@@ -56,11 +56,6 @@ int ConvertVoteSignal(std::string strVoteSignal)
     return -1;
 }
 
-/**
-*    MN GOVERNANCE RPC COMMAND
-*
-*/
-
 UniValue mngovernance(const UniValue& params, bool fHelp)
 {
     string strCommand;
@@ -95,7 +90,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
 
         Command:
-            mngovernance submit 71cd63efd90bb33bae023065b105a597168c0e126dc07e68693854f132f73997 0 1 1463588860 "beer-reimbursement" 
+            mngovernance submit 6e622bb41bad1fb18e7f23ae96770aeb33129e18bd9efe790522488e580a0a03 0 1 1464292854 "beer-reimbursement" 5b5b22636f6e7472616374222c207b2270726f6a6563745f6e616d65223a20225c22626565722d7265696d62757273656d656e745c22222c20227061796d656e745f61646472657373223a20225c225879324c4b4a4a64655178657948726e34744744514238626a6876464564615576375c22222c2022656e645f64617465223a202231343936333030343030222c20226465736372697074696f6e5f75726c223a20225c227777772e646173687768616c652e6f72672f702f626565722d7265696d62757273656d656e745c22222c2022636f6e74726163745f75726c223a20225c22626565722d7265696d62757273656d656e742e636f6d2f3030312e7064665c22222c20227061796d656e745f616d6f756e74223a20223233342e323334323232222c2022676f7665726e616e63655f6f626a6563745f6964223a2037342c202273746172745f64617465223a202231343833323534303030227d5d5d1
 
 
     */
@@ -190,11 +185,6 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         if(!govobj.IsValid(pindex, strError)){
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
         }
-
-        // int nConf = 0;
-        // if(!IsCollateralValid(hash, govobj.GetHash(), strError, govobj.nTime, nConf, GOVERNANCE_FEE_TX)){
-        //     throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
-        // }
 
         governance.mapSeenGovernanceObjects.insert(make_pair(govobj.GetHash(), SEEN_OBJECT_IS_VALID));
         govobj.Relay();

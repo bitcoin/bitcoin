@@ -42,7 +42,7 @@ extern CGovernanceManager governance;
 #define SEEN_OBJECT_ERROR_IMMATURE    2
 
 //Check the collateral transaction for the budget proposal/finalized budget
-extern bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee);
+extern bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t nTime, int& nConf, CAmount minFee);
 
 
 //
@@ -106,7 +106,7 @@ public:
     int CountMatchingVotes(CGovernanceObject& govobj, int nVoteSignalIn, int nVoteOutcomeIn);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddGovernanceObject (CGovernanceObject& budgetProposal);
+    bool AddGovernanceObject (CGovernanceObject& govobj);
     bool UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
     bool AddOrUpdateVote(CGovernanceVote& vote, std::string& strError);
     std::string GetRequiredPaymentsString(int nBlockHeight);
