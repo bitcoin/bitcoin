@@ -400,6 +400,26 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
             return NULL;
         }
 
+        if (pszDest && addrConnect.IsValid()) {
+            // It is possible that we already have a connection to the IP/port pszDest resolved to.
+            // In that case, drop the connection that was just created, and return the existing CNode instead.
+            // Also store the name we used to connect in that CNode, so that future FindNode() calls to that
+            // name catch this early.
+            CNode* pnode = FindNode((CService)addrConnect);
+            if (pnode)
+            {
+                pnode->AddRef();
+                {
+                    LOCK(cs_vNodes);
+                    if (pnode->addrName.empty()) {
+                        pnode->addrName = std::string(pszDest);
+                    }
+                }
+                CloseSocket(hSocket);
+                return pnode;
+            }
+        }
+
         addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
