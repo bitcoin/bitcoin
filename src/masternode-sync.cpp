@@ -329,16 +329,10 @@ void CMasternodeSync::Process()
                     return;
                 }
 
-                // target blocks count
-                // we store nMnCount*1.25 payments blocks so nMnCount*1.2 should be enough most of the time
-                if(mnpayments.GetBlockCount() > nMnCount*1.2)
-                {   
-                    // target votes, max ten per item. 6 average should be fine
-                    if(mnpayments.GetVoteCount() > nMnCount*1.2*6)
-                    {
-                        GetNextAsset();
-                        return;
-                    }
+                // if mnpayments already has enough blocks and votes, move to the next asset
+                if(mnpayments.IsEnoughData(nMnCount)) {
+                    GetNextAsset();
+                    return;
                 }
 
                 // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
@@ -346,7 +340,6 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("masternode-winner-sync")) continue;
                 pnode->FulfilledRequest("masternode-winner-sync");
 
-                int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 

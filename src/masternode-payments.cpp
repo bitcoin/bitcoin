@@ -606,8 +606,8 @@ void CMasternodePayments::CheckAndRemove()
 
     LOCK2(cs_mapMasternodePayeeVotes, cs_mapMasternodeBlocks);
 
-    // keep a bit more for historical sake but at least 4000
-    int nLimit = std::max(int(mnodeman.size()*1.25), 4000);
+    // keep a bit more for historical sake but at least minBlocksToStore
+    int nLimit = std::max(int(mnodeman.size() * nStorageCoeff), nMinBlocksToStore);
 
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
@@ -834,6 +834,18 @@ int CMasternodePayments::GetNewestBlock()
     }
 
     return nNewestBlock;
+}
+
+bool CMasternodePayments::IsEnoughData(int nMnCount) {
+    if(GetBlockCount() > nMnCount * nStorageCoeff || GetBlockCount() > nMinBlocksToStore)
+    {
+        float nAverageVotes = (MNPAYMENTS_SIGNATURES_TOTAL + MNPAYMENTS_SIGNATURES_REQUIRED) / 2;
+        if(GetVoteCount() > nMnCount * nStorageCoeff * nAverageVotes || GetVoteCount() > nMinBlocksToStore * nAverageVotes)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex)

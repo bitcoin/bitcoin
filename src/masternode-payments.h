@@ -224,7 +224,9 @@ public:
 class CMasternodePayments
 {
 private:
-    int nSyncedFromPeer;
+    int nMinBlocksToStore;
+    float nStorageCoeff;
+
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
@@ -234,7 +236,8 @@ public:
     std::map<uint256, int> mapMasternodesLastVote; //Hash(BEGIN(prevout.hash), END(prevout.n)), nBlockHeight
 
     CMasternodePayments() {
-        nSyncedFromPeer = 0;
+        nMinBlocksToStore = 4000;
+        nStorageCoeff = 1.25;
     }
 
     void Clear() {
@@ -285,6 +288,8 @@ public:
     {
         return mapMasternodePayeeVotes.size();
     }
+
+    bool IsEnoughData(int nMnCount);
 
     ADD_SERIALIZE_METHODS;
 
