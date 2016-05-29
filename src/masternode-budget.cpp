@@ -32,7 +32,7 @@ int GetBudgetPaymentCycleBlocks(){
     return 50; //ten times per day
 }
 
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t nTime, int& nConf)
 {
     CTransaction txCollateral;
     uint256 nBlockHash;
