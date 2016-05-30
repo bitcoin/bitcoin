@@ -1781,8 +1781,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
 
-    RandAddSeedPerfmon();
-
     //// debug print
     LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
     LogPrintf("chainActive.Height() = %d\n",   chainActive.Height());
