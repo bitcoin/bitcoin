@@ -1450,17 +1450,17 @@ int64_t GetTotalCoinEstimate(int nHeight)
     /* these values are taken from the block explorer */
     if(nHeight > 5076) nTotalCoins += 2021642;
     if(nHeight > 17000) nTotalCoins += 3267692-2021642;
-    if(nHeight > 34000) nTotalCoins += 3688775-3267692; 
-    if(nHeight > 68000) nTotalCoins += 4277615-3688775;    
+    if(nHeight > 34000) nTotalCoins += 3688775-3267692;
+    if(nHeight > 68000) nTotalCoins += 4277615-3688775;
 
     if(nHeight > 68000*2) {
-        nTotalCoins += 4649913.99999995-4277615;    
+        nTotalCoins += 4649913.99999995-4277615;
     } else {
         return nTotalCoins;
     }
 
     //5.383754730451325 per block average after this
-    nTotalCoins += ((nHeight-68000*2)*((5382104.64334133-4649913.99999995)/(68000*2)));    
+    nTotalCoins += ((nHeight-68000*2)*((5382104.64334133-4649913.99999995)/(68000*2)));
 
     // TODO: this should include the 7.1% decline too
     return nTotalCoins;
@@ -4565,7 +4565,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!pushed && inv.type == MSG_DSTX) {       
+                if (!pushed && inv.type == MSG_DSTX) {
                     if(mapDarksendBroadcastTxes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);

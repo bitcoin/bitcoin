@@ -36,31 +36,6 @@ std::string GetRequiredPaymentsString(int nBlockHeight);
 bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue);
 void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
 
-void DumpMasternodePayments();
-
-/** Save Masternode Payment Data (mnpayments.dat)
- */
-class CMasternodePaymentDB
-{
-private:
-    boost::filesystem::path pathDB;
-    std::string strMagicMessage;
-public:
-    enum ReadResult {
-        Ok,
-        FileError,
-        HashReadError,
-        IncorrectHash,
-        IncorrectMagicMessage,
-        IncorrectMagicNumber,
-        IncorrectFormat
-    };
-
-    CMasternodePaymentDB();
-    bool Write(const CMasternodePayments &objToSave);
-    ReadResult Read(CMasternodePayments& objToLoad, bool fDryRun = false);
-};
-
 class CMasternodePayee
 {
 public:

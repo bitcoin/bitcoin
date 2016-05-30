@@ -44,137 +44,6 @@ struct CompareScoreMN
     }
 };
 
-//
-// CMasternodeDB
-//
-
-CMasternodeDB::CMasternodeDB()
-{
-    pathMN = GetDataDir() / "mncache.dat";
-    strMagicMessage = "MasternodeCache";
-}
-
-bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
-{
-    int64_t nStart = GetTimeMillis();
-
-    // serialize, checksum data up to that point, then append checksum
-    CDataStream ssMasternodes(SER_DISK, CLIENT_VERSION);
-    ssMasternodes << strMagicMessage; // masternode cache file specific magic message
-    ssMasternodes << FLATDATA(Params().MessageStart()); // network specific magic number
-    ssMasternodes << mnodemanToSave;
-    uint256 hash = Hash(ssMasternodes.begin(), ssMasternodes.end());
-    ssMasternodes << hash;
-
-    // open output file, and associate with CAutoFile
-    FILE *file = fopen(pathMN.string().c_str(), "wb");
-    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
-        return error("%s : Failed to open file %s", __func__, pathMN.string());
-
-    // Write and commit header, data
-    try {
-        fileout << ssMasternodes;
-    }
-    catch (std::exception &e) {
-        return error("%s : Serialize or I/O error - %s", __func__, e.what());
-    }
-//    FileCommit(fileout);
-    fileout.fclose();
-
-    LogPrintf("Written info to mncache.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", mnodemanToSave.ToString());
-
-    return true;
-}
-
-CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad, bool fDryRun)
-{
-    int64_t nStart = GetTimeMillis();
-    // open input file, and associate with CAutoFile
-    FILE *file = fopen(pathMN.string().c_str(), "rb");
-    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-    {
-        error("%s : Failed to open file %s", __func__, pathMN.string());
-        return FileError;
-    }
-
-    // use file size to size memory buffer
-    int fileSize = boost::filesystem::file_size(pathMN);
-    int dataSize = fileSize - sizeof(uint256);
-    // Don't try to resize to a negative number if file is small
-    if (dataSize < 0)
-        dataSize = 0;
-    vector<unsigned char> vchData;
-    vchData.resize(dataSize);
-    uint256 hashIn;
-
-    // read data and checksum from file
-    try {
-        filein.read((char *)&vchData[0], dataSize);
-        filein >> hashIn;
-    }
-    catch (std::exception &e) {
-        error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        return HashReadError;
-    }
-    filein.fclose();
-
-    CDataStream ssMasternodes(vchData, SER_DISK, CLIENT_VERSION);
-
-    // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssMasternodes.begin(), ssMasternodes.end());
-    if (hashIn != hashTmp)
-    {
-        error("%s : Checksum mismatch, data corrupted", __func__);
-        return IncorrectHash;
-    }
-
-    unsigned char pchMsgTmp[4];
-    std::string strMagicMessageTmp;
-    try {
-        // de-serialize file header (masternode cache file specific magic message) and ..
-
-        ssMasternodes >> strMagicMessageTmp;
-
-        // ... verify the message matches predefined one
-        if (strMagicMessage != strMagicMessageTmp)
-        {
-            error("%s : Invalid masternode cache magic message", __func__);
-            return IncorrectMagicMessage;
-        }
-
-        // de-serialize file header (network specific magic number) and ..
-        ssMasternodes >> FLATDATA(pchMsgTmp);
-
-        // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-        {
-            error("%s : Invalid network magic number", __func__);
-            return IncorrectMagicNumber;
-        }
-        // de-serialize data into CMasternodeMan object
-        ssMasternodes >> mnodemanToLoad;
-    }
-    catch (std::exception &e) {
-        mnodemanToLoad.Clear();
-        error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        return IncorrectFormat;
-    }
-
-    LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", mnodemanToLoad.ToString());
-    if(!fDryRun) {
-        LogPrintf("Masternode manager - cleaning....\n");
-        mnodemanToLoad.CheckAndRemove(true);
-        LogPrintf("Masternode manager - result:\n");
-        LogPrintf("  %s\n", mnodemanToLoad.ToString());
-    }
-
-    return Ok;
-}
-
 CMasternodeMan::CMasternodeMan() {
     nDsqCount = 0;
 }
@@ -225,6 +94,8 @@ void CMasternodeMan::Check()
 
 void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
 {
+    LogPrintf("CMasternodeMan::CheckAndRemove\n");
+
     Check();
 
     LOCK(cs);
@@ -235,7 +106,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED)) {
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing inactive Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
+            LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing %s Masternode %s - %i now\n", (*it).Status(), (*it).addr.ToString(), size() - 1);
 
             //erase all of the broadcasts we've seen from this vin
             // -- if we missed a few pings and the node was removed, this will allow is to get it back without them 
@@ -746,8 +617,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; //local network
 
             if(mn.IsEnabled()) {
-                LogPrint("masternode", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
                 if(vin == CTxIn() || vin == mn.vin){
+                    LogPrint("masternode", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
                     CMasternodeBroadcast mnb = CMasternodeBroadcast(mn);
                     uint256 hash = mnb.GetHash();
                     pfrom->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hash));

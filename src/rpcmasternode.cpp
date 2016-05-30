@@ -324,9 +324,6 @@ UniValue masternode(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
         }
 
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         int successful = 0;
         int failed = 0;
 
@@ -378,9 +375,6 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if(strCommand == "list-conf")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         UniValue resultObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
