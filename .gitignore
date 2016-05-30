@@ -114,3 +114,5 @@ share/BitcoindComparisonTool.jar
 /doc/doxygen/
 
 libbitcoinconsensus.pc
+
+*.dSYM/
