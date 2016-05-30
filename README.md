@@ -1,7 +1,9 @@
 Dash Core staging tree 0.12
 ===============================
 
-https://www.dashpay.io
+`master:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=master)](https://travis-ci.org/dashpay/dash) `v0.12.0.x:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=v0.12.0.x)](https://travis-ci.org/dashpay/dash/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=v0.12.1.x)](https://travis-ci.org/dashpay/dash/branches)
+
+https://www.dash.org
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
 
@@ -18,7 +20,7 @@ are carried out collectively by the network. Dash Core is the name of open
 source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Dash Core software, see https://www.dashpay.io/downloads.
+the Dash Core software, see https://www.dash.org/downloads.
 
 
 License
