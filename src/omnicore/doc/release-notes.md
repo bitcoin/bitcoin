@@ -18,9 +18,10 @@ Table of contents
 - [Imported changes and notes](#imported-changes-and-notes)
   - TODO
 - [Consensus affecting changes](#consensus-affecting-changes)
-  - TODO
+  - [Trading of all pairs on the Distributed Exchange](#trading-of-all-pairs-on-the-distributed-exchange)
+  - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
 - [Other notable changes](#other-notable-changes)
-  - TODO
+  - [Improved consensus checks](#improved-consensus-checks)
 - [Change log](#change-log)
 - [Credits](#credits)
 
@@ -66,14 +67,22 @@ It follows an overview and a description of the consensus rule changes:
 Trading of all pairs on the Distributed Exchange
 ------------------------------------------------
 
-TODO
+Once activated trading of any property against any other (within the same ecosystem) will be permitted on the Distributed Exchange.
+
+Due to this change the existing trading UI in the QT version is no longer suitable and has been disabled for this release.  Please use the RPC interface to interact with the Distributed Exchange in this release.  The trading UI will be re-enabled in a future version to accomodate non-Omni pair trading.
 
 This change is identified by `"featureid": 8` and labeled by the GUI as `"Allow trading all pairs on the Distributed Exchange"`.
 
 Fee distribution system on the Distributed Exchange
 ---------------------------------------------------
 
-TODO
+Omni Core 0.11 contains a fee caching & distribution system.  This system collects small amounts of tokens in a cache until a distribution threshold is reached.  Once this distribution threshold (trigger) is reached for a property, the fees in the cache will be distributed proportionally to holders of the Omni (#1) token based on the percentage of the total Omni tokens owned.
+
+Once activated fees will be collected from trading of non-Omni pairs on the Distributed Exchange (there is no fee for trading Omni pairs).  The party removing liquidity from the market will incur a 0.05% fee which will be transferred to the fee cache, and subsequently distributed to holders of the Omni token.
+
+- Placing a trade where one side of the pair is Omni (#1) incurs no fee
+- Placing a trade where liquidity is added to the market (ie the trade does not immediately execute an existing trade) incurs no fee
+- Placing a trade where liquidity is removed from the market (ie the trade immediately executes an existing trade) the liquidity taker incurs a 0.05% fee
 
 See also: [omni_getfeecache](#), [omni_getfeedistribution](#), [omni_getfeedistributions](#), [omni_getfeeshare](#), [omni_getfeetrigger](#) JSON-RPC API calls
 
@@ -83,10 +92,12 @@ This change is identified by `"featureid": 9` and labeled by the GUI as `"Fee sy
 Other notable changes
 =====================
 
-TODO
---------------------
+Improved consensus checks
+-------------------------
 
-TODO
+Consensus hashing now covers much more of the state to provide wider coverage of the state.  The state of properties, crowdsales and the Distributed Exchange are included in the new consensus hashing process.
+
+Checkpoints have been updated in Omni Core 0.0.11 to reflect the new consensus hashing algorithm.  Seed blocks (for faster initial transaction scanning) and checkpoints are included with Omni Core 0.0.11 up to block 410,000.
 
 
 Change log
