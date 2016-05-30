@@ -199,8 +199,8 @@ public:
 class CMasternodePayments
 {
 private:
-    int nMinBlocksToStore;
-    float nStorageCoeff;
+    const int nMinBlocksToStore;
+    const float nStorageCoeff;
 
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
@@ -210,9 +210,7 @@ public:
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
     std::map<uint256, int> mapMasternodesLastVote; //Hash(BEGIN(prevout.hash), END(prevout.n)), nBlockHeight
 
-    CMasternodePayments() {
-        nMinBlocksToStore = 4000;
-        nStorageCoeff = 1.25;
+    CMasternodePayments() : nMinBlocksToStore(4000), nStorageCoeff(1.25) {
     }
 
     void Clear() {
