@@ -2797,7 +2797,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<CAmount>& vecAm
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
                                 int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType coin_type, bool useIX)
 {
-    CAmount nFeePay = useIX ? CENT : 0;
+    CAmount nFeePay = useIX ? INSTANTSEND_MIN_FEE : 0;
 
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;

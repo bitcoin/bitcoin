@@ -606,8 +606,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if (nPayFee > 0 && coinControl->nMinimumTotalFee > nPayFee)
             nPayFee = coinControl->nMinimumTotalFee;
 
-        // IX Fee
-        if(coinControl->useInstantX) nPayFee = max(nPayFee, CENT);
+        // InstantSend Fee
+        if(coinControl->useInstantX) nPayFee = max(nPayFee, INSTANTSEND_MIN_FEE);
 
         // Allow free? (require at least hard-coded threshold and default to that if no estimate)
         double dPriorityNeeded = std::max(mempoolEstimatePriority, AllowFreeThreshold());

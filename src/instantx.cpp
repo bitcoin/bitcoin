@@ -207,7 +207,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
         return true;
     }
 
-    if(nValueIn-nValueOut < CENT) {
+    if(nValueIn-nValueOut < INSTANTSEND_MIN_FEE) {
         LogPrint("instantsend", "IsIXTXValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString());
         return false;
     }
