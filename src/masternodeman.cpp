@@ -631,6 +631,22 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
     return NULL;
 }
 
+void CMasternodeMan::InitDummyScriptPubkey() {
+    CKey secret;
+    secret.MakeNewKey(true);
+
+    CPubKey pubkey = secret.GetPubKey();
+    assert(secret.VerifyPubKey(pubkey));
+
+    if (pubkey.IsValid()) {
+        CKeyID keyID = pubkey.GetID();
+        LogPrintf("Generated dummyScriptPubkey: address %s privkey %s\n", CBitcoinAddress(keyID).ToString(), CBitcoinSecret(secret).ToString());
+        dummyScriptPubkey = GetScriptForDestination(keyID);
+    } else {
+        LogPrintf("CMasternodeMan::InitDummyScriptPubkey - ERROR: can't assign dummyScriptPubkey\n");
+    }
+}
+
 void CMasternodeMan::ProcessMasternodeConnections()
 {
     //we don't care about this for regtest

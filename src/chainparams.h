@@ -79,7 +79,6 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     std::string SporkKey() const { return strSporkKey; }
-    std::string DarksendPoolDummyAddress() const { return strDarksendPoolDummyAddress; }
     std::string MasternodePaymentPubKey() const { return strMasternodePaymentsPubKey; }
 protected:
     CChainParams() {}
@@ -105,7 +104,6 @@ protected:
     int nPoolMaxTransactions;
     std::string strSporkKey;
     std::string strMasternodePaymentsPubKey;
-    std::string strDarksendPoolDummyAddress;
 };
 
 /**

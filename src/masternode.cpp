@@ -214,7 +214,7 @@ void CMasternode::Check(bool forceCheck)
     if(!unitTest){
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
+        CTxOut vout = CTxOut(999.99*COIN, mnodeman.dummyScriptPubkey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -479,7 +479,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
+    CTxOut vout = CTxOut(999.99*COIN, mnodeman.dummyScriptPubkey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 

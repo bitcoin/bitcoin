@@ -323,9 +323,6 @@ public:
         MSG_ENTRIES_ADDED
     };
 
-    // where collateral should be made out to
-    CScript collateralPubKey;
-
     CMasternode* pSubmittedToMasternode;
     int sessionDenom; //Users must submit an denom matching this
     int cachedNumBlocks; //used for the overview screen
@@ -361,10 +358,6 @@ public:
      * \param vRecv
      */
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-
-    void InitCollateralAddress(){
-        SetCollateralAddress(Params().DarksendPoolDummyAddress());
-    }
 
     void ClearSkippedDenominations() {
         darkSendDenominationsSkipped.clear();
@@ -404,7 +397,6 @@ public:
         minBlockSpacing = minBlockSpacingIn;
     }
 
-    bool SetCollateralAddress(std::string strAddress);
     void Reset();
     void SetNull();
 

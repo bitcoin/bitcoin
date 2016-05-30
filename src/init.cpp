@@ -1823,24 +1823,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             MilliSleep(10);
     }
 
-    // ********************************************************* Step 10: Load cache data
-
-    // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
-
-    uiInterface.InitMessage(_("Loading masternode cache..."));
-    CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-    flatdb1.Load(mnodeman);
-
-    uiInterface.InitMessage(_("Loading masternode payment cache..."));
-    CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
-    flatdb2.Load(mnpayments);
-
-    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    flatdb3.Load(governance);
-    governance.ClearSeen();
-
-    // ********************************************************* Step 11: setup DarkSend
-
+    // ********************************************************* Step 11a: setup PrivateSend
     fMasterNode = GetBoolArg("-masternode", false);
 
     if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
@@ -1879,7 +1862,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
     }
-    
+
     //get the mode of budget voting for this masternode
     strBudgetMode = GetArg("-budgetvotemode", "auto");
 
@@ -1923,7 +1906,25 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("Budget Mode %s\n", strBudgetMode);
 
     darkSendPool.InitDenominations();
-    darkSendPool.InitCollateralAddress();
+    mnodeman.InitDummyScriptPubkey();
+
+    // ********************************************************* Step 11b: Load cache data
+
+    // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
+
+    uiInterface.InitMessage(_("Loading masternode cache..."));
+    CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
+    flatdb1.Load(mnodeman);
+
+    uiInterface.InitMessage(_("Loading masternode payment cache..."));
+    CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
+    flatdb2.Load(mnpayments);
+
+    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+    flatdb3.Load(governance);
+    governance.ClearSeen();
+
+    // ********************************************************* Step 11c: update block tip in Dash modules
 
     // force UpdatedBlockTip to initialize pCurrentBlockIndex for DS, MN payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
@@ -1932,10 +1933,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     mnpayments.UpdatedBlockTip(chainActive.Tip());
     masternodeSync.UpdatedBlockTip(chainActive.Tip());
 
-    // start dash-darksend thread
+    // ********************************************************* Step 11d: start dash-darksend thread
+
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 
-    // ********************************************************* Step 11: start node
+    // ********************************************************* Step 12: start node
 
     if (!CheckDiskSpace())
         return false;

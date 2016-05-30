@@ -426,17 +426,6 @@ void CDarksendPool::SetNull(){
     std::srand(seed);
 }
 
-bool CDarksendPool::SetCollateralAddress(std::string strAddress){
-    CBitcoinAddress address;
-    if (!address.SetString(strAddress))
-    {
-        LogPrintf("CDarksendPool::SetCollateralAddress - Invalid PrivateSend collateral address\n");
-        return false;
-    }
-    collateralPubKey = GetScriptForDestination(address.Get());
-    return true;
-}
-
 //
 // Unlock coins after Darksend fails or succeeds
 //
