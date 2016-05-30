@@ -18,7 +18,7 @@ packages:
 - "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
-reference_datetime: "2013-06-01 00:00:00"
+reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
