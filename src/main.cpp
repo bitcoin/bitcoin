@@ -4519,10 +4519,11 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
                 if (!push && inv.type == MSG_TX) {
-                    int64_t txtime;
+                    auto txinfo = mempool.info(inv.hash);
                     // To protect privacy, do not answer getdata using the mempool when
                     // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (mempool.lookup(inv.hash, tx, txtime) && txtime <= pfrom->timeLastMempoolReq) {
+                    if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
+                        tx = *txinfo.tx;
                         push = true;
                     }
                 }
@@ -5900,8 +5901,7 @@ bool SendMessages(CNode* pto)
 
             // Respond to BIP35 mempool requests
             if (fSendTrickle && pto->fSendMempool) {
-                std::vector<uint256> vtxid;
-                mempool.queryHashes(vtxid);
+                auto vtxinfo = mempool.infoAll();
                 pto->fSendMempool = false;
                 CAmount filterrate = 0;
                 {
@@ -5911,20 +5911,16 @@ bool SendMessages(CNode* pto)
 
                 LOCK(pto->cs_filter);
 
-                BOOST_FOREACH(const uint256& hash, vtxid) {
+                for (const auto& txinfo : vtxinfo) {
+                    const uint256& hash = txinfo.tx->GetHash();
                     CInv inv(MSG_TX, hash);
                     pto->setInventoryTxToSend.erase(hash);
                     if (filterrate) {
-                        CFeeRate feeRate;
-                        mempool.lookupFeeRate(hash, feeRate);
-                        if (feeRate.GetFeePerK() < filterrate)
+                        if (txinfo.feeRate.GetFeePerK() < filterrate)
                             continue;
                     }
                     if (pto->pfilter) {
-                        CTransaction tx;
-                        bool fInMemPool = mempool.lookup(hash, tx);
-                        if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
-                        if (!pto->pfilter->IsRelevantAndUpdate(tx)) continue;
+                        if (!pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     }
                     pto->filterInventoryKnown.insert(hash);
                     vInv.push_back(inv);
@@ -5970,16 +5966,14 @@ bool SendMessages(CNode* pto)
                         continue;
                     }
                     // Not in the mempool anymore? don't bother sending it.
-                    CFeeRate feeRate;
-                    if (!mempool.lookupFeeRate(hash, feeRate)) {
+                    auto txinfo = mempool.info(hash);
+                    if (!txinfo.tx) {
                         continue;
                     }
-                    if (filterrate && feeRate.GetFeePerK() < filterrate) {
+                    if (filterrate && txinfo.feeRate.GetFeePerK() < filterrate) {
                         continue;
                     }
-                    CTransaction tx;
-                    if (!mempool.lookup(hash, tx)) continue;
-                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(tx)) continue;
+                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
@@ -5992,7 +5986,7 @@ bool SendMessages(CNode* pto)
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.insert(std::make_pair(hash, tx));
+                        auto ret = mapRelay.insert(std::make_pair(hash, *txinfo.tx));
                         if (ret.second) {
                             vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, hash));
                         }
