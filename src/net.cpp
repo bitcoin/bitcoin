@@ -17,6 +17,7 @@
 #include "crypto/sha256.h"
 #include "hash.h"
 #include "primitives/transaction.h"
+#include "netbase.h"
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
