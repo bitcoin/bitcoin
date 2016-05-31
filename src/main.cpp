@@ -1531,15 +1531,15 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 
 bool IsInitialBlockDownload()
 {
-    const CChainParams& chainParams = Params();
-    LOCK(cs_main);
-    if (fImporting || fReindex)
-        return true;
-    if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
-        return true;
     static bool lockIBDState = false;
     if (lockIBDState)
         return false;
+    if (fImporting || fReindex)
+        return true;
+    LOCK(cs_main);
+    const CChainParams& chainParams = Params();
+    if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
+        return true;
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
             pindexBestHeader->GetBlockTime() < GetTime() - chainParams.MaxTipAge());
     if (!state)
