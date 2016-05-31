@@ -171,12 +171,26 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(!CSubNet(ResolveIP("127.0.0.1")).Match(ResolveIP("127.0.0.2")));
     BOOST_CHECK(CSubNet(ResolveIP("127.0.0.1")).ToString() == "127.0.0.1/32");
 
+    CSubNet subnet = CSubNet(ResolveIP("1.2.3.4"), 32);
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/32");
+    subnet = CSubNet(ResolveIP("1.2.3.4"), 8);
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/8");
+    subnet = CSubNet(ResolveIP("1.2.3.4"), 0);
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/0");
+
+    subnet = CSubNet(ResolveIP("1.2.3.4"), ResolveIP("255.255.255.255"));
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/32");
+    subnet = CSubNet(ResolveIP("1.2.3.4"), ResolveIP("255.0.0.0"));
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/8");
+    subnet = CSubNet(ResolveIP("1.2.3.4"), ResolveIP("0.0.0.0"));
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/0");
+
     BOOST_CHECK(CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).IsValid());
     BOOST_CHECK(CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).Match(ResolveIP("1:2:3:4:5:6:7:8")));
     BOOST_CHECK(!CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).Match(ResolveIP("1:2:3:4:5:6:7:9")));
     BOOST_CHECK(CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).ToString() == "1:2:3:4:5:6:7:8/128");
 
-    CSubNet subnet = ResolveSubNet("1.2.3.4/255.255.255.255");
+    subnet = ResolveSubNet("1.2.3.4/255.255.255.255");
     BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/32");
     subnet = ResolveSubNet("1.2.3.4/255.255.255.254");
     BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/31");
