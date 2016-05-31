@@ -556,6 +556,7 @@ class CBlock(CBlockHeader):
             self.nNonce += 1
             self.rehash()
 
+
     def __repr__(self):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
@@ -836,6 +837,18 @@ class msg_block(object):
     def __repr__(self):
         return "msg_block(block=%s)" % (repr(self.block))
 
+# for cases where a user needs tighter control over what is sent over the wire
+# note that the user must supply the name of the command, and the data
+class msg_generic(object):
+    def __init__(self, command, data=None):
+        self.command = command
+        self.data = data
+
+    def serialize(self):
+        return self.data
+
+    def __repr__(self):
+        return "msg_generic()"
 
 class msg_getaddr(object):
     command = b"getaddr"
