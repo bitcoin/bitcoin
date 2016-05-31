@@ -55,6 +55,7 @@ The Dash Core repo's [root README](/README.md) contains relevant information on 
 - [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
 - [Dnsseed Policy](dnsseed-policy.md)
+- [Benchmarking](benchmarking.md)
 
 ### Resources
 * Discuss on the [DashTalk](https://dashtalk.org/) forums, in the Development & Technical Discussion board.
