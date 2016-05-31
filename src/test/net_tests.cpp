@@ -52,7 +52,9 @@ public:
         s << nUBuckets;
 
         CAddress addr = CAddress(CService("252.1.1.1", 7777), NODE_NONE);
-        CAddrInfo info = CAddrInfo(addr, CNetAddr("252.2.2.2"));
+        CNetAddr resolved;
+        LookupHost("252.2.2.2", resolved, false);
+        CAddrInfo info = CAddrInfo(addr, resolved);
         s << info;
     }
 };
