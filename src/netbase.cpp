@@ -639,7 +639,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
         }
     }
 
-    addr = CService("0.0.0.0:0");
+    addr = CService();
 
     if (!HaveNameProxy())
         return false;
@@ -1122,38 +1122,6 @@ bool CService::SetSockAddr(const struct sockaddr *paddr)
     default:
         return false;
     }
-}
-
-CService::CService(const char *pszIpPort)
-{
-    Init();
-    CService ip;
-    if (Lookup(pszIpPort, ip, 0, false))
-        *this = ip;
-}
-
-CService::CService(const char *pszIpPort, int portDefault)
-{
-    Init();
-    CService ip;
-    if (Lookup(pszIpPort, ip, portDefault, false))
-        *this = ip;
-}
-
-CService::CService(const std::string &strIpPort)
-{
-    Init();
-    CService ip;
-    if (Lookup(strIpPort.c_str(), ip, 0, false))
-        *this = ip;
-}
-
-CService::CService(const std::string &strIpPort, int portDefault)
-{
-    Init();
-    CService ip;
-    if (Lookup(strIpPort.c_str(), ip, portDefault, false))
-        *this = ip;
 }
 
 unsigned short CService::GetPort() const
