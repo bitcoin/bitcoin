@@ -1616,183 +1616,6 @@ $ omnicore-cli "omni_createrawtx_change" \
 
 ---
 
-## Fee system
-
-The RPCs for the fee system can be used to obtain data about the fee system and fee distributions.
-
-### omni_getfeecache
-
-Obtains the current amount of fees cached (pending distribution).
-
-If a property ID is supplied the results will be filtered to show this property ID only.  If no property ID is supplied the results will contain all properties that currently have fees cached pending distribution.
-
-**Arguments:**
-
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `propertyid`        | number  | optional | the identifier of the property to filter results on                                          |
-
-**Result:**
-```js
-[                                  // (array of JSON objects)
-  {
-    "propertyid" : nnnnnnn,        // (number) the property id
-    "cachedfees" : "n.nnnnnnnn",   // (string) the amount of fees cached for this property
-  },
-...
-]
-```
-
-**Example:**
-
-```bash
-$ omnicore-cli "omni_getfeecache" 31
-```
-
----
-
-### omni_getfeetrigger
-
-Obtains the amount at which cached fees will be distributed.
-
-If a property ID is supplied the results will be filtered to show this property ID only.  If no property ID is supplied the results will contain all properties.
-
-**Arguments:**
-
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `propertyid`        | number  | optional | the identifier of the property to filter results on                                          |
-
-**Result:**
-```js
-[                                  // (array of JSON objects)
-  {
-    "propertyid" : nnnnnnn,        // (number) the property id
-    "feetrigger" : "n.nnnnnnnn",   // (string) the amount of fees required to trigger distribution
-  },
-...
-]
-```
-
-**Example:**
-
-```bash
-$ omnicore-cli "omni_getfeetrigger" 31
-```
-
----
-
-### omni_getfeeshare
-
-Obtains the current percentage share of fees addresses would receive if a distribution were to occur.
-
-If an address is supplied the results will be filtered to show this address only.  If no address is supplied the results will be filtered to show wallet addresses only.  If a wildcard is provided (```"*"```) the results will contain all addresses that would receive a share.
-
-If an ecosystem is supplied the results will reflect the fee share for that ecosystem (main or test).  If no ecosystem is supplied the results will reflect the main ecosystem.
-
-**Arguments:**
-
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `address`           | string  | optional | the address to filter results on                                                             |
-| `ecosystem`         | number  | optional | the ecosystem to obtain the current percentage fee share (1 = main, 2 = test)                |
-
-**Result:**
-```js
-[                                  // (array of JSON objects)
-  {
-    "address" : "address"          // (string) the adress that would receive a share of fees
-    "feeshare" : "n.nnnn%",        // (string) the percentage of fees this address will receive based on the current state
-  },
-...
-]
-```
-
-**Example:**
-
-```bash
-$ omnicore-cli "omni_getfeeshare" "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB" 1
-```
-
----
-
-### omni_getfeedistribution
-
-Obtains data for a past distribution of fees.
-
-A distribution ID must be supplied to identify the distribution to obtain data for.
-
-**Arguments:**
-
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `distributionid`    | number  | required | the identifier of the distribution to obtain data for                                        |
-
-**Result:**
-```js
-{
-  "distributionid" : n,            // (number) the distribution id
-  "propertyid" : n,                // (number) the property id of the distributed tokens
-  "block" : n,                     // (number) the block the distribution occurred
-  "amount" : "n.nnnnnnnn",         // (string) the amount that was distributed
-  "recipients": [                  // (array of JSON objects) a list of recipients
-    {
-      "address" : "address",       // (string) the address of the recipient
-      "amount" : "n.nnnnnnnn"      // (string) the amount of fees received by the recipient
-    },
-    ...
-  ]
-}
-```
-
-**Example:**
-
-```bash
-$ omnicore-cli "omni_getfeedistribution" 1
-```
-
----
-
-### omni_getfeedistributions
-
-Obtains data for past distributions of fees for a property.
-
-A property ID must be supplied to retrieve past distributions for.
-
-**Arguments:**
-
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `propertyid`        | number  | required | the identifier of the property to retrieve past distributions for                            |
-
-**Result:**
-```js
-[                                  // (array of JSON objects)
-  {
-    "distributionid" : n,          // (number) the distribution id
-    "propertyid" : n,              // (number) the property id of the distributed tokens
-    "block" : n,                   // (number) the block the distribution occurred
-    "amount" : "n.nnnnnnnn",       // (string) the amount that was distributed
-    "recipients": [                // (array of JSON objects) a list of recipients
-      {
-        "address" : "address",       // (string) the address of the recipient
-        "amount" : "n.nnnnnnnn"      // (string) the amount of fees received by the recipient
-      },
-      ...
-    ]
-  },
-  ...
-]
-```
-
-**Example:**
-
-```bash
-$ omnicore-cli "omni_getfeedistributions" 31
-```
-
----
-
 ### omni_createpayload_simplesend
 
 Create the payload for a simple send transaction.
@@ -1816,6 +1639,7 @@ $ omnicore-cli "omni_createpayload_simplesend" 1 "100.0"
 ```
 
 ---
+
 ### omni_createpayload_sendall
 
 Create the payload for a send all transaction.
@@ -1838,6 +1662,7 @@ $ omnicore-cli "omni_createpayload_sendall" 2
 ```
 
 ---
+
 ### omni_createpayload_dexsell
 
 Create a payload to place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.
@@ -2201,6 +2026,183 @@ Creates the payload to cancel all offers on the distributed token exchange with 
 
 ```bash
 $ omnicore-cli "omni_createpayload_cancelalltrades" 1
+```
+
+---
+
+## Fee system
+
+The RPCs for the fee system can be used to obtain data about the fee system and fee distributions.
+
+### omni_getfeecache
+
+Obtains the current amount of fees cached (pending distribution).
+
+If a property ID is supplied the results will be filtered to show this property ID only.  If no property ID is supplied the results will contain all properties that currently have fees cached pending distribution.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | optional | the identifier of the property to filter results on                                          |
+
+**Result:**
+```js
+[                                  // (array of JSON objects)
+  {
+    "propertyid" : nnnnnnn,        // (number) the property id
+    "cachedfees" : "n.nnnnnnnn",   // (string) the amount of fees cached for this property
+  },
+...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getfeecache" 31
+```
+
+---
+
+### omni_getfeetrigger
+
+Obtains the amount at which cached fees will be distributed.
+
+If a property ID is supplied the results will be filtered to show this property ID only.  If no property ID is supplied the results will contain all properties.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | optional | the identifier of the property to filter results on                                          |
+
+**Result:**
+```js
+[                                  // (array of JSON objects)
+  {
+    "propertyid" : nnnnnnn,        // (number) the property id
+    "feetrigger" : "n.nnnnnnnn",   // (string) the amount of fees required to trigger distribution
+  },
+...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getfeetrigger" 31
+```
+
+---
+
+### omni_getfeeshare
+
+Obtains the current percentage share of fees addresses would receive if a distribution were to occur.
+
+If an address is supplied the results will be filtered to show this address only.  If no address is supplied the results will be filtered to show wallet addresses only.  If a wildcard is provided (```"*"```) the results will contain all addresses that would receive a share.
+
+If an ecosystem is supplied the results will reflect the fee share for that ecosystem (main or test).  If no ecosystem is supplied the results will reflect the main ecosystem.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | optional | the address to filter results on                                                             |
+| `ecosystem`         | number  | optional | the ecosystem to obtain the current percentage fee share (1 = main, 2 = test)                |
+
+**Result:**
+```js
+[                                  // (array of JSON objects)
+  {
+    "address" : "address"          // (string) the adress that would receive a share of fees
+    "feeshare" : "n.nnnn%",        // (string) the percentage of fees this address will receive based on the current state
+  },
+...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getfeeshare" "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB" 1
+```
+
+---
+
+### omni_getfeedistribution
+
+Obtains data for a past distribution of fees.
+
+A distribution ID must be supplied to identify the distribution to obtain data for.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `distributionid`    | number  | required | the identifier of the distribution to obtain data for                                        |
+
+**Result:**
+```js
+{
+  "distributionid" : n,            // (number) the distribution id
+  "propertyid" : n,                // (number) the property id of the distributed tokens
+  "block" : n,                     // (number) the block the distribution occurred
+  "amount" : "n.nnnnnnnn",         // (string) the amount that was distributed
+  "recipients": [                  // (array of JSON objects) a list of recipients
+    {
+      "address" : "address",       // (string) the address of the recipient
+      "amount" : "n.nnnnnnnn"      // (string) the amount of fees received by the recipient
+    },
+    ...
+  ]
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getfeedistribution" 1
+```
+
+---
+
+### omni_getfeedistributions
+
+Obtains data for past distributions of fees for a property.
+
+A property ID must be supplied to retrieve past distributions for.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the property to retrieve past distributions for                            |
+
+**Result:**
+```js
+[                                  // (array of JSON objects)
+  {
+    "distributionid" : n,          // (number) the distribution id
+    "propertyid" : n,              // (number) the property id of the distributed tokens
+    "block" : n,                   // (number) the block the distribution occurred
+    "amount" : "n.nnnnnnnn",       // (string) the amount that was distributed
+    "recipients": [                // (array of JSON objects) a list of recipients
+      {
+        "address" : "address",       // (string) the address of the recipient
+        "amount" : "n.nnnnnnnn"      // (string) the amount of fees received by the recipient
+      },
+      ...
+    ]
+  },
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getfeedistributions" 31
 ```
 
 ---
