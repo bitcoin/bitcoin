@@ -28,11 +28,15 @@ std::vector<CGovernanceObject> vecImmatureGovernanceObjects;
 
 int nSubmittedFinalBudget;
 
-bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t nTime, int& nConf, CAmount minFee)
+bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int& nConf, CAmount minFee)
 {
 
     CTransaction txCollateral;
     uint256 nBlockHash;
+    int64_t nTime;
+
+    // RETRIEVE TRANSACTION IN QUESTION  
+
     if(!GetTransaction(nTxCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
         strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
         LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
@@ -44,6 +48,8 @@ bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::st
         LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
         return false;
     }
+
+    // LOOK FOR SPECIALIZED GOVERNANCE SCRIPT (PROOF OF BURN)
 
     CScript findScript;
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
@@ -64,30 +70,33 @@ bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::st
         return false;
     }
 
+    // GET CONFIRMATIONS FOR TRANSACTION
+
     LOCK(cs_main);
-    int conf = GetIXConfirmations(nTxCollateralHash);
+    int nConfirmationsIn = GetIXConfirmations(nTxCollateralHash);
     if (nBlockHash != uint256()) {
         BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
         if (mi != mapBlockIndex.end() && (*mi).second) {
             CBlockIndex* pindex = (*mi).second;
             if (chainActive.Contains(pindex)) {
-                conf += chainActive.Height() - pindex->nHeight + 1;
+                nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
                 nTime = pindex->nTime;
             }
         }
     }
 
-    nConf = conf;
+    nConf = nConfirmationsIn;
 
     //if we're syncing we won't have instantX information, so accept 1 confirmation 
-    if(conf >= GOVERNANCE_FEE_CONFIRMATIONS){
+    if(nConfirmationsIn >= GOVERNANCE_FEE_CONFIRMATIONS){
         strError = "valid";
-        return true;
     } else {
-        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", GOVERNANCE_FEE_CONFIRMATIONS, conf);
-        LogPrintf ("CGovernanceObject::IsCollateralValid - %s - %d confirmations\n", strError, conf);
+        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
+        LogPrintf ("CGovernanceObject::IsCollateralValid - %s - %d confirmations\n", strError, nConfirmationsIn);
         return false;
     }
+    
+    return true;
 }
 
 void CGovernanceManager::CheckOrphanVotes()
@@ -290,7 +299,7 @@ void CGovernanceManager::NewBlock()
     {
         std::string strError = "";
         int nConf = 0;
-        if(!IsCollateralValid((*it4).nFeeTXHash, (*it4).GetHash(), strError, (*it4).nTime, nConf, GOVERNANCE_FEE_TX)){
+        if(!IsCollateralValid((*it4).nFeeTXHash, (*it4).GetHash(), strError, nConf, GOVERNANCE_FEE_TX)){
             ++it4;
             continue;
         }
@@ -351,7 +360,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         std::string strError = "";
         int nConf = 0;
-        if(!IsCollateralValid(govobj.nFeeTXHash, govobj.GetHash(), strError, govobj.nTime, nConf, GOVERNANCE_FEE_TX)){
+        if(!IsCollateralValid(govobj.nFeeTXHash, govobj.GetHash(), strError, nConf, GOVERNANCE_FEE_TX)){
             LogPrintf("Proposal FeeTX is not valid - %s - %s\n", govobj.nFeeTXHash.ToString(), strError);
             //todo 12.1
             //if(nConf >= 1) vecImmatureGovernanceObjects.push_back(govobj);
@@ -620,7 +629,7 @@ bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError
 
     if(fCheckCollateral){
         int nConf = 0;
-        if(!IsCollateralValid(nFeeTXHash, GetHash(), strError, nTime, nConf, GOVERNANCE_FEE_TX)){
+        if(!IsCollateralValid(nFeeTXHash, GetHash(), strError, nConf, GOVERNANCE_FEE_TX)){
             // strError set in IsCollateralValid
             return false;
         }
