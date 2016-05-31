@@ -13,6 +13,7 @@ CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_
 CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nTotalBloomFilterBytes("nSizeBloom", STAT_OP_SUM | STAT_KEEP);
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
 std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
@@ -139,6 +140,7 @@ void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginal
 void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
 {
     CThinBlockStats::mapBloomFiltersOutBound[GetTimeMillis()] = nBloomFilterSize;
+    CThinBlockStats::nTotalBloomFilterBytes += nBloomFilterSize;
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
@@ -151,6 +153,7 @@ void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
 void CThinBlockStats::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
 {
     CThinBlockStats::mapBloomFiltersInBound[GetTimeMillis()] = nBloomFilterSize;
+    CThinBlockStats::nTotalBloomFilterBytes += nBloomFilterSize;
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
@@ -212,7 +215,7 @@ std::string CThinBlockStats::ToString()
 {
     static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     int i = 0;
-    double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() );
+    double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() - CThinBlockStats::nTotalBloomFilterBytes());
     while (size > 1000) {
 	size /= 1000;
 	i++;
@@ -241,9 +244,15 @@ std::string CThinBlockStats::InBoundPercentToString()
         nThinSizeTotal += (*mi).second.first;
         nOriginalSizeTotal += (*mi).second.second;
     }
+    // We count up the outbound bloom filters. Outbound bloom filters go with Inbound xthins.
+    uint64_t nOutBoundBloomFilterSize = 0;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+        nOutBoundBloomFilterSize += (*mi).second;
+    }
+
 
     if (nOriginalSizeTotal > 0)
-        nCompressionRate = 100 - (100 * (double)nThinSizeTotal / nOriginalSizeTotal);
+        nCompressionRate = 100 - (100 * (double)(nThinSizeTotal + nOutBoundBloomFilterSize) / nOriginalSizeTotal);
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
@@ -268,9 +277,14 @@ std::string CThinBlockStats::OutBoundPercentToString()
         nThinSizeTotal += (*mi).second.first;
         nOriginalSizeTotal += (*mi).second.second;
     }
+    // We count up the inbound bloom filters. Inbound bloom filters go with Outbound xthins.
+    uint64_t nInBoundBloomFilterSize = 0;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+        nInBoundBloomFilterSize += (*mi).second;
+    }
 
     if (nOriginalSizeTotal > 0)
-        nCompressionRate = 100 - (100 * (double)nThinSizeTotal / nOriginalSizeTotal);
+        nCompressionRate = 100 - (100 * (double)(nThinSizeTotal + nInBoundBloomFilterSize) / nOriginalSizeTotal);
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
@@ -426,7 +440,7 @@ std::string CThinBlockStats::ReRequestedTxToString()
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
-    ss << "Re-request rate (last 24hrs): " << nReRequestRate << "% Total re-requests:" << nTotalReRequests;
+    ss << "Tx re-request rate (last 24hrs): " << nReRequestRate << "% Total re-requests:" << nTotalReRequests;
     return ss.str();
 }
 

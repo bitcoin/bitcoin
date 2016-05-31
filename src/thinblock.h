@@ -109,6 +109,7 @@ private:
 	static CStatHistory<uint64_t> nThinSize;
 	static CStatHistory<uint64_t> nBlocks;
 	static CStatHistory<uint64_t> nMempoolLimiterBytesSaved;
+	static CStatHistory<uint64_t> nTotalBloomFilterBytes;
         static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
         static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
         static std::map<int64_t, uint64_t> mapBloomFiltersOutBound;
