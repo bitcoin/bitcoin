@@ -500,7 +500,7 @@ UniValue setban(const UniValue& params, bool fHelp)
         netAddr = resolved;
     }
     else
-        subNet = CSubNet(params[0].get_str());
+        LookupSubNet(params[0].get_str().c_str(), subNet);
 
     if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
         throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Invalid IP/Subnet");
