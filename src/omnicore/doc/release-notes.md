@@ -15,13 +15,15 @@ Table of contents
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
-- [Imported changes and notes](#imported-changes-and-notes)
-  - TODO
 - [Consensus affecting changes](#consensus-affecting-changes)
   - [Trading of all pairs on the Distributed Exchange](#trading-of-all-pairs-on-the-distributed-exchange)
   - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
 - [Other notable changes](#other-notable-changes)
+  - [Raw payload creation API](#raw-payload-creation-api)
+  - [Other API extensions](#other-api-extensions)
+  - [Increased OP_RETURN payload size to 80 byte](#increased-op_return-payload-size-to-80-bytes)
   - [Improved consensus checks](#improved-consensus-checks)
+  - [Various bug fixes and clean-ups](#various-bug-fixes-and-clean-ups)
 - [Change log](#change-log)
 - [Credits](#credits)
 
@@ -47,14 +49,6 @@ Omni Core is based on Bitcoin Core 0.10.4 and can be used as replacement for Bit
 
 Downgrading to a Bitcoin Core version prior 0.10 is not supported due to the new headers-first synchronization.
 
-Imported changes and notes
-==========================
-
-TODO
-------------------------------
-
-TODO
-
 Consensus affecting changes
 ===========================
 
@@ -69,22 +63,22 @@ Trading of all pairs on the Distributed Exchange
 
 Once activated trading of any property against any other (within the same ecosystem) will be permitted on the Distributed Exchange.
 
-Due to this change the existing trading UI in the QT version is no longer suitable and has been disabled for this release.  Please use the RPC interface to interact with the Distributed Exchange in this release.  The trading UI will be re-enabled in a future version to accomodate non-Omni pair trading.
+Due to this change the existing trading UI in the QT version is no longer suitable and has been disabled for this release.  Please use the RPC interface to interact with the Distributed Exchange in this release.  The trading UI will be re-enabled in a future version to accommodate non-Omni pair trading.
 
 This change is identified by `"featureid": 8` and labeled by the GUI as `"Allow trading all pairs on the Distributed Exchange"`.
 
 Fee distribution system on the Distributed Exchange
 ---------------------------------------------------
 
-Omni Core 0.11 contains a fee caching & distribution system.  This system collects small amounts of tokens in a cache until a distribution threshold is reached.  Once this distribution threshold (trigger) is reached for a property, the fees in the cache will be distributed proportionally to holders of the Omni (#1) token based on the percentage of the total Omni tokens owned.
+Omni Core 0.11 contains a fee caching and distribution system.  This system collects small amounts of tokens in a cache until a distribution threshold is reached.  Once this distribution threshold (trigger) is reached for a property, the fees in the cache will be distributed proportionally to holders of the Omni (#1) and Test-Omni (#2) tokens based on the percentage of the total Omni tokens owned.
 
 Once activated fees will be collected from trading of non-Omni pairs on the Distributed Exchange (there is no fee for trading Omni pairs).  The party removing liquidity from the market will incur a 0.05% fee which will be transferred to the fee cache, and subsequently distributed to holders of the Omni token.
 
-- Placing a trade where one side of the pair is Omni (#1) incurs no fee
-- Placing a trade where liquidity is added to the market (ie the trade does not immediately execute an existing trade) incurs no fee
-- Placing a trade where liquidity is removed from the market (ie the trade immediately executes an existing trade) the liquidity taker incurs a 0.05% fee
+- Placing a trade where one side of the pair is Omni (#1) or Test-Omni (#2) incurs no fee
+- Placing a trade where liquidity is added to the market (i.e. the trade does not immediately execute an existing trade) incurs no fee
+- Placing a trade where liquidity is removed from the market (i.e. the trade immediately executes an existing trade) the liquidity taker incurs a 0.05% fee
 
-See also: [omni_getfeecache](#), [omni_getfeedistribution](#), [omni_getfeedistributions](#), [omni_getfeeshare](#), [omni_getfeetrigger](#) JSON-RPC API calls
+See also [fee system JSON-RPC API documentation](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#fee-system).
 
 This change is identified by `"featureid": 9` and labeled by the GUI as `"Fee system (inc 0.05% fee from trades of non-Omni pairs)"`.
 
@@ -92,13 +86,52 @@ This change is identified by `"featureid": 9` and labeled by the GUI as `"Fee sy
 Other notable changes
 =====================
 
+Raw payload creation API
+------------------------
+
+Omni Core 0.0.11 adds support for payload creation via the RPC interface.
+
+The calls are similar to the send transactions (e.g. `omni_send`), without the requirement for an address or any of the balance checks.
+
+This allows integrators to build transactions via the [raw transactions interface](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#raw-transactions).
+
+Other API extensions
+--------------------
+
+An optional parameter `height` can be provided, when using [omni_decodetransaction](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#omni_decodetransaction), which is used to determine the parsing rules. If no `height` is provided, the chain height is used as default.
+
+When retrieving feature activation transactions with [omni_gettransaction](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#omni_gettransaction), then additional fields are included in the result: `"featureid"`, `"activationblock"` and `"minimumversion"`.
+
+The Omni Core client version is now also exposed under the new key `"omnicoreversion"`, as well as inter via `"omnicoreversion_int"`, when using [omni_getinfo](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/src/omnicore/doc/rpc-api.md#omni_getinfo). The old key `"mastercoreversion"` remains for compatibility in this version.
+
+The field `"positioninblock"` was added to RPCs retrieving or listing Omni transactions to provide visibility into the order of an Omni transaction within a block.
+
+Increased OP_RETURN payload size to 80 bytes
+--------------------------------------------
+
+The maximum payload for OP_RETURN outputs was increased to 80 byte.
+
+At this point a majority of the network supports 80 byte payloads, so Omni Core can safely use the larger payload size. This can result in cheaper transactions, as there is no fallback to bare multisig encoding.
+
 Improved consensus checks
 -------------------------
 
-Consensus hashing now covers much more of the state to provide wider coverage of the state.  The state of properties, crowdsales and the Distributed Exchange are included in the new consensus hashing process.
+Consensus hashing now covers much more of the state to provide wider coverage of the state. The state of properties, crowdsales and the Distributed Exchange are included in the new consensus hashing process.
 
-Checkpoints have been updated in Omni Core 0.0.11 to reflect the new consensus hashing algorithm.  Seed blocks (for faster initial transaction scanning) and checkpoints are included with Omni Core 0.0.11 up to block 410,000.
+Checkpoints have been updated in Omni Core 0.0.11 to reflect the new consensus hashing algorithm. Seed blocks (for faster initial transaction scanning) and checkpoints are included with Omni Core 0.0.11 up to block 410,000.
 
+Various bug fixes and clean-ups
+------------------------------
+
+Various smaller improvements were added Omni Core 0.0.11, such as:
+
+- Grow balances to fit on "Overview" tab
+- Switch to "Bitcoin" tab in "Send" page when handling Bitcoin URIs
+- Improve and adjust fee warning threshold when sending transactions
+- Fix missing client notification for new feature activations
+- Fix Travis CI builds without cache
+- Fix syntax error in walletdb key parser
+- Fix too-aggressive database clean in block reorganization events
 
 Change log
 ==========
@@ -120,7 +153,7 @@ The following list includes relevant pull requests merged into this release:
 - #334 Update documentation for getseedblocks, getcurrentconsensushash, setautocommit
 - #335 Disable logging on Windows to speed up CI RPC tests
 - #336 Change the default maximum OP_RETURN size to 80 bytes
-- #341 Add omni_getmetadexhash() RPC call to hash state of MetaDEx
+- #341 Add omni_getmetadexhash RPC call to hash state of MetaDEx
 - #343 Remove pre-OP_RETURN legacy code
 - #344 Fix missing client notification for new activations
 - #349 Add positioninblock attribute to RPC output for transactions
@@ -133,10 +166,15 @@ The following list includes relevant pull requests merged into this release:
 - #371 Add consensus checkpoints for blocks 400,000 & 410,000
 - #372 Add seed blocks for 390,000 to 410,000
 - #375 Temporarily disable the trading UI
-- #TODO TODO
+- #384 Add fee system RPC calls to API doc
+- #385 Add RPC documentation for createpayload calls
+- #386 Don't warn user about unknown block versions
+- #377 Add release notes for Omni Core 0.0.11
+- #376 Bump version to Omni Core 0.0.11-rc1
 ```
 
 Credits
 =======
 
 Thanks to everyone who contributed to this release, and especially the Bitcoin Core developers for providing the foundation for Omni Core!
+
