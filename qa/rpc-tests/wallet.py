@@ -1,4 +1,6 @@
 #!/usr/bin/env python2
+# coding=utf-8
+# ^^^^^^^^^^^^ TODO remove when supporting only Python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -257,6 +259,20 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
         balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
 
+        # Check modes:
+        #   - True: unicode escaped as \u....
+        #   - False: unicode directly as UTF-8
+        for mode in [True, False]:
+            self.nodes[0].ensure_ascii = mode
+            # unicode check: Basic Multilingual Plane, Supplementary Plane respectively
+            for s in [u'рыба', u'𝅘𝅥𝅯']:
+                addr = self.nodes[0].getaccountaddress(s)
+                label = self.nodes[0].getaccount(addr)
+                assert_equal(label.encode('utf-8'), s.encode('utf-8')) # TODO remove encode(...) when supporting only Python3
+                assert(s in self.nodes[0].listaccounts().keys())
+        self.nodes[0].ensure_ascii = True # restore to default
+
+        # maintenance tests
         maintenance = [
             '-rescan',
             '-reindex',
