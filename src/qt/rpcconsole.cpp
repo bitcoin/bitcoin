@@ -327,6 +327,14 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
                 return true;
             }
             break;
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            // forward these events to lineEdit
+            if(obj == autoCompleter->popup()) {
+                QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
+                return true;
+            }
+            break;
         default:
             // Typing in messages widget brings focus to line edit, and redirects key there
             // Exclude most combinations and keys that emit no text, except paste shortcuts
@@ -458,9 +466,7 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         autoCompleter = new QCompleter(wordList, this);
         ui->lineEdit->setCompleter(autoCompleter);
-
-	// clear the lineEdit after activating from QCompleter
-	connect(autoCompleter, SIGNAL(activated(const QString&)), ui->lineEdit, SLOT(clear()), Qt::QueuedConnection);
+        autoCompleter->popup()->installEventFilter(this);
     }
 }
 
