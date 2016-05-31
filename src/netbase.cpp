@@ -195,6 +195,16 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
     return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup);
 }
 
+bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup)
+{
+    std::vector<CNetAddr> vIP;
+    LookupHost(pszName, vIP, 1, fAllowLookup);
+    if(vIP.empty())
+        return false;
+    addr = vIP.front();
+    return true;
+}
+
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
 {
     if (pszName[0] == 0)
@@ -693,22 +703,6 @@ CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
 {
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
     scopeId = scope;
-}
-
-CNetAddr::CNetAddr(const char *pszIp)
-{
-    Init();
-    std::vector<CNetAddr> vIP;
-    if (LookupHost(pszIp, vIP, 1, false))
-        *this = vIP[0];
-}
-
-CNetAddr::CNetAddr(const std::string &strIp)
-{
-    Init();
-    std::vector<CNetAddr> vIP;
-    if (LookupHost(strIp.c_str(), vIP, 1, false))
-        *this = vIP[0];
 }
 
 unsigned int CNetAddr::GetByte(int n) const
