@@ -80,9 +80,6 @@ uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
-std::map<uint256, CTransaction> mapRelay;
-std::deque<std::pair<int64_t, uint256> > vRelayExpiration;
-CCriticalSection cs_mapRelay;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
@@ -215,6 +212,12 @@ namespace {
 
     /** Number of peers from which we're downloading blocks. */
     int nPeersWithValidatedDownloads = 0;
+
+    /** Relay map, protected by cs_main. */
+    typedef std::map<uint256, std::shared_ptr<const CTransaction>> MapRelay;
+    MapRelay mapRelay;
+    /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
+    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -4505,31 +4508,24 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
             }
-            else if (inv.IsKnownType())
+            else if (inv.type == MSG_TX)
             {
-                CTransaction tx;
                 // Send stream from relay memory
                 bool push = false;
-                {
-                    LOCK(cs_mapRelay);
-                    map<uint256, CTransaction>::iterator mi = mapRelay.find(inv.hash);
-                    if (mi != mapRelay.end()) {
-                        tx = (*mi).second;
-                        push = true;
-                    }
-                }
-                if (!push && inv.type == MSG_TX) {
+                auto mi = mapRelay.find(inv.hash);
+                if (mi != mapRelay.end()) {
+                    pfrom->PushMessage(NetMsgType::TX, *mi->second);
+                    push = true;
+                } else {
                     auto txinfo = mempool.info(inv.hash);
                     // To protect privacy, do not answer getdata using the mempool when
                     // that TX couldn't have been INVed in reply to a MEMPOOL request.
                     if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
-                        tx = *txinfo.tx;
+                        pfrom->PushMessage(NetMsgType::TX, *txinfo.tx);
                         push = true;
                     }
                 }
-                if (push) {
-                    pfrom->PushMessage(inv.GetCommand(), tx);
-                } else {
+                if (!push) {
                     vNotFound.push_back(inv);
                 }
             }
@@ -5978,7 +5974,6 @@ bool SendMessages(CNode* pto)
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
                     {
-                        LOCK(cs_mapRelay);
                         // Expire old relay messages
                         while (!vRelayExpiration.empty() && vRelayExpiration.front().first < GetTime())
                         {
@@ -5986,9 +5981,9 @@ bool SendMessages(CNode* pto)
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.insert(std::make_pair(hash, *txinfo.tx));
+                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
                         if (ret.second) {
-                            vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, hash));
+                            vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, ret.first));
                         }
                     }
                     if (vInv.size() == MAX_INV_SZ) {
