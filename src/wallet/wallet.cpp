@@ -42,6 +42,7 @@ bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 bool fSendFreeTransactions = DEFAULT_SEND_FREE_TRANSACTIONS;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
+const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 
 /**
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
@@ -112,16 +113,19 @@ CPubKey CWallet::GenerateNewKey()
         masterKey.SetMaster(key.begin(), key.size());
 
         // derive m/0'
-        // use hardened derivation (child keys > 0x80000000 are hardened after bip32)
-        masterKey.Derive(accountKey, 0 | 0x80000000);
+        // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
+        masterKey.Derive(accountKey, BIP32_HARDENED_KEY_LIMIT);
 
         // derive m/0'/0'
-        accountKey.Derive(externalChainChildKey, 0 | 0x80000000);
+        accountKey.Derive(externalChainChildKey, BIP32_HARDENED_KEY_LIMIT);
 
         // derive child key at next index, skip keys already known to the wallet
         do
         {
-            externalChainChildKey.Derive(childKey, hdChain.nExternalChainCounter | 0x80000000);
+            // always derive hardened keys
+            // childIndex | BIP32_HARDENED_KEY_LIMIT = derive childIndex in hardened child-index-range
+            // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
+            externalChainChildKey.Derive(childKey, hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
             // increment childkey index
             hdChain.nExternalChainCounter++;
         } while(HaveKey(childKey.key.GetPubKey().GetID()));
