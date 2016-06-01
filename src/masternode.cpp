@@ -387,7 +387,8 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     std::string errorMessage = "";
     if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
         LogPrintf("mnb - Got bad Masternode address signature\n");
-        nDos = 100;
+        // There is a bug in MN signatures, ignore such MN but do not ban the peer we got this from
+        // nDos = 100;
         return false;
     }
 
