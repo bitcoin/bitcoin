@@ -1376,7 +1376,7 @@ $ omnicore-cli "omni_getcurrentconsensushash"
 
 ## Raw transactions
 
-The RPCs for raw transactions can be used to decode or create raw Omni transactions.
+The RPCs for raw transactions/payloads can be used to decode or create raw Omni transactions.
 
 ### omni_decodetransaction
 
@@ -1612,6 +1612,420 @@ $ omnicore-cli "omni_createrawtx_change" \
     "[{\"txid\":\"6779a710fcd5f6fb0883ea3306360c3ad8c0a3c5de902768ec57ef3104e65eb1\",\"vout\":4, \
     \"scriptPubKey\":\"76a9147b25205fd98d462880a3e5b0541235831ae959e588ac\",\"value\":0.00068257}]" \
     "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB" 0.000035 1
+```
+
+---
+
+### omni_createpayload_simplesend
+
+Create the payload for a simple send transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
+| `amount`            | string  | required | the amount to send                                                                           |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_simplesend" 1 "100.0"
+```
+
+---
+
+### omni_createpayload_sendall
+
+Create the payload for a send all transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `ecosystem`         | number  | required | the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)             |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_sendall" 2
+```
+
+---
+
+### omni_createpayload_dexsell
+
+Create a payload to place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be 1 for OMNI or 2 for TOMNI)            |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
+| `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
+| `minacceptfee`      | string  | required | a minimum mining fee a buyer has to pay to accept the offer                                  |
+| `action`            | number  | required | the action to take (1 for new offers, 2 to update\", 3 to cancel)                            |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_dexsell" 1 "1.5" "0.75" 25 "0.0005" 1
+```
+
+---
+
+### omni_createpayload_dexaccept
+
+Create the payload for an accept offer for the specified token and amount.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the token to purchase                                                      |
+| `amount`            | string  | required | the amount to accept                                                                         |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_dexaccept" 1 "15.0"
+```
+
+---
+
+### omni_createpayload_sto
+
+Creates the payload for a send-to-owners transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the token to distribute                                                    |
+| `amount`            | string  | required | the amount to distribute                                                                     |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_sto" 3 "5000"
+```
+
+---
+
+### omni_createpayload_issuancefixed
+
+Creates the payload for a new tokens issuance with fixed supply.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)           |
+| `type`              | number  | required | the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)         |
+| `previousid`        | number  | required | an identifier of a predecessor token (use 0 for new tokens)                                  |
+| `category`          | string  | required | a category for the new tokens (can be "")                                                    |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be "")                                                 |
+| `name`              | string  | required | the name of the new tokens to create                                                         |
+| `url`               | string  | required | an URL for further information about the new tokens (can be "")                              |
+| `data`              | string  | required | a description for the new tokens (can be "")                                                 |
+| `amount`            | string  | required | the number of tokens to create                                                               |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_issuancefixed" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" "1000000"
+```
+
+---
+
+### omni_createpayload_issuancecrowdsale
+
+Creates the payload for a new tokens issuance with crowdsale.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)           |
+| `type`              | number  | required | the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)         |
+| `previousid`        | number  | required | an identifier of a predecessor token (use 0 for new tokens)                                  |
+| `category`          | string  | required | a category for the new tokens (can be "")                                                    |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be "")                                                 |
+| `name`              | string  | required | the name of the new tokens to create                                                         |
+| `url`               | string  | required | an URL for further information about the new tokens (can be "")                              |
+| `data`              | string  | required | a description for the new tokens (can be "")                                                 |
+| `propertyiddesired` | number  | required | the identifier of a token eligible to participate in the crowdsale                           |
+| `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
+| `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
+| `earlybonus`        | number  | required | an early bird bonus for participants in percent per week                                     |
+| `issuerpercentage`  | number  | required | a percentage of tokens that will be granted to the issuer                                    |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_issuancecrowdsale" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" 2 "100" 1483228800 30 2
+```
+
+---
+
+### omni_createpayload_issuancemanaged
+
+Creates the payload for a new tokens issuance with manageable supply.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)           |
+| `type`              | number  | required | the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)         |
+| `previousid`        | number  | required | an identifier of a predecessor token (use 0 for new tokens)                                  |
+| `category`          | string  | required | a category for the new tokens (can be "")                                                    |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be "")                                                 |
+| `name`              | string  | required | the name of the new tokens to create                                                         |
+| `url`               | string  | required | an URL for further information about the new tokens (can be "")                              |
+| `data`              | string  | required | a description for the new tokens (can be "")                                                 |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_issuancemanaged" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" ""
+```
+
+---
+
+### omni_createpayload_closecrowdsale
+
+Creates the payload to manually close a crowdsale.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the crowdsale to close                                                     |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_closecrowdsale" 70
+```
+
+---
+
+### omni_createpayload_grant
+
+Creates the payload to issue or grant new units of managed tokens.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens to grant                                                        |
+| `amount`            | string  | required | the amount of tokens to create                                                               |
+| `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_grant" 51 "7000"
+```
+
+---
+
+### omni_createpayload_revoke
+
+Creates the payload to revoke units of managed tokens.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens to revoke                                                       |
+| `amount`            | string  | required | the amount of tokens to revoke                                                               |
+| `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_revoke" 51 "100"
+```
+
+---
+
+### omni_createpayload_changeissuer
+
+Creates the payload to change the issuer on record of the given tokens.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_changeissuer" 3
+```
+
+---
+
+### omni_createpayload_trade
+
+Creates the payload to place a trade offer on the distributed token exchange.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `propertyiddesired` | number  | required | the identifier of the tokens desired in exchange                                             |
+| `amountdesired`     | string  | required | the amount of tokens desired in exchange                                                     |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_trade" 31 "250.0" 1 "10.0"
+```
+
+---
+
+### omni_createpayload_canceltradesbyprice
+
+Creates the payload to cancel offers on the distributed token exchange with the specified price.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `propertyiddesired` | number  | required | the identifier of the tokens desired in exchange                                             |
+| `amountdesired`     | string  | required | the amount of tokens desired in exchange                                                     |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_canceltradesbyprice" 31 "100.0" 1 "5.0"
+```
+
+---
+
+### omni_createpayload_canceltradesbypair
+
+Creates the payload to cancel all offers on the distributed token exchange with the given currency pair.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
+| `propertyiddesired` | number  | required | the identifier of the tokens desired in exchange                                             |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_canceltradesbypair" 1 31
+```
+
+---
+
+### omni_createpayload_cancelalltrades
+
+Creates the payload to cancel all offers on the distributed token exchange with the given currency pair.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `ecosystem`         | number  | required | the ecosystem of the offers to cancel (1 for main ecosystem, 2 for test ecosystem)           |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_cancelalltrades" 1
 ```
 
 ---
