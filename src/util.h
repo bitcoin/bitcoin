@@ -30,9 +30,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
 
-#ifndef WIN32
 #include <signal.h>
-#endif
 
 // Debugging macros
 
