@@ -874,7 +874,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         std::string errorMessage = "";
         if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
             LogPrintf("dsee - Got bad Masternode address signature\n");
-            Misbehaving(pfrom->GetId(), 100);
+            // There is a bug in MN signatures, ignore such MN but do not ban the peer we got this from
+            // Misbehaving(pfrom->GetId(), 100);
             return;
         }
 
