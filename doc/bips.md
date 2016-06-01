@@ -1,5 +1,6 @@
-BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.12.0**):
+BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.13.0**):
 
+* [`BIP 9`](https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki): The changes allowing multiple soft-forks to be deployed in parallel have been implemented since **v0.12.1**  ([PR #7575](https://github.com/bitcoin/bitcoin/pull/7575))
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
 * [`BIP 13`](https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki): The address format for P2SH addresses has been implemented since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
 * [`BIP 14`](https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki): The subversion string is being used as User Agent since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
@@ -16,8 +17,11 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.12.0**):
 * [`BIP 61`](https://github.com/bitcoin/bips/blob/master/bip-0061.mediawiki): The 'reject' protocol message (and the protocol version bump to 70002) was added in **v0.9.0** ([PR #3185](https://github.com/bitcoin/bitcoin/pull/3185)).
 * [`BIP 65`](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki): The CHECKLOCKTIMEVERIFY softfork was merged in **v0.12.0** ([PR #6351](https://github.com/bitcoin/bitcoin/pull/6351)), and backported to **v0.11.2** and **v0.10.4**. Mempool-only CLTV was added in [PR #6124](https://github.com/bitcoin/bitcoin/pull/6124).
 * [`BIP 66`](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki): The strict DER rules and associated version 3 blocks have been implemented since **v0.10.0** ([PR #5713](https://github.com/bitcoin/bitcoin/pull/5713)).
+* [`BIP 68`](https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki): Sequence locks have been implemented as of **v0.12.1**  ([PR #7184](https://github.com/bitcoin/bitcoin/pull/7184)).
 * [`BIP 70`](https://github.com/bitcoin/bips/blob/master/bip-0070.mediawiki) [`71`](https://github.com/bitcoin/bips/blob/master/bip-0071.mediawiki) [`72`](https://github.com/bitcoin/bips/blob/master/bip-0072.mediawiki): Payment Protocol support has been available in Bitcoin Core GUI since **v0.9.0** ([PR #5216](https://github.com/bitcoin/bitcoin/pull/5216)).
 * [`BIP 111`](https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki): `NODE_BLOOM` service bit added, and enforced for all peer versions as of **v0.13.0** ([PR #6579](https://github.com/bitcoin/bitcoin/pull/6579) and [PR #6641](https://github.com/bitcoin/bitcoin/pull/6641)).
+* [`BIP 112`](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki): The CHECKSEQUENCEVERIFY opcode has been implemented since **v0.12.1** ([PR #7524](https://github.com/bitcoin/bitcoin/pull/7524)).
+* [`BIP 113`](https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki): Median time past lock-time calculations have been implemented since **v0.12.1** ([PR #6566](https://github.com/bitcoin/bitcoin/pull/6566)).
 * [`BIP 125`](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki): Opt-in full replace-by-fee signaling honoured in mempool and mining as of **v0.12.0** ([PR 6871](https://github.com/bitcoin/bitcoin/pull/6871)).
 * [`BIP 130`](https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki): direct headers announcement is negotiated with peer versions `>=70012` as of **v0.12.0** ([PR 6494](https://github.com/bitcoin/bitcoin/pull/6494)).
 * [`BIP 133`](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki): feefilter messages are respected and sent for peer versions `>=70013` as of **v0.13.0** ([PR 7542](https://github.com/bitcoin/bitcoin/pull/7542)).
