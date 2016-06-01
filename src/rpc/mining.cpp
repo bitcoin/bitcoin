@@ -264,7 +264,9 @@ static UniValue BIP22ValidationResult(const CValidationState& state)
 std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
     std::string s = vbinfo.name;
-    s.insert(s.begin(), '!');
+    if (!vbinfo.gbt_force) {
+        s.insert(s.begin(), '!');
+    }
     return s;
 }
 
@@ -342,6 +344,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
+    std::set<std::string> setClientRules;
     if (params.size() > 0)
     {
         const UniValue& oparam = params[0].get_obj();
@@ -384,6 +387,14 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             CValidationState state;
             TestBlockValidity(state, Params(), block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
+        }
+
+        const UniValue& aClientRules = find_value(oparam, "rules");
+        if (aClientRules.isArray()) {
+            for (unsigned int i = 0; i < aClientRules.size(); ++i) {
+                const UniValue& v = aClientRules[i];
+                setClientRules.insert(v.get_str());
+            }
         }
     }
 
@@ -544,13 +555,30 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
                 pblock->nVersion |= VersionBitsMask(consensusParams, pos);
                 // FALL THROUGH to get vbavailable set...
             case THRESHOLD_STARTED:
-                // Add to vbavailable (and it's presumably in version already)
+            {
+                const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
                 vbavailable.push_back(Pair(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit));
+                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
+                    if (!vbinfo.gbt_force) {
+                        // If the client doesn't support this, don't indicate it in the [default] version
+                        pblock->nVersion &= ~VersionBitsMask(consensusParams, pos);
+                    }
+                }
                 break;
+            }
             case THRESHOLD_ACTIVE:
+            {
                 // Add to rules only
+                const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
                 aRules.push_back(gbt_vb_name(pos));
+                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
+                    // Not supported by the client; make sure it's safe to proceed
+                    if (!vbinfo.gbt_force) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Support for '%s' rule requires explicit client support", vbinfo.name));
+                    }
+                }
                 break;
+            }
         }
     }
     result.push_back(Pair("version", pblock->nVersion));
