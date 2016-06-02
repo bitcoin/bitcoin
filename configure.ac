@@ -68,6 +68,7 @@ AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
 AC_PATH_PROGS([PYTHON], [python3 python2.7 python2 python])
+AC_PATH_PROGS([PYTHON2], [python2.7 python2 python])
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
@@ -301,6 +302,12 @@ case $host in
   *darwin*)
      TARGET_OS=darwin
      LEVELDB_TARGET_FLAGS="-DOS_MACOSX"
+     AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
+     AC_PATH_TOOL([OTOOL], [otool], otool)
+     AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
+     AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
+     AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
+     AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
        AC_CHECK_PROG([PORT],port, port)
@@ -344,13 +351,6 @@ case $host in
            BUILD_OS=darwin
            ;;
          *)
-           AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
-           AC_PATH_TOOL([OTOOL], [otool], otool)
-           AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
-           AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
-
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
            dnl which may not exist in the path. Stripping the .a is not

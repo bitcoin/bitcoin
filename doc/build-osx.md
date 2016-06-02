@@ -16,6 +16,11 @@ Dependencies
 
     brew install automake berkeley-db4 libtool boost --c++11 miniupnpc openssl pkg-config protobuf --c++11 qt5 libevent
 
+Builing the disk image (`make deploy`) requires `imagemagick`, `rsvg-convert` and `mkisofs` from the `dvdrtools` package together with some OSX relevant python packages
+
+    brew install dvdrtools imagemagick --with-librsvg
+    pip install ds_store mac_alias biplist
+
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. Building with Qt5 is recommended.
 
 Build Bitcoin Core
