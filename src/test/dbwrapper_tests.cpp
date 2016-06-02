@@ -203,5 +203,125 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     BOOST_CHECK(odbw.Read(key, res3));
     BOOST_CHECK_EQUAL(res3.ToString(), in2.ToString());
 }
- 
+
+BOOST_AUTO_TEST_CASE(iterator_ordering)
+{
+    path ph = temp_directory_path() / unique_path();
+    CDBWrapper dbw(ph, (1 << 20), true, false, false);
+    for (int x=0x00; x<256; ++x) {
+        uint8_t key = x;
+        uint32_t value = x*x;
+        BOOST_CHECK(dbw.Write(key, value));
+    }
+
+    boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+    for (int c=0; c<2; ++c) {
+        int seek_start;
+        if (c == 0)
+            seek_start = 0x00;
+        else
+            seek_start = 0x80;
+        it->Seek((uint8_t)seek_start);
+        for (int x=seek_start; x<256; ++x) {
+            uint8_t key;
+            uint32_t value;
+            BOOST_CHECK(it->Valid());
+            if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
+                break;
+            BOOST_CHECK(it->GetKey(key));
+            BOOST_CHECK(it->GetValue(value));
+            BOOST_CHECK_EQUAL(key, x);
+            BOOST_CHECK_EQUAL(value, x*x);
+            it->Next();
+        }
+        BOOST_CHECK(!it->Valid());
+    }
+}
+
+struct StringContentsSerializer {
+    // Used to make two serialized objects the same while letting them have a different lengths
+    // This is a terrible idea
+    string str;
+    StringContentsSerializer() {}
+    StringContentsSerializer(const string& inp) : str(inp) {}
+
+    StringContentsSerializer& operator+=(const string& s) {
+        str += s;
+        return *this;
+    }
+    StringContentsSerializer& operator+=(const StringContentsSerializer& s) { return *this += s.str; }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        if (ser_action.ForRead()) {
+            str.clear();
+            char c = 0;
+            while (true) {
+                try {
+                    READWRITE(c);
+                    str.push_back(c);
+                } catch (const std::ios_base::failure& e) {
+                    break;
+                }
+            }
+        } else {
+            for (size_t i = 0; i < str.size(); i++)
+                READWRITE(str[i]);
+        }
+    }
+};
+
+BOOST_AUTO_TEST_CASE(iterator_string_ordering)
+{
+    char buf[10];
+
+    path ph = temp_directory_path() / unique_path();
+    CDBWrapper dbw(ph, (1 << 20), true, false, false);
+    for (int x=0x00; x<10; ++x) {
+        for (int y = 0; y < 10; y++) {
+            sprintf(buf, "%d", x);
+            StringContentsSerializer key(buf);
+            for (int z = 0; z < y; z++)
+                key += key;
+            uint32_t value = x*x;
+            BOOST_CHECK(dbw.Write(key, value));
+        }
+    }
+
+    boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
+    for (int c=0; c<2; ++c) {
+        int seek_start;
+        if (c == 0)
+            seek_start = 0;
+        else
+            seek_start = 5;
+        sprintf(buf, "%d", seek_start);
+        StringContentsSerializer seek_key(buf);
+        it->Seek(seek_key);
+        for (int x=seek_start; x<10; ++x) {
+            for (int y = 0; y < 10; y++) {
+                sprintf(buf, "%d", x);
+                string exp_key(buf);
+                for (int z = 0; z < y; z++)
+                    exp_key += exp_key;
+                StringContentsSerializer key;
+                uint32_t value;
+                BOOST_CHECK(it->Valid());
+                if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
+                    break;
+                BOOST_CHECK(it->GetKey(key));
+                BOOST_CHECK(it->GetValue(value));
+                BOOST_CHECK_EQUAL(key.str, exp_key);
+                BOOST_CHECK_EQUAL(value, x*x);
+                it->Next();
+            }
+        }
+        BOOST_CHECK(!it->Valid());
+    }
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
