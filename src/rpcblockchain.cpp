@@ -764,6 +764,7 @@ UniValue getchaintips(const UniValue& params, bool fHelp)
         UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("height", block->nHeight));
         obj.push_back(Pair("hash", block->phashBlock->GetHex()));
+        obj.push_back(Pair("difficulty", GetDifficulty(block)));
         obj.push_back(Pair("branchlen", branchLen));
 
         string status;
