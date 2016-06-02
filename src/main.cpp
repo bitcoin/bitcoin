@@ -354,9 +354,20 @@ bool MarkBlockAsReceived(const uint256& hash) {
         // BUIP010 Xtreme Thinblocks: begin section
         int64_t getdataTime = itInFlight->second.second->nTime;
         int64_t now = GetTimeMicros();
-        double nResponseTime = (now - getdataTime) / 1000000.0;
+        double nResponseTime = (double)(now - getdataTime) / 1000000.0;
         LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), nResponseTime);
-        CThinBlockStats::UpdateResponseTime(nResponseTime);
+        {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (pnode->mapThinBlocksInFlight.count(hash)) {
+                    // Only update thinstats if this is actually a thinblock and not a regular block.
+                    // Sometimes we request a thinblock but then revert to requesting a regular block
+                    // as can happen when the thinblock preferential timer is exceeded.
+                    CThinBlockStats::UpdateResponseTime(nResponseTime);
+                    break;
+                }
+            }
+        }
         // BUIP010 Xtreme Thinblocks: end section
         CNodeState *state = State(itInFlight->second.first);
         nQueuedValidatedHeaders -= itInFlight->second.second->fValidatedHeaders;
