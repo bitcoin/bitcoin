@@ -116,6 +116,7 @@ BITCOIN_CORE_H = \
   hdchain.h \
   httprpc.h \
   httpserver.h \
+  indirectmap.h \
   init.h \
   instantx.h \
   key.h \
