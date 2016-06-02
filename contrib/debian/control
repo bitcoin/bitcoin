@@ -2,7 +2,7 @@ Source: bitcoinclassic
 Section: utils
 Priority: optional
 Maintainer: The Classic Devs <packages@bitcoinclassic.com>
-Uploaders: Micah Anderson <micah@debian.org>, Jon Rumion <yamamushi@gmail.com>
+Uploaders: Tom Z <tomz@freedommail.ch>
 Build-Depends: debhelper,
  devscripts,
  automake,
