@@ -378,16 +378,17 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     if(protocolVersion < 70201) {
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
     } else {
-        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) +
+        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
                         pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
                         boost::lexical_cast<std::string>(protocolVersion);
     }
 
     std::string errorMessage = "";
+    LogPrint("masternode", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n", strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
     if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
-        LogPrintf("mnb - Got bad Masternode address signature\n");
+        LogPrintf("mnb - Got bad Masternode address signature, error: %s\n", errorMessage);
         // There is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
         nDos = protocolVersion < 70201 ? 0 : 100;
         return false;
@@ -527,7 +528,7 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 
     sigTime = GetAdjustedTime();
 
-    std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+    std::string strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
         LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage);
