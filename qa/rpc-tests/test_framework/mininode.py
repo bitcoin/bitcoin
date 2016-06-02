@@ -556,7 +556,6 @@ class CBlock(CBlockHeader):
             self.nNonce += 1
             self.rehash()
 
-
     def __repr__(self):
         return "CBlock(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x vtx=%s)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
