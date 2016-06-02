@@ -3855,7 +3855,7 @@ CVerifyDB::~CVerifyDB()
     uiInterface.ShowProgress("", 100);
 }
 
-bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
+bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth, int nTxCheckLimit)
 {
     LOCK(cs_main);
     if (chainActive.Tip() == NULL || chainActive.Tip()->pprev == NULL)
@@ -3872,6 +3872,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     CBlockIndex* pindexState = chainActive.Tip();
     CBlockIndex* pindexFailure = NULL;
     int nGoodTransactions = 0;
+    int nTxCheckLimitCurrent = 0;
     CValidationState state;
     for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
     {
@@ -3915,6 +3916,11 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         }
         if (ShutdownRequested())
             return true;
+        nTxCheckLimitCurrent+=block.vtx.size();
+        if (nTxCheckLimit > 0 && nTxCheckLimitCurrent >= nTxCheckLimit && chainActive.Height() - pindex->nHeight >= std::min(nCheckDepth, MIN_BLOCK_TO_RESPECT_WITH_MAX_TX_CHECK)) {
+            LogPrintf("VerifyDB(): reached max transaction limit (%d)\n", nTxCheckLimit);
+            break;
+        }
     }
     if (pindexFailure)
         return error("VerifyDB(): *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainActive.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
