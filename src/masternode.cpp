@@ -339,6 +339,8 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
 
 bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
 {
+    nDos = 0;
+
     // make sure signature isn't in the future (past is OK)
     if (sigTime > GetAdjustedTime() + 60 * 60) {
         LogPrintf("mnb - Signature rejected, too far into the future %s\n", vin.ToString());
@@ -375,23 +377,55 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     }
 
     std::string strMessage;
+    std::string errorMessage = "";
+
     if(protocolVersion < 70201) {
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
+                        vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+
+        LogPrint("masternode", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+            SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
+            EncodeBase64(&sig[0], sig.size()));
+
+        if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+            if (addr.ToString() != addr.ToString(false))
+            {
+                // maybe it's wrong format, try again with the old one
+                strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) +
+                                vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+
+                LogPrint("masternode", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+                    SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
+                    EncodeBase64(&sig[0], sig.size()));
+
+                if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+                    // didn't work either
+                    LogPrintf("mnb - Got bad Masternode address signature, sanitized error: %s\n", SanitizeString(errorMessage));
+                    // there is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
+                    return false;
+                }
+            } else {
+                // nope, sig is actually wrong
+                LogPrintf("mnb - Got bad Masternode address signature, sanitized error: %s\n", SanitizeString(errorMessage));
+                // there is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
+                return false;
+            }
+        }
     } else {
         strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
                         pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
                         boost::lexical_cast<std::string>(protocolVersion);
-    }
 
-    std::string errorMessage = "";
-    LogPrint("masternode", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n", strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
-    if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
-        LogPrintf("mnb - Got bad Masternode address signature, error: %s\n", errorMessage);
-        // There is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
-        nDos = protocolVersion < 70201 ? 0 : 100;
-        return false;
+        LogPrint("masternode", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n",
+            strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
+
+        if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
+            LogPrintf("mnb - Got bad Masternode address signature, error: %s\n", errorMessage);
+            nDos = 100;
+            return false;
+        }
     }
 
     if(Params().NetworkID() == CBaseChainParams::MAIN) {
