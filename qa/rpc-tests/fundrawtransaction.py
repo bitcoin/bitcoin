@@ -678,6 +678,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert(signedtx["complete"])
         self.nodes[0].sendrawtransaction(signedtx["hex"])
 
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress() : 1}
+        rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
+        result = self.nodes[3].fundrawtransaction(rawtx, )
+        result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2000})
+        result3 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 10000})
+        assert_equal(result['fee']*2, result2['fee'])
+        assert_equal(result['fee']*10, result3['fee'])
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
