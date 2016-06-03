@@ -99,6 +99,9 @@
              <attribute name="horizontalHeaderStretchLastSection">
               <bool>true</bool>
              </attribute>
+             <attribute name="ResizeMode">
+              <enum>QHeaderView::Interactive</enum>
+             </attribute>
              <column>
               <property name="text">
                <string>Alias</string>
@@ -223,6 +226,9 @@
            </property>
            <attribute name="horizontalHeaderStretchLastSection">
             <bool>true</bool>
+           </attribute>
+           <attribute name="ResizeMode">
+            <enum>QHeaderView::Interactive</enum>
            </attribute>
            <column>
             <property name="text">
