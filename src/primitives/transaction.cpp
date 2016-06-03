@@ -74,7 +74,7 @@ void CTransaction::UpdateHash() const
 
 uint256 CTransaction::GetWitnessHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_WITNESS);
+    return SerializeHash(*this, SER_GETHASH, 0);
 }
 
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
@@ -151,5 +151,5 @@ std::string CTransaction::ToString() const
 
 int64_t GetTransactionCost(const CTransaction& tx)
 {
-    return ::GetSerializeSize(tx, SER_NETWORK, SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);
+    return ::GetSerializeSize(tx, SER_NETWORK, SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 }

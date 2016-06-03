@@ -640,8 +640,8 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
         while (true)
         {
             // Read next record
-            CDataStream ssKey(SER_DISK, nSerVersion);
-            CDataStream ssValue(SER_DISK, nSerVersion);
+            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;
@@ -746,8 +746,8 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vec
         while (true)
         {
             // Read next record
-            CDataStream ssKey(SER_DISK, nSerVersion);
-            CDataStream ssValue(SER_DISK, nSerVersion);
+            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;
@@ -998,7 +998,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
         if (fOnlyKeys)
         {
             CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
-            CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION | SERIALIZE_TRANSACTION_WITNESS);
+            CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
             string strType, strErr;
             bool fReadOK;
             {

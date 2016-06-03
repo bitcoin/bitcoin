@@ -11,8 +11,7 @@
 #include "serialize.h"
 #include "uint256.h"
 
-static const int SERIALIZE_TRANSACTION_WITNESS = 0x40000000;
-static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x20000000;
+static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
@@ -293,8 +292,6 @@ template<typename Stream, typename Operation, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, int nType, int nVersion) {
     READWRITE(*const_cast<int32_t*>(&tx.nVersion));
     unsigned char flags = 0;
-    /* Verify that exactly one of SERIALIZE_TRANSACTION_WITNESS and SERIALIZE_TRANSACTION_NO_WITESS is set */
-    assert(!(nVersion & SERIALIZE_TRANSACTION_WITNESS) ^ !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS));
     if (ser_action.ForRead()) {
         const_cast<std::vector<CTxIn>*>(&tx.vin)->clear();
         const_cast<std::vector<CTxOut>*>(&tx.vout)->clear();
