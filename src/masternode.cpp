@@ -359,6 +359,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
 
 bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
 {
+    nDos = 0;
     // make sure signature isn't in the future (past is OK)
     if (sigTime > GetAdjustedTime() + 60 * 60) {
         LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString());
@@ -369,17 +370,6 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     // incorrect ping or its sigTime
     if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true))
         return false;
-
-    std::string strMessage;
-    if(protocolVersion < 70201) {
-        std::string vchPubKey(pubkey.begin(), pubkey.end());
-        std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
-    } else {
-        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
-                        pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
-                        boost::lexical_cast<std::string>(protocolVersion);
-    }
 
     if(protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
         LogPrintf("CMasternodeBroadcast::CheckAndUpdate - ignoring outdated Masternode %s protocol version %d\n", vin.ToString(), protocolVersion);
@@ -409,12 +399,9 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    std::string errorMessage = "";
-    LogPrint("masternode", "CMasternodeBroadcast::CheckAndUpdate - strMessage: %s, pubkey address: %s, sig: %s\n", strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
-    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
-        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Got bad Masternode address signature, error: %s\n", errorMessage);
-        // don't ban for old masternodes, their sigs could be broken because of the bug
-        nDos = protocolVersion < 70201 ? 0 : 100;
+    if (!VerifySignature(nDos))
+    {
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - VerifySignature failed %s\n",vin.ToString());
         return false;
     }
 
@@ -575,21 +562,20 @@ void CMasternodeBroadcast::Relay()
 bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 {
     std::string errorMessage;
+    std::string strMessage;
 
     sigTime = GetAdjustedTime();
 
-    std::string strMessage;
-    if(protocolVersion < 70201) {
-        std::string vchPubKey(pubkey.begin(), pubkey.end());
-        std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
-    } else {
-        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
-                        pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
-                        boost::lexical_cast<std::string>(protocolVersion);
-    }
+    strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
+                    pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
+                    boost::lexical_cast<std::string>(protocolVersion);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyCollateralAddress)) {
+        LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage);
+        return false;
+    }
+
+    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)) {
         LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage);
         return false;
     }
@@ -597,24 +583,66 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
     return true;
 }
 
-bool CMasternodeBroadcast::VerifySignature()
+bool CMasternodeBroadcast::VerifySignature(int& nDos)
 {
-    std::string errorMessage;
-
     std::string strMessage;
+    std::string errorMessage = "";
+    nDos = 0;
+
+    //
+    // REMOVE AFTER MIGRATION TO 12.1
+    //
     if(protocolVersion < 70201) {
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+        strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
+                        vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+
+        LogPrint("masternode", "CMasternodeBroadcast::VerifySignature - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+            SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
+            EncodeBase64(&vchSig[0], vchSig.size()));
+
+        if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
+            if (addr.ToString() != addr.ToString(false))
+            {
+                // maybe it's wrong format, try again with the old one
+                strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) +
+                                vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+
+                LogPrint("masternode", "CMasternodeBroadcast::VerifySignature - second try, sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+                    SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
+                    EncodeBase64(&vchSig[0], vchSig.size()));
+
+                if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
+                    // didn't work either
+                    LogPrintf("CMasternodeBroadcast::VerifySignature - Got bad Masternode address signature, second try, sanitized error: %s\n",
+                        SanitizeString(errorMessage));
+                    // don't ban for old masternodes, their sigs could be broken because of the bug
+                    return false;
+                }
+            } else {
+                // nope, sig is actually wrong
+                LogPrintf("CMasternodeBroadcast::VerifySignature - Got bad Masternode address signature, sanitized error: %s\n",
+                    SanitizeString(errorMessage));
+                // don't ban for old masternodes, their sigs could be broken because of the bug
+                return false;
+            }
+        }
     } else {
+    //
+    // END REMOVE
+    //
         strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
                         pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
                         boost::lexical_cast<std::string>(protocolVersion);
-    }
 
-    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CMasternodeBroadcast::VerifySignature() - Error: %s\n", errorMessage);
-        return false;
+        LogPrint("masternode", "CMasternodeBroadcast::VerifySignature - strMessage: %s, pubkey address: %s, sig: %s\n", strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
+
+        if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
+            LogPrintf("CMasternodeBroadcast::VerifySignature - Got bad Masternode address signature, error: %s\n", errorMessage);
+            nDos = 100;
+            return false;
+        }
     }
 
     return true;
@@ -670,6 +698,7 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 bool CMasternodePing::VerifySignature(CPubKey& pubKeyMasternode, int &nDos) {
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string errorMessage = "";
+    nDos = 0;
 
     if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage))
     {

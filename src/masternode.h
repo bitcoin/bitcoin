@@ -293,7 +293,7 @@ public:
     bool CheckAndUpdate(int& nDos);
     bool CheckInputsAndAdd(int& nDos);
     bool Sign(CKey& keyCollateralAddress);
-    bool VerifySignature();
+    bool VerifySignature(int& nDos);
     void Relay();
 
     ADD_SERIALIZE_METHODS;

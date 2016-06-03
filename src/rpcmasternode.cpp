@@ -778,6 +778,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
         int successful = 0;
         int failed = 0;
+        int nDos = 0;
 
         std::vector<CMasternodeBroadcast> vecMnb;
         UniValue returnObj(UniValue::VOBJ);
@@ -788,7 +789,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         BOOST_FOREACH(CMasternodeBroadcast& mnb, vecMnb) {
             UniValue resultObj(UniValue::VOBJ);
 
-            if(mnb.VerifySignature()) {
+            if(mnb.VerifySignature(nDos)) {
                 successful++;
                 resultObj.push_back(Pair("vin", mnb.vin.ToString()));
                 resultObj.push_back(Pair("addr", mnb.addr.ToString()));
@@ -846,7 +847,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
             int nDos = 0;
             bool fResult;
-            if (mnb.VerifySignature()) {
+            if (mnb.VerifySignature(nDos)) {
                 if (fSafe) {
                     fResult = mnodeman.CheckMnbAndUpdateMasternodeList(mnb, nDos);
                 } else {
