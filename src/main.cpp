@@ -1075,7 +1075,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             if ((dFreeCount + nSize) >= (nFreeLimit*10*1000 * nLargestBlockSeen / BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)) {
                 CThinBlockStats::UpdateMempoolLimiterBytesSaved(nSize);
                 return state.DoS(0,
-                       error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
+                       LogPrint("mempool", "AcceptToMemoryPool : free transaction rejected by rate limiter"),
                        REJECT_INSUFFICIENTFEE, "rate limited free transaction");
             }
             dFreeCount += nSize;
