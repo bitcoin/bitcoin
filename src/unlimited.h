@@ -11,6 +11,7 @@
 #include "stat.h"
 #include "thinblock.h"
 #include "consensus/validation.h"
+#include "requestManager.h"
 #include <univalue.h>
 #include <vector>
 
@@ -131,6 +132,11 @@ extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
 extern bool ThinBlockMessageHandler(std::vector<CNode*>& vNodesCopy);
 extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
+
+// statistics
+void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime);
+
+void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, int64_t nTimeReceived);
 // txn mempool statistics
 extern CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;

@@ -88,9 +88,14 @@ CXThinBlock::CXThinBlock(const CBlock& block)
                 this->collision = true;
         setPartialTxHash.insert(cheapHash);
 
+        // if it is missing from this node, then add it to the thin block
+        if (!((mempool.exists(hash256))||(mapOrphanTransactions.find(hash256) != mapOrphanTransactions.end())))
+	  {
+          vMissingTx.push_back(block.vtx[i]);
+	  }
         // We always add the first tx, the coinbase as it is the one
         // most often missing.
-        if (i == 0) vMissingTx.push_back(block.vtx[i]);
+        else if (i == 0) vMissingTx.push_back(block.vtx[i]);
     }
 }
 
@@ -249,7 +254,7 @@ bool CXThinBlock::process(CNode* pfrom)  // TODO: request from the "best" txn so
         count++;
       }
     }
-    LogPrint("thin", "(exp) Re-requesting %d tx\n", count);
+    //LogPrint("thin", "(exp) Re-requesting %d tx\n", count);
     // Re-request transactions that we are still missing
     CXRequestThinBlockTx thinBlockTx(header.GetHash(), setHashesToRequest);
     pfrom->mapThinBlocksInFlight[header.GetHash()] = GetTime(); // make a note that we are requesting for this block

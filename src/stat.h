@@ -58,6 +58,7 @@ class CStatBase
 public:
   CStatBase() {};
   virtual UniValue GetNow()=0;  // Returns the current value of this statistic
+  virtual UniValue GetTotal()=0;  // Returns the cumulative value of this statistic
   virtual UniValue GetSeries(const std::string& name, int count)=0;  // Returns the historical or series data
 };
 
@@ -115,6 +116,11 @@ name = "";
     return UniValue(value);
   }
 
+  virtual UniValue GetTotal()
+  {
+    return NullUniValue;
+  }
+
   virtual UniValue GetSeries(const std::string& name, int count)
   {
     return NullUniValue;  // Has no series data
@@ -138,7 +144,7 @@ extern int interruptIntervals[];  // When to calculate the next series, in multi
 enum
   {
     STATISTICS_NUM_RANGES = 5,
-    STATISTICS_SAMPLES = 100,
+    STATISTICS_SAMPLES = 300,
   };
 
 #if 0
@@ -171,8 +177,10 @@ template <class DataType,class RecordType=DataType> class CStatHistory:public CS
   boost::asio::deadline_timer timer;
   RecordType history[STATISTICS_NUM_RANGES][STATISTICS_SAMPLES];
   int loc[STATISTICS_NUM_RANGES];
+  int len[STATISTICS_NUM_RANGES];
   uint64_t timerCount;
   unsigned int sampleCount;
+  RecordType total;
 
 public:
 CStatHistory():CStat<DataType,RecordType>(),timer(stat_io_service)
@@ -207,12 +215,15 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
     {
       timerCount=0;
       for (int i=0; i<STATISTICS_NUM_RANGES; i++) loc[i] = 0;
+      for (int i=0; i<STATISTICS_NUM_RANGES; i++) len[i] = 0;
       for (int i=0; i<STATISTICS_NUM_RANGES; i++)
         for (int j=0; j<STATISTICS_SAMPLES; j++)
 	  {
 	    history[i][j] = RecordType();
 	  }
-      Start();
+      total = DataType();
+      this->value = RecordType();
+      Start();      
     }
 
   ~CStatHistory()
@@ -222,11 +233,29 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 
   CStatHistory& operator << (const DataType& rhs) 
     {
-
-      if (op & STAT_OP_SUM) this->value += rhs;
-      else if (op & STAT_OP_AVE) { unsigned int tmp = ++sampleCount; if (tmp==0) tmp=1; statAverage(this->value,rhs,tmp); }
-      else if (op & STAT_OP_MAX) { if (this->value < rhs) this->value = rhs; }
-      else if (op & STAT_OP_MIN) { if (this->value > rhs) this->value = rhs; }
+      if (op & STAT_OP_SUM) 
+	{
+        this->value += rhs;
+        //this->total += rhs;  // Updating total when timer fires
+	}
+      else if (op & STAT_OP_AVE) 
+        { 
+        unsigned int tmp = ++sampleCount; 
+        if (tmp==0) tmp=1; 
+        statAverage(this->value,rhs,tmp);
+        //++totalSamples;
+        //statAverage(this->total,rhs,totalSamples); 
+        }
+      else if (op & STAT_OP_MAX) 
+        { 
+        if (this->value < rhs) this->value = rhs;
+        //if (this->total < rhs) this->total = rhs;
+        }
+      else if (op & STAT_OP_MIN) 
+        { 
+        if (this->value > rhs) this->value = rhs; 
+        //if (this->total > rhs) this->total = rhs; 
+        }
 
     return *this; 
     }
@@ -257,6 +286,11 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
     return len;
   }
 
+  virtual UniValue GetTotal()
+  {
+    if (op & STAT_OP_AVE) return UniValue(total/timerCount);  // If the metric is an average, calculate the average before returning it
+    return UniValue(total);
+  }
 
   virtual UniValue GetSeries(const std::string& name, int count)
   {
@@ -266,7 +300,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 	  {
           UniValue ret(UniValue::VARR);
           if (count<0) count = 0;
-          if (count>STATISTICS_SAMPLES) count = STATISTICS_SAMPLES;
+          if (count>len[series]) count = len[series];
           for (int i=-1*(count-1); i<=0;i++)
 	    {
 	      const RecordType& sample = History(series, i);
@@ -307,9 +341,17 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 
     history[0][loc[0]] = samples[0];
     loc[0]++;
+    len[0]++;
     if (loc[0] >= STATISTICS_SAMPLES) loc[0]=0;
+    if (len[0] >= STATISTICS_SAMPLES) len[0]=STATISTICS_SAMPLES;  // full              
 
     timerCount++;
+
+    // Update the "total" count
+    if ((op & STAT_OP_SUM)||(op & STAT_OP_AVE)) total += samples[0];
+    else if (op & STAT_OP_MAX) { if (total < samples[0]) total = samples[0]; }
+    else if (op & STAT_OP_MIN) { if (total > samples[0]) total = samples[0]; }
+
     // flow the samples if its time
     for (int i=0;i<STATISTICS_NUM_RANGES-1;i++)
       {
@@ -334,10 +376,12 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
                 
 	      }
             // All done accumulating.  Now store the data in the proper history field -- its going in the next series.
-            if (op == STAT_OP_AVE) accumulator /= ((DataType) operateSampleCount[i]);
+            if (op & STAT_OP_AVE) accumulator /= ((DataType) operateSampleCount[i]);
             history[i+1][loc[i+1]] = accumulator;
             loc[i+1]++;
+            len[i+1]++;
             if (loc[i+1] >= STATISTICS_SAMPLES) loc[i+1]=0;  // Wrap around                  
+            if (len[i+1] >= STATISTICS_SAMPLES) len[i+1]=STATISTICS_SAMPLES;  // full              
 	  }
       }
     wait();
@@ -459,6 +503,10 @@ public:
       return *this;
     }
 
+  NUM operator/(const NUM& rhs)
+    {
+      return val/rhs;
+    }
 
   // used in the averaging
   MinValMax& operator/=(const NUM& rhs)

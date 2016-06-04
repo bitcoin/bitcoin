@@ -1036,6 +1036,7 @@ void ThreadSocketHandler()
     while (true) {
         progress = 0;
         stat_io_service.poll(); // BU instrumentation
+        requester.SendRequests(); // BU
         //
         // Disconnect nodes
         //
@@ -2337,9 +2338,9 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
       }
     bytesSent.init("node/" + xmledName + "/bytesSent");
     bytesReceived.init("node/" + xmledName + "/bytesReceived");
-    //txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
-    //firstTx.init("node/" + xmledName + "/firstTxn");
-    //firstBlock.init("node/" + xmledName + "/firstBlock");
+    txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
+    firstTx.init("node/" + xmledName + "/firstTxn");
+    firstBlock.init("node/" + xmledName + "/firstBlock");
 
     {
         LOCK(cs_nLastNodeId);
@@ -2412,6 +2413,7 @@ void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
     assert(ssSend.size() == 0);
     ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
+    currentCommand = pszCommand;
 }
 
 void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
@@ -2444,6 +2446,8 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
+
+    UpdateSendStats(this, currentCommand, nSize + CMessageHeader::HEADER_SIZE, GetTimeMicros());
 
     // Set the checksum
     uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());

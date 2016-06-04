@@ -344,6 +344,7 @@ public:
     int64_t nTimeOffset;
     CAddress addr;
     std::string addrName;
+    const char* currentCommand;  // if in the middle of the send, this is the command type
     CService addrLocal;
     int nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
@@ -437,11 +438,11 @@ public:
     // track the number of bytes received from this node
     CStatHistory<unsigned int > bytesReceived;
     // track the average round trip latency for transaction requests to this node
-    // CStatHistory<unsigned int > txReqLatency;
+    CStatHistory<unsigned int > txReqLatency;
     // track the # of times this node is the first to send us a transaction INV
-    //CStatHistory<unsigned int> firstTx;
+    CStatHistory<unsigned int> firstTx;
     // track the # of times this node is the first to send us a block INV
-    //CStatHistory<unsigned int> firstBlock;
+    CStatHistory<unsigned int> firstBlock;
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();

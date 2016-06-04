@@ -58,7 +58,10 @@ CStatMap statistics __attribute__((init_priority(102)));
 
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
+CStatHistory<uint64_t > recvAmt; 
+CStatHistory<uint64_t > sendAmt; 
 
+// Expedited blocks
 std::vector<CNode*> xpeditedBlk(256,NULL);
 std::vector<CNode*> xpeditedTxn(256,NULL);
 
@@ -73,6 +76,43 @@ std::map<uint256, uint64_t> mapThinBlockTimer;
 
 //! The largest block size that we have seen since startup
 uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
+
+void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime)
+{
+  sendAmt += msgSize;
+  std::string name("net/send/msg/");
+  name.append(strCommand);
+  CStatMap::iterator obj = statistics.find(name);
+  CStatMap::iterator end = statistics.end();
+  if (obj != end)
+    {
+      CStatBase* base = obj->second;
+      if (base)
+	{
+	  CStatHistory<uint64_t>* stat = dynamic_cast<CStatHistory<uint64_t>*> (base);
+          if (stat)
+            *stat << msgSize;
+	}
+    }
+}
+
+void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, int64_t nTimeReceived)
+{
+  recvAmt += msgSize;
+  std::string name = "net/recv/msg/" + strCommand;
+  CStatMap::iterator obj = statistics.find(name);
+  CStatMap::iterator end = statistics.end();
+  if (obj != end)
+    {
+      CStatBase* base = obj->second;
+      if (base)
+	{
+	  CStatHistory<uint64_t>* stat = dynamic_cast<CStatHistory<uint64_t>*> (base);
+          if (stat)
+            *stat << msgSize;
+	}
+    }
+}
 
 void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
 {
@@ -286,12 +326,14 @@ UniValue expedited(const UniValue& params, bool fHelp)
     string strCommand;
     if (fHelp || params.size() < 2)
         throw runtime_error(
-            "expedited block|tx \"node\" on|off\n"
-            "\nRequest expedited blocks and/or transactions from a node\n"
+            "expedited block|tx \"node IP addr\" on|off\n"
+            "\nRequest expedited forwarding of blocks and/or transactions from a node.\nExpedited forwarding sends blocks or transactions to a node before the node requests them.  This reduces latency, potentially at the expense of bandwidth.\n"
             "\nArguments:\n"
-            "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
+            "1. \"block | tx\"        (string, required) choose block to send expedited blocks, tx to send expedited transactions\n"
+            "2. \"node ip addr\"     (string, required) The node's IP address or IP and port (see getpeerinfo for nodes)\n"
+            "3. \"on | off\"     (string, required) Turn expedited service on or off\n"
             "\nExamples:\n" +
-            HelpExampleCli("pushtx", "\"192.168.0.6:8333\" ") + HelpExampleRpc("pushtx", "\"192.168.0.6:8333\", "));
+            HelpExampleCli("expedited", "block \"192.168.0.6:8333\" on") + HelpExampleRpc("expedited", "\"block\", \"192.168.0.6:8333\", \"on\""));
 
     string obj = params[0].get_str();
     string strNode = params[1].get_str();
@@ -420,6 +462,15 @@ void UnlimitedSetup(void)
 
     txAdded.init("memPool/txAdded");
     poolSize.init("memPool/size",STAT_OP_AVE | STAT_KEEP);
+    recvAmt.init("net/recv/total");
+    recvAmt.init("net/send/total");
+    std::vector<std::string> msgTypes = getAllNetMessageTypes();
+    
+    for (std::vector<std::string>::const_iterator i=msgTypes.begin(); i!=msgTypes.end();++i)
+      {
+	new CStatHistory<uint64_t >("net/recv/msg/" +  *i);  // This "leaks" in the sense that it is never freed, but is intended to last the duration of the program.
+	new CStatHistory<uint64_t >("net/send/msg/" +  *i);  // This "leaks" in the sense that it is never freed, but is intended to last the duration of the program.
+      }
 }
 
 
@@ -894,6 +945,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     // conditions in AcceptBlock().
     bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
     const CChainParams& chainparams = Params();
+    pfrom->firstBlock += 1;
     ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL);
     int nDoS;
     if (state.IsInvalid(nDoS)) {
@@ -1145,7 +1197,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
             "\nReturns the current settings for the network send and receive bandwidth and burst in kilobytes per second.\n"
             "\nArguments: \n"
             "1. \"statistic\"     (string, required) Specify what statistic you want\n"
-            "2. \"series\"  (string, optional) Specify what data series you want.  Options are \"now\",\"all\", \"sec10\", \"min5\", \"hourly\", \"daily\",\"monthly\".  Default is all.\n"
+            "2. \"series\"  (string, optional) Specify what data series you want.  Options are \"total\", \"now\",\"all\", \"sec10\", \"min5\", \"hourly\", \"daily\",\"monthly\".  Default is all.\n"
             "3. \"count\"  (string, optional) Specify the number of samples you want.\n"
 
             "\nResult:\n"
@@ -1168,7 +1220,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
 
     string seriesStr;
     if (params.size() < 2)
-      seriesStr = "now";
+      seriesStr = "total";
     else seriesStr = params[1].get_str();
     //uint_t series = 0; 
     //if (series == "now") series |= 1;
@@ -1181,6 +1233,10 @@ UniValue getstat(const UniValue& params, bool fHelp)
         if (seriesStr == "now")
           {
 	    ustat.push_back(Pair("now", base->GetNow()));
+	  }
+        else if (seriesStr == "total")
+          {
+	    ustat.push_back(Pair("total", base->GetTotal()));
 	  }
         else
 	  {
