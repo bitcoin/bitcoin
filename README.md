@@ -1,5 +1,8 @@
 #  BitBar
-##Bitbar official development tree
+## OLD Bitbar development tree
+<br>
+## please go to https://github.com/Crypto-Currency/BitBar for current updates
+<br>
 <br>
 ##  Based on NovaCoin
 <br>
@@ -17,8 +20,8 @@ you can get an updated list at:[Cryptocoinexplorer](http://btb.cryptocoinexplore
 <br>
 <br>
 ### Current zip Releases:
-*  Windows  QT [v.0.4.3.004](https://drive.google.com/file/d/0B1cnD3W8c0jtaEJ1ajFIeDFSZnc/view?usp=sharing) 
-*  Linux source - (use github for most current)
+*  Please go to Bitbar.co for links 
+*  Linux source - Please goto https://github.com/Crypto-Currency/BitBar
 <br>
 <br>
 <br>
