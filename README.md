@@ -20,7 +20,7 @@ you can get an updated list at:[Cryptocoinexplorer](http://btb.cryptocoinexplore
 <br>
 <br>
 ### Current zip Releases:
-*  Please go to Bitbar.co for links 
+*  Please go to http://Bitbar.co for links 
 *  Linux source - Please goto https://github.com/Crypto-Currency/BitBar
 <br>
 <br>
