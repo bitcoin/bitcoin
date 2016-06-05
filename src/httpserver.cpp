@@ -152,8 +152,9 @@ public:
     void WaitExit()
     {
         boost::unique_lock<boost::mutex> lock(cs);
-        while (numThreads > 0)
+        while (numThreads > 0){
             cond.wait(lock);
+        }
     }
 
     /** Return current depth of queue */
@@ -476,7 +477,12 @@ void StopHTTPServer()
     LogPrint("http", "Stopping HTTP server\n");
     if (workQueue) {
         LogPrint("http", "Waiting for HTTP worker threads to exit\n");
+#ifndef WIN32
+        // ToDo: Disabling WaitExit() for Windows platforms is an ugly workaround for the wallet not
+        // closing during a repair-restart. It doesn't hurt, though, because threadHTTP.timed_join
+        // below takes care of this and sends a loopbreak.
         workQueue->WaitExit();
+#endif        
         delete workQueue;
     }
     if (eventBase) {
@@ -492,6 +498,7 @@ void StopHTTPServer()
 #else
         if (!threadHTTP.timed_join(boost::posix_time::milliseconds(2000))) {
 #endif
+
             LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
             event_base_loopbreak(eventBase);
             threadHTTP.join();
