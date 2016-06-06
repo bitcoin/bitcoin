@@ -142,28 +142,28 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
     connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
 
-
     // init "out of sync" warning labels
-   ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
-   ui->labelDarksendSyncStatus->setText("(" + tr("out of sync") + ")");
-   ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
+    ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
+    ui->labelPrivateSendSyncStatus->setText("(" + tr("out of sync") + ")");
+    ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
     if(fLiteMode){
-        ui->frameDarksend->setVisible(false);
+        ui->framePrivateSend->setVisible(false);
     } else {
+        updateAdvancedPSUI(false);
         if(fMasterNode){
-            ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
-            ui->darksendAuto->setText("(" + tr("Disabled") + ")");
-            ui->darksendReset->setText("(" + tr("Disabled") + ")");
-            ui->frameDarksend->setEnabled(false);
+            ui->togglePrivateSend->setText("(" + tr("Disabled") + ")");
+            ui->privateSendAuto->setText("(" + tr("Disabled") + ")");
+            ui->privateSendReset->setText("(" + tr("Disabled") + ")");
+            ui->framePrivateSend->setEnabled(false);
         } else {
             if(!fEnablePrivateSend){
-                ui->toggleDarksend->setText(tr("Start Mixing"));
+                ui->togglePrivateSend->setText(tr("Start Mixing"));
             } else {
-                ui->toggleDarksend->setText(tr("Stop Mixing"));
+                ui->togglePrivateSend->setText(tr("Stop Mixing"));
             }
             timer = new QTimer(this);
-            connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+            connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
             timer->start(1000);
         }
     }
@@ -180,7 +180,7 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 
 OverviewPage::~OverviewPage()
 {
-    if(!fLiteMode && !fMasterNode) disconnect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+    if(!fLiteMode && !fMasterNode) disconnect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
     delete ui;
 }
 
@@ -213,7 +213,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
 
-    updateDarksendProgress();
+    updatePrivateSendProgress();
 
     static int cachedTxLocks = 0;
 
@@ -278,12 +278,14 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        connect(model->getOptionsModel(), SIGNAL(darksendRoundsChanged()), this, SLOT(updateDarksendProgress()));
-        connect(model->getOptionsModel(), SIGNAL(anonymizeDashAmountChanged()), this, SLOT(updateDarksendProgress()));
+        connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
+        connect(model->getOptionsModel(), SIGNAL(anonymizeDashAmountChanged()), this, SLOT(updatePrivateSendProgress()));
+        connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
+        updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
-        connect(ui->darksendAuto, SIGNAL(clicked()), this, SLOT(darksendAuto()));
-        connect(ui->darksendReset, SIGNAL(clicked()), this, SLOT(darksendReset()));
-        connect(ui->toggleDarksend, SIGNAL(clicked()), this, SLOT(toggleDarksend()));
+        connect(ui->privateSendAuto, SIGNAL(clicked()), this, SLOT(privateSendAuto()));
+        connect(ui->privateSendReset, SIGNAL(clicked()), this, SLOT(privateSendReset()));
+        connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
         updateWatchOnlyLabels(model->haveWatchOnly());
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
@@ -317,11 +319,11 @@ void OverviewPage::updateAlerts(const QString &warnings)
 void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
-    ui->labelDarksendSyncStatus->setVisible(fShow);
+    ui->labelPrivateSendSyncStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
 }
 
-void OverviewPage::updateDarksendProgress()
+void OverviewPage::updatePrivateSendProgress()
 {
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
@@ -332,8 +334,8 @@ void OverviewPage::updateDarksendProgress()
 
     if(currentBalance == 0)
     {
-        ui->darksendProgress->setValue(0);
-        ui->darksendProgress->setToolTip(tr("No inputs detected"));
+        ui->privateSendProgress->setValue(0);
+        ui->privateSendProgress->setToolTip(tr("No inputs detected"));
 
         // when balance is zero just show info from settings
         strAnonymizeDashAmount = strAnonymizeDashAmount.remove(strAnonymizeDashAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
@@ -416,7 +418,7 @@ void OverviewPage::updateDarksendProgress()
     float progress = denomPartCalc + anonNormPartCalc + anonFullPartCalc;
     if(progress >= 100) progress = 100;
 
-    ui->darksendProgress->setValue(progress);
+    ui->privateSendProgress->setValue(progress);
 
     QString strToolPip = ("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
                           tr("Denominated") + ": %2%<br/>" +
@@ -425,11 +427,20 @@ void OverviewPage::updateDarksendProgress()
                           tr("Denominated inputs have %5 of %n rounds on average", "", nPrivateSendRounds))
             .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart)
             .arg(nAverageAnonymizedRounds);
-    ui->darksendProgress->setToolTip(strToolPip);
+    ui->privateSendProgress->setToolTip(strToolPip);
 }
 
+void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
+    ui->labelCompletitionText->setVisible(fShowAdvancedPSUI);
+    ui->privateSendProgress->setVisible(fShowAdvancedPSUI);
+    ui->labelSubmittedDenomText->setVisible(fShowAdvancedPSUI);
+    ui->labelSubmittedDenom->setVisible(fShowAdvancedPSUI);
+    ui->privateSendAuto->setVisible(fShowAdvancedPSUI);
+    ui->privateSendReset->setVisible(fShowAdvancedPSUI);
+    ui->labelPrivateSendLastMessage->setVisible(fShowAdvancedPSUI);
+}
 
-void OverviewPage::darkSendStatus()
+void OverviewPage::privateSendStatus()
 {
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
@@ -444,11 +455,11 @@ void OverviewPage::darkSendStatus()
         if(nBestHeight != darkSendPool.cachedNumBlocks)
         {
             darkSendPool.cachedNumBlocks = nBestHeight;
-            updateDarksendProgress();
+            updatePrivateSendProgress();
 
-            ui->darksendEnabled->setText(tr("Disabled"));
-            ui->darksendStatus->setText("");
-            ui->toggleDarksend->setText(tr("Start Mixing"));
+            ui->labelPrivateSendEnabled->setText(tr("Disabled"));
+            ui->labelPrivateSendLastMessage->setText("");
+            ui->togglePrivateSend->setText(tr("Start Mixing"));
         }
 
         return;
@@ -459,19 +470,19 @@ void OverviewPage::darkSendStatus()
     {
         // Balance and number of transactions might have changed
         darkSendPool.cachedNumBlocks = nBestHeight;
-        updateDarksendProgress();
+        updatePrivateSendProgress();
 
-        ui->darksendEnabled->setText(tr("Enabled"));
+        ui->labelPrivateSendEnabled->setText(tr("Enabled"));
     }
 
     QString strStatus = QString(darkSendPool.GetStatus().c_str());
 
     QString s = tr("Last PrivateSend message:\n") + strStatus;
 
-    if(s != ui->darksendStatus->text())
+    if(s != ui->labelPrivateSendLastMessage->text())
         LogPrintf("Last PrivateSend message: %s\n", strStatus.toStdString());
 
-    ui->darksendStatus->setText(s);
+    ui->labelPrivateSendLastMessage->setText(s);
 
     if(darkSendPool.sessionDenom == 0){
         ui->labelSubmittedDenom->setText(tr("N/A"));
@@ -484,11 +495,11 @@ void OverviewPage::darkSendStatus()
 
 }
 
-void OverviewPage::darksendAuto(){
+void OverviewPage::privateSendAuto(){
     darkSendPool.DoAutomaticDenominating();
 }
 
-void OverviewPage::darksendReset(){
+void OverviewPage::privateSendReset(){
     darkSendPool.Reset();
 
     QMessageBox::warning(this, tr("PrivateSend"),
@@ -496,7 +507,7 @@ void OverviewPage::darksendReset(){
         QMessageBox::Ok, QMessageBox::Ok);
 }
 
-void OverviewPage::toggleDarksend(){
+void OverviewPage::togglePrivateSend(){
     QSettings settings;
     // Popup some information on first mixing
     QString hasMixed = settings.value("hasMixed").toString();
@@ -539,10 +550,10 @@ void OverviewPage::toggleDarksend(){
     darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
 
     if(!fEnablePrivateSend){
-        ui->toggleDarksend->setText(tr("Start Mixing"));
+        ui->togglePrivateSend->setText(tr("Start Mixing"));
         darkSendPool.UnlockCoins();
     } else {
-        ui->toggleDarksend->setText(tr("Stop Mixing"));
+        ui->togglePrivateSend->setText(tr("Stop Mixing"));
 
         /* show darksend configuration if client has defaults set */
 

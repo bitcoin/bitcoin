@@ -46,6 +46,7 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        ShowAdvancedPSUI,       // bool
         PrivateSendRounds,      // int
         AnonymizeDashAmount,    // int
         ShowMasternodesTab,     // bool
@@ -69,6 +70,7 @@ public:
     QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() { return fCoinControlFeatures; }
+    bool getShowAdvancedPSUI() { return fShowAdvancedPSUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
@@ -84,6 +86,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
+    bool fShowAdvancedPSUI;
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
 
@@ -92,8 +95,9 @@ private:
 
 Q_SIGNALS:
     void displayUnitChanged(int unit);
-    void darksendRoundsChanged();
+    void privateSendRoundsChanged();
     void anonymizeDashAmountChanged();
+    void advancedPSUIChanged(bool);
     void coinControlFeaturesChanged(bool);
 };
 

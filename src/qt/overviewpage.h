@@ -37,7 +37,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 public Q_SLOTS:
-    void darkSendStatus();
+    void privateSendStatus();
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
@@ -62,11 +62,12 @@ private:
     TransactionFilterProxy *filter;
 
 private Q_SLOTS:
-    void toggleDarksend();
-    void darksendAuto();
-    void darksendReset();
+    void togglePrivateSend();
+    void privateSendAuto();
+    void privateSendReset();
     void updateDisplayUnit();
-    void updateDarksendProgress();
+    void updatePrivateSendProgress();
+    void updateAdvancedPSUI(bool fShowAdvancedPSUI);
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);

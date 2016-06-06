@@ -197,6 +197,7 @@ void OptionsDialog::setMapper()
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
+    mapper->addMapping(ui->showAdvancedPSUI, OptionsModel::ShowAdvancedPSUI);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
     mapper->addMapping(ui->anonymizeDash, OptionsModel::AnonymizeDashAmount);

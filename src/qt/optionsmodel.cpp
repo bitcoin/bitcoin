@@ -84,6 +84,10 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("fShowMasternodesTab"))
         settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());
 
+    if (!settings.contains("fShowAdvancedPSUI"))
+        settings.setValue("fShowAdvancedPSUI", false);
+    fShowAdvancedPSUI = settings.value("fShowAdvancedPSUI", false).toBool();
+
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //
@@ -110,7 +114,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
 
-    // Darksend
+    // PrivateSend
     if (!settings.contains("nPrivateSendRounds"))
         settings.setValue("nPrivateSendRounds", 2);
     if (!SoftSetArg("-privatesendrounds", settings.value("nPrivateSendRounds").toString().toStdString()))
@@ -239,6 +243,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ShowAdvancedPSUI:
+            return fShowAdvancedPSUI;
         case PrivateSendRounds:
             return settings.value("nPrivateSendRounds");
         case AnonymizeDashAmount:
@@ -367,12 +373,17 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case ShowAdvancedPSUI:
+            fShowAdvancedPSUI = value.toBool();
+            settings.setValue("fShowAdvancedPSUI", fShowAdvancedPSUI);
+            Q_EMIT advancedPSUIChanged(fShowAdvancedPSUI);
+            break;
         case PrivateSendRounds:
             if (settings.value("nPrivateSendRounds") != value)
             {
                 nPrivateSendRounds = value.toInt();
                 settings.setValue("nPrivateSendRounds", nPrivateSendRounds);
-                Q_EMIT darksendRoundsChanged();
+                Q_EMIT privateSendRoundsChanged();
             }
             break;
         case AnonymizeDashAmount:

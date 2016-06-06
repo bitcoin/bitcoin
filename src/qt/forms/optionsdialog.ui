@@ -164,6 +164,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="showAdvancedPSUI">
+            <property name="toolTip">
+             <string>Show additional information and buttons for PrivateSend on overview screen.</string>
+            </property>
+            <property name="text">
+             <string>Enable advanced PrivateSend interface</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="spendZeroConfChange">
             <property name="toolTip">
              <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
