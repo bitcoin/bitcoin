@@ -230,6 +230,47 @@ QAbstractSpinBox::down-arrow {
 image:url(':/images/light/drkblue_downArrow_small');
 }
 
+QCheckBox {
+spacing: 5px;
+}
+
+QCheckBox::indicator {
+width: 16px;
+height: 16px;
+}
+
+QCheckBox::indicator:unchecked {
+image:url(':/images/light/unchecked');
+}
+
+QCheckBox::indicator:unchecked:hover {
+image:url(':/images/light/unchecked');
+}
+
+QCheckBox::indicator:unchecked:pressed {
+image:url(':/images/light/checked');
+}
+
+QCheckBox::indicator:checked {
+image:url(':/images/light/checked');
+}
+
+QCheckBox::indicator:checked:hover {
+image:url(':/images/light/checked');
+}
+
+QCheckBox::indicator:checked:pressed {
+image:url(':/images/light/unchecked');
+}
+
+QCheckBox::indicator:indeterminate:hover {
+image:url(':/images/light/unchecked');
+}
+
+QCheckBox::indicator:indeterminate:pressed {
+image:url(':/images/light/checked');
+}
+
 /*******************************************************/
 
 QHeaderView { /* Table Header */
@@ -1209,6 +1250,10 @@ border-radius:5px;
 padding-top:20px;
 padding-bottom:20px; */
 min-height:27px;
+}
+
+#checkboxSubtractFeeFromAmount {
+padding-left:10px;
 }
 
 

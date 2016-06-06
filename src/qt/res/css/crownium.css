@@ -234,6 +234,47 @@ QAbstractSpinBox::down-arrow {
 image:url(':/images/crownium/drkblue_downArrow_small');
 }
 
+QCheckBox {
+spacing: 5px;
+}
+
+QCheckBox::indicator {
+width: 16px;
+height: 16px;
+}
+
+QCheckBox::indicator:unchecked {
+image:url(':/images/crownium/unchecked');
+}
+
+QCheckBox::indicator:unchecked:hover {
+image:url(':/images/crownium/unchecked');
+}
+
+QCheckBox::indicator:unchecked:pressed {
+image:url(':/images/crownium/checked');
+}
+
+QCheckBox::indicator:checked {
+image:url(':/images/crownium/checked');
+}
+
+QCheckBox::indicator:checked:hover {
+image:url(':/images/crownium/checked');
+}
+
+QCheckBox::indicator:checked:pressed {
+image:url(':/images/crownium/unchecked');
+}
+
+QCheckBox::indicator:indeterminate:hover {
+image:url(':/images/crownium/unchecked');
+}
+
+QCheckBox::indicator:indeterminate:pressed {
+image:url(':/images/crownium/checked');
+}
+
 /*******************************************************/
 
 QHeaderView { /* Table Header */
@@ -1221,6 +1262,9 @@ padding-bottom:20px; */
 min-height:27px;
 }
 
+#checkboxSubtractFeeFromAmount {
+padding-left:10px;
+}
 
 /* SEND COINS ENTRY */
 
