@@ -46,15 +46,13 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     QHBoxLayout *hlayout = new QHBoxLayout();
     hlayout->setContentsMargins(0,0,0,0);
-
     if (platformStyle->getUseExtraSpacing()) {
-        hlayout->setSpacing(5);
-        hlayout->addSpacing(26);
-    } else {
         hlayout->setSpacing(0);
-        hlayout->addSpacing(23);
+        hlayout->addSpacing(6);
+    } else {
+        hlayout->setSpacing(1);
+        hlayout->addSpacing(5);
     }
-
     QString theme = GUIUtil::getThemeName();
     watchOnlyWidget = new QComboBox(this);
     watchOnlyWidget->setFixedWidth(24);
@@ -65,7 +63,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     dateWidget = new QComboBox(this);
     if (platformStyle->getUseExtraSpacing()) {
-        dateWidget->setFixedWidth(121);
+        dateWidget->setFixedWidth(120);
     } else {
         dateWidget->setFixedWidth(120);
     }
@@ -81,9 +79,9 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     typeWidget = new QComboBox(this);
     if (platformStyle->getUseExtraSpacing()) {
-        typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH+1);
-    } else {
         typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH);
+    } else {
+        typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH-1);
     }
 
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
@@ -108,6 +106,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 #if QT_VERSION >= 0x040700
     addressWidget->setPlaceholderText(tr("Enter address or label to search"));
 #endif
+    addressWidget->setObjectName("addressWidget");
     hlayout->addWidget(addressWidget);
 
     amountWidget = new QLineEdit(this);
@@ -115,11 +114,12 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     amountWidget->setPlaceholderText(tr("Min amount"));
 #endif
     if (platformStyle->getUseExtraSpacing()) {
-        amountWidget->setFixedWidth(97);
+        amountWidget->setFixedWidth(118);
     } else {
-        amountWidget->setFixedWidth(100);
-    }
+        amountWidget->setFixedWidth(125);
+    }  
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
+    amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
@@ -592,6 +592,6 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
 // show/hide column Watch-only
 void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
 {
-    watchOnlyWidget->setVisible(fHaveWatchOnly);
+    watchOnlyWidget->setVisible(true);
     transactionView->setColumnHidden(TransactionTableModel::Watchonly, !fHaveWatchOnly);
 }

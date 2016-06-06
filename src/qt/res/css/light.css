@@ -1501,10 +1501,24 @@ border:1px solid #d7d7d7;
 
 /* TRANSACTIONS PAGE */
 
-TransactionView QLineEdit { /* Address Filter */
+TransactionView QLineEdit { /* Filters */
 margin-bottom:2px;
 margin-right:1px;
 min-width:111px;
+text-align:center;
+}
+
+TransactionView QLineEdit#addressWidget { /* Address Filter */
+margin-bottom:2px;
+margin-right:1px;
+min-width:405px;
+text-align:center;
+}
+
+TransactionView QLineEdit#amountWidget { /* Amount Filter */
+margin-bottom:2px;
+margin-right:1px;
+max-width:100px;
 text-align:center;
 }
 
