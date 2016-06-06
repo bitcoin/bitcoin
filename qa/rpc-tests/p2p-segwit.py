@@ -281,10 +281,8 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
 
-    # Mine enough blocks to lock in segwit, but don't activate.
-    # TODO: we could verify that lockin only happens at the right threshold of
-    # signalling blocks, rather than just at the right period boundary.
-    def advance_to_segwit_lockin(self):
+    # Mine enough blocks for segwit's vb state to be 'started'.
+    def advance_to_segwit_started(self):
         height = self.nodes[0].getblockcount()
         # Will need to rewrite the tests here if we are past the first period
         assert(height < VB_PERIOD - 1)
@@ -292,6 +290,13 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'defined')
         # Advance to end of period, status should now be 'started'
         self.nodes[0].generate(VB_PERIOD-height-1)
+        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'started')
+
+    # Mine enough blocks to lock in segwit, but don't activate.
+    # TODO: we could verify that lockin only happens at the right threshold of
+    # signalling blocks, rather than just at the right period boundary.
+    def advance_to_segwit_lockin(self):
+        height = self.nodes[0].getblockcount()
         assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'started')
         # Advance to end of period, and verify lock-in happens at the end
         self.nodes[0].generate(VB_PERIOD-1)
@@ -1522,6 +1527,21 @@ class SegWitTest(BitcoinTestFramework):
 
         # TODO: test p2sh sigop counting
 
+    def test_getblocktemplate_before_lockin(self):
+        print("\tTesting getblocktemplate setting of segwit versionbit (before lockin)")
+        block_version = (self.nodes[0].getblocktemplate())['version']
+        assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
+
+        # Workaround:
+        # Can either change the tip, or change the mempool and wait 5 seconds
+        # to trigger a recomputation of getblocktemplate.
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        # Using mocktime lets us avoid sleep()
+        self.nodes[0].setmocktime(int(time.time())+10)
+
+        block_version = self.nodes[0].getblocktemplate({"rules" : ["segwit"]})['version']
+        assert(block_version & (1 << VB_WITNESS_BIT) != 0)
+        self.nodes[0].setmocktime(0) # undo mocktime
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
@@ -1553,6 +1573,10 @@ class SegWitTest(BitcoinTestFramework):
         self.test_non_witness_transaction() # non-witness tx's are accepted
         self.test_unnecessary_witness_before_segwit_activation()
         self.test_block_relay(segwit_activated=False)
+
+        # Advance to segwit being 'started'
+        self.advance_to_segwit_started()
+        self.test_getblocktemplate_before_lockin()
 
         sync_blocks(self.nodes)
 
