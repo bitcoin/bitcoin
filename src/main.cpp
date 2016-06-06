@@ -5157,6 +5157,25 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     // BUIP010 Xtreme Thinblocks: begin section
     else if (strCommand == NetMsgType::GET_XTHIN && !fImporting && !fReindex) // Ignore blocks received while importing
     {
+
+        // Check for Misbehaving and DOS
+        // If they make more than 20 requests in 10 minutes then disconnect them
+        {
+            LOCK(cs_vNodes);
+            if (pfrom->nGetXthinLastTime <= 0)
+                pfrom->nGetXthinLastTime = GetTime();
+            uint64_t nNow = GetTime();
+            pfrom->nGetXthinCount *= pow(1.0 - 1.0/600.0, (double)(nNow - pfrom->nGetXthinLastTime));
+            pfrom->nGetXthinLastTime = nNow;
+            pfrom->nGetXthinCount += 1;
+            LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
+            if (pfrom->nGetXthinCount >= 20) {
+                LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
+            }
+        }
+
         CBloomFilter filterMemPool;
         CInv inv;
         vRecv >> inv >> filterMemPool;
@@ -5492,6 +5511,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Check for Misbehaving and DOS
         // If they make more than 20 requests in 10 minutes then disconnect them
         {
+            LOCK(cs_vNodes);
             if (pfrom->nGetXBlockTxLastTime <= 0)
                 pfrom->nGetXBlockTxLastTime = GetTime();
             uint64_t nNow = GetTime();
