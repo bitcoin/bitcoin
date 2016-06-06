@@ -515,7 +515,7 @@ public:
     // BUIP010:
     bool ThinBlockCapable()
     {
-        if ((nServices & NODE_XTHIN) && (nServices & NODE_BLOOM)) return true;
+        if (nServices & NODE_XTHIN) return true;
         return false;
     }
 

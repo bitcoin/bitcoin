@@ -4431,20 +4431,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         return true;
     }
 
-// BUIP010 Extrem Thinblocks:  We need bloom filtering. We do not turn bloom filtering off
-//    if (!(nLocalServices & NODE_BLOOM) &&
-//              (strCommand == NetMsgType::FILTERLOAD ||
-//               strCommand == NetMsgType::FILTERADD ||
-//               strCommand == NetMsgType::FILTERCLEAR))
-//    {
-//        if (pfrom->nVersion >= NO_BLOOM_VERSION) {
-//            Misbehaving(pfrom->GetId(), 100);
-//            return false;
-//        } else if (GetBoolArg("-enforcenodebloom", false)) {
-//            pfrom->fDisconnect = true;
-//            return false;
-//        }
-//    }
+    if (!(nLocalServices & NODE_BLOOM) &&
+              (strCommand == NetMsgType::FILTERLOAD ||
+               strCommand == NetMsgType::FILTERADD ||
+               strCommand == NetMsgType::FILTERCLEAR))
+    {
+        if (pfrom->nVersion >= NO_BLOOM_VERSION) {
+            Misbehaving(pfrom->GetId(), 100);
+            return false;
+        } else if (GetBoolArg("-enforcenodebloom", false)) {
+            pfrom->fDisconnect = true;
+            return false;
+        }
+    }
 
 
     if (strCommand == NetMsgType::VERSION)
