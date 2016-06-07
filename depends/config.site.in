@@ -1,24 +1,26 @@
+depends_prefix="`dirname ${ac_site_file}`/.."
+
 cross_compiling=maybe
 host_alias=@HOST@
 ac_tool_prefix=${host_alias}-
 
 if test -z $with_boost; then
-  with_boost=$prefix
+  with_boost=$depends_prefix
 fi
 if test -z $with_qt_plugindir; then
-  with_qt_plugindir=$prefix/plugins
+  with_qt_plugindir=$depends_prefix/plugins
 fi
 if test -z $with_qt_translationdir; then
-  with_qt_translationdir=$prefix/translations
+  with_qt_translationdir=$depends_prefix/translations
 fi
 if test -z $with_qt_bindir; then
-  with_qt_bindir=$prefix/native/bin
+  with_qt_bindir=$depends_prefix/native/bin
 fi
 if test -z $with_protoc_bindir; then
-  with_protoc_bindir=$prefix/native/bin
+  with_protoc_bindir=$depends_prefix/native/bin
 fi
 if test -z $with_comparison_tool; then
-  with_comparison_tool=$prefix/native/share/BitcoindComparisonTool_jar/BitcoindComparisonTool.jar
+  with_comparison_tool=$depends_prefix/native/share/BitcoindComparisonTool_jar/BitcoindComparisonTool.jar
 fi
 
 
@@ -41,32 +43,32 @@ fi
 
 if test x@host_os@ = xmingw32; then
   if test -z $with_qt_incdir; then
-    with_qt_incdir=$prefix/include
+    with_qt_incdir=$depends_prefix/include
   fi
   if test -z $with_qt_libdir; then
-    with_qt_libdir=$prefix/lib
+    with_qt_libdir=$depends_prefix/lib
   fi
 fi
 
-PATH=$prefix/native/bin:$PATH
+PATH=$depends_prefix/native/bin:$PATH
 PKG_CONFIG="`which pkg-config` --static"
 
 # These two need to remain exported because pkg-config does not see them
 # otherwise. That means they must be unexported at the end of configure.ac to
 # avoid ruining the cache. Sigh.
 
-export PKG_CONFIG_LIBDIR=$prefix/lib/pkgconfig
-export PKG_CONFIG_PATH=$prefix/share/pkgconfig
+export PKG_CONFIG_LIBDIR=$depends_prefix/lib/pkgconfig
+export PKG_CONFIG_PATH=$depends_prefix/share/pkgconfig
 
-CPPFLAGS="-I$prefix/include/ $CPPFLAGS"
-LDFLAGS="-L$prefix/lib $LDFLAGS"
+CPPFLAGS="-I$depends_prefix/include/ $CPPFLAGS"
+LDFLAGS="-L$depends_prefix/lib $LDFLAGS"
 
 CC="@CC@"
 CXX="@CXX@"
 OBJC="${CC}"
 OBJCXX="${CXX}"
-CCACHE=$prefix/native/bin/ccache
-PYTHONPATH=$prefix/native/lib/python/dist-packages:$PYTHONPATH
+CCACHE=$depends_prefix/native/bin/ccache
+PYTHONPATH=$depends_prefix/native/lib/python/dist-packages:$PYTHONPATH
 
 if test -n "@AR@"; then
   AR=@AR@
