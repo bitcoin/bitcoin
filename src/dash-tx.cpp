@@ -76,7 +76,7 @@ static int AppInitRawTx(int argc, char* argv[])
         strUsage = HelpMessageGroup(_("Commands:"));
         strUsage += HelpMessageOpt("delin=N", _("Delete input N from TX"));
         strUsage += HelpMessageOpt("delout=N", _("Delete output N from TX"));
-        strUsage += HelpMessageOpt("in=TXID:VOUT", _("Add input to TX"));
+        strUsage += HelpMessageOpt("in=TXID:VOUT(:SEQUENCE_NUMBER)", _("Add input to TX"));
         strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
         strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
         strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
@@ -190,15 +190,15 @@ static void MutateTxLocktime(CMutableTransaction& tx, const string& cmdVal)
 
 static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
 {
+    std::vector<std::string> vStrInputParts;
+    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+
     // separate TXID:VOUT in string
-    size_t pos = strInput.find(':');
-    if ((pos == string::npos) ||
-        (pos == 0) ||
-        (pos == (strInput.size() - 1)))
+    if (vStrInputParts.size()<2)
         throw runtime_error("TX input missing separator");
 
     // extract and validate TXID
-    string strTxid = strInput.substr(0, pos);
+    string strTxid = vStrInputParts[0];
     if ((strTxid.size() != 64) || !IsHex(strTxid))
         throw runtime_error("invalid TX input txid");
     uint256 txid(uint256S(strTxid));
@@ -207,13 +207,18 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
     static const unsigned int maxVout = MaxBlockSize(true) / minTxOutSz;
 
     // extract and validate vout
-    string strVout = strInput.substr(pos + 1, string::npos);
+    string strVout = vStrInputParts[1];
     int vout = atoi(strVout);
     if ((vout < 0) || (vout > (int)maxVout))
         throw runtime_error("invalid TX input vout");
 
+    // extract the optional sequence number
+    uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max();
+    if (vStrInputParts.size() > 2)
+        nSequenceIn = atoi(vStrInputParts[2]);
+
     // append to transaction input list
-    CTxIn txin(txid, vout);
+    CTxIn txin(txid, vout, CScript(), nSequenceIn);
     tx.vin.push_back(txin);
 }
 
