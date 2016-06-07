@@ -2601,12 +2601,8 @@ int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {
 
 /* static */ uint64_t CNode::CalculateKeyedNetGroup(const CAddress& ad)
 {
-    static uint64_t k0 = 0, k1 = 0;
-    while (k0 == 0 && k1 == 0) {
-        // Make sure this only runs on the first invocation.
-        GetRandBytes((unsigned char*)&k0, sizeof(k0));
-        GetRandBytes((unsigned char*)&k1, sizeof(k1));
-    }
+    static const uint64_t k0 = GetRand(std::numeric_limits<uint64_t>::max());
+    static const uint64_t k1 = GetRand(std::numeric_limits<uint64_t>::max());
 
     std::vector<unsigned char> vchNetGroup(ad.GetGroup());
 
