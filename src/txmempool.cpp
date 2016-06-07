@@ -831,16 +831,6 @@ std::shared_ptr<const CTransaction> CTxMemPool::get(const uint256& hash) const
     return i->GetSharedTx();
 }
 
-bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
-{
-    auto tx = get(hash);
-    if (tx) {
-        result = *tx;
-        return true;
-    }
-    return false;
-}
-
 TxMempoolInfo CTxMemPool::info(const uint256& hash) const
 {
     LOCK(cs);
@@ -960,9 +950,9 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
-    CTransaction tx;
-    if (mempool.lookup(txid, tx)) {
-        coins = CCoins(tx, MEMPOOL_HEIGHT);
+    shared_ptr<const CTransaction> ptx = mempool.get(txid);
+    if (ptx) {
+        coins = CCoins(*ptx, MEMPOOL_HEIGHT);
         return true;
     }
     return (base->GetCoins(txid, coins) && !coins.IsPruned());
