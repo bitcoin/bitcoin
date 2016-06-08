@@ -197,6 +197,26 @@ public:
     {
         int64_t nStart = GetTimeMillis();
 
+
+        // LOAD SERIALIZED FILE TO DETERMINE SAFETY OF SAVING INTO THAT FILE
+
+        /*
+
+
+            2016-06-02 21:23:55     dash-shutoff |      Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:23:55     dash-shutoff |      Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:29:17            dashd |      Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:29:17            dashd | CFlatDB - Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:29:25     dash-shutoff |      Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:30:07     dash-shutoff |      Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:30:16            dashd |      Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
+            2016-06-02 21:30:16            dashd | CFlatDB - Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
+
+            
+            This fact can be demonstrated by adding a governance item, then stopping and starting the client. 
+            With the code enabled, "Seen Budgets" will equal 0, whereas the object should have one entry. 
+        */
+
         LogPrintf("Verifying %s format...\n", strFilename);
         T tmpObjToLoad;
         ReadResult readResult = Read(tmpObjToLoad, true);

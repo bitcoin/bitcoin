@@ -9,9 +9,9 @@
 #define MASTERNODE_SYNC_SPORKS            1
 #define MASTERNODE_SYNC_LIST              2
 #define MASTERNODE_SYNC_MNW               3
-#define MASTERNODE_SYNC_BUDGET            4
-#define MASTERNODE_SYNC_BUDGET_PROP       10
-#define MASTERNODE_SYNC_BUDGET_FIN        11
+#define MASTERNODE_SYNC_GOVERNANCE        4
+#define MASTERNODE_SYNC_GOVOBJ            10
+#define MASTERNODE_SYNC_GOVERNANCE_FIN    11
 #define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
@@ -64,6 +64,7 @@ public:
     void AddedMasternodeWinner(uint256 hash);
     void AddedBudgetItem(uint256 hash);
     void GetNextAsset();
+    std::string GetAssetName();
     std::string GetSyncStatus();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     bool IsBudgetFinEmpty();

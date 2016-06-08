@@ -70,7 +70,11 @@ public:
     std::map<uint256, int> mapSeenGovernanceObjects;
     std::map<uint256, int> mapSeenVotes;
     std::map<uint256, CGovernanceVote> mapOrphanVotes;
-    std::map<uint256, CGovernanceVote> mapVotes;
+
+    // todo: one of these should point to the other
+    //   -- must be carefully managed while adding/removing/updating
+    std::map<uint256, CGovernanceVote> mapVotesByHash;
+    std::map<uint256, CGovernanceVote> mapVotesByType;
 
     CGovernanceManager() {
         mapObjects.clear();
@@ -94,12 +98,13 @@ public:
     //void ResetSync();
     //void MarkSynced();
     void Sync(CNode* node, uint256 nProp);
+    void SyncParentObjectByVote(CNode* pfrom, const CGovernanceVote& vote);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
 
     CGovernanceObject *FindGovernanceObject(const std::string &strName);
-    CGovernanceObject *FindGovernanceObject(uint256 nHash);
+    CGovernanceObject *FindGovernanceObject(const uint256& nHash);
     
     std::vector<CGovernanceObject*> GetAllProposals(int64_t nMoreThanTime);
 
@@ -107,8 +112,8 @@ public:
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddGovernanceObject (CGovernanceObject& govobj);
-    bool UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
-    bool AddOrUpdateVote(CGovernanceVote& vote, std::string& strError);
+    bool UpdateGovernanceObject(const CGovernanceVote& vote, CNode* pfrom, std::string& strError);
+    bool AddOrUpdateVote(const CGovernanceVote& vote, std::string& strError);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void CleanAndRemove(bool fSignatureCheck);
     void CheckAndRemove();
@@ -122,6 +127,8 @@ public:
         mapSeenGovernanceObjects.clear();
         mapSeenVotes.clear();
         mapOrphanVotes.clear();
+        mapVotesByType.clear();
+        mapVotesByHash.clear();
     }
     std::string ToString() const;
 
@@ -133,7 +140,8 @@ public:
         READWRITE(mapSeenVotes);
         READWRITE(mapOrphanVotes);
         READWRITE(mapObjects);
-        READWRITE(mapVotes);
+        READWRITE(mapVotesByHash);
+        READWRITE(mapVotesByType);
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
@@ -185,21 +193,32 @@ public:
         // CALCULATE MINIMUM SUPPORT LEVELS REQUIRED
 
         int nMnCount = mnodeman.CountEnabled();
+        if(nMnCount == 0) return;
+
+        // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
+
         int nAbsYesVoteReq = nMnCount / 10;
+        int nAbsNoVoteReq = nAbsYesVoteReq; //same in absolute value
 
         // SET SENTINEL FLAGS TO FALSE
 
         fCachedFunding = false;
-        fCachedValid = false;
+        fCachedValid = true; //default to valid
         fCachedDelete = false;
         fCachedEndorsed = false;
 
         // SET SENTINEL FLAGS TO TRUE IF MIMIMUM SUPPORT LEVELS ARE REACHED
 
-        if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsYesVoteReq) fCachedFunding = true;
-        if(GetAbsoluteYesCount(VOTE_SIGNAL_VALID) >= nAbsYesVoteReq) fCachedValid = true;
-        if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsYesVoteReq) fCachedDelete = true;
-        if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsYesVoteReq) fCachedEndorsed = true;
+        // todo - 12.1
+        // if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsYesVoteReq) fCachedFunding = true;
+        // if(GetAbsoluteYesCount(VOTE_SIGNAL_VALID) >= nAbsYesVoteReq) fCachedValid = true;
+        // if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsYesVoteReq) fCachedDelete = true;
+        // if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsYesVoteReq) fCachedEndorsed = true;
+
+        // if(GetAbsoluteNoCount(VOTE_SIGNAL_FUNDING) >= nAbsNoVoteReq) fCachedFunding = false;
+        // if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsNoVoteReq) fCachedValid = false;
+        // if(GetAbsoluteNoCount(VOTE_SIGNAL_DELETE) >= nAbsNoVoteReq) fCachedDelete = false;
+        // if(GetAbsoluteNoCount(VOTE_SIGNAL_ENDORSED) >= nAbsNoVoteReq) fCachedEndorsed = false;
     }
 
     void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
@@ -230,6 +249,7 @@ public:
 
     // get vote counts on each outcome
     int GetAbsoluteYesCount(int nVoteSignalIn);
+    int GetAbsoluteNoCount(int nVoteSignalIn);
     int GetYesCount(int nVoteSignalIn);
     int GetNoCount(int nVoteSignalIn);
     int GetAbstainCount(int nVoteSignalIn);
@@ -258,7 +278,7 @@ public:
     *   SetData - Example usage:
     *   --------------------------------------------------------
     * 
-    *   dash-core is data-agnostic, for rules about data see sentinel documentation
+    *   Governance is data-agnostic, for rules about data see sentinel documentation
     *    
     */
 

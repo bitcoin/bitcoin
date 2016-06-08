@@ -43,8 +43,8 @@ CGovernanceVote::CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, i
 
 void CGovernanceVote::Relay()
 {
-    CInv inv(MSG_BUDGET_VOTE, GetHash());
-    RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
+    CInv inv(MSG_GOVERNANCE_VOTE, GetHash());
+    RelayInv(inv, MSG_GOVERNANCE_PEER_PROTO_VERSION);
 }
 
 bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)

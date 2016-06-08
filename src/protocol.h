@@ -227,9 +227,9 @@ extern const char *SPORK;
 extern const char *GETSPORKS;
 extern const char *MNWINNER;
 extern const char *MNWINNERSSYNC;
-extern const char *MNGOVERNANCEVOTESYNC;
+extern const char *MNGOVERNANCESYNC;
 extern const char *MNGOVERNANCEVOTE;
-extern const char *MNGOVERNANCEPROPOSAL;
+extern const char *MNGOVERNANCEOBJECT;
 extern const char *MNGOVERNANCEFINAL;
 extern const char *MNGOVERNANCEFINALVOTE;
 extern const char *MNANNOUNCE;
@@ -346,8 +346,8 @@ enum {
     MSG_SPORK,
     MSG_MASTERNODE_WINNER,
     MSG_MASTERNODE_SCANNING_ERROR, // not implemented
-    MSG_BUDGET_VOTE,
-    MSG_BUDGET_PROPOSAL,
+    MSG_GOVERNANCE_VOTE,
+    MSG_GOVERNANCE_OBJECT,
     MSG_BUDGET_FINALIZED,
     MSG_BUDGET_FINALIZED_VOTE,
     MSG_MASTERNODE_QUORUM, // not implemented

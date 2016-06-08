@@ -76,13 +76,48 @@ public:
         return ret;
     }
 
-    uint256 GetHash(){
+    /**
+    *   GetHash()
+    *
+    *   GET UNIQUE HASH WITH DETERMINISTIC VALUE OF THIS SPECIFIC VOTE
+    */
+
+    uint256 GetHash() const
+    {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vinMasternode;
         ss << nParentHash;
         ss << nVoteSignal;
         ss << nVoteOutcome;
         ss << nTime;
+        return ss.GetHash();
+    }
+
+    /**
+    *   GetTypeHash()
+    *
+    *   GET HASH WITH DETERMINISTIC VALUE OF MASTERNODE-VIN/PARENT-HASH/VOTE-SIGNAL
+    *
+    *   This hash collides with previous masternode votes when they update their votes on governance objects. 
+    *   With 12.1 there's various types of votes (funding, valid, delete, etc), so this is the deterministic hash 
+    *   that will collide with the previous vote and allow the system to update.
+    *   
+    *   --
+    *
+    *   We do not include an outcome, because that can change when a masternode updates their vote from yes to no
+    *   on funding a specific project for example. 
+    *   We do not include a time because it will be updated each time the vote is updated, changing the hash
+    */
+    uint256 GetTypeHash() const
+    {       
+        // CALCULATE HOW TO STORE VOTE IN governance.mapVotes
+
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vinMasternode;
+        ss << nParentHash;
+        ss << nVoteSignal;
+        //  -- no outcome 
+        //  -- timeless
         return ss.GetHash();
     }
 
