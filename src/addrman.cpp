@@ -263,7 +263,7 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
             pinfo->nTime = std::max((int64_t)0, addr.nTime - nTimePenalty);
 
         // add services
-        pinfo->nServices |= addr.nServices;
+        pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
 
         // do not update if no new information is present
         if (!addr.nTime || (pinfo->nTime && addr.nTime <= pinfo->nTime))
@@ -502,7 +502,7 @@ void CAddrMan::Connected_(const CService& addr, int64_t nTime)
         info.nTime = nTime;
 }
 
-void CAddrMan::SetServices_(const CService& addr, uint64_t nServices)
+void CAddrMan::SetServices_(const CService& addr, ServiceFlags nServices)
 {
     CAddrInfo* pinfo = Find(addr);
 
