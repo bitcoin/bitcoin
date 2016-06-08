@@ -2232,7 +2232,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                             // Insert change txn at random position:
                             nChangePosInOut = GetRandInt(txNew.vout.size()+1);
                         }
-                        else if (nChangePosInOut > txNew.vout.size())
+                        else if ((unsigned int)nChangePosInOut > txNew.vout.size())
                         {
                             strFailReason = _("Change index out of range");
                             return false;
