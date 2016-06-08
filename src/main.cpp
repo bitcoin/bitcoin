@@ -1381,7 +1381,7 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 {
-    int64_t ret = blockValue/2; // start at 20%
+    int64_t ret = blockValue*0.4; // start at 40%
 
     return ret;
 }
