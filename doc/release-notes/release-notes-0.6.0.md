@@ -30,7 +30,7 @@ because database writes are queued to speed up download
 time.
 
 
-NEW FEATURES SINCE BITCOIN VERSION 0.5
+NEW FEATURES SINCE CROWNCOIN VERSION 0.5
 
 Initial network synchronization should be much faster
 (one or two hours on a typical machine instead of ten or more

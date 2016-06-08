@@ -24,7 +24,7 @@ SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # Crowncoin #
-BITCOIN_CORE_H = \
+CROWNCOIN_CORE_H = \
   activethrone.h \
   addrman.h \
   alert.h \
@@ -124,7 +124,7 @@ libcrowncoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   $(JSON_H) \
-  $(BITCOIN_CORE_H)
+  $(CROWNCOIN_CORE_H)
 
 libcrowncoin_wallet_a_SOURCES = \
   activethrone.cpp \
@@ -135,7 +135,7 @@ libcrowncoin_wallet_a_SOURCES = \
   wallet.cpp \
   walletdb.cpp \
   keepass.cpp \
-  $(BITCOIN_CORE_H)
+  $(CROWNCOIN_CORE_H)
 
 libcrowncoin_common_a_SOURCES = \
   activethrone.cpp \
@@ -161,7 +161,7 @@ libcrowncoin_common_a_SOURCES = \
   util.cpp \
   version.cpp \
   spork.cpp \
-  $(BITCOIN_CORE_H)
+  $(CROWNCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
 libcrowncoin_common_a_SOURCES += compat/glibc_compat.cpp
@@ -170,7 +170,7 @@ endif
 
 libcrowncoin_cli_a_SOURCES = \
   rpcclient.cpp \
-  $(BITCOIN_CORE_H)
+  $(CROWNCOIN_CORE_H)
 
 nodist_libcrowncoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #

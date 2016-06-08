@@ -13,7 +13,7 @@ fi
 
 set -f
 
-BITCOIND=${1}/crowncoind
+CROWNCOIND=${1}/crowncoind
 CLI=${1}/crowncoin-cli
 
 DIR="${BASH_SOURCE%/*}"
@@ -29,13 +29,13 @@ D=$(mktemp -d test.XXXXX)
 D1=${D}/node1
 CreateDataDir $D1 port=11000 rpcport=11001
 B1ARGS="-datadir=$D1"
-$BITCOIND $B1ARGS &
+$CROWNCOIND $B1ARGS &
 B1PID=$!
 
 D2=${D}/node2
 CreateDataDir $D2 port=11010 rpcport=11011
 B2ARGS="-datadir=$D2"
-$BITCOIND $B2ARGS &
+$CROWNCOIND $B2ARGS &
 B2PID=$!
 
 # Wait until both nodes are at the same block number
@@ -85,7 +85,7 @@ CheckBalance "$B2ARGS" 0
 # restart B2 with no connection
 $CLI $B2ARGS stop > /dev/null 2>&1
 wait $B2PID
-$BITCOIND $B2ARGS &
+$CROWNCOIND $B2ARGS &
 B2PID=$!
 
 B2ADDRESS=$( $CLI $B2ARGS getaccountaddress "from1" )

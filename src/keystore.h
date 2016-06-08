@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEYSTORE_H
-#define BITCOIN_KEYSTORE_H
+#ifndef CROWNCOIN_KEYSTORE_H
+#define CROWNCOIN_KEYSTORE_H
 
 #include "key.h"
 #include "sync.h"

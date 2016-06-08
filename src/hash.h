@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HASH_H
-#define BITCOIN_HASH_H
+#ifndef CROWNCOIN_HASH_H
+#define CROWNCOIN_HASH_H
 
 #include "serialize.h"
 #include "uint256.h"

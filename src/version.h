@@ -1,8 +1,8 @@
 // Copyright (c) 2012 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_VERSION_H
-#define BITCOIN_VERSION_H
+#ifndef CROWNCOIN_VERSION_H
+#define CROWNCOIN_VERSION_H
 
 #include "clientversion.h"
 

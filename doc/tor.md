@@ -1,4 +1,4 @@
-TOR SUPPORT IN BITCOIN
+TOR SUPPORT IN CROWNCOIN
 ======================
 
 It is possible to run Crowncoin as a Tor hidden service, and connect to such services.

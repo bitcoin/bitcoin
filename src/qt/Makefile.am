@@ -148,7 +148,7 @@ QT_MOC_CPP = \
   moc_walletmodel.cpp \
   moc_walletview.cpp
 
-BITCOIN_MM = \
+CROWNCOIN_MM = \
   macdockiconhandler.mm \
   macnotificationhandler.mm
 
@@ -165,7 +165,7 @@ PROTOBUF_CC = paymentrequest.pb.cc
 PROTOBUF_H = paymentrequest.pb.h
 PROTOBUF_PROTO = paymentrequest.proto
 
-BITCOIN_QT_H = \
+CROWNCOIN_QT_H = \
   addressbookpage.h \
   addresstablemodel.h \
   askpassphrasedialog.h \
@@ -260,7 +260,7 @@ RES_ICONS = \
   res/icons/tx_output.png \
   res/icons/tx_mined.png
 
-BITCOIN_QT_CPP = \
+CROWNCOIN_QT_CPP = \
   crowncoin.cpp \
   crowncoinaddressvalidator.cpp \
   crowncoinamountfield.cpp \
@@ -283,7 +283,7 @@ BITCOIN_QT_CPP = \
   winshutdownmonitor.cpp
 
 if ENABLE_WALLET
-BITCOIN_QT_CPP += \
+CROWNCOIN_QT_CPP += \
   addressbookpage.cpp \
   addresstablemodel.cpp \
   askpassphrasedialog.cpp \
@@ -319,11 +319,11 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
-BITCOIN_RC = res/crowncoin-qt-res.rc
+CROWNCOIN_RC = res/crowncoin-qt-res.rc
 
 libcrowncoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
-libcrowncoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+libcrowncoinqt_a_SOURCES = $(CROWNCOIN_QT_CPP) $(CROWNCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
 nodist_libcrowncoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
@@ -341,16 +341,16 @@ crowncoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
 crowncoin_qt_SOURCES = crowncoin.cpp
 if TARGET_DARWIN
-  crowncoin_qt_SOURCES += $(BITCOIN_MM)
+  crowncoin_qt_SOURCES += $(CROWNCOIN_MM)
 endif
 if TARGET_WINDOWS
-  crowncoin_qt_SOURCES += $(BITCOIN_RC)
+  crowncoin_qt_SOURCES += $(CROWNCOIN_RC)
 endif
-crowncoin_qt_LDADD = libcrowncoinqt.a $(LIBBITCOIN_SERVER)
+crowncoin_qt_LDADD = libcrowncoinqt.a $(LIBCROWNCOIN_SERVER)
 if ENABLE_WALLET
-crowncoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+crowncoin_qt_LDADD += $(LIBCROWNCOIN_WALLET)
 endif
-crowncoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+crowncoin_qt_LDADD += $(LIBCROWNCOIN_CLI) $(LIBCROWNCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
 crowncoin_qt_LDFLAGS = $(QT_LDFLAGS)
 
@@ -366,7 +366,7 @@ QT_QM=$(QT_TS:.ts=.qm)
 crowncoinstrings.cpp: FORCE
 	$(MAKE) -C $(top_srcdir)/src qt/crowncoinstrings.cpp
 
-translate: crowncoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: crowncoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(CROWNCOIN_QT_CPP) $(CROWNCOIN_QT_H) $(CROWNCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/crowncoin_en.ts
 

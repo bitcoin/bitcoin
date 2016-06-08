@@ -2,8 +2,8 @@
 // Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_COINS_H
-#define BITCOIN_COINS_H
+#ifndef CROWNCOIN_COINS_H
+#define CROWNCOIN_COINS_H
 
 #include "core.h"
 #include "names.h"

@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef CROWNCOIN_KEY_H
+#define CROWNCOIN_KEY_H
 
 #include "allocators.h"
 #include "hash.h"

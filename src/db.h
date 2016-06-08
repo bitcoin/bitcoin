@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_DB_H
-#define BITCOIN_DB_H
+#ifndef CROWNCOIN_DB_H
+#define CROWNCOIN_DB_H
 
 #include "serialize.h"
 #include "sync.h"
@@ -305,4 +305,4 @@ public:
     bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
 };
 
-#endif // BITCOIN_DB_H
+#endif // CROWNCOIN_DB_H

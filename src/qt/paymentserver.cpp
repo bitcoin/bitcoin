@@ -46,11 +46,11 @@
 
 using namespace boost;
 
-const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
-const QString BITCOIN_IPC_PREFIX("crowncoin:");
-const char* BITCOIN_REQUEST_MIMETYPE = "application/crowncoin-paymentrequest";
-const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/crowncoin-paymentack";
-const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/crowncoin-payment";
+const int CROWNCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
+const QString CROWNCOIN_IPC_PREFIX("crowncoin:");
+const char* CROWNCOIN_REQUEST_MIMETYPE = "application/crowncoin-paymentrequest";
+const char* CROWNCOIN_PAYMENTACK_MIMETYPE = "application/crowncoin-paymentack";
+const char* CROWNCOIN_PAYMENTACK_CONTENTTYPE = "application/crowncoin-payment";
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -186,7 +186,7 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
         if (arg.startsWith("-"))
             continue;
 
-        if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // crowncoin: URI
+        if (arg.startsWith(CROWNCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // crowncoin: URI
         {
             savedPaymentRequests.append(arg);
 
@@ -238,7 +238,7 @@ bool PaymentServer::ipcSendCommandLine()
     {
         QLocalSocket* socket = new QLocalSocket();
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
-        if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
+        if (!socket->waitForConnected(CROWNCOIN_IPC_CONNECT_TIMEOUT))
         {
             delete socket;
             return false;
@@ -252,7 +252,7 @@ bool PaymentServer::ipcSendCommandLine()
         socket->write(block);
         socket->flush();
 
-        socket->waitForBytesWritten(BITCOIN_IPC_CONNECT_TIMEOUT);
+        socket->waitForBytesWritten(CROWNCOIN_IPC_CONNECT_TIMEOUT);
         socket->disconnectFromServer();
         delete socket;
         fResult = true;
@@ -378,7 +378,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
     }
 
-    if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // crowncoin: URI
+    if (s.startsWith(CROWNCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // crowncoin: URI
     {
 #if QT_VERSION < 0x050000
         QUrl uri(s);
@@ -539,7 +539,7 @@ void PaymentServer::fetchRequest(const QUrl& url)
     netRequest.setAttribute(QNetworkRequest::User, "PaymentRequest");
     netRequest.setUrl(url);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
-    netRequest.setRawHeader("Accept", BITCOIN_REQUEST_MIMETYPE);
+    netRequest.setRawHeader("Accept", CROWNCOIN_REQUEST_MIMETYPE);
     netManager->get(netRequest);
 }
 
@@ -552,9 +552,9 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     QNetworkRequest netRequest;
     netRequest.setAttribute(QNetworkRequest::User, "PaymentACK");
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
-    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BITCOIN_PAYMENTACK_CONTENTTYPE);
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, CROWNCOIN_PAYMENTACK_CONTENTTYPE);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
-    netRequest.setRawHeader("Accept", BITCOIN_PAYMENTACK_MIMETYPE);
+    netRequest.setRawHeader("Accept", CROWNCOIN_PAYMENTACK_MIMETYPE);
 
     payments::Payment payment;
     payment.set_merchant_data(details.merchant_data());

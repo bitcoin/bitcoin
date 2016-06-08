@@ -2,8 +2,8 @@
 // Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_WALLET_H
-#define BITCOIN_WALLET_H
+#ifndef CROWNCOIN_WALLET_H
+#define CROWNCOIN_WALLET_H
 
 #include "core.h"
 #include "crypter.h"

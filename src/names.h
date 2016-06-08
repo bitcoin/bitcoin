@@ -1,8 +1,8 @@
 // Copyright (c) 2014-2015 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_NAMES_H
-#define BITCOIN_NAMES_H
+#ifndef CROWNCOIN_NAMES_H
+#define CROWNCOIN_NAMES_H
 
 #include "core.h"
 #include "serialize.h"

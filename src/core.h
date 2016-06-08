@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CORE_H
-#define BITCOIN_CORE_H
+#ifndef CROWNCOIN_CORE_H
+#define CROWNCOIN_CORE_H
 
 #include "script.h"
 #include "serialize.h"

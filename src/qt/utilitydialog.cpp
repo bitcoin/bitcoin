@@ -69,7 +69,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent) :
         tr("Usage:") + "\n" +
         "  crowncoin-qt [" + tr("command-line options") + "]                     " + "\n";
 
-    coreOptions = QString::fromStdString(HelpMessage(HMM_BITCOIN_QT));
+    coreOptions = QString::fromStdString(HelpMessage(HMM_CROWNCOIN_QT));
 
     uiOptions = tr("UI options") + ":\n" +
         "  -choosedatadir            " + tr("Choose data directory on startup (default: 0)") + "\n" +

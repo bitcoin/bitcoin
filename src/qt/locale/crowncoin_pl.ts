@@ -429,7 +429,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <source>Crowncoin</source>
-        <translation>Rdzeń BitCoin</translation>
+        <translation>Rdzeń CrownCoin</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and crowncoin: URIs)</source>
@@ -888,7 +888,7 @@ Adres: %4
     </message>
     <message>
         <source>Crowncoin</source>
-        <translation>Rdzeń BitCoin</translation>
+        <translation>Rdzeń CrownCoin</translation>
     </message>
     <message>
         <source>version</source>
@@ -2128,7 +2128,7 @@ Adres: %4
     <name>SplashScreen</name>
     <message>
         <source>Crowncoin</source>
-        <translation>Rdzeń BitCoin</translation>
+        <translation>Rdzeń CrownCoin</translation>
     </message>
     <message>
         <source>The Crowncoin developers</source>
