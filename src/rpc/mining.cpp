@@ -8,6 +8,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
+#include "consensus/params.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
@@ -303,6 +304,15 @@ static UniValue BIP22ValidationResult(const CValidationState& state)
     return "valid?";
 }
 
+std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
+    const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+    std::string s = vbinfo.name;
+    if (!vbinfo.gbt_force) {
+        s.insert(s.begin(), '!');
+    }
+    return s;
+}
+
 UniValue getblocktemplate(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -310,7 +320,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "getblocktemplate ( \"jsonrequestobject\" )\n"
             "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
             "It returns data needed to construct a block to work on.\n"
-            "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
+            "For full specification, see BIPs 22 and 9:\n"
+            "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
+            "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
 
             "\nArguments:\n"
             "1. \"jsonrequestobject\"       (string, optional) A json object in the following spec\n"
@@ -326,6 +338,12 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"version\" : n,                    (numeric) The block version\n"
+            "  \"rules\" : [ \"rulename\", ... ],    (array of strings) specific block rules that are to be enforced\n"
+            "  \"vbavailable\" : {                 (json object) set of pending, supported versionbit (BIP 9) softfork deployments\n"
+            "      \"rulename\" : bitnumber        (numeric) identifies the bit number as indicating acceptance and readiness for the named softfork rule\n"
+            "      ,...\n"
+            "  },\n"
+            "  \"vbrequired\" : n,                 (numeric) bit mask of versionbits the server requires set in submissions\n"
             "  \"previousblockhash\" : \"xxxx\",    (string) The hash of current highest block\n"
             "  \"transactions\" : [                (array) contents of non-coinbase transactions that should be included in the next block\n"
             "      {\n"
@@ -369,6 +387,8 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
+    std::set<std::string> setClientRules;
+    int64_t nMaxVersionPreVB = -1;
     if (params.size() > 0)
     {
         const UniValue& oparam = params[0].get_obj();
@@ -411,6 +431,20 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             CValidationState state;
             TestBlockValidity(state, Params(), block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
+        }
+
+        const UniValue& aClientRules = find_value(oparam, "rules");
+        if (aClientRules.isArray()) {
+            for (unsigned int i = 0; i < aClientRules.size(); ++i) {
+                const UniValue& v = aClientRules[i];
+                setClientRules.insert(v.get_str());
+            }
+        } else {
+            // NOTE: It is important that this NOT be read if versionbits is supported
+            const UniValue& uvMaxVersion = find_value(oparam, "maxversion");
+            if (uvMaxVersion.isNum()) {
+                nMaxVersionPreVB = uvMaxVersion.get_int64();
+            }
         }
     }
 
@@ -501,9 +535,10 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         pindexPrev = pindexPrevNew;
     }
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Update nTime
-    UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
+    UpdateTime(pblock, consensusParams, pindexPrev);
     pblock->nNonce = 0;
 
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
@@ -544,17 +579,69 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
-    static UniValue aMutable(UniValue::VARR);
-    if (aMutable.empty())
-    {
-        aMutable.push_back("time");
-        aMutable.push_back("transactions");
-        aMutable.push_back("prevblock");
-    }
+    UniValue aMutable(UniValue::VARR);
+    aMutable.push_back("time");
+    aMutable.push_back("transactions");
+    aMutable.push_back("prevblock");
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("capabilities", aCaps));
+
+    UniValue aRules(UniValue::VARR);
+    UniValue vbavailable(UniValue::VOBJ);
+    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
+        Consensus::DeploymentPos pos = Consensus::DeploymentPos(i);
+        ThresholdState state = VersionBitsState(pindexPrev, consensusParams, pos, versionbitscache);
+        switch (state) {
+            case THRESHOLD_DEFINED:
+            case THRESHOLD_FAILED:
+                // Not exposed to GBT at all
+                break;
+            case THRESHOLD_LOCKED_IN:
+                // Ensure bit is set in block version
+                pblock->nVersion |= VersionBitsMask(consensusParams, pos);
+                // FALL THROUGH to get vbavailable set...
+            case THRESHOLD_STARTED:
+            {
+                const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+                vbavailable.push_back(Pair(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit));
+                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
+                    if (!vbinfo.gbt_force) {
+                        // If the client doesn't support this, don't indicate it in the [default] version
+                        pblock->nVersion &= ~VersionBitsMask(consensusParams, pos);
+                    }
+                }
+                break;
+            }
+            case THRESHOLD_ACTIVE:
+            {
+                // Add to rules only
+                const struct BIP9DeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+                aRules.push_back(gbt_vb_name(pos));
+                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
+                    // Not supported by the client; make sure it's safe to proceed
+                    if (!vbinfo.gbt_force) {
+                        // If we do anything other than throw an exception here, be sure version/force isn't sent to old clients
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Support for '%s' rule requires explicit client support", vbinfo.name));
+                    }
+                }
+                break;
+            }
+        }
+    }
     result.push_back(Pair("version", pblock->nVersion));
+    result.push_back(Pair("rules", aRules));
+    result.push_back(Pair("vbavailable", vbavailable));
+    result.push_back(Pair("vbrequired", int(0)));
+
+    if (nMaxVersionPreVB >= 2) {
+        // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
+        // Because BIP 34 changed how the generation transaction is serialised, we can only use version/force back to v2 blocks
+        // This is safe to do [otherwise-]unconditionally only because we are throwing an exception above if a non-force deployment gets activated
+        // Note that this can probably also be removed entirely after the first BIP9 non-force deployment (ie, probably segwit) gets activated
+        aMutable.push_back("version/force");
+    }
+
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));
