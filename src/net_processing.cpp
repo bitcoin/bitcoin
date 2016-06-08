@@ -52,10 +52,6 @@ int64_t nTimeBestReceived = 0; // Used only to inform the wallet of when we last
 
 extern FeeFilterRounder filterRounder;
 
-std::map<uint256, CTransaction> mapRelay;
-std::deque<std::pair<int64_t, uint256> > vRelayExpiration;
-CCriticalSection cs_mapRelay;
-
 struct COrphanTx {
     CTransaction tx;
     NodeId fromPeer;
@@ -110,9 +106,14 @@ namespace {
     /** Number of preferable block download peers. */
     int nPreferredDownload = 0;
 
-
     /** Number of peers from which we're downloading blocks. */
     int nPeersWithValidatedDownloads = 0;
+
+    /** Relay map, protected by cs_main. */
+    typedef std::map<uint256, std::shared_ptr<const CTransaction>> MapRelay;
+    MapRelay mapRelay;
+    /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
+    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -886,32 +887,24 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             }
             else if (inv.IsKnownType())
             {
-                CTransaction tx;
                 // Send stream from relay memory
                 bool push = false;
-
                 // Only serve MSG_TX from mapRelay.
                 // Otherwise we may send out a normal TX instead of a IX
                 if (inv.type == MSG_TX) {
-                    LOCK(cs_mapRelay);
-                    map<uint256, CTransaction>::iterator mi = mapRelay.find(inv.hash);
+                    auto mi = mapRelay.find(inv.hash);
                     if (mi != mapRelay.end()) {
-                        tx = (*mi).second;
+                        connman.PushMessage(pfrom, NetMsgType::TX, *mi->second);
                         push = true;
+                    } else if (pfrom->timeLastMempoolReq) {
+                        auto txinfo = mempool.info(inv.hash);
+                        // To protect privacy, do not answer getdata using the mempool when
+                        // that TX couldn't have been INVed in reply to a MEMPOOL request.
+                        if (txinfo.tx && txinfo.nTime <= pfrom->timeLastMempoolReq) {
+                            connman.PushMessage(pfrom, NetMsgType::TX, *txinfo.tx);
+                            push = true;
+                        }
                     }
-                }
-
-                if (!push && inv.type == MSG_TX) {
-                    int64_t txtime;
-                    // To protect privacy, do not answer getdata using the mempool when
-                    // that TX couldn't have been INVed in reply to a MEMPOOL request.
-                    if (mempool.lookup(inv.hash, tx, txtime) && txtime <= pfrom->timeLastMempoolReq) {
-                        push = true;
-                    }
-                }
-
-                if (push) {
-                    pfrom->PushMessage(inv.GetCommand(), tx);
                 }
 
                 if (!push && inv.type == MSG_TXLOCK_REQUEST) {
@@ -2580,8 +2573,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
 
             // Respond to BIP35 mempool requests
             if (fSendTrickle && pto->fSendMempool) {
-                std::vector<uint256> vtxid;
-                mempool.queryHashes(vtxid);
+                auto vtxinfo = mempool.infoAll();
                 pto->fSendMempool = false;
                 CAmount filterrate = 0;
                 {
@@ -2591,20 +2583,16 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
 
                 LOCK(pto->cs_filter);
 
-                BOOST_FOREACH(const uint256& hash, vtxid) {
+                for (const auto& txinfo : vtxinfo) {
+                    const uint256& hash = txinfo.tx->GetHash();
                     CInv inv(MSG_TX, hash);
                     pto->setInventoryTxToSend.erase(hash);
                     if (filterrate) {
-                        CFeeRate feeRate;
-                        mempool.lookupFeeRate(hash, feeRate);
-                        if (feeRate.GetFeePerK() < filterrate)
+                        if (txinfo.feeRate.GetFeePerK() < filterrate)
                             continue;
                     }
                     if (pto->pfilter) {
-                        CTransaction tx;
-                        bool fInMemPool = mempool.lookup(hash, tx);
-                        if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
-                        if (!pto->pfilter->IsRelevantAndUpdate(tx)) continue;
+                        if (!pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     }
                     pto->filterInventoryKnown.insert(hash);
 
@@ -2652,31 +2640,28 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                         continue;
                     }
                     // Not in the mempool anymore? don't bother sending it.
-                    CFeeRate feeRate;
-                    if (!mempool.lookupFeeRate(hash, feeRate)) {
+                    auto txinfo = mempool.info(hash);
+                    if (!txinfo.tx) {
                         continue;
                     }
-                    if (filterrate && feeRate.GetFeePerK() < filterrate) {
+                    if (filterrate && txinfo.feeRate.GetFeePerK() < filterrate) {
                         continue;
                     }
-                    CTransaction tx;
-                    if (!mempool.lookup(hash, tx)) continue;
-                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(tx)) continue;
+                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
                     {
-                        LOCK(cs_mapRelay);
                         // Expire old relay messages
-                        while (!vRelayExpiration.empty() && vRelayExpiration.front().first < GetTime())
+                        while (!vRelayExpiration.empty() && vRelayExpiration.front().first < nNow)
                         {
                             mapRelay.erase(vRelayExpiration.front().second);
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.insert(std::make_pair(hash, tx));
+                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
                         if (ret.second) {
-                            vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, hash));
+                            vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
                         }
                     }
                     if (vInv.size() == MAX_INV_SZ) {

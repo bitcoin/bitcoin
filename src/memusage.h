@@ -74,6 +74,15 @@ private:
     X x;
 };
 
+struct stl_shared_counter
+{
+    /* Various platforms use different sized counters here.
+     * Conservatively assume that they won't be larger than size_t. */
+    void* class_type;
+    size_t use_count;
+    size_t weak_count;
+};
+
 template<typename X>
 static inline size_t DynamicUsage(const std::vector<X>& v)
 {
@@ -122,6 +131,21 @@ template<typename X, typename Y>
 static inline size_t IncrementalDynamicUsage(const indirectmap<X, Y>& m)
 {
     return MallocUsage(sizeof(stl_tree_node<std::pair<const X*, Y> >));
+}
+
+template<typename X>
+static inline size_t DynamicUsage(const std::unique_ptr<X>& p)
+{
+    return p ? MallocUsage(sizeof(X)) : 0;
+}
+
+template<typename X>
+static inline size_t DynamicUsage(const std::shared_ptr<X>& p)
+{
+    // A shared_ptr can either use a single continuous memory block for both
+    // the counter and the storage (when using std::make_shared), or separate.
+    // We can't observe the difference, however, so assume the worst.
+    return p ? MallocUsage(sizeof(X)) + MallocUsage(sizeof(stl_shared_counter)) : 0;
 }
 
 // Boost data structures

@@ -24,18 +24,18 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  bool poolHasNoInputsOf, CAmount _inChainInputValue,
                                  bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp):
-    tx(_tx), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
+    tx(std::make_shared<CTransaction>(_tx)), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
     hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue),
     spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
 {
-    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
-    nModSize = tx.CalculateModifiedSize(nTxSize);
-    nUsageSize = RecursiveDynamicUsage(tx);
+    nTxSize = ::GetSerializeSize(_tx, SER_NETWORK, PROTOCOL_VERSION);
+    nModSize = _tx.CalculateModifiedSize(nTxSize);
+    nUsageSize = RecursiveDynamicUsage(*tx) + memusage::DynamicUsage(tx);
 
     nCountWithDescendants = 1;
     nSizeWithDescendants = nTxSize;
     nModFeesWithDescendants = nFee;
-    CAmount nValueIn = tx.GetValueOut()+nFee;
+    CAmount nValueIn = _tx.GetValueOut()+nFee;
     assert(inChainInputValue <= nValueIn);
 
     feeDelta = 0;
@@ -904,50 +904,76 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
 namespace {
 class DepthAndScoreComparator
 {
-    CTxMemPool *mp;
 public:
-    DepthAndScoreComparator(CTxMemPool *mempool) : mp(mempool) {}
-    bool operator()(const uint256& a, const uint256& b) { return mp->CompareDepthAndScore(a, b); }
+    bool operator()(const CTxMemPool::indexed_transaction_set::const_iterator& a, const CTxMemPool::indexed_transaction_set::const_iterator& b)
+    {
+        uint64_t counta = a->GetCountWithAncestors();
+        uint64_t countb = b->GetCountWithAncestors();
+        if (counta == countb) {
+            return CompareTxMemPoolEntryByScore()(*a, *b);
+        }
+        return counta < countb;
+    }
 };
+}
+
+std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedDepthAndScore() const
+{
+    std::vector<indexed_transaction_set::const_iterator> iters;
+    AssertLockHeld(cs);
+
+    iters.reserve(mapTx.size());
+
+    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+        iters.push_back(mi);
+    }
+    std::sort(iters.begin(), iters.end(), DepthAndScoreComparator());
+    return iters;
 }
 
 void CTxMemPool::queryHashes(vector<uint256>& vtxid)
 {
+    LOCK(cs);
+    auto iters = GetSortedDepthAndScore();
+
     vtxid.clear();
-
-    LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
-        vtxid.push_back(mi->GetTx().GetHash());
 
-    std::sort(vtxid.begin(), vtxid.end(), DepthAndScoreComparator(this));
+    for (auto it : iters) {
+        vtxid.push_back(it->GetTx().GetHash());
+    }
 }
 
-
-bool CTxMemPool::lookup(uint256 hash, CTransaction& result, int64_t& time) const
+std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = mapTx.find(hash);
-    if (i == mapTx.end()) return false;
-    result = i->GetTx();
-    time = i->GetTime();
-    return true;
+    auto iters = GetSortedDepthAndScore();
+
+    std::vector<TxMempoolInfo> ret;
+    ret.reserve(mapTx.size());
+    for (auto it : iters) {
+        ret.push_back(TxMempoolInfo{it->GetSharedTx(), it->GetTime(), CFeeRate(it->GetFee(), it->GetTxSize())});
+    }
+
+    return ret;
 }
 
-bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
-{
-    int64_t time;
-    return CTxMemPool::lookup(hash, result, time);
-}
-
-bool CTxMemPool::lookupFeeRate(const uint256& hash, CFeeRate& feeRate) const
+std::shared_ptr<const CTransaction> CTxMemPool::get(const uint256& hash) const
 {
     LOCK(cs);
     indexed_transaction_set::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end())
-        return false;
-    feeRate = CFeeRate(i->GetFee(), i->GetTxSize());
-    return true;
+        return nullptr;
+    return i->GetSharedTx();
+}
+
+TxMempoolInfo CTxMemPool::info(const uint256& hash) const
+{
+    LOCK(cs);
+    indexed_transaction_set::const_iterator i = mapTx.find(hash);
+    if (i == mapTx.end())
+        return TxMempoolInfo();
+    return TxMempoolInfo{i->GetSharedTx(), i->GetTime(), CFeeRate(i->GetFee(), i->GetTxSize())};
 }
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
@@ -1060,10 +1086,10 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
-    CTransaction tx;
-    if (mempool.lookup(outpoint.hash, tx)) {
-        if (outpoint.n < tx.vout.size()) {
-            coin = Coin(tx.vout[outpoint.n], MEMPOOL_HEIGHT, false);
+    shared_ptr<const CTransaction> ptx = mempool.get(outpoint.hash);
+    if (ptx) {
+        if (outpoint.n < ptx->vout.size()) {
+            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
             return true;
         } else {
             return false;

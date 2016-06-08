@@ -1087,8 +1087,10 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
 
     LOCK(cs_main);
 
-    if (mempool.lookup(hash, txOut))
+    std::shared_ptr<const CTransaction> ptx = mempool.get(hash);
+    if (ptx)
     {
+        txOut = *ptx;
         return true;
     }
 
