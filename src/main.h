@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #define BITCOIN_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "crowncoin-config.h"
 #endif
 
 #include "bignum.h"
@@ -172,7 +172,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, b
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state);
 int64_t GetBlockValue(int nHeight, int64_t nFees);
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
+int64_t GetThronePayment(int nHeight, int64_t blockValue);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
 void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);

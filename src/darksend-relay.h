@@ -8,14 +8,14 @@
 
 #include "core.h"
 #include "main.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
+#include "activethrone.h"
+#include "throneman.h"
 
 
 class CDarkSendRelay
 {
 public:
-    CTxIn vinMasternode;
+    CTxIn vinThrone;
     vector<unsigned char> vchSig;
     vector<unsigned char> vchSig2;
     int nBlockHeight;
@@ -24,11 +24,11 @@ public:
     CTxOut out;
 
     CDarkSendRelay();
-    CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2);
+    CDarkSendRelay(CTxIn& vinThroneIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2);
     
     IMPLEMENT_SERIALIZE
     (
-    	READWRITE(vinMasternode);
+    	READWRITE(vinThrone);
         READWRITE(vchSig);
         READWRITE(vchSig2);
         READWRITE(nBlockHeight);

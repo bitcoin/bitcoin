@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -94,17 +94,17 @@ namespace boost {
 using namespace std;
 
 //Dash only features
-bool fMasterNode = false;
-string strMasterNodePrivKey = "";
-string strMasterNodeAddr = "";
+bool fThroNe = false;
+string strThroNePrivKey = "";
+string strThroNeAddr = "";
 bool fLiteMode = false;
 int nInstantXDepth = 1;
 int nDarksendRounds = 2;
 int nAnonymizeDarkcoinAmount = 1000;
 int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
-int64_t enforceMasternodePaymentsTime = 4085657524;
-int nMasternodeMinProtocol = 0;
+int64_t enforceThronePaymentsTime = 4085657524;
+int nThroneMinProtocol = 0;
 bool fSucessfullyLoaded = false;
 bool fEnableDarksend = false;
 /** All denominations used by darksend */
@@ -1095,9 +1095,9 @@ boost::filesystem::path GetConfigFile()
     return pathConfigFile;
 }
 
-boost::filesystem::path GetMasternodeConfigFile()
+boost::filesystem::path GetThroneConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "throne.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }
@@ -1418,7 +1418,7 @@ string FormatFullVersion()
     return CLIENT_BUILD;
 }
 
-// Format the subversion field according to BIP 14 spec (https://en.bitcoin.it/wiki/BIP_0014)
+// Format the subversion field according to BIP 14 spec (https://en.crowncoin.it/wiki/BIP_0014)
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {
     std::ostringstream ss;

@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE (name_script_parsing)
 {
   CNameData data;
 
-  CBitcoinAddress addr(addrString);
+  CCrowncoinAddress addr(addrString);
   BOOST_CHECK (addr.IsValid ());
   data.address.SetDestination (addr.Get ());
   const CName name = NameFromString ("my-cool-name");
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE (names_in_block)
   CValidationState state;
 
   CNameData data;
-  CBitcoinAddress addr(addrString);
+  CCrowncoinAddress addr(addrString);
   BOOST_CHECK (addr.IsValid ());
   data.address.SetDestination (addr.Get ());
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE (names_database)
 {
   const CName name = NameFromString ("database-test-name");
   CNameData data, data2;
-  CBitcoinAddress addr(addrString);
+  CCrowncoinAddress addr(addrString);
   BOOST_CHECK (addr.IsValid ());
   data.address.SetDestination (addr.Get ());
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE (name_operations)
 
   const CName name = NameFromString ("database-test-name");
   CNameData data, data2;
-  CBitcoinAddress addr(addrString);
+  CCrowncoinAddress addr(addrString);
   BOOST_CHECK (addr.IsValid ());
   data.address.SetDestination (addr.Get ());
 

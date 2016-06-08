@@ -25,7 +25,7 @@ import os
 # Name of transifex tool
 TX = 'tx'
 # Name of source language file
-SOURCE_LANG = 'bitcoin_en.ts'
+SOURCE_LANG = 'crowncoin_en.ts'
 # Directory with locale files
 LOCALE_DIR = 'src/qt/locale'
 

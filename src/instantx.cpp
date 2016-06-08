@@ -10,8 +10,8 @@
 #include "base58.h"
 #include "protocol.h"
 #include "instantx.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
+#include "activethrone.h"
+#include "throneman.h"
 #include "darksend.h"
 #include "spork.h"
 #include <boost/lexical_cast.hpp>
@@ -30,12 +30,12 @@ int nCompleteTXLocks;
 //txlock - Locks transaction
 //
 //step 1.) Broadcast intention to lock transaction inputs, "txlreg", CTransaction
-//step 2.) Top 10 masternodes, open connect to top 1 masternode. Send "txvote", CTransaction, Signature, Approve
-//step 3.) Top 1 masternode, waits for 10 messages. Upon success, sends "txlock'
+//step 2.) Top 10 thrones, open connect to top 1 throne. Send "txvote", CTransaction, Signature, Approve
+//step 3.) Top 1 throne, waits for 10 messages. Upon success, sends "txlock'
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLiteMode) return; //disable all darksend/throne related functionality
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(IsInitialBlockDownload()) return;
 
@@ -140,24 +140,24 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         if(ProcessConsensusVote(ctx)){
             //Spam/Dos protection
             /*
-                Masternodes will sometimes propagate votes before the transaction is known to the client.
+                Thrones will sometimes propagate votes before the transaction is known to the client.
                 This tracks those messages and allows it at the same rate of the rest of the network, if
                 a peer violates it, it will simply be ignored
             */
             if(!mapTxLockReq.count(ctx.txHash) && !mapTxLockReqRejected.count(ctx.txHash)){
-                if(!mapUnknownVotes.count(ctx.vinMasternode.prevout.hash)){
-                    mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
+                if(!mapUnknownVotes.count(ctx.vinThrone.prevout.hash)){
+                    mapUnknownVotes[ctx.vinThrone.prevout.hash] = GetTime()+(60*10);
                 }
 
-                if(mapUnknownVotes[ctx.vinMasternode.prevout.hash] > GetTime() &&
-                    mapUnknownVotes[ctx.vinMasternode.prevout.hash] - GetAverageVoteTime() > 60*10){
-                        LogPrintf("ProcessMessageInstantX::txlreq - masternode is spamming transaction votes: %s %s\n",
-                            ctx.vinMasternode.ToString().c_str(),
+                if(mapUnknownVotes[ctx.vinThrone.prevout.hash] > GetTime() &&
+                    mapUnknownVotes[ctx.vinThrone.prevout.hash] - GetAverageVoteTime() > 60*10){
+                        LogPrintf("ProcessMessageInstantX::txlreq - throne is spamming transaction votes: %s %s\n",
+                            ctx.vinThrone.ToString().c_str(),
                             ctx.txHash.ToString().c_str()
                         );
                         return;
                 } else {
-                    mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
+                    mapUnknownVotes[ctx.vinThrone.prevout.hash] = GetTime()+(60*10);
                 }
             }
             vector<CInv> vInv;
@@ -233,7 +233,7 @@ int64_t CreateNewLock(CTransaction tx)
 
     /*
         Use a blockheight newer than the input.
-        This prevents attackers from using transaction mallibility to predict which masternodes
+        This prevents attackers from using transaction mallibility to predict which thrones
         they'll use.
     */
     int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
@@ -260,19 +260,19 @@ int64_t CreateNewLock(CTransaction tx)
 // check if we need to vote on this transaction
 void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 {
-    if(!fMasterNode) return;
+    if(!fThroNe) return;
 
-    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+    int n = mnodeman.GetThroneRank(activeThrone.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
     if(n == -1)
     {
-        if(fDebug) LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
+        if(fDebug) LogPrintf("InstantX::DoConsensusVote - Unknown Throne\n");
         return;
     }
 
     if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        if(fDebug) LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+        if(fDebug) LogPrintf("InstantX::DoConsensusVote - Throne not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
         return;
     }
     /*
@@ -282,7 +282,7 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
     if(fDebug) LogPrintf("InstantX::DoConsensusVote - In the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
 
     CConsensusVote ctx;
-    ctx.vinMasternode = activeMasternode.vin;
+    ctx.vinThrone = activeThrone.vin;
     ctx.txHash = tx.GetHash();
     ctx.nBlockHeight = nBlockHeight;
     if(!ctx.Sign()){
@@ -310,30 +310,30 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 //received a consensus vote
 bool ProcessConsensusVote(CConsensusVote& ctx)
 {
-    int n = mnodeman.GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+    int n = mnodeman.GetThroneRank(ctx.vinThrone, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
-    CMasternode* pmn = mnodeman.Find(ctx.vinMasternode);
+    CThrone* pmn = mnodeman.Find(ctx.vinThrone);
     if(pmn != NULL)
     {
-        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", pmn->addr.ToString().c_str(), n);
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Throne ADDR %s %d\n", pmn->addr.ToString().c_str(), n);
     }
 
     if(n == -1)
     {
         //can be caused by past versions trying to vote with an invalid protocol
-        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Unknown Masternode\n");
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Unknown Throne\n");
         return false;
     }
 
     if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d) - %s\n", INSTANTX_SIGNATURES_TOTAL, n, ctx.GetHash().ToString().c_str());
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Throne not in the top %d (%d) - %s\n", INSTANTX_SIGNATURES_TOTAL, n, ctx.GetHash().ToString().c_str());
         return false;
     }
 
     if(!ctx.SignatureValid()) {
         LogPrintf("InstantX::ProcessConsensusVote - Signature invalid\n");
-        //don't ban, it could just be a non-synced masternode
+        //don't ban, it could just be a non-synced throne
         return false;
     }
 
@@ -451,23 +451,23 @@ void CleanTransactionLocksList()
         if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
 
-            // loop through masternodes that responded
+            // loop through thrones that responded
             for(int nRank = 0; nRank <= INSTANTX_SIGNATURES_TOTAL; nRank++)
             {
-                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+                CThrone* pmn = mnodeman.GetThroneByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
                 if(!pmn) continue;
 
                 bool fFound = false;
                 BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
                 {
-                    if(pmn->vin == v.vinMasternode){ //Masternode responded
+                    if(pmn->vin == v.vinThrone){ //Throne responded
                         fFound = true;
                     }
                 }
 
                 if(!fFound){
                     //increment a scanning error
-                    CMasternodeScanningError mnse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
+                    CThroneScanningError mnse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
                     pmn->ApplyScanningError(mnse);
                 }
             }
@@ -495,7 +495,7 @@ void CleanTransactionLocksList()
 
 uint256 CConsensusVote::GetHash() const
 {
-    return vinMasternode.prevout.hash + vinMasternode.prevout.n + txHash;
+    return vinThrone.prevout.hash + vinThrone.prevout.n + txHash;
 }
 
 
@@ -505,26 +505,26 @@ bool CConsensusVote::SignatureValid()
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
     //LogPrintf("verify strMessage %s \n", strMessage.c_str());
 
-    CMasternode* pmn = mnodeman.Find(vinMasternode);
+    CThrone* pmn = mnodeman.Find(vinThrone);
 
     if(pmn == NULL)
     {
-        LogPrintf("InstantX::CConsensusVote::SignatureValid() - Unknown Masternode\n");
+        LogPrintf("InstantX::CConsensusVote::SignatureValid() - Unknown Throne\n");
         return false;
     }
 
-    //LogPrintf("verify addr %s \n", vecMasternodes[0].addr.ToString().c_str());
-    //LogPrintf("verify addr %s \n", vecMasternodes[1].addr.ToString().c_str());
-    //LogPrintf("verify addr %d %s \n", n, vecMasternodes[n].addr.ToString().c_str());
+    //LogPrintf("verify addr %s \n", vecThrones[0].addr.ToString().c_str());
+    //LogPrintf("verify addr %s \n", vecThrones[1].addr.ToString().c_str());
+    //LogPrintf("verify addr %d %s \n", n, vecThrones[n].addr.ToString().c_str());
 
     CScript pubkey;
     pubkey.SetDestination(pmn->pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
-    CBitcoinAddress address2(address1);
+    CCrowncoinAddress address2(address1);
     //LogPrintf("verify pubkey2 %s \n", address2.ToString().c_str());
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Verify message failed\n");
         return false;
     }
@@ -540,11 +540,11 @@ bool CConsensusVote::Sign()
     CPubKey pubkey2;
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
     //LogPrintf("signing strMessage %s \n", strMessage.c_str());
-    //LogPrintf("signing privkey %s \n", strMasterNodePrivKey.c_str());
+    //LogPrintf("signing privkey %s \n", strThroNePrivKey.c_str());
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
+    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        LogPrintf("CActiveThrone::RegisterAsThroNe() - ERROR: Invalid throneprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
 
@@ -552,16 +552,16 @@ bool CConsensusVote::Sign()
     pubkey.SetDestination(pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
-    CBitcoinAddress address2(address1);
+    CCrowncoinAddress address2(address1);
     //LogPrintf("signing pubkey2 %s \n", address2.ToString().c_str());
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, key2)) {
-        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - Sign message failed");
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, key2)) {
+        LogPrintf("CActiveThrone::RegisterAsThroNe() - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
-        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - Verify message failed");
+    if(!darkSendSigner.VerifyMessage(pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
+        LogPrintf("CActiveThrone::RegisterAsThroNe() - Verify message failed");
         return false;
     }
 
@@ -574,17 +574,17 @@ bool CTransactionLock::SignaturesValid()
 
     BOOST_FOREACH(CConsensusVote vote, vecConsensusVotes)
     {
-        int n = mnodeman.GetMasternodeRank(vote.vinMasternode, vote.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+        int n = mnodeman.GetThroneRank(vote.vinThrone, vote.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
         if(n == -1)
         {
-            LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
+            LogPrintf("InstantX::DoConsensusVote - Unknown Throne\n");
             return false;
         }
 
         if(n > INSTANTX_SIGNATURES_TOTAL)
         {
-            LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %s\n", INSTANTX_SIGNATURES_TOTAL);
+            LogPrintf("InstantX::DoConsensusVote - Throne not in the top %s\n", INSTANTX_SIGNATURES_TOTAL);
             return false;
         }
 

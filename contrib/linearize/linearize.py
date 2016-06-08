@@ -3,7 +3,7 @@
 # linearize.py:  Construct a linear, no-fork, best version of the blockchain.
 #
 #
-# Copyright (c) 2013 The Bitcoin developers
+# Copyright (c) 2013 The Crowncoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -20,7 +20,7 @@ MAX_NONCE = 1000000L
 
 settings = {}
 
-class BitcoinRPC:
+class CrowncoinRPC:
 	OBJID = 1
 
 	def __init__(self, host, port, username, password):
@@ -70,7 +70,7 @@ def getblock(rpc, settings, n):
 	return data
 
 def get_blocks(settings):
-	rpc = BitcoinRPC(settings['host'], settings['port'],
+	rpc = CrowncoinRPC(settings['host'], settings['port'],
 			 settings['rpcuser'], settings['rpcpassword'])
 
 	outf = open(settings['output'], 'ab')

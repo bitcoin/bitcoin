@@ -13,7 +13,7 @@
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternodeman.h"
+#include "throneman.h"
 #include "net.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -1379,7 +1379,7 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
     return nSubsidy + nFees;
 }
 
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
+int64_t GetThronePayment(int nHeight, int64_t blockValue)
 {
     int64_t ret = blockValue*0.4; // start at 40%
 
@@ -2682,32 +2682,32 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
 
-    // ----------- masternode payments -----------
+    // ----------- throne payments -----------
 
-    bool MasternodePayments = false;
+    bool ThronePayments = false;
 
     if(TestNet()){
-        if(block.nTime > START_MASTERNODE_PAYMENTS_TESTNET) MasternodePayments = true;
+        if(block.nTime > START_THRONE_PAYMENTS_TESTNET) ThronePayments = true;
     } else {
-        if(block.nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
+        if(block.nTime > START_THRONE_PAYMENTS) ThronePayments = true;
     }
 
-    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)){
-        MasternodePayments = false;
-        if(fDebug) LogPrintf("CheckBlock() : Masternode payment enforcement is off\n");
+    if(!IsSporkActive(SPORK_1_THRONE_PAYMENTS_ENFORCEMENT)){
+        ThronePayments = false;
+        if(fDebug) LogPrintf("CheckBlock() : Throne payment enforcement is off\n");
     }
 
-    if(MasternodePayments)
+    if(ThronePayments)
     {
         LOCK2(cs_main, mempool.cs);
 
         CBlockIndex *pindex = chainActive.Tip();
         if(pindex != NULL){
             if(pindex->GetBlockHash() == block.hashPrevBlock){
-                int64_t masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, block.vtx[0].GetValueOut());
+                int64_t thronePaymentAmount = GetThronePayment(pindex->nHeight+1, block.vtx[0].GetValueOut());
                 bool fIsInitialDownload = IsInitialBlockDownload();
 
-                // If we don't already have its previous block, skip masternode payment step
+                // If we don't already have its previous block, skip throne payment step
                 if (!fIsInitialDownload && pindex != NULL)
                 {
                     bool foundPaymentAmount = false;
@@ -2715,44 +2715,44 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     bool foundPaymentAndPayee = false;
 
                     CScript payee;
-                    if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
+                    if(!thronePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
                         foundPayee = true; //doesn't require a specific payee
                         foundPaymentAmount = true;
                         foundPaymentAndPayee = true;
-                        LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", chainActive.Tip()->nHeight+1);
+                        LogPrintf("CheckBlock() : Using non-specific throne payments %d\n", chainActive.Tip()->nHeight+1);
                     }
 
                     for (unsigned int i = 0; i < block.vtx[0].vout.size(); i++) {
-                        if(block.vtx[0].vout[i].nValue == masternodePaymentAmount )
+                        if(block.vtx[0].vout[i].nValue == thronePaymentAmount )
                             foundPaymentAmount = true;
                         if(block.vtx[0].vout[i].scriptPubKey == payee )
                             foundPayee = true;
-                        if(block.vtx[0].vout[i].nValue == masternodePaymentAmount && block.vtx[0].vout[i].scriptPubKey == payee)
+                        if(block.vtx[0].vout[i].nValue == thronePaymentAmount && block.vtx[0].vout[i].scriptPubKey == payee)
                             foundPaymentAndPayee = true;
                     }
 
 
                     CTxDestination address1;
                     ExtractDestination(payee, address1);
-                    CBitcoinAddress address2(address1);
+                    CCrowncoinAddress address2(address1);
 
                     if(!foundPaymentAndPayee) {
-                        LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                        if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                        LogPrintf("CheckBlock() : Couldn't find throne payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, thronePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
+                        if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find throne payment or payee"));
                     } else {
-                        LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
+                        LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, thronePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
                     }
                 } else {
-                    LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", chainActive.Tip()->nHeight+1);
+                    LogPrintf("CheckBlock() : Is initial download, skipping throne payment check %d\n", chainActive.Tip()->nHeight+1);
                 }
             } else {
-                LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", chainActive.Tip()->nHeight+1, block.GetHash().ToString().c_str());
+                LogPrintf("CheckBlock() : Skipping throne payment check - nHeight %d Hash %s\n", chainActive.Tip()->nHeight+1, block.GetHash().ToString().c_str());
             }
         } else {
-            LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n");
+            LogPrintf("CheckBlock() : pindex is null, skipping throne payment check\n");
         }
     } else {
-        LogPrintf("CheckBlock() : skipping masternode payment checks\n");
+        LogPrintf("CheckBlock() : skipping throne payment checks\n");
     }
 
 
@@ -3060,8 +3060,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     if(!fLiteMode){
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
             darkSendPool.NewBlock();
-            masternodePayments.ProcessBlock(GetHeight()+10);
-            mnscan.DoMasternodePOSChecks();
+            thronePayments.ProcessBlock(GetHeight()+10);
+            mnscan.DoThronePOSChecks();
         }
     }
 
@@ -3721,10 +3721,10 @@ bool static AlreadyHave(const CInv& inv)
         return mapTxLockVote.count(inv.hash);
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
-    case MSG_MASTERNODE_WINNER:
-        return mapSeenMasternodeVotes.count(inv.hash);
-    case MSG_MASTERNODE_SCANNING_ERROR:
-        return mapMasternodeScanningErrors.count(inv.hash);
+    case MSG_THRONE_WINNER:
+        return mapSeenThroneVotes.count(inv.hash);
+    case MSG_THRONE_SCANNING_ERROR:
+        return mapThroneScanningErrors.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -3876,20 +3876,20 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
-                    if(mapSeenMasternodeVotes.count(inv.hash)){
+                if (!pushed && inv.type == MSG_THRONE_WINNER) {
+                    if(mapSeenThroneVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeVotes[inv.hash];
+                        ss << mapSeenThroneVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_MASTERNODE_SCANNING_ERROR) {
-                    if(mapMasternodeScanningErrors.count(inv.hash)){
+                if (!pushed && inv.type == MSG_THRONE_SCANNING_ERROR) {
+                    if(mapThroneScanningErrors.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapMasternodeScanningErrors[inv.hash];
+                        ss << mapThroneScanningErrors[inv.hash];
                         pfrom->PushMessage("mnse", ss);
                         pushed = true;
                     }
@@ -4269,7 +4269,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vector<uint256> vEraseQueue;
         CTransaction tx;
 
-        //masternode signed transaction
+        //throne signed transaction
         bool allowFree = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
@@ -4278,15 +4278,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if(strCommand == "tx") {
             vRecv >> tx;
         } else if (strCommand == "dstx") {
-            //these allow masternodes to publish a limited amount of free transactions
+            //these allow thrones to publish a limited amount of free transactions
             vRecv >> tx >> vin >> vchSig >> sigTime;
 
-            CMasternode* pmn = mnodeman.Find(vin);
+            CThrone* pmn = mnodeman.Find(vin);
             if(pmn != NULL)
             {
                 if(!pmn->allowFreeTx){
-                    //multiple peers can send us a valid masternode transaction
-                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
+                    //multiple peers can send us a valid throne transaction
+                    if(fDebug) LogPrintf("dstx: Throne sending too many transactions %s\n", tx.GetHash().ToString().c_str());
                     return true;
                 }
 
@@ -4294,12 +4294,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
                 std::string errorMessage = "";
                 if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
+                    LogPrintf("dstx: Got bad throne address signature %s \n", vin.ToString().c_str());
                     //pfrom->Misbehaving(20);
                     return false;
                 }
 
-                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
+                LogPrintf("dstx: Got Throne transaction %s\n", tx.GetHash().ToString().c_str());
 
                 allowFree = true;
                 pmn->allowFreeTx = false;
@@ -4638,10 +4638,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         //probably one the extensions
         darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
         mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
-        ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+        ProcessMessageThronePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
-        ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);
+        ProcessMessageThronePOS(pfrom, strCommand, vRecv);
     }
 
 

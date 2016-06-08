@@ -1,14 +1,14 @@
 Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
-Upstream-Name: Bitcoin
+Upstream-Name: Crowncoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: http://sourceforge.net/projects/bitcoin/files/
- https://github.com/bitcoin/bitcoin
+ irc://#crowncoin@freenode.net
+Source: http://sourceforge.net/projects/crowncoin/files/
+ https://github.com/crowncoin/crowncoin
 
 Files: *
 Copyright: 2009-2012, Crowncoin Developers
 License: Expat
-Comment: The Crowncoin Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Crowncoin Developers encompasses the current developers listed on crowncoin.org,
          as well as the numerous contributors to the project.
 
 Files: src/json/*
@@ -56,7 +56,7 @@ Comment: Icon Pack: Human-O2
 Files: src/qt/res/icons/transaction*.png
 Copyright: md2k7
 License: Expat
-Comment: Site: https://bitcointalk.org/index.php?topic=15276.0
+Comment: Site: https://crowncointalk.org/index.php?topic=15276.0
 
 Files: src/qt/res/icons/configure.png, src/qt/res/icons/quit.png,
       src/qt/res/icons/editcopy.png, src/qt/res/icons/editpaste.png,
@@ -66,10 +66,10 @@ Copyright: http://www.everaldo.com
 License: LGPL
 Comment: Icon Pack: Crystal SVG
 
-Files: src/qt/res/icons/bitcoin.png, src/qt/res/icons/toolbar.png
+Files: src/qt/res/icons/crowncoin.png, src/qt/res/icons/toolbar.png
 Copyright: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: PUB-DOM
-Comment: Site: https://bitcointalk.org/?topic=1756.0
+Comment: Site: https://crowncointalk.org/?topic=1756.0
 
 Files:  scripts/img/reload.xcf, src/qt/res/movies/*.png
 Copyright: Everaldo (Everaldo Coelho)
@@ -80,7 +80,7 @@ Comment: Icon Pack: Kids
 Files: src/qt/res/images/splash2.jpg
 License: PUB-DOM
 Copyright: Crobbo (forum)
-Comment: Site: https://bitcointalk.org/index.php?topic=32273.0
+Comment: Site: https://crowncointalk.org/index.php?topic=32273.0
 
 
 License: Expat

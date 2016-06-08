@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,36 +12,36 @@
 
 #include <stdint.h>
 
-#define START_MASTERNODE_PAYMENTS_TESTNET 1465391833 //Fri, 09 Jan 2015 21:05:58 GMT
-#define START_MASTERNODE_PAYMENTS 1465391833 //Wed, 25 Jun 2014 20:36:16 GMT
+#define START_THRONE_PAYMENTS_TESTNET 1465391833 //Fri, 09 Jan 2015 21:05:58 GMT
+#define START_THRONE_PAYMENTS 1465391833 //Wed, 25 Jun 2014 20:36:16 GMT
 
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (9999.99*COIN);
 
 /*
-    At 15 signatures, 1/2 of the masternode network can be owned by
+    At 15 signatures, 1/2 of the throne network can be owned by
     one party without comprimising the security of InstantX
     (1000/2150.0)**15 = 1.031e-05
 */
 #define INSTANTX_SIGNATURES_REQUIRED           15
 #define INSTANTX_SIGNATURES_TOTAL              20
 
-#define MASTERNODE_NOT_PROCESSED               0 // initial state
-#define MASTERNODE_IS_CAPABLE                  1
-#define MASTERNODE_NOT_CAPABLE                 2
-#define MASTERNODE_STOPPED                     3
-#define MASTERNODE_INPUT_TOO_NEW               4
-#define MASTERNODE_PORT_NOT_OPEN               6
-#define MASTERNODE_PORT_OPEN                   7
-#define MASTERNODE_SYNC_IN_PROCESS             8
-#define MASTERNODE_REMOTELY_ENABLED            9
+#define THRONE_NOT_PROCESSED               0 // initial state
+#define THRONE_IS_CAPABLE                  1
+#define THRONE_NOT_CAPABLE                 2
+#define THRONE_STOPPED                     3
+#define THRONE_INPUT_TOO_NEW               4
+#define THRONE_PORT_NOT_OPEN               6
+#define THRONE_PORT_OPEN                   7
+#define THRONE_SYNC_IN_PROCESS             8
+#define THRONE_REMOTELY_ENABLED            9
 
-#define MASTERNODE_MIN_CONFIRMATIONS           15
-#define MASTERNODE_MIN_DSEEP_SECONDS           (30*60)
-#define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
-#define MASTERNODE_PING_SECONDS                (1*60)
-#define MASTERNODE_EXPIRATION_SECONDS          (65*60)
-#define MASTERNODE_REMOVAL_SECONDS             (70*60)
+#define THRONE_MIN_CONFIRMATIONS           15
+#define THRONE_MIN_DSEEP_SECONDS           (30*60)
+#define THRONE_MIN_DSEE_SECONDS            (5*60)
+#define THRONE_PING_SECONDS                (1*60)
+#define THRONE_EXPIRATION_SECONDS          (65*60)
+#define THRONE_REMOVAL_SECONDS             (70*60)
 
 static const int MIN_POOL_PEER_PROTO_VERSION = 70076; // minimum peer version accepted by DarkSendPool
 

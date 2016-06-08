@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -138,7 +138,7 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
      * these. Do not add them to the wallet and warn. */
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
     {
-        std::string strAddr = CBitcoinAddress(redeemScript.GetID()).ToString();
+        std::string strAddr = CCrowncoinAddress(redeemScript.GetID()).ToString();
         LogPrintf("%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n",
             __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
         return true;
@@ -1537,7 +1537,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        // masternode-like input should not be selected by AvailableCoins now anyway
+        // throne-like input should not be selected by AvailableCoins now anyway
         //if(out.tx->vout[out.i].nValue == 10000*COIN) continue;
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             bool fAccepted = false;
@@ -1607,7 +1607,7 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     {
         //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
         if(out.tx->vout[out.i].nValue < 1*COIN && !IsDenominatedAmount(out.tx->vout[out.i].nValue)) continue;
-        if(fMasterNode && out.tx->vout[out.i].nValue == 10000*COIN) continue; //masternode input
+        if(fThroNe && out.tx->vout[out.i].nValue == 10000*COIN) continue; //throne input
 
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
@@ -1870,7 +1870,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 // The following if statement should be removed once enough miners
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
-                // CENT bitcoins.
+                // CENT crowncoins.
                 if (nFeeRet < CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
                 {
                     int64_t nMoveToFee = min(nChange, CTransaction::nMinTxFee - nFeeRet);
@@ -1889,7 +1889,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 {
                     // Fill a vout to ourself
                     // TODO: pass in scriptChange instead of reservekey so
-                    // change transaction isn't always pay-to-bitcoin-address
+                    // change transaction isn't always pay-to-crowncoin-address
                     CScript scriptChange;
 
                     // coin control: send change to custom address
@@ -2315,9 +2315,9 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!fFileBacked)
         return false;
-    if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(CBitcoinAddress(address).ToString(), strPurpose))
+    if (!strPurpose.empty() && !CWalletDB(strWalletFile).WritePurpose(CCrowncoinAddress(address).ToString(), strPurpose))
         return false;
-    return CWalletDB(strWalletFile).WriteName(CBitcoinAddress(address).ToString(), strName);
+    return CWalletDB(strWalletFile).WriteName(CCrowncoinAddress(address).ToString(), strName);
 }
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
@@ -2328,7 +2328,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         if(fFileBacked)
         {
             // Delete destdata tuples associated with address
-            std::string strAddress = CBitcoinAddress(address).ToString();
+            std::string strAddress = CCrowncoinAddress(address).ToString();
             BOOST_FOREACH(const PAIRTYPE(string, string) &item, mapAddressBook[address].destdata)
             {
                 CWalletDB(strWalletFile).EraseDestData(strAddress, item.first);
@@ -2341,8 +2341,8 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
 
     if (!fFileBacked)
         return false;
-    CWalletDB(strWalletFile).ErasePurpose(CBitcoinAddress(address).ToString());
-    return CWalletDB(strWalletFile).EraseName(CBitcoinAddress(address).ToString());
+    CWalletDB(strWalletFile).ErasePurpose(CCrowncoinAddress(address).ToString());
+    return CWalletDB(strWalletFile).EraseName(CCrowncoinAddress(address).ToString());
 }
 
 bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
@@ -2839,7 +2839,7 @@ bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, co
     mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).WriteDestData(CBitcoinAddress(dest).ToString(), key, value);
+    return CWalletDB(strWalletFile).WriteDestData(CCrowncoinAddress(dest).ToString(), key, value);
 }
 
 bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
@@ -2848,7 +2848,7 @@ bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
         return false;
     if (!fFileBacked)
         return true;
-    return CWalletDB(strWalletFile).EraseDestData(CBitcoinAddress(dest).ToString(), key);
+    return CWalletDB(strWalletFile).EraseDestData(CCrowncoinAddress(dest).ToString(), key);
 }
 
 bool CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)

@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -134,7 +134,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // vSeeds.push_back(CDNSSeedData("bitcoin.petertodd.org", "testnet-seed.bitcoin.petertodd.org"));
+        // vSeeds.push_back(CDNSSeedData("crowncoin.petertodd.org", "testnet-seed.crowncoin.petertodd.org"));
         // vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(111);

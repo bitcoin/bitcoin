@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #include "ui_sendcoinsdialog.h"
 
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "crowncoinunits.h"
 #include "coincontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -142,7 +142,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         // generate bold amount string
-        QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = "<b>" + CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");
         // generate monospace address string
         QString addrOrName = "<span style='font-family: monospace;'>";
@@ -153,7 +153,7 @@ void SendCoinsDialog::on_sendButton_clicked()
             CTxDestination dest;
             if (!model->checkRecipientName (rcp.recipient, dest))
               return;
-            CBitcoinAddress addr;
+            CCrowncoinAddress addr;
             if (!addr.Set (dest))
               return;
             const QString strAddr(QString::fromStdString (addr.ToString ()));
@@ -208,7 +208,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
+        CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
@@ -223,7 +223,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append(CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
     }
@@ -232,13 +232,13 @@ void SendCoinsDialog::on_sendButton_clicked()
     questionString.append("<hr />");
     qint64 totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
+    foreach(CrowncoinUnits::Unit u, CrowncoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatWithUnit(u, totalAmount));
+            alternativeUnits.append(CrowncoinUnits::formatWithUnit(u, totalAmount));
     }
     questionString.append(tr("Total Amount %1 (= %2)")
-        .arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
+        .arg(CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
@@ -402,7 +402,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
         }
     }
     else {
-        CBitcoinAddress address(rv.recipient.toStdString());
+        CCrowncoinAddress address(rv.recipient.toStdString());
         if (!address.IsValid()) {
             emit message(strSendCoins, tr("Invalid payment address %1").arg(rv.recipient),
                 CClientUIInterface::MSG_WARNING);
@@ -421,7 +421,7 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 
     if(model && model->getOptionsModel())
     {
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+        ui->labelBalance->setText(CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
     }
 }
 
@@ -566,7 +566,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
-        CBitcoinAddress addr = CBitcoinAddress(text.toStdString());
+        CCrowncoinAddress addr = CCrowncoinAddress(text.toStdString());
 
         if (text.isEmpty()) // Nothing entered
         {

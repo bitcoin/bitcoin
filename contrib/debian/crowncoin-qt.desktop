@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Crowncoin
+Comment=Crowncoin P2P Cryptocurrency
+Comment[fr]=Crowncoin, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Crowncoin, eşten eşe kriptografik sanal para birimi
+Exec=crowncoin-qt %u
+Terminal=false
+Type=Application
+Icon=crowncoin128
+MimeType=x-scheme-handler/crowncoin;
+Categories=Office;Finance;

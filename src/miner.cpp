@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,11 +11,11 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
-#include "masternodeman.h"
+#include "throneman.h"
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// BitcoinMiner
+// CrowncoinMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
@@ -145,16 +145,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
-    // start masternode payments
-    bool bMasterNodePayment = false;
+    // start throne payments
+    bool bThroNePayment = false;
 
     if ( Params().NetworkID() == CChainParams::TESTNET ){
-        if (GetTimeMicros() > START_MASTERNODE_PAYMENTS_TESTNET ){
-            bMasterNodePayment = true;
+        if (GetTimeMicros() > START_THRONE_PAYMENTS_TESTNET ){
+            bThroNePayment = true;
         }
     }else{
-        if (GetTimeMicros() > START_MASTERNODE_PAYMENTS){
-            bMasterNodePayment = true;
+        if (GetTimeMicros() > START_THRONE_PAYMENTS){
+            bThroNePayment = true;
         }
     }
 
@@ -165,16 +165,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CBlockIndex* pindexPrev = chainActive.Tip();
         CCoinsViewCache view(*pcoinsTip, true);
 
-        if(bMasterNodePayment) {
+        if(bThroNePayment) {
             bool hasPayment = true;
             //spork
-            if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
-                //no masternode detected
-                CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+            if(!thronePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
+                //no throne detected
+                CThrone* winningNode = mnodeman.GetCurrentThroNe(1);
                 if(winningNode){
                     pblock->payee.SetDestination(winningNode->pubkey.GetID());
                 } else {
-                    LogPrintf("CreateNewBlock: Failed to detect masternode to pay\n");
+                    LogPrintf("CreateNewBlock: Failed to detect throne to pay\n");
                     hasPayment = false;
                 }
             }
@@ -188,9 +188,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
                 CTxDestination address1;
                 ExtractDestination(pblock->payee, address1);
-                CBitcoinAddress address2(address1);
+                CCrowncoinAddress address2(address1);
 
-                LogPrintf("Masternode payment to %s\n", address2.ToString().c_str());
+                LogPrintf("Throne payment to %s\n", address2.ToString().c_str());
             }
         }
 
@@ -375,12 +375,12 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
         int64_t blockValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
-        int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
+        int64_t thronePayment = GetThronePayment(pindexPrev->nHeight+1, blockValue);
 
-        //create masternode payment
+        //create throne payment
         if(payments > 1){
-            pblock->vtx[0].vout[payments-1].nValue = masternodePayment;
-            blockValue -= masternodePayment;
+            pblock->vtx[0].vout[payments-1].nValue = thronePayment;
+            blockValue -= thronePayment;
         }
         pblock->vtx[0].vout[0].nValue = blockValue;
 
@@ -557,7 +557,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-void static BitcoinMiner(CWallet *pwallet)
+void static CrowncoinMiner(CWallet *pwallet)
 {
     LogPrintf("CrowncoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -703,7 +703,7 @@ void static BitcoinMiner(CWallet *pwallet)
     }
 }
 
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
+void GenerateCrowncoins(bool fGenerate, CWallet* pwallet, int nThreads)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -726,7 +726,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+        minerThreads->create_thread(boost::bind(&CrowncoinMiner, pwallet));
 }
 
 #endif

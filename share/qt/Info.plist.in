@@ -11,7 +11,7 @@
   </array>
 
   <key>CFBundleIconFile</key>
-  <string>bitcoin.icns</string>
+  <string>crowncoin.icns</string>
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
@@ -54,7 +54,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.crowncoin.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Bitcoin payment request</string>
+      <string>Crowncoin payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>

@@ -46,7 +46,7 @@ name_getaddress (const json_spirit::Array& params, bool fHelp)
     }
 
   CTxDestination dest;
-  CBitcoinAddress addr;
+  CCrowncoinAddress addr;
   if (!ExtractDestination (data.address, dest) || !addr.Set (dest))
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
                        "destination address cannot be extracted");
@@ -99,7 +99,7 @@ name_register (const json_spirit::Array& params, bool fHelp)
   /* Validate the target address and build up the name
      registration data we want in the end.  */
   data = CNameData();
-  CBitcoinAddress addr(params[1].get_str ());
+  CCrowncoinAddress addr(params[1].get_str ());
   if (!addr.IsValid ())
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "invalid Crowncoin address");
   data.address.SetDestination (addr.Get ());

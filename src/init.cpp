@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "crowncoin-config.h"
 #endif
 
 #include "init.h"
@@ -19,8 +19,8 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
+#include "activethrone.h"
+#include "throneman.h"
 #include "spork.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
@@ -123,10 +123,10 @@ void Shutdown()
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         bitdb.Flush(false);
-    GenerateBitcoins(false, NULL, 0);
+    GenerateCrowncoins(false, NULL, 0);
 #endif
     StopNode();
-    DumpMasternodes();
+    DumpThrones();
     UnregisterNodeSignals(GetNodeSignals());
     {
         LOCK(cs_main);
@@ -308,18 +308,18 @@ std::string HelpMessage(HelpMessageMode hmm)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
-    strUsage += "  -litemode=<n>          " + _("Disable all Masternode and Darksend related functionality (0-1, default: 0)") + "\n";
+    strUsage += "  -litemode=<n>          " + _("Disable all Throne and Darksend related functionality (0-1, default: 0)") + "\n";
 
-    strUsage += "\n" + _("Masternode options:") + "\n";
-    strUsage += "  -masternode=<n>            " + _("Enable the client to act as a masternode (0-1, default: 0)") + "\n";
-    strUsage += "  -mnconf=<file>             " + _("Specify masternode configuration file (default: masternode.conf)") + "\n";
-    strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
-    strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
-    strUsage += "  -masternodeminprotocol=<n> " + _("Ignore masternodes less than version (example: 70050; default : 0)") + "\n";
+    strUsage += "\n" + _("Throne options:") + "\n";
+    strUsage += "  -throne=<n>            " + _("Enable the client to act as a throne (0-1, default: 0)") + "\n";
+    strUsage += "  -mnconf=<file>             " + _("Specify throne configuration file (default: throne.conf)") + "\n";
+    strUsage += "  -throneprivkey=<n>     " + _("Set the throne private key") + "\n";
+    strUsage += "  -throneaddr=<n>        " + _("Set external address:port to get to this throne (example: address:port)") + "\n";
+    strUsage += "  -throneminprotocol=<n> " + _("Ignore thrones less than version (example: 70050; default : 0)") + "\n";
 
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + _("Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)") + "\n";
-    strUsage += "  -darksendrounds=<n>          " + _("Use N separate masternodes to anonymize funds  (2-8, default: 2)") + "\n";
+    strUsage += "  -darksendrounds=<n>          " + _("Use N separate thrones to anonymize funds  (2-8, default: 2)") + "\n";
     strUsage += "  -anonymizedashamount=<n> " + _("Keep N dash anonymized (default: 0)") + "\n";
     strUsage += "  -liquidityprovider=<n>       " + _("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)") + "\n";
 
@@ -651,16 +651,16 @@ bool AppInit2(boost::thread_group& threadGroup)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
-    if (mapArgs.count("-masternodepaymentskey")) // masternode payments priv key
+    if (mapArgs.count("-thronepaymentskey")) // throne payments priv key
     {
-        if (!masternodePayments.SetPrivKey(GetArg("-masternodepaymentskey", "")))
-            return InitError(_("Unable to sign masternode payment winner, wrong key?"));
-        if (!sporkManager.SetPrivKey(GetArg("-masternodepaymentskey", "")))
+        if (!thronePayments.SetPrivKey(GetArg("-thronepaymentskey", "")))
+            return InitError(_("Unable to sign throne payment winner, wrong key?"));
+        if (!sporkManager.SetPrivKey(GetArg("-thronepaymentskey", "")))
             return InitError(_("Unable to sign spork message, wrong key?"));
     }
 
-    //ignore masternodes below protocol version
-    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_PEER_PROTO_VERSION);
+    //ignore thrones below protocol version
+    nThroneMinProtocol = GetArg("-throneminprotocol", MIN_PEER_PROTO_VERSION);
 
     int64_t nStart;
 
@@ -1105,51 +1105,51 @@ bool AppInit2(boost::thread_group& threadGroup)
     //CAddress addr;
     //ConnectNode(addr, strNode.c_str(), true);
 
-    uiInterface.InitMessage(_("Loading masternode cache..."));
+    uiInterface.InitMessage(_("Loading throne cache..."));
 
-    CMasternodeDB mndb;
-    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
-    if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
-    else if (readResult != CMasternodeDB::Ok)
+    CThroneDB mndb;
+    CThroneDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CThroneDB::FileError)
+        LogPrintf("Missing throne cache file - mncache.dat, will try to recreate\n");
+    else if (readResult != CThroneDB::Ok)
     {
         LogPrintf("Error reading mncache.dat: ");
-        if(readResult == CMasternodeDB::IncorrectFormat)
+        if(readResult == CThroneDB::IncorrectFormat)
             LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    fMasterNode = GetBoolArg("-masternode", false);
-    if(fMasterNode) {
+    fThroNe = GetBoolArg("-throne", false);
+    if(fThroNe) {
         LogPrintf("IS DARKSEND MASTER NODE\n");
-        strMasterNodeAddr = GetArg("-masternodeaddr", "");
+        strThroNeAddr = GetArg("-throneaddr", "");
 
-        LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
+        LogPrintf(" addr %s\n", strThroNeAddr.c_str());
 
-        if(!strMasterNodeAddr.empty()){
-            CService addrTest = CService(strMasterNodeAddr);
+        if(!strThroNeAddr.empty()){
+            CService addrTest = CService(strThroNeAddr);
             if (!addrTest.IsValid()) {
-                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
+                return InitError("Invalid -throneaddr address: " + strThroNeAddr);
             }
         }
 
-        strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
-        if(!strMasterNodePrivKey.empty()){
+        strThroNePrivKey = GetArg("-throneprivkey", "");
+        if(!strThroNePrivKey.empty()){
             std::string errorMessage;
 
             CKey key;
             CPubKey pubkey;
 
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
+            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key, pubkey))
             {
-                return InitError(_("Invalid masternodeprivkey. Please see documenation."));
+                return InitError(_("Invalid throneprivkey. Please see documenation."));
             }
 
-            activeMasternode.pubKeyMasternode = pubkey;
+            activeThrone.pubKeyThrone = pubkey;
 
         } else {
-            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a throneprivkey in the configuration. Please see documentation for help."));
         }
     }
 
@@ -1179,10 +1179,10 @@ bool AppInit2(boost::thread_group& threadGroup)
         nInstantXDepth = 0;
     }
 
-    //lite mode disables all Masternode and Darksend related functionality
+    //lite mode disables all Throne and Darksend related functionality
     fLiteMode = GetBoolArg("-litemode", false);
-    if(fMasterNode && fLiteMode){
-        return InitError("You can not start a masternode in litemode");
+    if(fThroNe && fLiteMode){
+        return InitError("You can not start a throne in litemode");
     }
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
@@ -1255,7 +1255,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 #ifdef ENABLE_WALLET
     // Generate coins in the background
     if (pwalletMain)
-        GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
+        GenerateCrowncoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
 #endif
 
     // ********************************************************* Step 12: finished

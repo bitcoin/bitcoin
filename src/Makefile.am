@@ -3,11 +3,11 @@ include Makefile.include
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
-  libbitcoin_server.a \
-  libbitcoin_common.a \
-  libbitcoin_cli.a
+  libcrowncoin_server.a \
+  libcrowncoin_common.a \
+  libcrowncoin_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libbitcoin_wallet.a
+noinst_LIBRARIES += libcrowncoin_wallet.a
 endif
 
 bin_PROGRAMS =
@@ -25,7 +25,7 @@ DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # Crowncoin #
 BITCOIN_CORE_H = \
-  activemasternode.h \
+  activethrone.h \
   addrman.h \
   alert.h \
   allocators.h \
@@ -52,10 +52,10 @@ BITCOIN_CORE_H = \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
-  masternode.h \
-  masternode-pos.h \
-  masternodeman.h \
-  masternodeconfig.h \
+  throne.h \
+  throne-pos.h \
+  throneman.h \
+  throneconfig.h \
   miner.h \
   mruset.h \
   names.h \
@@ -98,8 +98,8 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libbitcoin_server_a_SOURCES = \
-  activemasternode.cpp \
+libcrowncoin_server_a_SOURCES = \
+  activethrone.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -126,8 +126,8 @@ libbitcoin_server_a_SOURCES = \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-libbitcoin_wallet_a_SOURCES = \
-  activemasternode.cpp \
+libcrowncoin_wallet_a_SOURCES = \
+  activethrone.cpp \
   db.cpp \
   crypter.cpp \
   rpcdump.cpp \
@@ -137,8 +137,8 @@ libbitcoin_wallet_a_SOURCES = \
   keepass.cpp \
   $(BITCOIN_CORE_H)
 
-libbitcoin_common_a_SOURCES = \
-  activemasternode.cpp \
+libcrowncoin_common_a_SOURCES = \
+  activethrone.cpp \
   auxpow.cpp \
   base58.cpp \
   allocators.cpp \
@@ -146,10 +146,10 @@ libbitcoin_common_a_SOURCES = \
   core.cpp \
   darksend.cpp \
   darksend-relay.cpp \
-  masternode.cpp \
-  masternode-pos.cpp \
-  masternodeman.cpp \
-  masternodeconfig.cpp \
+  throne.cpp \
+  throne-pos.cpp \
+  throneman.cpp \
+  throneconfig.cpp \
   instantx.cpp \
   hash.cpp \
   key.cpp \
@@ -164,47 +164,47 @@ libbitcoin_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcoin_common_a_SOURCES += compat/glibc_compat.cpp
-libbitcoin_common_a_SOURCES += compat/glibcxx_compat.cpp
+libcrowncoin_common_a_SOURCES += compat/glibc_compat.cpp
+libcrowncoin_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libbitcoin_cli_a_SOURCES = \
+libcrowncoin_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libbitcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libcrowncoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
-# bitcoind binary #
+# crowncoind binary #
 crowncoind_LDADD = \
-  libbitcoin_server.a \
-  libbitcoin_cli.a \
-  libbitcoin_common.a \
+  libcrowncoin_server.a \
+  libcrowncoin_cli.a \
+  libcrowncoin_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-crowncoind_LDADD += libbitcoin_wallet.a
+crowncoind_LDADD += libcrowncoin_wallet.a
 endif
-crowncoind_SOURCES = bitcoind.cpp
+crowncoind_SOURCES = crowncoind.cpp
 #
 
 if TARGET_WINDOWS
-crowncoind_SOURCES += bitcoind-res.rc
+crowncoind_SOURCES += crowncoind-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 crowncoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
-# bitcoin-cli binary #
+# crowncoin-cli binary #
 crowncoin_cli_LDADD = \
-  libbitcoin_cli.a \
-  libbitcoin_common.a \
+  libcrowncoin_cli.a \
+  libcrowncoin_common.a \
   $(BOOST_LIBS)
-crowncoin_cli_SOURCES = bitcoin-cli.cpp
+crowncoin_cli_SOURCES = crowncoin-cli.cpp
 #
 
 if TARGET_WINDOWS
-crowncoin_cli_SOURCES += bitcoin-cli-res.rc
+crowncoin_cli_SOURCES += crowncoin-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -215,7 +215,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_cli_a_SOURCES)
+qt/crowncoinstrings.cpp: $(libcrowncoin_server_a_SOURCES) $(libcrowncoin_common_a_SOURCES) $(libcrowncoin_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 

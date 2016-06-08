@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #include "ui_aboutdialog.h"
 #include "ui_helpmessagedialog.h"
 
-#include "bitcoingui.h"
+#include "crowncoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
 
@@ -78,7 +78,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent) :
         "  -rootcertificates=<file>  " + tr("Set SSL root certificates for payment request (default: -system-)") + "\n" +
         "  -splash                   " + tr("Show splash screen on startup (default: 1)");
 
-    ui->helpMessageLabel->setFont(GUIUtil::bitcoinAddressFont());
+    ui->helpMessageLabel->setFont(GUIUtil::crowncoinAddressFont());
 
     // Set help message text
     ui->helpMessageLabel->setText(header + "\n" + coreOptions + "\n" + uiOptions);
@@ -115,7 +115,7 @@ void HelpMessageDialog::on_okButton_accepted()
 
 
 /** "Shutdown" window */
-void ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
+void ShutdownWindow::showShutdownWindow(CrowncoinGUI *window)
 {
     if (!window)
         return;

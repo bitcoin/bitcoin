@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
 #endif
 
     // just a label for displaying Crowncoin address(es)
-    ui->payTo_is->setFont(GUIUtil::bitcoinAddressFont());
+    ui->payTo_is->setFont(GUIUtil::crowncoinAddressFont());
 }
 
 SendCoinsEntry::~SendCoinsEntry()
@@ -240,7 +240,7 @@ bool SendCoinsEntry::updateLabel()
     CTxDestination dest;
     if (!rv.getAddress (*model, dest))
       return false;
-    CBitcoinAddress addr;
+    CCrowncoinAddress addr;
     if (!addr.Set (dest))
       return false;
     const QString address = QString::fromStdString (addr.ToString ());

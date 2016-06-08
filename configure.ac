@@ -111,7 +111,7 @@ AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[spec
 
 
 AC_CONFIG_SRCDIR([src])
-AC_CONFIG_HEADERS([src/bitcoin-config.h])
+AC_CONFIG_HEADERS([src/crowncoin-config.h])
 
 dnl Checks for programs.
 AC_PROG_CXX
@@ -299,7 +299,7 @@ dnl Check for pthread compile/link requirements
 AX_PTHREAD
 INCLUDES="$INCLUDES $PTHREAD_CFLAGS"
 
-# The following macro will add the necessary defines to bitcoin-config.h, but
+# The following macro will add the necessary defines to crowncoin-config.h, but
 # they also need to be passed down to any subprojects. Pull the results out of
 # the cache and add them to CPPFLAGS.
 AC_SYS_LARGEFILE
@@ -548,11 +548,11 @@ AC_MSG_CHECKING([whether to build crowncoind])
 AM_CONDITIONAL([BUILD_CROWNCOIND], [test x$build_crowncoind = xyes])
 AC_MSG_RESULT($build_crowncoind)
 
-AC_MSG_CHECKING([whether to build bitcoin-cli])
+AC_MSG_CHECKING([whether to build crowncoin-cli])
 AM_CONDITIONAL([BUILD_CROWNCOIN_CLI], [test x$build_crowncoin_cli = xyes])
 AC_MSG_RESULT($build_crowncoin_cli)
 
-dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+dnl sets $crowncoin_enable_qt, $crowncoin_enable_qt_test, $crowncoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
 
 AC_LANG_POP
@@ -611,14 +611,14 @@ else
 fi
 
 dnl these are only used when qt is enabled
-if test x$bitcoin_enable_qt != xno; then
+if test x$crowncoin_enable_qt != xno; then
   BUILD_QT=qt
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
-  if test x$bitcoin_enable_qt_dbus != xno; then
+  if test x$crowncoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
-  AC_MSG_RESULT($bitcoin_enable_qt_dbus)
+  AC_MSG_RESULT($crowncoin_enable_qt_dbus)
 
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
@@ -642,7 +642,7 @@ if test x$bitcoin_enable_qt != xno; then
   fi
 
   AC_MSG_CHECKING([whether to build test_crowncoin-qt])
-  if test x$use_tests$bitcoin_enable_qt_test = xyesyes; then
+  if test x$use_tests$crowncoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="test"
   else
@@ -696,6 +696,6 @@ AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
-AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
+AC_CONFIG_FILES([qa/pull-tester/run-crowncoind-for-test.sh],[chmod +x qa/pull-tester/run-crowncoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])
 AC_OUTPUT

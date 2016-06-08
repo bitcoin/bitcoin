@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "paymentserver.h"
 
-#include "bitcoinunits.h"
+#include "crowncoinunits.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -48,9 +48,9 @@ using namespace boost;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("crowncoin:");
-const char* BITCOIN_REQUEST_MIMETYPE = "application/bitcoin-paymentrequest";
-const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/bitcoin-paymentack";
-const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/bitcoin-payment";
+const char* BITCOIN_REQUEST_MIMETYPE = "application/crowncoin-paymentrequest";
+const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/crowncoin-paymentack";
+const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/crowncoin-payment";
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -191,9 +191,9 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             savedPaymentRequests.append(arg);
 
             SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(arg, &r))
+            if (GUIUtil::parseCrowncoinURI(arg, &r))
             {
-                CBitcoinAddress address(r.recipient.toStdString());
+                CCrowncoinAddress address(r.recipient.toStdString());
 
                 SelectParams(CChainParams::MAIN);
                 if (!address.IsValid())
@@ -410,7 +410,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
         else // normal URI
         {
             SendCoinsRecipient recipient;
-            if (GUIUtil::parseBitcoinURI(s, &recipient))
+            if (GUIUtil::parseCrowncoinURI(s, &recipient))
                 emit receivedPaymentRequest(recipient);
             else
                 emit message(tr("URI handling"),
@@ -495,7 +495,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
             // Append destination address
-            addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
+            addresses.append(QString::fromStdString(CCrowncoinAddress(dest).ToString()));
         }
         else if (!recipient.authenticatedMerchant.isEmpty()){
             // Insecure payments to custom Crowncoin addresses are not supported
@@ -511,7 +511,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         CTxOut txOut(sendingTo.second, sendingTo.first);
         if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
             QString msg = tr("Requested payment amount of %1 is too small (considered dust).")
-                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
+                .arg(CrowncoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
 
             qDebug() << "PaymentServer::processPaymentRequest : " << msg;
             emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);

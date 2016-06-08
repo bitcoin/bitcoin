@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -120,7 +120,7 @@ Value getgenerate(const Array& params, bool fHelp)
         throw runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
-            "It is set with the command line argument -gen (or bitcoin.conf setting gen)\n"
+            "It is set with the command line argument -gen (or crowncoin.conf setting gen)\n"
             "It can also be set with the setgenerate call.\n"
             "\nResult\n"
             "true|false      (boolean) If the server is set to generate coins or not\n"
@@ -193,7 +193,7 @@ Value setgenerate(const Array& params, bool fHelp)
             if (nHeightLast != nHeight)
             {
                 nHeightLast = nHeight;
-                GenerateBitcoins(fGenerate, pwalletMain, 1);
+                GenerateCrowncoins(fGenerate, pwalletMain, 1);
             }
             MilliSleep(1);
             {   // Don't keep cs_main locked
@@ -206,7 +206,7 @@ Value setgenerate(const Array& params, bool fHelp)
     {
         mapArgs["-gen"] = (fGenerate ? "1" : "0");
         mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
-        GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
+        GenerateCrowncoins(fGenerate, pwalletMain, nGenProcLimit);
     }
 
     return Value::null;
@@ -300,10 +300,10 @@ Value getwork(const Array& params, bool fHelp)
         );
 
     if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Crowncoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Crowncoin is downloading blocks...");
 
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
@@ -408,7 +408,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "getblocktemplate ( \"jsonrequestobject\" )\n"
             "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
             "It returns data needed to construct a block to work on.\n"
-            "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
+            "See https://en.crowncoin.it/wiki/BIP_0022 for full specification.\n"
 
             "\nArguments:\n"
             "1. \"jsonrequestobject\"       (string, optional) A json object in the following spec\n"
@@ -462,8 +462,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "        { ... }                       (json object) vote candidate\n"
             "        ,...\n"
             "  ],\n"
-            "  \"masternode_payments\" : true|false,         (boolean) true, if masternode payments are enabled"
-            "  \"enforce_masternode_payments\" : true|false  (boolean) true, if masternode payments are enforced"
+            "  \"throne_payments\" : true|false,         (boolean) true, if throne payments are enabled"
+            "  \"enforce_throne_payments\" : true|false  (boolean) true, if throne payments are enforced"
             "}\n"
 
             "\nExamples:\n"
@@ -490,10 +490,10 @@ Value getblocktemplate(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Crowncoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Crowncoin is downloading blocks...");
 
     // Update block
     static unsigned int nTransactionsUpdatedLast;
@@ -601,25 +601,25 @@ Value getblocktemplate(const Array& params, bool fHelp)
     if(pblock->payee != CScript()){
         CTxDestination address1;
         ExtractDestination(pblock->payee, address1);
-        CBitcoinAddress address2(address1);
+        CCrowncoinAddress address2(address1);
         result.push_back(Pair("payee", address2.ToString().c_str()));
-        result.push_back(Pair("payee_amount", (int64_t)GetMasternodePayment(pindexPrev->nHeight+1, pblock->vtx[0].GetValueOut())));
+        result.push_back(Pair("payee_amount", (int64_t)GetThronePayment(pindexPrev->nHeight+1, pblock->vtx[0].GetValueOut())));
     } else {
         result.push_back(Pair("payee", ""));
         result.push_back(Pair("payee_amount", ""));
     }
 
-    bool MasternodePayments = false;
+    bool ThronePayments = false;
 
     if(TestNet()){
-        if(pblock->nTime > START_MASTERNODE_PAYMENTS_TESTNET) MasternodePayments = true;
+        if(pblock->nTime > START_THRONE_PAYMENTS_TESTNET) ThronePayments = true;
     } else {
-        if(pblock->nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
+        if(pblock->nTime > START_THRONE_PAYMENTS) ThronePayments = true;
     }
 
 
-    result.push_back(Pair("masternode_payments", MasternodePayments));
-    result.push_back(Pair("enforce_masternode_payments", true));
+    result.push_back(Pair("throne_payments", ThronePayments));
+    result.push_back(Pair("enforce_throne_payments", true));
 
     return result;
 }
@@ -631,7 +631,7 @@ Value submitblock(const Array& params, bool fHelp)
             "submitblock \"hexdata\" ( \"jsonparametersobject\" )\n"
             "\nAttempts to submit new block to network.\n"
             "The 'jsonparametersobject' parameter is currently ignored.\n"
-            "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n"
+            "See https://en.crowncoin.it/wiki/BIP_0022 for full specification.\n"
 
             "\nArguments\n"
             "1. \"hexdata\"    (string, required) the hex-encoded block data to submit\n"
@@ -703,9 +703,9 @@ Value getauxblock(const Array& params, bool fHelp)
 
     const bool regtest = (Params().NetworkID() == CChainParams::REGTEST);
     if (vNodes.empty() && !regtest)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Crowncoin is not connected!");
     if (IsInitialBlockDownload() && !regtest)
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Crowncoin is downloading blocks...");
 
     {
         LOCK(cs_main);

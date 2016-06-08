@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 
 #include "addressbookpage.h"
 #include "askpassphrasedialog.h"
-#include "bitcoingui.h"
+#include "crowncoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -78,7 +78,7 @@ WalletView::~WalletView()
 {
 }
 
-void WalletView::setBitcoinGUI(BitcoinGUI *gui)
+void WalletView::setCrowncoinGUI(CrowncoinGUI *gui)
 {
     if (gui)
     {

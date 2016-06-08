@@ -55,10 +55,10 @@ bool static TestSplitHost(string test, string host, int port)
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
 {
-    BOOST_CHECK(TestSplitHost("www.bitcoin.org", "www.bitcoin.org", -1));
-    BOOST_CHECK(TestSplitHost("[www.bitcoin.org]", "www.bitcoin.org", -1));
-    BOOST_CHECK(TestSplitHost("www.bitcoin.org:80", "www.bitcoin.org", 80));
-    BOOST_CHECK(TestSplitHost("[www.bitcoin.org]:80", "www.bitcoin.org", 80));
+    BOOST_CHECK(TestSplitHost("www.crowncoin.org", "www.crowncoin.org", -1));
+    BOOST_CHECK(TestSplitHost("[www.crowncoin.org]", "www.crowncoin.org", -1));
+    BOOST_CHECK(TestSplitHost("www.crowncoin.org:80", "www.crowncoin.org", 80));
+    BOOST_CHECK(TestSplitHost("[www.crowncoin.org]:80", "www.crowncoin.org", 80));
     BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", -1));
     BOOST_CHECK(TestSplitHost("127.0.0.1:9340", "127.0.0.1", 9340));
     BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", -1));

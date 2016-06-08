@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -254,7 +254,7 @@ std::string HelpMessageCli(bool mainProgram)
     {
         strUsage += _("Options:") + "\n";
         strUsage += "  -?                     " + _("This help message") + "\n";
-        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
+        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: crowncoin.conf)") + "\n";
         strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
         strUsage += "  -testnet               " + _("Use the test network") + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
@@ -272,7 +272,7 @@ std::string HelpMessageCli(bool mainProgram)
         strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
         strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
 
-        strUsage += "\n" + _("SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
+        strUsage += "\n" + _("SSL options: (see the Crowncoin Wiki for SSL setup instructions)") + "\n";
         strUsage += "  -rpcssl                " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
     }
 

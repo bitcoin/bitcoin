@@ -27,7 +27,7 @@ std::map<int, CSporkMessage> mapSporksActive;
 
 void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLiteMode) return; //disable all darksend/throne related functionality
 
     if (strCommand == "spork")
     {
@@ -83,11 +83,11 @@ bool IsSporkActive(int nSporkID)
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
     } else {
-        if(nSporkID == SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT) r = SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_1_THRONE_PAYMENTS_ENFORCEMENT) r = SPORK_1_THRONE_PAYMENTS_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_2_INSTANTX) r = SPORK_2_INSTANTX_DEFAULT;
         if(nSporkID == SPORK_3_INSTANTX_BLOCK_FILTERING) r = SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT;
         if(nSporkID == SPORK_5_MAX_VALUE) r = SPORK_5_MAX_VALUE_DEFAULT;
-        if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING;
+        if(nSporkID == SPORK_7_THRONE_SCANNING) r = SPORK_7_THRONE_SCANNING;
 
         if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -104,11 +104,11 @@ int GetSporkValue(int nSporkID)
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
     } else {
-        if(nSporkID == SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT) r = SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_1_THRONE_PAYMENTS_ENFORCEMENT) r = SPORK_1_THRONE_PAYMENTS_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_2_INSTANTX) r = SPORK_2_INSTANTX_DEFAULT;
         if(nSporkID == SPORK_3_INSTANTX_BLOCK_FILTERING) r = SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT;
         if(nSporkID == SPORK_5_MAX_VALUE) r = SPORK_5_MAX_VALUE_DEFAULT;
-        if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING;
+        if(nSporkID == SPORK_7_THRONE_SCANNING) r = SPORK_7_THRONE_SCANNING;
 
         if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -146,17 +146,17 @@ bool CSporkManager::Sign(CSporkMessage& spork)
 
     if(!darkSendSigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CMasternodePayments::Sign - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        LogPrintf("CThronePayments::Sign - ERROR: Invalid throneprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, spork.vchSig, key2)) {
-        LogPrintf("CMasternodePayments::Sign - Sign message failed");
+        LogPrintf("CThronePayments::Sign - Sign message failed");
         return false;
     }
 
     if(!darkSendSigner.VerifyMessage(pubkey2, spork.vchSig, strMessage, errorMessage)) {
-        LogPrintf("CMasternodePayments::Sign - Verify message failed");
+        LogPrintf("CThronePayments::Sign - Verify message failed");
         return false;
     }
 
@@ -212,22 +212,22 @@ bool CSporkManager::SetPrivKey(std::string strPrivKey)
 
 int CSporkManager::GetSporkIDByName(std::string strName)
 {
-    if(strName == "SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT") return SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT;
+    if(strName == "SPORK_1_THRONE_PAYMENTS_ENFORCEMENT") return SPORK_1_THRONE_PAYMENTS_ENFORCEMENT;
     if(strName == "SPORK_2_INSTANTX") return SPORK_2_INSTANTX;
     if(strName == "SPORK_3_INSTANTX_BLOCK_FILTERING") return SPORK_3_INSTANTX_BLOCK_FILTERING;
     if(strName == "SPORK_5_MAX_VALUE") return SPORK_5_MAX_VALUE;
-    if(strName == "SPORK_7_MASTERNODE_SCANNING") return SPORK_7_MASTERNODE_SCANNING;
+    if(strName == "SPORK_7_THRONE_SCANNING") return SPORK_7_THRONE_SCANNING;
 
     return -1;
 }
 
 std::string CSporkManager::GetSporkNameByID(int id)
 {
-    if(id == SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT) return "SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT";
+    if(id == SPORK_1_THRONE_PAYMENTS_ENFORCEMENT) return "SPORK_1_THRONE_PAYMENTS_ENFORCEMENT";
     if(id == SPORK_2_INSTANTX) return "SPORK_2_INSTANTX";
     if(id == SPORK_3_INSTANTX_BLOCK_FILTERING) return "SPORK_3_INSTANTX_BLOCK_FILTERING";
     if(id == SPORK_5_MAX_VALUE) return "SPORK_5_MAX_VALUE";
-    if(id == SPORK_7_MASTERNODE_SCANNING) return "SPORK_7_MASTERNODE_SCANNING";
+    if(id == SPORK_7_THRONE_SCANNING) return "SPORK_7_THRONE_SCANNING";
 
     return "Unknown";
 }

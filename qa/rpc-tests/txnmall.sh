@@ -13,8 +13,8 @@ fi
 
 set -f
 
-BITCOIND=${1}/bitcoind
-CLI=${1}/bitcoin-cli
+BITCOIND=${1}/crowncoind
+CLI=${1}/crowncoin-cli
 
 DIR="${BASH_SOURCE%/*}"
 SENDANDWAIT="${DIR}/send.sh"
@@ -92,7 +92,7 @@ B2ADDRESS=$( $CLI $B2ARGS getaccountaddress "from1" )
 
 # Have B1 create two transactions; second will
 # spend change from first, since B1 starts with only a single
-# 50 bitcoin output:
+# 50 crowncoin output:
 $CLI $B1ARGS move "" "foo" 10.0 > /dev/null
 $CLI $B1ARGS move "" "bar" 10.0 > /dev/null
 TXID1=$( $CLI $B1ARGS sendfrom foo $B2ADDRESS 1.0 0)

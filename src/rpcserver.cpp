@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -270,8 +270,8 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Dash features */
     { "spork",                  &spork,                  true,      false,      false },
-    { "masternode",             &masternode,             true,      false,      true  },
-    { "masternodelist",         &masternodelist,         true,      false,      false },
+    { "throne",             &throne,             true,      false,      true  },
+    { "thronelist",         &thronelist,         true,      false,      false },
 #ifdef ENABLE_WALLET
     { "darksend",               &darksend,               false,     false,      true  },
 #endif /* ENABLE_WALLET?  */

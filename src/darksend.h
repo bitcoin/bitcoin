@@ -8,18 +8,18 @@
 #include "core.h"
 #include "main.h"
 #include "sync.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
+#include "activethrone.h"
+#include "throneman.h"
 #include "darksend-relay.h"
 
 class CTxIn;
 class CDarksendPool;
 class CDarkSendSigner;
-class CMasterNodeVote;
-class CBitcoinAddress;
+class CThroNeVote;
+class CCrowncoinAddress;
 class CDarksendQueue;
 class CDarksendBroadcastTx;
-class CActiveMasternode;
+class CActiveThrone;
 
 // pool states for mixing
 #define POOL_MAX_TRANSACTIONS                  3 // wait for X transactions to merge and publish
@@ -35,9 +35,9 @@ class CActiveMasternode;
 #define POOL_STATUS_SUCCESS                    8 // success
 
 // status update message constants
-#define MASTERNODE_ACCEPTED                    1
-#define MASTERNODE_REJECTED                    0
-#define MASTERNODE_RESET                       -1
+#define THRONE_ACCEPTED                    1
+#define THRONE_REJECTED                    0
+#define THRONE_RESET                       -1
 
 #define DARKSEND_QUEUE_TIMEOUT                 30
 #define DARKSEND_SIGNING_TIMEOUT               15
@@ -50,9 +50,9 @@ class CActiveMasternode;
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
 extern std::vector<CDarksendQueue> vecDarksendQueue;
-extern std::string strMasterNodePrivKey;
+extern std::string strThroNePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
-extern CActiveMasternode activeMasternode;
+extern CActiveThrone activeThrone;
 
 // get the Darksend chain depth for a given input
 int GetInputDarksendRounds(CTxIn in, int rounds=0);
@@ -185,7 +185,7 @@ public:
 
     bool GetAddress(CService &addr)
     {
-        CMasternode* pmn = mnodeman.Find(vin);
+        CThrone* pmn = mnodeman.Find(vin);
         if(pmn != NULL)
         {
             addr = pmn->addr;
@@ -197,7 +197,7 @@ public:
     /// Get the protocol version
     bool GetProtocolVersion(int &protocolVersion)
     {
-        CMasternode* pmn = mnodeman.Find(vin);
+        CThrone* pmn = mnodeman.Find(vin);
         if(pmn != NULL)
         {
             protocolVersion = pmn->protocolVersion;
@@ -208,8 +208,8 @@ public:
 
     /** Sign this Darksend transaction
      *  \return true if all conditions are met:
-     *     1) we have an active Masternode,
-     *     2) we have a valid Masternode private key,
+     *     1) we have an active Throne,
+     *     2) we have a valid Throne private key,
      *     3) we signed the message successfully, and
      *     4) we verified the message successfully
      */
@@ -223,7 +223,7 @@ public:
         return (GetTime() - time) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
     }
 
-    /// Check if we have a valid Masternode address
+    /// Check if we have a valid Throne address
     bool CheckSignature();
 
 };
@@ -244,7 +244,7 @@ public:
 class CDarkSendSigner
 {
 public:
-    /// Is the inputs associated with this public key? (and there is 1000 DASH - checking if valid masternode)
+    /// Is the inputs associated with this public key? (and there is 1000 DASH - checking if valid throne)
     bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
     /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
@@ -261,7 +261,7 @@ class CDarksendPool
 public:
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
-    std::vector<CDarkSendEntry> entries; // Masternode entries
+    std::vector<CDarkSendEntry> entries; // Throne entries
     CTransaction finalTransaction; // the finalized transaction ready for signing
 
     int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
@@ -282,12 +282,12 @@ public:
     std::string lastMessage;
     bool completedTransaction;
     bool unitTest;
-    CMasternode* pSubmittedToMasternode;
+    CThrone* pSubmittedToThrone;
 
     int sessionID;
     int sessionDenom; //Users must submit an denom matching this
     int sessionUsers; //N Users have said they'll join
-    bool sessionFoundMasternode; //If we've found a compatible Masternode
+    bool sessionFoundThrone; //If we've found a compatible Throne
     int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
@@ -365,7 +365,7 @@ public:
 
     int GetEntriesCount() const
     {
-        if(fMasterNode){
+        if(fThroNe){
             return entries.size();
         } else {
             return entriesCount;
@@ -393,16 +393,16 @@ public:
     // Set the 'state' value, with some logging and capturing when the state changed
     void UpdateState(unsigned int newState)
     {
-        if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
+        if (fThroNe && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
+            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Throne. \n");
             return;
         }
 
         LogPrintf("CDarksendPool::UpdateState() == %d | %d \n", state, newState);
         if(state != newState){
             lastTimeChanged = GetTimeMillis();
-            if(fMasterNode) {
-                RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+            if(fThroNe) {
+                RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
             }
         }
         state = newState;
@@ -452,9 +452,9 @@ public:
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
-    /// As a client, send a transaction to a Masternode to start the denomination process
+    /// As a client, send a transaction to a Throne to start the denomination process
     void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount);
-    /// Get Masternode updates about the progress of Darksend
+    /// Get Throne updates about the progress of Darksend
     bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, std::string& error, int newSessionID=0);
 
     /// As a client, check and sign the final transaction

@@ -64,7 +64,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../crowncoin.qrc">
           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
         </property>
         <property name="shortcut">
@@ -81,7 +81,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../crowncoin.qrc">
           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
         </property>
         <property name="shortcut">
@@ -98,7 +98,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../crowncoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -139,7 +139,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount"/>
+     <widget class="CrowncoinAmountField" name="payAmount"/>
     </item>
     <item row="3" column="0">
      <widget class="QLabel" name="messageLabel">
@@ -622,7 +622,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../crowncoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -660,7 +660,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_is">
+     <widget class="CrowncoinAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1158,7 +1158,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../crowncoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -1196,7 +1196,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_s">
+     <widget class="CrowncoinAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1212,9 +1212,9 @@
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>CrowncoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>bitcoinamountfield.h</header>
+   <header>crowncoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1230,7 +1230,7 @@
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../crowncoin.qrc"/>
  </resources>
  <connections/>
 </ui>

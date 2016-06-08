@@ -19,19 +19,19 @@ using namespace std;
 using namespace boost;
 
 // Don't ever reuse these IDs for other sporks
-#define SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT               10000
+#define SPORK_1_THRONE_PAYMENTS_ENFORCEMENT               10000
 #define SPORK_2_INSTANTX                                      10001
 #define SPORK_3_INSTANTX_BLOCK_FILTERING                      10002
 #define SPORK_4_NOTUSED                                       10003
 #define SPORK_5_MAX_VALUE                                     10004
 #define SPORK_6_NOTUSED                                       10005
-#define SPORK_7_MASTERNODE_SCANNING                           10006
+#define SPORK_7_THRONE_SCANNING                           10006
 
-#define SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT_DEFAULT       1465391833  //2015-2-18
+#define SPORK_1_THRONE_PAYMENTS_ENFORCEMENT_DEFAULT       1465391833  //2015-2-18
 #define SPORK_2_INSTANTX_DEFAULT                              978307200   //2001-1-1
 #define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              1465391833  //2015-2-18
 #define SPORK_5_MAX_VALUE_DEFAULT                             1000        //1000 DASH
-#define SPORK_7_MASTERNODE_SCANNING_DEFAULT                   978307200   //2001-1-1
+#define SPORK_7_THRONE_SCANNING_DEFAULT                   978307200   //2001-1-1
 
 class CSporkMessage;
 class CSporkManager;

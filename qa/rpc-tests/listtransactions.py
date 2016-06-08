@@ -5,10 +5,10 @@
 
 # Exercise the listtransactions API
 
-# Add python-bitcoinrpc to module search path:
+# Add python-crowncoinrpc to module search path:
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-crowncoinrpc"))
 
 import json
 import shutil
@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 import traceback
 
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from crowncoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
 
@@ -106,9 +106,9 @@ def main():
 
     parser = optparse.OptionParser(usage="%prog [options]")
     parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                      help="Leave bitcoinds and test.* datadir on exit or error")
+                      help="Leave crowncoinds and test.* datadir on exit or error")
     parser.add_option("--srcdir", dest="srcdir", default="../../src",
-                      help="Source directory containing bitcoind/bitcoin-cli (default: %default%)")
+                      help="Source directory containing crowncoind/crowncoin-cli (default: %default%)")
     parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                       help="Root directory for datadirs")
     (options, args) = parser.parse_args()
@@ -142,7 +142,7 @@ def main():
     if not options.nocleanup:
         print("Cleaning up")
         stop_nodes(nodes)
-        wait_bitcoinds()
+        wait_crowncoinds()
         shutil.rmtree(options.tmpdir)
 
     if success:

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "crowncoin-config.h"
 #endif
 
 #include "compat.h"
@@ -93,16 +93,16 @@ inline void MilliSleep(int64_t n)
 
 //Dash only features
 
-extern bool fMasterNode;
+extern bool fThroNe;
 extern bool fLiteMode;
 extern int nInstantXDepth;
 extern int nDarksendRounds;
 extern int nAnonymizeDarkcoinAmount;
 extern int nLiquidityProvider;
 extern bool fEnableDarksend;
-extern int64_t enforceMasternodePaymentsTime;
-extern std::string strMasterNodeAddr;
-extern int nMasternodeMinProtocol;
+extern int64_t enforceThronePaymentsTime;
+extern std::string strThroNeAddr;
+extern int nThroneMinProtocol;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::vector<int64_t> darkSendDenominations;
@@ -197,7 +197,7 @@ bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
-boost::filesystem::path GetMasternodeConfigFile();
+boost::filesystem::path GetThroneConfigFile();
 boost::filesystem::path GetPidFile();
 #ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
@@ -538,7 +538,7 @@ inline uint32_t ByteReverse(uint32_t value)
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("crowncoin-%s", name);
     RenameThread(s.c_str());
     LogPrintf("%s thread start\n", name);
     try
@@ -566,7 +566,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 // .. and a wrapper that just calls func once
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("bitcoin-%s", name);
+    std::string s = strprintf("crowncoin-%s", name);
     RenameThread(s.c_str());
     try
     {

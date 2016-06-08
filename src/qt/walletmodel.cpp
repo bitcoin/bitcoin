@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,7 +29,7 @@
 bool
 SendCoinsRecipient::getAddress (const WalletModel& model, CTxDestination& dest) const
 {
-  CBitcoinAddress addr(recipient.toStdString ());
+  CCrowncoinAddress addr(recipient.toStdString ());
   if (addr.IsValid ())
     {
       dest = addr.Get ();
@@ -174,7 +174,7 @@ void WalletModel::updateAddressBook(const QString &address, const QString &label
 
 bool WalletModel::validateAddress(const QString &address) const
 {
-    CBitcoinAddress addressParsed(address.toStdString());
+    CCrowncoinAddress addressParsed(address.toStdString());
     return addressParsed.IsValid();
 }
 
@@ -448,7 +448,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
         const CTxDestination &address, const std::string &label, bool isMine,
         const std::string &purpose, ChangeType status)
 {
-    QString strAddress = QString::fromStdString(CBitcoinAddress(address).ToString());
+    QString strAddress = QString::fromStdString(CCrowncoinAddress(address).ToString());
     QString strLabel = QString::fromStdString(label);
     QString strPurpose = QString::fromStdString(purpose);
 
@@ -611,7 +611,7 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
 
         CTxDestination address;
         if(!ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address)) continue;
-        mapCoins[CBitcoinAddress(address).ToString().c_str()].push_back(out);
+        mapCoins[CCrowncoinAddress(address).ToString().c_str()].push_back(out);
     }
 }
 
@@ -650,7 +650,7 @@ void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests
 
 bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest)
 {
-    CTxDestination dest = CBitcoinAddress(sAddress).Get();
+    CTxDestination dest = CCrowncoinAddress(sAddress).Get();
 
     std::stringstream ss;
     ss << nId;

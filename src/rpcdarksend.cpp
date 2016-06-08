@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2009-2012 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,9 @@
 #include "core.h"
 #include "db.h"
 #include "init.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
-#include "masternodeconfig.h"
+#include "activethrone.h"
+#include "throneman.h"
+#include "throneconfig.h"
 #include "rpcserver.h"
 #include <boost/lexical_cast.hpp>
 
@@ -30,8 +30,8 @@ Value darksend(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     if(params[0].get_str() == "auto"){
-        if(fMasterNode)
-            return "DarkSend is not supported from masternodes";
+        if(fThroNe)
+            return "DarkSend is not supported from thrones";
 
         darkSendPool.DoAutomaticDenominating();
         return "DoAutomaticDenominating";
@@ -50,7 +50,7 @@ Value darksend(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
-    CBitcoinAddress address(params[0].get_str());
+    CCrowncoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
 
@@ -75,7 +75,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
             "Returns an object containing anonymous pool-related information.");
 
     Object obj;
-    obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentMasterNode()->addr.ToString()));
+    obj.push_back(Pair("current_throne",        mnodeman.GetCurrentThroNe()->addr.ToString()));
     obj.push_back(Pair("state",        darkSendPool.GetState()));
     obj.push_back(Pair("entries",      darkSendPool.GetEntriesCount()));
     obj.push_back(Pair("entries_accepted",      darkSendPool.GetCountEntriesAccepted()));
@@ -83,7 +83,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
 }
 
 
-Value masternode(const Array& params, bool fHelp)
+Value throne(const Array& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -93,27 +93,27 @@ Value masternode(const Array& params, bool fHelp)
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
             && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
         throw runtime_error(
-                "masternode \"command\"... ( \"passphrase\" )\n"
-                "Set of commands to execute masternode related actions\n"
+                "throne \"command\"... ( \"passphrase\" )\n"
+                "Set of commands to execute throne related actions\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'enabled', 'both')\n"
-                "  current      - Print info on current masternode winner\n"
-                "  debug        - Print masternode status\n"
-                "  genkey       - Generate new masternodeprivkey\n"
-                "  enforce      - Enforce masternode payments\n"
-                "  outputs      - Print masternode compatible outputs\n"
-                "  start        - Start masternode configured in dash.conf\n"
-                "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
-                "  start-many   - Start all masternodes configured in masternode.conf\n"
-                "  stop         - Stop masternode configured in dash.conf\n"
-                "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
-                "  stop-many    - Stop all masternodes configured in masternode.conf\n"
-                "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
-                "  list-conf    - Print masternode.conf in JSON format\n"
-                "  winners      - Print list of masternode winners\n"
+                "  count        - Print number of all known thrones (optional: 'enabled', 'both')\n"
+                "  current      - Print info on current throne winner\n"
+                "  debug        - Print throne status\n"
+                "  genkey       - Generate new throneprivkey\n"
+                "  enforce      - Enforce throne payments\n"
+                "  outputs      - Print throne compatible outputs\n"
+                "  start        - Start throne configured in dash.conf\n"
+                "  start-alias  - Start single throne by assigned alias configured in throne.conf\n"
+                "  start-many   - Start all thrones configured in throne.conf\n"
+                "  stop         - Stop throne configured in dash.conf\n"
+                "  stop-alias   - Stop single throne by assigned alias configured in throne.conf\n"
+                "  stop-many    - Stop all thrones configured in throne.conf\n"
+                "  list         - Print list of all known thrones (see thronelist for more info)\n"
+                "  list-conf    - Print throne.conf in JSON format\n"
+                "  winners      - Print list of throne winners\n"
                 "  vote-many    - Vote on a Dash initiative\n"
                 "  vote         - Vote on a Dash initiative\n"
                 );
@@ -121,7 +121,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "stop")
     {
-        if(!fMasterNode) return "you must set masternode=1 in the configuration";
+        if(!fThroNe) return "you must set throne=1 in the configuration";
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -140,13 +140,13 @@ Value masternode(const Array& params, bool fHelp)
         }
 
         std::string errorMessage;
-        if(!activeMasternode.StopMasterNode(errorMessage)) {
+        if(!activeThrone.StopThroNe(errorMessage)) {
         	return "stop failed: " + errorMessage;
         }
         pwalletMain->Lock();
 
-        if(activeMasternode.status == MASTERNODE_STOPPED) return "successfully stopped masternode";
-        if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode";
+        if(activeThrone.status == THRONE_STOPPED) return "successfully stopped throne";
+        if(activeThrone.status == THRONE_NOT_CAPABLE) return "not capable throne";
 
         return "unknown";
     }
@@ -181,11 +181,11 @@ Value masternode(const Array& params, bool fHelp)
 		Object statusObj;
 		statusObj.push_back(Pair("alias", alias));
 
-    	BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    	BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
-    			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), errorMessage);
+    			bool result = activeThrone.StopThroNe(mne.getIp(), mne.getPrivKey(), errorMessage);
 
 				statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
@@ -229,11 +229,11 @@ Value masternode(const Array& params, bool fHelp)
 
 		Object resultsObj;
 
-		BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+		BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
 			total++;
 
 			std::string errorMessage;
-			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), errorMessage);
+			bool result = activeThrone.StopThroNe(mne.getIp(), mne.getPrivKey(), errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -251,7 +251,7 @@ Value masternode(const Array& params, bool fHelp)
 		pwalletMain->Lock();
 
 		Object returnObj;
-		returnObj.push_back(Pair("overall", "Successfully stopped " + boost::lexical_cast<std::string>(successful) + " masternodes, failed to stop " +
+		returnObj.push_back(Pair("overall", "Successfully stopped " + boost::lexical_cast<std::string>(successful) + " thrones, failed to stop " +
 				boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
 		returnObj.push_back(Pair("detail", resultsObj));
 
@@ -263,7 +263,7 @@ Value masternode(const Array& params, bool fHelp)
     {
         Array newParams(params.size() - 1);
         std::copy(params.begin() + 1, params.end(), newParams.begin());
-        return masternodelist(newParams, fHelp);
+        return thronelist(newParams, fHelp);
     }
 
     if (strCommand == "count")
@@ -282,7 +282,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "start")
     {
-        if(!fMasterNode) return "you must set masternode=1 in the configuration";
+        if(!fThroNe) return "you must set throne=1 in the configuration";
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -300,19 +300,19 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
-        if(activeMasternode.status != MASTERNODE_REMOTELY_ENABLED && activeMasternode.status != MASTERNODE_IS_CAPABLE){
-            activeMasternode.status = MASTERNODE_NOT_PROCESSED; // TODO: consider better way
+        if(activeThrone.status != THRONE_REMOTELY_ENABLED && activeThrone.status != THRONE_IS_CAPABLE){
+            activeThrone.status = THRONE_NOT_PROCESSED; // TODO: consider better way
             std::string errorMessage;
-            activeMasternode.ManageStatus();
+            activeThrone.ManageStatus();
             pwalletMain->Lock();
         }
 
-        if(activeMasternode.status == MASTERNODE_REMOTELY_ENABLED) return "masternode started remotely";
-        if(activeMasternode.status == MASTERNODE_INPUT_TOO_NEW) return "masternode input must have at least 15 confirmations";
-        if(activeMasternode.status == MASTERNODE_STOPPED) return "masternode is stopped";
-        if(activeMasternode.status == MASTERNODE_IS_CAPABLE) return "successfully started masternode";
-        if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode: " + activeMasternode.notCapableReason;
-        if(activeMasternode.status == MASTERNODE_SYNC_IN_PROCESS) return "sync in process. Must wait until client is synced to start.";
+        if(activeThrone.status == THRONE_REMOTELY_ENABLED) return "throne started remotely";
+        if(activeThrone.status == THRONE_INPUT_TOO_NEW) return "throne input must have at least 15 confirmations";
+        if(activeThrone.status == THRONE_STOPPED) return "throne is stopped";
+        if(activeThrone.status == THRONE_IS_CAPABLE) return "successfully started throne";
+        if(activeThrone.status == THRONE_NOT_CAPABLE) return "not capable throne: " + activeThrone.notCapableReason;
+        if(activeThrone.status == THRONE_SYNC_IN_PROCESS) return "sync in process. Must wait until client is synced to start.";
 
         return "unknown";
     }
@@ -347,7 +347,7 @@ Value masternode(const Array& params, bool fHelp)
 		Object statusObj;
 		statusObj.push_back(Pair("alias", alias));
 
-    	BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    	BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
@@ -355,7 +355,7 @@ Value masternode(const Array& params, bool fHelp)
                 std::string strDonateAddress = mne.getDonationAddress();
                 std::string strDonationPercentage = mne.getDonationPercentage();
 
-    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+    			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
     			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
@@ -393,8 +393,8 @@ Value masternode(const Array& params, bool fHelp)
 			}
 		}
 
-		std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-		mnEntries = masternodeConfig.getEntries();
+		std::vector<CThroneConfig::CThroneEntry> mnEntries;
+		mnEntries = throneConfig.getEntries();
 
 		int total = 0;
 		int successful = 0;
@@ -402,7 +402,7 @@ Value masternode(const Array& params, bool fHelp)
 
 		Object resultsObj;
 
-		BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+		BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
 			total++;
 
 			std::string errorMessage;
@@ -410,7 +410,7 @@ Value masternode(const Array& params, bool fHelp)
             std::string strDonateAddress = mne.getDonationAddress();
             std::string strDonationPercentage = mne.getDonationPercentage();
 
-			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -428,7 +428,7 @@ Value masternode(const Array& params, bool fHelp)
 		pwalletMain->Lock();
 
 		Object returnObj;
-		returnObj.push_back(Pair("overall", "Successfully started " + boost::lexical_cast<std::string>(successful) + " masternodes, failed to start " +
+		returnObj.push_back(Pair("overall", "Successfully started " + boost::lexical_cast<std::string>(successful) + " thrones, failed to start " +
 				boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
 		returnObj.push_back(Pair("detail", resultsObj));
 
@@ -437,19 +437,19 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeMasternode.status == MASTERNODE_REMOTELY_ENABLED) return "masternode started remotely";
-        if(activeMasternode.status == MASTERNODE_INPUT_TOO_NEW) return "masternode input must have at least 15 confirmations";
-        if(activeMasternode.status == MASTERNODE_IS_CAPABLE) return "successfully started masternode";
-        if(activeMasternode.status == MASTERNODE_STOPPED) return "masternode is stopped";
-        if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode: " + activeMasternode.notCapableReason;
-        if(activeMasternode.status == MASTERNODE_SYNC_IN_PROCESS) return "sync in process. Must wait until client is synced to start.";
+        if(activeThrone.status == THRONE_REMOTELY_ENABLED) return "throne started remotely";
+        if(activeThrone.status == THRONE_INPUT_TOO_NEW) return "throne input must have at least 15 confirmations";
+        if(activeThrone.status == THRONE_IS_CAPABLE) return "successfully started throne";
+        if(activeThrone.status == THRONE_STOPPED) return "throne is stopped";
+        if(activeThrone.status == THRONE_NOT_CAPABLE) return "not capable throne: " + activeThrone.notCapableReason;
+        if(activeThrone.status == THRONE_SYNC_IN_PROCESS) return "sync in process. Must wait until client is synced to start.";
 
         CTxIn vin = CTxIn();
         CPubKey pubkey = CScript();
         CKey key;
-        bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
+        bool found = activeThrone.GetThroNeVin(vin, pubkey, key);
         if(!found){
-            return "Missing masternode input, please look at the documentation for instructions on masternode creation";
+            return "Missing throne input, please look at the documentation for instructions on throne creation";
         } else {
             return "No problems were found";
         }
@@ -458,19 +458,19 @@ Value masternode(const Array& params, bool fHelp)
     if (strCommand == "create")
     {
 
-        return "Not implemented yet, please look at the documentation for instructions on masternode creation";
+        return "Not implemented yet, please look at the documentation for instructions on throne creation";
     }
 
     if (strCommand == "current")
     {
-        CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
+        CThrone* winner = mnodeman.GetCurrentThroNe(1);
         if(winner) {
             Object obj;
             CScript pubkey;
             pubkey.SetDestination(winner->pubkey.GetID());
             CTxDestination address1;
             ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
+            CCrowncoinAddress address2(address1);
 
             obj.push_back(Pair("IP:port",       winner->addr.ToString().c_str()));
             obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
@@ -489,7 +489,7 @@ Value masternode(const Array& params, bool fHelp)
         CKey secret;
         secret.MakeNewKey(false);
 
-        return CBitcoinSecret(secret).ToString();
+        return CCrowncoinSecret(secret).ToString();
     }
 
     if (strCommand == "winners")
@@ -499,10 +499,10 @@ Value masternode(const Array& params, bool fHelp)
         for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
             CScript payee;
-            if(masternodePayments.GetBlockPayee(nHeight, payee)){
+            if(thronePayments.GetBlockPayee(nHeight, payee)){
                 CTxDestination address1;
                 ExtractDestination(payee, address1);
-                CBitcoinAddress address2(address1);
+                CCrowncoinAddress address2(address1);
                 obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       address2.ToString().c_str()));
             } else {
                 obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       ""));
@@ -514,7 +514,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "enforce")
     {
-        return (uint64_t)enforceMasternodePaymentsTime;
+        return (uint64_t)enforceThronePaymentsTime;
     }
 
     if(strCommand == "connect")
@@ -524,7 +524,7 @@ Value masternode(const Array& params, bool fHelp)
             strAddress = params[1].get_str().c_str();
         } else {
             throw runtime_error(
-                "Masternode address required\n");
+                "Throne address required\n");
         }
 
         CService addr = CService(strAddress);
@@ -538,12 +538,12 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "list-conf")
     {
-    	std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-    	mnEntries = masternodeConfig.getEntries();
+    	std::vector<CThroneConfig::CThroneEntry> mnEntries;
+    	mnEntries = throneConfig.getEntries();
 
         Object resultObj;
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             Object mnObj;
             mnObj.push_back(Pair("alias", mne.getAlias()));
             mnObj.push_back(Pair("address", mne.getIp()));
@@ -552,7 +552,7 @@ Value masternode(const Array& params, bool fHelp)
             mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
             mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));
             mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
-            resultObj.push_back(Pair("masternode", mnObj));
+            resultObj.push_back(Pair("throne", mnObj));
         }
 
         return resultObj;
@@ -560,7 +560,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "outputs"){
         // Find possible candidates
-        vector<COutput> possibleCoins = activeMasternode.SelectCoinsMasternode();
+        vector<COutput> possibleCoins = activeThrone.SelectCoinsThrone();
 
         Object obj;
         BOOST_FOREACH(COutput& out, possibleCoins) {
@@ -573,8 +573,8 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "vote-many")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        mnEntries = throneConfig.getEntries();
 
         if (params.size() != 2)
             throw runtime_error("You can only vote 'yea' or 'nay'");
@@ -591,39 +591,39 @@ Value masternode(const Array& params, bool fHelp)
 
         Object resultObj;
 
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
+            std::vector<unsigned char> vchThroNeSignature;
+            std::string strThroNeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
+            CPubKey pubKeyThrone;
+            CKey keyThrone;
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
                 printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
             
-            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
+            CThrone* pmn = mnodeman.Find(pubKeyThrone);
             if(pmn == NULL)
             {
-                printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
+                printf("Can't find throne by pubkey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
 
             std::string strMessage = pmn->vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode)){
+            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone)){
                 printf(" Error upon calling SignMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
 
-            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)){
+            if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage)){
                 printf(" Error upon calling VerifyMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
@@ -634,7 +634,7 @@ Value masternode(const Array& params, bool fHelp)
             //send to all peers
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-                pnode->PushMessage("mvote", pmn->vin, vchMasterNodeSignature, nVote);
+                pnode->PushMessage("mvote", pmn->vin, vchThroNeSignature, nVote);
         }
 
         return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
@@ -642,8 +642,8 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "vote")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        std::vector<CThroneConfig::CThroneEntry> mnEntries;
+        mnEntries = throneConfig.getEntries();
 
         if (params.size() != 2)
             throw runtime_error("You can only vote 'yea' or 'nay'");
@@ -657,33 +657,33 @@ Value masternode(const Array& params, bool fHelp)
         // Choose coins to use
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
+        CPubKey pubKeyThrone;
+        CKey keyThrone;
 
         std::string errorMessage;
-        std::vector<unsigned char> vchMasterNodeSignature;
-        std::string strMessage = activeMasternode.vin.ToString() + boost::lexical_cast<std::string>(nVote);
+        std::vector<unsigned char> vchThroNeSignature;
+        std::string strMessage = activeThrone.vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return(" Error upon calling SetKey");
 
-        if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode))
+        if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone))
             return(" Error upon calling SignMessage");
 
-        if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage))
+        if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage))
             return(" Error upon calling VerifyMessage");
 
         //send to all peers
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
-            pnode->PushMessage("mvote", activeMasternode.vin, vchMasterNodeSignature, nVote);
+            pnode->PushMessage("mvote", activeThrone.vin, vchThroNeSignature, nVote);
 
     }
 
     return Value::null;
 }
 
-Value masternodelist(const Array& params, bool fHelp)
+Value thronelist(const Array& params, bool fHelp)
 {
     std::string strMode = "status";
     std::string strFilter = "";
@@ -696,37 +696,37 @@ Value masternodelist(const Array& params, bool fHelp)
                 && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose"))
     {
         throw runtime_error(
-                "masternodelist ( \"mode\" \"filter\" )\n"
-                "Get a list of masternodes in different modes\n"
+                "thronelist ( \"mode\" \"filter\" )\n"
+                "Get a list of thrones in different modes\n"
                 "\nArguments:\n"
                 "1. \"mode\"      (string, optional/required to use filter, defaults = status) The mode to run list in\n"
                 "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes, additional matches in some modes\n"
                 "\nAvailable modes:\n"
-                "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
+                "  activeseconds  - Print number of seconds throne recognized by the network as enabled\n"
                 "  donation       - Show donation settings\n"
                 "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)\n"
-                "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
+                "  lastseen       - Print timestamp of when a throne was last seen on the network\n"
                 "  pose           - Print Proof-of-Service score\n"
-                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
-                "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
-                "  rank           - Print rank of a masternode based on current block\n"
-                "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
-                "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
-                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  protocol       - Print protocol of a throne (can be additionally filtered, exact match))\n"
+                "  pubkey         - Print public key associated with a throne (can be additionally filtered, partial match)\n"
+                "  rank           - Print rank of a throne based on current block\n"
+                "  status         - Print throne status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
+                "  vin            - Print vin associated with a throne (can be additionally filtered, partial match)\n"
+                "  votes          - Print all throne votes for a Dash initiative (can be additionally filtered, partial match)\n"
                 );
     }
 
     Object obj;
     if (strMode == "rank") {
-        std::vector<pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks(chainActive.Tip()->nHeight);
-        BOOST_FOREACH(PAIRTYPE(int, CMasternode)& s, vMasternodeRanks) {
+        std::vector<pair<int, CThrone> > vThroneRanks = mnodeman.GetThroneRanks(chainActive.Tip()->nHeight);
+        BOOST_FOREACH(PAIRTYPE(int, CThrone)& s, vThroneRanks) {
             std::string strAddr = s.second.addr.ToString();
             if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       s.first));
         }
     } else {
-        std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
-        BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
+        BOOST_FOREACH(CThrone& mn, vThrones) {
             std::string strAddr = mn.addr.ToString();
             if (strMode == "activeseconds") {
                 if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
@@ -734,7 +734,7 @@ Value masternodelist(const Array& params, bool fHelp)
             } else if (strMode == "donation") {
                 CTxDestination address1;
                 ExtractDestination(mn.donationAddress, address1);
-                CBitcoinAddress address2(address1);
+                CCrowncoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strAddr.find(strFilter) == string::npos) continue;
@@ -752,7 +752,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 pubkey.SetDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
-                CBitcoinAddress address2(address1);
+                CCrowncoinAddress address2(address1);
 
                 std::ostringstream addrStream;
                 addrStream << setw(21) << strAddr;
@@ -782,7 +782,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 pubkey.SetDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
-                CBitcoinAddress address2(address1);
+                CCrowncoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strAddr.find(strFilter) == string::npos) continue;
