@@ -43,13 +43,13 @@ void CActiveThrone::ManageStatus()
         LogPrintf("CActiveThrone::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString().c_str());
 
         if(Params().NetworkID() == CChainParams::MAIN){
-            if(service.GetPort() != 9340) {
+            if(service.GetPort() != 9341) {
                 notCapableReason = "Invalid port: " + boost::lexical_cast<string>(service.GetPort()) + " - only 9999 is supported on mainnet.";
                 status = THRONE_NOT_CAPABLE;
                 LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason.c_str());
                 return;
             }
-        } else if(service.GetPort() == 9340) {
+        } else if(service.GetPort() == 9341) {
             notCapableReason = "Invalid port: " + boost::lexical_cast<string>(service.GetPort()) + " - 9999 is only supported on mainnet.";
             status = THRONE_NOT_CAPABLE;
             LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason.c_str());
