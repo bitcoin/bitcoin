@@ -14,6 +14,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "crypto/common.h"
+#include "crypto/sha256.h"
 #include "hash.h"
 #include "primitives/transaction.h"
 #include "scheduler.h"
@@ -838,6 +839,7 @@ struct NodeEvictionCandidate
     int64_t nTimeConnected;
     int64_t nMinPingUsecTime;
     CAddress addr;
+    std::vector<unsigned char> vchKeyedNetGroup;
 };
 
 static bool ReverseCompareNodeMinPingTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
@@ -850,36 +852,8 @@ static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate &a, cons
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-class CompareNetGroupKeyed
-{
-    std::vector<unsigned char> vchSecretKey;
-public:
-    CompareNetGroupKeyed()
-    {
-        vchSecretKey.resize(32, 0);
-        GetRandBytes(vchSecretKey.data(), vchSecretKey.size());
-    }
-
-    bool operator()(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
-    {
-        std::vector<unsigned char> vchGroupA, vchGroupB;
-        CSHA256 hashA, hashB;
-        std::vector<unsigned char> vchA(32), vchB(32);
-
-        vchGroupA = a.addr.GetGroup();
-        vchGroupB = b.addr.GetGroup();
-
-        hashA.Write(begin_ptr(vchGroupA), vchGroupA.size());
-        hashB.Write(begin_ptr(vchGroupB), vchGroupB.size());
-
-        hashA.Write(begin_ptr(vchSecretKey), vchSecretKey.size());
-        hashB.Write(begin_ptr(vchSecretKey), vchSecretKey.size());
-
-        hashA.Finalize(begin_ptr(vchA));
-        hashB.Finalize(begin_ptr(vchB));
-
-        return vchA < vchB;
-    }
+static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
+    return a.vchKeyedNetGroup < b.vchKeyedNetGroup;
 };
 
 /** Try to find a connection to evict when the node is full.
@@ -902,7 +876,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
                 continue;
             if (node->fDisconnect)
                 continue;
-            NodeEvictionCandidate candidate = {node->id, node->nTimeConnected, node->nMinPingUsecTime, node->addr};
+            NodeEvictionCandidate candidate = {node->id, node->nTimeConnected, node->nMinPingUsecTime, node->addr, node->vchKeyedNetGroup};
             vEvictionCandidates.push_back(candidate);
         }
     }
@@ -912,9 +886,8 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // Protect connections with certain characteristics
 
     // Deterministically select 4 peers to protect by netgroup.
-    // An attacker cannot predict which netgroups will be protected.
-    static CompareNetGroupKeyed comparerNetGroupKeyed;
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), comparerNetGroupKeyed);
+    // An attacker cannot predict which netgroups will be protected
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareNetGroupKeyed);
     vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
     if (vEvictionCandidates.empty()) return false;
@@ -2391,6 +2364,8 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
+
+    CalculateKeyedNetGroup();
 
     BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
