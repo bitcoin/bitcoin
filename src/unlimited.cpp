@@ -652,12 +652,12 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& v
     // by including a full blocks worth of high priority tx's we cover every scenario.  And when we
     // go on to add the high fee tx's there will be an intersection between the two which then makes 
     // the total number of tx's that go into the bloom filter smaller than just the sum of the two.  
-    uint64_t nBlockPrioritySize = nLargestBlockSeen * 1.15;
+    uint64_t nBlockPrioritySize = nLargestBlockSeen * 1.5;
 
     // Largest projected block size used to add the high fee transactions.  We multiply it by an
     // additional factor to take into account that miners may have slighty different policies when selecting
     // high fee tx's from the pool.
-    uint64_t nBlockMaxProjectedSize = nLargestBlockSeen * 1.35;
+    uint64_t nBlockMaxProjectedSize = nLargestBlockSeen * 1.5;
 
     vector<TxCoinAgePriority> vPriority;
     TxCoinAgePriorityCompare pricomparer;
@@ -786,12 +786,13 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& v
     static int64_t nStartGrowth = GetTime();
 
     // Tuning knobs for the false positive growth algorithm
-    static uint8_t nHoursToGrow = 24; // number of hours until maximum growth for false positive rate
+    static uint8_t nHoursToGrow = 72; // number of hours until maximum growth for false positive rate
     //static double nGrowthCoefficient = 0.7676; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.01 for 6 hour growth period
     //static double nGrowthCoefficient = 0.8831; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.02 for 6 hour growth period
-    static double nGrowthCoefficient = 0.1921; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.01 for 24 hour growth period
+    //static double nGrowthCoefficient = 0.1921; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.01 for 24 hour growth period
+    static double nGrowthCoefficient = 0.0544; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.005 for 72 hour growth period
     static double nMinFalsePositive = 0.0001; // starting value for false positive 
-    static double nMaxFalsePositive = 0.01; // maximum false positive rate at end of decay
+    static double nMaxFalsePositive = 0.005; // maximum false positive rate at end of decay
     // TODO: automatically calculate the nGrowthCoefficient from nHoursToGrow, nMinFalsePositve and nMaxFalsePositive
 
     // Count up all the transactions that we'll be putting into the filter, removing any duplicates
