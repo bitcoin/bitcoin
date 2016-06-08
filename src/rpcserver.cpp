@@ -268,6 +268,13 @@ static const CRPCCommand vRPCCommands[] =
     { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
+    /* Dash features */
+    { "spork",                  &spork,                  true,      false,      false },
+    { "masternode",             &masternode,             true,      false,      true  },
+    { "masternodelist",         &masternodelist,         true,      false,      false },
+#ifdef ENABLE_WALLET
+    { "darksend",               &darksend,               false,     false,      true  },
+#endif /* ENABLE_WALLET?  */
     /* Names */
     { "name_getaddress",        &name_getaddress,        true,      false,      false },
 #ifdef ENABLE_WALLET
@@ -296,6 +303,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getwalletinfo",          &getwalletinfo,          true,      false,      true },
     { "importprivkey",          &importprivkey,          false,     false,      true },
     { "importwallet",           &importwallet,           false,     false,      true },
+    { "keepass",                &keepass,                false,     false,      true },
     { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
     { "listaccounts",           &listaccounts,           false,     false,      true },
     { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },

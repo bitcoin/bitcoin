@@ -10,7 +10,7 @@
 #include "noui.h"
 #include "ui_interface.h"
 #include "util.h"
-
+#include "masternodeconfig.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 

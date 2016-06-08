@@ -13,6 +13,8 @@
 #include "chainparams.h"
 #include "core.h"
 #include "ui_interface.h"
+#include "darksend.h"
+#include "wallet.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -456,7 +458,7 @@ CNode* FindNode(const CService& addr)
     return NULL;
 }
 
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaster)
 {
     if (pszDest == NULL) {
         if (IsLocal(addrConnect))
@@ -466,6 +468,9 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
         {
+            if(darkSendMaster)
+                pnode->fDarkSendMaster = true;
+
             pnode->AddRef();
             return pnode;
         }
@@ -505,6 +510,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
         }
 
         pnode->nTimeConnected = GetTime();
+        if(darkSendMaster) pnode->fDarkSendMaster = true;
         return pnode;
     }
     else
@@ -1850,6 +1856,23 @@ void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataSt
         } else
             pnode->PushInventory(inv);
     }
+}
+
+
+void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool relayToAll)
+{
+    CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
+
+    //broadcast the new lock
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        if(!relayToAll && !pnode->fRelayTxes)
+            continue;
+
+        pnode->PushMessage("txlreq", tx);
+    }
+
 }
 
 void CNode::RecordBytesRecv(uint64_t bytes)

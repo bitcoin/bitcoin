@@ -11,6 +11,8 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
+#include "masternodeman.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // BitcoinMiner
@@ -112,6 +114,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
+    int payments = 1;
     // Create coinbase tx
     CTransaction txNew;
     txNew.vin.resize(1);
@@ -142,12 +145,59 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
+    // start masternode payments
+    bool bMasterNodePayment = false;
+
+    if ( Params().NetworkID() == CChainParams::TESTNET ){
+        if (GetTimeMicros() > START_MASTERNODE_PAYMENTS_TESTNET ){
+            bMasterNodePayment = true;
+        }
+    }else{
+        if (GetTimeMicros() > START_MASTERNODE_PAYMENTS){
+            bMasterNodePayment = true;
+        }
+    }
+
     // Collect memory pool transactions into the block
     int64_t nFees = 0;
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         CCoinsViewCache view(*pcoinsTip, true);
+
+        if(bMasterNodePayment) {
+            bool hasPayment = true;
+            //spork
+            if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
+                //no masternode detected
+                CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+                if(winningNode){
+                    pblock->payee.SetDestination(winningNode->pubkey.GetID());
+                } else {
+                    LogPrintf("CreateNewBlock: Failed to detect masternode to pay\n");
+                    hasPayment = false;
+                }
+            }
+
+            if(hasPayment){
+                payments++;
+                txNew.vout.resize(payments);
+
+                txNew.vout[payments-1].scriptPubKey = pblock->payee;
+                txNew.vout[payments-1].nValue = 0;
+
+                CTxDestination address1;
+                ExtractDestination(pblock->payee, address1);
+                CBitcoinAddress address2(address1);
+
+                LogPrintf("Masternode payment to %s\n", address2.ToString().c_str());
+            }
+        }
+
+        // Add our coinbase tx as first transaction
+        pblock->vtx.push_back(txNew);
+        pblocktemplate->vTxFees.push_back(-1); // updated at end
+        pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
@@ -324,8 +374,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
+        int64_t blockValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+        int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
 
-        pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+        //create masternode payment
+        if(payments > 1){
+            pblock->vtx[0].vout[payments-1].nValue = masternodePayment;
+            blockValue -= masternodePayment;
+        }
+        pblock->vtx[0].vout[0].nValue = blockValue;
+
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header

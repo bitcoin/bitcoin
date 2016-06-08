@@ -25,6 +25,7 @@ DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # Crowncoin #
 BITCOIN_CORE_H = \
+  activemasternode.h \
   addrman.h \
   alert.h \
   allocators.h \
@@ -39,14 +40,22 @@ BITCOIN_CORE_H = \
   compat.h \
   core.h \
   crypter.h \
+  darksend.h \
+  darksend-relay.h \
   db.h \
   hash.h \
   init.h \
+  instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
+  masternode.h \
+  masternode-pos.h \
+  masternodeman.h \
+  masternodeconfig.h \
   miner.h \
   mruset.h \
   names.h \
@@ -59,6 +68,7 @@ BITCOIN_CORE_H = \
   rpcserver.h \
   script.h \
   serialize.h \
+  spork.h \
   sync.h \
   threadsafety.h \
   tinyformat.h \
@@ -89,6 +99,7 @@ obj/build.h: FORCE
 version.o: obj/build.h
 
 libbitcoin_server_a_SOURCES = \
+  activemasternode.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -103,6 +114,7 @@ libbitcoin_server_a_SOURCES = \
   net.cpp \
   noui.cpp \
   rpcblockchain.cpp \
+  rpcdarksend.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnames.cpp \
@@ -115,20 +127,30 @@ libbitcoin_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 libbitcoin_wallet_a_SOURCES = \
+  activemasternode.cpp \
   db.cpp \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \
   walletdb.cpp \
+  keepass.cpp \
   $(BITCOIN_CORE_H)
 
 libbitcoin_common_a_SOURCES = \
+  activemasternode.cpp \
   auxpow.cpp \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
   core.cpp \
+  darksend.cpp \
+  darksend-relay.cpp \
+  masternode.cpp \
+  masternode-pos.cpp \
+  masternodeman.cpp \
+  masternodeconfig.cpp \
+  instantx.cpp \
   hash.cpp \
   key.cpp \
   netbase.cpp \
@@ -138,6 +160,7 @@ libbitcoin_common_a_SOURCES = \
   sync.cpp \
   util.cpp \
   version.cpp \
+  spork.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT

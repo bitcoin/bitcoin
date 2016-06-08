@@ -55,6 +55,7 @@ void CTxIn::print() const
 CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
+    nRounds = -10; // an initial value, should be no way to get this by calculations
     scriptPubKey = scriptPubKeyIn;
 }
 

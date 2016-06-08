@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,10 +12,16 @@
 #include "ui_interface.h"
 #include "uint256.h"
 #include "version.h"
+#include "allocators.h"
 
 #include <stdarg.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/buffer.h>
+#include <openssl/crypto.h> // for OPENSSL_cleanse()
+
 
 #ifndef WIN32
 // for posix_fallocate
@@ -85,6 +92,23 @@ namespace boost {
 
 
 using namespace std;
+
+//Dash only features
+bool fMasterNode = false;
+string strMasterNodePrivKey = "";
+string strMasterNodeAddr = "";
+bool fLiteMode = false;
+int nInstantXDepth = 1;
+int nDarksendRounds = 2;
+int nAnonymizeDarkcoinAmount = 1000;
+int nLiquidityProvider = 0;
+/** Spork enforcement enabled time */
+int64_t enforceMasternodePaymentsTime = 4085657524;
+int nMasternodeMinProtocol = 0;
+bool fSucessfullyLoaded = false;
+bool fEnableDarksend = false;
+/** All denominations used by darksend */
+std::vector<int64_t> darkSendDenominations;
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -595,6 +619,33 @@ string EncodeBase64(const string& str)
     return EncodeBase64((const unsigned char*)str.c_str(), str.size());
 }
 
+// Base64 encoding with secure memory allocation
+SecureString EncodeBase64Secure(const SecureString& input)
+{
+    // Init openssl BIO with base64 filter and memory output
+    BIO *b64, *mem;
+    b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); // No newlines in output
+    mem = BIO_new(BIO_s_mem());
+    BIO_push(b64, mem);
+
+    // Decode the string
+    BIO_write(b64, &input[0], input.size());
+    (void) BIO_flush(b64);
+
+    // Create output variable from buffer mem ptr
+    BUF_MEM *bptr;
+    BIO_get_mem_ptr(b64, &bptr);
+    SecureString output(bptr->data, bptr->length);
+
+    // Cleanse secure data buffer from memory
+    OPENSSL_cleanse((void *) bptr->data, bptr->length);
+
+    // Free memory
+    BIO_free_all(b64);
+    return output;
+}
+
 vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
 {
     static const int decode64_table[256] =
@@ -682,6 +733,35 @@ string DecodeBase64(const string& str)
 {
     vector<unsigned char> vchRet = DecodeBase64(str.c_str());
     return string((const char*)&vchRet[0], vchRet.size());
+}
+
+// Base64 decoding with secure memory allocation
+SecureString DecodeBase64Secure(const SecureString& input)
+{
+    SecureString output;
+
+    // Init openssl BIO with base64 filter and memory input
+    BIO *b64, *mem;
+    b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); //Do not use newlines to flush buffer
+    mem = BIO_new_mem_buf((void *) &input[0], input.size());
+    BIO_push(b64, mem);
+
+    // Prepare buffer to receive decoded data
+    if(input.size() % 4 != 0) {
+        throw runtime_error("Input length should be a multiple of 4");
+    }
+    size_t nMaxLen = input.size() / 4 * 3; // upper bound, guaranteed divisible by 4
+    output.resize(nMaxLen);
+
+    // Decode the string
+    size_t nLen;
+    nLen = BIO_read(b64, (void *) &output[0], input.size());
+    output.resize(nLen);
+
+    // Free memory
+    BIO_free_all(b64);
+    return output;
 }
 
 string EncodeBase32(const unsigned char* pch, size_t len)
@@ -871,7 +951,6 @@ string DecodeBase32(const string& str)
     return string((const char*)&vchRet[0], vchRet.size());
 }
 
-
 bool WildcardMatch(const char* psz, const char* mask)
 {
     while (true)
@@ -1016,12 +1095,24 @@ boost::filesystem::path GetConfigFile()
     return pathConfigFile;
 }
 
+boost::filesystem::path GetMasternodeConfigFile()
+{
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
+    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
+    return pathConfigFile;
+}
+
 void ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile());
-    if (!streamConfig.good())
-        return; // No crowncoin.conf file is OK
+    if (!streamConfig.good()){
+        // Create empty dash.conf if it does not excist
+        FILE* configFile = fopen(GetConfigFile().string().c_str(), "a");
+        if (configFile != NULL)
+            fclose(configFile);
+        return; // Nothing to read, so just return
+    }
 
     set<string> setOptions;
     setOptions.insert("*");

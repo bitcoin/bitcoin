@@ -172,6 +172,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, b
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state);
 int64_t GetBlockValue(int nHeight, int64_t nFees);
+int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
 void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);
@@ -192,11 +193,9 @@ void Misbehaving(NodeId nodeid, int howmuch);
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee=false);
 
+bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool ignoreFees=true);
 
-
-
-
-
+int GetInputAge(CTxIn& vin);
 
 
 struct CNodeStateStats {
@@ -560,6 +559,12 @@ bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex);
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+
+/** Find a conflicting transcation in a block and disconnect all up to that point **/
+bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock);
+
+// reprocess a number of blocks to try and get on the correct chain again
+bool DisconnectBlocksAndReprocess(int blocks);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
 bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
@@ -1062,7 +1067,7 @@ protected:
     virtual void SyncTransaction(const uint256 &hash, const CTransaction &tx, const CBlock *pblock) =0;
     virtual void EraseFromWallet(const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
-    virtual void UpdatedTransaction(const uint256 &hash) =0;
+    virtual bool UpdatedTransaction(const uint256 &hash) =0;
     virtual void Inventory(const uint256 &hash) =0;
     virtual void ResendWalletTransactions() =0;
     friend void ::RegisterWallet(CWalletInterface*);

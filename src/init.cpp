@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "checkpoints.h"
+#include "key.h"
 #include "main.h"
 #include "miner.h"
 #include "net.h"
@@ -18,10 +19,14 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "activemasternode.h"
+#include "masternodeman.h"
+#include "spork.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
+#include "keepass.h"
 #endif
 
 #include <stdint.h>
@@ -121,6 +126,7 @@ void Shutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
+    DumpMasternodes();
     UnregisterNodeSignals(GetNodeSignals());
     {
         LOCK(cs_main);
@@ -243,6 +249,12 @@ std::string HelpMessage(HelpMessageMode hmm)
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
+    strUsage += "  -keepass               " + _("Use KeePass 2 integration using KeePassHttp plugin (default: 0)") + "\n";
+    strUsage += "  -keepassport=<port>    " + _("Connect to KeePassHttp on port <port> (default: 19455)") + "\n";
+    strUsage += "  -keepasskey=<key>      " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
+    strUsage += "  -keepassid=<name>      " + _("KeePassHttp id for the established association") + "\n";
+    strUsage += "  -keepassname=<name>    " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
+    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 1000)") + "\n";
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
@@ -296,6 +308,24 @@ std::string HelpMessage(HelpMessageMode hmm)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
+    strUsage += "  -litemode=<n>          " + _("Disable all Masternode and Darksend related functionality (0-1, default: 0)") + "\n";
+
+    strUsage += "\n" + _("Masternode options:") + "\n";
+    strUsage += "  -masternode=<n>            " + _("Enable the client to act as a masternode (0-1, default: 0)") + "\n";
+    strUsage += "  -mnconf=<file>             " + _("Specify masternode configuration file (default: masternode.conf)") + "\n";
+    strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
+    strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
+    strUsage += "  -masternodeminprotocol=<n> " + _("Ignore masternodes less than version (example: 70050; default : 0)") + "\n";
+
+    strUsage += "\n" + _("Darksend options:") + "\n";
+    strUsage += "  -enabledarksend=<n>          " + _("Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)") + "\n";
+    strUsage += "  -darksendrounds=<n>          " + _("Use N separate masternodes to anonymize funds  (2-8, default: 2)") + "\n";
+    strUsage += "  -anonymizedashamount=<n> " + _("Keep N dash anonymized (default: 0)") + "\n";
+    strUsage += "  -liquidityprovider=<n>       " + _("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)") + "\n";
+
+    strUsage += "\n" + _("InstantX options:") + "\n";
+    strUsage += "  -enableinstantx=<n>    " + _("Enable instantx, show confirmations for locked transactions (bool, default: true)") + "\n";
+    strUsage += "  -instantxdepth=<n>     " + _("Show N confirmations for a successfully locked transaction (0-9999, default: 1)") + "\n";
 
     strUsage += "\n" + _("Block creation options:") + "\n";
     strUsage += "  -blockminsize=<n>      " + _("Set minimum block size in bytes (default: 0)") + "\n";
@@ -621,6 +651,17 @@ bool AppInit2(boost::thread_group& threadGroup)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
+    if (mapArgs.count("-masternodepaymentskey")) // masternode payments priv key
+    {
+        if (!masternodePayments.SetPrivKey(GetArg("-masternodepaymentskey", "")))
+            return InitError(_("Unable to sign masternode payment winner, wrong key?"));
+        if (!sporkManager.SetPrivKey(GetArg("-masternodepaymentskey", "")))
+            return InitError(_("Unable to sign spork message, wrong key?"));
+    }
+
+    //ignore masternodes below protocol version
+    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_PEER_PROTO_VERSION);
+
     int64_t nStart;
 
     // ********************************************************* Step 5: verify wallet database integrity
@@ -670,6 +711,10 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (r == CDBEnv::RECOVER_FAIL)
                 return InitError(_("wallet.dat corrupt, salvage failed"));
         }
+
+    // Initialize KeePass Integration
+    keePassInt.init();
+
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization
@@ -1054,7 +1099,120 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
-    // ********************************************************* Step 10: load peers
+    // ********************************************************* Step 10: setup DarkSend
+
+    //string strNode = "23.23.186.131";
+    //CAddress addr;
+    //ConnectNode(addr, strNode.c_str(), true);
+
+    uiInterface.InitMessage(_("Loading masternode cache..."));
+
+    CMasternodeDB mndb;
+    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+    {
+        LogPrintf("Error reading mncache.dat: ");
+        if(readResult == CMasternodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
+    fMasterNode = GetBoolArg("-masternode", false);
+    if(fMasterNode) {
+        LogPrintf("IS DARKSEND MASTER NODE\n");
+        strMasterNodeAddr = GetArg("-masternodeaddr", "");
+
+        LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
+
+        if(!strMasterNodeAddr.empty()){
+            CService addrTest = CService(strMasterNodeAddr);
+            if (!addrTest.IsValid()) {
+                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
+            }
+        }
+
+        strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
+        if(!strMasterNodePrivKey.empty()){
+            std::string errorMessage;
+
+            CKey key;
+            CPubKey pubkey;
+
+            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
+            {
+                return InitError(_("Invalid masternodeprivkey. Please see documenation."));
+            }
+
+            activeMasternode.pubKeyMasternode = pubkey;
+
+        } else {
+            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+        }
+    }
+
+    fEnableDarksend = GetBoolArg("-enabledarksend", false);
+
+    nDarksendRounds = GetArg("-darksendrounds", 2);
+    if(nDarksendRounds > 16) nDarksendRounds = 16;
+    if(nDarksendRounds < 1) nDarksendRounds = 1;
+
+    nLiquidityProvider = GetArg("-liquidityprovider", 0); //0-100
+    if(nLiquidityProvider != 0) {
+        darkSendPool.SetMinBlockSpacing(std::min(nLiquidityProvider,100)*15);
+        fEnableDarksend = true;
+        nDarksendRounds = 99999;
+    }
+
+    nAnonymizeDarkcoinAmount = GetArg("-anonymizedashamount", 0);
+    if(nAnonymizeDarkcoinAmount > 999999) nAnonymizeDarkcoinAmount = 999999;
+    if(nAnonymizeDarkcoinAmount < 2) nAnonymizeDarkcoinAmount = 2;
+
+    bool fEnableInstantX = GetBoolArg("-enableinstantx", true);
+    if(fEnableInstantX){
+        nInstantXDepth = GetArg("-instantxdepth", 5);
+        if(nInstantXDepth > 60) nInstantXDepth = 60;
+        if(nInstantXDepth < 0) nAnonymizeDarkcoinAmount = 0;
+    } else {
+        nInstantXDepth = 0;
+    }
+
+    //lite mode disables all Masternode and Darksend related functionality
+    fLiteMode = GetBoolArg("-litemode", false);
+    if(fMasterNode && fLiteMode){
+        return InitError("You can not start a masternode in litemode");
+    }
+
+    LogPrintf("fLiteMode %d\n", fLiteMode);
+    LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
+    LogPrintf("Darksend rounds %d\n", nDarksendRounds);
+    LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDarkcoinAmount);
+
+    /* Denominations
+
+       A note about convertability. Within Darksend pools, each denomination
+       is convertable to another.
+
+       For example:
+       1DRK+1000 == (.1DRK+100)*10
+       10DRK+10000 == (1DRK+1000)*10
+    */
+    darkSendDenominations.push_back( (100      * COIN)+100000 );
+    darkSendDenominations.push_back( (10       * COIN)+10000 );
+    darkSendDenominations.push_back( (1        * COIN)+1000 );
+    darkSendDenominations.push_back( (.1       * COIN)+100 );
+    /* Disabled till we need them
+    darkSendDenominations.push_back( (.01      * COIN)+10 );
+    darkSendDenominations.push_back( (.001     * COIN)+1 );
+    */
+
+    darkSendPool.InitCollateralAddress();
+
+    threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
+
+    // ********************************************************* Step 11: load peers
 
     uiInterface.InitMessage(_("Loading addresses..."));
 
@@ -1069,7 +1227,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
            addrman.size(), GetTimeMillis() - nStart);
 
-    // ********************************************************* Step 11: start node
+    // ********************************************************* Step 12: start node
 
     if (!CheckDiskSpace())
         return false;
