@@ -65,6 +65,10 @@ class FullBlockTest(ComparisonTestFramework):
         self.tip = None
         self.blocks = {}
 
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_option("--runbarelyexpensive", dest="runbarelyexpensive", default=True)
+
     def run_test(self):
         self.test = TestManager(self, self.options.tmpdir)
         self.test.add_all_connections(self.nodes)
@@ -875,10 +879,13 @@ class FullBlockTest(ComparisonTestFramework):
         yield rejected(RejectResult(16, b'bad-txns-nonfinal'))
 
 
-        #  This checks that a block with a bloated VARINT between the block_header and the array of tx is rejected
-        #  (previous behavior was that it was accepted.)  It also checks that if you subsequently send that block
-        #  with correct encoding, it should be accepted (i.e., the receiving node should not reject it on the
-        #  basis that it's the same as an already-rejected block, which would be a DoS vulnerability.)
+        #  This checks that a block with a bloated VARINT between the block_header and the array of tx such that
+        #  the block is > MAX_BLOCK_SIZE with the bloated varint, but <= MAX_BLOCK_SIZE without the bloated varint,
+        #  does not cause a subsequent, identical block with canonical encoding to be rejected.  The test does not
+        #  care whether the bloated block is accepted or rejected; it only cares that the second block is accepted.
+        #
+        #  What matters is that the receiving node should not reject the bloated block, and then reject the canonical
+        #  block on the basis that it's the same as an already-rejected block (which would be a consensus failure.)
         #
         #  -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18)
         #                                                                                        \
@@ -903,7 +910,7 @@ class FullBlockTest(ComparisonTestFramework):
         tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
         b64a = update_block("64a", [tx])
         assert_equal(len(b64a.serialize()), MAX_BLOCK_SIZE + 8)
-        yield rejected()
+        yield TestInstance([[self.tip, None]])
 
         # comptool workaround: to make sure b64 is delivered, manually erase b64a from blockstore
         self.test.block_store.erase(b64a.sha256)
@@ -940,7 +947,6 @@ class FullBlockTest(ComparisonTestFramework):
         tx2 = create_and_sign_tx(tx1, 0, 1)
         update_block(66, [tx2, tx1])
         yield rejected(RejectResult(16, b'bad-txns-inputs-missingorspent'))
-
 
         # Attempt to double-spend a transaction created in a block
         #
@@ -1239,46 +1245,48 @@ class FullBlockTest(ComparisonTestFramework):
         #  Test re-org of a week's worth of blocks (1088 blocks)
         #  This test takes a minute or two and can be accomplished in memory
         #
-        tip(88)
-        LARGE_REORG_SIZE = 1088
-        test1 = TestInstance(sync_every_block=False)
-        spend=out[32]
-        for i in range(89, LARGE_REORG_SIZE + 89):
-            b = block(i, spend)
-            tx = CTransaction()
-            script_length = MAX_BLOCK_SIZE - len(b.serialize()) - 69
-            script_output = CScript([b'\x00' * script_length])
-            tx.vout.append(CTxOut(0, script_output))
-            tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
-            b = update_block(i, [tx])
-            assert_equal(len(b.serialize()), MAX_BLOCK_SIZE)
-            test1.blocks_and_transactions.append([self.tip, True])
-            save_spendable_output()
-            spend = get_spendable_output()
+        if self.options.runbarelyexpensive:
+            tip(88)
+            LARGE_REORG_SIZE = 1088
+            test1 = TestInstance(sync_every_block=False)
+            spend=out[32]
+            for i in range(89, LARGE_REORG_SIZE + 89):
+                b = block(i, spend)
+                tx = CTransaction()
+                script_length = MAX_BLOCK_SIZE - len(b.serialize()) - 69
+                script_output = CScript([b'\x00' * script_length])
+                tx.vout.append(CTxOut(0, script_output))
+                tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
+                b = update_block(i, [tx])
+                assert_equal(len(b.serialize()), MAX_BLOCK_SIZE)
+                test1.blocks_and_transactions.append([self.tip, True])
+                save_spendable_output()
+                spend = get_spendable_output()
 
-        yield test1
-        chain1_tip = i
+            yield test1
+            chain1_tip = i
 
-        # now create alt chain of same length
-        tip(88)
-        test2 = TestInstance(sync_every_block=False)
-        for i in range(89, LARGE_REORG_SIZE + 89):
-            block("alt"+str(i))
-            test2.blocks_and_transactions.append([self.tip, False])
-        yield test2
+            # now create alt chain of same length
+            tip(88)
+            test2 = TestInstance(sync_every_block=False)
+            for i in range(89, LARGE_REORG_SIZE + 89):
+                block("alt"+str(i))
+                test2.blocks_and_transactions.append([self.tip, False])
+            yield test2
 
-        # extend alt chain to trigger re-org
-        block("alt" + str(chain1_tip + 1))
-        yield accepted()
+            # extend alt chain to trigger re-org
+            block("alt" + str(chain1_tip + 1))
+            yield accepted()
 
-        # ... and re-org back to the first chain
-        tip(chain1_tip)
-        block(chain1_tip + 1)
-        yield rejected()
-        block(chain1_tip + 2)
-        yield accepted()
+            # ... and re-org back to the first chain
+            tip(chain1_tip)
+            block(chain1_tip + 1)
+            yield rejected()
+            block(chain1_tip + 2)
+            yield accepted()
 
-        chain1_tip += 2
+            chain1_tip += 2
+
 
 
 if __name__ == '__main__':
