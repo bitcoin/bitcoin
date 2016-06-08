@@ -15,6 +15,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "crypto/common.h"
+#include "crypto/sha256.h"
 #include "hash.h"
 #include "primitives/transaction.h"
 #include "netbase.h"
@@ -291,8 +292,6 @@ bool IsReachable(const CNetAddr& addr)
     return IsReachable(net);
 }
 
-
-std::vector<unsigned char> CNode::vchSecretKey;
 
 CNode* CConnman::FindNode(const CNetAddr& ip)
 {
@@ -861,11 +860,10 @@ struct NodeEvictionCandidate
           fNetworkNode(pnode->fNetworkNode),
           fRelayTxes(pnode->fRelayTxes),
           fBloomFilter(pnode->pfilter != NULL),
-          vchNetGroup(pnode->addr.GetGroup()),
-          vchKeyedNetGroup(pnode->vchKeyedNetGroup)
+          nKeyedNetGroup(pnode->nKeyedNetGroup)
         {}
 
-    int id;
+    NodeId id;
     int64_t nTimeConnected;
     int64_t nMinPingUsecTime;
     int64_t nLastBlockTime;
@@ -873,8 +871,7 @@ struct NodeEvictionCandidate
     bool fNetworkNode;
     bool fRelayTxes;
     bool fBloomFilter;
-    std::vector<unsigned char> vchNetGroup;
-    std::vector<unsigned char> vchKeyedNetGroup;
+    uint64_t nKeyedNetGroup;
 };
 
 static bool ReverseCompareNodeMinPingTime(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
@@ -887,10 +884,9 @@ static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate& a, cons
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-static bool CompareKeyedNetGroup(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
-{
-    return a.vchKeyedNetGroup < b.vchKeyedNetGroup;
-}
+static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
+    return a.nKeyedNetGroup < b.nKeyedNetGroup;
+};
 
 static bool CompareNodeBlockTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
@@ -940,8 +936,8 @@ bool CConnman::AttemptToEvictConnection()
     // Protect connections with certain characteristics
 
     // Deterministically select 4 peers to protect by netgroup.
-    // An attacker cannot predict which netgroups will be protected.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareKeyedNetGroup);
+    // An attacker cannot predict which netgroups will be protected
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareNetGroupKeyed);
     vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
     if (vEvictionCandidates.empty()) return false;
@@ -976,44 +972,34 @@ bool CConnman::AttemptToEvictConnection()
 
     // Identify the network group with the most connections and youngest member.
     // (vEvictionCandidates is already sorted by reverse connect time)
-    std::vector<unsigned char> naMostConnections;
+    uint64_t naMostConnections;
     unsigned int nMostConnections = 0;
     int64_t nMostConnectionsTime = 0;
-    std::map<std::vector<unsigned char>, std::vector<NodeEvictionCandidate> > mapAddrCounts;
-    for(size_t i = 0; i < vEvictionCandidates.size(); ++i) {
-        const NodeEvictionCandidate& candidate = vEvictionCandidates[i];
-        mapAddrCounts[candidate.vchNetGroup].push_back(candidate);
-        int64_t grouptime = mapAddrCounts[candidate.vchNetGroup][0].nTimeConnected;
-        size_t groupsize = mapAddrCounts[candidate.vchNetGroup].size();
+    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapAddrCounts;
+    BOOST_FOREACH(const NodeEvictionCandidate &node, vEvictionCandidates) {
+        mapAddrCounts[node.nKeyedNetGroup].push_back(node);
+        int64_t grouptime = mapAddrCounts[node.nKeyedNetGroup][0].nTimeConnected;
+        size_t groupsize = mapAddrCounts[node.nKeyedNetGroup].size();
 
         if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
             nMostConnections = groupsize;
             nMostConnectionsTime = grouptime;
-            naMostConnections = candidate.vchNetGroup;
+            naMostConnections = node.nKeyedNetGroup;
         }
     }
 
     // Reduce to the network group with the most connections
-    std::vector<NodeEvictionCandidate> vEvictionNodes = mapAddrCounts[naMostConnections];
-
-    // Do not disconnect peers if there is only 1 connection from their network group
-    if(vEvictionNodes.empty()) {
-        return false;
-    }
+    vEvictionCandidates = std::move(mapAddrCounts[naMostConnections]);
 
     // Disconnect from the network group with the most connections
-    int nEvictionId = vEvictionNodes[0].id;
-    {
-        LOCK(cs_vNodes);
-        for(size_t i = 0; i < vNodes.size(); ++i) {
-            CNode* pnode = vNodes[i];
-            if(pnode->id == nEvictionId) {
-                pnode->fDisconnect = true;
-                return true;
-            }
+    NodeId evicted = vEvictionCandidates.front().id;
+    LOCK(cs_vNodes);
+    for(std::vector<CNode*>::const_iterator it(vNodes.begin()); it != vNodes.end(); ++it) {
+        if ((*it)->GetId() == evicted) {
+            (*it)->fDisconnect = true;
+            return true;
         }
     }
-
     return false;
 }
 
@@ -2622,6 +2608,8 @@ unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 unsigned int CConnman::GetSendBufferSize() const{ return nSendBufferMaxSize; }
 
 CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn, bool fNetworkNodeIn) :
+    addr(addrIn),
+    nKeyedNetGroup(CalculateKeyedNetGroup(addrIn)),
     addrKnown(5000, 0.001),
     filterInventoryKnown(50000, 0.000001),
     nSendVersion(0)
@@ -2636,7 +2624,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nRecvBytes = 0;
     nTimeConnected = GetSystemTimeInSeconds();
     nTimeOffset = 0;
-    addr = addrIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;
     nNumWarningsSkipped = 0;
@@ -2676,7 +2663,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
-    vchKeyedNetGroup = CalculateKeyedNetGroup(addr);
     id = idIn;
     nLocalServices = nLocalServicesIn;
     fPauseRecv = false;
@@ -2756,27 +2742,6 @@ void CNode::AskFor(const CInv& inv)
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
-}
-
-std::vector<unsigned char> CNode::CalculateKeyedNetGroup(CAddress& address)
-{
-    if(vchSecretKey.size() == 0) {
-        vchSecretKey.resize(32, 0);
-        GetRandBytes(vchSecretKey.data(), vchSecretKey.size());
-    }
-
-    std::vector<unsigned char> vchGroup;
-    CSHA256 hash;
-    std::vector<unsigned char> vch(32);
-
-    vchGroup = address.GetGroup();
-
-    hash.Write(begin_ptr(vchGroup), vchGroup.size());
-
-    hash.Write(begin_ptr(vchSecretKey), vchSecretKey.size());
-
-    hash.Finalize(begin_ptr(vch));
-    return vch;
 }
 
 CDataStream CConnman::BeginMessage(CNode* pnode, int nVersion, int flags, const std::string& sCommand)
@@ -2877,4 +2842,14 @@ void CConnman::ReleaseNodeVector(const std::vector<CNode*>& vecNodes)
         CNode* pnode = vecNodes[i];
         pnode->Release();
     }
+}
+
+/* static */ uint64_t CNode::CalculateKeyedNetGroup(const CAddress& ad)
+{
+    static const uint64_t k0 = GetRand(std::numeric_limits<uint64_t>::max());
+    static const uint64_t k1 = GetRand(std::numeric_limits<uint64_t>::max());
+
+    std::vector<unsigned char> vchNetGroup(ad.GetGroup());
+
+    return CSipHasher(k0, k1).Write(&vchNetGroup[0], vchNetGroup.size()).Finalize();
 }

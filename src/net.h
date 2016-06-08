@@ -683,7 +683,7 @@ public:
     int64_t nTimeConnected;
     int64_t nTimeOffset;
     int64_t nLastWarningTime;
-    CAddress addr;
+    const CAddress addr;
     std::string addrName;
     CService addrLocal;
     int nNumWarningsSkipped;
@@ -715,6 +715,8 @@ public:
     CBloomFilter* pfilter;
     int nRefCount;
     NodeId id;
+
+    const uint64_t nKeyedNetGroup;
 
     std::atomic_bool fPauseRecv;
     std::atomic_bool fPauseSend;
@@ -782,19 +784,16 @@ public:
     CAmount lastSentFeeFilter;
     int64_t nextSendTimeFeeFilter;
 
-    std::vector<unsigned char> vchKeyedNetGroup;
-
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool fNetworkNodeIn = false);
     ~CNode();
 
 private:
-    // Secret key for computing keyed net groups
-    static std::vector<unsigned char> vchSecretKey;
-
     CCriticalSection cs_nRefCount;
 
     CNode(const CNode&);
     void operator=(const CNode&);
+
+    static uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
     uint64_t nLocalHostNonce;
     ServiceFlags nLocalServices;
@@ -918,8 +917,6 @@ public:
     {
         return nLocalServices;
     }
-
-    static std::vector<unsigned char> CalculateKeyedNetGroup(CAddress& address);
 };
 
 class CExplicitNetCleanup
