@@ -408,8 +408,7 @@ int DisconnectSubNetNodes(const CSubNet& subNet)
     return nDisconnected;
 }
 
-
-CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
 {
     if (pszDest == NULL) {
         if (IsLocal(addrConnect))
@@ -444,7 +443,7 @@ CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
             return NULL;
         }
 
-        addrman.Attempt(addrConnect);
+        addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
@@ -461,7 +460,7 @@ CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
     } else if (!proxyConnectionFailed) {
         // If connecting to the node failed, and failure is not caused by a problem connecting to
         // the proxy, mark this as an attempt.
-        addrman.Attempt(addrConnect);
+        addrman.Attempt(addrConnect, fCountFailure);
     }
 
     return NULL;
@@ -1710,7 +1709,7 @@ void static ProcessOneShot()
     //Uses try-wait methodology because if a grant is given, there are outbound
     //slots to fill, and if the grant isn't given, there's no seeding to do.
     if (grant) {
-        if (!OpenNetworkConnection(addr, &grant, strDest.c_str(), true))
+        if (!OpenNetworkConnection(addr, false, &grant, strDest.c_str(), true))
             AddOneShot(strDest);
     }
 }
@@ -1729,7 +1728,7 @@ void ThreadOpenConnections()
                 CAddress addr;
                 //NOTE: Because the only nodes we are connecting to here are the ones the user put in their
                 //      bitcoin.conf/commandline args as "-connect", we don't use the semaphore to limit outbound connections
-                OpenNetworkConnection(addr, NULL, strAddr.c_str());
+                OpenNetworkConnection(addr, false, NULL, strAddr.c_str());
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
                     MilliSleep(500);
@@ -1818,8 +1817,10 @@ void ThreadOpenConnections()
         }
 
         if (addrConnect.IsValid())
+        {
             //Seeded outbound connections track against the original semaphore
-            OpenNetworkConnection(addrConnect, &grant);
+            OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant);
+        }
     }
 }
 
@@ -1850,13 +1851,14 @@ void ThreadOpenAddedConnections()
                 BOOST_FOREACH(const std::string& strAddNode, vAddedNodes)
                     lAddresses.push_back(strAddNode);
             }
-            BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
-  	            CAddress addr;
+            BOOST_FOREACH(const std::string& strAddNode, lAddresses)
+            {
+                CAddress addr;
                 // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are reduced by
-                //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
+                //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to
                 //     nodes that have restarted.
                 CSemaphoreGrant grant(*semOutboundAddNode);
-                OpenNetworkConnection(addr, &grant, strAddNode.c_str());
+                OpenNetworkConnection(addr, false, &grant, strAddNode.c_str());
                 MilliSleep(500);
             }
             // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
@@ -1905,10 +1907,10 @@ void ThreadOpenAddedConnections()
         BOOST_FOREACH(vector<CService>& vserv, lservAddressesToAdd)
         {
             // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are reduced by
-            //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
+            //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to
             //     nodes that have restarted.
             CSemaphoreGrant grant(*semOutboundAddNode);
-            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
+            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), false, &grant);
             MilliSleep(500);
         }
         // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
@@ -1918,7 +1920,7 @@ void ThreadOpenAddedConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOutbound, const char* pszDest, bool fOneShot)
+bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot)
 {
 
     //
@@ -1938,7 +1940,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOu
             return false;
     }
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest);
+    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
     boost::this_thread::interruption_point();
 
     if (!pnode)
