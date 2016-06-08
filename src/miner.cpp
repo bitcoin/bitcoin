@@ -377,7 +377,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         int64_t thronePayment = GetThronePayment(pindexPrev->nHeight+1, blockValue);
 
         //create throne payment
-        if(hasPayment){
+        if(payments > 0){
             pblock->vtx[0].vout[1].nValue = thronePayment;
             blockValue -= thronePayment;
         }
