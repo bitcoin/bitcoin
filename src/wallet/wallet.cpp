@@ -1981,7 +1981,7 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
     return res;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOut, CAmount& nFeeInOut, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOut, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
 {
     vector<CRecipient> vecSend;
 
@@ -2003,7 +2003,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOu
         coinControl.Select(txin.prevout);
 
     CWalletTx wtx;
-    if (!CreateTransaction(vecSend, wtx, reservekeyOut, nFeeInOut, nChangePosInOut, strFailReason, &coinControl, CREATE_TX_DONT_SIGN))
+    if (!CreateTransaction(vecSend, wtx, reservekeyOut, nFeeRet, nChangePosInOut, strFailReason, &coinControl, CREATE_TX_DONT_SIGN))
         return false;
 
     if (nChangePosInOut != -1)
@@ -2027,13 +2027,11 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOu
     return true;
 }
 
-bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeInOut,
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
                                 int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, unsigned int flags)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
-    // store the fee input value for adding it to the calculated fee later
-    CAmount addToFee = nFeeInOut;
     unsigned int nSubtractFeeFromAmount = 0;
     BOOST_FOREACH (const CRecipient& recipient, vecSend)
     {
@@ -2095,6 +2093,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, coinControl);
 
+            nFeeRet = 0;
+            // Start with no fee and loop until there is enough fee
+
             while (true)
             {
                 nChangePosInOut = nChangePosRequest;
@@ -2105,7 +2106,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                 CAmount nValueToSelect = nValue;
                 if (nSubtractFeeFromAmount == 0)
-                    nValueToSelect += nFeeInOut; //add the required fee to the amount-to-select
+                    nValueToSelect += nFeeRet; //add the required fee to the amount-to-select
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const CRecipient& recipient, vecSend)
@@ -2114,18 +2115,18 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                     if (recipient.fSubtractFeeFromAmount)
                     {
-                        txout.nValue -= nFeeInOut / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+                        txout.nValue -= nFeeRet / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
 
                         if (fFirst) // first receiver pays the remainder not divisible by output count
                         {
                             fFirst = false;
-                            txout.nValue -= nFeeInOut % nSubtractFeeFromAmount;
+                            txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
                         }
                     }
 
                     if (txout.IsDust(::minRelayTxFee))
                     {
-                        if (recipient.fSubtractFeeFromAmount && nFeeInOut > 0)
+                        if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
                         {
                             if (txout.nValue < 0)
                                 strFailReason = _("The transaction amount is too small to pay the fee");
@@ -2221,7 +2222,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     if (newTxOut.IsDust(::minRelayTxFee))
                     {
                         nChangePosInOut = -1;
-                        nFeeInOut += nChange;
+                        nFeeRet += nChange;
                         reservekey.ReturnKey();
                     }
                     else
@@ -2303,7 +2304,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         break;
                 }
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, nTxConfirmTarget, mempool)+addToFee;
+                CAmount nFeeNeeded = GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
                 if (coinControl && nFeeNeeded > 0 && coinControl->nMinimumTotalFee > nFeeNeeded) {
                     nFeeNeeded = coinControl->nMinimumTotalFee;
                 }
@@ -2318,11 +2319,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     return false;
                 }
 
-                if (nFeeInOut >= nFeeNeeded)
+                if (nFeeRet >= nFeeNeeded)
                     break; // Done, enough fee included.
 
                 // Include more fee and try again.
-                nFeeInOut = nFeeNeeded;
+                nFeeRet = nFeeNeeded;
                 continue;
             }
         }
