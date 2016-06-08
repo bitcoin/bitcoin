@@ -143,6 +143,20 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 1000)
+        
+        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : -1}]
+        outputs = { self.nodes[0].getnewaddress() : 1 }
+        assert_raises(JSONRPCException, self.nodes[0].createrawtransaction, inputs, outputs)
+        
+        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967296}]
+        outputs = { self.nodes[0].getnewaddress() : 1 }
+        assert_raises(JSONRPCException, self.nodes[0].createrawtransaction, inputs, outputs)
+        
+        inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967294}]
+        outputs = { self.nodes[0].getnewaddress() : 1 }
+        rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
+        decrawtx= self.nodes[0].decoderawtransaction(rawtx)
+        assert_equal(decrawtx['vin'][0]['sequence'], 4294967294)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
