@@ -2511,7 +2511,8 @@ UniValue bumpfee(const UniValue& params, bool fHelp)
     // get the old fee to allow oldfee+newfee
     CAmount nDebit = wtx.GetDebit(ISMINE_SPENDABLE);
     CAmount nOldFee = -(wtx.IsFromMe(ISMINE_SPENDABLE) ? wtx.GetValueOut() - nDebit : 0);
-    CAmount nFee = nOldFee; //set the old fee as the base fee
+    CFeeRate oldFeeRate(nOldFee, (int)::GetSerializeSize(wtx, SER_NETWORK, PROTOCOL_VERSION));
+    CAmount nFee = 0;
 
     CMutableTransaction tx(wtx);
     // remove scriptSigs, the signatures are invalid after mutating the transaction
@@ -2532,9 +2533,12 @@ UniValue bumpfee(const UniValue& params, bool fHelp)
     string strFailReason;
     int nChangePos = -1;
 
+    // increase fee rate
+    CFeeRate newFeeRate = CFeeRate(oldFeeRate.GetFeePerK()*1.5);
+
     // re-fund the transaction, a new change output will be added
     CReserveKey reservekey(pwalletMain);
-    if(!pwalletMain->FundTransaction(tx, reservekey, nFee, false, CFeeRate(0), nChangePos, strFailReason, false, false))
+    if(!pwalletMain->FundTransaction(tx, reservekey, nFee, true, newFeeRate, nChangePos, strFailReason, false, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     // sign the new transaction
