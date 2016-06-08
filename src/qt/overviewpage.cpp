@@ -28,6 +28,7 @@
 #define ICON_OFFSET 16
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
+#define NUM_ITEMS_ADV 7
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -137,7 +138,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
-    ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
+    // Note: minimum height of listTransactions will be set later in updateAdvancedPSUI() to reflect actual settings
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
     connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
@@ -147,29 +148,32 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->labelPrivateSendSyncStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
-    if(fLiteMode){
-        ui->framePrivateSend->setVisible(false);
-    } else {
-        updateAdvancedPSUI(false);
-        if(fMasterNode){
-            ui->togglePrivateSend->setText("(" + tr("Disabled") + ")");
-            ui->privateSendAuto->setText("(" + tr("Disabled") + ")");
-            ui->privateSendReset->setText("(" + tr("Disabled") + ")");
-            ui->framePrivateSend->setEnabled(false);
-        } else {
-            if(!fEnablePrivateSend){
-                ui->togglePrivateSend->setText(tr("Start Mixing"));
-            } else {
-                ui->togglePrivateSend->setText(tr("Stop Mixing"));
-            }
-            timer = new QTimer(this);
-            connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
-            timer->start(1000);
-        }
-    }
+    // hide PS frame (helps to preserve saved size)
+    // we'll setup and make it visible in updateAdvancedPSUI() later if we are not in litemode
+    ui->framePrivateSend->setVisible(false);
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
+
+    // that's it for litemode
+    if(fLiteMode) return;
+
+    // disable any PS UI for masternode
+    if(fMasterNode){
+        ui->togglePrivateSend->setText("(" + tr("Disabled") + ")");
+        ui->privateSendAuto->setText("(" + tr("Disabled") + ")");
+        ui->privateSendReset->setText("(" + tr("Disabled") + ")");
+        ui->framePrivateSend->setEnabled(false);
+    } else {
+        if(!fEnablePrivateSend){
+            ui->togglePrivateSend->setText(tr("Start Mixing"));
+        } else {
+            ui->togglePrivateSend->setText(tr("Stop Mixing"));
+        }
+        timer = new QTimer(this);
+        connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
+        timer->start(1000);
+    }
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -260,18 +264,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
     this->walletModel = model;
     if(model && model->getOptionsModel())
     {
-        // Set up transaction list
-        filter = new TransactionFilterProxy();
-        filter->setSourceModel(model->getTransactionTableModel());
-        filter->setLimit(NUM_ITEMS);
-        filter->setDynamicSortFilter(true);
-        filter->setSortRole(Qt::EditRole);
-        filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
-
-        ui->listTransactions->setModel(filter);
-        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
-
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
@@ -281,6 +273,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(anonymizeDashAmountChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
+        // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
         connect(ui->privateSendAuto, SIGNAL(clicked()), this, SLOT(privateSendAuto()));
@@ -431,6 +424,12 @@ void OverviewPage::updatePrivateSendProgress()
 }
 
 void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
+    int nNumItems = (fLiteMode || !fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
+    SetupTransactionList(nNumItems);
+
+    if (fLiteMode) return;
+
+    ui->framePrivateSend->setVisible(true);
     ui->labelCompletitionText->setVisible(fShowAdvancedPSUI);
     ui->privateSendProgress->setVisible(fShowAdvancedPSUI);
     ui->labelSubmittedDenomText->setVisible(fShowAdvancedPSUI);
@@ -563,5 +562,23 @@ void OverviewPage::togglePrivateSend(){
             dlg.exec();
         }
 
+    }
+}
+
+void OverviewPage::SetupTransactionList(int nNumItems) {
+    ui->listTransactions->setMinimumHeight(nNumItems * (DECORATION_SIZE + 2));
+
+    if(walletModel && walletModel->getOptionsModel()) {
+        // Set up transaction list
+        filter = new TransactionFilterProxy();
+        filter->setSourceModel(walletModel->getTransactionTableModel());
+        filter->setLimit(nNumItems);
+        filter->setDynamicSortFilter(true);
+        filter->setSortRole(Qt::EditRole);
+        filter->setShowInactive(false);
+        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+
+        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
     }
 }

@@ -61,6 +61,8 @@ private:
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
 
+    void SetupTransactionList(int nNumItems);
+
 private Q_SLOTS:
     void togglePrivateSend();
     void privateSendAuto();
