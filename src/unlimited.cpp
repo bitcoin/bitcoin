@@ -519,7 +519,7 @@ bool HaveConnectThinblockNodes()
     {
         LOCK(cs_vNodes);
         BOOST_FOREACH (CNode* pnode, vNodes) {
-           int pos = pnode->addrName.find(":");
+           int pos = pnode->addrName.rfind(":");
            if (pos <= 0 )
                vNodesIP.push_back(pnode->addrName);
            else
@@ -538,7 +538,7 @@ bool HaveConnectThinblockNodes()
     int nConnectionsOpen = 0;
     BOOST_FOREACH(const std::string& strAddrNode, mapMultiArgs["-connect-thinblock"]) {
         std::string strThinblockNode;
-        int pos = strAddrNode.find(":");
+        int pos = strAddrNode.rfind(":");
         if (pos <= 0 )
             strThinblockNode = strAddrNode;
         else
