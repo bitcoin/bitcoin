@@ -114,7 +114,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
-    int payments = 1;
+    int payments = 0;
     // Create coinbase tx
     CTransaction txNew;
     txNew.vin.resize(1);
@@ -183,8 +183,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 payments++;
                 txNew.vout.resize(payments);
 
-                txNew.vout[payments-1].scriptPubKey = pblock->payee;
-                txNew.vout[payments-1].nValue = 0;
+                txNew.vout[1].scriptPubKey = pblock->payee;
 
                 CTxDestination address1;
                 ExtractDestination(pblock->payee, address1);
@@ -378,8 +377,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         int64_t thronePayment = GetThronePayment(pindexPrev->nHeight+1, blockValue);
 
         //create throne payment
-        if(payments > 1){
-            pblock->vtx[0].vout[payments-1].nValue = thronePayment;
+        if(hasPayment){
+            pblock->vtx[0].vout[1].nValue = thronePayment;
             blockValue -= thronePayment;
         }
         pblock->vtx[0].vout[0].nValue = blockValue;
