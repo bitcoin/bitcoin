@@ -2095,7 +2095,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
             nFeeRet = 0;
             // Start with no fee and loop until there is enough fee
-
             while (true)
             {
                 nChangePosInOut = nChangePosRequest;
@@ -2106,7 +2105,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                 CAmount nValueToSelect = nValue;
                 if (nSubtractFeeFromAmount == 0)
-                    nValueToSelect += nFeeRet; //add the required fee to the amount-to-select
+                    nValueToSelect += nFeeRet;
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const CRecipient& recipient, vecSend)

@@ -2511,30 +2511,42 @@ UniValue bumpfee(const UniValue& params, bool fHelp)
     // get the old fee to allow oldfee+newfee
     CAmount nDebit = wtx.GetDebit(ISMINE_SPENDABLE);
     CAmount nOldFee = -(wtx.IsFromMe(ISMINE_SPENDABLE) ? wtx.GetValueOut() - nDebit : 0);
-    CFeeRate oldFeeRate(nOldFee, (int)::GetSerializeSize(wtx, SER_NETWORK, PROTOCOL_VERSION));
+    CFeeRate oldFeeRate(nOldFee, (int)::GetSerializeSize((CTransaction)wtx, SER_NETWORK, PROTOCOL_VERSION));
     CAmount nFee = 0;
 
     CMutableTransaction tx(wtx);
     // remove scriptSigs, the signatures are invalid after mutating the transaction
-    for (std::vector<CTxIn>::iterator it(tx.vin.begin()); it != tx.vin.end(); ++it)
-    {
+    for (std::vector<CTxIn>::iterator it(tx.vin.begin()); it != tx.vin.end(); ++it) {
         (*it).scriptSig = CScript();
     }
 
     // remove "old" change outputs
     for (std::vector<CTxOut>::iterator it(tx.vout.begin()); it != tx.vout.end();)
     {
-        if (pwalletMain->IsMine(*it) == ISMINE_SPENDABLE)
+        // only remove IsMine outputs that are not in the address book (only change)
+        CTxDestination address;
+        if (pwalletMain->IsMine(*it) == ISMINE_SPENDABLE && (!ExtractDestination((*it).scriptPubKey, address) || !pwalletMain->mapAddressBook.count(address))) {
             it = tx.vout.erase(it);
-        else
+        }
+        else {
             ++it;
+        }
     }
 
     string strFailReason;
     int nChangePos = -1;
 
-    // increase fee rate
-    CFeeRate newFeeRate = CFeeRate(oldFeeRate.GetFeePerK()*1.5);
+    // double fee rate
+    int estimateFoundTarget = nTxConfirmTarget;
+    CFeeRate newFeeRate = mempool.estimateSmartFee(nTxConfirmTarget, &estimateFoundTarget);
+    // ... unless we don't have enough mempool data for estimatefee, then use fallbackFee
+    if (newFeeRate.GetFeePerK() == 0)
+        newFeeRate = CWallet::fallbackFee;
+
+    if (newFeeRate.GetFeePerK() < oldFeeRate.GetFeePerK()+::minRelayTxFee.GetFeePerK())
+        newFeeRate = CFeeRate(oldFeeRate.GetFeePerK() + ::minRelayTxFee.GetFeePerK());
+
+    //CFeeRate newFeeRate = CFeeRate(oldFeeRate.GetFeePerK()*2);
 
     // re-fund the transaction, a new change output will be added
     CReserveKey reservekey(pwalletMain);
