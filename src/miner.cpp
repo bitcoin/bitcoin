@@ -181,7 +181,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
             if(hasPayment){
                 payments++;
-                txNew.vout.resize(payments);
+                txNew.vout.resize(2);
 
                 txNew.vout[1].scriptPubKey = pblock->payee;
 
@@ -391,9 +391,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 				int64_t payout = txNew.vout[i].nValue;
 				CTxDestination address;
 				ExtractDestination(txNew.vout[i].scriptPubKey, address);
-				string receiveAddress = CCrowncoinAddress( address ).ToString().c_str();
-				LogPrintf(" Payouts: %s :-, %ld\n",receiveAddress,payout);
-				}
+				CCrowncoinAddress addresss(address);
+				LogPrintf(" Payouts: %s :-, %ld\n",addresss.ToString().c_str(),payout);
+
+			}
 		
 
         // Fill in header
