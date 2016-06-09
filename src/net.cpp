@@ -853,10 +853,12 @@ private:
     CNode *_pnode;
 };
 
+#if 0  // Not currently used
 static bool ReverseCompareNodeMinPingTime(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nMinPingUsecTime > b->nMinPingUsecTime;
 }
+#endif
 
 static bool ReverseCompareNodeTimeConnected(const CNodeRef &a, const CNodeRef &b)
 {
@@ -996,7 +998,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     vEvictionCandidatesByActivity[0]->fDisconnect = true;
     LogPrintf("Node disconnected as too inactive %d bytes activity peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
     int i =0;
-    for (i = 0; i <= vEvictionCandidatesByActivity.size()-1; i++) {
+    for (i = 0; i < vEvictionCandidatesByActivity.size(); i++) {
         LogPrintf("Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
     }
 
