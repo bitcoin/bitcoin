@@ -246,17 +246,21 @@ class AddressIndexTest(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
         amount = unspent[1]["amount"] * 100000000
-        tx2.vout = [CTxOut(amount, scriptPubKey3)]
+        tx2.vout = [CTxOut(amount / 2, scriptPubKey3), CTxOut(amount / 2, scriptPubKey3)]
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
         time.sleep(2)
 
         mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
-        assert_equal(len(mempool), 2)
+        assert_equal(len(mempool), 3)
         assert_equal(mempool[0]["txid"], memtxid1)
-        assert_equal(mempool[1]["txid"], memtxid2)
         assert_equal(mempool[0]["address"], address3)
+        assert_equal(mempool[0]["index"], 0)
+        assert_equal(mempool[1]["txid"], memtxid2)
+        assert_equal(mempool[1]["index"], 0)
+        assert_equal(mempool[2]["txid"], memtxid2)
+        assert_equal(mempool[2]["index"], 1)
 
         self.nodes[2].generate(1);
         self.sync_all();
@@ -264,7 +268,7 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(len(mempool2), 0)
 
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(memtxid2, 16), 0))]
+        tx.vin = [CTxIn(COutPoint(int(memtxid2, 16), 0)), CTxIn(COutPoint(int(memtxid2, 16), 1))]
         tx.vout = [CTxOut(amount - 10000, scriptPubKey2)]
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
@@ -273,9 +277,11 @@ class AddressIndexTest(BitcoinTestFramework):
         time.sleep(2)
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
-        assert_equal(len(mempool3), 1)
+        assert_equal(len(mempool3), 2)
         assert_equal(mempool3[0]["prevtxid"], memtxid2)
         assert_equal(mempool3[0]["prevout"], 0)
+        assert_equal(mempool3[1]["prevtxid"], memtxid2)
+        assert_equal(mempool3[1]["prevout"], 1)
 
         print "Passed\n"
 
