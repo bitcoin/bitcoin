@@ -80,6 +80,13 @@ The following outputs are affected by this change:
 - REST `/rest/block/` (JSON format when including extended tx details)
 - `bitcoin-tx -json`
 
+New mempool information RPC calls
+---------------------------------
+
+RPC calls have been added to output detailed statistics for individual mempool
+entries, as well as to calculate the in-mempool ancestors or descendants of a
+transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
+
 ### ZMQ
 
 Each ZMQ notification now contains an up-counting sequence number that allows
