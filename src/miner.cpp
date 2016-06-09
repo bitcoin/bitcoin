@@ -378,22 +378,22 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         //create throne payment
         if(payments > 0){
-            pblock->vtx[0].vout[1].nValue = thronePayment;
+            txNew.vout[1].nValue = thronePayment;
             blockValue -= thronePayment;
         }
-        pblock->vtx[0].vout[0].nValue = blockValue;
+        txNew.vout[0].nValue = blockValue;
 
         pblocktemplate->vTxFees[0] = -nFees;
 
 		
-			/*LogPrintf(" Payments size:  %ld\n",txNew.vout.size());
+			LogPrintf(" Payments size:  %ld\n",txNew.vout.size());
 			for(unsigned int i=0; i < txNew.vout.size();i++){
 				int64_t payout = txNew.vout[i].nValue;
 				CTxDestination address;
 				ExtractDestination(txNew.vout[i].scriptPubKey, address);
 				string receiveAddress = CCrowncoinAddress( address ).ToString().c_str();
 				LogPrintf(" Payouts: %s :-, %ld\n",receiveAddress,payout);
-				}*/
+				}
 		
 
         // Fill in header

@@ -57,6 +57,7 @@ public slots:
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
+    void setThroneCount(const QString &strThrones);
 
 signals:
     // For RPC command executor

@@ -274,6 +274,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumBlocks(model->getNumBlocks(), model->getNumBlocksOfPeers());
         connect(model, SIGNAL(numBlocksChanged(int,int)), this, SLOT(setNumBlocks(int,int)));
 
+        setThroneCount(model->getThroneCountString());
+        connect(model, SIGNAL(strThronesChanged(QString)), this, SLOT(setThroneCount(QString)));
+
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
@@ -373,6 +376,11 @@ void RPCConsole::setNumBlocks(int count, int countOfPeers)
     ui->totalBlocks->setText(countOfPeers == 0 ? tr("N/A") : QString::number(countOfPeers));
     if(clientModel)
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
+}
+
+void RPCConsole::setThroneCount(const QString &strThrones)
+{
+    ui->throneCount->setText(strThrones);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
