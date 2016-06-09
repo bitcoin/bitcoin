@@ -6,7 +6,6 @@ architectures:
 - "amd64"
 packages:
 - "faketime"
-reference_datetime: "2017-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/dashpay/dash-detached-sigs.git"
   "dir": "signature"
