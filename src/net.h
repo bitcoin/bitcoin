@@ -342,6 +342,10 @@ public:
     uint64_t nRecvBytes;
     int nRecvVersion;
 
+    // BU connection de-prioritization
+    // Total bytes sent and received
+    uint64_t nActivityBytes;
+
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
