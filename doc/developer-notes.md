@@ -326,7 +326,7 @@ Strings and formatting
     buffer overflows and surprises with `\0` characters. Also some C string manipulations
     tend to act differently depending on platform, or even the user locale
 
-- Use `ParseInt32`, `ParseInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
+- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
 
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues
 
