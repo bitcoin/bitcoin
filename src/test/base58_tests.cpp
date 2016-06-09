@@ -79,7 +79,7 @@ class TestAddrTypeVisitor : public boost::static_visitor<bool>
 private:
     std::string exp_addrType;
 public:
-    TestAddrTypeVisitor(const std::string &exp_addrType) : exp_addrType(exp_addrType) { }
+    TestAddrTypeVisitor(const std::string &_exp_addrType) : exp_addrType(_exp_addrType) { }
     bool operator()(const CKeyID &id) const
     {
         return (exp_addrType == "pubkey");
@@ -100,7 +100,7 @@ class TestPayloadVisitor : public boost::static_visitor<bool>
 private:
     std::vector<unsigned char> exp_payload;
 public:
-    TestPayloadVisitor(std::vector<unsigned char> &exp_payload) : exp_payload(exp_payload) { }
+    TestPayloadVisitor(std::vector<unsigned char> &_exp_payload) : exp_payload(_exp_payload) { }
     bool operator()(const CKeyID &id) const
     {
         uint160 exp_key(exp_payload);

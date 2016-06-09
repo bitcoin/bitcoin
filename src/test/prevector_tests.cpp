@@ -192,8 +192,8 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             if (((r >> 21) % 32) == 7) {
                 int values[4];
                 int num = 1 + (insecure_rand() % 4);
-                for (int i = 0; i < num; i++) {
-                    values[i] = insecure_rand();
+                for (int k = 0; k < num; k++) {
+                    values[k] = insecure_rand();
                 }
                 test.insert_range(insecure_rand() % (test.size() + 1), values, values + num);
             }
