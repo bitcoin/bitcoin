@@ -125,11 +125,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     // Initialise the block version.
     pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION);
 
-    // Add our coinbase tx as first transaction
-    pblock->vtx.push_back(txNew);
-    pblocktemplate->vTxFees.push_back(-1); // updated at end
-    pblocktemplate->vTxSigOps.push_back(-1); // updated at end
-
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
@@ -147,6 +142,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
     // start throne payments
     bool bThroNePayment = false;
+    bool hasPayment = false;
 
     if ( Params().NetworkID() == CChainParams::TESTNET ){
         if (GetTimeMicros() > START_THRONE_PAYMENTS_TESTNET ){
@@ -166,7 +162,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CCoinsViewCache view(*pcoinsTip, true);
 
         if(bThroNePayment) {
-            bool hasPayment = true;
+            hasPayment = true;
             //spork
             if(!thronePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
                 //no throne detected
@@ -181,9 +177,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
             if(hasPayment){
                 payments++;
-                txNew.vout.resize(payments);
+                txNew.vout.resize(2);
 
-                txNew.vout[1].scriptPubKey = pblock->payee;
+                txNew.vout[payments].scriptPubKey = pblock->payee;
 
                 CTxDestination address1;
                 ExtractDestination(pblock->payee, address1);
@@ -329,8 +325,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 continue;
 
             CValidationState state;
-            if (!CheckInputs (tx, state, view, true,
-                              SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_NAMES))
+            if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_NAMES))
                 continue;
 
             CTxUndo txundo;
@@ -378,22 +373,23 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         //create throne payment
         if(payments > 0){
-            txNew.vout[1].nValue = thronePayment;
+            pblock->vtx[0].vout[payments].nValue = thronePayment;
             blockValue -= thronePayment;
         }
-        txNew.vout[0].nValue = blockValue;
+        pblock->vtx[0].vout[0].nValue = blockValue;
 
         pblocktemplate->vTxFees[0] = -nFees;
 
 		
-			LogPrintf(" Payments size:  %ld\n",txNew.vout.size());
-			for(unsigned int i=0; i < txNew.vout.size();i++){
-				int64_t payout = txNew.vout[i].nValue;
-				CTxDestination address;
-				ExtractDestination(txNew.vout[i].scriptPubKey, address);
-				string receiveAddress = CCrowncoinAddress( address ).ToString().c_str();
-				LogPrintf(" Payouts: %s :-, %ld\n",receiveAddress,payout);
-				}
+		LogPrintf(" Payments size:  %ld\n",pblock->vtx[0].vout.size());
+		for(unsigned int i=0; i < pblock->vtx[0].vout.size();i++){
+			int64_t payout = pblock->vtx[0].vout[i].nValue;
+			CTxDestination address;
+			ExtractDestination(pblock->vtx[0].vout[i].scriptPubKey, address);
+			CCrowncoinAddress addresss(address);
+			LogPrintf(" Payouts: %s :-, %ld  number : %d \n",addresss.ToString().c_str(),payout, i);
+
+		}
 		
 
         // Fill in header
