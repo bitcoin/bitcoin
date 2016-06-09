@@ -449,12 +449,18 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
+    case TransactionRecord::Darksent:
+    case TransactionRecord::RecvWithDarksend:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
     case TransactionRecord::SendToSelf:
+    case TransactionRecord::DarksendCreateDenominations:
+    case TransactionRecord::DarksendDenominate:
+    case TransactionRecord::DarksendMakeCollaterals:
+    case TransactionRecord::DarksendCollateralPayment:
         return COLOR_BAREADDRESS;
     default:
         break;
