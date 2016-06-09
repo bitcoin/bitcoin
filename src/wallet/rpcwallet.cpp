@@ -2669,7 +2669,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     if (origTx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    if (changePosition != -1 && (changePosition < 0 || changePosition > origTx.vout.size()))
+    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > origTx.vout.size()))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
     CMutableTransaction tx(origTx);
