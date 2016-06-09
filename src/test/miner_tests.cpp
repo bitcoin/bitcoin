@@ -387,8 +387,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(0);
     mempool.clear();
 
-    BOOST_FOREACH(CTransaction *tx, txFirst)
-        delete tx;
+    BOOST_FOREACH(CTransaction *_tx, txFirst)
+        delete _tx;
 
     fCheckpointsEnabled = true;
 }
