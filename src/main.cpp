@@ -391,7 +391,7 @@ void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Pa
     mapBlocksInFlight[hash] = std::make_pair(nodeid, it);
 }
 
-/** Check whether the last unknown block a peer advertized is not yet known. */
+/** Check whether the last unknown block a peer advertised is not yet known. */
 void ProcessBlockAvailability(NodeId nodeid) {
     CNodeState *state = State(nodeid);
     assert(state != NULL);
@@ -4639,11 +4639,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 CAddress addr = GetLocalAddress(&pfrom->addr);
                 if (addr.IsRoutable())
                 {
-                    LogPrintf("ProcessMessages: advertizing address %s\n", addr.ToString());
+                    LogPrintf("ProcessMessages: advertising address %s\n", addr.ToString());
                     pfrom->PushAddress(addr);
                 } else if (IsPeerAddrLocalGood(pfrom)) {
                     addr.SetIP(pfrom->addrLocal);
-                    LogPrintf("ProcessMessages: advertizing address %s\n", addr.ToString());
+                    LogPrintf("ProcessMessages: advertising address %s\n", addr.ToString());
                     pfrom->PushAddress(addr);
                 }
             }
@@ -4845,7 +4845,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             {
                 if (fBlocksOnly)
                     LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
-                else if (!fAlreadyHave && !fImporting && !fReindex)
+                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
                     pfrom->AskFor(inv);
             }
 
@@ -5001,7 +5001,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CValidationState state;
 
         pfrom->setAskFor.erase(inv.hash);
-        mapAlreadyAskedFor.erase(inv);
+        mapAlreadyAskedFor.erase(inv.hash);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
@@ -5247,13 +5247,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    // This asymmetric behavior for inbound and outbound connections was introduced
-    // to prevent a fingerprinting attack: an attacker can send specific fake addresses
-    // to users' AddrMan and later request them by sending getaddr messages.
-    // Making nodes which are behind NAT and can only make outgoing connections ignore
-    // the getaddr message mitigates the attack.
-    else if ((strCommand == NetMsgType::GETADDR) && (pfrom->fInbound))
+    else if (strCommand == NetMsgType::GETADDR)
     {
+        // This asymmetric behavior for inbound and outbound connections was introduced
+        // to prevent a fingerprinting attack: an attacker can send specific fake addresses
+        // to users' AddrMan and later request them by sending getaddr messages.
+        // Making nodes which are behind NAT and can only make outgoing connections ignore
+        // the getaddr message mitigates the attack.
+        if (!pfrom->fInbound) {
+            LogPrint("net", "Ignoring \"getaddr\" from outbound connection. peer=%d\n", pfrom->id);
+            return true;
+        }
+
         pfrom->vAddrToSend.clear();
         vector<CAddress> vAddr = addrman.GetAddr();
         BOOST_FOREACH(const CAddress &addr, vAddr)
@@ -5652,7 +5657,7 @@ bool SendMessages(CNode* pto)
         // Address refresh broadcast
         int64_t nNow = GetTimeMicros();
         if (!IsInitialBlockDownload() && pto->nNextLocalAddrSend < nNow) {
-            AdvertizeLocal(pto);
+            AdvertiseLocal(pto);
             pto->nNextLocalAddrSend = PoissonNextSend(nNow, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
         }
 
@@ -5765,7 +5770,21 @@ bool SendMessages(CNode* pto)
                         fRevertToInv = true;
                         break;
                     }
-                    assert(pBestIndex == NULL || pindex->pprev == pBestIndex);
+                    if (pBestIndex != NULL && pindex->pprev != pBestIndex) {
+                        // This means that the list of blocks to announce don't
+                        // connect to each other.
+                        // This shouldn't really be possible to hit during
+                        // regular operation (because reorgs should take us to
+                        // a chain that has some block not on the prior chain,
+                        // which should be caught by the prior check), but one
+                        // way this could happen is by using invalidateblock /
+                        // reconsiderblock repeatedly on the tip, causing it to
+                        // be added multiple times to vBlockHashesToAnnounce.
+                        // Robustly deal with this rare situation by reverting
+                        // to an inv.
+                        fRevertToInv = true;
+                        break;
+                    }
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
