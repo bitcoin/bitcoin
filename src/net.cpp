@@ -965,13 +965,6 @@ static bool AttemptToEvictConnection() {
     // Reduce to the network group with the most connections
     vEvictionCandidates = std::move(mapAddrCounts[naMostConnections]);
 
-    // Do not disconnect peers if there is only one unprotected connection from their network group.
-    // This step excessively favors netgroup diversity, and should be removed once more protective criteria are established.
-    if (vEvictionCandidates.size() <= 1)
-        // unless we prefer the new connection (for whitelisted peers)
-        if (!fPreferNewConnection)
-            return false;
-
     // Disconnect from the network group with the most connections
     NodeId evicted = vEvictionCandidates.front().id;
     LOCK(cs_vNodes);
