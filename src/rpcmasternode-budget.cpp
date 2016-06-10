@@ -324,6 +324,9 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
             bObj.push_back(Pair("fCachedValid",  pbudgetProposal->fCachedValid));
+            bObj.push_back(Pair("fCachedFunding",  pbudgetProposal->fCachedFunding));
+            bObj.push_back(Pair("fCachedDelete",  pbudgetProposal->fCachedDelete));
+            bObj.push_back(Pair("fCachedEndorsed",  pbudgetProposal->fCachedEndorsed));
 
             resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
         }

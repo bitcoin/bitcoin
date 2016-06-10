@@ -176,11 +176,12 @@ public:
     std::string strLocalValidityError;
 
     // set via sentinel voting mechanisms
-    // caching -- one per voting mechanism -- see governance-vote.h for more information
-    bool fCachedFunding;
-    bool fCachedValid;
-    bool fCachedDelete;
-    bool fCachedEndorsed;
+    // caching -- one per voting mechanism -- see below for more information
+    bool fCachedFunding; // true == minimum network support has been reached for this object to be funded (doesn't mean it will for sure though)
+    bool fCachedValid; // true == minimum network has been reached flagging this object as a valid and understood goverance object (e.g, the serialized data is correct format, etc)
+    bool fCachedDelete; // true == minimum network support has been reached saying this object should be deleted from the system entirely
+    bool fCachedEndorsed; // true == minimum network support has been reached flagging this object as endorsed by an elected representative body (e.g. business review board / technecial review board /etc)
+    // bool fDirtyCache; // object was updated and cached values should be updated soon
 
     CGovernanceObject();
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
@@ -257,7 +258,6 @@ public:
     void CleanAndRemove(bool fSignatureCheck);
     void Relay();
 
-
     uint256 GetHash(){
 
         // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
@@ -310,6 +310,8 @@ public:
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
         READWRITE(strData);
+
+        // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
 };
 
