@@ -3785,7 +3785,7 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+288"/>
+        <location filename="../bitcoinstrings.cpp" line="+286"/>
         <source>Options:</source>
         <translation>Options:</translation>
     </message>
@@ -3810,7 +3810,7 @@
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-125"/>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3835,7 +3835,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+120"/>
+        <location line="+118"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3865,7 +3865,7 @@
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <location line="-203"/>
+        <location line="-201"/>
         <source>Bitcoin Core</source>
         <translation type="unfinished">Bitcoin Core</translation>
     </message>
@@ -3946,11 +3946,6 @@
     </message>
     <message>
         <location line="+5"/>
-        <source>Tell other nodes to filter invs to us by our mempool min fee (default: %u)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4305,7 +4300,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-315"/>
+        <location line="-313"/>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4375,7 +4370,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+12"/>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4580,12 +4575,12 @@
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="-216"/>
+        <location line="-214"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+143"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
@@ -4595,7 +4590,7 @@
         <translation>Loading addresses...</translation>
     </message>
     <message>
-        <location line="-260"/>
+        <location line="-258"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4645,7 +4640,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+16"/>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation type="unfinished"></translation>
     </message>

@@ -140,8 +140,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Support filtering of blocks and transaction with bloom filters (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Tell other nodes to filter invs to us by our mempool min fee (default: %u)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
