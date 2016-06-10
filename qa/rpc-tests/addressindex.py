@@ -293,6 +293,34 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(mempool3[1]["prevtxid"], memtxid2)
         assert_equal(mempool3[1]["prevout"], 1)
 
+        # sending and receiving to the same address
+        privkey1 = "cQY2s58LhzUCmEXN8jtAp1Etnijx78YRZ466w4ikX1V4UpTpbsf8"
+        address1 = "myAUWSHnwsQrhuMWv4Br6QsCnpB41vFwHn"
+        address1hash = "c192bff751af8efec15135d42bfeedf91a6f3e34".decode("hex")
+        address1script = CScript([OP_DUP, OP_HASH160, address1hash, OP_EQUALVERIFY, OP_CHECKSIG])
+
+        self.nodes[0].sendtoaddress(address1, 10)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        utxos = self.nodes[1].getaddressutxos({"addresses": [address1]})
+        assert_equal(len(utxos), 1)
+
+        tx = CTransaction()
+        tx.vin = [
+            CTxIn(COutPoint(int(utxos[0]["txid"], 16), utxos[0]["outputIndex"]))
+        ]
+        amount = utxos[0]["satoshis"] - 1000
+        tx.vout = [CTxOut(amount, address1script)]
+        tx.rehash()
+        self.nodes[0].importprivkey(privkey1)
+        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        mem_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+
+        self.sync_all()
+        mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})
+        assert_equal(len(mempool_deltas), 2)
+
         print "Passed\n"
 
 
