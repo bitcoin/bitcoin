@@ -365,22 +365,6 @@ bool MarkBlockAsReceived(const uint256& hash) {
     return false;
 }
 
-// Requires cs_main.
-void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Params& consensusParams, CBlockIndex *pindex = NULL) {
-    CNodeState *state = State(nodeid);
-    assert(state != NULL);
-
-    // Make sure it's not listed somewhere already.
-    MarkBlockAsReceived(hash);
-
-    int64_t nNow = GetTimeMicros();
-    QueuedBlock newentry = {hash, pindex, nNow, pindex != NULL, GetBlockTimeout(nNow, nQueuedValidatedHeaders, consensusParams)};
-    nQueuedValidatedHeaders += newentry.fValidatedHeaders;
-    list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(), newentry);
-    state->nBlocksInFlight++;
-    state->nBlocksInFlightValidHeaders += newentry.fValidatedHeaders;
-    mapBlocksInFlight[hash] = std::make_pair(nodeid, it);
-}
 
 /** Check whether the last unknown block a peer advertized is not yet known. */
 void ProcessBlockAvailability(NodeId nodeid) {
@@ -413,12 +397,6 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
         // An unknown block was announced; just assume that the latest one is the best one.
         state->hashLastUnknownBlock = hash;
     }
-}
-
-// Requires cs_main
-bool CanDirectFetch(const Consensus::Params &consensusParams)
-{
-    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
 }
 
 // Requires cs_main
@@ -535,6 +513,34 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 }
 
 } // anon namespace
+
+// Requires cs_main.
+void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Params& consensusParams, CBlockIndex *pindex = NULL) {
+    CNodeState *state = State(nodeid);
+    assert(state != NULL);
+
+    // Make sure it's not listed somewhere already.
+    // BU why mark as received? because this erases it from the inflight list.  Instead we'll check for it
+    // BU not: MarkBlockAsReceived(hash);
+    map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
+    if (itInFlight == mapBlocksInFlight.end()) // If it hasn't already been marked inflight...
+      {
+	int64_t nNow = GetTimeMicros();
+	QueuedBlock newentry = {hash, pindex, nNow, pindex != NULL, GetBlockTimeout(nNow, nQueuedValidatedHeaders, consensusParams)};
+	nQueuedValidatedHeaders += newentry.fValidatedHeaders;
+	list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(), newentry);
+	state->nBlocksInFlight++;
+	state->nBlocksInFlightValidHeaders += newentry.fValidatedHeaders;
+	mapBlocksInFlight[hash] = std::make_pair(nodeid, it);
+      }
+}
+
+// Requires cs_main
+bool CanDirectFetch(const Consensus::Params &consensusParams)
+{
+    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
+}
+
 
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     LOCK(cs_main);
@@ -3338,7 +3344,7 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
         LogPrintf("Invalid block: ver:%x time:%d Tx size:%d len:%d\n", pblock->nVersion, pblock->nTime, pblock->vtx.size(),byteLen);
       }
 
-    LogPrint("thin", "Received standard format block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom->addrName.c_str(),pfrom->id);
+    LogPrint("thin", "Processing new block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom ? pfrom->addrName.c_str():"myself",pfrom ? pfrom->id: 0);
     if (!IsInitialBlockDownload()) SendExpeditedBlock(*pblock,pfrom);
     
     {
@@ -4546,7 +4552,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (fLogIPs)
             remoteAddr = ", peeraddr=" + pfrom->addr.ToString();
 
-        LogPrintf("receive version message: %s: version %d, blocks=%d, us=%s, peer=%d%s\n",
+        LogPrint("net", "receive version message: %s: version %d, blocks=%d, us=%s, peer=%d%s\n",
                   pfrom->cleanSubVer, pfrom->nVersion,
                   pfrom->nStartingHeight, addrMe.ToString(), pfrom->id,
                   remoteAddr);
@@ -4697,69 +4703,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
-                    // First request the headers preceding the announced block. In the normal fully-synced
-                    // case where a new block is announced that succeeds the current tip (no reorganization),
-                    // there are no such headers.
-                    // Secondly, and only when we are close to being synced, we request the announced block directly,
-                    // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
-                    // time the block arrives, the header chain leading up to it is already validated. Not
-                    // doing this will result in the received block being rejected as an orphan in case it is
-                    // not a direct successor.
-                    pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
-                    CNodeState *nodestate = State(pfrom->GetId());
-                    if (CanDirectFetch(chainparams.GetConsensus()) &&
-                        nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                        // BUIP010 Xtreme Thinblocks: begin section
-                        CInv inv2(inv);
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        CBloomFilter filterMemPool;
-                        if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
-                            if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(inv.hash))) {
-                                // Must download a block from a ThinBlock peer
-                                if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
-                                    pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-                                    inv2.type = MSG_XTHINBLOCK;
-                                    std::vector<uint256> vOrphanHashes;
-                                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-                                        vOrphanHashes.push_back((*mi).first);
-                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
-                                    ss << inv2;
-                                    ss << filterMemPool;
-                                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-                                    MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-                                }
-                            }
-                            else {
-                                // Try to download a thinblock if possible otherwise just download a regular block
-                                if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
-                                    pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-                                    inv2.type = MSG_XTHINBLOCK;
-                                    std::vector<uint256> vOrphanHashes;
-                                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-                                        vOrphanHashes.push_back((*mi).first);
-                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
-                                    ss << inv2;
-                                    ss << filterMemPool;
-                                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-                                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-                                }
-                                else {
-                                    LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-                                    vToFetch.push_back(inv2);
-                                }
-                                MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                            }
-                        }
-                        else {
-                            vToFetch.push_back(inv2);
-                            MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                            LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-                        }
-                        // BUIP010 Xtreme Thinblocks: end section
-                    }
-                    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
+                if (!fAlreadyHave && !fImporting && !fReindex ) {  // BU request manager keeps track of all sources so no need for: && !mapBlocksInFlight.count(inv.hash)) {
+		    requester.AskFor(inv, pfrom);
                 }
             }
             else
@@ -5176,6 +5121,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	  }
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+        requester.Received(inv, pfrom, msgSize);
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
         bool alreadyHave = false;
@@ -5300,7 +5246,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	      CThinBlockStats::Update(nSizeThinBlock, blockSize);
 	      std::string ss = CThinBlockStats::ToString();
 	      LogPrint("thin", "thin block stats: %s\n", ss.c_str());
-
+              requester.Received(inv, pfrom, msgSize);
 	      HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
 	      BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes)
                 EraseOrphanTx(mapPartialTxHash[cheapHash]);
@@ -5392,6 +5338,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
+            requester.Received(inv, pfrom, msgSize);
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv);
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
@@ -5461,6 +5408,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv);
+            requester.Received(inv, pfrom, msgSize);
 
             // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
             int nSizeThinBlockTx = ::GetSerializeSize(thinBlockTx, SER_NETWORK, PROTOCOL_VERSION);
@@ -5566,6 +5514,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // BU send as unsolicited txns and block
         SendExpeditedBlock(block);
+        requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
         for (unsigned int i = 0; i < block.vtx.size(); i++)

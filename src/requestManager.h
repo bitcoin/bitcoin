@@ -19,19 +19,22 @@ public:
   int64_t lastRequestTime;  // In microseconds, 0 means no request
   unsigned int outstandingReqs;
   unsigned int receivingFrom;
+  char    requestCount[MAX_AVAIL_FROM];
   CNode* availableFrom[MAX_AVAIL_FROM];
   int priority;
 
   
   CUnknownObj()
   {
-    for (int i =0;i<MAX_AVAIL_FROM;i++) availableFrom[i] = NULL;
+    for (int i =0;i<MAX_AVAIL_FROM;i++) { availableFrom[i] = NULL; requestCount[i] = 0; }
     rateLimited = false;
     receivingFrom = 0;
     outstandingReqs = 0;
     lastRequestTime = 0;
   }
 
+  int NextSource();
+  int AddSource(CNode* from);
   //CUnknownObj( const CUnknownObj &) = default;
 };
 
@@ -41,12 +44,14 @@ class CRequestManager
   // map of transactions
   typedef std::map<uint256, CUnknownObj> OdMap;
   OdMap mapTxnInfo;
+  OdMap mapBlkInfo;
   CCriticalSection cs_objDownloader;
 
   OdMap::iterator sendIter;
+  OdMap::iterator sendBlkIter;
 
   int inFlight;
-  int maxInFlight;
+  //int maxInFlight;
   CStatHistory<int> inFlightTxns;
   CStatHistory<int> receivedTxns;
   CStatHistory<int> rejectedTxns;
@@ -54,7 +59,8 @@ class CRequestManager
   CStatHistory<int> pendingTxns;
   
   void cleanup(OdMap::iterator& item);
-
+  CLeakyBucket requestPacer;
+  CLeakyBucket blockPacer;
   public:
   CRequestManager();
 
