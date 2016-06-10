@@ -232,6 +232,8 @@ class AddressIndexTest(BitcoinTestFramework):
         address3 = "mw4ynwhS7MmrQ27hr82kgqu7zryNDK26JB"
         addressHash3 = "aa9872b5bbcdb511d89e0e11aa27da73fd2c3f50".decode("hex")
         scriptPubKey3 = CScript([OP_DUP, OP_HASH160, addressHash3, OP_EQUALVERIFY, OP_CHECKSIG])
+        address4 = "2N8oFVB2vThAKury4vnLquW2zVjsYjjAkYQ"
+        scriptPubKey4 = CScript([OP_HASH160, addressHash3, OP_EQUAL])
         unspent = self.nodes[2].listunspent()
 
         tx = CTransaction()
@@ -246,7 +248,12 @@ class AddressIndexTest(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
         amount = unspent[1]["amount"] * 100000000
-        tx2.vout = [CTxOut(amount / 2, scriptPubKey3), CTxOut(amount / 2, scriptPubKey3)]
+        tx2.vout = [
+            CTxOut(amount / 4, scriptPubKey3),
+            CTxOut(amount / 4, scriptPubKey3),
+            CTxOut(amount / 4, scriptPubKey4),
+            CTxOut(amount / 4, scriptPubKey4)
+        ]
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
@@ -268,8 +275,11 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(len(mempool2), 0)
 
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(memtxid2, 16), 0)), CTxIn(COutPoint(int(memtxid2, 16), 1))]
-        tx.vout = [CTxOut(amount - 10000, scriptPubKey2)]
+        tx.vin = [
+            CTxIn(COutPoint(int(memtxid2, 16), 0)),
+            CTxIn(COutPoint(int(memtxid2, 16), 1))
+        ]
+        tx.vout = [CTxOut(amount / 2 - 10000, scriptPubKey2)]
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
