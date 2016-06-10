@@ -911,11 +911,11 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     uint64_t naMostConnections;
     unsigned int nMostConnections = 0;
     int64_t nMostConnectionsTime = 0;
-    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapAddrCounts;
+    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapNetGroupNodes;
     BOOST_FOREACH(const NodeEvictionCandidate &node, vEvictionCandidates) {
-        mapAddrCounts[node.nKeyedNetGroup].push_back(node);
-        int64_t grouptime = mapAddrCounts[node.nKeyedNetGroup][0].nTimeConnected;
-        size_t groupsize = mapAddrCounts[node.nKeyedNetGroup].size();
+        mapNetGroupNodes[node.nKeyedNetGroup].push_back(node);
+        int64_t grouptime = mapNetGroupNodes[node.nKeyedNetGroup][0].nTimeConnected;
+        size_t groupsize = mapNetGroupNodes[node.nKeyedNetGroup].size();
 
         if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
             nMostConnections = groupsize;
@@ -925,7 +925,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     }
 
     // Reduce to the network group with the most connections
-    vEvictionCandidates = std::move(mapAddrCounts[naMostConnections]);
+    vEvictionCandidates = std::move(mapNetGroupNodes[naMostConnections]);
 
     // Do not disconnect peers if there is only one unprotected connection from their network group.
     // This step excessively favors netgroup diversity, and should be removed once more protective criteria are established.
