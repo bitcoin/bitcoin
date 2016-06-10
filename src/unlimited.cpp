@@ -62,10 +62,11 @@ CStatHistory<uint64_t > recvAmt;
 CStatHistory<uint64_t > sendAmt; 
 
 // Expedited blocks
-std::vector<CNode*> xpeditedBlk(256,NULL);
-std::vector<CNode*> xpeditedTxn(256,NULL);
+std::vector<CNode*> xpeditedBlk(256,NULL);    // Who requested expedited blocks from us
+std::vector<CNode*> xpeditedBlkUp(256,NULL);  // Who we requested expedited blocks from
+std::vector<CNode*> xpeditedTxn(256,NULL);  
 
-#define NUM_XPEDITED_STORE 5
+#define NUM_XPEDITED_STORE 10
 uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];  // Just save the last few expedited sent blocks so we don't resend (uint256 zeros on construction)
 int xpeditedBlkSendPos=0;
 
@@ -242,10 +243,12 @@ void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
 
 void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops,const CNode* skip)
   {
+  bool cameFromUpstream = false;
   std::vector<CNode*>::iterator end = xpeditedBlk.end();
   for (std::vector<CNode*>::iterator it = xpeditedBlk.begin(); it != end; it++)
     {
       CNode* n = *it;
+      if (n == skip) cameFromUpstream = true;
       if ((n != skip)&&(n != NULL)) // Don't send it back in case there is a forwarding loop
 	{
           if (n->fDisconnect)
@@ -257,6 +260,31 @@ void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops,const CNode* s
 	    {
 	      LogPrint("thin", "Sending expedited block %s to %s.\n", thinBlock.header.GetHash().ToString(),n->addrName.c_str());
               n->PushMessage(NetMsgType::XPEDITEDBLK, (unsigned char) EXPEDITED_MSG_XTHIN, hops, thinBlock);  // I should push the vRecv rather than reserialize
+              n->blocksSent += 1;
+	    }
+	}
+    }
+
+  // Upstream
+  if (!cameFromUpstream)  // TODO, if it came from an upstream block I really want to delay for a short period and then check if we got it and then send.  But this solves some of the issue
+    {
+      std::vector<CNode*>::iterator end = xpeditedBlkUp.end();
+      for (std::vector<CNode*>::iterator it = xpeditedBlkUp.begin(); it != end; it++)
+	{
+	  CNode* n = *it;
+	  if ((n != skip)&&(n != NULL)) // Don't send it back to the sender in case there is a forwarding loop
+	    {
+	      if (n->fDisconnect)
+		{
+		  *it = NULL;
+		  n->Release();
+		}
+	      else
+		{
+		  LogPrint("thin", "Sending expedited block %s upstream to %s.\n", thinBlock.header.GetHash().ToString(),n->addrName.c_str());
+		  n->PushMessage(NetMsgType::XPEDITEDBLK, (unsigned char) EXPEDITED_MSG_XTHIN, hops, thinBlock);  // I should push the vRecv rather than reserialize
+                  n->blocksSent += 1;
+		}
 	    }
 	}
     }
@@ -276,7 +304,7 @@ void SendExpeditedBlock(const CBlock& block,const CNode* skip)
     }
   else
     {
-      if (!xpeditedBlk.empty()) LogPrint("thin", "No need to send expedited block %s\n", block.GetHash().ToString());
+      // LogPrint("thin", "No need to send expedited block %s\n", block.GetHash().ToString());
     }
 }
 
@@ -360,6 +388,23 @@ UniValue expedited(const UniValue& params, bool fHelp)
       if (onoff == "OFF") flags |= EXPEDITED_STOP;
       }
 
+    // TODO: validate that the node can handle expedited blocks
+
+    // Add or remove this node to our list of upstream nodes
+    std::vector<CNode*>::iterator elem = std::find(xpeditedBlkUp.begin(), xpeditedBlkUp.end(),node); 
+    if ((flags & EXPEDITED_BLOCKS)&&(flags & EXPEDITED_STOP))
+      {
+	if (elem == xpeditedBlkUp.end()) xpeditedBlkUp.erase(elem);
+      }
+    else if (flags & EXPEDITED_BLOCKS)
+      {
+      if (elem == xpeditedBlkUp.end())  // don't add it twice
+        {
+        xpeditedBlkUp.push_back(node);
+        }
+      }
+
+    // Push the expedited message even if its a repeat to allow the operator to reissue the CLI command to trigger another message.
     node->PushMessage(NetMsgType::XPEDITEDREQUEST,flags);
     return NullUniValue;
 }
@@ -1102,6 +1147,11 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             LogPrint("thin", "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peer: %s (%d)\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(), pfrom->addrName.c_str(), pfrom->id);
         }
     }
+    else
+      {
+	assert(0);  // inv type is not correct 
+      }
+    pfrom->blocksSent += 1;
 }
 
 // Similar to TestBlockValidity but is very conservative in parameters (used in mining)

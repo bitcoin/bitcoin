@@ -4309,7 +4309,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
+		      {
+    	                pfrom->blocksSent += 1;
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
+		      }
 
                     // BUIP010 Xtreme Thinblocks: begin section
                     else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)               
@@ -4323,6 +4326,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         {
                             CMerkleBlock merkleBlock(block, *pfrom->pfilter);
                             pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
+                            pfrom->blocksSent += 1;
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
                             // Note that there is currently no way for a node to request any single transactions we didn't send here -
@@ -4331,7 +4335,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             // however we MUST always provide at least what the remote peer needs
                             typedef std::pair<unsigned int, uint256> PairType;
                             BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+			      {
+       	                        pfrom->txsSent += 1;
                                 pfrom->PushMessage(NetMsgType::TX, block.vtx[pair.first]);
+			      }
                         }
                         // else
                             // no response
@@ -4377,6 +4384,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         ss << tx;
                         pfrom->PushMessage(NetMsgType::TX, ss);
                         pushed = true;
+                        pfrom->txsSent += 1;
                     }
                 }
                 if (!pushed) {
@@ -5496,6 +5504,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->AddInventoryKnown(inv);
         CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
         pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
+        pfrom->blocksSent += 1;
         }
     }
     // BUIP010 Xtreme Thinblocks: end section

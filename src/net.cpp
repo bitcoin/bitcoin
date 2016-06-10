@@ -2339,8 +2339,10 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     bytesSent.init("node/" + xmledName + "/bytesSent");
     bytesReceived.init("node/" + xmledName + "/bytesReceived");
     txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
-    firstTx.init("node/" + xmledName + "/firstTxn");
+    firstTx.init("node/" + xmledName + "/firstTx");
     firstBlock.init("node/" + xmledName + "/firstBlock");
+    blocksSent.init("node/" + xmledName + "/blocksSent");
+    txsSent.init("node/" + xmledName + "/txsSent");
 
     {
         LOCK(cs_nLastNodeId);

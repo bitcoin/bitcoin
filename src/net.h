@@ -443,6 +443,10 @@ public:
     CStatHistory<unsigned int> firstTx;
     // track the # of times this node is the first to send us a block INV
     CStatHistory<unsigned int> firstBlock;
+    // track the # of times we sent this node a block
+    CStatHistory<unsigned int> blocksSent;
+    // track the # of times we sent this node a transaction
+    CStatHistory<unsigned int> txsSent;
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();

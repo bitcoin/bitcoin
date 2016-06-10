@@ -265,7 +265,7 @@ int CUnknownObj::AddSource(CNode* from)
               LOCK(cs_vNodes);
 	      availableFrom[i] = from->AddRef();
 	    }
-	  LogPrint("req", "ReqMgr: %s added ref to %d count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
+	  LogPrint("req", "%s added ref to node %d.  Current count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
 	  // I Don't need to clear this bit in receivingFrom, it should already be 0
 	  if (i==0) // First request for this object
 	    {
