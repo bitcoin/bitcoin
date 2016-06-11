@@ -1011,10 +1011,9 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // no need here to check whether the peer is whitelisted or not.
     std::sort(vEvictionCandidatesByActivity.begin(), vEvictionCandidatesByActivity.end(), CompareNodeActivityBytes);
     vEvictionCandidatesByActivity[0]->fDisconnect = true;
-    LogPrintf("Node disconnected as too inactive %d bytes activity peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
-    int i =0;
-    for (i = 0; i < vEvictionCandidatesByActivity.size(); i++) {
-        LogPrintf("Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
+    LogPrint("evict", "Node disconnected because too inactive:%d bytes of activity for peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
+    for (unsigned int i = 0; i < vEvictionCandidatesByActivity.size(); i++) {
+        LogPrint("evict", "Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
     }
 
     return true;
