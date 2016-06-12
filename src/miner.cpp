@@ -92,14 +92,28 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
-    // Largest block you're willing to create:
-    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
-    // Limit to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
-    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
-
-    unsigned int nBlockMaxCost = GetArg("-blockmaxcost", DEFAULT_BLOCK_MAX_COST);
+    // Block resource limits
+    // If neither -blockmaxsize or -blockmaxcost is given, limit to DEFAULT_BLOCK_MAX_*
+    // If only one is given, only restrict the specified resource.
+    // If both are given, restrict both.
+    unsigned int nBlockMaxCost = DEFAULT_BLOCK_MAX_COST;
+    unsigned int nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
+    bool fCostSet = false;
+    if (mapArgs.count("-blockmaxcost")) {
+        nBlockMaxCost = GetArg("-blockmaxcost", DEFAULT_BLOCK_MAX_COST);
+        nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
+        fCostSet = true;
+    }
+    if (mapArgs.count("-blockmaxsize")) {
+        nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+        if (!fCostSet) {
+            nBlockMaxCost = nBlockMaxSize * WITNESS_SCALE_FACTOR;
+        }
+    }
     // Limit cost to between 4K and MAX_BLOCK_COST-4K for sanity:
     nBlockMaxCost = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_COST-4000), nBlockMaxCost));
+    // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
+    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
 
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
@@ -110,6 +124,9 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     // until there are no more or the block reaches this size:
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
+
+    // Whether we need to account for byte usage (in addition to cost usage)
+    bool fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000) || (nBlockPrioritySize > 0) || (nBlockMinSize > 0);
 
     // Collect memory pool transactions into the block
     CTxMemPool::setEntries inBlock;
@@ -216,7 +233,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 continue;
             }
 
-            unsigned int nTxSize = ::GetSerializeSize(iter->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
+            unsigned int nTxSize = fNeedSizeAccounting ? ::GetSerializeSize(iter->GetTx(), SER_NETWORK, PROTOCOL_VERSION) : 0;
             int64_t nTxCost = GetTransactionCost(tx);
             if (fPriorityBlock &&
                 (nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
