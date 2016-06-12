@@ -68,6 +68,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
 /** Compute the virtual transaction size (cost reinterpreted as bytes). */
+int64_t GetVirtualTransactionSize(int64_t nCost);
 int64_t GetVirtualTransactionSize(const CTransaction& tx);
 
 #endif // BITCOIN_POLICY_POLICY_H

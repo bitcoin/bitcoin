@@ -234,7 +234,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             }
 
             unsigned int nTxSize = fNeedSizeAccounting ? ::GetSerializeSize(iter->GetTx(), SER_NETWORK, PROTOCOL_VERSION) : 0;
-            int64_t nTxCost = GetTransactionCost(tx);
+            int64_t nTxCost = iter->GetTxCost();
             if (fPriorityBlock &&
                 (nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
                 fPriorityBlock = false;

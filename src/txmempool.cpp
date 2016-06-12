@@ -28,12 +28,12 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue),
     spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp)
 {
-    nTxSize = GetVirtualTransactionSize(tx);
-    nModSize = tx.CalculateModifiedSize(nTxSize);
+    nTxCost = GetTransactionCost(_tx);
+    nModSize = _tx.CalculateModifiedSize(GetTxSize());
     nUsageSize = RecursiveDynamicUsage(tx);
 
     nCountWithDescendants = 1;
-    nSizeWithDescendants = nTxSize;
+    nSizeWithDescendants = GetTxSize();
     nModFeesWithDescendants = nFee;
     CAmount nValueIn = tx.GetValueOut()+nFee;
     assert(inChainInputValue <= nValueIn);
@@ -41,7 +41,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     feeDelta = 0;
 
     nCountWithAncestors = 1;
-    nSizeWithAncestors = nTxSize;
+    nSizeWithAncestors = GetTxSize();
     nModFeesWithAncestors = nFee;
     nSigOpCostWithAncestors = sigOpCost;
 }
@@ -71,6 +71,11 @@ void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
 {
     lockPoints = lp;
+}
+
+size_t CTxMemPoolEntry::GetTxSize() const
+{
+    return GetVirtualTransactionSize(nTxCost);
 }
 
 // Update the given tx for any in-mempool descendants.
