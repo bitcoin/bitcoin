@@ -9,7 +9,6 @@
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "arith_uint256.h"
 
 #include <assert.h>
 
@@ -239,67 +238,6 @@ public:
 static CTestNetParams testNetParams;
 
 /**
- * Segnet
- */
-class CSegNetParams : public CChainParams {
-public:
-    CSegNetParams() {
-        strNetworkID = "segnet4";
-        consensus.nSubsidyHalvingInterval = 210000;
-        consensus.nMajorityEnforceBlockUpgrade = 7;
-        consensus.nMajorityRejectBlockOutdated = 9;
-        consensus.nMajorityWindow = 10;
-        consensus.BIP34Height = -1;
-        consensus.BIP34Hash = uint256();
-        consensus.powLimit = uint256S("000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // 512x lower min difficulty than mainnet
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = false;
-        pchMessageStart[0] = 0xdc;
-        pchMessageStart[1] = 0xab;
-        pchMessageStart[2] = 0xa1;
-        pchMessageStart[3] = 0xc4;
-        nDefaultPort = 28901;
-        nPruneAfterHeight = 1000;
-        consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 144; // Faster than normal for segnet (144 instead of 2016)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
-        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 999999999999ULL;
-
-        genesis = CreateGenesisBlock(1452831101, 0, UintToArith256(consensus.powLimit).GetCompact(), 1, 50 * COIN);
-        consensus.hashGenesisBlock = genesis.GetHash();
-
-        vFixedSeeds.clear();
-        vSeeds.clear();
-
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,30);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,50);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,158);
-        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x05)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x05)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
-
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_seg, pnSeed6_seg + ARRAYLEN(pnSeed6_seg));
-
-        fMiningRequiresPeers = true;
-        fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
-        fMineBlocksOnDemand = false;
-        fTestnetToBeDeprecatedFieldRPC = true;
-
-        // checkpointData is empty
-    }
-};
-static CSegNetParams segNetParams;
-
-/**
  * Regression test
  */
 class CRegTestParams : public CChainParams {
@@ -379,8 +317,6 @@ CChainParams& Params(const std::string& chain)
             return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
             return testNetParams;
-    else if (chain == CBaseChainParams::SEGNET)
-            return segNetParams;
     else if (chain == CBaseChainParams::REGTEST)
             return regTestParams;
     else

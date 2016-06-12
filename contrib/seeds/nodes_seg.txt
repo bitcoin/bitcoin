@@ -1,3 +1,0 @@
-# List of fixed seed nodes for segnet
-
-37.34.48.17

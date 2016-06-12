@@ -13,7 +13,6 @@
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
-const std::string CBaseChainParams::SEGNET = "segnet";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -22,7 +21,6 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
-        strUsage += HelpMessageOpt("-segnet", "Enter segregated witness test mode. ");
     }
 }
 
@@ -53,20 +51,6 @@ public:
 };
 static CBaseTestNetParams testNetParams;
 
-/**
- * Segnet
- */
-class CBaseSegNetParams : public CBaseChainParams
-{
-public:
-    CBaseSegNetParams()
-    {
-        nRPCPort = 28902;
-        strDataDir = "segnet4";
-    }
-};
-static CBaseSegNetParams segNetParams;
-
 /*
  * Regression test
  */
@@ -95,8 +79,6 @@ CBaseChainParams& BaseParams(const std::string& chain)
         return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
         return testNetParams;
-    else if (chain == CBaseChainParams::SEGNET)
-        return segNetParams;
     else if (chain == CBaseChainParams::REGTEST)
         return regTestParams;
     else
@@ -112,16 +94,13 @@ std::string ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
-    bool fSegNet = GetBoolArg("-segnet", false);
 
-    if ((int)fRegTest + (int)fTestNet + (int)fSegNet > 1)
-        throw std::runtime_error("Invalid combination of -regtest, -testnet, -segnet.");
+    if (fTestNet && fRegTest)
+        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    if (fSegNet)
-        return CBaseChainParams::SEGNET;
     return CBaseChainParams::MAIN;
 }
 
