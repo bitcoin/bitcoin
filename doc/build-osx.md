@@ -5,11 +5,13 @@ The built-in one is located in `/Applications/Utilities/Terminal.app`.
 
 Preparation
 -----------
-Download and install [Xcode](https://developer.apple.com/xcode/download).
+Install the OS X command line tools:
 
-Once installed, run `xcode-select --install` to install the OS X command line tools.
+`xcode-select --install`
 
-Install [Homebrew](http://brew.sh).
+When the popup appears, click `Install`.
+
+Then install [Homebrew](http://brew.sh).
 
 Dependencies
 ----------------------
