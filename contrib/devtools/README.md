@@ -51,8 +51,9 @@ maintained:
 * for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
 * for `src/leveldb`: https://github.com/bitcoin-core/leveldb.git (branch bitcoin-fork)
 * for `src/univalue`: https://github.com/bitcoin-core/univalue.git (branch master)
+* for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
 
-Usage: `git-subtree-check.sh DIR COMMIT`
+Usage: `git-subtree-check.sh DIR (COMMIT)`
 
 `COMMIT` may be omitted, in which case `HEAD` is used.
 
