@@ -678,14 +678,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert(signedtx["complete"])
         self.nodes[0].sendrawtransaction(signedtx["hex"])
 
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
+        
         inputs = []
         outputs = {self.nodes[2].getnewaddress() : 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
         result = self.nodes[3].fundrawtransaction(rawtx) # uses min_relay_tx_fee (set by settxfee)
         result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee})
         result3 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 10*min_relay_tx_fee})
-        assert_equal(result['fee']*2, result2['fee'])
-        assert_equal(result['fee']*10, result3['fee'])
+        assert(result2['fee'] > result['fee'])
+        assert(result3['fee'] > result2['fee'])
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
