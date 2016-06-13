@@ -447,6 +447,11 @@ public:
     CStatHistory<unsigned int> blocksSent;
     // track the # of times we sent this node a transaction
     CStatHistory<unsigned int> txsSent;
+    // track the # of times we sent this node a transaction
+    CStatHistory<unsigned int> sendGap;
+    // track the # of times we sent this node a transaction
+    CStatHistory<unsigned int> recvGap;
+
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();

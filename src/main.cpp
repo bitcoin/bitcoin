@@ -5161,9 +5161,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	    // We need to check all transaction sources (orphan list, mempool, and new (incoming) transactions in this block) for a collision.
 	    bool collision = false;
 	    std::map<uint64_t, uint256> mapPartialTxHash;
-	    LOCK(cs_main);
 	    std::vector<uint256> memPoolHashes;
-	    mempool.queryHashes(memPoolHashes);
+            if (1)
+	      {
+  	      LOCK(cs_main);
+	      mempool.queryHashes(memPoolHashes);
+	      }
 	    for (uint64_t i = 0; i < memPoolHashes.size(); i++) {
 	      uint64_t cheapHash = memPoolHashes[i].GetCheapHash();
 	      if(mapPartialTxHash.count(cheapHash)) //Check for collisions
@@ -5553,10 +5556,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->fDisconnect = true;
             return true;
         }
-        LOCK2(cs_main, pfrom->cs_filter);
-
         std::vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
+        if (1)  // Keep this lock for as short as possible, causing 2.6 second locks
+	  {
+          LOCK2(cs_main, pfrom->cs_filter);
+          mempool.queryHashes(vtxid);
+	  }
         vector<CInv> vInv;
         BOOST_FOREACH(uint256& hash, vtxid) {
             CInv inv(MSG_TX, hash);

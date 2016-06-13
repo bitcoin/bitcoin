@@ -761,7 +761,9 @@ int SocketSendData(CNode* pnode)
         if (nBytes > 0) {
             progress++;  // BU
             pnode->bytesSent += nBytes;  // BU stats
-            pnode->nLastSend = GetTime();
+            int64_t tmp = GetTime();
+            pnode->sendGap << (tmp - pnode->nLastSend);
+            pnode->nLastSend = tmp;
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
             pnode->RecordBytesSent(nBytes);
@@ -1216,7 +1218,9 @@ void ThreadSocketHandler()
                             receiveShaper.leak(nBytes);
                             if (!pnode->ReceiveMsgBytes(recvMsgBuf, nBytes))
                                 pnode->CloseSocketDisconnect();
-                            pnode->nLastRecv = GetTime();
+                            int64_t tmp = GetTime();
+                            pnode->recvGap << (tmp - pnode->nLastRecv);
+                            pnode->nLastRecv = tmp;
                             pnode->nRecvBytes += nBytes;
                             pnode->bytesReceived += nBytes;  // BU stats
                             pnode->RecordBytesRecv(nBytes);
@@ -1684,7 +1688,7 @@ void ThreadMessageHandler()
     boost::mutex condition_mutex;
     boost::unique_lock<boost::mutex> lock(condition_mutex);
 
-    SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
+    // SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true) {
         vector<CNode*> vNodesCopy;
         {
@@ -2343,6 +2347,9 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     firstBlock.init("node/" + xmledName + "/firstBlock");
     blocksSent.init("node/" + xmledName + "/blocksSent");
     txsSent.init("node/" + xmledName + "/txsSent");
+
+    sendGap.init("node/" + xmledName + "/sendGap",STAT_OP_MAX);
+    recvGap.init("node/" + xmledName + "/recvGap",STAT_OP_MAX);
 
     {
         LOCK(cs_nLastNodeId);
