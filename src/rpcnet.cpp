@@ -422,11 +422,18 @@ static UniValue GetThinBlockStats()
     obj.push_back(Pair("enabled", enabled));
     if (enabled) {
         obj.push_back(Pair("summary", CThinBlockStats::ToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::MempoolLimiterBytesSavedToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::InBoundPercentToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::OutBoundPercentToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ResponseTimeToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ValidationTimeToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::OutBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::InBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ReRequestedTxToString()));
     }
     return obj;
 }
 // BitcoinUnlimited BUIP010 : End
-
 
 UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 {

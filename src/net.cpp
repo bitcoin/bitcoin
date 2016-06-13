@@ -696,7 +696,7 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
         nBytes -= handled;
 
         if (msg.complete()) {
-            // BU: connection slot attackk mitigation.  We don't count PONG responses as bytes received. We don't want to include
+            // BU: connection slot attack mitigation.  We don't count PONG responses as bytes received. We don't want to include
             //     bytes sent or received for nodes that just connect and listen to INV messages.
             std::string strCommand = msg.hdr.GetCommand();
             if (strCommand != NetMsgType::PONG &&
@@ -704,7 +704,22 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
                 strCommand != NetMsgType::ADDR &&
                 strCommand != NetMsgType::VERSION &&
                 strCommand != NetMsgType::VERACK)
+            {
                 nActivityBytes += msg.hdr.nMessageSize;
+
+                // BU: furthermore, if the message is a priority message then move from the back to the front of the deque
+                if (strCommand == NetMsgType::GET_XTHIN || 
+                    strCommand == NetMsgType::XTHINBLOCK || 
+                    strCommand == NetMsgType::THINBLOCK || 
+                    strCommand == NetMsgType::XBLOCKTX || 
+                    strCommand == NetMsgType::GET_XBLOCKTX )
+                {
+                    vRecvMsg.push_front(msg);
+                    vRecvMsg.pop_back();
+                    LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strCommand);
+                }
+            }
+            // BU: end
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
         }
@@ -996,10 +1011,9 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // no need here to check whether the peer is whitelisted or not.
     std::sort(vEvictionCandidatesByActivity.begin(), vEvictionCandidatesByActivity.end(), CompareNodeActivityBytes);
     vEvictionCandidatesByActivity[0]->fDisconnect = true;
-    LogPrintf("Node disconnected as too inactive %d bytes activity peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
-    int i =0;
-    for (i = 0; i < vEvictionCandidatesByActivity.size(); i++) {
-        LogPrintf("Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
+    LogPrint("evict", "Node disconnected because too inactive:%d bytes of activity for peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
+    for (unsigned int i = 0; i < vEvictionCandidatesByActivity.size(); i++) {
+        LogPrint("evict", "Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
     }
 
     return true;
@@ -1085,8 +1099,10 @@ void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
     int progress; // This variable is incremented if something happens.  If it is zero at the bottom of the loop, we delay.  This solves spin loop issues where the select does not block but no bytes can be transferred (traffic shaping limited, for example).
+    bool fAquiredAllRecvLocks;
     while (true) {
         progress = 0;
+        fAquiredAllRecvLocks = true;
         stat_io_service.poll(); // BU instrumentation
         //
         // Disconnect nodes
@@ -1257,7 +1273,10 @@ void ThreadSocketHandler()
             if (FD_ISSET(pnode->hSocket, &fdsetRecv) || FD_ISSET(pnode->hSocket, &fdsetError)) {
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 int64_t amt2Recv = receiveShaper.available(RECV_SHAPER_MIN_FRAG);
-                if (lockRecv && (amt2Recv > 0)) {
+                if (!lockRecv) {
+                    fAquiredAllRecvLocks = false;
+                }
+                else if (amt2Recv > 0) {
                     {
                         progress++;
                         // max of min makes sure amt is in a range reasonable for buffer allocation
@@ -1327,8 +1346,8 @@ void ThreadSocketHandler()
                 pnode->Release();
         }
 
-        if (progress == 0) // BU: Nothing happened even though select did not block.  So slow us down.
-            MilliSleep(50);
+        if (progress == 0 && fAquiredAllRecvLocks) // BU: Nothing happened even though select did not block.  So slow us down. 
+            MilliSleep(5);
     }
 }
 
@@ -2570,6 +2589,7 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // BU: connection slot attack mitigation.  We don't want to add bytes for outgoing INV or PING
     //     messages since attackers will often just connect and listen to INV messages.  We want to make
     //     sure that connected nodes are really doing useful work in sending us data or requesting data.
+    std::deque<CSerializeData>::iterator it;
     char strCommand[CMessageHeader::COMMAND_SIZE + 1];
     strncpy(strCommand, &(*(ssSend.begin() + MESSAGE_START_SIZE)), CMessageHeader::COMMAND_SIZE);
     strCommand[CMessageHeader::COMMAND_SIZE] = '\0';
@@ -2579,9 +2599,25 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         strcmp(strCommand, NetMsgType::VERSION) != 0 &&
         strcmp(strCommand, NetMsgType::VERACK) != 0 &&
         strcmp(strCommand, NetMsgType::INV) != 0)
+    {
         nActivityBytes += nSize;
 
-    std::deque<CSerializeData>::iterator it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
+        // BU: furthermore, if the message is a priority message then move to the front of the deque
+        if (strcmp(strCommand, NetMsgType::GET_XTHIN) == 0 || 
+            strcmp(strCommand, NetMsgType::XTHINBLOCK) == 0 || 
+            strcmp(strCommand, NetMsgType::THINBLOCK) == 0 || 
+            strcmp(strCommand, NetMsgType::XBLOCKTX) == 0 || 
+            strcmp(strCommand, NetMsgType::GET_XBLOCKTX) == 0 ) {
+            it = vSendMsg.insert(vSendMsg.begin(), CSerializeData());
+            LogPrint("thin", "Send Queue: pushed %s to the front of the queue\n", strCommand);
+        }
+        else
+            it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
+    }
+    else
+        it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
+    // BU: end
+
     ssSend.GetAndClear(*it);
     nSendSize += (*it).size();
 

@@ -40,7 +40,7 @@ extern std::string minerComment;  // An arbitrary field that miners can change t
 /** The default value for -minrelaytxfee */
 static const char DEFAULT_MINLIMITERTXFEE[] = "0.0";
 /** The default value for -maxrelaytxfee */
-static const char DEFAULT_MAXLIMITERTXFEE[] = "5.0";
+static const char DEFAULT_MAXLIMITERTXFEE[] = "3.0";
 /** The number of block heights to gradually choke spam transactions over */
 static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
 /** The minimum value possible for -limitfreerelay when rate limiting */
@@ -107,8 +107,9 @@ extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(uint256 hash);
 extern void ClearThinblockTimer(uint256 hash);
 extern bool IsThinBlocksEnabled();
+extern bool CanThinBlockBeDownloaded(CNode* pto);
 extern bool IsChainNearlySyncd();
-extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes);
+extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
 extern void ConnectToThinBlockNodes();

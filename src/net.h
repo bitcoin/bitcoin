@@ -387,6 +387,8 @@ public:
     std::map<uint256, uint64_t> mapThinBlocksInFlight; // map of the hashes of thin blocks in flight with the time they were requested.
     double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
     uint64_t nGetXBlockTxLastTime;  // The last time a get_xblocktx request was made
+    double nGetXthinCount; // Count how many get_xthin requests are made
+    uint64_t nGetXthinLastTime;  // The last time a get_xthin request was made
     // BUIP010 Xtreme Thinblocks: end section
 
 protected:
