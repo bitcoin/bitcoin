@@ -247,7 +247,7 @@ class SegWitTest(BitcoinTestFramework):
         # For now, rely on earlier tests to have created at least one utxo for
         # us to use
         assert(len(self.utxo) > 0)
-        assert(get_bip9_status(self.nodes[0], 'witness')['status'] != 'active')
+        assert(get_bip9_status(self.nodes[0], 'segwit')['status'] != 'active')
 
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
@@ -288,36 +288,36 @@ class SegWitTest(BitcoinTestFramework):
         # Will need to rewrite the tests here if we are past the first period
         assert(height < VB_PERIOD - 1)
         # Genesis block is 'defined'.
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'defined')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'defined')
         # Advance to end of period, status should now be 'started'
         self.nodes[0].generate(VB_PERIOD-height-1)
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
 
     # Mine enough blocks to lock in segwit, but don't activate.
     # TODO: we could verify that lockin only happens at the right threshold of
     # signalling blocks, rather than just at the right period boundary.
     def advance_to_segwit_lockin(self):
         height = self.nodes[0].getblockcount()
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         # Advance to end of period, and verify lock-in happens at the end
         self.nodes[0].generate(VB_PERIOD-1)
         height = self.nodes[0].getblockcount()
         assert((height % VB_PERIOD) == VB_PERIOD - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
 
 
     # Mine enough blocks to activate segwit.
     # TODO: we could verify that activation only happens at the right threshold
     # of signalling blocks, rather than just at the right period boundary.
     def advance_to_segwit_active(self):
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height%VB_PERIOD) - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'witness')['status'], 'active')
+        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
 
 
     # This test can only be run after segwit has activated
@@ -1432,7 +1432,7 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Make sure that this peer thinks segwit has activated.
-        assert(get_bip9_status(node, 'witness')['status'] == "active")
+        assert(get_bip9_status(node, 'segwit')['status'] == "active")
 
         # Make sure this peers blocks match those of node0.
         height = node.getblockcount()
