@@ -3846,12 +3846,16 @@ void CWallet::LockCoin(COutPoint& output)
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     setLockedCoins.insert(output);
+    std::map<uint256, CWalletTx>::iterator it = mapWallet.find(output.hash);
+    if (it != mapWallet.end()) it->second.MarkDirty(); // recalculate all credits for this tx
 }
 
 void CWallet::UnlockCoin(COutPoint& output)
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
     setLockedCoins.erase(output);
+    std::map<uint256, CWalletTx>::iterator it = mapWallet.find(output.hash);
+    if (it != mapWallet.end()) it->second.MarkDirty(); // recalculate all credits for this tx
 }
 
 void CWallet::UnlockAllCoins()
