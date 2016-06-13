@@ -11,6 +11,7 @@ from test_framework.blocktools import create_block, create_coinbase, add_witness
 from test_framework.key import CECKey, CPubKey
 import time
 import random
+from binascii import hexlify
 
 # The versionbit bit used to signal activation of SegWit
 VB_WITNESS_BIT = 1
@@ -927,6 +928,17 @@ class SegWitTest(BitcoinTestFramework):
         self.old_node.wait_for_inv(CInv(1, tx2.sha256)) # wait until tx2 was inv'ed
         self.test_node.test_transaction_acceptance(tx3, with_witness=True, accepted=True)
         self.old_node.wait_for_inv(CInv(1, tx3.sha256))
+
+        # Test that getrawtransaction returns correct witness information
+        # hash, size, vsize
+        raw_tx = self.nodes[0].getrawtransaction(tx3.hash, 1)
+        assert_equal(int(raw_tx["hash"], 16), tx3.calc_sha256(True))
+        assert_equal(raw_tx["size"], len(tx3.serialize_with_witness()))
+        vsize = (len(tx3.serialize_with_witness()) + 3*len(tx3.serialize_without_witness()) + 3) / 4
+        assert_equal(raw_tx["vsize"], vsize)
+        assert_equal(len(raw_tx["vin"][0]["txinwitness"]), 1)
+        assert_equal(raw_tx["vin"][0]["txinwitness"][0], hexlify(witness_program).decode('ascii'))
+        assert(vsize != raw_tx["size"])
 
         # Cleanup: mine the transactions and update utxo for next test
         self.nodes[0].generate(1)
