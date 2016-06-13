@@ -1863,11 +1863,18 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Masternodes:\n");
         uint256 mnTxHash;
+        int outputIndex;
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-            LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
             mnTxHash.SetHex(mne.getTxHash());
-            COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
+            outputIndex = boost::lexical_cast<unsigned int>(mne.getOutputIndex());
+            // don't lock spent
+            if(pwalletMain->IsSpent(mnTxHash, outputIndex)) {
+                LogPrintf("  %s %s - SPENT, not locked\n", mne.getTxHash(), mne.getOutputIndex());
+                continue;
+            }
+            COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
             pwalletMain->LockCoin(outpoint);
+            LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
         }
     }
 
