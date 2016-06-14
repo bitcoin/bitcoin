@@ -82,7 +82,7 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 22
+#serial 23
 
 AU_ALIAS([ACX_PTHREAD], [AX_PTHREAD])
 AC_DEFUN([AX_PTHREAD], [
@@ -100,22 +100,22 @@ ax_pthread_ok=no
 # etcetera environment variables, and if threads linking works using
 # them:
 if test "x$PTHREAD_CFLAGS$PTHREAD_LIBS" != "x"; then
-	ax_pthread_save_CC="$CC"
-	ax_pthread_save_CFLAGS="$CFLAGS"
-	ax_pthread_save_LIBS="$LIBS"
-	AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
-	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-	LIBS="$PTHREAD_LIBS $LIBS"
-	AC_MSG_CHECKING([for pthread_join using $CC $PTHREAD_CFLAGS $PTHREAD_LIBS])
-	AC_LINK_IFELSE([AC_LANG_CALL([], [pthread_join])], [ax_pthread_ok=yes])
-	AC_MSG_RESULT([$ax_pthread_ok])
-	if test "x$ax_pthread_ok" = "xno"; then
-		PTHREAD_LIBS=""
-		PTHREAD_CFLAGS=""
-	fi
-	CC="$ax_pthread_save_CC"
-	CFLAGS="$ax_pthread_save_CFLAGS"
-	LIBS="$ax_pthread_save_LIBS"
+        ax_pthread_save_CC="$CC"
+        ax_pthread_save_CFLAGS="$CFLAGS"
+        ax_pthread_save_LIBS="$LIBS"
+        AS_IF([test "x$PTHREAD_CC" != "x"], [CC="$PTHREAD_CC"])
+        CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+        LIBS="$PTHREAD_LIBS $LIBS"
+        AC_MSG_CHECKING([for pthread_join using $CC $PTHREAD_CFLAGS $PTHREAD_LIBS])
+        AC_LINK_IFELSE([AC_LANG_CALL([], [pthread_join])], [ax_pthread_ok=yes])
+        AC_MSG_RESULT([$ax_pthread_ok])
+        if test "x$ax_pthread_ok" = "xno"; then
+                PTHREAD_LIBS=""
+                PTHREAD_CFLAGS=""
+        fi
+        CC="$ax_pthread_save_CC"
+        CFLAGS="$ax_pthread_save_CFLAGS"
+        LIBS="$ax_pthread_save_LIBS"
 fi
 
 # We must check for the threads library under a number of different
@@ -152,50 +152,50 @@ ax_pthread_flags="pthreads none -Kthread -pthread -pthreads -mthreads pthread --
 
 case $host_os in
 
-	freebsd*)
+        freebsd*)
 
-	# -kthread: FreeBSD kernel threads (preferred to -pthread since SMP-able)
-	# lthread: LinuxThreads port on FreeBSD (also preferred to -pthread)
+        # -kthread: FreeBSD kernel threads (preferred to -pthread since SMP-able)
+        # lthread: LinuxThreads port on FreeBSD (also preferred to -pthread)
 
-	ax_pthread_flags="-kthread lthread $ax_pthread_flags"
-	;;
+        ax_pthread_flags="-kthread lthread $ax_pthread_flags"
+        ;;
 
-	hpux*)
+        hpux*)
 
-	# From the cc(1) man page: "[-mt] Sets various -D flags to enable
-	# multi-threading and also sets -lpthread."
+        # From the cc(1) man page: "[-mt] Sets various -D flags to enable
+        # multi-threading and also sets -lpthread."
 
-	ax_pthread_flags="-mt -pthread pthread $ax_pthread_flags"
-	;;
+        ax_pthread_flags="-mt -pthread pthread $ax_pthread_flags"
+        ;;
 
-	openedition*)
+        openedition*)
 
-	# IBM z/OS requires a feature-test macro to be defined in order to
-	# enable POSIX threads at all, so give the user a hint if this is
-	# not set. (We don't define these ourselves, as they can affect
-	# other portions of the system API in unpredictable ways.)
+        # IBM z/OS requires a feature-test macro to be defined in order to
+        # enable POSIX threads at all, so give the user a hint if this is
+        # not set. (We don't define these ourselves, as they can affect
+        # other portions of the system API in unpredictable ways.)
 
-	AC_EGREP_CPP([AX_PTHREAD_ZOS_MISSING],
-	    [
-#	     if !defined(_OPEN_THREADS) && !defined(_UNIX03_THREADS)
-	     AX_PTHREAD_ZOS_MISSING
-#	     endif
-	    ],
-	    [AC_MSG_WARN([IBM z/OS requires -D_OPEN_THREADS or -D_UNIX03_THREADS to enable pthreads support.])])
-	;;
+        AC_EGREP_CPP([AX_PTHREAD_ZOS_MISSING],
+            [
+#            if !defined(_OPEN_THREADS) && !defined(_UNIX03_THREADS)
+             AX_PTHREAD_ZOS_MISSING
+#            endif
+            ],
+            [AC_MSG_WARN([IBM z/OS requires -D_OPEN_THREADS or -D_UNIX03_THREADS to enable pthreads support.])])
+        ;;
 
-	solaris*)
+        solaris*)
 
-	# On Solaris (at least, for some versions), libc contains stubbed
-	# (non-functional) versions of the pthreads routines, so link-based
-	# tests will erroneously succeed. (N.B.: The stubs are missing
-	# pthread_cleanup_push, or rather a function called by this macro,
-	# so we could check for that, but who knows whether they'll stub
-	# that too in a future libc.)  So we'll check first for the
-	# standard Solaris way of linking pthreads (-mt -lpthread).
+        # On Solaris (at least, for some versions), libc contains stubbed
+        # (non-functional) versions of the pthreads routines, so link-based
+        # tests will erroneously succeed. (N.B.: The stubs are missing
+        # pthread_cleanup_push, or rather a function called by this macro,
+        # so we could check for that, but who knows whether they'll stub
+        # that too in a future libc.)  So we'll check first for the
+        # standard Solaris way of linking pthreads (-mt -lpthread).
 
-	ax_pthread_flags="-mt,pthread pthread $ax_pthread_flags"
-	;;
+        ax_pthread_flags="-mt,pthread pthread $ax_pthread_flags"
+        ;;
 esac
 
 # GCC generally uses -pthread, or -pthreads on some platforms (e.g. SPARC)
@@ -208,17 +208,17 @@ AS_IF([test "x$GCC" = "xyes"],
 # correctly enabled
 
 case $host_os in
-	darwin* | hpux* | linux* | osf* | solaris*)
-	ax_pthread_check_macro="_REENTRANT"
-	;;
+        darwin* | hpux* | linux* | osf* | solaris*)
+        ax_pthread_check_macro="_REENTRANT"
+        ;;
 
-	aix* | freebsd*)
-	ax_pthread_check_macro="_THREAD_SAFE"
-	;;
+        aix*)
+        ax_pthread_check_macro="_THREAD_SAFE"
+        ;;
 
-	*)
-	ax_pthread_check_macro="--"
-	;;
+        *)
+        ax_pthread_check_macro="--"
+        ;;
 esac
 AS_IF([test "x$ax_pthread_check_macro" = "x--"],
       [ax_pthread_check_cond=0],
@@ -231,13 +231,13 @@ AC_CACHE_CHECK([whether $CC is Clang],
     [ax_cv_PTHREAD_CLANG=no
      # Note that Autoconf sets GCC=yes for Clang as well as GCC
      if test "x$GCC" = "xyes"; then
-	AC_EGREP_CPP([AX_PTHREAD_CC_IS_CLANG],
-	    [/* Note: Clang 2.7 lacks __clang_[a-z]+__ */
-#	     if defined(__clang__) && defined(__llvm__)
-	     AX_PTHREAD_CC_IS_CLANG
-#	     endif
-	    ],
-	    [ax_cv_PTHREAD_CLANG=yes])
+        AC_EGREP_CPP([AX_PTHREAD_CC_IS_CLANG],
+            [/* Note: Clang 2.7 lacks __clang_[a-z]+__ */
+#            if defined(__clang__) && defined(__llvm__)
+             AX_PTHREAD_CC_IS_CLANG
+#            endif
+            ],
+            [ax_cv_PTHREAD_CLANG=yes])
      fi
     ])
 ax_pthread_clang="$ax_cv_PTHREAD_CLANG"
@@ -249,222 +249,222 @@ ax_pthread_clang_warning=no
 
 if test "x$ax_pthread_clang" = "xyes"; then
 
-	# Clang takes -pthread; it has never supported any other flag
+        # Clang takes -pthread; it has never supported any other flag
 
-	# (Note 1: This will need to be revisited if a system that Clang
-	# supports has POSIX threads in a separate library.  This tends not
-	# to be the way of modern systems, but it's conceivable.)
+        # (Note 1: This will need to be revisited if a system that Clang
+        # supports has POSIX threads in a separate library.  This tends not
+        # to be the way of modern systems, but it's conceivable.)
 
-	# (Note 2: On some systems, notably Darwin, -pthread is not needed
-	# to get POSIX threads support; the API is always present and
-	# active.  We could reasonably leave PTHREAD_CFLAGS empty.  But
-	# -pthread does define _REENTRANT, and while the Darwin headers
-	# ignore this macro, third-party headers might not.)
+        # (Note 2: On some systems, notably Darwin, -pthread is not needed
+        # to get POSIX threads support; the API is always present and
+        # active.  We could reasonably leave PTHREAD_CFLAGS empty.  But
+        # -pthread does define _REENTRANT, and while the Darwin headers
+        # ignore this macro, third-party headers might not.)
 
-	PTHREAD_CFLAGS="-pthread"
-	PTHREAD_LIBS=
+        PTHREAD_CFLAGS="-pthread"
+        PTHREAD_LIBS=
 
-	ax_pthread_ok=yes
+        ax_pthread_ok=yes
 
-	# However, older versions of Clang make a point of warning the user
-	# that, in an invocation where only linking and no compilation is
-	# taking place, the -pthread option has no effect ("argument unused
-	# during compilation").  They expect -pthread to be passed in only
-	# when source code is being compiled.
-	#
-	# Problem is, this is at odds with the way Automake and most other
-	# C build frameworks function, which is that the same flags used in
-	# compilation (CFLAGS) are also used in linking.  Many systems
-	# supported by AX_PTHREAD require exactly this for POSIX threads
-	# support, and in fact it is often not straightforward to specify a
-	# flag that is used only in the compilation phase and not in
-	# linking.  Such a scenario is extremely rare in practice.
-	#
-	# Even though use of the -pthread flag in linking would only print
-	# a warning, this can be a nuisance for well-run software projects
-	# that build with -Werror.  So if the active version of Clang has
-	# this misfeature, we search for an option to squash it.
+        # However, older versions of Clang make a point of warning the user
+        # that, in an invocation where only linking and no compilation is
+        # taking place, the -pthread option has no effect ("argument unused
+        # during compilation").  They expect -pthread to be passed in only
+        # when source code is being compiled.
+        #
+        # Problem is, this is at odds with the way Automake and most other
+        # C build frameworks function, which is that the same flags used in
+        # compilation (CFLAGS) are also used in linking.  Many systems
+        # supported by AX_PTHREAD require exactly this for POSIX threads
+        # support, and in fact it is often not straightforward to specify a
+        # flag that is used only in the compilation phase and not in
+        # linking.  Such a scenario is extremely rare in practice.
+        #
+        # Even though use of the -pthread flag in linking would only print
+        # a warning, this can be a nuisance for well-run software projects
+        # that build with -Werror.  So if the active version of Clang has
+        # this misfeature, we search for an option to squash it.
 
-	AC_CACHE_CHECK([whether Clang needs flag to prevent "argument unused" warning when linking with -pthread],
-	    [ax_cv_PTHREAD_CLANG_NO_WARN_FLAG],
-	    [ax_cv_PTHREAD_CLANG_NO_WARN_FLAG=unknown
-	     # Create an alternate version of $ac_link that compiles and
-	     # links in two steps (.c -> .o, .o -> exe) instead of one
-	     # (.c -> exe), because the warning occurs only in the second
-	     # step
-	     ax_pthread_save_ac_link="$ac_link"
-	     ax_pthread_sed='s/conftest\.\$ac_ext/conftest.$ac_objext/g'
-	     ax_pthread_link_step=`$as_echo "$ac_link" | sed "$ax_pthread_sed"`
-	     ax_pthread_2step_ac_link="($ac_compile) && (echo ==== >&5) && ($ax_pthread_link_step)"
-	     ax_pthread_save_CFLAGS="$CFLAGS"
-	     for ax_pthread_try in '' -Qunused-arguments -Wno-unused-command-line-argument unknown; do
-		AS_IF([test "x$ax_pthread_try" = "xunknown"], [break])
-		CFLAGS="-Werror -Wunknown-warning-option $ax_pthread_try -pthread $ax_pthread_save_CFLAGS"
-		ac_link="$ax_pthread_save_ac_link"
-		AC_LINK_IFELSE([AC_LANG_SOURCE([[int main(void){return 0;}]])],
-		    [ac_link="$ax_pthread_2step_ac_link"
-		     AC_LINK_IFELSE([AC_LANG_SOURCE([[int main(void){return 0;}]])],
-			 [break])
-		    ])
-	     done
-	     ac_link="$ax_pthread_save_ac_link"
-	     CFLAGS="$ax_pthread_save_CFLAGS"
-	     AS_IF([test "x$ax_pthread_try" = "x"], [ax_pthread_try=no])
-	     ax_cv_PTHREAD_CLANG_NO_WARN_FLAG="$ax_pthread_try"
-	    ])
+        AC_CACHE_CHECK([whether Clang needs flag to prevent "argument unused" warning when linking with -pthread],
+            [ax_cv_PTHREAD_CLANG_NO_WARN_FLAG],
+            [ax_cv_PTHREAD_CLANG_NO_WARN_FLAG=unknown
+             # Create an alternate version of $ac_link that compiles and
+             # links in two steps (.c -> .o, .o -> exe) instead of one
+             # (.c -> exe), because the warning occurs only in the second
+             # step
+             ax_pthread_save_ac_link="$ac_link"
+             ax_pthread_sed='s/conftest\.\$ac_ext/conftest.$ac_objext/g'
+             ax_pthread_link_step=`$as_echo "$ac_link" | sed "$ax_pthread_sed"`
+             ax_pthread_2step_ac_link="($ac_compile) && (echo ==== >&5) && ($ax_pthread_link_step)"
+             ax_pthread_save_CFLAGS="$CFLAGS"
+             for ax_pthread_try in '' -Qunused-arguments -Wno-unused-command-line-argument unknown; do
+                AS_IF([test "x$ax_pthread_try" = "xunknown"], [break])
+                CFLAGS="-Werror -Wunknown-warning-option $ax_pthread_try -pthread $ax_pthread_save_CFLAGS"
+                ac_link="$ax_pthread_save_ac_link"
+                AC_LINK_IFELSE([AC_LANG_SOURCE([[int main(void){return 0;}]])],
+                    [ac_link="$ax_pthread_2step_ac_link"
+                     AC_LINK_IFELSE([AC_LANG_SOURCE([[int main(void){return 0;}]])],
+                         [break])
+                    ])
+             done
+             ac_link="$ax_pthread_save_ac_link"
+             CFLAGS="$ax_pthread_save_CFLAGS"
+             AS_IF([test "x$ax_pthread_try" = "x"], [ax_pthread_try=no])
+             ax_cv_PTHREAD_CLANG_NO_WARN_FLAG="$ax_pthread_try"
+            ])
 
-	case "$ax_cv_PTHREAD_CLANG_NO_WARN_FLAG" in
-		no | unknown) ;;
-		*) PTHREAD_CFLAGS="$ax_cv_PTHREAD_CLANG_NO_WARN_FLAG $PTHREAD_CFLAGS" ;;
-	esac
+        case "$ax_cv_PTHREAD_CLANG_NO_WARN_FLAG" in
+                no | unknown) ;;
+                *) PTHREAD_CFLAGS="$ax_cv_PTHREAD_CLANG_NO_WARN_FLAG $PTHREAD_CFLAGS" ;;
+        esac
 
 fi # $ax_pthread_clang = yes
 
 if test "x$ax_pthread_ok" = "xno"; then
 for ax_pthread_try_flag in $ax_pthread_flags; do
 
-	case $ax_pthread_try_flag in
-		none)
-		AC_MSG_CHECKING([whether pthreads work without any flags])
-		;;
+        case $ax_pthread_try_flag in
+                none)
+                AC_MSG_CHECKING([whether pthreads work without any flags])
+                ;;
 
-		-mt,pthread)
-		AC_MSG_CHECKING([whether pthreads work with -mt -lpthread])
-		PTHREAD_CFLAGS="-mt"
-		PTHREAD_LIBS="-lpthread"
-		;;
+                -mt,pthread)
+                AC_MSG_CHECKING([whether pthreads work with -mt -lpthread])
+                PTHREAD_CFLAGS="-mt"
+                PTHREAD_LIBS="-lpthread"
+                ;;
 
-		-*)
-		AC_MSG_CHECKING([whether pthreads work with $ax_pthread_try_flag])
-		PTHREAD_CFLAGS="$ax_pthread_try_flag"
-		;;
+                -*)
+                AC_MSG_CHECKING([whether pthreads work with $ax_pthread_try_flag])
+                PTHREAD_CFLAGS="$ax_pthread_try_flag"
+                ;;
 
-		pthread-config)
-		AC_CHECK_PROG([ax_pthread_config], [pthread-config], [yes], [no])
-		AS_IF([test "x$ax_pthread_config" = "xno"], [continue])
-		PTHREAD_CFLAGS="`pthread-config --cflags`"
-		PTHREAD_LIBS="`pthread-config --ldflags` `pthread-config --libs`"
-		;;
+                pthread-config)
+                AC_CHECK_PROG([ax_pthread_config], [pthread-config], [yes], [no])
+                AS_IF([test "x$ax_pthread_config" = "xno"], [continue])
+                PTHREAD_CFLAGS="`pthread-config --cflags`"
+                PTHREAD_LIBS="`pthread-config --ldflags` `pthread-config --libs`"
+                ;;
 
-		*)
-		AC_MSG_CHECKING([for the pthreads library -l$ax_pthread_try_flag])
-		PTHREAD_LIBS="-l$ax_pthread_try_flag"
-		;;
-	esac
+                *)
+                AC_MSG_CHECKING([for the pthreads library -l$ax_pthread_try_flag])
+                PTHREAD_LIBS="-l$ax_pthread_try_flag"
+                ;;
+        esac
 
-	ax_pthread_save_CFLAGS="$CFLAGS"
-	ax_pthread_save_LIBS="$LIBS"
-	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-	LIBS="$PTHREAD_LIBS $LIBS"
+        ax_pthread_save_CFLAGS="$CFLAGS"
+        ax_pthread_save_LIBS="$LIBS"
+        CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+        LIBS="$PTHREAD_LIBS $LIBS"
 
-	# Check for various functions.  We must include pthread.h,
-	# since some functions may be macros.  (On the Sequent, we
-	# need a special flag -Kthread to make this header compile.)
-	# We check for pthread_join because it is in -lpthread on IRIX
-	# while pthread_create is in libc.  We check for pthread_attr_init
-	# due to DEC craziness with -lpthreads.  We check for
-	# pthread_cleanup_push because it is one of the few pthread
-	# functions on Solaris that doesn't have a non-functional libc stub.
-	# We try pthread_create on general principles.
+        # Check for various functions.  We must include pthread.h,
+        # since some functions may be macros.  (On the Sequent, we
+        # need a special flag -Kthread to make this header compile.)
+        # We check for pthread_join because it is in -lpthread on IRIX
+        # while pthread_create is in libc.  We check for pthread_attr_init
+        # due to DEC craziness with -lpthreads.  We check for
+        # pthread_cleanup_push because it is one of the few pthread
+        # functions on Solaris that doesn't have a non-functional libc stub.
+        # We try pthread_create on general principles.
 
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <pthread.h>
-#			if $ax_pthread_check_cond
-#			 error "$ax_pthread_check_macro must be defined"
-#			endif
-			static void routine(void *a) { a = 0; }
-			static void *start_routine(void *a) { return a; }],
-		       [pthread_t th; pthread_attr_t attr;
-			pthread_create(&th, 0, start_routine, 0);
-			pthread_join(th, 0);
-			pthread_attr_init(&attr);
-			pthread_cleanup_push(routine, 0);
-			pthread_cleanup_pop(0) /* ; */])],
-	    [ax_pthread_ok=yes],
-	    [])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <pthread.h>
+#                       if $ax_pthread_check_cond
+#                        error "$ax_pthread_check_macro must be defined"
+#                       endif
+                        static void routine(void *a) { a = 0; }
+                        static void *start_routine(void *a) { return a; }],
+                       [pthread_t th; pthread_attr_t attr;
+                        pthread_create(&th, 0, start_routine, 0);
+                        pthread_join(th, 0);
+                        pthread_attr_init(&attr);
+                        pthread_cleanup_push(routine, 0);
+                        pthread_cleanup_pop(0) /* ; */])],
+            [ax_pthread_ok=yes],
+            [])
 
-	CFLAGS="$ax_pthread_save_CFLAGS"
-	LIBS="$ax_pthread_save_LIBS"
+        CFLAGS="$ax_pthread_save_CFLAGS"
+        LIBS="$ax_pthread_save_LIBS"
 
-	AC_MSG_RESULT([$ax_pthread_ok])
-	AS_IF([test "x$ax_pthread_ok" = "xyes"], [break])
+        AC_MSG_RESULT([$ax_pthread_ok])
+        AS_IF([test "x$ax_pthread_ok" = "xyes"], [break])
 
-	PTHREAD_LIBS=""
-	PTHREAD_CFLAGS=""
+        PTHREAD_LIBS=""
+        PTHREAD_CFLAGS=""
 done
 fi
 
 # Various other checks:
 if test "x$ax_pthread_ok" = "xyes"; then
-	ax_pthread_save_CFLAGS="$CFLAGS"
-	ax_pthread_save_LIBS="$LIBS"
-	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-	LIBS="$PTHREAD_LIBS $LIBS"
+        ax_pthread_save_CFLAGS="$CFLAGS"
+        ax_pthread_save_LIBS="$LIBS"
+        CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+        LIBS="$PTHREAD_LIBS $LIBS"
 
-	# Detect AIX lossage: JOINABLE attribute is called UNDETACHED.
-	AC_CACHE_CHECK([for joinable pthread attribute],
-	    [ax_cv_PTHREAD_JOINABLE_ATTR],
-	    [ax_cv_PTHREAD_JOINABLE_ATTR=unknown
-	     for ax_pthread_attr in PTHREAD_CREATE_JOINABLE PTHREAD_CREATE_UNDETACHED; do
-		 AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <pthread.h>],
-						 [int attr = $ax_pthread_attr; return attr /* ; */])],
-				[ax_cv_PTHREAD_JOINABLE_ATTR=$ax_pthread_attr; break],
-				[])
-	     done
-	    ])
-	AS_IF([test "x$ax_cv_PTHREAD_JOINABLE_ATTR" != "xunknown" && \
-	       test "x$ax_cv_PTHREAD_JOINABLE_ATTR" != "xPTHREAD_CREATE_JOINABLE" && \
-	       test "x$ax_pthread_joinable_attr_defined" != "xyes"],
-	      [AC_DEFINE_UNQUOTED([PTHREAD_CREATE_JOINABLE],
-				  [$ax_cv_PTHREAD_JOINABLE_ATTR],
-				  [Define to necessary symbol if this constant
-				   uses a non-standard name on your system.])
-	       ax_pthread_joinable_attr_defined=yes
-	      ])
+        # Detect AIX lossage: JOINABLE attribute is called UNDETACHED.
+        AC_CACHE_CHECK([for joinable pthread attribute],
+            [ax_cv_PTHREAD_JOINABLE_ATTR],
+            [ax_cv_PTHREAD_JOINABLE_ATTR=unknown
+             for ax_pthread_attr in PTHREAD_CREATE_JOINABLE PTHREAD_CREATE_UNDETACHED; do
+                 AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <pthread.h>],
+                                                 [int attr = $ax_pthread_attr; return attr /* ; */])],
+                                [ax_cv_PTHREAD_JOINABLE_ATTR=$ax_pthread_attr; break],
+                                [])
+             done
+            ])
+        AS_IF([test "x$ax_cv_PTHREAD_JOINABLE_ATTR" != "xunknown" && \
+               test "x$ax_cv_PTHREAD_JOINABLE_ATTR" != "xPTHREAD_CREATE_JOINABLE" && \
+               test "x$ax_pthread_joinable_attr_defined" != "xyes"],
+              [AC_DEFINE_UNQUOTED([PTHREAD_CREATE_JOINABLE],
+                                  [$ax_cv_PTHREAD_JOINABLE_ATTR],
+                                  [Define to necessary symbol if this constant
+                                   uses a non-standard name on your system.])
+               ax_pthread_joinable_attr_defined=yes
+              ])
 
-	AC_CACHE_CHECK([whether more special flags are required for pthreads],
-	    [ax_cv_PTHREAD_SPECIAL_FLAGS],
-	    [ax_cv_PTHREAD_SPECIAL_FLAGS=no
-	     case $host_os in
-	     solaris*)
-	     ax_cv_PTHREAD_SPECIAL_FLAGS="-D_POSIX_PTHREAD_SEMANTICS"
-	     ;;
-	     esac
-	    ])
-	AS_IF([test "x$ax_cv_PTHREAD_SPECIAL_FLAGS" != "xno" && \
-	       test "x$ax_pthread_special_flags_added" != "xyes"],
-	      [PTHREAD_CFLAGS="$ax_cv_PTHREAD_SPECIAL_FLAGS $PTHREAD_CFLAGS"
-	       ax_pthread_special_flags_added=yes])
+        AC_CACHE_CHECK([whether more special flags are required for pthreads],
+            [ax_cv_PTHREAD_SPECIAL_FLAGS],
+            [ax_cv_PTHREAD_SPECIAL_FLAGS=no
+             case $host_os in
+             solaris*)
+             ax_cv_PTHREAD_SPECIAL_FLAGS="-D_POSIX_PTHREAD_SEMANTICS"
+             ;;
+             esac
+            ])
+        AS_IF([test "x$ax_cv_PTHREAD_SPECIAL_FLAGS" != "xno" && \
+               test "x$ax_pthread_special_flags_added" != "xyes"],
+              [PTHREAD_CFLAGS="$ax_cv_PTHREAD_SPECIAL_FLAGS $PTHREAD_CFLAGS"
+               ax_pthread_special_flags_added=yes])
 
-	AC_CACHE_CHECK([for PTHREAD_PRIO_INHERIT],
-	    [ax_cv_PTHREAD_PRIO_INHERIT],
-	    [AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],
-					     [[int i = PTHREAD_PRIO_INHERIT;]])],
-			    [ax_cv_PTHREAD_PRIO_INHERIT=yes],
-			    [ax_cv_PTHREAD_PRIO_INHERIT=no])
-	    ])
-	AS_IF([test "x$ax_cv_PTHREAD_PRIO_INHERIT" = "xyes" && \
-	       test "x$ax_pthread_prio_inherit_defined" != "xyes"],
-	      [AC_DEFINE([HAVE_PTHREAD_PRIO_INHERIT], [1], [Have PTHREAD_PRIO_INHERIT.])
-	       ax_pthread_prio_inherit_defined=yes
-	      ])
+        AC_CACHE_CHECK([for PTHREAD_PRIO_INHERIT],
+            [ax_cv_PTHREAD_PRIO_INHERIT],
+            [AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],
+                                             [[int i = PTHREAD_PRIO_INHERIT;]])],
+                            [ax_cv_PTHREAD_PRIO_INHERIT=yes],
+                            [ax_cv_PTHREAD_PRIO_INHERIT=no])
+            ])
+        AS_IF([test "x$ax_cv_PTHREAD_PRIO_INHERIT" = "xyes" && \
+               test "x$ax_pthread_prio_inherit_defined" != "xyes"],
+              [AC_DEFINE([HAVE_PTHREAD_PRIO_INHERIT], [1], [Have PTHREAD_PRIO_INHERIT.])
+               ax_pthread_prio_inherit_defined=yes
+              ])
 
-	CFLAGS="$ax_pthread_save_CFLAGS"
-	LIBS="$ax_pthread_save_LIBS"
+        CFLAGS="$ax_pthread_save_CFLAGS"
+        LIBS="$ax_pthread_save_LIBS"
 
-	# More AIX lossage: compile with *_r variant
-	if test "x$GCC" != "xyes"; then
-	    case $host_os in
-		aix*)
-		AS_CASE(["x/$CC"],
-		    [x*/c89|x*/c89_128|x*/c99|x*/c99_128|x*/cc|x*/cc128|x*/xlc|x*/xlc_v6|x*/xlc128|x*/xlc128_v6],
-		    [#handle absolute path differently from PATH based program lookup
-		     AS_CASE(["x$CC"],
-			 [x/*],
-			 [AS_IF([AS_EXECUTABLE_P([${CC}_r])],[PTHREAD_CC="${CC}_r"])],
-			 [AC_CHECK_PROGS([PTHREAD_CC],[${CC}_r],[$CC])])])
-		;;
-	    esac
-	fi
+        # More AIX lossage: compile with *_r variant
+        if test "x$GCC" != "xyes"; then
+            case $host_os in
+                aix*)
+                AS_CASE(["x/$CC"],
+                    [x*/c89|x*/c89_128|x*/c99|x*/c99_128|x*/cc|x*/cc128|x*/xlc|x*/xlc_v6|x*/xlc128|x*/xlc128_v6],
+                    [#handle absolute path differently from PATH based program lookup
+                     AS_CASE(["x$CC"],
+                         [x/*],
+                         [AS_IF([AS_EXECUTABLE_P([${CC}_r])],[PTHREAD_CC="${CC}_r"])],
+                         [AC_CHECK_PROGS([PTHREAD_CC],[${CC}_r],[$CC])])])
+                ;;
+            esac
+        fi
 fi
 
 test -n "$PTHREAD_CC" || PTHREAD_CC="$CC"
@@ -475,11 +475,11 @@ AC_SUBST([PTHREAD_CC])
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "x$ax_pthread_ok" = "xyes"; then
-	ifelse([$1],,[AC_DEFINE([HAVE_PTHREAD],[1],[Define if you have POSIX threads libraries and header files.])],[$1])
-	:
+        ifelse([$1],,[AC_DEFINE([HAVE_PTHREAD],[1],[Define if you have POSIX threads libraries and header files.])],[$1])
+        :
 else
-	ax_pthread_ok=no
-	$2
+        ax_pthread_ok=no
+        $2
 fi
 AC_LANG_POP
 ])dnl AX_PTHREAD
