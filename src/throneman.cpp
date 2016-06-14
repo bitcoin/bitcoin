@@ -561,12 +561,10 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
         int current;
         int64_t lastUpdated;
         int protocolVersion;
-        CScript donationAddress;
-        int donationPercentage;
         std::string strMessage;
 
         // 70047 and greater
-        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion >> donationAddress >> donationPercentage;
+        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion ;
 
         // make sure signature isn't in the future (past is OK)
         if (sigTime > GetAdjustedTime() + 60 * 60) {
@@ -580,12 +578,7 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
 
-        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion)  + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
-
-        if(donationPercentage < 0 || donationPercentage > 100){
-            LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
-            return;
-        }
+        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion) ;
 
         if(protocolVersion < nThroneMinProtocol) {
             LogPrintf("dsee - ignoring outdated Throne %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
@@ -618,8 +611,8 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
         }
 
         if(Params().NetworkID() == CChainParams::MAIN){
-            if(addr.GetPort() != 9999) return;
-        } else if(addr.GetPort() == 9999) return;
+            if(addr.GetPort() != 9340) return;
+        } else if(addr.GetPort() == 9340) return;
 
         //search existing Throne list, this is where we update existing Thrones with new dsee broadcasts
         CThrone* pmn = this->Find(vin);
@@ -640,11 +633,9 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
                     pmn->sig = vchSig;
                     pmn->protocolVersion = protocolVersion;
                     pmn->addr = addr;
-                    pmn->donationAddress = donationAddress;
-                    pmn->donationPercentage = donationPercentage;
                     pmn->Check();
                     if(pmn->IsEnabled())
-                        mnodeman.RelayThroneEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
+                        mnodeman.RelayThroneEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
                 }
             }
 
@@ -700,13 +691,9 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
             addrman.Add(CAddress(addr), pfrom->addr, 2*60*60);
 
             //doesn't support multisig addresses
-            if(donationAddress.IsPayToScriptHash()){
-                donationAddress = CScript();
-                donationPercentage = 0;
-            }
 
             // add our Throne
-            CThrone mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion, donationAddress, donationPercentage);
+            CThrone mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion);
             mn.UpdateLastSeen(lastUpdated);
             this->Add(mn);
 
@@ -716,7 +703,7 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
             }
 
             if(count == -1 && !isLocal)
-                mnodeman.RelayThroneEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
+                mnodeman.RelayThroneEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
 
         } else {
             LogPrintf("dsee - Rejected Throne entry %s\n", addr.ToString().c_str());
@@ -872,9 +859,9 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
             {
                 if(fDebug) LogPrintf("dseg - Sending Throne entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion, mn.donationAddress, mn.donationPercentage);
+                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
                 } else if (vin == mn.vin) {
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion, mn.donationAddress, mn.donationPercentage);
+                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
                     LogPrintf("dseg - Sent 1 Throne entries to %s\n", pfrom->addr.ToString().c_str());
                     return;
                 }
@@ -887,11 +874,11 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
 
 }
 
-void CThroneMan::RelayThroneEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
+void CThroneMan::RelayThroneEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
 }
 
 void CThroneMan::RelayThroneEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)

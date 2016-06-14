@@ -151,8 +151,6 @@ CThrone::CThrone()
     allowFreeTx = true;
     protocolVersion = MIN_PEER_PROTO_VERSION;
     nLastDsq = 0;
-    donationAddress = CScript();
-    donationPercentage = 0;
     nVote = 0;
     lastVote = 0;
     nScanningErrorCount = 0;
@@ -177,15 +175,13 @@ CThrone::CThrone(const CThrone& other)
     allowFreeTx = other.allowFreeTx;
     protocolVersion = other.protocolVersion;
     nLastDsq = other.nLastDsq;
-    donationAddress = other.donationAddress;
-    donationPercentage = other.donationPercentage;
     nVote = other.nVote;
     lastVote = other.lastVote;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
 }
 
-CThrone::CThrone(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
+CThrone::CThrone(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn)
 {
     LOCK(cs);
     vin = newVin;
@@ -203,8 +199,6 @@ CThrone::CThrone(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<
     allowFreeTx = true;
     protocolVersion = protocolVersionIn;
     nLastDsq = 0;
-    donationAddress = newDonationAddress;
-    donationPercentage = newDonationPercentage;
     nVote = 0;
     lastVote = 0;
     nScanningErrorCount = 0;
@@ -445,10 +439,7 @@ bool CThronePayments::ProcessBlock(int nBlockHeight)
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
 
-        if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
-            newWinner.payee = pmn->donationAddress;
-        } else {
-            newWinner.payee.SetDestination(pmn->pubkey.GetID());
+		{   newWinner.payee.SetDestination(pmn->pubkey.GetID());
         }
 
         payeeSource.SetDestination(pmn->pubkey.GetID());
@@ -471,9 +462,7 @@ bool CThronePayments::ProcessBlock(int nBlockHeight)
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
 
-                if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
-                    newWinner.payee = pmn->donationAddress;
-                } else {
+                {
                     newWinner.payee.SetDestination(pmn->pubkey.GetID());
                 }
 
@@ -508,7 +497,6 @@ bool CThronePayments::ProcessBlock(int nBlockHeight)
 
     return false;
 }
-
 
 void CThronePayments::Relay(CThronePaymentWinner& winner)
 {

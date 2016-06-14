@@ -7,6 +7,7 @@
 #include "crowncoinunits.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
+#include "thronemanager.h"
 #include "guiutil.h"
 #include "notificator.h"
 #include "openuridialog.h"
@@ -247,6 +248,10 @@ void CrowncoinGUI::createActions(bool fIsTestnet)
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    throneManagerAction = new QAction(QIcon(":/icons/null"), tr("&Thrones"), this);
+    throneManagerAction->setCheckable(true);
+    tabGroup->addAction(throneManagerAction);
+
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -257,6 +262,9 @@ void CrowncoinGUI::createActions(bool fIsTestnet)
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+
+    connect(throneManagerAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(throneManagerAction, SIGNAL(triggered()), this, SLOT(gotoThroneManagerPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -386,6 +394,7 @@ void CrowncoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(throneManagerAction);
         overviewAction->setChecked(true);
     }
 }
@@ -457,6 +466,7 @@ void CrowncoinGUI::setWalletActionsEnabled(bool enabled)
     verifyMessageAction->setEnabled(enabled);
     usedSendingAddressesAction->setEnabled(enabled);
     usedReceivingAddressesAction->setEnabled(enabled);
+    throneManagerAction->setEnabled(enabled);
     openAction->setEnabled(enabled);
 }
 
@@ -571,6 +581,13 @@ void CrowncoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     if (walletFrame) walletFrame->gotoOverviewPage();
+}
+
+void CrowncoinGUI::gotoThroneManagerPage()
+{
+    throneManagerAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoThroneManagerPage();
+
 }
 
 void CrowncoinGUI::gotoHistoryPage()

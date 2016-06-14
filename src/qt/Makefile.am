@@ -101,12 +101,18 @@ QT_FORMS_UI = \
   forms/sendcoinsdialog.ui \
   forms/sendcoinsentry.ui \
   forms/signverifymessagedialog.ui \
-  forms/transactiondescdialog.ui
+  forms/transactiondescdialog.ui \
+  forms/thronemanager.ui \
+  forms/addeditadrenalinenode.ui \
+  forms/adrenalinenodeconfigdialog.ui 
 
 QT_MOC_CPP = \
   moc_addressbookpage.cpp \
   moc_addresstablemodel.cpp \
   moc_askpassphrasedialog.cpp \
+  moc_thronemanager.cpp \
+  moc_addeditadrenalinenode.cpp \
+  moc_adrenalinenodeconfigdialog.cpp \
   moc_crowncoinaddressvalidator.cpp \
   moc_crowncoinamountfield.cpp \
   moc_crowncoingui.cpp \
@@ -213,7 +219,10 @@ CROWNCOIN_QT_H = \
   walletmodel.h \
   walletmodeltransaction.h \
   walletview.h \
-  winshutdownmonitor.h
+  winshutdownmonitor.h \
+  thronemanager.h \
+  addeditadrenalinenode.h \
+  adrenalinenodeconfigdialog.h 
 
 RES_ICONS = \
   res/icons/add.png \
@@ -280,8 +289,10 @@ CROWNCOIN_QT_CPP = \
   splashscreen.cpp \
   trafficgraphwidget.cpp \
   utilitydialog.cpp \
-  winshutdownmonitor.cpp
-
+  winshutdownmonitor.cpp \
+  thronemanager.cpp \
+  addeditadrenalinenode.cpp \
+  adrenalinenodeconfigdialog.cpp 
 if ENABLE_WALLET
 CROWNCOIN_QT_CPP += \
   addressbookpage.cpp \

@@ -277,7 +277,7 @@ public:
 
     std::vector<CTxIn> lockedCoins;
 
-    uint256 masterNodeBlockHash;
+    uint256 ThroneBlockHash;
 
     std::string lastMessage;
     bool completedTransaction;
