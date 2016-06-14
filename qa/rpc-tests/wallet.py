@@ -11,12 +11,7 @@ class WalletTest (BitcoinTestFramework):
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
         """Return curr_balance after asserting the fee was in range"""
         fee = balance_with_fee - curr_balance
-        target_fee = fee_per_byte * tx_size
-        if fee < target_fee:
-            raise AssertionError("Fee of %s DASH too low! (Should be %s DASH)"%(str(fee), str(target_fee)))
-        # allow the node's estimation to be at most 2 bytes off
-        if fee > fee_per_byte * (tx_size + 2):
-            raise AssertionError("Fee of %s DASH too high! (Should be %s DASH)"%(str(fee), str(target_fee)))
+        assert_fee_amount(fee, tx_size, fee_per_byte * 1000)
         return curr_balance
 
     def __init__(self):
