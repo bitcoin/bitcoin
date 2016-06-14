@@ -124,6 +124,7 @@ share/BitcoindComparisonTool.jar
 /doc/doxygen/
 
 libdashconsensus.pc
+contrib/devtools/split-debug.sh
 src/qt/dash-qt.bash
 qa/pull-tester/tests-config.sh
 
