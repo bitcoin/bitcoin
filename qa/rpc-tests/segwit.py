@@ -55,6 +55,7 @@ def send_to_witness(version, node, utxo, pubkey, encode_p2sh, amount, sign=True,
     tx_to_witness = create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount)
     if (sign):
         signed = node.signrawtransaction(tx_to_witness)
+        assert("errors" not in signed or len(["errors"]) == 0)
         return node.sendrawtransaction(signed["hex"])
     else:
         if (insert_redeem_script):
