@@ -8,6 +8,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
+#include "peer.h"
 #include "pow.h"
 #include "script/sign.h"
 #include "serialize.h"
@@ -32,6 +33,7 @@ struct COrphanTx {
 };
 extern std::map<uint256, COrphanTx> mapOrphanTransactions;
 extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
+extern PeerManager peermgr;
 
 CService ip(uint32_t i)
 {
@@ -46,21 +48,27 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 {
     CNode::ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
+    assert(!addr1.IsLocal());
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
-    dummyNode1.nVersion = 1;
-    Misbehaving(dummyNode1.GetId(), 100); // Should get banned
+    auto ppeer1 = peermgr.Get(dummyNode1.GetId());
+    assert(ppeer1);
+    ppeer1->Misbehaving(100); // Should get banned
+    BOOST_CHECK(ppeer1->CanBan());
     SendMessages(&dummyNode1);
     BOOST_CHECK(CNode::IsBanned(addr1));
     BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002), NODE_NONE);
+    assert(!addr2.IsLocal());
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
-    dummyNode2.nVersion = 1;
-    Misbehaving(dummyNode2.GetId(), 50);
+    auto ppeer2 = peermgr.Get(dummyNode2.GetId());
+    assert(ppeer2);
+    ppeer2->Misbehaving(50);
+    BOOST_CHECK(ppeer2->CanBan());
     SendMessages(&dummyNode2);
     BOOST_CHECK(!CNode::IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(CNode::IsBanned(addr1));  // ... but 1 still should be
-    Misbehaving(dummyNode2.GetId(), 50);
+    ppeer2->Misbehaving(50);
     SendMessages(&dummyNode2);
     BOOST_CHECK(CNode::IsBanned(addr2));
 }
@@ -68,20 +76,25 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
     CNode::ClearBanned();
-    mapArgs["-banscore"] = "111"; // because 11 is my favorite number
+    auto banscoreOld = Misbehavior::GetBanscore();
+    Misbehavior::_SetBanscore(111); // because 11 is Gavin's favorite number
+    BOOST_CHECK(Misbehavior::GetBanscore() == 111);
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
+    assert(!addr1.IsLocal());
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
-    dummyNode1.nVersion = 1;
-    Misbehaving(dummyNode1.GetId(), 100);
+    auto ppeer1 = peermgr.Get(dummyNode1.GetId());
+    assert(ppeer1);
+    BOOST_CHECK(ppeer1->CanBan());
+    ppeer1->Misbehaving(100);
     SendMessages(&dummyNode1);
     BOOST_CHECK(!CNode::IsBanned(addr1));
-    Misbehaving(dummyNode1.GetId(), 10);
+    ppeer1->Misbehaving(10);
     SendMessages(&dummyNode1);
     BOOST_CHECK(!CNode::IsBanned(addr1));
-    Misbehaving(dummyNode1.GetId(), 1);
+    ppeer1->Misbehaving(1);
     SendMessages(&dummyNode1);
     BOOST_CHECK(CNode::IsBanned(addr1));
-    mapArgs.erase("-banscore");
+    Misbehavior::_SetBanscore(banscoreOld);
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
@@ -91,10 +104,12 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
+    assert(!addr.IsLocal());
     CNode dummyNode(INVALID_SOCKET, addr, "", true);
-    dummyNode.nVersion = 1;
-
-    Misbehaving(dummyNode.GetId(), 100);
+    auto ppeer = peermgr.Get(dummyNode.GetId());
+    assert(ppeer);
+    BOOST_CHECK(ppeer->CanBan());
+    ppeer->Misbehaving(100);
     SendMessages(&dummyNode);
     BOOST_CHECK(CNode::IsBanned(addr));
 
@@ -102,6 +117,36 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     BOOST_CHECK(CNode::IsBanned(addr));
 
     SetMockTime(nStartTime+60*60*24+1);
+    BOOST_CHECK(!CNode::IsBanned(addr));
+}
+
+BOOST_AUTO_TEST_CASE(DoS_noban_whitelist)
+{
+    CNode::ClearBanned();
+    CAddress addr(ip(0xa0b0c001), NODE_NONE);
+    assert(!addr.IsLocal());
+    CNode dummyNode(INVALID_SOCKET, addr, "", true, true);
+    auto ppeer = peermgr.Get(dummyNode.GetId());
+    assert(ppeer);
+    ppeer->Misbehaving(200);
+    BOOST_CHECK(!ppeer->CanBan());
+    BOOST_CHECK(!ppeer->CanDisconnect());
+    SendMessages(&dummyNode);
+    BOOST_CHECK(!CNode::IsBanned(addr));
+}
+
+BOOST_AUTO_TEST_CASE(DoS_noban_local)
+{
+    CNode::ClearBanned();
+    CAddress addr(CService("127.0.0.24", 1039), NODE_NONE);
+    assert(addr.IsLocal());
+    CNode dummyNode(INVALID_SOCKET, addr, "", true);
+    auto ppeer = peermgr.Get(dummyNode.GetId());
+    assert(ppeer);
+    ppeer->Misbehaving(200);
+    BOOST_CHECK(!ppeer->CanBan());
+    BOOST_CHECK(ppeer->CanDisconnect());
+    SendMessages(&dummyNode);
     BOOST_CHECK(!CNode::IsBanned(addr));
 }
 

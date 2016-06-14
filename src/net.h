@@ -118,7 +118,7 @@ struct CNodeSignals
     boost::signals2::signal<bool (CNode*), CombinerAll> ProcessMessages;
     boost::signals2::signal<bool (CNode*), CombinerAll> SendMessages;
     boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
-    boost::signals2::signal<void (NodeId)> FinalizeNode;
+    boost::signals2::signal<bool (NodeId)> FinalizeNode;
 };
 
 
@@ -189,7 +189,6 @@ class CNodeStats
 public:
     NodeId nodeid;
     ServiceFlags nServices;
-    bool fRelayTxes;
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
@@ -347,18 +346,12 @@ public:
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
     // the network or wire types and the cleaned string used when displayed or logged.
     std::string strSubVer, cleanSubVer;
-    bool fWhitelisted; // This peer can bypass DoS banning.
-    bool fOneShot;
-    bool fClient;
+    const bool fWhitelisted; // This peer can bypass DoS banning.
+    const bool fOneShot;
     bool fInbound;
     bool fNetworkNode;
     bool fSuccessfullyConnected;
     bool fDisconnect;
-    // We use fRelayTxes for two purposes -
-    // a) it allows us to not relay tx invs before receiving the peer's version message
-    // b) the peer may tell us in its version message that we should not relay tx invs
-    //    unless it loads a bloom filter.
-    bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
@@ -430,13 +423,10 @@ public:
     int64_t nMinPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
-    // Minimum fee rate with which to filter inv's to this node
-    CAmount minFeeFilter;
-    CCriticalSection cs_feeFilter;
     CAmount lastSentFeeFilter;
     int64_t nextSendTimeFeeFilter;
 
-    CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
+    CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false, bool fWhitelistedIn = false, bool fOneShotIn = false);
     ~CNode();
 
 private:
