@@ -74,8 +74,10 @@ enum WalletFeature
 
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
+    FEATURE_KEYFLAGS_OLD= 70000, // old 8-bit key origin flags
+    FEATURE_KEYFLAGS    = 70001, // key metadata flags for storing informations like key origin
 
-    FEATURE_LATEST = 60000
+    FEATURE_LATEST = 70001
 };
 
 

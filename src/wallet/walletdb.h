@@ -44,8 +44,16 @@ class CKeyMetadata
 {
 public:
     static const int CURRENT_VERSION=1;
+    static const int VERSION_SUPPORT_FLAGS_OLD=2;
+    static const int VERSION_SUPPORT_FLAGS=3;
+    static const uint32_t KEY_ORIGIN_UNKNOWN       = 0x00000000;
+    static const uint32_t KEY_ORIGIN_IMPORTED      = 0x00000001;
+    static const uint32_t KEY_ORIGIN_UNENC_WALLET  = 0x00000002;
+    static const uint32_t KEY_ORIGIN_ENC_WALLET    = 0x00000004;
+
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
+    uint32_t keyFlags;
 
     CKeyMetadata()
     {
@@ -53,7 +61,7 @@ public:
     }
     CKeyMetadata(int64_t nCreateTime_)
     {
-        nVersion = CKeyMetadata::CURRENT_VERSION;
+        SetNull();
         nCreateTime = nCreateTime_;
     }
 
@@ -64,12 +72,26 @@ public:
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nCreateTime);
+        if (nVersion >= VERSION_SUPPORT_FLAGS)
+            READWRITE(keyFlags);
+        else if (nVersion >= VERSION_SUPPORT_FLAGS_OLD) {
+            uint8_t nOldFlags;
+            // NOTE: This is lossy for the "unknown" bit in old flags
+            if (ser_action.ForRead()) {
+                READWRITE(nOldFlags);
+                keyFlags = nOldFlags >> 1;
+            } else {
+                nOldFlags = keyFlags << 1;
+                READWRITE(nOldFlags);
+            }
+        }
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
+        keyFlags = KEY_ORIGIN_UNKNOWN;
     }
 };
 
