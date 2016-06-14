@@ -16,7 +16,7 @@ enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
-    DEPLOYMENT_WITNESS, // Deployment of BIP141 and BIP143
+    DEPLOYMENT_SEGWIT, // Deployment of BIP141 and BIP143
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 
