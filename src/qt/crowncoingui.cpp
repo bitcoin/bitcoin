@@ -394,6 +394,7 @@ void CrowncoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(throneManagerAction);
         overviewAction->setChecked(true);
     }
 }
