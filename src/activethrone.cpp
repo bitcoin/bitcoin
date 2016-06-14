@@ -1,5 +1,6 @@
 
 #include "core.h"
+#include "throneconfig.h"
 #include "protocol.h"
 #include "activethrone.h"
 #include "throneman.h"
@@ -72,7 +73,7 @@ void CActiveThrone::ManageStatus()
 
         // Set defaults
         status = THRONE_NOT_CAPABLE;
-        notCapableReason = "Unknown. Check debug.log for more information.";
+        notCapableReason = "Unknown. Check debug.log for more information.\n";
 
         // Choose coins to use
         CPubKey pubKeyCollateralAddress;
@@ -88,7 +89,7 @@ void CActiveThrone::ManageStatus()
                 return;
             }
 
-            LogPrintf("CActiveThrone::ManageStatus() - Is capable master node!\n");
+            LogPrintf("CActiveThrone::ManageStatus() - Is capable throne node!\n");
 
             status = THRONE_IS_CAPABLE;
             notCapableReason = "";
@@ -105,12 +106,8 @@ void CActiveThrone::ManageStatus()
                 return;
             }
 
-            /* donations are not supported in dash.conf */
-            CScript donationAddress = CScript();
-            int donationPercentage = 0;
-
-            if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, donationAddress, donationPercentage, errorMessage)) {
-                LogPrintf("CActiveThrone::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());
+            if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage)) {
+            	LogPrintf("CActiveThrone::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());
             }
 
             return;
@@ -191,9 +188,9 @@ bool CActiveThrone::Dseep(CTxIn vin, CService service, CKey keyThrone, CPubKey p
     std::string errorMessage;
     std::vector<unsigned char> vchThroNeSignature;
     std::string strThroNeSignMessage;
-    int64_t masterNodeSignatureTime = GetAdjustedTime();
+    int64_t ThroneSignatureTime = GetAdjustedTime();
 
-    std::string strMessage = service.ToString() + boost::lexical_cast<std::string>(masterNodeSignatureTime) + boost::lexical_cast<std::string>(stop);
+    std::string strMessage = service.ToString() + boost::lexical_cast<std::string>(ThroneSignatureTime) + boost::lexical_cast<std::string>(stop);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone)) {
         retErrorMessage = "sign message failed: " + errorMessage;
@@ -228,19 +225,17 @@ bool CActiveThrone::Dseep(CTxIn vin, CService service, CKey keyThrone, CPubKey p
 
     //send to all peers
     LogPrintf("CActiveThrone::Dseep() - RelayThroneEntryPing vin = %s\n", vin.ToString().c_str());
-    mnodeman.RelayThroneEntryPing(vin, vchThroNeSignature, masterNodeSignatureTime, stop);
+    mnodeman.RelayThroneEntryPing(vin, vchThroNeSignature, ThroneSignatureTime, stop);
 
     return true;
 }
 
-bool CActiveThrone::Register(std::string strService, std::string strKeyThrone, std::string txHash, std::string strOutputIndex, std::string strDonationAddress, std::string strDonationPercentage, std::string& errorMessage) {
-    CTxIn vin;
+bool CActiveThrone::Register(std::string strService, std::string strKeyThrone, std::string txHash, std::string strOutputIndex, std::string& errorMessage) {
+	CTxIn vin;
     CPubKey pubKeyCollateralAddress;
     CKey keyCollateralAddress;
     CPubKey pubKeyThrone;
     CKey keyThrone;
-    CScript donationAddress = CScript();
-    int donationPercentage = 0;
 
     if(!darkSendSigner.SetKey(strKeyThrone, errorMessage, keyThrone, pubKeyThrone))
     {
@@ -249,48 +244,44 @@ bool CActiveThrone::Register(std::string strService, std::string strKeyThrone, s
     }
 
     if(!GetThroNeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, txHash, strOutputIndex)) {
-        errorMessage = "could not allocate vin";
-        LogPrintf("CActiveThrone::Register() - Error: %s\n", errorMessage.c_str());
-        return false;
-    }
-
-    CCrowncoinAddress address;
-    if (strDonationAddress != "")
-    {
-        if(!address.SetString(strDonationAddress))
-        {
-            LogPrintf("CActiveThrone::Register - Invalid Donation Address\n");
-            return false;
-        }
-        donationAddress.SetDestination(address.Get());
-
-        try {
-            donationPercentage = boost::lexical_cast<int>( strDonationPercentage );
-        } catch( boost::bad_lexical_cast const& ) {
-            LogPrintf("CActiveThrone::Register - Invalid Donation Percentage (Couldn't cast)\n");
-            return false;
-        }
-
-        if(donationPercentage < 0 || donationPercentage > 100)
-        {
-            LogPrintf("CActiveThrone::Register - Donation Percentage Out Of Range\n");
-            return false;
-        }
-    }
-
-    return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, donationAddress, donationPercentage, errorMessage);
+		errorMessage = "could not allocate vin";
+    	LogPrintf("CActiveThrone::Register() - Error: %s\n", errorMessage.c_str());
+		return false;
+	}
+	return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage);
 }
 
-bool CActiveThrone::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyThrone, CPubKey pubKeyThrone, CScript donationAddress, int donationPercentage, std::string &retErrorMessage) {
+bool CActiveThrone::RegisterByPubKey(std::string strService, std::string strKeyThrone, std::string collateralAddress, std::string& errorMessage) {
+	CTxIn vin;
+    CPubKey pubKeyCollateralAddress;
+    CKey keyCollateralAddress;
+    CPubKey pubKeyThrone;
+    CKey keyThrone;
+
+    if(!darkSendSigner.SetKey(strKeyThrone, errorMessage, keyThrone, pubKeyThrone))
+    {
+    	LogPrintf("CActiveThrone::RegisterByPubKey() - Error upon calling SetKey: %s\n", errorMessage.c_str());
+    	return false;
+    }
+
+    if(!GetThroNeVinForPubKey(collateralAddress, vin, pubKeyCollateralAddress, keyCollateralAddress)) {
+		errorMessage = "could not allocate vin for collateralAddress";
+    	LogPrintf("Register::Register() - Error: %s\n", errorMessage.c_str());
+		return false;
+	}
+	return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyThrone, pubKeyThrone, errorMessage);
+}
+
+bool CActiveThrone::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyThrone, CPubKey pubKeyThrone, std::string &retErrorMessage) {
     std::string errorMessage;
     std::vector<unsigned char> vchThroNeSignature;
     std::string strThroNeSignMessage;
-    int64_t masterNodeSignatureTime = GetAdjustedTime();
+    int64_t ThroneSignatureTime = GetAdjustedTime();
 
     std::string vchPubKey(pubKeyCollateralAddress.begin(), pubKeyCollateralAddress.end());
     std::string vchPubKey2(pubKeyThrone.begin(), pubKeyThrone.end());
 
-    std::string strMessage = service.ToString() + boost::lexical_cast<std::string>(masterNodeSignatureTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(PROTOCOL_VERSION) + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
+    std::string strMessage = service.ToString() + boost::lexical_cast<std::string>(ThroneSignatureTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(PROTOCOL_VERSION);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyCollateralAddress)) {
         retErrorMessage = "sign message failed: " + errorMessage;
@@ -308,14 +299,14 @@ bool CActiveThrone::Register(CTxIn vin, CService service, CKey keyCollateralAddr
     if(pmn == NULL)
     {
         LogPrintf("CActiveThrone::Register() - Adding to Throne list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
-        CThrone mn(service, vin, pubKeyCollateralAddress, vchThroNeSignature, masterNodeSignatureTime, pubKeyThrone, PROTOCOL_VERSION, donationAddress, donationPercentage);
-        mn.UpdateLastSeen(masterNodeSignatureTime);
+        CThrone mn(service, vin, pubKeyCollateralAddress, vchThroNeSignature, ThroneSignatureTime, pubKeyThrone, PROTOCOL_VERSION);
+        mn.UpdateLastSeen(ThroneSignatureTime);
         mnodeman.Add(mn);
     }
 
     //send to all peers
     LogPrintf("CActiveThrone::Register() - RelayElectionEntry vin = %s\n", vin.ToString().c_str());
-    mnodeman.RelayThroneEntry(vin, service, vchThroNeSignature, masterNodeSignatureTime, pubKeyCollateralAddress, pubKeyThrone, -1, -1, masterNodeSignatureTime, PROTOCOL_VERSION, donationAddress, donationPercentage);
+    mnodeman.RelayThroneEntry(vin, service, vchThroNeSignature, ThroneSignatureTime, pubKeyCollateralAddress, pubKeyThrone, -1, -1, ThroneSignatureTime, PROTOCOL_VERSION);
 
     return true;
 }
@@ -391,7 +382,53 @@ bool CActiveThrone::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, C
     return true;
 }
 
-// get all possible outputs for running Throne
+bool CActiveThrone::GetThroNeVinForPubKey(std::string collateralAddress, CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
+	return GetThroNeVinForPubKey(collateralAddress, vin, pubkey, secretKey, "", "");
+}
+
+bool CActiveThrone::GetThroNeVinForPubKey(std::string collateralAddress, CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
+    CScript pubScript;
+
+    // Find possible candidates
+    vector<COutput> possibleCoins = SelectCoinsThroneForPubKey(collateralAddress);
+    COutput *selectedOutput;
+
+    // Find the vin
+	if(!strTxHash.empty()) {
+		// Let's find it
+		uint256 txHash(strTxHash);
+        int outputIndex = boost::lexical_cast<int>(strOutputIndex);
+		bool found = false;
+		BOOST_FOREACH(COutput& out, possibleCoins) {
+			if(out.tx->GetHash() == txHash && out.i == outputIndex)
+			{
+				selectedOutput = &out;
+				found = true;
+				break;
+			}
+		}
+		if(!found) {
+			LogPrintf("CActiveThrone::GetThroNeVinForPubKey - Could not locate valid vin\n");
+			return false;
+		}
+	} else {
+		// No output specified,  Select the first one
+		if(possibleCoins.size() > 0) {
+			selectedOutput = &possibleCoins[0];
+		} else {
+			LogPrintf("CActiveThrone::GetBankNodeVinForPubKey - Could not locate specified vin from possible list\n");
+			return false;
+		}
+    }
+
+	// At this point we have a selected output, retrieve the associated info
+	return GetVinFromOutput(*selectedOutput, vin, pubkey, secretKey);
+}
+
+
+
+
+// get all possible outputs for running throne
 vector<COutput> CActiveThrone::SelectCoinsThrone()
 {
     vector<COutput> vCoins;
@@ -407,6 +444,38 @@ vector<COutput> CActiveThrone::SelectCoinsThrone()
             filteredCoins.push_back(out);
         }
     }
+    return filteredCoins;
+}
+
+// get all possible outputs for running throne for a specific pubkey
+vector<COutput> CActiveThrone::SelectCoinsThroneForPubKey(std::string collateralAddress)
+{
+    CCrowncoinAddress address(collateralAddress);
+    CScript scriptPubKey;
+    scriptPubKey.SetDestination(address.Get()); 
+    vector<COutput> vCoins;
+    vector<COutput> filteredCoins;
+
+    // Retrieve all possible outputs
+    pwalletMain->AvailableCoins(vCoins);
+
+    // Filter
+    if (chainActive.Tip()->nHeight<145000) {
+    BOOST_FOREACH(const COutput& out, vCoins)
+    {
+        if(out.tx->vout[out.i].scriptPubKey == scriptPubKey && out.tx->vout[out.i].nValue == 250000*COIN) { //exactly
+        	filteredCoins.push_back(out);
+        }
+    }
+	}
+	else {
+    BOOST_FOREACH(const COutput& out, vCoins)
+    {
+        if(out.tx->vout[out.i].scriptPubKey == scriptPubKey && out.tx->vout[out.i].nValue == 50000*COIN) { //exactly
+        	filteredCoins.push_back(out);
+        }
+    }
+	} 
     return filteredCoins;
 }
 

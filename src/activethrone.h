@@ -50,14 +50,24 @@ public:
     bool StopThroNe(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string& errorMessage); 
 
     /// Register remote Throne
-    bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string strDonationAddress, std::string strDonationPercentage, std::string& errorMessage); 
+    bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string& errorMessage); 
     /// Register any Throne
-    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyThrone, CPubKey pubKeyThrone, CScript donationAddress, int donationPercentage, std::string &retErrorMessage); 
+    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyThrone, CPubKey pubKeyThrone, std::string &retErrorMessage); 
+
+    bool RegisterByPubKey(std::string strService, std::string strKeyThrone, std::string collateralAddress, std::string& errorMessage); // register for a specific collateral address
 
     /// Get 1000DRK input that can be used for the Throne
     bool GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
     bool GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
+
+    bool GetThroNeVinForPubKey(std::string collateralAddress, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
+
+    bool GetThroNeVinForPubKey(std::string collateralAddress, CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
+
     vector<COutput> SelectCoinsThrone();
+ 
+    vector<COutput> SelectCoinsThroneForPubKey(std::string collateralAddress);
+
     bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
 
     /// Enable hot wallet mode (run a Throne with no funds)

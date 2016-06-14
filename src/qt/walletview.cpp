@@ -17,7 +17,9 @@
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "walletmodel.h"
-
+#include "adrenalinenodeconfigdialog.h"
+#include "addeditadrenalinenode.h"
+#include "thronemanager.h"
 #include "ui_interface.h"
 
 #include <QAction>
@@ -35,7 +37,7 @@ WalletView::WalletView(QWidget *parent):
 {
     // Create tabs
     overviewPage = new OverviewPage();
-
+	throneManagerPage = new ThroneManager(this);
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
@@ -58,7 +60,7 @@ WalletView::WalletView(QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-
+    addWidget(throneManagerPage);
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
 
@@ -153,6 +155,11 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
 void WalletView::gotoOverviewPage()
 {
     setCurrentWidget(overviewPage);
+}
+
+void WalletView::gotoThroneManagerPage()
+{ 
+    setCurrentWidget(throneManagerPage);
 }
 
 void WalletView::gotoHistoryPage()

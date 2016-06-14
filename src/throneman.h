@@ -56,7 +56,7 @@ private:
     mutable CCriticalSection cs;
 
     // map to hold all MNs
-    std::vector<CThrone> vThrones;
+
     // who's asked for the Throne list and the last time
     std::map<CNetAddr, int64_t> mAskedUsForThroneList;
     // who we asked for the Throne list and the last time
@@ -67,6 +67,8 @@ private:
 public:
     // keep track of dsq count to prevent thrones from gaming darksend queue
     int64_t nDsqCount;
+
+    std::vector<CThrone> vThrones;
 
     IMPLEMENT_SERIALIZE
     (
@@ -138,7 +140,7 @@ public:
     // Relay Throne Messages
     //
 
-    void RelayThroneEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage);
+    void RelayThroneEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion);
     void RelayThroneEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
 
     void Remove(CTxIn vin);

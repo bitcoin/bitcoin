@@ -13,7 +13,7 @@ class ClientModel;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
-
+class ThroneManager;
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
@@ -68,6 +68,7 @@ public slots:
     void backupWallet();
     /** Change encrypted wallet passphrase */
     void changePassphrase();
+    void gotoThroneManagerPage();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
 

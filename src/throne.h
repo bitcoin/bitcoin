@@ -39,9 +39,10 @@ class CThrone;
 class CThronePayments;
 class CThronePaymentWinner;
 
-extern CThronePayments thronePayments;
+extern CCriticalSection cs_thronepayments;
 extern map<uint256, CThronePaymentWinner> mapSeenThroneVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
+extern CThronePayments thronePayments;
 
 void ProcessMessageThronePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool GetBlockHash(uint256& hash, int nBlockHeight);
@@ -80,8 +81,6 @@ public:
     bool allowFreeTx;
     int protocolVersion;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
-    CScript donationAddress;
-    int donationPercentage;
     int nVote;
     int64_t lastVote;
     int nScanningErrorCount;
@@ -89,7 +88,7 @@ public:
 
     CThrone();
     CThrone(const CThrone& other);
-    CThrone(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript donationAddress, int donationPercentage);
+    CThrone(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
 
     void swap(CThrone& first, CThrone& second) // nothrow
     {
@@ -113,8 +112,6 @@ public:
         swap(first.allowFreeTx, second.allowFreeTx);
         swap(first.protocolVersion, second.protocolVersion);
         swap(first.nLastDsq, second.nLastDsq);
-        swap(first.donationAddress, second.donationAddress);
-        swap(first.donationPercentage, second.donationPercentage);
         swap(first.nVote, second.nVote);
         swap(first.lastVote, second.lastVote);
         swap(first.nScanningErrorCount, second.nScanningErrorCount);
@@ -161,8 +158,6 @@ public:
                 READWRITE(allowFreeTx);
                 READWRITE(protocolVersion);
                 READWRITE(nLastDsq);
-                READWRITE(donationAddress);
-                READWRITE(donationPercentage);
                 READWRITE(nVote);
                 READWRITE(lastVote);
                 READWRITE(nScanningErrorCount);

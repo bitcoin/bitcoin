@@ -92,7 +92,7 @@ private:
 signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, int countOfPeers);
-    void strThronesChanged(const QString &strMasternodes);
+    void strThronesChanged(const QString &strThrones);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 

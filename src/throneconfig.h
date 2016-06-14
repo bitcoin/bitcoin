@@ -28,18 +28,15 @@ public:
         std::string privKey;
         std::string txHash;
         std::string outputIndex;
-        std::string donationAddress;
-        std::string donationPercent;
+
     public:
 
-        CThroneEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex, std::string donationAddress, std::string donationPercent) {
+        CThroneEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
             this->alias = alias;
             this->ip = ip;
             this->privKey = privKey;
             this->txHash = txHash;
             this->outputIndex = outputIndex;
-            this->donationAddress = donationAddress;
-            this->donationPercent = donationPercent;
         }
 
         const std::string& getAlias() const {
@@ -82,13 +79,6 @@ public:
             this->ip = ip;
         }
 
-        const std::string& getDonationAddress() const {
-            return donationAddress;
-        }
-
-        const std::string& getDonationPercentage() const {
-            return donationPercent;
-        }
     };
 
     CThroneConfig() {
@@ -97,7 +87,7 @@ public:
 
     void clear();
     bool read(std::string& strErr);
-    void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex, std::string donationAddress, std::string donationPercent);
+	void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
 
     std::vector<CThroneEntry>& getEntries() {
         return entries;

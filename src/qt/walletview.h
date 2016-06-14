@@ -15,7 +15,8 @@ class SendCoinsDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
-
+class ThroneManager;
+class AddEditAdrenalineNode;
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 class QProgressDialog;
@@ -53,7 +54,7 @@ public:
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;
-
+    ThroneManager *throneManagerPage;
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
@@ -72,7 +73,7 @@ public slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-
+	void gotoThroneManagerPage();
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */

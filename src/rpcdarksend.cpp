@@ -351,11 +351,7 @@ Value throne(const Array& params, bool fHelp)
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
-
-                std::string strDonateAddress = mne.getDonationAddress();
-                std::string strDonationPercentage = mne.getDonationPercentage();
-
-    			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+    			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
     			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
@@ -406,11 +402,7 @@ Value throne(const Array& params, bool fHelp)
 			total++;
 
 			std::string errorMessage;
-
-            std::string strDonateAddress = mne.getDonationAddress();
-            std::string strDonationPercentage = mne.getDonationPercentage();
-
-			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+			bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -544,16 +536,14 @@ Value throne(const Array& params, bool fHelp)
         Object resultObj;
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-            Object mnObj;
-            mnObj.push_back(Pair("alias", mne.getAlias()));
-            mnObj.push_back(Pair("address", mne.getIp()));
-            mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
-            mnObj.push_back(Pair("txHash", mne.getTxHash()));
-            mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
-            mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));
-            mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
-            resultObj.push_back(Pair("throne", mnObj));
-        }
+    		Object mnObj;
+    		mnObj.push_back(Pair("alias", mne.getAlias()));
+    		mnObj.push_back(Pair("address", mne.getIp()));
+    		mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
+    		mnObj.push_back(Pair("txHash", mne.getTxHash()));
+    		mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
+    		resultObj.push_back(Pair("throne", mnObj));
+    	}
 
         return resultObj;
     }
@@ -731,22 +721,6 @@ Value thronelist(const Array& params, bool fHelp)
             if (strMode == "activeseconds") {
                 if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
-            } else if (strMode == "donation") {
-                CTxDestination address1;
-                ExtractDestination(mn.donationAddress, address1);
-                CCrowncoinAddress address2(address1);
-
-                if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
-                    strAddr.find(strFilter) == string::npos) continue;
-
-                std::string strOut = "";
-
-                if(mn.donationPercentage != 0){
-                    strOut = address2.ToString().c_str();
-                    strOut += ":";
-                    strOut += boost::lexical_cast<std::string>(mn.donationPercentage);
-                }
-                obj.push_back(Pair(strAddr,       strOut.c_str()));
             } else if (strMode == "full") {
                 CScript pubkey;
                 pubkey.SetDestination(mn.pubkey.GetID());
