@@ -416,7 +416,7 @@ bool CActiveThrone::GetThroNeVinForPubKey(std::string collateralAddress, CTxIn& 
 		if(possibleCoins.size() > 0) {
 			selectedOutput = &possibleCoins[0];
 		} else {
-			LogPrintf("CActiveThrone::GetBankNodeVinForPubKey - Could not locate specified vin from possible list\n");
+			LogPrintf("CActiveThrone::GetThroNeVinForPubKey - Could not locate specified vin from possible list\n");
 			return false;
 		}
     }

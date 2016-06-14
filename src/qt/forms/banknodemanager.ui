@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ThroneManager</class>
- <widget class="QWidget" name="BanknodeManager">
+ <widget class="QWidget" name="ThroneManager">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -85,7 +85,7 @@
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
-         <string>Bank Network</string>
+         <string>Throne Network</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout">
          <item row="1" column="0">
@@ -169,7 +169,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Bank Node Count:</string>
+              <string>Throne Count:</string>
              </property>
             </widget>
            </item>
@@ -211,10 +211,10 @@
               </size>
              </property>
              <property name="toolTip">
-              <string>Show only those Banknodes listed by their address in mybanknodes.txt</string>
+              <string>Show only those Thrones listed by their address in mybanknodes.txt</string>
              </property>
              <property name="text">
-              <string>Show only my Banknodes</string>
+              <string>Show only my Thrones</string>
              </property>
             </widget>
            </item>
@@ -237,7 +237,7 @@
        </widget>
        <widget class="QWidget" name="tab_2">
         <attribute name="title">
-         <string>My Bank Nodes</string>
+         <string>My Thrones</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
