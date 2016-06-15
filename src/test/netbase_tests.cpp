@@ -45,6 +45,30 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(CNetAddr("8.8.8.8").IsRoutable());
     BOOST_CHECK(CNetAddr("2001::1").IsRoutable());
     BOOST_CHECK(CNetAddr("127.0.0.1").IsValid());
+    BOOST_CHECK(CNetAddr("1.1.1").ToString() == "1.1.0.1");
+    BOOST_CHECK(CNetAddr("1.1").ToString() == "1.0.0.1");
+    BOOST_CHECK(CNetAddr("1111").ToString() == "0.0.4.87");
+    BOOST_CHECK(CNetAddr("1111111111").ToString() == "66.58.53.199");
+
+    // CNetAddr does not support ports making it dangerous to treat like CService
+    BOOST_CHECK(CNetAddr("250.2.2.2:7777").ToString() != CNetAddr("250.2.2.2", 7777).ToString());
+    BOOST_CHECK(CNetAddr("250.2.2.2:7777").ToString() == "::");
+    BOOST_CHECK(CNetAddr("250.2.2.2", 7777).ToString() == "250.2.2.2");
+    BOOST_CHECK(CNetAddr("1.1.1.1:1").ToString() == CNetAddr("2.2.2:1").ToString());
+    BOOST_CHECK(CNetAddr("1.1.1.1:1").ToString() == "::");
+    BOOST_CHECK(CNetAddr("2.2.2.2:2").ToString() == "::");
+    BOOST_CHECK(CNetAddr("2.2.2.2:2").IsIPv6());
+    BOOST_CHECK(CNetAddr("2.2.2.2:2").IsIPv4() == false);
+
+    // Comparing with CNetAddr constructor with CService constructor
+    BOOST_CHECK(CNetAddr("250.2.2.2").ToString() == CNetAddr("250.2.2.2", 7777).ToString());
+    BOOST_CHECK(CNetAddr("250.2.2.2:7777").ToString() != CService("250.2.2.2:7777").ToString());
+    BOOST_CHECK(CService("250.2.2.2:7777").ToString() == CService("250.2.2.2",7777).ToString());
+
+    BOOST_CHECK(CNetAddr("250.2.2.2:8333").IsIPv6());
+    BOOST_CHECK(CService("250.2.2.2:8333").IsIPv4());
+    BOOST_CHECK(CNetAddr("250.2.2.2", 8333).IsIPv4());
+    BOOST_CHECK(CService("250.2.2.2", 8333).IsIPv4());
 }
 
 bool static TestSplitHost(string test, string host, int port)
