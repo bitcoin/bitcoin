@@ -899,10 +899,10 @@ public:
 
     /* Set the HD chain model (chain child index counters) */
     bool SetHDChain(const CHDChain& chain, bool memonly);
+    const CHDChain& GetHDChain() { return hdChain; }
 
     /* Set the current HD master key (will reset the chain child index counters) */
     bool SetHDMasterKey(const CKey& key);
-    const CHDChain& GetHDChain() { return hdChain; }
 };
 
 /** A key allocated from the key pool. */
