@@ -232,6 +232,8 @@ class AddressIndexTest(BitcoinTestFramework):
         address3 = "mw4ynwhS7MmrQ27hr82kgqu7zryNDK26JB"
         addressHash3 = "aa9872b5bbcdb511d89e0e11aa27da73fd2c3f50".decode("hex")
         scriptPubKey3 = CScript([OP_DUP, OP_HASH160, addressHash3, OP_EQUALVERIFY, OP_CHECKSIG])
+        address4 = "2N8oFVB2vThAKury4vnLquW2zVjsYjjAkYQ"
+        scriptPubKey4 = CScript([OP_HASH160, addressHash3, OP_EQUAL])
         unspent = self.nodes[2].listunspent()
 
         tx = CTransaction()
@@ -246,17 +248,26 @@ class AddressIndexTest(BitcoinTestFramework):
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
         amount = unspent[1]["amount"] * 100000000
-        tx2.vout = [CTxOut(amount, scriptPubKey3)]
+        tx2.vout = [
+            CTxOut(amount / 4, scriptPubKey3),
+            CTxOut(amount / 4, scriptPubKey3),
+            CTxOut(amount / 4, scriptPubKey4),
+            CTxOut(amount / 4, scriptPubKey4)
+        ]
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
         time.sleep(2)
 
         mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
-        assert_equal(len(mempool), 2)
+        assert_equal(len(mempool), 3)
         assert_equal(mempool[0]["txid"], memtxid1)
-        assert_equal(mempool[1]["txid"], memtxid2)
         assert_equal(mempool[0]["address"], address3)
+        assert_equal(mempool[0]["index"], 0)
+        assert_equal(mempool[1]["txid"], memtxid2)
+        assert_equal(mempool[1]["index"], 0)
+        assert_equal(mempool[2]["txid"], memtxid2)
+        assert_equal(mempool[2]["index"], 1)
 
         self.nodes[2].generate(1);
         self.sync_all();
@@ -264,8 +275,11 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(len(mempool2), 0)
 
         tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(memtxid2, 16), 0))]
-        tx.vout = [CTxOut(amount - 10000, scriptPubKey2)]
+        tx.vin = [
+            CTxIn(COutPoint(int(memtxid2, 16), 0)),
+            CTxIn(COutPoint(int(memtxid2, 16), 1))
+        ]
+        tx.vout = [CTxOut(amount / 2 - 10000, scriptPubKey2)]
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
@@ -273,9 +287,39 @@ class AddressIndexTest(BitcoinTestFramework):
         time.sleep(2)
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
-        assert_equal(len(mempool3), 1)
+        assert_equal(len(mempool3), 2)
         assert_equal(mempool3[0]["prevtxid"], memtxid2)
         assert_equal(mempool3[0]["prevout"], 0)
+        assert_equal(mempool3[1]["prevtxid"], memtxid2)
+        assert_equal(mempool3[1]["prevout"], 1)
+
+        # sending and receiving to the same address
+        privkey1 = "cQY2s58LhzUCmEXN8jtAp1Etnijx78YRZ466w4ikX1V4UpTpbsf8"
+        address1 = "myAUWSHnwsQrhuMWv4Br6QsCnpB41vFwHn"
+        address1hash = "c192bff751af8efec15135d42bfeedf91a6f3e34".decode("hex")
+        address1script = CScript([OP_DUP, OP_HASH160, address1hash, OP_EQUALVERIFY, OP_CHECKSIG])
+
+        self.nodes[0].sendtoaddress(address1, 10)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        utxos = self.nodes[1].getaddressutxos({"addresses": [address1]})
+        assert_equal(len(utxos), 1)
+
+        tx = CTransaction()
+        tx.vin = [
+            CTxIn(COutPoint(int(utxos[0]["txid"], 16), utxos[0]["outputIndex"]))
+        ]
+        amount = utxos[0]["satoshis"] - 1000
+        tx.vout = [CTxOut(amount, address1script)]
+        tx.rehash()
+        self.nodes[0].importprivkey(privkey1)
+        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        mem_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+
+        self.sync_all()
+        mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})
+        assert_equal(len(mempool_deltas), 2)
 
         print "Passed\n"
 
