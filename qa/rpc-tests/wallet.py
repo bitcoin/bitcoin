@@ -55,9 +55,11 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
-        # Send 21 BTC from 0 to 2 using sendtoaddress call.
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
+        # Send 11 BTC from 0 to 2 using sendtoaddress call.
+        addr = self.nodes[2].getnewaddress()
+        self.nodes[0].sendtoaddress(addr, 11)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        assert(self.nodes[2].validateaddress(addr)["hdkeypath"] == "m/0'/0'/1'")
 
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
