@@ -112,6 +112,14 @@ int nInstantSendDepth = 5;
 int nPrivateSendRounds = 2;
 int nAnonymizeDashAmount = 1000;
 int nLiquidityProvider = 0;
+/**
+    nWalletBackups:
+        1..10   - number of automatic backups to keep
+        0       - disabled by command-line
+        -1      - disabled because of some error during run-time
+        -2      - disabled because wallet was locked and we were not able to replenish keypool
+*/
+int nWalletBackups = 10;
 /** Spork enforcement enabled time */
 int64_t enforceMasternodePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
@@ -578,6 +586,34 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     fs::create_directories(path);
 
     return path;
+}
+
+static boost::filesystem::path backupsDirCached;
+static CCriticalSection csBackupsDirCached;
+
+const boost::filesystem::path &GetBackupsDir()
+{
+    namespace fs = boost::filesystem;
+
+    LOCK(csBackupsDirCached);
+
+    fs::path &backupsDir = backupsDirCached;
+
+    if (!backupsDir.empty())
+        return backupsDir;
+
+    if (mapArgs.count("-walletbackupsdir")) {
+        backupsDir = fs::absolute(mapArgs["-walletbackupsdir"]);
+        // Path must exist
+        if (fs::is_directory(backupsDir)) return backupsDir;
+        // Fallback to default path if it doesn't
+        LogPrintf("%s: Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n", __func__);
+        strMiscWarning = _("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.");
+    }
+    // Default path
+    backupsDir = GetDataDir() / "backups";
+
+    return backupsDir;
 }
 
 void ClearDatadirCache()

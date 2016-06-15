@@ -143,4 +143,6 @@ private:
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 void ThreadFlushWalletDB(const std::string& strFile);
 
+bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& strBackupWarning, std::string& strBackupError);
+
 #endif // BITCOIN_WALLET_WALLETDB_H

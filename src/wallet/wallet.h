@@ -612,6 +612,7 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     int64_t nTimeFirstKey;
+    int64_t nKeysLeftSinceAutoBackup;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 

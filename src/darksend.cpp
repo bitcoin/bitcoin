@@ -1351,16 +1351,75 @@ void CDarksendPool::ClearLastMessage()
 //
 // Passively run Darksend in the background to anonymize funds based on the given configuration.
 //
-// This does NOT run by default for daemons, only for QT.
-//
 bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnablePrivateSend) return false;
     if(fMasterNode) return false;
 
     if(!pCurrentBlockIndex) return false;
+    if(!pwalletMain || pwalletMain->IsLocked()) return false;
 
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
+
+    if (nWalletBackups == 0) {
+        LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - Automatic backups disabled, no mixing available.\n");
+        strAutoDenomResult = _("Automatic backups disabled") + ", " + _("no mixing available.");
+        fEnablePrivateSend = false; // stop mixing
+        pwalletMain->nKeysLeftSinceAutoBackup = 0; // no backup, no "keys since last backup"
+        return false;
+    } else if (nWalletBackups == -1) {
+        // Automatic backup failed, nothing else we can do until user fixes the issue manually.
+        // There is no way to bring user attention in daemon mode so we just update status and
+        // keep spaming if debug is on.
+        LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - ERROR! Failed to create automatic backup.\n");
+        strAutoDenomResult = _("ERROR! Failed to create automatic backup") + ", " + _("see debug.log for details.");
+        return false;
+    } else if (nWalletBackups == -2) {
+        // We were able to create automatic backup but keypool was not replenished because wallet is locked.
+        // There is no way to bring user attention in daemon mode so we just update status and
+        // keep spaming if debug is on.
+        LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - WARNING! Failed to create replenish keypool, please unlock your wallet to do so.\n");
+        strAutoDenomResult = _("WARNING! Failed to replenish keypool, please unlock your wallet to do so.") + ", " + _("see debug.log for details.");
+        return false;
+    }
+
+    if (pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_STOP) {
+        // We should never get here via mixing itself but probably smth else is still actively using keypool
+        LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - Very low number of keys left: %d, no mixing available.\n", pwalletMain->nKeysLeftSinceAutoBackup);
+        strAutoDenomResult = strprintf(_("Very low number of keys left: %d") + ", " + _("no mixing available."), pwalletMain->nKeysLeftSinceAutoBackup);
+        // It's getting really dangerous, stop mixing
+        fEnablePrivateSend = false;
+        return false;
+    } else if (pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING) {
+        // Low number of keys left but it's still more or less safe to continue
+        LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - Very low number of keys left: %d\n", pwalletMain->nKeysLeftSinceAutoBackup);
+        strAutoDenomResult = strprintf(_("Very low number of keys left: %d"), pwalletMain->nKeysLeftSinceAutoBackup);
+
+        if (fCreateAutoBackups) {
+            LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - Trying to create new backup.\n");
+            std::string warningString;
+            std::string errorString;
+
+            if(!AutoBackupWallet(pwalletMain, "", warningString, errorString)) {
+                if (!warningString.empty()) {
+                    // There were some issues saving backup but yet more or less safe to continue
+                    LogPrintf("CDarksendPool::DoAutomaticDenominating - WARNING! Something went wrong on automatic backup: %s\n", warningString);
+                }
+                if (!errorString.empty()) {
+                    // Things are really broken
+                    LogPrintf("CDarksendPool::DoAutomaticDenominating - ERROR! Failed to create automatic backup: %s\n", errorString);
+                    strAutoDenomResult = strprintf(_("ERROR! Failed to create automatic backup") + ": %s", errorString);
+                    return false;
+                }
+            }
+        } else {
+            // Wait for someone else (e.g. GUI action) to create automatic backup for us
+            return false;
+        }
+    }
+
+    LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating - Keys left since latest backup: %d\n", pwalletMain->nKeysLeftSinceAutoBackup);
+
     if(GetEntriesCount() > 0) {
         strAutoDenomResult = _("Mixing in progress...");
         return false;

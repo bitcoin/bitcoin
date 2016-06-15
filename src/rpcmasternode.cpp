@@ -42,7 +42,6 @@ UniValue privatesend(const UniValue& params, bool fHelp)
 
         fEnablePrivateSend = true;
         bool result = darkSendPool.DoAutomaticDenominating();
-//        fEnablePrivateSend = result;
         return "Mixing " + (result ? "started successfully" : ("start failed: " + darkSendPool.GetStatus() + ", will retry"));
     }
 
@@ -57,7 +56,12 @@ UniValue privatesend(const UniValue& params, bool fHelp)
     }
 
     if(params[0].get_str() == "status"){
-        return "Mixing status: " + darkSendPool.GetStatus();
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("status",            darkSendPool.GetStatus()));
+        obj.push_back(Pair("keys_left",     pwalletMain->nKeysLeftSinceAutoBackup));
+        obj.push_back(Pair("warnings",      (pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING
+                                                ? "WARNING: keypool is almost depleted!" : "")));
+        return obj;
     }
 
     return "Unknown command, please see \"help privatesend\"";

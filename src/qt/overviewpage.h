@@ -57,11 +57,13 @@ private:
     CAmount currentWatchUnconfBalance;
     CAmount currentWatchImmatureBalance;
     int nDisplayUnit;
+    bool fShowAdvancedPSUI;
 
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
 
     void SetupTransactionList(int nNumItems);
+    void DisablePrivateSendCompletely();
 
 private Q_SLOTS:
     void togglePrivateSend();

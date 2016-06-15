@@ -47,6 +47,11 @@ class CActiveMasternode;
 static const CAmount DARKSEND_COLLATERAL = (0.01*COIN);
 static const CAmount DARKSEND_POOL_MAX = (999.99*COIN);
 static const CAmount DENOMS_COUNT_MAX = 100;
+// Warn user if mixing in gui or try to create backup if mixing in daemon mode
+// when we have only this many keys left
+static const int PS_KEYS_THRESHOLD_WARNING = 100;
+// Stop mixing completely, it's too dangerous to continue when we have only this many keys left
+static const int PS_KEYS_THRESHOLD_STOP = 50;
 
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
@@ -326,6 +331,7 @@ public:
     CMasternode* pSubmittedToMasternode;
     int sessionDenom; //Users must submit an denom matching this
     int cachedNumBlocks; //used for the overview screen
+    bool fCreateAutoBackups; //builtin support for automatic backups
 
     CDarksendPool()
     {
@@ -338,6 +344,7 @@ public:
         txCollateral = CMutableTransaction();
         minBlockSpacing = 0;
         lastNewBlock = 0;
+        fCreateAutoBackups = true;
 
         SetNull();
     }
@@ -466,7 +473,7 @@ public:
     /// Is this amount compatible with other client in the pool?
     bool IsCompatibleWithSession(CAmount nAmount, CTransaction txCollateral, int &errorID);
 
-    /// Passively run Darksend in the background according to the configuration in settings (only for QT)
+    /// Passively run Darksend in the background according to the configuration in settings
     bool DoAutomaticDenominating(bool fDryRun=false);
     bool PrepareDarksendDenominate();
 

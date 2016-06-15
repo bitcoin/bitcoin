@@ -430,11 +430,11 @@ void openMNConfigfile()
 
 void showBackups()
 {
-    boost::filesystem::path pathBackups = GetDataDir() / "backups";
+    boost::filesystem::path backupsDir = GetBackupsDir();
 
     /* Open folder with default browser */
-    if (boost::filesystem::exists(pathBackups))
-        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathBackups)));
+    if (boost::filesystem::exists(backupsDir))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(backupsDir)));
 }
 
 void SubstituteFonts(const QString& language)

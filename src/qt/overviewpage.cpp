@@ -158,18 +158,22 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     // that's it for litemode
     if(fLiteMode) return;
 
-    // disable any PS UI for masternode
-    if(fMasterNode){
-        ui->togglePrivateSend->setText("(" + tr("Disabled") + ")");
-        ui->privateSendAuto->setText("(" + tr("Disabled") + ")");
-        ui->privateSendReset->setText("(" + tr("Disabled") + ")");
-        ui->framePrivateSend->setEnabled(false);
+    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
+    if(fMasterNode || nWalletBackups <= 0){
+        DisablePrivateSendCompletely();
+        if (nWalletBackups <= 0) {
+            ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
+        }
     } else {
         if(!fEnablePrivateSend){
             ui->togglePrivateSend->setText(tr("Start Mixing"));
         } else {
             ui->togglePrivateSend->setText(tr("Stop Mixing"));
         }
+        // Disable darkSendPool builtin support for automatic backups while we are in GUI,
+        // we'll handle automatic backups and user warnings in privateSendStatus()
+        darkSendPool.fCreateAutoBackups = false;
+
         timer = new QTimer(this);
         connect(timer, SIGNAL(timeout()), this, SLOT(privateSendStatus()));
         timer->start(1000);
@@ -424,6 +428,7 @@ void OverviewPage::updatePrivateSendProgress()
 }
 
 void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
+    this->fShowAdvancedPSUI = fShowAdvancedPSUI;
     int nNumItems = (fLiteMode || !fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
     SetupTransactionList(nNumItems);
 
@@ -450,28 +455,83 @@ void OverviewPage::privateSendStatus()
     if(((nBestHeight - darkSendPool.cachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
     nLastDSProgressBlockTime = GetTimeMillis();
 
+    QString strKeysLeftText(tr("keys left: %1").arg(pwalletMain->nKeysLeftSinceAutoBackup));
+    if(pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING) {
+        strKeysLeftText = "<span style='color:red;'>" + strKeysLeftText + "</span>";
+    }
+    ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
+
+    // Warn user that wallet is running out of keys
+    if (nWalletBackups > 0 && pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING) {
+        QString strWarn =   tr("Very low number of keys left since last automatic backup!") + "<br><br>" +
+                            tr("We are about to create a new automatic backup for you, however "
+                               "<span style='color:red;'> you should always make sure you have backups "
+                               "saved in some safe place</span>!");
+        ui->labelPrivateSendEnabled->setToolTip(strWarn);
+        LogPrintf("OverviewPage::privateSendStatus - Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
+        QMessageBox::warning(this, tr("PrivateSend"), strWarn, QMessageBox::Ok, QMessageBox::Ok);
+
+        std::string warningString;
+        std::string errorString;
+        if(!AutoBackupWallet(pwalletMain, "", warningString, errorString)) {
+            if (!warningString.empty()) {
+                // It's still more or less safe to continue but warn user anyway
+                LogPrintf("OverviewPage::privateSendStatus - WARNING! Something went wrong on automatic backup: %s\n", warningString);
+
+                QMessageBox::warning(this, tr("PrivateSend"),
+                    tr("WARNING! Something went wrong on automatic backup") + ":<br><br>" + warningString.c_str(),
+                    QMessageBox::Ok, QMessageBox::Ok);
+            }
+            if (!errorString.empty()) {
+                // Things are really broken, warn user and stop mixing immediately
+                LogPrintf("OverviewPage::privateSendStatus - ERROR! Failed to create automatic backup: %s\n", errorString);
+
+                QMessageBox::warning(this, tr("PrivateSend"),
+                    tr("ERROR! Failed to create automatic backup") + ":<br><br>" + errorString.c_str() + "<br>" +
+                    tr("Mixing is disabled, please close your wallet and fix the issue!"),
+                    QMessageBox::Ok, QMessageBox::Ok);
+            }
+        }
+    }
+
+    QString strEnabled = fEnablePrivateSend ? tr("Enabled") : tr("Disabled");
+    // Show how many keys left in advanced PS UI mode only
+    if(fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
+    ui->labelPrivateSendEnabled->setText(strEnabled);
+
+    if(nWalletBackups == -1) {
+        // Automatic backup failed, nothing else we can do until user fixes the issue manually
+        DisablePrivateSendCompletely();
+
+        QString strError =  tr("ERROR! Failed to create automatic backup") + ", " +
+                            tr("see debug.log for details.") + "<br><br>" +
+                            tr("Mixing is disabled, please close your wallet and fix the issue!");
+        ui->labelPrivateSendEnabled->setToolTip(strError);
+
+        return;
+    } else if(nWalletBackups == -2) {
+        // We were able to create automatic backup but keypool was not replenished because wallet is locked.
+        QString strWarning = tr("WARNING! Failed to replenish keypool, please unlock your wallet to do so.");
+        ui->labelPrivateSendEnabled->setToolTip(strWarning);
+    }
+
     if(!fEnablePrivateSend) {
-        if(nBestHeight != darkSendPool.cachedNumBlocks)
-        {
+        if(nBestHeight != darkSendPool.cachedNumBlocks) {
             darkSendPool.cachedNumBlocks = nBestHeight;
             updatePrivateSendProgress();
-
-            ui->labelPrivateSendEnabled->setText(tr("Disabled"));
-            ui->labelPrivateSendLastMessage->setText("");
-            ui->togglePrivateSend->setText(tr("Start Mixing"));
         }
+
+        ui->labelPrivateSendLastMessage->setText("");
+        ui->togglePrivateSend->setText(tr("Start Mixing"));
 
         return;
     }
 
     // check darksend status and unlock if needed
-    if(nBestHeight != darkSendPool.cachedNumBlocks)
-    {
+    if(nBestHeight != darkSendPool.cachedNumBlocks) {
         // Balance and number of transactions might have changed
         darkSendPool.cachedNumBlocks = nBestHeight;
         updatePrivateSendProgress();
-
-        ui->labelPrivateSendEnabled->setText(tr("Enabled"));
     }
 
     QString strStatus = QString(darkSendPool.GetStatus().c_str());
@@ -479,7 +539,7 @@ void OverviewPage::privateSendStatus()
     QString s = tr("Last PrivateSend message:\n") + strStatus;
 
     if(s != ui->labelPrivateSendLastMessage->text())
-        LogPrintf("Last PrivateSend message: %s\n", strStatus.toStdString());
+        LogPrintf("OverviewPage::privateSendStatus - Last PrivateSend message: %s\n", strStatus.toStdString());
 
     ui->labelPrivateSendLastMessage->setText(s);
 
@@ -538,7 +598,7 @@ void OverviewPage::togglePrivateSend(){
                 QMessageBox::warning(this, tr("PrivateSend"),
                     tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
-                if (fDebug) LogPrintf("Wallet is locked and user declined to unlock. Disabling PrivateSend.\n");
+                LogPrint("privatesend", "OverviewPage::togglePrivateSend - Wallet is locked and user declined to unlock. Disabling PrivateSend.\n");
                 return;
             }
         }
@@ -581,4 +641,15 @@ void OverviewPage::SetupTransactionList(int nNumItems) {
         ui->listTransactions->setModel(filter);
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
     }
+}
+
+void OverviewPage::DisablePrivateSendCompletely() {
+    ui->togglePrivateSend->setText("(" + tr("Disabled") + ")");
+    ui->privateSendAuto->setText("(" + tr("Disabled") + ")");
+    ui->privateSendReset->setText("(" + tr("Disabled") + ")");
+    ui->framePrivateSend->setEnabled(false);
+    if (nWalletBackups <= 0) {
+        ui->labelPrivateSendEnabled->setText("<span style='color:red;'>(" + tr("Disabled") + ")</span>");
+    }
+    fEnablePrivateSend = false;
 }

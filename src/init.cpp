@@ -78,7 +78,6 @@ using namespace std;
 
 #ifdef ENABLE_WALLET
 CWallet* pwalletMain = NULL;
-int nWalletBackups = 10;
 #endif
 bool fFeeEstimatesInitialized = false;
 bool fRestartRequested = false;  // true: restart false: shutdown
@@ -467,7 +466,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
         " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
-    strUsage += HelpMessageOpt("-createwalletbackups=<n>", _("Number of automatic wallet backups (default: 10)"));
+    strUsage += HelpMessageOpt("-createwalletbackups=<n>", strprintf(_("Number of automatic wallet backups (default: %u)"), nWalletBackups));
+    strUsage += HelpMessageOpt("-walletbackupsdir=<dir>", _("Specify full path to directory for automatic wallet backups (must exist)"));
     strUsage += HelpMessageOpt("-keepass", strprintf(_("Use KeePass 2 integration using KeePassHttp plugin (default: %u)"), 0));
     strUsage += HelpMessageOpt("-keepassport=<port>", strprintf(_("Connect to KeePassHttp on port <port> (default: %u)"), 19455));
     strUsage += HelpMessageOpt("-keepasskey=<key>", _("KeePassHttp key for AES encrypted communication with KeePass"));
@@ -1230,82 +1230,24 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 5: Backup wallet and verify wallet database integrity
 #ifdef ENABLE_WALLET
     if (!fDisableWallet) {
-    
-        filesystem::path backupDir = GetDataDir() / "backups";
-        if (!filesystem::exists(backupDir))
-        {
-            // Always create backup folder to not confuse the operating system's file browser
-            filesystem::create_directories(backupDir);
-        }
+        std::string warningString;
+        std::string errorString;
+
         nWalletBackups = GetArg("-createwalletbackups", 10);
         nWalletBackups = std::max(0, std::min(10, nWalletBackups));
-        if(nWalletBackups > 0)
-        {
-            if (filesystem::exists(backupDir))
-            {
-                // Create backup of the wallet
-                std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
-                std::string backupPathStr = backupDir.string();
-                backupPathStr += "/" + strWalletFile;
-                std::string sourcePathStr = GetDataDir().string();
-                sourcePathStr += "/" + strWalletFile;
-                boost::filesystem::path sourceFile = sourcePathStr;
-                boost::filesystem::path backupFile = backupPathStr + dateTimeStr;
-                sourceFile.make_preferred();
-                backupFile.make_preferred();
-                if(boost::filesystem::exists(sourceFile)) {
-                    try {
-                        boost::filesystem::copy_file(sourceFile, backupFile);
-                        LogPrintf("Creating backup of %s -> %s\n", sourceFile, backupFile);
-                    } catch(boost::filesystem::filesystem_error &error) {
-                        LogPrintf("Failed to create backup %s\n", error.what());
-                    }
-                }
-                // Keep only the last 10 backups, including the new one of course
-                typedef std::multimap<std::time_t, boost::filesystem::path> folder_set_t;
-                folder_set_t folder_set;
-                boost::filesystem::directory_iterator end_iter;
-                boost::filesystem::path backupFolder = backupDir.string();
-                backupFolder.make_preferred();
-                // Build map of backup files for current(!) wallet sorted by last write time
-                boost::filesystem::path currentFile;
-                for (boost::filesystem::directory_iterator dir_iter(backupFolder); dir_iter != end_iter; ++dir_iter)
-                {
-                    // Only check regular files
-                    if ( boost::filesystem::is_regular_file(dir_iter->status()))
-                    {
-                        currentFile = dir_iter->path().filename();
-                        // Only add the backups for the current wallet, e.g. wallet.dat.*
-                        if(dir_iter->path().stem().string() == strWalletFile)
-                        {
-                            folder_set.insert(folder_set_t::value_type(boost::filesystem::last_write_time(dir_iter->path()), *dir_iter));
-                        }
-                    }
-                }
-                // Loop backward through backup files and keep the N newest ones (1 <= N <= 10)
-                int counter = 0;
-                BOOST_REVERSE_FOREACH(PAIRTYPE(const std::time_t, boost::filesystem::path) file, folder_set)
-                {
-                    counter++;
-                    if (counter > nWalletBackups)
-                    {
-                        // More than nWalletBackups backups: delete oldest one(s)
-                        try {
-                            boost::filesystem::remove(file.second);
-                            LogPrintf("Old backup deleted: %s\n", file.second);
-                        } catch(boost::filesystem::filesystem_error &error) {
-                            LogPrintf("Failed to delete backup %s\n", error.what());
-                        }
-                    }
-                }
-            }
+
+        if(!AutoBackupWallet(NULL, strWalletFile, warningString, errorString)) {
+            if (!warningString.empty())
+                InitWarning(warningString);
+            if (!errorString.empty())
+                return InitError(errorString);
         }
 
         LogPrintf("Using wallet %s\n", strWalletFile);
         uiInterface.InitMessage(_("Verifying wallet..."));
 
-        std::string warningString;
-        std::string errorString;
+        // reset warning string
+        warningString = "";
 
         if (!CWallet::Verify(strWalletFile, warningString, errorString))
             return false;
@@ -1706,6 +1648,17 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             }
 
             pwalletMain->SetBestChain(chainActive.GetLocator());
+
+            // Try to create wallet backup right after new wallet was created
+            std::string warningString;
+            std::string errorString;
+            if(!AutoBackupWallet(pwalletMain, "", warningString, errorString)) {
+                if (!warningString.empty())
+                    InitWarning(warningString);
+                if (!errorString.empty())
+                    return InitError(errorString);
+            }
+
         }
 
         LogPrintf("%s", strErrors.str());
