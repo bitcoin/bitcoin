@@ -351,7 +351,20 @@ bool MarkBlockAsReceived(const uint256& hash) {
         // BUIP010 Xtreme Thinblocks: begin section
         int64_t getdataTime = itInFlight->second.second->nTime;
         int64_t now = GetTimeMicros();
-        LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), (now - getdataTime) / 1000000.0);
+        double nResponseTime = (double)(now - getdataTime) / 1000000.0;
+        LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), nResponseTime);
+        {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (pnode->mapThinBlocksInFlight.count(hash)) {
+                    // Only update thinstats if this is actually a thinblock and not a regular block.
+                    // Sometimes we request a thinblock but then revert to requesting a regular block
+                    // as can happen when the thinblock preferential timer is exceeded.
+                    CThinBlockStats::UpdateResponseTime(nResponseTime);
+                    break;
+                }
+            }
+        }
         // BUIP010 Xtreme Thinblocks: end section
         CNodeState *state = State(itInFlight->second.first);
         nQueuedValidatedHeaders -= itInFlight->second.second->fValidatedHeaders;
@@ -1008,6 +1021,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         static const double maxFeeCutoff = boost::lexical_cast<double>(GetArg("-maxlimitertxfee", DEFAULT_MAXLIMITERTXFEE)); /* maximum feeCutoff in satoshi per byte */
 	static const double initFeeCutoff = boost::lexical_cast<double>(GetArg("-minlimitertxfee", DEFAULT_MINLIMITERTXFEE)); /* starting value for feeCutoff in satoshi per byte*/
         static const int nLimitFreeRelay = GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY); 
+
         // get current memory pool size
         uint64_t poolBytes = pool.GetTotalTxSize();
 
@@ -1046,7 +1060,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             nFreeLimit = DEFAULT_MIN_LIMITFREERELAY;
         }
 
-        minRelayTxFee = CFeeRate(feeCutoff * 1000); 
+        minRelayTxFee = CFeeRate(feeCutoff * 1000);
         LogPrint("mempool",
                  "MempoolBytes:%d  LimitFreeRelay:%.5g  FeeCutOff:%.4g  FeesSatoshiPerByte:%.4g  TxBytes:%d  TxFees:%d\n",
                   poolBytes, nFreeLimit, ((double)::minRelayTxFee.GetFee(nSize)) / nSize, ((double)nFees) / nSize, nSize, nFees);
@@ -1061,10 +1075,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             // -limitfreerelay unit is thousand-bytes-per-minute
             // At default rate it would take over a month to fill 1GB
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            if ((dFreeCount + nSize) >= (nFreeLimit*10*1000 * nLargestBlockSeen / BLOCKSTREAM_CORE_MAX_BLOCK_SIZE))
-                return state.DoS(0, 
-				 false, // spams the log: error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
+            if ((dFreeCount + nSize) >= (nFreeLimit*10*1000 * nLargestBlockSeen / BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)) {
+                CThinBlockStats::UpdateMempoolLimiterBytesSaved(nSize);
+                return state.DoS(0,
+                       LogPrint("mempool", "AcceptToMemoryPool : free transaction rejected by rate limiter"),
                        REJECT_INSUFFICIENTFEE, "rate limited free transaction");
+            }
             dFreeCount += nSize;
         }
         nLastTime = nNow;
@@ -4315,8 +4331,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 		      }
 
                     // BUIP010 Xtreme Thinblocks: begin section
-                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)               
+                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK) {
+                        LogPrint("thin", "Sending xthin by INV queue getdata message\n");
                         SendXThinBlock(block, pfrom, inv);
+                    }
                     // BUIP010 Xtreme Thinblocks: end section
 
                     else // MSG_FILTERED_BLOCK)
@@ -4429,20 +4447,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         return true;
     }
 
-// BUIP010 Extrem Thinblocks:  We need bloom filtering. We do not turn bloom filtering off
-//    if (!(nLocalServices & NODE_BLOOM) &&
-//              (strCommand == NetMsgType::FILTERLOAD ||
-//               strCommand == NetMsgType::FILTERADD ||
-//               strCommand == NetMsgType::FILTERCLEAR))
-//    {
-//        if (pfrom->nVersion >= NO_BLOOM_VERSION) {
-//            Misbehaving(pfrom->GetId(), 100);
-//            return false;
-//        } else if (GetBoolArg("-enforcenodebloom", false)) {
-//            pfrom->fDisconnect = true;
-//            return false;
-//        }
-//    }
+    if (!(nLocalServices & NODE_BLOOM) &&
+              (strCommand == NetMsgType::FILTERLOAD ||
+               strCommand == NetMsgType::FILTERADD ||
+               strCommand == NetMsgType::FILTERCLEAR))
+    {
+        if (pfrom->nVersion >= NO_BLOOM_VERSION) {
+            Misbehaving(pfrom->GetId(), 100);
+            return false;
+        } else if (GetBoolArg("-enforcenodebloom", false)) {
+            pfrom->fDisconnect = true;
+            return false;
+        }
+    }
 
 
     if (strCommand == NetMsgType::VERSION)
@@ -5096,13 +5113,38 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     // BUIP010 Xtreme Thinblocks: begin section
     else if (strCommand == NetMsgType::GET_XTHIN && !fImporting && !fReindex) // Ignore blocks received while importing
     {
+
+        // Check for Misbehaving and DOS
+        // If they make more than 20 requests in 10 minutes then disconnect them
+        {
+            LOCK(cs_vNodes);
+            if (pfrom->nGetXthinLastTime <= 0)
+                pfrom->nGetXthinLastTime = GetTime();
+            uint64_t nNow = GetTime();
+            pfrom->nGetXthinCount *= pow(1.0 - 1.0/600.0, (double)(nNow - pfrom->nGetXthinLastTime));
+            pfrom->nGetXthinLastTime = nNow;
+            pfrom->nGetXthinCount += 1;
+            LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
+            if (pfrom->nGetXthinCount >= 20) {
+                LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
+            }
+        }
+
         CBloomFilter filterMemPool;
         CInv inv;
         vRecv >> inv >> filterMemPool;
 
         LoadFilter(pfrom, &filterMemPool);
-        pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), inv);
-        ProcessGetData(pfrom, chainparams.GetConsensus());
+
+        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+        CBlock block;
+        const Consensus::Params& consensusParams = Params().GetConsensus();
+        if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
+            assert(!"cannot load block from disk");
+
+        SendXThinBlock(block, pfrom, inv);
     }
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
       {
@@ -5254,7 +5296,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 		       );
 
 	      // Update run-time statistics of thin block bandwidth savings
-	      CThinBlockStats::Update(nSizeThinBlock, blockSize);
+	      CThinBlockStats::UpdateInBound(nSizeThinBlock, blockSize);
 	      std::string ss = CThinBlockStats::ToString();
 	      LogPrint("thin", "thin block stats: %s\n", ss.c_str());
               requester.Received(inv, pfrom, msgSize);
@@ -5278,6 +5320,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	      pfrom->PushMessage(NetMsgType::GET_XBLOCKTX, thinBlockTx);
 	      LogPrint("thin", "Missing %d transactions for xthinblock, re-requesting\n", 
 		       pfrom->thinBlockWaitingForTxns);
+              CThinBlockStats::UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
 	    }
 	  }
     }
@@ -5345,7 +5388,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
-        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
+        LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n", inv.hash.ToString(), pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
@@ -5361,9 +5404,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      );
 
             // Update run-time statistics of thin block bandwidth savings
-            CThinBlockStats::Update(nSizeThinBlock, blockSize);
-            std::string ss = CThinBlockStats::ToString();
-            LogPrint("thin", "thin block stats: %s\n", ss.c_str());
+            CThinBlockStats::UpdateInBound(nSizeThinBlock, blockSize);
+            LogPrint("thin", "thin block stats: %s\n", CThinBlockStats::ToString());
 
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
             BOOST_FOREACH(uint256 &hash, thinBlock.vTxHashes)
@@ -5378,6 +5420,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
             LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
                        pfrom->thinBlockWaitingForTxns);
+            CThinBlockStats::UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
+
         }
     }
 
@@ -5432,10 +5476,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      ((float) blockSize) / ( (float) pfrom->nSizeThinBlock + (float) nSizeThinBlockTx )
                      );
 
-            // Update run-time statistics of thin block bandwidth savings
-            CThinBlockStats::Update(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
-            std::string ss = CThinBlockStats::ToString();
-            LogPrint("thin", "thin block stats: %s\n", ss.c_str());
+            // Update run-time statistics of thin block bandwidth savings.
+            // We add the original thinblock size with the size of transactions that were re-requested.
+            // This is NOT double counting since we never accounted for the original thinblock due to the re-request.
+            CThinBlockStats::UpdateInBound(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
+            LogPrint("thin", "thin block stats: %s\n", CThinBlockStats::ToString());
 
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
@@ -5464,6 +5509,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Check for Misbehaving and DOS
         // If they make more than 20 requests in 10 minutes then disconnect them
         {
+            LOCK(cs_vNodes);
             if (pfrom->nGetXBlockTxLastTime <= 0)
                 pfrom->nGetXBlockTxLastTime = GetTime();
             uint64_t nNow = GetTime();
@@ -6028,8 +6074,10 @@ bool SendMessages(CNode* pto)
                    got back an empty response.  */
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
-                LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
-                pto->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256());
+                if (pindexStart->nHeight < pto->nStartingHeight) { // BU Bug fix for Core:  Don't start downloading headers unless our chain is shorter
+                    LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
+                    pto->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256());
+                }
             }
         }
 
@@ -6233,33 +6281,33 @@ bool SendMessages(CNode* pto)
                     CBloomFilter filterMemPool;
                     if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
                         // Must download a block from a ThinBlock peer
-                        if (pto->mapThinBlocksInFlight.size() < 1 && pto->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
+                        if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto)) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                 vOrphanHashes.push_back((*mi).first);
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
                             MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                            LogPrint("thin", "Requesting thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
-                                     pindex->nHeight, pto->addrName.c_str(), pto->id);
+                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d) pingtime(ms) %d\n", pindex->GetBlockHash().ToString(),
+                                     pindex->nHeight, pto->addrName.c_str(), pto->id,  pto->nPingUsecTime/1000);
                         }
                     }
                     else {
                         // Try to download a thinblock if possible otherwise just download a regular block
-                        if (pto->mapThinBlocksInFlight.size() < 1 && pto->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
+                        if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto)) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                 vOrphanHashes.push_back((*mi).first);
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
-                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
-                                     pindex->nHeight, pto->addrName.c_str(), pto->id);
+                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d) pingtime(ms) %d\n", pindex->GetBlockHash().ToString(),
+                                     pindex->nHeight, pto->addrName.c_str(), pto->id, pto->nPingUsecTime/1000);
                         }
                         else {
                             vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash())); 

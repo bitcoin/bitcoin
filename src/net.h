@@ -72,6 +72,10 @@ static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 
+// BITCOINUNLIMITED START
+static const bool DEFAULT_FORCEBITNODES = false;
+// BITCOINUNLIMITED END
+
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
@@ -338,6 +342,10 @@ public:
     uint64_t nRecvBytes;
     int nRecvVersion;
 
+    // BU connection de-prioritization
+    // Total bytes sent and received
+    uint64_t nActivityBytes;
+
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
@@ -380,6 +388,8 @@ public:
     std::map<uint256, uint64_t> mapThinBlocksInFlight; // map of the hashes of thin blocks in flight with the time they were requested.
     double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
     uint64_t nGetXBlockTxLastTime;  // The last time a get_xblocktx request was made
+    double nGetXthinCount; // Count how many get_xthin requests are made
+    uint64_t nGetXthinLastTime;  // The last time a get_xthin request was made
     // BUIP010 Xtreme Thinblocks: end section
 
 protected:
