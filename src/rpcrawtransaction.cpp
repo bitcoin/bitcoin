@@ -83,6 +83,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
             CSpentIndexValue spentInfo;
             CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
             if (GetSpentIndex(spentKey, spentInfo)) {
+                // Unconfirmed spentInfo have a height of -1, block 0 is unspendable
+                if (spentInfo.blockHeight > 0) {
+                    in.push_back(Pair("height", spentInfo.blockHeight));
+                    in.push_back(Pair("confirmations", 1 + chainActive.Height() - spentInfo.blockHeight));
+                } else {
+                    in.push_back(Pair("confirmations", 0));
+                }
                 in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
                 in.push_back(Pair("valueSat", spentInfo.satoshis));
                 if (spentInfo.addressType == 1) {
