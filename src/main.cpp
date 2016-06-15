@@ -3134,7 +3134,10 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     pindexNew->nFile = pos.nFile;
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
-    pindexNew->nStatus |= BLOCK_HAVE_DATA | BLOCK_OPT_WITNESS;
+    pindexNew->nStatus |= BLOCK_HAVE_DATA;
+    if (IsWitnessEnabled(pindexNew->pprev, Params().GetConsensus())) {
+        pindexNew->nStatus |= BLOCK_OPT_WITNESS;
+    }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -4752,6 +4755,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
     }
 }
 
+uint32_t GetFetchFlags(CNode* pfrom, CBlockIndex* pprev, const Consensus::Params& chainparams) {
+    uint32_t nFetchFlags = 0;
+    if (IsWitnessEnabled(pprev, chainparams) && State(pfrom->GetId())->fHaveWitness) {
+        nFetchFlags |= MSG_WITNESS_FLAG;
+    }
+    return nFetchFlags;
+}
+
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams)
 {
     RandAddSeedPerfmon();
@@ -5034,11 +5045,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         LOCK(cs_main);
 
+        uint32_t nFetchFlags = GetFetchFlags(pfrom, chainActive.Tip(), chainparams.GetConsensus());
+
         std::vector<CInv> vToFetch;
 
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             CInv &inv = vInv[nInv];
+            inv.type |= nFetchFlags;
 
             boost::this_thread::interruption_point();
             pfrom->AddInventoryKnown(inv);
@@ -5046,8 +5060,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
 
-            if (inv.type == MSG_TX && State(pfrom->GetId())->fHaveWitness) {
-                inv.type = MSG_WITNESS_TX;
+            if (inv.type == MSG_TX) {
+                inv.type |= nFetchFlags;
             }
 
             if (inv.type == MSG_BLOCK) {
@@ -5066,9 +5080,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     if (CanDirectFetch(chainparams.GetConsensus()) &&
                         nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER &&
                         (!IsWitnessEnabled(chainActive.Tip(), chainparams.GetConsensus()) || State(pfrom->GetId())->fHaveWitness)) {
-                        if (State(pfrom->GetId())->fHaveWitness) {
-                            inv.type = MSG_WITNESS_BLOCK;
-                        }
+                        inv.type |= nFetchFlags;
                         vToFetch.push_back(inv);
                         // Mark block as in flight already, even though the actual "getdata" message only goes out
                         // later (within the same cs_main lock, though).
@@ -5442,7 +5454,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // Can't download any more from this peer
                         break;
                     }
-                    vGetData.push_back(CInv(State(pfrom->GetId())->fHaveWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK, pindex->GetBlockHash()));
+                    uint32_t nFetchFlags = GetFetchFlags(pfrom, pindex->pprev, chainparams.GetConsensus());
+                    vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                     MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex);
                     LogPrint("net", "Requesting block %s from  peer=%d\n",
                             pindex->GetBlockHash().ToString(), pfrom->id);
@@ -6156,7 +6169,8 @@ bool SendMessages(CNode* pto)
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
             BOOST_FOREACH(CBlockIndex *pindex, vToDownload) {
                 if (State(pto->GetId())->fHaveWitness || !IsWitnessEnabled(pindex->pprev, consensusParams)) {
-                    vGetData.push_back(CInv(State(pto->GetId())->fHaveWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK, pindex->GetBlockHash()));
+                    uint32_t nFetchFlags = GetFetchFlags(pto, pindex->pprev, consensusParams);
+                    vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
                     MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
                     LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                         pindex->nHeight, pto->id);

@@ -79,7 +79,7 @@ static const uint64_t nRelevantServices = NODE_NETWORK | NODE_WITNESS;
 //
 bool fDiscover = true;
 bool fListen = true;
-uint64_t nLocalServices = NODE_NETWORK | NODE_WITNESS;
+uint64_t nLocalServices = NODE_NETWORK;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
