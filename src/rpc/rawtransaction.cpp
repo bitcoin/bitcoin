@@ -898,7 +898,6 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
     g_connman->ForEachNode([&inv](CNode* pnode)
     {
         pnode->PushInventory(inv);
-        return true;
     });
     return hashTx.GetHex();
 }
