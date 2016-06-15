@@ -61,7 +61,6 @@ UniValue ping(const UniValue& params, bool fHelp)
     // Request that each node send a ping during next message processing pass
     g_connman->ForEachNode([](CNode* pnode) {
         pnode->fPingQueued = true;
-        return true;
     });
     return NullUniValue;
 }
