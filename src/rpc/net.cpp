@@ -143,7 +143,7 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
         if (!(stats.addrLocal.empty()))
             obj.push_back(Pair("addrlocal", stats.addrLocal));
         obj.push_back(Pair("services", strprintf("%016x", stats.nServices)));
-        obj.push_back(Pair("relaytxes", stats.fRelayTxes));
+        obj.push_back(Pair("relaytxes", statestats.fRelayTxes));
         obj.push_back(Pair("lastsend", stats.nLastSend));
         obj.push_back(Pair("lastrecv", stats.nLastRecv));
         obj.push_back(Pair("bytessent", stats.nSendBytes));

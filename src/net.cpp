@@ -368,7 +368,7 @@ CNode* FindNode(const CService& addr)
     return NULL;
 }
 
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fOneShot)
 {
     if (pszDest == NULL) {
         if (IsLocal(addrConnect))
@@ -403,7 +403,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
         addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
-        CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
+        CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false, fOneShot);
         pnode->AddRef();
 
         {
@@ -650,7 +650,6 @@ void CNode::copyStats(CNodeStats &stats)
 {
     stats.nodeid = this->GetId();
     X(nServices);
-    X(fRelayTxes);
     X(nLastSend);
     X(nLastRecv);
     X(nTimeConnected);
@@ -1010,9 +1009,8 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         }
     }
 
-    CNode* pnode = new CNode(hSocket, addr, "", true);
+    CNode* pnode = new CNode(hSocket, addr, "", true, whitelisted);
     pnode->AddRef();
-    pnode->fWhitelisted = whitelisted;
 
     LogPrint("net", "connection from %s accepted\n", addr.ToString());
 
@@ -1709,7 +1707,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
     } else if (FindNode(std::string(pszDest)))
         return false;
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
+    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, fOneShot);
     boost::this_thread::interruption_point();
 
     if (!pnode)
@@ -1717,8 +1715,6 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     pnode->fNetworkNode = true;
-    if (fOneShot)
-        pnode->fOneShot = true;
 
     return true;
 }
@@ -2338,12 +2334,14 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
 unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
 unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
 
-CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
+CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn, bool fWhitelistedIn, bool fOneShotIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
     addr(addrIn),
     nKeyedNetGroup(CalculateKeyedNetGroup(addrIn)),
     addrKnown(5000, 0.001),
-    filterInventoryKnown(50000, 0.000001)
+    filterInventoryKnown(50000, 0.000001),
+    fWhitelisted(fWhitelistedIn),
+    fOneShot(fOneShotIn)
 {
     nServices = NODE_NONE;
     nServicesExpected = NODE_NONE;
@@ -2358,9 +2356,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;
     strSubVer = "";
-    fWhitelisted = false;
-    fOneShot = false;
-    fClient = false; // set by version message
     fInbound = fInboundIn;
     fNetworkNode = false;
     fSuccessfullyConnected = false;
@@ -2376,7 +2371,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nNextLocalAddrSend = 0;
     nNextAddrSend = 0;
     nNextInvSend = 0;
-    fRelayTxes = false;
     fSentAddr = false;
     pfilter = new CBloomFilter();
     timeLastMempoolReq = 0;
@@ -2385,7 +2379,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
-    minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
 
@@ -2417,7 +2410,8 @@ CNode::~CNode()
     if (pfilter)
         delete pfilter;
 
-    GetNodeSignals().FinalizeNode(GetId());
+    if (GetNodeSignals().FinalizeNode(GetId()))
+        AddressCurrentlyConnected(addr);
 }
 
 void CNode::AskFor(const CInv& inv)

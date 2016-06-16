@@ -209,13 +209,10 @@ void UnregisterNodeSignals(CNodeSignals& nodeSignals);
  * specific block passed to it has been checked for validity!
  * 
  * @param[out]  state   This may be set to an Error state if any error occurred processing it, including during validation/connection/etc of otherwise unrelated blocks during reorganisation; or it may be set to an Invalid state if pblock is itself invalid (but this is not guaranteed even when the block is checked). If you want to *possibly* get feedback on whether pblock is valid, you must also install a CValidationInterface (see validationinterface.h) - this will have its BlockChecked method called whenever *any* block completes validation.
- * @param[in]   pfrom   The node which we are receiving the block from; it is added to mapBlockSource and may be penalised if the block is invalid.
  * @param[in]   pblock  The block we want to process.
- * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @param[out]  dbp     The already known disk position of pblock, or NULL if not yet stored.
  * @return True if state.IsValid()
  */
-bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, const CNode* pfrom, const CBlock* pblock, bool fForceProcessing, const CDiskBlockPos* dbp);
+bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, const CBlock* pblock);
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
@@ -286,8 +283,6 @@ void UnlinkPrunedFiles(std::set<int>& setFilesToPrune);
 CBlockIndex * InsertBlockIndex(uint256 hash);
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch);
 /** Flush all state, indexes and buffers to disk. */
 void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
@@ -305,6 +300,7 @@ ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::D
 
 struct CNodeStateStats {
     int nMisbehavior;
+    bool fRelayTxes;
     int nSyncHeight;
     int nCommonHeight;
     std::vector<int> vHeightInFlight;
