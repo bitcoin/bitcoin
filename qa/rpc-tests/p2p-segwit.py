@@ -856,13 +856,13 @@ class SegWitTest(BitcoinTestFramework):
         # But eliminating the witness should fix it
         self.test_node.test_transaction_acceptance(tx, with_witness=False, accepted=True)
 
-        # Verify that inv's to test_node come with getdata's for witness tx's
+        # Verify that inv's to test_node come with getdata's for non-witness tx's
         # Just tweak the transaction, announce it, and verify we get a getdata
-        # for a witness_tx
+        # for a normal tx
         tx.vout[0].scriptPubKey = CScript([OP_TRUE, OP_TRUE])
         tx.rehash()
         self.test_node.announce_tx_and_wait_for_getdata(tx)
-        assert(self.test_node.last_getdata.inv[0].type == 1|MSG_WITNESS_FLAG)
+        assert(self.test_node.last_getdata.inv[0].type == 1)
 
         # Cleanup: mine the first transaction and update utxo
         self.nodes[0].generate(1)
@@ -954,6 +954,8 @@ class SegWitTest(BitcoinTestFramework):
     def test_block_relay(self, segwit_activated):
         print("\tTesting block relay")
 
+        blocktype = 2|MSG_WITNESS_FLAG if segwit_activated else 2
+
         # test_node has set NODE_WITNESS, so all getdata requests should be for
         # witness blocks.
         # Test announcing a block via inv results in a getdata, and that
@@ -962,20 +964,20 @@ class SegWitTest(BitcoinTestFramework):
         block1.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
-        assert(self.test_node.last_getdata.inv[0].type == 2|MSG_WITNESS_FLAG)
+        assert(self.test_node.last_getdata.inv[0].type == blocktype)
         self.test_node.test_witness_block(block1, True)
 
         block2 = self.build_next_block(nVersion=4)
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
-        assert(self.test_node.last_getdata.inv[0].type == 2|MSG_WITNESS_FLAG)
+        assert(self.test_node.last_getdata.inv[0].type == blocktype)
         self.test_node.test_witness_block(block2, True)
 
         block3 = self.build_next_block(nVersion=(VB_TOP_BITS | (1<<15)))
         block3.solve()
         self.test_node.announce_block_and_wait_for_getdata(block3, use_header=True)
-        assert(self.test_node.last_getdata.inv[0].type == 2|MSG_WITNESS_FLAG)
+        assert(self.test_node.last_getdata.inv[0].type == blocktype)
         self.test_node.test_witness_block(block3, True)
 
         # Check that we can getdata for witness blocks or regular blocks,

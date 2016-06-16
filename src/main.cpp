@@ -5052,7 +5052,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
         {
             CInv &inv = vInv[nInv];
-            inv.type |= nFetchFlags;
 
             boost::this_thread::interruption_point();
             pfrom->AddInventoryKnown(inv);
