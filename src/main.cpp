@@ -1246,6 +1246,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
     statsClient.count("transactions.inputs", tx.vin.size(), 1.0f);
     statsClient.count("transactions.outputs", tx.vout.size(), 1.0f);
 
+    statsClient.gauge("transactions.mempool.totalTransactions", pool.size(), 0.1f);
+    statsClient.gauge("transactions.mempool.totalTxBytes", (int64_t) pool.GetTotalTxSize(), 0.1f);
+    statsClient.gauge("transactions.mempool.memoryUsageBytes", (int64_t) pool.DynamicMemoryUsage(), 0.1f);
+    statsClient.gauge("transactions.mempool.minFeePerKb", pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 0.1f);
+
     return true;
 }
 
