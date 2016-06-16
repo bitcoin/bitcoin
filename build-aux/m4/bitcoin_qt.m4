@@ -342,6 +342,8 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
        elif test x$TARGET_OS = xdarwin; then
          PKG_CHECK_MODULES([QTPRINT], [Qt5PrintSupport], [QT_LIBS="$QTPRINT_LIBS $QT_LIBS"])
        fi
+     else
+       QT_LIBS="-lQt5PlatformSupport $QT_LIBS"
      fi
      ])
   else
