@@ -309,6 +309,20 @@ class WalletTest (BitcoinTestFramework):
         balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
         block_count = self.nodes[0].getblockcount()
 
+        # Check modes:
+        #   - True: unicode escaped as \u....
+        #   - False: unicode directly as UTF-8
+        for mode in [True, False]:
+            self.nodes[0].ensure_ascii = mode
+            # unicode check: Basic Multilingual Plane, Supplementary Plane respectively
+            for s in [u'рыба', u'𝅘𝅥𝅯']:
+                addr = self.nodes[0].getaccountaddress(s)
+                label = self.nodes[0].getaccount(addr)
+                assert_equal(label, s)
+                assert(s in self.nodes[0].listaccounts().keys())
+        self.nodes[0].ensure_ascii = True # restore to default
+
+        # maintenance tests
         maintenance = [
             '-rescan',
             '-reindex',

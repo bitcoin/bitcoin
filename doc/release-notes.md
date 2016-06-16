@@ -43,6 +43,11 @@ RPC low-level changes
   32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
   fixed, but this means that the output will be different than from previous versions.
 
+- Full UTF-8 support in the RPC API. Non-ASCII characters in, for example,
+  wallet labels have always been malformed because they weren't taken into account
+  properly in JSON RPC processing. This is no longer the case. This also affects
+  the GUI debug console.
+
 C++11 and Python 3
 -------------------
 
