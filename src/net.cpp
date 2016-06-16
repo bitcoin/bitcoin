@@ -72,7 +72,7 @@ namespace {
 const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
 /** Services this node implementation cares about */
-static const uint64_t nRelevantServices = NODE_NETWORK | NODE_WITNESS;
+uint64_t nRelevantServices = NODE_NETWORK;
 
 //
 // Global state variables
@@ -1601,8 +1601,8 @@ void ThreadOpenConnections()
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
-            // only consider non-witness nodes after 40 failed attemps
-            if (!(addr.nServices & NODE_WITNESS) && nTries < 40)
+            // only consider nodes missing relevant services after 40 failed attemps
+            if ((addr.nServices & nRelevantServices) != nRelevantServices && nTries < 40)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already

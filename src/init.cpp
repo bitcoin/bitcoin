@@ -1391,6 +1391,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         // Note that setting NODE_WITNESS is never required: the only downside from not
         // doing so is that after activation, no upgraded nodes will fetch from you.
         nLocalServices |= NODE_WITNESS;
+        // Only care about others providing witness capabilities if there is a softfork
+        // defined.
+        nRelevantServices |= NODE_WITNESS;
     }
 
     // ********************************************************* Step 10: import blocks
