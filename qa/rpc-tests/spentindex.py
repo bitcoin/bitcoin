@@ -103,10 +103,6 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(txVerbose3["vin"][0]["value"], Decimal(unspent[0]["amount"]))
         assert_equal(txVerbose3["vin"][0]["valueSat"], amount)
 
-        # Check that the input confirmations work for mempool unconfirmed transactions
-        assert_equal(txVerbose3["vin"][0].has_key("height"), False)
-        assert_equal(txVerbose3["vin"][0]["confirmations"], 0)
-
         # Check the database index
         self.nodes[0].generate(1)
         self.sync_all()
@@ -115,10 +111,6 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(txVerbose4["vin"][0]["address"], address2)
         assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
         assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
-
-        # Check that the input confirmations work
-        assert_equal(txVerbose4["vin"][0]["height"], 107)
-        assert_equal(txVerbose4["vin"][0]["confirmations"], 1)
 
         print "Passed\n"
 
