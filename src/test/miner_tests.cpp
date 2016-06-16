@@ -71,6 +71,113 @@ bool TestSequenceLocks(const CTransaction &tx, int flags)
     return CheckSequenceLocks(tx, flags);
 }
 
+// Test suite for ancestor feerate transaction selection.
+// Implemented as an additional function, rather than a separate test case,
+// to allow reusing the blockchain created in CreateNewBlock_validity.
+// Note that this test assumes blockprioritysize is 0.
+void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransaction *>& txFirst)
+{
+    // Test the ancestor feerate transaction selection.
+    TestMemPoolEntryHelper entry;
+
+    // Test that a medium fee transaction will be selected after a higher fee
+    // rate package with a low fee rate parent.
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+    tx.vin[0].prevout.n = 0;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 5000000000LL - 1000;
+    // This tx has a low fee: 1000 satoshis
+    uint256 hashParentTx = tx.GetHash(); // save this txid for later use
+    mempool.addUnchecked(hashParentTx, entry.Fee(1000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+
+    // This tx has a medium fee: 10000 satoshis
+    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vout[0].nValue = 5000000000LL - 10000;
+    uint256 hashMediumFeeTx = tx.GetHash();
+    mempool.addUnchecked(hashMediumFeeTx, entry.Fee(10000).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+
+    // This tx has a high fee, but depends on the first transaction
+    tx.vin[0].prevout.hash = hashParentTx;
+    tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k satoshi fee
+    uint256 hashHighFeeTx = tx.GetHash();
+    mempool.addUnchecked(hashHighFeeTx, entry.Fee(50000).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
+
+    CBlockTemplate *pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    BOOST_CHECK(pblocktemplate->block.vtx[1].GetHash() == hashParentTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[2].GetHash() == hashHighFeeTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[3].GetHash() == hashMediumFeeTx);
+
+    // Test that a package below the min relay fee doesn't get included
+    tx.vin[0].prevout.hash = hashHighFeeTx;
+    tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 0 fee
+    uint256 hashFreeTx = tx.GetHash();
+    mempool.addUnchecked(hashFreeTx, entry.Fee(0).FromTx(tx));
+    size_t freeTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+
+    // Calculate a fee on child transaction that will put the package just
+    // below the min relay fee (assuming 1 child tx of the same size).
+    CAmount feeToUse = minRelayTxFee.GetFee(2*freeTxSize) - 1;
+
+    tx.vin[0].prevout.hash = hashFreeTx;
+    tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
+    uint256 hashLowFeeTx = tx.GetHash();
+    mempool.addUnchecked(hashLowFeeTx, entry.Fee(feeToUse).FromTx(tx));
+    pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    // Verify that the free tx and the low fee tx didn't get selected
+    for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
+        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashFreeTx);
+        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashLowFeeTx);
+    }
+
+    // Test that packages above the min relay fee do get included, even if one
+    // of the transactions is below the min relay fee
+    // Remove the low fee transaction and replace with a higher fee transaction
+    std::list<CTransaction> dummy;
+    mempool.removeRecursive(tx, dummy);
+    tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
+    hashLowFeeTx = tx.GetHash();
+    mempool.addUnchecked(hashLowFeeTx, entry.Fee(feeToUse+2).FromTx(tx));
+    pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    BOOST_CHECK(pblocktemplate->block.vtx[4].GetHash() == hashFreeTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[5].GetHash() == hashLowFeeTx);
+
+    // Test that transaction selection properly updates ancestor fee
+    // calculations as ancestor transactions get included in a block.
+    // Add a 0-fee transaction that has 2 outputs.
+    tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.vout.resize(2);
+    tx.vout[0].nValue = 5000000000LL - 100000000;
+    tx.vout[1].nValue = 100000000; // 1BTC output
+    uint256 hashFreeTx2 = tx.GetHash();
+    mempool.addUnchecked(hashFreeTx2, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
+
+    // This tx can't be mined by itself
+    tx.vin[0].prevout.hash = hashFreeTx2;
+    tx.vout.resize(1);
+    feeToUse = minRelayTxFee.GetFee(freeTxSize);
+    tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
+    uint256 hashLowFeeTx2 = tx.GetHash();
+    mempool.addUnchecked(hashLowFeeTx2, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
+    pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+
+    // Verify that this tx isn't selected.
+    for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
+        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashFreeTx2);
+        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashLowFeeTx2);
+    }
+
+    // This tx will be mineable, and should cause hashLowFeeTx2 to be selected
+    // as well.
+    tx.vin[0].prevout.n = 1;
+    tx.vout[0].nValue = 100000000 - 10000; // 10k satoshi fee
+    mempool.addUnchecked(tx.GetHash(), entry.Fee(10000).FromTx(tx));
+    pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    BOOST_CHECK(pblocktemplate->block.vtx[8].GetHash() == hashLowFeeTx2);
+}
+
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
@@ -384,6 +491,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     chainActive.Tip()->nHeight--;
     SetMockTime(0);
     mempool.clear();
+
+    TestPackageSelection(chainparams, scriptPubKey, txFirst);
 
     BOOST_FOREACH(CTransaction *_tx, txFirst)
         delete _tx;
