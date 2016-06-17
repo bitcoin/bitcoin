@@ -45,6 +45,8 @@
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
+/** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
+static const int FEELER_INTERVAL = 60;
 
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
@@ -383,7 +385,7 @@ CNode* FindNode(const NodeId nodeid)
     return NULL;
 }
 
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure)
+CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fFeeler)
 {
     if (pszDest == NULL) {
         if (IsLocal(addrConnect))
@@ -399,9 +401,9 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
     }
 
     /// debug print
-    LogPrint("net", "trying connection %s lastseen=%.1fhrs\n",
+    LogPrint("net", "%s connection %s lastseen=%.1fdays\n", fFeeler ? "feeler" : "trying",
         pszDest ? pszDest : addrConnect.ToString(),
-        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/86400.0);
 
     // Connect
     SOCKET hSocket;
@@ -1731,7 +1733,6 @@ void ThreadOpenConnections()
                 // Add small amount of random noise before connection to avoid synchronization.
                 int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
                 MilliSleep(randsleep);
-                LogPrint("net", "Making feeler connection to %s\n", addrConnect.ToString());
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, NULL, false, fFeeler);
@@ -1831,7 +1832,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
     } else if (FindNode(std::string(pszDest)))
         return false;
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
+    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, fFeeler);
     boost::this_thread::interruption_point();
 
     if (!pnode)
