@@ -85,10 +85,16 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         while (txn_available[i + index_offset])
             index_offset++;
         shorttxids[cmpctblock.shorttxids[i]] = i + index_offset;
-        // Bucket selection is a simple Binomial distribution. If we assume blocks of
-        // 10,000 transactions, allowing up to 12 elements per bucket should only fail
-        // once every ~1.3 million blocks and once every 74,000 blocks in a worst-case
-        // 16,000-transaction block.
+        // To determine the chance that the number of entries in a bucket exceeds N,
+        // we use the fact that the number of elements in a single bucket is
+        // binomially distributed (with n = the number of shorttxids S, and p =
+        // 1 / the number of buckets), that in the worst case the number of buckets is
+        // equal to S (due to std::unordered_map having a default load factor of 1.0),
+        // and that the chance for any bucket to exceed N elements is at most
+        // buckets * (the chance that any given bucket is above N elements).
+        // Thus: P(max_elements_per_bucket > N) <= S * (1 - cdf(binomial(n=S,p=1/S), N)).
+        // If we assume blocks of up to 16000, allowing 12 elements per bucket should
+        // only fail once per ~1 million block transfers (per peer and connection).
         if (shorttxids.bucket_size(shorttxids.bucket(cmpctblock.shorttxids[i])) > 12)
             return READ_STATUS_FAILED;
     }
