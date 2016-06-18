@@ -22,6 +22,7 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
+#include <memory>
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -508,12 +509,12 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
-    static CBlockTemplate* pblocktemplate;
+    static std::unique_ptr<CBlockTemplate> pblocktemplate;
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
-        pindexPrev = NULL;
+        pindexPrev = nullptr;
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
@@ -521,11 +522,6 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         nStart = GetTime();
 
         // Create new block
-        if(pblocktemplate)
-        {
-            delete pblocktemplate;
-            pblocktemplate = NULL;
-        }
         CScript scriptDummy = CScript() << OP_TRUE;
         pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
         if (!pblocktemplate)
