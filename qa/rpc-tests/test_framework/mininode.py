@@ -74,8 +74,19 @@ def ripemd160(s):
 def hash256(s):
     return sha256(sha256(s))
 
+def ser_compact_size(l):
+    r = b""
+    if l < 253:
+        r = struct.pack("B", l)
+    elif l < 0x10000:
+        r = struct.pack("<BH", 253, l)
+    elif l < 0x100000000:
+        r = struct.pack("<BI", 254, l)
+    else:
+        r = struct.pack("<BQ", 255, l)
+    return r
 
-def deser_string(f):
+def deser_compact_size(f):
     nit = struct.unpack("<B", f.read(1))[0]
     if nit == 253:
         nit = struct.unpack("<H", f.read(2))[0]
@@ -83,16 +94,14 @@ def deser_string(f):
         nit = struct.unpack("<I", f.read(4))[0]
     elif nit == 255:
         nit = struct.unpack("<Q", f.read(8))[0]
+    return nit
+
+def deser_string(f):
+    nit = deser_compact_size(f)
     return f.read(nit)
 
 def ser_string(s):
-    if len(s) < 253:
-        return struct.pack("B", len(s)) + s
-    elif len(s) < 0x10000:
-        return struct.pack("<BH", 253, len(s)) + s
-    elif len(s) < 0x100000000:
-        return struct.pack("<BI", 254, len(s)) + s
-    return struct.pack("<BQ", 255, len(s)) + s
+    return ser_compact_size(len(s)) + s
 
 def deser_uint256(f):
     r = 0
@@ -125,13 +134,7 @@ def uint256_from_compact(c):
 
 
 def deser_vector(f, c):
-    nit = struct.unpack("<B", f.read(1))[0]
-    if nit == 253:
-        nit = struct.unpack("<H", f.read(2))[0]
-    elif nit == 254:
-        nit = struct.unpack("<I", f.read(4))[0]
-    elif nit == 255:
-        nit = struct.unpack("<Q", f.read(8))[0]
+    nit = deser_compact_size(f)
     r = []
     for i in range(nit):
         t = c()
@@ -144,15 +147,7 @@ def deser_vector(f, c):
 # entries in the vector (we use this for serializing the vector of transactions
 # for a witness block).
 def ser_vector(l, ser_function_name=None):
-    r = b""
-    if len(l) < 253:
-        r = struct.pack("B", len(l))
-    elif len(l) < 0x10000:
-        r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000:
-        r = struct.pack("<BI", 254, len(l))
-    else:
-        r = struct.pack("<BQ", 255, len(l))
+    r = ser_compact_size(len(l))
     for i in l:
         if ser_function_name:
             r += getattr(i, ser_function_name)()
@@ -162,13 +157,7 @@ def ser_vector(l, ser_function_name=None):
 
 
 def deser_uint256_vector(f):
-    nit = struct.unpack("<B", f.read(1))[0]
-    if nit == 253:
-        nit = struct.unpack("<H", f.read(2))[0]
-    elif nit == 254:
-        nit = struct.unpack("<I", f.read(4))[0]
-    elif nit == 255:
-        nit = struct.unpack("<Q", f.read(8))[0]
+    nit = deser_compact_size(f)
     r = []
     for i in range(nit):
         t = deser_uint256(f)
@@ -177,28 +166,14 @@ def deser_uint256_vector(f):
 
 
 def ser_uint256_vector(l):
-    r = b""
-    if len(l) < 253:
-        r = struct.pack("B", len(l))
-    elif len(l) < 0x10000:
-        r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000:
-        r = struct.pack("<BI", 254, len(l))
-    else:
-        r = struct.pack("<BQ", 255, len(l))
+    r = ser_compact_size(len(l))
     for i in l:
         r += ser_uint256(i)
     return r
 
 
 def deser_string_vector(f):
-    nit = struct.unpack("<B", f.read(1))[0]
-    if nit == 253:
-        nit = struct.unpack("<H", f.read(2))[0]
-    elif nit == 254:
-        nit = struct.unpack("<I", f.read(4))[0]
-    elif nit == 255:
-        nit = struct.unpack("<Q", f.read(8))[0]
+    nit = deser_compact_size(f)
     r = []
     for i in range(nit):
         t = deser_string(f)
@@ -207,28 +182,14 @@ def deser_string_vector(f):
 
 
 def ser_string_vector(l):
-    r = b""
-    if len(l) < 253:
-        r = struct.pack("B", len(l))
-    elif len(l) < 0x10000:
-        r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000:
-        r = struct.pack("<BI", 254, len(l))
-    else:
-        r = struct.pack("<BQ", 255, len(l))
+    r = ser_compact_size(len(l))
     for sv in l:
         r += ser_string(sv)
     return r
 
 
 def deser_int_vector(f):
-    nit = struct.unpack("<B", f.read(1))[0]
-    if nit == 253:
-        nit = struct.unpack("<H", f.read(2))[0]
-    elif nit == 254:
-        nit = struct.unpack("<I", f.read(4))[0]
-    elif nit == 255:
-        nit = struct.unpack("<Q", f.read(8))[0]
+    nit = deser_compact_size(f)
     r = []
     for i in range(nit):
         t = struct.unpack("<i", f.read(4))[0]
@@ -237,15 +198,7 @@ def deser_int_vector(f):
 
 
 def ser_int_vector(l):
-    r = b""
-    if len(l) < 253:
-        r = struct.pack("B", len(l))
-    elif len(l) < 0x10000:
-        r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000:
-        r = struct.pack("<BI", 254, len(l))
-    else:
-        r = struct.pack("<BQ", 255, len(l))
+    r = ser_compact_size(len(l))
     for i in l:
         r += struct.pack("<i", i)
     return r
