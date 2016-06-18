@@ -27,7 +27,7 @@ enum
     SIGHASH_ANYONECANPAY = 0x80,
 };
 
-/** Script verification flags */
+/** Consensus verification flags */
 enum
 {
     SCRIPT_VERIFY_NONE      = 0,
@@ -86,6 +86,12 @@ enum
     //
     // See BIP112 for details
     SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
+
+    /* BIP68: Interpret sequence numbers as relative lock-time constraints. */
+    LOCKTIME_VERIFY_SEQUENCE = (1U << 11),
+
+    /* BIP113: Use GetMedianTimePast() instead of nTime for end point timestamp. */
+    LOCKTIME_MEDIAN_TIME_PAST = (1U << 12),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
