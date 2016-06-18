@@ -22,7 +22,7 @@ env:
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
     - CCACHE_COMPRESS=1
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
-    - SDK_URL=https://bitcoincore.org/depends-sources/sdks
+    - SDK_URL=https://bitcoin.jonasschnelli.ch/sdks
     - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
   matrix:
