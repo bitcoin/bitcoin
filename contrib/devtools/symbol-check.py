@@ -68,7 +68,6 @@ b'libX11.so.6', # part of X11
 b'libxcb.so.1', # part of X11
 b'libfontconfig.so.1', # font support
 b'libfreetype.so.6', # font parsing
-b'libdbus-1.so.3', # inter process communication (notification system)
 b'libdl.so.2' # programming interface to dynamic linker
 }
 
