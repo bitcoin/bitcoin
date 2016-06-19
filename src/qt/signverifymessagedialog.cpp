@@ -108,6 +108,18 @@ void SignVerifyMessageDialog::on_pasteButton_SM_clicked()
     setAddress_SM(QApplication::clipboard()->text());
 }
 
+
+char *strsep(char **stringp, const char *delim) {
+  if (*stringp == NULL) { return NULL; }
+  char *token_start = *stringp;
+  *stringp = strpbrk(token_start, delim);
+  if (*stringp) {
+    **stringp = '\0';
+    (*stringp)++;
+  }
+  return token_start;
+}
+
 void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
 {
     if (!model)
@@ -116,54 +128,63 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     /* Clear old signature to ensure users don't get confused on error with an old signature displayed */
     ui->signatureOut_SM->clear();
 
-    CBitcoinAddress addr(ui->addressIn_SM->text().toStdString());
-    if (!addr.IsValid())
-    {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
-        return;
+    const char *my_str_literal =ui->addressIn_SM->text().toStdString().c_str();
+    char *str = strdup(my_str_literal);  // We own str's memory now.
+    char *addressInput;
+    while ((addressInput = strsep(&str, ";"))){
+
+        CBitcoinAddress addr(addressInput);
+        if (!addr.IsValid())
+        {
+            ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+            ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
+            return;
+        }
+        CKeyID keyID;
+        if (!addr.GetKeyID(keyID))
+        {
+            ui->addressIn_SM->setValid(false);
+            ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+            ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
+            return;
+        }
+
+        WalletModel::UnlockContext ctx(model->requestUnlock());
+        if (!ctx.isValid())
+        {
+            ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+            ui->statusLabel_SM->setText(tr("Wallet unlock was cancelled."));
+            return;
+        }
+
+        CKey key;
+        if (!pwalletMain->GetKey(keyID, key))
+        {
+            ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+            ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));
+            return;
+        }
+
+        CDataStream ss(SER_GETHASH, 0);
+        ss << strMessageMagic;
+        ss << ui->messageIn_SM->document()->toPlainText().toStdString();
+
+        std::vector<unsigned char> vchSig;
+        if (!key.SignCompact(Hash(ss.begin(), ss.end()), vchSig))
+        {
+            ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+            ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signing failed.") + QString("</nobr>"));
+            return;
+        }
+
+        ui->statusLabel_SM->setStyleSheet("QLabel { color: green; }");
+        ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signed.") + QString("</nobr>"));
+        ui->signatureOut_SM->setText(ui->signatureOut_SM->text() + QString::fromStdString(EncodeBase64(&vchSig[0], vchSig.size())));
+
     }
-    CKeyID keyID;
-    if (!addr.GetKeyID(keyID))
-    {
-        ui->addressIn_SM->setValid(false);
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
-        return;
-    }
+    free(str);
 
-    WalletModel::UnlockContext ctx(model->requestUnlock());
-    if (!ctx.isValid())
-    {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("Wallet unlock was cancelled."));
-        return;
-    }
 
-    CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
-    {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));
-        return;
-    }
-
-    CDataStream ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << ui->messageIn_SM->document()->toPlainText().toStdString();
-
-    std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(Hash(ss.begin(), ss.end()), vchSig))
-    {
-        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signing failed.") + QString("</nobr>"));
-        return;
-    }
-
-    ui->statusLabel_SM->setStyleSheet("QLabel { color: green; }");
-    ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signed.") + QString("</nobr>"));
-
-    ui->signatureOut_SM->setText(QString::fromStdString(EncodeBase64(&vchSig[0], vchSig.size())));
 }
 
 void SignVerifyMessageDialog::on_copySignatureButton_SM_clicked()
