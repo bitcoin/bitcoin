@@ -5,6 +5,7 @@
 #include "omnicore/activation.h"
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
+#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
@@ -205,7 +206,8 @@ bool CMPTransaction::interpret_SimpleSend()
 /** Tx 3 */
 bool CMPTransaction::interpret_SendToOwners()
 {
-    if (pkt_size < 16) {
+    int expectedSize = (version == MP_TX_PKT_V0) ? 16 : 20;
+    if (pkt_size < expectedSize) {
         return false;
     }
     memcpy(&property, &pkt[4], 4);
@@ -213,10 +215,17 @@ bool CMPTransaction::interpret_SendToOwners()
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
+    if (version > MP_TX_PKT_V0) {
+        memcpy(&distribution_property, &pkt[16], 4);
+        swapByteOrder32(distribution_property);
+    }
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
-        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+        PrintToLog("\t             property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t                value: %s\n", FormatMP(property, nValue));
+        if (version > MP_TX_PKT_V1) {
+            PrintToLog("\t distributionproperty: %s\n", FormatMP(distribution_property, nValue));
+        }
     }
 
     return true;
@@ -901,6 +910,13 @@ int CMPTransaction::logicMath_SendToOwners()
         return (PKT_ERROR_STO -24);
     }
 
+    if (version > MP_TX_PKT_V0) {
+        if (!_my_sps->hasSP(distribution_property)) {
+            PrintToLog("%s(): rejected: distribution property %d does not exist\n", __func__, distribution_property);
+            return (PKT_ERROR_STO -24);
+        }
+    }
+
     int64_t nBalance = getMPbalance(sender, property, BALANCE);
     if (nBalance < (int64_t) nValue) {
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
@@ -914,19 +930,20 @@ int CMPTransaction::logicMath_SendToOwners()
 
     // ------------------------------------------
 
-    OwnerAddrType receiversSet = STO_GetReceivers(sender, property, nValue);
+    uint32_t distributeTo = (version == MP_TX_PKT_V0) ? property : distribution_property;
+    OwnerAddrType receiversSet = STO_GetReceivers(sender, distributeTo, nValue);
     uint64_t numberOfReceivers = receiversSet.size();
 
     // make sure we found some owners
     if (numberOfReceivers <= 0) {
-        PrintToLog("%s(): rejected: no other owners of property %d [owners=%d <= 0]\n", __func__, property, numberOfReceivers);
+        PrintToLog("%s(): rejected: no other owners of property %d [owners=%d <= 0]\n", __func__, distributeTo, numberOfReceivers);
         return (PKT_ERROR_STO -26);
     }
 
     // determine which property the fee will be paid in
     uint32_t feeProperty = isTestEcosystemProperty(property) ? OMNI_PROPERTY_TMSC : OMNI_PROPERTY_MSC;
-
-    int64_t transferFee = TRANSFER_FEE_PER_OWNER * numberOfReceivers;
+    int64_t feePerOwner = (version == MP_TX_PKT_V0) ? TRANSFER_FEE_PER_OWNER : TRANSFER_FEE_PER_OWNER_V1;
+    int64_t transferFee = feePerOwner * numberOfReceivers;
     PrintToLog("\t    Transfer fee: %s %s\n", FormatDivisibleMP(transferFee), strMPProperty(feeProperty));
 
     // enough coins to pay the fee?
@@ -958,8 +975,13 @@ int CMPTransaction::logicMath_SendToOwners()
 
     // ------------------------------------------
 
-    // burn MSC or TMSC here: take the transfer fee away from the sender
     assert(update_tally_map(sender, feeProperty, -transferFee, BALANCE));
+    if (version == MP_TX_PKT_V0) {
+        // v0 - do not credit the subtracted fee to any tally (ie burn the tokens)
+    } else {
+        // v1 - credit the subtracted fee to the fee cache
+        p_feecache->AddFee(feeProperty, block, transferFee);
+    }
 
     // split up what was taken and distribute between all holders
     int64_t sent_so_far = 0;

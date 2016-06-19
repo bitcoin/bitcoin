@@ -32,6 +32,8 @@ const uint16_t FEATURE_SPCROWDCROSSOVER = 7;
 const uint16_t FEATURE_TRADEALLPAIRS = 8;
 //! Feature identifier to enable the fee cache and strip 0.05% fees from non-Omni pairs
 const uint16_t FEATURE_FEES = 9;
+//! Feature identifier to enable cross property (v1) Send To Owners
+const uint16_t FEATURE_STOV1 = 10;
 
 //! When (propertyTotalTokens / OMNI_FEE_THRESHOLD) is reached fee distribution will occur
 const int64_t OMNI_FEE_THRESHOLD = 100000; // 0.001%
@@ -111,6 +113,8 @@ public:
     int MSC_SEND_ALL_BLOCK;
     //! Block to enable betting transactions
     int MSC_BET_BLOCK;
+    //! Block to enable cross property STO (v1)
+    int MSC_STOV1_BLOCK;
 
     //! Block to deactivate crowdsale participations when "granting tokens"
     int GRANTEFFECTS_FEATURE_BLOCK;

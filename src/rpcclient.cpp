@@ -141,6 +141,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     /* Omni Core - transaction calls */
     { "omni_send", 2 },
     { "omni_sendsto", 1 },
+    { "omni_sendsto", 4 },
     { "omni_sendall", 2 },
     { "omni_sendtrade", 1 },
     { "omni_sendtrade", 3 },
@@ -194,6 +195,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_createpayload_dexsell", 5 },
     { "omni_createpayload_dexaccept", 0 },
     { "omni_createpayload_sto", 0 },
+    { "omni_createpayload_sto", 2 },
     { "omni_createpayload_issuancefixed", 0 },
     { "omni_createpayload_issuancefixed", 1 },
     { "omni_createpayload_issuancefixed", 2 },

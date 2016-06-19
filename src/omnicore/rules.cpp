@@ -58,6 +58,7 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
         { MSC_TYPE_CHANGE_ISSUER_ADDRESS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
 
         { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V0,  false,   MSC_STO_BLOCK      },
+        { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V1,  false,   MSC_STOV1_BLOCK    },
 
         { MSC_TYPE_METADEX_TRADE,             MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
         { MSC_TYPE_METADEX_CANCEL_PRICE,      MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
@@ -163,6 +164,7 @@ CMainConsensusParams::CMainConsensusParams()
     MSC_METADEX_BLOCK = 999999;
     MSC_SEND_ALL_BLOCK = 999999;
     MSC_BET_BLOCK = 999999;
+    MSC_STOV1_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -200,6 +202,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_METADEX_BLOCK = 0;
     MSC_SEND_ALL_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
+    MSC_STOV1_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -237,6 +240,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_METADEX_BLOCK = 0;
     MSC_SEND_ALL_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
+    MSC_STOV1_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -411,6 +415,10 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             MutableConsensusParams().FEES_FEATURE_BLOCK = activationBlock;
             featureName = "Fee system (inc 0.05% fee from trades of non-Omni pairs)";
         break;
+        case FEATURE_STOV1:
+            MutableConsensusParams().MSC_STOV1_BLOCK = activationBlock;
+            featureName = "Cross-property Send To Owners";
+        break;
         default:
             featureName = "Unknown feature";
             supported = false;
@@ -466,6 +474,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
             break;
         case FEATURE_FEES:
             activationBlock = params.FEES_FEATURE_BLOCK;
+            break;
+        case FEATURE_STOV1:
+            activationBlock = params.MSC_STOV1_BLOCK;
             break;
         default:
             return false;

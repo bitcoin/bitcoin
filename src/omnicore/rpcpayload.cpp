@@ -148,16 +148,16 @@ Value omni_createpayload_dexaccept(const Array& params, bool fHelp)
 
 Value omni_createpayload_sto(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
             "omni_createpayload_sto propertyid \"amount\"\n"
 
             "\nCreates the payload for a send-to-owners transaction.\n"
 
             "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens to distribute\n"
-            "2. amount               (string, required) the amount to distribute\n"
-
+            "1. propertyid             (number, required) the identifier of the tokens to distribute\n"
+            "2. amount                 (string, required) the amount to distribute\n"
+            "3. distributionproperty   (number, optional) the identifier of the property holders to distribute to\n"
             "\nResult:\n"
             "\"payload\"             (string) the hex-encoded payload\n"
 
@@ -169,8 +169,9 @@ Value omni_createpayload_sto(const Array& params, bool fHelp)
     uint32_t propertyId = ParsePropertyId(params[0]);
     RequireExistingProperty(propertyId);
     int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
+    uint32_t distributionPropertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : 0;
 
-    std::vector<unsigned char> payload = CreatePayload_SendToOwners(propertyId, amount);
+    std::vector<unsigned char> payload = CreatePayload_SendToOwners(propertyId, amount, distributionPropertyId);
 
     return HexStr(payload.begin(), payload.end());
 }
