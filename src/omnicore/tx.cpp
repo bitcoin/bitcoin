@@ -224,7 +224,7 @@ bool CMPTransaction::interpret_SendToOwners()
         PrintToLog("\t             property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t                value: %s\n", FormatMP(property, nValue));
         if (version > MP_TX_PKT_V1) {
-            PrintToLog("\t distributionproperty: %s\n", FormatMP(distribution_property, nValue));
+            PrintToLog("\t distributionproperty: %d (%s)\n", distribution_property, strMPProperty(distribution_property));
         }
     }
 

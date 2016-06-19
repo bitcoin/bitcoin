@@ -537,7 +537,7 @@ Value omni_sendsto(const Array& params, bool fHelp)
             "2. propertyid             (number, required) the identifier of the tokens to distribute\n"
             "3. amount                 (string, required) the amount to distribute\n"
             "4. redeemaddress          (string, optional) an address that can spend the transaction dust (sender by default)\n"
-            "5. distributionproperty   (number, required) the identifier of the property holders to distribute to\n"
+            "5. distributionproperty   (number, optional) the identifier of the property holders to distribute to\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"

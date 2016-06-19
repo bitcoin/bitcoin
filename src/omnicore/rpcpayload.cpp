@@ -150,7 +150,7 @@ Value omni_createpayload_sto(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "omni_createpayload_sto propertyid \"amount\"\n"
+            "omni_createpayload_sto propertyid \"amount\" ( distributionproperty )\n"
 
             "\nCreates the payload for a send-to-owners transaction.\n"
 
