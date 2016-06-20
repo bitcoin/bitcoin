@@ -122,12 +122,22 @@ Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' hidden services programmatically.
 Dash Core has been updated to make use of this.
 
-This means that if Tor is running (and proper authorization is available),
-Dash Core automatically creates a hidden service to listen on, without
-manual configuration. This will positively affect the number of available
-.onion nodes.
+This means that if Tor is running (and proper authentication has been configured),
+Dash Core automatically creates a hidden service to listen on. This will positively 
+affect the number of available .onion nodes.
 
 This new feature is enabled by default if Dash Core is listening, and
 a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
+
+Connecting to Tor's control socket API requires one of two authentication methods to be 
+configured. For cookie authentication the user running dashd must have write access 
+to the `CookieAuthFile` specified in Tor configuration. In some cases this is 
+preconfigured and the creation of a hidden service is automatic. If permission problems 
+are seen with `-debug=tor` they can be resolved by adding both the user running tor and 
+the user running dashd to the same group and setting permissions appropriately. On 
+Debian-based systems the user running dashd can be added to the debian-tor group, 
+which has the appropriate permissions. An alternative authentication method is the use 
+of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
+Tor configuration.
