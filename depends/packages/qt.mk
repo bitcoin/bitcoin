@@ -1,20 +1,21 @@
 PACKAGE=qt
-$(package)_version=5.5.0
-$(package)_download_path=http://download.qt.io/official_releases/qt/5.5/$($(package)_version)/submodules
+$(package)_version=5.6.1
+$(package)_download_path=http://download.qt.io/official_releases/qt/5.6/$($(package)_version)/submodules
 $(package)_suffix=opensource-src-$($(package)_version).tar.gz
 $(package)_file_name=qtbase-$($(package)_suffix)
-$(package)_sha256_hash=7e82b1318f88e56a2a9376e069aa608d4fd96b48cb0e1b880ae658b0a1af0561
+$(package)_sha256_hash=0ac67cf8d66d52b995f96c31c4b48117a1afb3db99eaa93e20ccd8f7f55f7fde
 $(package)_dependencies=openssl
-$(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
+$(package)_linux_dependencies=freetype fontconfig libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch mingw-uuidof.patch pidlist_absolute.patch
+$(package)_patches=mac-qmake.conf mingw-uuidof.patch pidlist_absolute.patch fix-xcb-include-order.patch fix_qt_pkgconfig.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
-$(package)_qttranslations_sha256_hash=c4bd6db6e426965c6f8824c54e81f68bbd61e2bae1bcadc328c6e81c45902a0d
+$(package)_qttranslations_sha256_hash=dcc1534d247babca1840cb6d0a000671801a341ea352d0535474f86adadaf028
+
 
 $(package)_qttools_file_name=qttools-$($(package)_suffix)
-$(package)_qttools_sha256_hash=d9e06bd19ecc86afba5e95d45a906d1bc1ad579aa70001e36143c1aaf695bdd6
+$(package)_qttools_sha256_hash=e0f845de28c31230dfa428f0190ccb3b91d1fc02481b1f064698ae4ef8376aa1
 
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
@@ -22,21 +23,34 @@ $(package)_extra_sources += $($(package)_qttools_file_name)
 define $(package)_set_vars
 $(package)_config_opts_release = -release
 $(package)_config_opts_debug   = -debug
-$(package)_config_opts += -opensource -confirm-license
+$(package)_config_opts += -bindir $(build_prefix)/bin
+$(package)_config_opts += -c++11
+$(package)_config_opts += -confirm-license
+$(package)_config_opts += -dbus-runtime
+$(package)_config_opts += -hostprefix $(build_prefix)
+$(package)_config_opts += -no-alsa
 $(package)_config_opts += -no-audio-backend
-$(package)_config_opts += -no-glib
-$(package)_config_opts += -no-icu
 $(package)_config_opts += -no-cups
-$(package)_config_opts += -no-iconv
-$(package)_config_opts += -no-gif
-$(package)_config_opts += -no-freetype
-$(package)_config_opts += -no-nis
-$(package)_config_opts += -pch
-$(package)_config_opts += -no-qml-debug
-$(package)_config_opts += -nomake examples
-$(package)_config_opts += -nomake tests
+$(package)_config_opts += -no-egl
+$(package)_config_opts += -no-eglfs
 $(package)_config_opts += -no-feature-style-windowsmobile
 $(package)_config_opts += -no-feature-style-windowsce
+$(package)_config_opts += -no-freetype
+$(package)_config_opts += -no-gif
+$(package)_config_opts += -no-glib
+$(package)_config_opts += -no-gstreamer
+$(package)_config_opts += -no-icu
+$(package)_config_opts += -no-iconv
+$(package)_config_opts += -no-kms
+$(package)_config_opts += -no-linuxfb
+$(package)_config_opts += -no-libudev
+$(package)_config_opts += -no-mitshm
+$(package)_config_opts += -no-mtdev
+$(package)_config_opts += -no-nis
+$(package)_config_opts += -no-pulseaudio
+$(package)_config_opts += -no-openvg
+$(package)_config_opts += -no-reduce-relocations
+$(package)_config_opts += -no-qml-debug
 $(package)_config_opts += -no-sql-db2
 $(package)_config_opts += -no-sql-ibase
 $(package)_config_opts += -no-sql-oci
@@ -46,36 +60,25 @@ $(package)_config_opts += -no-sql-odbc
 $(package)_config_opts += -no-sql-psql
 $(package)_config_opts += -no-sql-sqlite
 $(package)_config_opts += -no-sql-sqlite2
-$(package)_config_opts += -prefix $(host_prefix)
-$(package)_config_opts += -hostprefix $(build_prefix)
-$(package)_config_opts += -bindir $(build_prefix)/bin
-$(package)_config_opts += -c++11
+$(package)_config_opts += -no-use-gold-linker
+$(package)_config_opts += -no-xinput2
+$(package)_config_opts += -no-xrender
+$(package)_config_opts += -nomake examples
+$(package)_config_opts += -nomake tests
+$(package)_config_opts += -opensource
 $(package)_config_opts += -openssl-linked
-$(package)_config_opts += -v
-$(package)_config_opts += -static
-$(package)_config_opts += -silent
+$(package)_config_opts += -optimized-qmake
+$(package)_config_opts += -pch
 $(package)_config_opts += -pkg-config
+$(package)_config_opts += -prefix $(host_prefix)
 $(package)_config_opts += -qt-libpng
 $(package)_config_opts += -qt-libjpeg
-$(package)_config_opts += -qt-zlib
 $(package)_config_opts += -qt-pcre
-$(package)_config_opts += -no-pulseaudio
-$(package)_config_opts += -no-openvg
-$(package)_config_opts += -no-xrender
-$(package)_config_opts += -no-alsa
-$(package)_config_opts += -no-mtdev
-$(package)_config_opts += -no-gstreamer
-$(package)_config_opts += -no-mitshm
-$(package)_config_opts += -no-kms
-$(package)_config_opts += -no-reduce-relocations
-$(package)_config_opts += -no-egl
-$(package)_config_opts += -no-eglfs
-$(package)_config_opts += -no-linuxfb
-$(package)_config_opts += -no-xinput2
-$(package)_config_opts += -no-libudev
-$(package)_config_opts += -no-use-gold-linker
+$(package)_config_opts += -qt-zlib
 $(package)_config_opts += -reduce-exports
-$(package)_config_opts += -optimized-qmake
+$(package)_config_opts += -static
+$(package)_config_opts += -silent
+$(package)_config_opts += -v
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin = -xplatform macx-clang-linux
@@ -119,19 +122,22 @@ define $(package)_extract_cmds
   tar --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttools_file_name) -C qttools
 endef
 
+
 define $(package)_preprocess_cmds
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   sed -i.old "s/src_plugins.depends = src_sql src_xml src_network/src_plugins.depends = src_xml src_network/" qtbase/src/src.pro && \
   sed -i.old "s|X11/extensions/XIproto.h|X11/X.h|" qtbase/src/plugins/platforms/xcb/qxcbxsettings.cpp && \
   sed -i.old 's/if \[ "$$$$XPLATFORM_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/if \[ "$$$$BUILD_ON_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/' qtbase/configure && \
+  sed -i.old 's/CGEventCreateMouseEvent(0, kCGEventMouseMoved, pos, 0)/CGEventCreateMouseEvent(0, kCGEventMouseMoved, pos, kCGMouseButtonLeft)/' qtbase/src/plugins/platforms/cocoa/qcocoacursor.mm && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/Info.plist.lib qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f qtbase/mkspecs/macx-clang/Info.plist.app qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
-  patch -p1 < $($(package)_patch_dir)/fix-xcb-include-order.patch && \
   patch -p1 < $($(package)_patch_dir)/mingw-uuidof.patch && \
   patch -p1 < $($(package)_patch_dir)/pidlist_absolute.patch && \
+  patch -p1 < $($(package)_patch_dir)/fix-xcb-include-order.patch && \
+  patch -p1 < $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
   echo "QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
