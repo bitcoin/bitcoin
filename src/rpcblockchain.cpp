@@ -359,6 +359,95 @@ UniValue getblockheader(const UniValue& params, bool fHelp)
     return blockheaderToJSON(pblockindex);
 }
 
+UniValue getblockheaders(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 3)
+        throw runtime_error(
+            "getblockheaders \"hash\" ( count verbose )\n"
+            "\nReturns an array of items with information about <count> blockheaders starting from <hash>.\n"
+            "\nIf verbose is false, each item is a string that is serialized, hex-encoded data for a single blockheader.\n"
+            "If verbose is true, each item is an Object with information about a single blockheader.\n"
+            "\nArguments:\n"
+            "1. \"hash\"          (string, required) The block hash\n"
+            "2. count           (numeric, optional, default/max=" + strprintf("%s", MAX_HEADERS_RESULTS) +")\n"
+            "3. verbose         (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
+            "\nResult (for verbose = true):\n"
+            "[ {\n"
+            "  \"hash\" : \"hash\",               (string)  The block hash\n"
+            "  \"confirmations\" : n,           (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+            "  \"height\" : n,                  (numeric) The block height or index\n"
+            "  \"version\" : n,                 (numeric) The block version\n"
+            "  \"merkleroot\" : \"xxxx\",         (string)  The merkle root\n"
+            "  \"time\" : ttt,                  (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"mediantime\" : ttt,            (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"nonce\" : n,                   (numeric) The nonce\n"
+            "  \"bits\" : \"1d00ffff\",           (string)  The bits\n"
+            "  \"difficulty\" : x.xxx,          (numeric) The difficulty\n"
+            "  \"previousblockhash\" : \"hash\",  (string)  The hash of the previous block\n"
+            "  \"nextblockhash\" : \"hash\",      (string)  The hash of the next block\n"
+            "  \"chainwork\" : \"0000...1f3\"     (string)  Expected number of hashes required to produce the current chain (in hex)\n"
+            "}, {\n"
+            "       ...\n"
+            "   },\n"
+            "...\n"
+            "]\n"
+            "\nResult (for verbose=false):\n"
+            "[\n"
+            "  \"data\",                        (string)  A string that is serialized, hex-encoded data for block header.\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getblockheaders", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 2000")
+            + HelpExampleRpc("getblockheaders", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 2000")
+        );
+
+    LOCK(cs_main);
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(uint256S(strHash));
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    int nCount = MAX_HEADERS_RESULTS;
+    if (params.size() > 1)
+        nCount = params[1].get_int();
+
+    if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
+
+    bool fVerbose = true;
+    if (params.size() > 2)
+        fVerbose = params[2].get_bool();
+
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    UniValue arrHeaders(UniValue::VARR);
+
+    if (!fVerbose)
+    {
+        for (; pblockindex; pblockindex = chainActive.Next(pblockindex))
+        {
+            CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+            ssBlock << pblockindex->GetBlockHeader();
+            std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+            arrHeaders.push_back(strHex);
+            if (--nCount <= 0)
+                break;
+        }
+        return arrHeaders;
+    }
+
+    for (; pblockindex; pblockindex = chainActive.Next(pblockindex))
+    {
+        arrHeaders.push_back(blockheaderToJSON(pblockindex));
+        if (--nCount <= 0)
+            break;
+    }
+
+    return arrHeaders;
+}
+
 UniValue getblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
