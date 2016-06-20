@@ -27,20 +27,6 @@ generator that returns TestInstance objects.  See below for definition.
 
 global mininode_lock
 
-def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
-    attempt = 0
-    elapsed = 0
-
-    while attempt < attempts and elapsed < timeout:
-        with mininode_lock:
-            if predicate():
-                return True
-        attempt += 1
-        elapsed += 0.05
-        time.sleep(0.05)
-
-    return False
-
 class RejectResult(object):
     '''
     Outcome that expects rejection of a transaction or block.
