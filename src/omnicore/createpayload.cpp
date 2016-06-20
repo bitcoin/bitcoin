@@ -105,7 +105,7 @@ std::vector<unsigned char> CreatePayload_SendToOwners(uint32_t propertyId, uint6
     std::vector<unsigned char> payload;
 
     uint16_t messageType = 3;
-    uint16_t messageVer = (distributionProperty == 0) ? 0 : 1;
+    uint16_t messageVer = (distributionProperty == 0 || propertyId == distributionProperty) ? 0 : 1;
     mastercore::swapByteOrder16(messageType);
     mastercore::swapByteOrder16(messageVer);
     mastercore::swapByteOrder32(propertyId);
@@ -115,7 +115,7 @@ std::vector<unsigned char> CreatePayload_SendToOwners(uint32_t propertyId, uint6
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
     PUSH_BACK_BYTES(payload, amount);
-    if (distributionProperty != 0) {
+    if (distributionProperty != 0 && propertyId != distributionProperty) {
         mastercore::swapByteOrder32(distributionProperty);
         PUSH_BACK_BYTES(payload, distributionProperty);
     }
