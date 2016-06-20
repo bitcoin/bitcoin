@@ -13,6 +13,7 @@
 #include "omnicore/pending.h"
 #include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"
+#include "omnicore/sto.h"
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxs.h"
@@ -500,13 +501,15 @@ void populateRPCTypeActivation(CMPTransaction& omniObj, Object& txobj)
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, Object& txobj, uint16_t version)
 {
     Array receiveArray;
-    uint64_t tmpAmount = 0, stoFee = 0;
+    uint64_t tmpAmount = 0, stoFee = 0, numRecipients = 0;
     LOCK(cs_tally);
-    s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &stoFee);
-    if (version > MP_TX_PKT_V0) {
-        stoFee = stoFee * 100; // just awful, but until we start storing the fee somewhere it's a workaround
+    s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &numRecipients);
+    if (version == MP_TX_PKT_V0) {
+        stoFee = numRecipients * TRANSFER_FEE_PER_OWNER;
+    } else {
+        stoFee = numRecipients * TRANSFER_FEE_PER_OWNER_V1;
     }
-    txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
+    txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always OMNI so always divisible
     txobj.push_back(Pair("recipients", receiveArray));
 }
 
