@@ -156,17 +156,22 @@ def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
+    rpc_u, rpc_p = rpc_auth_pair(n)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
         f.write("regtest=1\n")
-        f.write("rpcuser=rt\n")
-        f.write("rpcpassword=rt\n")
+        f.write("rpcuser=" + rpc_u + "\n")
+        f.write("rpcpassword=" + rpc_p + "\n")
         f.write("port="+str(p2p_port(n))+"\n")
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
     return datadir
 
+def rpc_auth_pair(n):
+    return 'rpcuser💻' + str(n), 'rpcpass🔑' + str(n)
+
 def rpc_url(i, rpchost=None):
-    return "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
+    rpc_u, rpc_p = rpc_auth_pair(i)
+    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, rpchost or '127.0.0.1', rpc_port(i))
 
 def wait_for_bitcoind_start(process, url, i):
     '''
