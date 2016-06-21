@@ -1018,10 +1018,6 @@
         <translation>Konzola za dijagnostiku</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>OpenSSL verzija u upotrebi</translation>
-    </message>
-    <message>
         <source>Network</source>
         <translation>Mreža</translation>
     </message>

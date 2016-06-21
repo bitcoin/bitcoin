@@ -1474,10 +1474,6 @@
         <translation>Загальна</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Використовується OpenSSL версії</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Використовується BerkeleyDB версії</translation>
     </message>
@@ -3140,6 +3136,10 @@
         <translation>Підключатися тільки до вузлів в мережі &lt;net&gt; (ipv4, ipv6 або onion)</translation>
     </message>
     <message>
+        <source>Print version and exit</source>
+        <translation>Версія для друку і виходу</translation>
+    </message>
+    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Розмір скороченого ланцюжка блоків не може бути від'ємним. </translation>
     </message>
@@ -3194,10 +3194,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>Параметри гаманця:</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Увага: Поточна версія застаріла, необхідне оновлення!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3294,10 +3290,6 @@
     <message>
         <source>Activating best chain...</source>
         <translation>Активація найкращого ланцюжка...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Завжди передавайте транзакції отримані від пірів з білого списку (типово: %d)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>

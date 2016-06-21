@@ -1000,10 +1000,6 @@
         <translation>پنجرهٔ اشکالزدایی</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>نسخهٔ OpenSSL استفاده شده</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>زمان آغاز به کار</translation>
     </message>

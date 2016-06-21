@@ -1076,10 +1076,6 @@
         <translation>General</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Utilizando la versión OpenSSL</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Hora de inicio</translation>
     </message>

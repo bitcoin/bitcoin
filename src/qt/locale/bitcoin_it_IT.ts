@@ -1,129 +1,174 @@
-<TS language="tr_TR" version="2.1">
+<TS language="it_IT" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
+        <translation>Click destro per modificare indirizzo o etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Yeni adres oluştur</translation>
+        <translation>Crea un nuovo indirizzo</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Yeni</translation>
+        <translation>nuovo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Seçili adresi panoya kopyala</translation>
+        <translation>copia l'indirizzo selezionato correntemente nella clipboard di sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Kopyala</translation>
+        <translation>copia</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>K&amp;apat</translation>
+        <translation>chiudi </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Adresi Kopyala</translation>
+        <translation>copia indirizzo </translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Seçili adresi listeden sil</translation>
+        <translation>Cancella l'indirizzo attualmente selezionato dalla lista.</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Seçili sekmedeki veriyi dosya olarak dışa aktar</translation>
+        <translation>Esportare i dati nella scheda corrente in un file</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Dışa Aktar</translation>
+        <translation>Esporta</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Sil</translation>
+        <translation>Cancella</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Para göndereceğiniz adresi seçin</translation>
+        <translation>Scegli l'indirizzo a cui inviare denaro</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Parayı alacağınız adresi seçin</translation>
+        <translation>Scegli l'indirizzo con cui ricevere i coin</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>S&amp;eç</translation>
+        <translation>Scegli</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Gönderim adresleri</translation>
+        <translation>Indirizzi mittenti</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Alış adresleri</translation>
+        <translation>Indirizzi destinatari</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Bunlar ödeme gönderebileceğiniz Bitcoin adreslerinizdir. Para göndermeden önce mutlaka alıcı adresini ve tutarı kontrol edin.</translation>
+        <translation>Questi sono gli indirizzi Bitcoin per l'invio di pagamenti. Controlla sempre la quantità e l'indirizzo di ricezione prima di inviare monete.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Bunlar ödeme alabileceğiniz Bitcoin adreslerinizdir. Her işlem için yeni bir adres kullanmanız önerilir.</translation>
+        <translation>Questi sono i tuoi indirizzi Bitcoin per ricevere pagamenti. Si raccomanda di generare un nuovo indirizzo per ogni transazione</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Kopyala &amp;Etiketle</translation>
+        <translation>copia etichetta</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Düzenle</translation>
+        <translation>Modifica</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Adres Listesini Dışa Aktar</translation>
+        <translation>Esporta lista degli indirizzi</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Virgül ile ayrılmış dosya (*.csv)</translation>
+        <translation>Contenuto del file separato da virgole (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Dışa Aktarma Başarısız Oldu</translation>
+        <translation>Esportazione fallita</translation>
     </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Adres listesini %1'e kaydederken bir hata oluştu. Lütfen tekrar deneyin.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>Indirizzo</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yok)</translation>
+        <translation>(nessuna etichetta)
+</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Enter passphrase</source>
+        <translation>Invia passphrase</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation>Nuova passphrase</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>Ripeti nuova passphrase</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Cifra portagoflio</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Questa operazione richiede la passphrase del tuo portafoglio per sbloccare il portafoglio.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Sblocca portafoglio</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>decifra portafoglio</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>cambia passphrase</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>conferma cifrazione del portagoglio</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>portafoglio cifrato</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>sblocco portafoglio fallito</translation>
+    </message>
     </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>bannato fino </translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Alış adresleri</translation>
+        <source>&amp;Transactions</source>
+        <translation>Transazioni</translation>
     </message>
     </context>
 <context>
@@ -133,19 +178,12 @@
     <name>CoinControlDialog</name>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yok)</translation>
+        <translation>(nessuna etichetta)
+</translation>
     </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
-    <message>
-        <source>&amp;Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>&amp;Address</source>
-        <translation>Adres</translation>
-    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -186,34 +224,32 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Copy &amp;Address</source>
-        <translation>&amp;Adresi Kopyala</translation>
-    </message>
-    <message>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>Indirizzo</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Etichetta</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yok)</translation>
+        <translation>(nessuna etichetta)
+</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>(no label)</source>
-        <translation>(etiket yok)</translation>
+        <translation>(nessuna etichetta)
+</translation>
     </message>
     </context>
 <context>
@@ -241,26 +277,26 @@
     <name>TransactionTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Etichetta</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
         <source>Exporting Failed</source>
-        <translation>Dışa Aktarma Başarısız Oldu</translation>
+        <translation>Esportazione fallita</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Virgül ile ayrılmış dosya (*.csv)</translation>
+        <translation>Contenuto del file separato da virgole (*.csv)</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiket</translation>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Adres</translation>
+        <translation>Indirizzo</translation>
     </message>
     </context>
 <context>
@@ -276,11 +312,11 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Dışa Aktar</translation>
+        <translation>Esporta</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Seçili sekmedeki veriyi dosya olarak dışa aktar</translation>
+        <translation>Esportare i dati nella scheda corrente in un file</translation>
     </message>
     </context>
 <context>
