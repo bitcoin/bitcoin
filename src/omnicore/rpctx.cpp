@@ -552,7 +552,7 @@ Value omni_sendsto(const Array& params, bool fHelp)
     uint32_t propertyId = ParsePropertyId(params[1]);
     int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
     std::string redeemAddress = (params.size() > 3 && !ParseText(params[3]).empty()) ? ParseAddress(params[3]): "";
-    uint32_t distributionPropertyId = (params.size() > 4) ? ParsePropertyId(params[4]) : 0;
+    uint32_t distributionPropertyId = (params.size() > 4) ? ParsePropertyId(params[4]) : propertyId;
 
     // perform checks
     RequireBalance(fromAddress, propertyId, amount);

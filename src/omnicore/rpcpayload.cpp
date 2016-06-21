@@ -169,7 +169,7 @@ Value omni_createpayload_sto(const Array& params, bool fHelp)
     uint32_t propertyId = ParsePropertyId(params[0]);
     RequireExistingProperty(propertyId);
     int64_t amount = ParseAmount(params[1], isPropertyDivisible(propertyId));
-    uint32_t distributionPropertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : 0;
+    uint32_t distributionPropertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : propertyId;
 
     std::vector<unsigned char> payload = CreatePayload_SendToOwners(propertyId, amount, distributionPropertyId);
 

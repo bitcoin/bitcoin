@@ -102,10 +102,12 @@ std::vector<unsigned char> CreatePayload_DExAccept(uint32_t propertyId, uint64_t
 
 std::vector<unsigned char> CreatePayload_SendToOwners(uint32_t propertyId, uint64_t amount, uint32_t distributionProperty)
 {
+    bool v0 = (propertyId == distributionProperty) ? true : false;
+
     std::vector<unsigned char> payload;
 
     uint16_t messageType = 3;
-    uint16_t messageVer = (distributionProperty == 0 || propertyId == distributionProperty) ? 0 : 1;
+    uint16_t messageVer = (v0) ? 0 : 1;
     mastercore::swapByteOrder16(messageType);
     mastercore::swapByteOrder16(messageVer);
     mastercore::swapByteOrder32(propertyId);
@@ -115,7 +117,7 @@ std::vector<unsigned char> CreatePayload_SendToOwners(uint32_t propertyId, uint6
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
     PUSH_BACK_BYTES(payload, amount);
-    if (distributionProperty != 0 && propertyId != distributionProperty) {
+    if (!v0) {
         mastercore::swapByteOrder32(distributionProperty);
         PUSH_BACK_BYTES(payload, distributionProperty);
     }
