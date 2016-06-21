@@ -495,9 +495,13 @@ void MaybeSetPeerAsAnnouncingHeaderAndIDs(const CNodeState* nodestate, CNode* pf
         return;
     }
     if (nodestate->fProvidesHeaderAndIDs) {
-        BOOST_FOREACH(const NodeId nodeid, lNodesAnnouncingHeaderAndIDs)
-            if (nodeid == pfrom->GetId())
+        for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
+            if (*it == pfrom->GetId()) {
+                lNodesAnnouncingHeaderAndIDs.erase(it);
+                lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
                 return;
+            }
+        }
         bool fAnnounceUsingCMPCTBLOCK = false;
         uint64_t nCMPCTBLOCKVersion = (nLocalServices & NODE_WITNESS) ? 2 : 1;
         if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
@@ -5725,6 +5729,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     vInv[0] = CInv(MSG_BLOCK | GetFetchFlags(pfrom, pindex->pprev, chainparams.GetConsensus()), cmpctblock.header.GetHash());
                     pfrom->PushMessage(NetMsgType::GETDATA, vInv);
                     return true;
+                }
+
+                if (!fAlreadyInFlight && mapBlocksInFlight.size() == 1 && pindex->pprev->IsValid(BLOCK_VALID_CHAIN)) {
+                    // We seem to be rather well-synced, so it appears pfrom was the first to provide us
+                    // with this block! Let's get them to announce using compact blocks in the future.
+                    MaybeSetPeerAsAnnouncingHeaderAndIDs(nodestate, pfrom, connman);
                 }
 
                 BlockTransactionsRequest req;
