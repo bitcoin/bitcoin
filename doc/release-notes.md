@@ -61,6 +61,26 @@ When cross-compiling for a target that doesn't have C++11 libraries, configure w
 For running the functional tests in `qa/rpc-tests`, Python3.4 or higher is now
 required.
 
+Linux ARM builds
+------------------
+
+Due to popular request, Linux ARM builds have been added to the uploaded
+executables.
+
+The following extra files can be found in the download directory or torrent:
+
+- `bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries for the most
+  common 32-bit ARM architecture.
+- `bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries for the most
+  common 64-bit ARM architecture.
+
+ARM builds are still experimental. If you have problems on a certain device or
+Linux distribution combination please report them on the bug tracker, it may be
+possible to resolve them.
+
+Note that Android is not considered ARM Linux in this context. The executables
+are not expected to work out of the box on Android.
+
 0.13.0 Change log
 =================
 
