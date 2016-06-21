@@ -4613,7 +4613,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             // Track requests for our stuff.
             GetMainSignals().Inventory(inv.hash);
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK)
                 break;
         }
     }
@@ -5077,8 +5077,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return true;
         }
 
-        if (it->second->nHeight < chainActive.Height() - 10) {
-            LogPrint("net", "Peer %d sent us a getblocktxn for a block > 10 deep", pfrom->id);
+        if (it->second->nHeight < chainActive.Height() - 15) {
+            LogPrint("net", "Peer %d sent us a getblocktxn for a block > 15 deep", pfrom->id);
             return true;
         }
 
