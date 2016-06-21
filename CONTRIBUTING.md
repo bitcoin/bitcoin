@@ -5,6 +5,7 @@ The Bitcoin Core project operates an open contributor model where anyone is welc
 
 Firstly in terms of structure, there is no particular concept of “Core developers” in the sense of privileged people. Open source often naturally revolves around meritocracy where longer term contributors gain more trust from the developer community. However, some hierarchy is necessary for practical purposes. As such there are repository “maintainers” who are responsible for merging pull requests as well as a “lead maintainer” who is responsible for the release cycle, overall merging, moderation and appointment of maintainers.
 
+Developer IRC can be found on Freenode at [#bitcoin-core-dev](https://webchat.freenode.net/?channels=#bitcoin-core-dev).
 
 Contributor Workflow
 --------------------
