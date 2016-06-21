@@ -4878,7 +4878,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         // and we don't feel like constructing the object for them, so
                         // instead we respond with the full, non-compact block.
                         bool fPeerWantsWitness = State(pfrom->GetId())->fWantsCmpctWitness;
-                        if (mi->second->nHeight >= chainActive.Height() - 10) {
+                        if (CanDirectFetch(Params().GetConsensus()) && mi->second->nHeight >= chainActive.Height() - 5) {
                             CBlockHeaderAndShortTxIDs cmpctblock(block, fPeerWantsWitness);
                             pfrom->PushMessageWithFlag(fPeerWantsWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::CMPCTBLOCK, cmpctblock);
                         } else
@@ -5405,8 +5405,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return true;
         }
 
-        if (it->second->nHeight < chainActive.Height() - 15) {
-            LogPrint("net", "Peer %d sent us a getblocktxn for a block > 15 deep", pfrom->id);
+        if (it->second->nHeight < chainActive.Height() - 10) {
+            LogPrint("net", "Peer %d sent us a getblocktxn for a block > 10 deep", pfrom->id);
             return true;
         }
 
