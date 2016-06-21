@@ -3,7 +3,7 @@ Release Process
 
 Before every release candidate:
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#syncing-with-transifex)
+* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
 
 Before every minor and major release:
 
@@ -13,7 +13,7 @@ Before every minor and major release:
 
 Before every major release:
 
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example. 
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
 
 ### First time / New builders
 
@@ -75,7 +75,7 @@ Ensure your gitian.sigs are up-to-date if you wish to gverify your builds agains
     git pull
     popd
 
-Ensure gitian-builder is up-to-date to take advantage of new caching features (`e9741525c` or later is recommended).
+Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     git pull
@@ -89,13 +89,7 @@ Ensure gitian-builder is up-to-date to take advantage of new caching features (`
     wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     popd
 
-Register and download the Apple SDK: see [OS X readme](README_osx.txt) for details.
-
-https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
-
-Using a Mac, create a tarball for the 10.9 SDK and copy it to the inputs directory:
-
-    tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.9.sdk.tar.gz MacOSX10.9.sdk
+Create the OS X SDK tarball, see the [OS X readme](README_osx.md) for details, and copy it into the inputs directory.
 
 ### Optional: Seed the Gitian sources cache and offline git repositories
 
@@ -239,7 +233,7 @@ transmission-show -m <torrent file>
 Insert the magnet URI into the announcement sent to mailing lists. This permits
 people without access to `bitcoin.org` to download the binary distribution.
 Also put it into the `optional_magnetlink:` slot in the YAML file for
-bitcoin.org (see below for bitcoin.org update instructions). 
+bitcoin.org (see below for bitcoin.org update instructions).
 
 - Update bitcoin.org version
 
