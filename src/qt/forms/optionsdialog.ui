@@ -174,6 +174,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="privateSendMultiSession">
+            <property name="toolTip">
+             <string>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
+            </property>
+            <property name="text">
+             <string>Enable PrivateSend &amp;multi-session</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="spendZeroConfChange">
             <property name="toolTip">
              <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>

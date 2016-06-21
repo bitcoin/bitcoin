@@ -201,6 +201,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
     mapper->addMapping(ui->anonymizeDash, OptionsModel::AnonymizeDashAmount);
+    mapper->addMapping(ui->privateSendMultiSession, OptionsModel::PrivateSendMultiSession);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);

@@ -50,6 +50,7 @@ public:
         PrivateSendRounds,      // int
         AnonymizeDashAmount,    // int
         ShowMasternodesTab,     // bool
+        PrivateSendMultiSession,// bool
         Listen,                 // bool
         OptionIDRowCount,
     };

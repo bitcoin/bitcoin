@@ -131,6 +131,12 @@ void OptionsModel::Init(bool resetSettings)
     if (!SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDashAmount").toString().toStdString()))
         addOverriddenOption("-anonymizedashamount");
     nAnonymizeDashAmount = settings.value("nAnonymizeDashAmount").toInt();
+
+    if (!settings.contains("fPrivateSendMultiSession"))
+        settings.setValue("fPrivateSendMultiSession", fPrivateSendMultiSession);
+    if (!SoftSetBoolArg("-privatesendmultisession", settings.value("fPrivateSendMultiSession").toBool()))
+        addOverriddenOption("-privatesendmultisession");
+    fPrivateSendMultiSession = settings.value("fPrivateSendMultiSession").toBool();
 #endif
 
     // Network
@@ -251,6 +257,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nAnonymizeDashAmount");
         case ShowMasternodesTab:
             return settings.value("fShowMasternodesTab");
+        case PrivateSendMultiSession:
+            return settings.value("fPrivateSendMultiSession");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -398,6 +406,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (settings.value("fShowMasternodesTab") != value) {
                 settings.setValue("fShowMasternodesTab", value);
                 setRestartRequired(true);
+            }
+            break;
+        case PrivateSendMultiSession:
+            if (settings.value("fPrivateSendMultiSession") != value)
+            {
+                fPrivateSendMultiSession = value.toBool();
+                settings.setValue("fPrivateSendMultiSession", fPrivateSendMultiSession);
             }
             break;
 #endif
