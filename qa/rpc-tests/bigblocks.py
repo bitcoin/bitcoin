@@ -321,10 +321,6 @@ class BigBlockTest2(BigBlockTest):
         assert(self.sync_blocks(self.nodes))
         self.TestMineBig(expect_big=False, expect_version=False)
 
-        # If vote fails, should be warned about running obsolete code:
-        info = self.nodes[0].getmininginfo()
-        assert("obsolete" in info['errors'])
-
 if __name__ == '__main__':
     print("Be patient, these tests can take 2 or more minutes to run.")
 

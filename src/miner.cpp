@@ -120,12 +120,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
-
         pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
-        // Vote for 2 MB until the vote expiration time
-        if (pblock->nTime <= chainparams.GetConsensus().SizeForkExpiration())
-            pblock->nVersion |= FORK_BIT_2MB;
-
         // -regtest only: allow overriding block.nVersion with
         // -blockversion=N to test forking scenarios
         if (chainparams.MineBlocksOnDemand())

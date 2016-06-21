@@ -97,6 +97,7 @@ testScripts = [
     'signrawtransactions.py',
     'walletbackup.py',
     'nodehandling.py',
+    'bigblocks.py',
     'reindex.py',
     'decodescript.py',
     'p2p-fullblocktest.py',
@@ -130,7 +131,6 @@ testScriptsExt = [
     'mempool_packages.py',
     'maxuploadtarget.py',
     'replace-by-fee.py',
-    'bigblocks.py',
 ]
 
 #Enable ZMQ tests
