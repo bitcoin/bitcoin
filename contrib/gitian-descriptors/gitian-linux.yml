@@ -22,7 +22,7 @@ packages:
 - "libqt4-test"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/Climbee/crowncoin.git"
+- "url": "https://github.com/Crowndev/crowncoin.git"
   "dir": "crowncoin"
 files:
 - "crowncoin-deps-linux32-gitian-r6.zip"
