@@ -1474,10 +1474,6 @@
         <translation>Generelt</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Bruker OpenSSL versjon</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Bruker BerkeleyDB versjon</translation>
     </message>
@@ -3196,10 +3192,6 @@
         <translation>Valg for lommebok:</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Advarsel: Denne versjonen er utdatert; oppgradering er påkrevd!</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Du må gjenoppbygge databasen med å bruke -reindex for å endre -txindex</translation>
     </message>
@@ -3294,10 +3286,6 @@
     <message>
         <source>Activating best chain...</source>
         <translation>Aktiverer beste kjede...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Alltid videresend transaksjoner mottatt fra hvitlistede noder (standardverdi: %d)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
