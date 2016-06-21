@@ -101,6 +101,8 @@ if ENABLE_ZMQ:
 
 #Tests
 testScripts = [
+    # longest test should go first, to favor running tests in parallel
+    'p2p-fullblocktest.py',
     'walletbackup.py',
     'bip68-112-113-p2p.py',
     'wallet.py',
@@ -125,7 +127,6 @@ testScripts = [
     'nodehandling.py',
     'reindex.py',
     'decodescript.py',
-    'p2p-fullblocktest.py',
     'blockchain.py',
     'disablewallet.py',
     'sendheaders.py',
@@ -191,7 +192,7 @@ def runtests():
     if coverage:
         flags.append(coverage.flag)
 
-    if len(test_list) > 1:
+    if len(test_list) > 1 and run_parallel > 1:
         # Populate cache
         subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + flags)
 
@@ -251,7 +252,7 @@ class RPCTestHandler:
                                                stdout=subprocess.PIPE,
                                                stderr=subprocess.PIPE)))
         if not self.jobs:
-            raise IndexError('%s from empty list' % __name__)
+            raise IndexError('pop from empty list')
         while True:
             # Return first proc that finishes
             time.sleep(.5)
