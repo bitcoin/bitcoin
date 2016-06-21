@@ -112,7 +112,7 @@ public:
 
 
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "dnsseed.darkcoin.io"));
-        vSeeds.push_back(CDNSSeedData("darkcoin.qa", "dnsseed.darkcoin.qa"));
+        vSeeds.push_back(CDNSSeedData("dashdot.io", "dnsseed.dashdot.io"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "dnsseed.masternode.io"));
         vSeeds.push_back(CDNSSeedData("dashpay.io", "dnsseed.dashpay.io"));
 
@@ -212,7 +212,6 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
         vSeeds.push_back(CDNSSeedData("dashdot.io",  "testnet-seed.dashdot.io"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
 
