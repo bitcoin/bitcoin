@@ -141,6 +141,11 @@ SplashScreen::~SplashScreen()
 void SplashScreen::slotFinish(QWidget *mainWin)
 {
     Q_UNUSED(mainWin);
+
+    /* If the window is minimized, hide() will be ignored. */
+    /* Make sure we de-minimize the splashscreen window before hiding */
+    if (isMinimized())
+        showNormal();
     hide();
 }
 
