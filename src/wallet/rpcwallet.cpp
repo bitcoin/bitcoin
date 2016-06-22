@@ -2563,6 +2563,8 @@ extern UniValue importprivkey(const UniValue& params, bool fHelp);
 extern UniValue deleteprivkey(const UniValue& params, bool fHelp);
 extern UniValue importaddress(const UniValue& params, bool fHelp);
 extern UniValue importpubkey(const UniValue& params, bool fHelp);
+extern UniValue forgetaddress(const UniValue& params, bool fHelp);
+extern UniValue purgetransactions(const UniValue& params, bool fHelp);
 extern UniValue dumpwallet(const UniValue& params, bool fHelp);
 extern UniValue importwallet(const UniValue& params, bool fHelp);
 extern UniValue importprunedfunds(const UniValue& params, bool fHelp);
@@ -2597,6 +2599,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "importaddress",            &importaddress,            true  },
     { "wallet",             "importprunedfunds",        &importprunedfunds,        true  },
     { "wallet",             "importpubkey",             &importpubkey,             true  },
+    { "wallet",             "forgetaddress",            &forgetaddress,            true  },
+    { "wallet",             "purgetransactions",        &purgetransactions,        true  },
     { "wallet",             "keypoolrefill",            &keypoolrefill,            true  },
     { "wallet",             "listaccounts",             &listaccounts,             false },
     { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false },
