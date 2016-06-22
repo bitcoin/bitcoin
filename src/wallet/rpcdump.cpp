@@ -152,6 +152,50 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue deleteprivkey(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "deleteprivkey \"pubkey\"\n"
+            "\nRemove the private key corresponding to the provided pubkey, making that address become watch-only (as if it was imported with importaddress). For security reasons the wallet must be unlocked.\n"
+            "\nArguments:\n"
+            "1. \"pubkey\"        (string, required) The pubkey corresponding to the private key to be removed.\n"
+            "\nExamples:\n"
+            "\nConvert a spendable address to watch-only\n"
+            + HelpExampleCli("deleteprivkey", "\"mypubkey\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("deleteprivkey", "\"mypubkey\"")
+        );
+
+    std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+    CPubKey pubKey(data.begin(), data.end());
+    if (!pubKey.IsFullyValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
+    CKeyID keyID = pubKey.GetID();
+    CScript script = GetScriptForDestination(keyID);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // Wallet must be unlocked not because we need access to key material, but
+    // because otherwise some joker that finds an unattended Bitcoin Core could
+    // delete the keys.
+    EnsureWalletIsUnlocked();
+
+    if (!pwalletMain->HaveKey(keyID))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not in the wallet");
+
+    // Erase the key material
+    pwalletMain->EraseKey(pubKey);
+
+    // Re-add the pubkey to the wallet as a watch-only address
+    pwalletMain->AddWatchOnly(script);
+
+    return NullUniValue;
+}
+
 void ImportAddress(const CBitcoinAddress& address, const string& strLabel);
 void ImportScript(const CScript& script, const string& strLabel, bool isRedeemScript)
 {
