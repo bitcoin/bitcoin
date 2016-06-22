@@ -150,6 +150,8 @@ public:
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     unsigned int GetSigOpCountWithAncestors() const { return nSigOpCountWithAncestors; }
+
+    mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -457,7 +459,10 @@ public:
 
     mutable CCriticalSection cs;
     indexed_transaction_set mapTx;
+
     typedef indexed_transaction_set::nth_index<0>::type::iterator txiter;
+    std::vector<std::pair<uint256, txiter> > vTxHashes; //!< All tx hashes/entries in mapTx, in random order
+
     struct CompareIteratorByHash {
         bool operator()(const txiter &a, const txiter &b) const {
             return a->GetTx().GetHash() < b->GetTx().GetHash();
