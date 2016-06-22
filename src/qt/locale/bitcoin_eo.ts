@@ -180,6 +180,10 @@
         <translation>La monujo estas ĉifrita</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Tajpu la malnovan pasvorton kaj la novan pasvorton por la monujo.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>Ĉifrado de la monujo fiaskis</translation>
     </message>
@@ -410,6 +414,10 @@
         <translation>Neniu fonto de blokoj trovebla...</translation>
     </message>
     <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n horo</numerusform><numerusform>%n horoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>%n day(s)</source>
         <translation><numerusform>%n tago</numerusform><numerusform>%n tagoj</numerusform></translation>
     </message>
@@ -479,6 +487,12 @@
         <source>Label: %1
 </source>
         <translation>Etikedo: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adreso: %1
 </translation>
     </message>
     <message>
@@ -812,6 +826,10 @@
         <source>command-line options</source>
         <translation>komandliniaj agordaĵoj</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Uzantinterfaco ebloj:</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -846,6 +864,10 @@
     <message>
         <source>Error</source>
         <translation>Eraro</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n gigabajto de libera loko disponeble</numerusform><numerusform>%n gigabajtoj de libera loko disponebla.</numerusform></translation>
     </message>
     </context>
 <context>
@@ -1098,6 +1120,10 @@
 </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>User Agent</source>
+        <translation>Uzanto Agento</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -1168,10 +1194,6 @@
         <translation>Ĝenerala</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>uzas OpenSSL-version</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Horo de lanĉo</translation>
     </message>
@@ -1204,8 +1226,20 @@
         <translation>Sendita</translation>
     </message>
     <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;Samuloj</translation>
+    </message>
+    <message>
+        <source>Banned peers</source>
+        <translation>Malpermesita samuloj.</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>Versio</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Uzanto Agento</translation>
     </message>
     <message>
         <source>Services</source>

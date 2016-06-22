@@ -87,11 +87,11 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>CSV (rozdzielany przecinkami)</translation>
+        <translation>Pliki (*.csv) rozdzielone przecinkami</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Błąd przy próbie eksportu</translation>
+        <translation>Błąd przy próbie eksportowania</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -137,7 +137,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ta operacja wymaga hasła do portfela ażeby odblokować portfel.</translation>
+        <translation>Operacja wymaga hasła portfela, aby go odblokować.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -145,7 +145,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ta operacja wymaga hasła do portfela ażeby odszyfrować portfel.</translation>
+        <translation>Operacja wymaga hasła portfela, aby go odszyfrować.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -161,7 +161,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Uwaga: Jeśli zaszyfrujesz swój portfel i zgubisz hasło to &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCOIN'Y&lt;/b&gt;!</translation>
+        <translation>Uwaga: jeśli zaszyfrujesz swój portfel i zgubisz hasło &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCOINY&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -169,15 +169,15 @@
     </message>
     <message>
         <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Program Bitcoin Core zamknie się, aby dokończyć proces szyfrowania. Pamiętaj, że szyfrowanie portfela nie zabezpiecza w pełni Twoich bitcoinów przed kradzieżą przez wirusy lub trojany mogące zainfekować Twój komputer.</translation>
+        <translation>Program Bitcoin Core zamknie się, aby dokończyć proces szyfrowania. Pamiętaj, że szyfrowanie portfela nie zabezpiecza w pełni twoich bitcoinów przed kradzieżą przez złośliwe oprogramowanie mogące zainfekować twój komputer.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>WAŻNE: Wszystkie wykonane wcześniej kopie pliku portfela powinny być zamienione na nowe, szyfrowane pliki. Z powodów bezpieczeństwa, poprzednie kopie nieszyfrowanych plików portfela staną się bezużyteczne jak tylko zaczniesz korzystać z nowego, szyfrowanego portfela.</translation>
+        <translation>WAŻNE: Wszystkie wcześniejsze kopie pliku portfela powinny być zamienione na nowe, szyfrowane pliki. Z powodów bezpieczeństwa, poprzednie kopie nieszyfrowanych plików portfela staną się bezużyteczne jak tylko zaczniesz korzystać z nowego, szyfrowanego portfela.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Uwaga: Klawisz Caps Lock jest włączony!</translation>
+        <translation>Uwaga: klawisz Caps Lock jest włączony!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Wprowadź nowe hasło do portfela.&lt;br/&gt;Proszę używać hasła złożonego z &lt;b&gt;10 lub więcej losowych znaków&lt;/b&gt; lub &lt;b&gt;ośmiu lub więcej słów.&lt;/b&gt;</translation>
+        <translation>Wprowadź nowe hasło do portfela.&lt;br/&gt;Proszę używać hasła złożonego z &lt;b&gt;10 lub więcej losowych znaków&lt;/b&gt; albo &lt;b&gt;8 lub więcej słów.&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
@@ -224,7 +224,7 @@
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
-        <translation>IP/Maska Sieci</translation>
+        <translation>IP / maska podsieci</translation>
     </message>
     <message>
         <source>Banned Until</source>
@@ -307,7 +307,7 @@
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>Rdzeń klienta Bitcoin</translation>
+        <translation>Klient Rdzenia Bitcoina</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -319,7 +319,7 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Wyślij monety na adres Bitcoin</translation>
+        <translation>Wyślij monety na adres bitcoinowy</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -359,7 +359,7 @@
     </message>
     <message>
         <source>Show information about Bitcoin Core</source>
-        <translation>Pokaż informacje o Rdzeniu Bitcoin</translation>
+        <translation>Pokaż informacje o Rdzeniu Bitcoina</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -371,7 +371,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Szyfruj klucze prywatne, które są w Twoim portfelu</translation>
+        <translation>Szyfruj klucze prywatne, które są w twoim portfelu</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -379,7 +379,7 @@
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem Bitcoin.</translation>
+        <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem bitcoinowym.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -399,11 +399,11 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Żądaj płatności (generuje kod QR oraz bitcoin URI)</translation>
+        <translation>Żądaj płatności (generuje kod QR oraz bitcoinowe URI)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
@@ -450,6 +450,10 @@
         <translation><numerusform>%n godzin</numerusform><numerusform>%n godzin</numerusform><numerusform>%n godzin</numerusform></translation>
     </message>
     <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>dzień</numerusform><numerusform>%n dni</numerusform><numerusform>%n dni</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>%n week(s)</source>
         <translation><numerusform>%n tygodni</numerusform><numerusform>%n tygodni</numerusform><numerusform>%n tygodni</numerusform></translation>
     </message>
@@ -491,7 +495,7 @@
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Synchronizuję się...</translation>
+        <translation>Trwa synchronizacja…</translation>
     </message>
     <message>
         <source>Date: %1
@@ -810,11 +814,11 @@
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
-        <translation>Wprowadzony adres "%1" już istnieje w książce adresowej.</translation>
+        <translation>Wprowadzony adres «%1» już istnieje w książce adresowej.</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Wprowadzony adres "%1" nie jest poprawnym adresem Bitcoin.</translation>
+        <translation>Wprowadzony adres «%1"» nie jest poprawnym adresem bitcoinowym.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -852,7 +856,7 @@
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>version</source>
@@ -888,7 +892,7 @@
     </message>
     <message>
         <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Wybierz język, na przykład "de_DE" (domyślnie: język systemowy)</translation>
+        <translation>Wybierz język, na przykład «de_DE» (domyślnie: język systemowy)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -915,7 +919,7 @@
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation>Witam w Bitcoin Core</translation>
+        <translation>Witaj w Bitcoin Core</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
@@ -923,7 +927,7 @@
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Program pobierze i będzie przechowywał kopię łańcucha bloków Bitcoin. W wybranym katalogu musi być przynajmniej %1GB miejsca, a z czasem ilość danych będzie rosła. Portfel będzie przechowywany w tym samym katalogu.</translation>
+        <translation>Program pobierze i będzie przechowywał kopię łańcucha bloków bitcoinowych. W wybranym katalogu musi być przynajmniej %1 GB miejsca, a z czasem ilość danych będzie rosła. Portfel będzie przechowywany w tym samym katalogu.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -935,11 +939,11 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Błąd: Określony folder danych "%1" nie mógł zostać utworzony.</translation>
+        <translation>Błąd: podany folder danych «%1» nie mógł zostać utworzony.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1037,7 +1041,7 @@
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>Z&amp;resetuj Ustawienia</translation>
+        <translation>Z&amp;resetuj ustawienia</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1049,7 +1053,7 @@
     </message>
     <message>
         <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>Uruchamiaj Bitcoin wraz z zalogowaniem do &amp;systemu</translation>
+        <translation>Uruchamiaj Bitcoin Core wraz z zalogowaniem do &amp;systemu</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1093,7 +1097,7 @@
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxy &amp;IP: </translation>
+        <translation>&amp;IP proxy: </translation>
     </message>
     <message>
         <source>&amp;Port:</source>
@@ -1102,6 +1106,10 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port proxy (np. 9050)</translation>
+    </message>
+    <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Użyto do połączenia z peerami przy pomocy:</translation>
     </message>
     <message>
         <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1120,8 +1128,12 @@
         <translation>Tor</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Połącz się z siecią Bitcoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Użyj oddzielnego prozy SOCKS5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
+        <translation>Użyj oddzielnego proxy SOCKS5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1133,7 +1145,7 @@
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimalizuj do paska przy zegarku zamiast do paska zadań</translation>
+        <translation>&amp;Minimalizuj do zasobnika systemowego zamiast do paska zadań</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -1145,7 +1157,7 @@
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Język &amp;Użytkownika:</translation>
+        <translation>Język &amp;użytkownika:</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1240,7 +1252,7 @@
     </message>
     <message>
         <source>Total:</source>
-        <translation>Wynosi ogółem:</translation>
+        <translation>Ogółem:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
@@ -1385,7 +1397,7 @@
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Wprowadź adres Bitcoin (np. %1)</translation>
+        <translation>Wprowadź adres bitcoinowy (np. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1428,7 +1440,7 @@
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation>Zapisz Kod QR</translation>
+        <translation>Zapisz kod QR</translation>
     </message>
     <message>
         <source>PNG Image (*.png)</source>
@@ -1462,10 +1474,6 @@
         <translation>Ogólne</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Używana wersja OpenSSL</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Używana wersja BerkeleyDB </translation>
     </message>
@@ -1492,6 +1500,10 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Aktualna liczba bloków</translation>
+    </message>
+    <message>
+        <source>Memory Pool</source>
+        <translation>Memory Pool (obszar pamięci)</translation>
     </message>
     <message>
         <source>Current number of transactions</source>
@@ -1630,8 +1642,28 @@
         <translation>Wyczyść konsolę</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>Odłącz Nod</translation>
+    </message>
+    <message>
         <source>Ban Node for</source>
         <translation>Blokuj węzeł na okres</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;godzina</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;dzień</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;tydzień</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;rok</translation>
     </message>
     <message>
         <source>&amp;Unban Node</source>
@@ -2299,6 +2331,11 @@
         <translation>&amp;Zweryfikuj wiadomość</translation>
     </message>
     <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Wpisz adres, wiadomość oraz sygnaturę (podpis) odbiorcy (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.).  Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle. 
+Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji! </translation>
+    </message>
+    <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>Adres Bitcoin, którym została podpisana wiadomość</translation>
     </message>
@@ -2371,7 +2408,7 @@
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -2838,11 +2875,11 @@
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation>Kopia Zapasowa Portfela</translation>
+        <translation>Kopia zapasowa portfela</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation>Dane Portfela (*.dat)</translation>
+        <translation>Dane portfela (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -2858,7 +2895,7 @@
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation>Wykonano Kopię Zapasową</translation>
+        <translation>Wykonano kopię zapasową</translation>
     </message>
 </context>
 <context>
@@ -2882,6 +2919,18 @@
     <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Akceptuj linię poleceń oraz polecenia JSON-RPC</translation>
+    </message>
+    <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Jeżeli &lt;category&gt; nie zostanie określona lub &lt;category&gt; = 1, wyświetl wszystkie informacje debugowania.</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Proszę sprawdzić czy data i czas na Twoim komputerze są poprawne! Jeżeli ustawienia zegara będą złe, Bitcoin Core nie będzie działał prawidłowo.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Przycinanie skonfigurowano poniżej minimalnych %d MiB. Proszę użyć wyższej liczby.</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
@@ -2908,6 +2957,10 @@
         <translation>Akceptuj połączenia z zewnątrz (domyślnie: 1 jeśli nie ustawiono -proxy lub -connect)</translation>
     </message>
     <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee ma ustawioną bardzo dużą wartość!  Jest to prowizja za transakcje, którą możesz zapłacić gdy oszacowanie opłaty jest niemożliwe.</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Skojarz z podanym adresem i nasłuchuj na nim. Użyj formatu [host]:port dla IPv6</translation>
     </message>
@@ -2924,6 +2977,10 @@
         <translation>Wykonaj polecenie, kiedy transakcja portfela ulegnie zmianie (%s w poleceniu zostanie zastąpione przez TxID)</translation>
     </message>
     <message>
+        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
+        <translation>Wymuś przekazywanie transakcji od osób z białej listy, nawet jeśli narusza to lokalną politykę przekazywania (default: %d)</translation>
+    </message>
+    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Ustaw liczbę wątków skryptu weryfikacyjnego (%u do %d, 0 = auto, &lt;0 = zostaw tyle rdzeni wolnych, domyślnie: %d)</translation>
     </message>
@@ -2934,6 +2991,14 @@
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Nie można przywiązać z portem %s na tym komputerze. Bitcoin Core prawdopodobnie już działa.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Niewspierany argument -whitelistalwaysrelay zignorowany, użyj -whitelistrelay i/lub -whitelistforcerelay.</translation>
+    </message>
+    <message>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>Używaj UPnP do mapowania portu nasłuchu (domyślnie: 1 gdy nasłuchuje i brak -proxy)</translation>
     </message>
     <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
@@ -2958,6 +3023,10 @@
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Dodawaj do białej listy węzły łączące się z podanej maski sieciowej lub adresu IP. Może być określona kilka razy.</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempool musi być przynajmniej %d MB</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2990,6 +3059,10 @@
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Czy chcesz teraz przebudować bazę bloków?</translation>
+    </message>
+    <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>Włącz wyświetlanie hasha bloku w &lt;address&gt;</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3028,12 +3101,24 @@
         <translation>Nieprawidłowy adres -onion: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nieprawidłowa kwota dla -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Utrzymuj obszar pamięci dla transakcji poniżej &lt;n&gt; MB (default: %u)</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Brak wystarczającej liczby deskryptorów plików. </translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Łącz z węzłami tylko w sieci &lt;net&gt; (ipv4, piv6 lub onion)</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Wyświetl wersję i wyjdź</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3064,8 +3149,16 @@
         <translation>Niewspierany argument -debugnet zignorowany, użyj -debug=net.</translation>
     </message>
     <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Znaleziono nieprawidłowy argument -tor, użyj -onion.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Użyj UPnP do przekazania portu nasłuchu (domyślnie : %u)</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>Komentarz User Agent (%s) zawiera niebezpieczne znaki.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3082,10 +3175,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>Opcje portfela:</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Uwaga: Ta wersja jest przestarzała, wymagana jest aktualizacja!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3172,10 +3261,6 @@
         <translation>Aktywuje najlepszy łańcuch</translation>
     </message>
     <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Zawsze przekazuj informacje o transakcjach otrzymanych od osób z białej listy (domyślnie: %d)</translation>
-    </message>
-    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>Próbuj podczas uruchamiania programu odzyskać klucze prywatne z uszkodzonego pliku wallet.dat</translation>
     </message>
@@ -3260,6 +3345,10 @@
         <translation>Odbieranie i wyświetlanie alertów sieci P2P (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>Zmniejszanie -maxconnections z %d do %d z powodu ograniczeń systemu.</translation>
+    </message>
+    <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation>Przeskanuj podczas ładowania programu łańcuch bloków w poszukiwaniu zaginionych transakcji portfela</translation>
     </message>
@@ -3336,6 +3425,10 @@
         <translation>Usuwam wszystkie transakcje z portfela...</translation>
     </message>
     <message>
+        <source>ZeroMQ notification options:</source>
+        <translation>Opcje powiadomień ZeroMQ:</translation>
+    </message>
+    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat uszkodzony, odtworzenie się nie powiodło</translation>
     </message>
@@ -3368,12 +3461,24 @@
         <translation>(1 = zachowaj wysłane metadane np. właściciel konta i informacje o żądaniach płatności, 2 = porzuć wysłane metadane)</translation>
     </message>
     <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-matxfee jest ustawione bardzo wysokie! Tak wysokie opłaty mogą być zapłacone w jednej transakcji.</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>-paytxfee ma ustawioną bardzo dużą wartość! Jest to prowizja za transakcje, którą płacisz, gdy wysyłasz monety.</translation>
+    </message>
+    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Nie trzymaj w pamięci transakcji starszych niż &lt;n&gt; godzin (domyślnie: %u)</translation>
+        <translation>Nie trzymaj w pamięci transakcji starszych niż &lt;n&gt; godz. (domyślnie: %u)</translation>
     </message>
     <message>
         <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Ostrzeżenie: błąd odczytu wallet.dat! Wszystkie klucze zostały odczytane, ale może brakować pewnych danych transakcji lub wpisów w książce adresowej lub mogą one być nieprawidłowe.</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Opłaty (w %s/Kb) mniejsze niż ta będą traktowane jako bez opłaty przy tworzeniu transakcji (domyślnie: %s)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
@@ -3390,6 +3495,18 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Wypuść informacje debugowania (domyślnie: %u, podanie &lt;category&gt; jest opcjonalne)</translation>
+    </message>
+    <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Wspieraj filtrowanie bloków i transakcji używając Filtrów Blooma (domyślnie: %u)</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Całkowita długość łańcucha wersji (%i) przekracza maksymalną dopuszczalną długość (%i). Zmniejsz ilość lub rozmiar parametru uacomment.</translation>
+    </message>
+    <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>Próbuje utrzymać ruch wychodzący poniżej zadanego (w MiB na dobę), 0 = bez limitu (domyślnie: %d)</translation>
     </message>
     <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>

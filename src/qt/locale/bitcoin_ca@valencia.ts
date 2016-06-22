@@ -1414,10 +1414,6 @@
         <translation>General</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Utilitzant OpenSSL versió</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Utilitzant BerkeleyDB versió</translation>
     </message>
@@ -2958,10 +2954,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>Opcions de moneder:</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Avís: esta versió és obsoleta; cal actualitzar-la!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>

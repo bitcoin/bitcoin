@@ -30,6 +30,10 @@
         <translation>Fshi adresen e selektuar nga lista</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Fshi</translation>
     </message>
@@ -790,6 +794,10 @@
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

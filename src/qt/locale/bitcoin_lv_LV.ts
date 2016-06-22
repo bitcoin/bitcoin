@@ -1080,10 +1080,6 @@
         <translation>Vispārējs</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Izmantotā OpenSSL versija</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Sākuma laiks</translation>
     </message>

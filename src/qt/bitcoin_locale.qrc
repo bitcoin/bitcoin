@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/translations">
+        <file alias="af">locale/bitcoin_af.qm</file>
         <file alias="af_ZA">locale/bitcoin_af_ZA.qm</file>
         <file alias="ar">locale/bitcoin_ar.qm</file>
         <file alias="be_BY">locale/bitcoin_be_BY.qm</file>
@@ -19,7 +20,10 @@
         <file alias="en_GB">locale/bitcoin_en_GB.qm</file>
         <file alias="en">locale/bitcoin_en.qm</file>
         <file alias="eo">locale/bitcoin_eo.qm</file>
+        <file alias="es_419">locale/bitcoin_es_419.qm</file>
+        <file alias="es_AR">locale/bitcoin_es_AR.qm</file>
         <file alias="es_CL">locale/bitcoin_es_CL.qm</file>
+        <file alias="es_CO">locale/bitcoin_es_CO.qm</file>
         <file alias="es_DO">locale/bitcoin_es_DO.qm</file>
         <file alias="es_ES">locale/bitcoin_es_ES.qm</file>
         <file alias="es_MX">locale/bitcoin_es_MX.qm</file>
@@ -30,6 +34,7 @@
         <file alias="eu_ES">locale/bitcoin_eu_ES.qm</file>
         <file alias="fa_IR">locale/bitcoin_fa_IR.qm</file>
         <file alias="fa">locale/bitcoin_fa.qm</file>
+        <file alias="fil">locale/bitcoin_fil.qm</file>
         <file alias="fi">locale/bitcoin_fi.qm</file>
         <file alias="fr_CA">locale/bitcoin_fr_CA.qm</file>
         <file alias="fr_FR">locale/bitcoin_fr_FR.qm</file>
@@ -40,6 +45,7 @@
         <file alias="hr">locale/bitcoin_hr.qm</file>
         <file alias="hu">locale/bitcoin_hu.qm</file>
         <file alias="id_ID">locale/bitcoin_id_ID.qm</file>
+        <file alias="it_IT">locale/bitcoin_it_IT.qm</file>
         <file alias="it">locale/bitcoin_it.qm</file>
         <file alias="ja">locale/bitcoin_ja.qm</file>
         <file alias="ka">locale/bitcoin_ka.qm</file>
@@ -59,22 +65,27 @@
         <file alias="pt_BR">locale/bitcoin_pt_BR.qm</file>
         <file alias="pt_PT">locale/bitcoin_pt_PT.qm</file>
         <file alias="ro_RO">locale/bitcoin_ro_RO.qm</file>
+        <file alias="ro">locale/bitcoin_ro.qm</file>
         <file alias="ru_RU">locale/bitcoin_ru_RU.qm</file>
         <file alias="ru">locale/bitcoin_ru.qm</file>
         <file alias="sk">locale/bitcoin_sk.qm</file>
         <file alias="sl_SI">locale/bitcoin_sl_SI.qm</file>
         <file alias="sq">locale/bitcoin_sq.qm</file>
+        <file alias="sr@latin">locale/bitcoin_sr@latin.qm</file>
         <file alias="sr">locale/bitcoin_sr.qm</file>
         <file alias="sv">locale/bitcoin_sv.qm</file>
+        <file alias="ta">locale/bitcoin_ta.qm</file>
         <file alias="th_TH">locale/bitcoin_th_TH.qm</file>
         <file alias="tr_TR">locale/bitcoin_tr_TR.qm</file>
         <file alias="tr">locale/bitcoin_tr.qm</file>
         <file alias="uk">locale/bitcoin_uk.qm</file>
         <file alias="ur_PK">locale/bitcoin_ur_PK.qm</file>
         <file alias="uz@Cyrl">locale/bitcoin_uz@Cyrl.qm</file>
+        <file alias="uz@Latn">locale/bitcoin_uz@Latn.qm</file>
         <file alias="vi">locale/bitcoin_vi.qm</file>
         <file alias="vi_VN">locale/bitcoin_vi_VN.qm</file>
         <file alias="zh_CN">locale/bitcoin_zh_CN.qm</file>
+        <file alias="zh_HK">locale/bitcoin_zh_HK.qm</file>
         <file alias="zh">locale/bitcoin_zh.qm</file>
         <file alias="zh_TW">locale/bitcoin_zh_TW.qm</file>
     </qresource>

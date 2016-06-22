@@ -1112,10 +1112,6 @@
         <translation>საერთო</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>OpenSSL-ის ვერსია</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>სტარტის დრო</translation>
     </message>

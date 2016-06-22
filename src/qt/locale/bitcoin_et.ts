@@ -830,10 +830,6 @@
         <translation>Üldine</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Kasutan OpenSSL versiooni</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Käivitamise hetk</translation>
     </message>

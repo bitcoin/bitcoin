@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>לחץ משק ימני כדי לערוך כתובת או חברה</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>יצירת כתובת חדשה</translation>
     </message>
@@ -164,6 +168,10 @@
         <translation>האם אכן להצפין את הארנק?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>ליבת ביטקוין תיסגר עכשיו כדי לסיים את תליך ההצפנה. זכור כי הצפנה אינה יכולה להגן עלייך באופן מלא מגניבה שמקורה בתוכנות זדוניות המצויות במחשב שלך.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>לתשומת לבך: כל גיבוי קודם שביצעת לארנק שלך יש להחליף בקובץ הארנק המוצפן שזה עתה נוצר. מטעמי אבטחה, גיבויים קודמים של קובץ הארנק הבלתי-מוצפן יהפכו לחסרי תועלת עם התחלת השימוש בארנק החדש המוצפן.</translation>
     </message>
@@ -178,6 +186,10 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>נא להזין את מילת הצופן החדשה לארנק.&lt;br/&gt;כדאי להשתמש במילת צופן המורכבת מ&lt;b&gt;עשרה תווים אקראיים ומעלה&lt;/b&gt;, או &lt;b&gt;שמונה מילים ומעלה&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>הכנס את מילת הצופן הישנה ומילת צופן חדשה לארנק שלך.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -1258,10 +1270,6 @@
     <message>
         <source>General</source>
         <translation>כללי</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>שימוש ב־OpenSSL גרסה</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
