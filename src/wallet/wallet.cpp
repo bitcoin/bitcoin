@@ -217,6 +217,17 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
     return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
 }
 
+bool CWallet::EraseKey(const CPubKey &pubKey)
+{
+    AssertLockHeld(cs_wallet);
+    CCryptoKeyStore::RemoveKey(pubKey.GetID());
+    mapKeyMetadata.erase(pubKey.GetID());
+    CWalletDB walletDB(strWalletFile);
+    walletDB.EraseKey(pubKey);
+    walletDB.Flush();
+    return true;
+}
+
 bool CWallet::AddCScript(const CScript& redeemScript)
 {
     if (!CCryptoKeyStore::AddCScript(redeemScript))
