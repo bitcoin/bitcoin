@@ -1,17 +1,18 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-try:
-    import urllib.parse as urlparse
-except ImportError:
-    import urlparse
+import urllib.parse
 
 class AbandonConflictTest(BitcoinTestFramework):
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 2
+        self.setup_clean_chain = False
 
     def setup_network(self):
         self.nodes = []
@@ -34,7 +35,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert(balance - newbalance < Decimal("0.001")) #no more than fees lost
         balance = newbalance
 
-        url = urlparse.urlparse(self.nodes[1].url)
+        url = urllib.parse.urlparse(self.nodes[1].url)
         self.nodes[0].disconnectnode(url.hostname+":"+str(p2p_port(1)))
 
         # Identify the 10btc outputs
@@ -151,9 +152,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = self.nodes[0].getbalance()
         #assert(newbalance == balance - Decimal("10"))
-        print "If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer"
-        print "conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315"
-        print balance , " -> " , newbalance , " ?"
+        print("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
+        print("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
+        print(str(balance) + " -> " + str(newbalance) + " ?")
 
 if __name__ == '__main__':
     AbandonConflictTest().main()

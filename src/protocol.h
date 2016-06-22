@@ -217,13 +217,41 @@ extern const char *SENDHEADERS;
  * @since protocol version 70013 as described by BIP133
  */
 extern const char *FEEFILTER;
+/**
+ * Contains a 1-byte bool and 8-byte LE version number.
+ * Indicates that a node is willing to provide blocks via "cmpctblock" messages.
+ * May indicate that a node prefers to receive new block announcements via a
+ * "cmpctblock" message rather than an "inv", depending on message contents.
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *SENDCMPCT;
+/**
+ * Contains a CBlockHeaderAndShortTxIDs object - providing a header and
+ * list of "short txids".
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *CMPCTBLOCK;
+/**
+ * Contains a BlockTransactionsRequest
+ * Peer should respond with "blocktxn" message.
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *GETBLOCKTXN;
+/**
+ * Contains a BlockTransactions.
+ * Sent in response to a "getblocktxn" message.
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *BLOCKTXN;
 };
 
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
-enum {
+enum ServiceFlags : uint64_t {
+    // Nothing
+    NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the block chain. It is currently
     // set by all Bitcoin Core nodes, and is unset by SPV clients or other peers that just want
     // network services but don't provide them.
@@ -254,7 +282,7 @@ class CAddress : public CService
 {
 public:
     CAddress();
-    explicit CAddress(CService ipIn, uint64_t nServicesIn = NODE_NETWORK);
+    explicit CAddress(CService ipIn, ServiceFlags nServicesIn);
 
     void Init();
 
@@ -270,13 +298,15 @@ public:
         if ((nType & SER_DISK) ||
             (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
             READWRITE(nTime);
-        READWRITE(nServices);
+        uint64_t nServicesInt = nServices;
+        READWRITE(nServicesInt);
+        nServices = (ServiceFlags)nServicesInt;
         READWRITE(*(CService*)this);
     }
 
     // TODO: make private (improves encapsulation)
 public:
-    uint64_t nServices;
+    ServiceFlags nServices;
 
     // disk and network only
     unsigned int nTime;
@@ -293,6 +323,7 @@ enum GetDataMsg
     MSG_TYPE_MAX = MSG_BLOCK,
     // The following can only occur in getdata. Invs always use TX or BLOCK.
     MSG_FILTERED_BLOCK,
+    MSG_CMPCT_BLOCK,
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG,
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,

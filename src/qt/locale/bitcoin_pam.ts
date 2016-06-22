@@ -656,10 +656,6 @@
         <translation>I-Debug ing awang</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Gagamit bersion na ning OpenSSL</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Oras ning umpisa</translation>
     </message>

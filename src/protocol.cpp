@@ -35,6 +35,10 @@ const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
 const char *FEEFILTER="feefilter";
+const char *SENDCMPCT="sendcmpct";
+const char *CMPCTBLOCK="cmpctblock";
+const char *GETBLOCKTXN="getblocktxn";
+const char *BLOCKTXN="blocktxn";
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -62,7 +66,11 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERCLEAR,
     NetMsgType::REJECT,
     NetMsgType::SENDHEADERS,
-    NetMsgType::FEEFILTER
+    NetMsgType::FEEFILTER,
+    NetMsgType::SENDCMPCT,
+    NetMsgType::CMPCTBLOCK,
+    NetMsgType::GETBLOCKTXN,
+    NetMsgType::BLOCKTXN,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -125,7 +133,7 @@ CAddress::CAddress() : CService()
     Init();
 }
 
-CAddress::CAddress(CService ipIn, uint64_t nServicesIn) : CService(ipIn)
+CAddress::CAddress(CService ipIn, ServiceFlags nServicesIn) : CService(ipIn)
 {
     Init();
     nServices = nServicesIn;
@@ -133,7 +141,7 @@ CAddress::CAddress(CService ipIn, uint64_t nServicesIn) : CService(ipIn)
 
 void CAddress::Init()
 {
-    nServices = NODE_NETWORK;
+    nServices = NODE_NONE;
     nTime = 100000000;
 }
 
@@ -165,6 +173,7 @@ std::string CInv::GetCommand() const
     case MSG_TX:             return cmd.append(NetMsgType::TX);
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
+    case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }

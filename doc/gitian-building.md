@@ -1,7 +1,7 @@
 Gitian building
 ================
 
-*Setup instructions for a Gitian build of Bitcoin using a Debian VM or physical system.*
+*Setup instructions for a Gitian build of Bitcoin Core using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Bitcoin
 Core executables. It provides a way to be reasonably sure that the
@@ -26,7 +26,7 @@ Table of Contents
 - [Installing Gitian](#installing-gitian)
 - [Setting up the Gitian image](#setting-up-the-gitian-image)
 - [Getting and building the inputs](#getting-and-building-the-inputs)
-- [Building Bitcoin](#building-bitcoin)
+- [Building Bitcoin Core](#building-bitcoin-core)
 - [Building an alternative repository](#building-an-alternative-repository)
 - [Signing externally](#signing-externally)
 - [Uploading signatures](#uploading-signatures)
@@ -95,11 +95,11 @@ After creating the VM, we need to configure it.
 
 - Click `Ok` twice to save.
 
-Get the [Debian 8.x net installer](http://cdimage.debian.org/debian-cd/8.4.0/amd64/iso-cd/debian-8.4.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
+Get the [Debian 8.x net installer](http://cdimage.debian.org/debian-cd/8.5.0/amd64/iso-cd/debian-8.5.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
 This DVD image can be validated using a SHA256 hashing tool, for example on
 Unixy OSes by entering the following in a terminal:
 
-    echo "7a6b418e6a4ee3ca75dda04d79ed96c9e2c33bb0c703ca7e40c6374ab4590748  debian-8.4.0-amd64-netinst.iso" | sha256sum -c
+    echo "ad4e8c27c561ad8248d5ebc1d36eb172f884057bfeb2c22ead823f59fa8c3dff  debian-8.5.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
 Then start the VM. On the first launch you will be asked for a CD or DVD image. Choose the downloaded iso.
@@ -310,7 +310,7 @@ Clone the git repositories for bitcoin and Gitian.
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
 git clone https://github.com/bitcoin/bitcoin
-git clone https://github.com/bitcoin/gitian.sigs.git
+git clone https://github.com/bitcoin-core/gitian.sigs.git
 ```
 
 Setting up the Gitian image
@@ -342,10 +342,10 @@ manual intervention. Also optionally follow the next step: 'Seed the Gitian sour
 and offline git repositories' which will fetch the remaining files required for building
 offline.
 
-Building Bitcoin
+Building Bitcoin Core
 ----------------
 
-To build Bitcoin (for Linux, OS X and Windows) just follow the steps under 'perform
+To build Bitcoin Core (for Linux, OS X and Windows) just follow the steps under 'perform
 Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the bitcoin repository.
 
 This may take some time as it will build all the dependencies needed for each descriptor.
@@ -441,10 +441,10 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 ```bash
 
 cd /some/root/path/
-git clone https://github.com/bitcoin/bitcoin-detached-sigs.git
+git clone https://github.com/bitcoin-core/bitcoin-detached-sigs.git
 
-BTCPATH=/some/root/path/bitcoin.git
-SIGPATH=/some/root/path/bitcoin-detached-sigs.git
+BTCPATH=/some/root/path/bitcoin
+SIGPATH=/some/root/path/bitcoin-detached-sigs
 
 ./bin/gbuild --url bitcoin=${BTCPATH},signature=${SIGPATH} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
 ```
@@ -473,5 +473,5 @@ Uploading signatures
 ---------------------
 
 After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if that's not possible create a pull
+[bitcoin-core/gitian.sigs](https://github.com/bitcoin-core/gitian.sigs/) repository, or if that's not possible create a pull
 request. You can also mail the files to Wladimir (laanwj@gmail.com) and he will commit them.

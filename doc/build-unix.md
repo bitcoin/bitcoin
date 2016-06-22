@@ -124,6 +124,24 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a bitcoin-qt executable will be
 built by default.
 
+Dependency Build Instructions: Fedora
+-------------------------------------
+Build requirements:
+
+    sudo dnf install gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel
+
+Optional:
+
+    sudo dnf install miniupnpc-devel
+
+To build with Qt 5 (recommended) you need the following:
+
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel protobuf-devel
+
+libqrencode (optional) can be installed with:
+
+    sudo dnf install qrencode-devel
+
 Notes
 -----
 The release is built with GCC and then "strip bitcoind" to strip the debug

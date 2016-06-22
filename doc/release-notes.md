@@ -1,6 +1,21 @@
 (note: this is a temporary file, to be added-to by anybody, and moved to
 release-notes at release time)
 
+Bitcoin Core version *version* is now available from:
+
+  <https://bitcoin.org/bin/bitcoin-core-*version*/>
+
+This is a new major version release, including new features, various bugfixes
+and performance improvements, as well as updated translations.
+
+Please report bugs using the issue tracker at github:
+
+  <https://github.com/bitcoin/bitcoin/issues>
+
+To receive security and update notifications, please subscribe to:
+
+  <https://bitcoincore.org/en/list/announcements/join/>
+
 Notable changes
 ===============
 
@@ -28,6 +43,44 @@ RPC low-level changes
   32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
   fixed, but this means that the output will be different than from previous versions.
 
+- Full UTF-8 support in the RPC API. Non-ASCII characters in, for example,
+  wallet labels have always been malformed because they weren't taken into account
+  properly in JSON RPC processing. This is no longer the case. This also affects
+  the GUI debug console.
+
+C++11 and Python 3
+-------------------
+
+Various code modernizations have been done. The Bitcoin Core code base has
+started using C++11. This means that a C++11-capable compiler is now needed for
+building. Effectively this means GCC 4.7 or higher, or Clang 3.3 or higher.
+
+When cross-compiling for a target that doesn't have C++11 libraries, configure with
+`./configure --enable-glibc-back-compat ... LDFLAGS=-static-libstdc++`.
+
+For running the functional tests in `qa/rpc-tests`, Python3.4 or higher is now
+required.
+
+Linux ARM builds
+------------------
+
+Due to popular request, Linux ARM builds have been added to the uploaded
+executables.
+
+The following extra files can be found in the download directory or torrent:
+
+- `bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries for the most
+  common 32-bit ARM architecture.
+- `bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries for the most
+  common 64-bit ARM architecture.
+
+ARM builds are still experimental. If you have problems on a certain device or
+Linux distribution combination please report them on the bug tracker, it may be
+possible to resolve them.
+
+Note that Android is not considered ARM Linux in this context. The executables
+are not expected to work out of the box on Android.
+
 0.13.0 Change log
 =================
 
@@ -52,6 +105,22 @@ The following outputs are affected by this change:
 - REST `/rest/block/` (JSON format when including extended tx details)
 - `bitcoin-tx -json`
 
+New mempool information RPC calls
+---------------------------------
+
+RPC calls have been added to output detailed statistics for individual mempool
+entries, as well as to calculate the in-mempool ancestors or descendants of a
+transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
+
+### ZMQ
+
+Each ZMQ notification now contains an up-counting sequence number that allows
+listeners to detect lost notifications.
+The sequence number is always the last element in a multi-part ZMQ notification and
+therefore backward compatible.
+Each message type has its own counter.
+(https://github.com/bitcoin/bitcoin/pull/7762)
+
 ### Configuration and command-line options
 
 ### Block and transaction handling
@@ -74,6 +143,24 @@ feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawik
 ### Build system
 
 ### Wallet
+
+Hierarchical Deterministic Key Generation
+-----------------------------------------
+Newly created wallets will use hierarchical deterministic key generation
+according to BIP32 (keypath m/0'/0'/k').
+Existing wallets will still use traditional key generation.
+
+Backups of HD wallets, regardless of when they have been created, can
+therefore be used to re-generate all possible private keys, even the
+ones which haven't already been generated during the time of the backup.
+
+HD key generation for new wallets can be disabled by `-usehd=0`. Keep in
+mind that this flag only has affect on newly created wallets.
+You can't disable HD key generation once you have created a HD wallet.
+
+There is no distinction between internal (change) and external keys.
+
+[Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
 ### GUI
 

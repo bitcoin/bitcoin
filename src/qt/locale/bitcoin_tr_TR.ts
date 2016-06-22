@@ -86,6 +86,10 @@
         <translation>Adres Listesini Dışa Aktar</translation>
     </message>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Virgül ile ayrılmış dosya (*.csv)</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Dışa Aktarma Başarısız Oldu</translation>
     </message>
@@ -245,6 +249,10 @@
     <message>
         <source>Exporting Failed</source>
         <translation>Dışa Aktarma Başarısız Oldu</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Virgül ile ayrılmış dosya (*.csv)</translation>
     </message>
     <message>
         <source>Label</source>

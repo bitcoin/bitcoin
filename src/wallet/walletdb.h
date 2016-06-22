@@ -41,6 +41,35 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
+/* simple hd chain data model */
+class CHDChain
+{
+public:
+    uint32_t nExternalChainCounter;
+    CKeyID masterKeyID; //!< master key hash160
+
+    static const int CURRENT_VERSION = 1;
+    int nVersion;
+
+    CHDChain() { SetNull(); }
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(nExternalChainCounter);
+        READWRITE(masterKeyID);
+    }
+
+    void SetNull()
+    {
+        nVersion = CHDChain::CURRENT_VERSION;
+        nExternalChainCounter = 0;
+        masterKeyID.SetNull();
+    }
+};
+
 class CKeyMetadata
 {
 public:
@@ -88,7 +117,7 @@ public:
     bool WritePurpose(const std::string& strAddress, const std::string& purpose);
     bool ErasePurpose(const std::string& strAddress);
 
-    bool WriteTx(uint256 hash, const CWalletTx& wtx);
+    bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(uint256 hash);
 
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
@@ -135,6 +164,9 @@ public:
     static bool Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, const std::string& filename);
 
+    //! write the hdchain model (external chain child index counter)
+    bool WriteHDChain(const CHDChain& chain);
+
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
@@ -142,7 +174,6 @@ private:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 };
 
-bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 void ThreadFlushWalletDB(const std::string& strFile);
 
 #endif // BITCOIN_WALLET_WALLETDB_H

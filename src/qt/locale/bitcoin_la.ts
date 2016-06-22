@@ -668,10 +668,6 @@
         <translation>Fenestra Debug</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Utens OpenSSL versione</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Tempus initiandi</translation>
     </message>

@@ -1474,10 +1474,6 @@
         <translation>一般</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>使用中の OpenSSL のバージョン</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>使用中のBerkleyDBバージョン</translation>
     </message>
@@ -2980,6 +2976,18 @@
         <translation>外部からの接続を許可 (初期値:  -proxy または -connect を使用していない場合は1)</translation>
     </message>
     <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee が高すぎます！これは手数料の推定機能が利用できない場合に支払うトランザクション手数料です。</translation>
+    </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>十分なデータが蓄積されていない場合に手数料推定機能が利用する手数料レート (%s/kB) (デフォルト: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>トランザクションの中継を行っていない場合でも、ホワイトリストのピアから受け取った中継トランザクションは受け取るようにする (デフォルト: %d)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>指定のアドレスへバインドし、その上で常にリスンします。IPv6 は [ホスト名]:ポート番号 と表記します</translation>
     </message>
@@ -2994,6 +3002,10 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>ウォレットの取引を変更する際にコマンドを実行 (cmd の %s は TxID に置換される)</translation>
+    </message>
+    <message>
+        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
+        <translation>ホワイトリストのピアから受け取ったトランザクションに関しては、たとえローカルの中継ポリシーに違反しているとしても中継を行うようにする (デフォルト: %d)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -3012,6 +3024,10 @@
         <translation>このコンピュータの %s にバインドすることができません。おそらく Bitcoin Core は既に実行されています。</translation>
     </message>
     <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>サポートされていない引数 -whitelistalwaysrelay は無視されました。-whitelistrelay または -whitelistforcerelay を利用してください</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>リスン ポートの割当に UPnP を使用 (初期値: リスン中および-proxyが指定されていない場合は1)</translation>
     </message>
@@ -3026,6 +3042,10 @@
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>警告： ネットワークは完全に同意しないみたいです。マイナーは何かの問題を経験してるみたいなんです。</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>警告: 未知のバージョンのブロックが採掘されました。未知のルールが導入された可能性があります</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -3046,6 +3066,10 @@
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt;は以下の値を指定できます：</translation>
+    </message>
+    <message>
+        <source>Append comment to the user agent string</source>
+        <translation>ユーザエージェント文字列にコメントを</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3093,6 +3117,10 @@
         <translation>&lt;address&gt; に対し、生トランザクションの公開を有効にする</translation>
     </message>
     <message>
+        <source>Enable transaction replacement in the memory pool (default: %u)</source>
+        <translation>メモリプール内のトランザクションの置換を有効化する (デフォルト: %u)</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>ブロック データベースの初期化中にエラー</translation>
     </message>
@@ -3129,8 +3157,20 @@
         <translation>無効な -onion アドレス：'%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>不正な額 -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>トランザクションのメモリ・プールの総量を &lt;n&gt; メガバイト以下に維持する (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>認証クッキーの場所 (デフォルト: )</translation>
+    </message>
+    <message>
+        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
+        <translation>中継や採掘を行ってもよい、sigopあたりの最小バイト数 (デフォルト: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3139,6 +3179,10 @@
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>&lt;net&gt; (ipv4, ipv6 または onion) ネットワーク内のノードだけに接続する</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>バージョンを表示し終了</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3195,10 +3239,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>ウォレットオプション：</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>警告: このバージョンはサポートされません。アップグレードが必要です！</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3295,10 +3335,6 @@
     <message>
         <source>Activating best chain...</source>
         <translation>最優良のチェインを有効化しています...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>ホワイトリストにあるピアから受け取ったトランザクションを常にリレーする (初期値: %d)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
@@ -3463,6 +3499,10 @@
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>警告: 未知の新しいルールが有効化されました (バージョンビット %i)</translation>
     </message>
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>

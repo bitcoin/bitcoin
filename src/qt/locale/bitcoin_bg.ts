@@ -214,7 +214,11 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Със забранен достъп до</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1228,10 +1232,6 @@
     <message>
         <source>General</source>
         <translation>Основни</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Използване на OpenSSL версия</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>

@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,17 +11,13 @@ class WalletTest (BitcoinTestFramework):
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
         """Return curr_balance after asserting the fee was in range"""
         fee = balance_with_fee - curr_balance
-        target_fee = fee_per_byte * tx_size
-        if fee < target_fee:
-            raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)"%(str(fee), str(target_fee)))
-        # allow the node's estimation to be at most 2 bytes off
-        if fee > fee_per_byte * (tx_size + 2):
-            raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)"%(str(fee), str(target_fee)))
+        assert_fee_amount(fee, tx_size, fee_per_byte * 1000)
         return curr_balance
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 4
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir)
@@ -32,7 +28,13 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
 
     def run_test (self):
-        print "Mining blocks..."
+
+        # Check that there's no UTXO on none of the nodes
+        assert_equal(len(self.nodes[0].listunspent()), 0)
+        assert_equal(len(self.nodes[1].listunspent()), 0)
+        assert_equal(len(self.nodes[2].listunspent()), 0)
+
+        print("Mining blocks...")
 
         self.nodes[0].generate(1)
 
@@ -47,6 +49,11 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), 50)
         assert_equal(self.nodes[1].getbalance(), 50)
         assert_equal(self.nodes[2].getbalance(), 0)
+
+        # Check that only first and second nodes have UTXOs
+        assert_equal(len(self.nodes[0].listunspent()), 1)
+        assert_equal(len(self.nodes[1].listunspent()), 1)
+        assert_equal(len(self.nodes[2].listunspent()), 0)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
@@ -259,6 +266,32 @@ class WalletTest (BitcoinTestFramework):
         except JSONRPCException as e:
             assert("not an integer" in e.error['message'])
 
+        # Import address and private key to check correct behavior of spendable unspents
+        # 1. Send some coins to generate new UTXO
+        address_to_import = self.nodes[2].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(address_to_import, 1)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        # 2. Import address from node2 to node1
+        self.nodes[1].importaddress(address_to_import)
+
+        # 3. Validate that the imported address is watch-only on node1
+        assert(self.nodes[1].validateaddress(address_to_import)["iswatchonly"])
+
+        # 4. Check that the unspents after import are not spendable
+        assert_array_result(self.nodes[1].listunspent(),
+                           {"address": address_to_import},
+                           {"spendable": False})
+
+        # 5. Import private key of the previously imported address on node1
+        priv_key = self.nodes[2].dumpprivkey(address_to_import)
+        self.nodes[1].importprivkey(priv_key)
+
+        # 6. Check that the unspents are now spendable on node1
+        assert_array_result(self.nodes[1].listunspent(),
+                           {"address": address_to_import},
+                           {"spendable": True})
 
         # Mine a block from node0 to an address from node1
         cbAddr = self.nodes[1].getnewaddress()
@@ -269,22 +302,37 @@ class WalletTest (BitcoinTestFramework):
         # Check that the txid and balance is found by node1
         self.nodes[1].gettransaction(cbTxId)
 
-        #check if wallet or blochchain maintenance changes the balance
+        # check if wallet or blockchain maintenance changes the balance
         self.sync_all()
         blocks = self.nodes[0].generate(2)
         self.sync_all()
         balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
         block_count = self.nodes[0].getblockcount()
 
+        # Check modes:
+        #   - True: unicode escaped as \u....
+        #   - False: unicode directly as UTF-8
+        for mode in [True, False]:
+            self.nodes[0].ensure_ascii = mode
+            # unicode check: Basic Multilingual Plane, Supplementary Plane respectively
+            for s in [u'рыба', u'𝅘𝅥𝅯']:
+                addr = self.nodes[0].getaccountaddress(s)
+                label = self.nodes[0].getaccount(addr)
+                assert_equal(label, s)
+                assert(s in self.nodes[0].listaccounts().keys())
+        self.nodes[0].ensure_ascii = True # restore to default
+
+        # maintenance tests
         maintenance = [
             '-rescan',
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            '-salvagewallet',
+            # disabled until issue is fixed: https://github.com/bitcoin/bitcoin/issues/7463
+            # '-salvagewallet',
         ]
         for m in maintenance:
-            print "check " + m
+            print("check " + m)
             stop_nodes(self.nodes)
             wait_bitcoinds()
             self.nodes = start_nodes(3, self.options.tmpdir, [[m]] * 3)
@@ -301,4 +349,4 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
 if __name__ == '__main__':
-    WalletTest ().main ()
+    WalletTest().main()

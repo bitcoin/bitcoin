@@ -1474,10 +1474,6 @@
         <translation>Общие</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Используется версия OpenSSL</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Используется версия BerkeleyDB</translation>
     </message>
@@ -2996,6 +2992,10 @@
         <translation>Выполнить команду, когда меняется транзакция в бумажнике (%s в команде заменяется на TxID)</translation>
     </message>
     <message>
+        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
+        <translation>Всегда разрешать транзакции, полученные от участников из белого списка (по умолчанию: %d)</translation>
+    </message>
+    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Задать число потоков проверки скрипта (от %u до %d, 0=авто, &lt;0 = оставить столько ядер свободными, по умолчанию: %d)</translation>
     </message>
@@ -3028,6 +3028,10 @@
         <translation>Внимание: похоже, в сети нет полного согласия! Некоторый майнеры, возможно, испытывают проблемы.</translation>
     </message>
     <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>Внимание: Получена неизвестная версия блока! Возможно неизвестные правила вступили в силу.</translation>
+    </message>
+    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Внимание: мы не полностью согласны с подключенными участниками! Вам или другим участникам, возможно, следует обновиться.</translation>
     </message>
@@ -3046,6 +3050,10 @@
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; может быть:</translation>
+    </message>
+    <message>
+        <source>Append comment to the user agent string</source>
+        <translation>Добавить комментарий к строке пользовательского агента</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3132,12 +3140,20 @@
         <translation>Сбрасывать транзакции из памяти на диск каждые &lt;n&gt; мегабайт (по умолчанию: %u)</translation>
     </message>
     <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Расположение куки входы(по умолчанию: data dir)</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Недостаточно файловых дескрипторов.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Соединяться только по сети &lt;net&gt; (ipv4, ipv6 или onion)</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Написать версию и выйти</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3194,10 +3210,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>Настройки бумажника:</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Внимание: эта версия устарела; требуется обновление!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3294,10 +3306,6 @@
     <message>
         <source>Activating best chain...</source>
         <translation>Активируется лучшая цепь...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Всегда транслировать транзакции, полученные из белого списка участников (по умолчанию: %d)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
@@ -3462,6 +3470,10 @@
     <message>
         <source>Warning</source>
         <translation>Внимание</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Внимание: неизвестные правила вступили в силу(versionbit %i)</translation>
     </message>
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>

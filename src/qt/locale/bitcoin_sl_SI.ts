@@ -427,7 +427,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktivna povezava v bitcoin omrežje</numerusform><numerusform>%n aktivni povezavi v bitcoin omrežje</numerusform><numerusform>%n aktivne povezave v bitcoin omrežje</numerusform><numerusform>%n aktivnih povezav v bitcoin omrežje</numerusform></translation>
+        <translation><numerusform>%n aktivna povezava v omrežje Bitcoin</numerusform><numerusform>%n aktivni povezavi v omrežje Bitcoin</numerusform><numerusform>%n aktivne povezave v omrežje Bitcoin</numerusform><numerusform>%n aktivnih povezav v omrežje Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -463,7 +463,7 @@
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Zadnji prejeti blok je bil ustvarjen %1 nazaj.</translation>
+        <translation>Zadnji prejeti blok je star %1.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -1322,7 +1322,7 @@
     </message>
     <message>
         <source>Node/Service</source>
-        <translation>Vozlišče/Storitev</translation>
+        <translation>Naslov</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1412,10 +1412,6 @@
     <message>
         <source>General</source>
         <translation>Splošno</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>OpenSSL različica v rabi</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
@@ -2437,7 +2433,7 @@
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Odprto še %n blok</numerusform><numerusform>Odprto še %n bloka</numerusform><numerusform>Odprto še %n bloke</numerusform><numerusform>Odprto še %n blokov</numerusform></translation>
+        <translation><numerusform>Še %n blok do potrditve</numerusform><numerusform>Še %n bloka do potrditve</numerusform><numerusform>Še %n bloki do potrditve</numerusform><numerusform>Še %n blokov do potrditve</numerusform></translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2471,7 +2467,7 @@
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Odprto še %n blok</numerusform><numerusform>Odprto še %n bloka</numerusform><numerusform>Odprto še %n bloke</numerusform><numerusform>Odprto še %n blokov</numerusform></translation>
+        <translation><numerusform>Še %n blok do potrditve</numerusform><numerusform>Še %n bloka do potrditve</numerusform><numerusform>Še %n bloki do potrditve</numerusform><numerusform>Še %n blokov do potrditve</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2956,10 +2952,6 @@
         <translation>Izbire denarnice:</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Opozorilo: Različica vašega odjemalca je zastarela. Potrebna je nadgradnja!</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Ob spremembi vrednosti opcije -txindex boste morali obnoviti bazo podatkov z uporabo opcije -reindex</translation>
     </message>
@@ -3009,7 +3001,7 @@
     </message>
     <message>
         <source>Activating best chain...</source>
-        <translation>Preklapljam na najboljšo verigo ...</translation>
+        <translation>Prehajam na najboljšo verigo ...</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>

@@ -167,6 +167,11 @@ void ImportScript(const CScript& script, const string& strLabel, bool isRedeemSc
         if (!pwalletMain->HaveCScript(script) && !pwalletMain->AddCScript(script))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
         ImportAddress(CBitcoinAddress(CScriptID(script)), strLabel);
+    } else {
+        CTxDestination destination;
+        if (ExtractDestination(script, destination)) {
+            pwalletMain->SetAddressBook(destination, strLabel, "receive");
+        }
     }
 }
 
@@ -195,6 +200,8 @@ UniValue importaddress(const UniValue& params, bool fHelp)
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
+            "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
+            "as change, and not show up in many RPCs.\n"
             "\nExamples:\n"
             "\nImport a script with rescan\n"
             + HelpExampleCli("importaddress", "\"myscript\"") +
@@ -590,7 +597,7 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
+    file << strprintf("# Wallet dump created by Bitcoin %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));

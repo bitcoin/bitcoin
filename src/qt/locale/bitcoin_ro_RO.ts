@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copiază adresa</translation>
+        <translation>&amp;Copiază Adresa</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -43,15 +43,15 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>Şterge</translation>
+        <translation>&amp;Şterge</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Alegeţi adresa unde vreţi să trimiteţi monezile</translation>
+        <translation>Alegeţi adresa unde vreţi să trimiteţi monedele</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Alegeţi adresa unde vreţi să primiţi monezile</translation>
+        <translation>Alegeţi adresa unde vreţi să primiţi monedele</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Acestea sînt adresele dumneavoastră Bitcoin pentru efectuarea plăţilor. Verificaţi întotdeauna cantitatea şi adresa de primire înainte de a trimite monezi.</translation>
+        <translation>Acestea sînt adresele dumneavoastră Bitcoin pentru efectuarea plăţilor. Verificaţi întotdeauna cantitatea şi adresa de primire înainte de a trimite monede.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
@@ -222,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmask</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Banat până la</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -547,7 +555,7 @@
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation>Selectarea monezii</translation>
+        <translation>Selectarea monedei</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -874,7 +882,35 @@
         <source>command-line options</source>
         <translation>Opţiuni linie de comandă</translation>
     </message>
-    </context>
+    <message>
+        <source>UI Options:</source>
+        <translation>Opţiuni UI:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Alege dosarul de date la pornire (implicit: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Setează limba, de exemplu: "ro_RO" (implicit: sistem local)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Porniţi minimizat</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Setare rădăcină certificat SSL pentru cerere de plată (implicit: -sistem- )</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Afişează ecran splash la pornire (implicit: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Resetează toate schimbările făcute în GUI</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1012,6 +1048,10 @@
         <translation>Reţea</translation>
     </message>
     <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>Porneşte automat Bitcoin Core după logarea în sistem.</translation>
+    </message>
+    <message>
         <source>&amp;Start Bitcoin Core on system login</source>
         <translation>Porneşte Nucleul Bitcoin la pornirea sistemului</translation>
     </message>
@@ -1066,6 +1106,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Portul proxy (de exemplu: 9050)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1313,6 +1365,10 @@
         <translation>Agent utilizator</translation>
     </message>
     <message>
+        <source>Node/Service</source>
+        <translation>Nod/Serviciu</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Timp ping</translation>
     </message>
@@ -1402,10 +1458,6 @@
         <translation>General</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Foloseşte OpenSSL versiunea</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Foloseşte BerkeleyDB versiunea</translation>
     </message>
@@ -1434,6 +1486,14 @@
         <translation>Numărul curent de blocuri</translation>
     </message>
     <message>
+        <source>Current number of transactions</source>
+        <translation>Numărul curent de tranzacţii</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Memorie folosită</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>Recepţionat</translation>
     </message>
@@ -1450,12 +1510,28 @@
         <translation>Selectaţi un partener pentru a vedea informaţiile detaliate.</translation>
     </message>
     <message>
+        <source>Whitelisted</source>
+        <translation>Whitelisted</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <translation>Direcţie</translation>
     </message>
     <message>
         <source>Version</source>
         <translation>Versiune</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>Bloc de început</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>Headere Sincronizate</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Blocuri Sincronizate</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1526,6 +1602,26 @@
         <translation>Curăţă consola</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>&amp;Deconectare nod</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;oră</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;zi</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;săptămână</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;an</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Bun venit la consola Nucleului Bitcoin RPC.</translation>
     </message>
@@ -1568,6 +1664,14 @@
     <message>
         <source>Outbound</source>
         <translation>Ieşire</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Da</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nu</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1918,6 +2022,10 @@
         <translation>Copiază rest</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Suma totală %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>sau</translation>
     </message>
@@ -1948,6 +2056,10 @@
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Adresa destinatarului nu este validă, vă rugăm să o verificaţi.</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Adresă duplicat găsită: fiecare adresă ar trebui folosită o singură dată.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2317,7 +2429,7 @@
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Monezile generate trebuie să crească %1 blocuri înainte să poată fi cheltuite. Cînd aţi generat acest bloc, a fost transmis reţelei pentru a fi adaugat la lanţul de blocuri. Aceasta  se poate întîmpla ocazional dacă alt nod generează un bloc la numai cîteva secunde de al dvs.</translation>
+        <translation>Monedele generate trebuie să crească %1 blocuri înainte să poată fi cheltuite. Cînd aţi generat acest bloc, a fost transmis reţelei pentru a fi adaugat la lanţul de blocuri. Aceasta se poate întîmpla ocazional dacă alt nod generează un bloc la numai cîteva secunde de al dvs.</translation>
     </message>
     <message>
         <source>Debug information</source>

@@ -222,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>عنوان البروتوكول/قناع</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>محظور حتى</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -326,6 +334,10 @@
         <translation>&amp;نافذة المعالجة</translation>
     </message>
     <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>إفتح وحدة التصحيح و التشخيص</translation>
+    </message>
+    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;التحقق من الرسالة...</translation>
     </message>
@@ -362,6 +374,14 @@
         <translation>تشفير المفتاح الخاص بمحفظتك</translation>
     </message>
     <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>وقَع الرسائل بواسطة ال: Bitcoin الخاص بك لإثبات امتلاكك لهم</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>تحقق من الرسائل للتأكد من أنَها وُقعت برسائل Bitcoin محدَدة</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;ملف</translation>
     </message>
@@ -382,12 +402,56 @@
         <translation>جوهر البيت كوين</translation>
     </message>
     <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>أطلب دفعات (يولد كودات الرمز المربع وبيت كوين: العناوين المعطاة)</translation>
+    </message>
+    <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>حول bitcoin core</translation>
     </message>
     <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>تغيير خيارات الإعداد لأساس Bitcoin</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>عرض قائمة عناوين الإرسال المستخدمة والملصقات</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>عرض قائمة عناوين الإستقبال المستخدمة والملصقات</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>فتح URI : Bitcoin أو طلب دفع</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;خيارات سطر الأوامر</translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>لا يوجد أي مصدر الكتلة</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>لم يتم معالجة أي كتلة سجل المعاملات</numerusform><numerusform>تم معالجة كتلة واحدة سجل المعاملات</numerusform><numerusform>تم معالجة كتلتين سجل المعاملات</numerusform><numerusform>تم معالجة %n كتل سجل المعاملات</numerusform><numerusform>تم معالجة %n كتلة سجل المعاملات</numerusform><numerusform>تم معالجة %n كتلة سجل المعاملات</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>0 ساعة</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعتين</numerusform><numerusform>%n ساعات</numerusform><numerusform>%n ساعة</numerusform><numerusform>%n ساعات</numerusform></translation>
+    </message>
+    <message>
         <source>%1 and %2</source>
         <translation>%1 و %2</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>تم توليد الكتلة المستقبلة الأخيرة منذ %1.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>المعاملات بعد ذلك لن تكون مريئة بعد.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -464,6 +528,14 @@
         <translation>المبلغ</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation>مستقبل مع ملصق</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>مستقبل مع عنوان</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>التاريخ</translation>
     </message>
@@ -532,6 +604,14 @@
         <translation>متوسط-مرتفع</translation>
     </message>
     <message>
+        <source>medium</source>
+        <translation>متوسط</translation>
+    </message>
+    <message>
+        <source>low-medium</source>
+        <translation>متوسط-منخفض</translation>
+    </message>
+    <message>
         <source>low</source>
         <translation>منخفض</translation>
     </message>
@@ -548,12 +628,28 @@
         <translation>لا شيء</translation>
     </message>
     <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>هذا الملصق يصبح أخمرا إذا كان حجم المعاملة أكبر من 1000 بايت.</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>نعم</translation>
     </message>
     <message>
         <source>no</source>
         <translation>لا</translation>
+    </message>
+    <message>
+        <source>This means a fee of at least %1 per kB is required.</source>
+        <translation>هذا يعني أن من المطلوب أن يكون الرسم ألى الأقل %1 لكل كيلوبايت.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- 1 byte per input.</source>
+        <translation>يمكن أن يتفاوت بـ 1 بايت لكل مساهمة.</translation>
+    </message>
+    <message>
+        <source>Transactions with higher priority are more likely to get included into a block.</source>
+        <translation>المعاملات التي لديها أولوية أعلى على الأرجح سيتم إنضمامها في الكتلة.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -599,6 +695,10 @@
         <translation>هدا العنوان "%1" موجود مسبقا في دفتر العناوين</translation>
     </message>
     <message>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>العنوان المدخل "%1" ليس عنوان بيت كوين صحيح.</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation> يمكن فتح المحفظة.</translation>
     </message>
@@ -616,6 +716,14 @@
     <message>
         <source>name</source>
         <translation>الاسم</translation>
+    </message>
+    <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>الدليل موجوج بالفعل. أضف %1 لو نويت إنشاء دليل جديد هنا.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>المسار موجود بالفعل، وهو ليس دليلاً.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -637,10 +745,38 @@
         <translation>عن جوهر البيت كوين</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>خيارات سطر الأوامر</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>المستخدم</translation>
     </message>
-    </context>
+    <message>
+        <source>command-line options</source>
+        <translation>خيارات سطر الأوامر</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>خيارات واجهة المستخدم</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>اختر دليل البيانات عند بدء التشغير (افتراضي: %u)</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>أضع شهادة بروتوكول الشبقة الأمنية لطلب المدفوع (افتراضي: -نظام-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>أظهر شاشة البداية عند بدء التشغيل (افتراضي: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>إعادة تعيين كل الإعدادات تم تغييرها من خلال الواجهة الرسومية</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1794,12 +1930,24 @@
         <translation>عنوان البروكسي غير صحيح : '%s'</translation>
     </message>
     <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>إنتاج معاملات بث المحفظة</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation>اموال غير كافية</translation>
     </message>
     <message>
+        <source>Loading block index...</source>
+        <translation>تحميل مؤشر الكتلة</translation>
+    </message>
+    <message>
         <source>Loading wallet...</source>
         <translation>تحميل المحفظه</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>لا يمكن تخفيض قيمة المحفظة</translation>
     </message>
     <message>
         <source>Cannot write default address</source>

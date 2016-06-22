@@ -5,7 +5,9 @@ Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
 a single style, so please use it in new code. Old code will be converted
 gradually.
-- Basic rules specified in src/.clang-format. Use a recent clang-format-3.5 to format automatically.
+- Basic rules specified in [src/.clang-format](/src/.clang-format).
+  Use a recent clang-format to format automatically using one of the [dev scripts]
+  (/contrib/devtools/README.md#clang-formatpy).
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
@@ -263,7 +265,7 @@ General C++
       the `.h` to the `.cpp` should not result in build errors
 
 - Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example by using
-  `scoped_pointer` for allocations in a function.
+  `unique_ptr` for allocations in a function.
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety
 
@@ -282,10 +284,9 @@ C++ data structures
   - *Rationale*: Behavior is undefined. In C++ parlor this means "may reformat
     the universe", in practice this has resulted in at least one hard-to-debug crash bug
 
-- Watch out for vector out-of-bounds exceptions. `&vch[0]` is illegal for an
-  empty vector, `&vch[vch.size()]` is always illegal. Use `begin_ptr(vch)` and
-  `end_ptr(vch)` to get the begin and end pointer instead (defined in
-  `serialize.h`)
+- Watch out for out-of-bounds vector access. `&vch[vch.size()]` is illegal,
+  including `&vch[0]` for an empty vector. Use `vch.data()` and `vch.data() +
+  vch.size()` instead.
 
 - Vector bounds checking is only enabled in debug mode. Do not rely on it
 
@@ -321,7 +322,7 @@ Strings and formatting
     buffer overflows and surprises with `\0` characters. Also some C string manipulations
     tend to act differently depending on platform, or even the user locale
 
-- Use `ParseInt32`, `ParseInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
+- Use `ParseInt32`, `ParseInt64`, `ParseUInt32`, `ParseUInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
 
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues
 
@@ -379,3 +380,51 @@ GUI
   - *Rationale*: Model classes pass through events and data from the core, they
     should not interact with the user. That's where View classes come in. The converse also
     holds: try to not directly access core data structures from Views.
+
+Git and github tips
+---------------------
+
+- For resolving merge/rebase conflicts, it can be useful to enable diff3 style using
+  `git config merge.conflictstyle diff3`. Instead of
+
+        <<<
+        yours
+        ===
+        theirs
+        >>>
+
+  you will see
+
+        <<<
+        yours
+        |||
+        original
+        ===
+        theirs
+        >>>
+
+  This may make it much clearer what caused the conflict. In this style, you can often just look
+  at what changed between *original* and *theirs*, and mechanically apply that to *yours* (or the other way around).
+
+- When reviewing patches which change indentation in C++ files, use `git diff -w` and `git show -w`. This makes
+  the diff algorithm ignore whitespace changes. This feature is also available on github.com, by adding `?w=1`
+  at the end of any URL which shows a diff.
+
+- When reviewing patches that change symbol names in many places, use `git diff --word-diff`. This will instead
+  of showing the patch as deleted/added *lines*, show deleted/added *words*.
+
+- When reviewing patches that move code around, try using
+  `git diff --patience commit~:old/file.cpp commit:new/file/name.cpp`, and ignoring everything except the
+  moved body of code which should show up as neither `+` or `-` lines. In case it was not a pure move, this may
+  even work when combined with the `-w` or `--word-diff` options described above.
+
+- When looking at other's pull requests, it may make sense to add the following section to your `.git/config`
+  file:
+
+        [remote "upstream-pull"]
+                fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+                url = git@github.com:bitcoin/bitcoin.git
+
+  This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all`
+  or `git fetch upstream-pull`. Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`,
+  `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.

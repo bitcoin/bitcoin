@@ -1475,10 +1475,6 @@ Var vänlig och försök igen.</translation>
         <translation>Generell</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Använder OpenSSL version</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Använder BerkeleyDB versionen</translation>
     </message>
@@ -2981,6 +2977,18 @@ Var vänlig och försök igen.</translation>
         <translation>Acceptera anslutningar utifrån (förvalt: 1 om ingen -proxy eller -connect)</translation>
     </message>
     <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee är satt väldigt högt! Detta är avgiften du kan komma att betala om uppskattad avgift inte finns tillgänglig.</translation>
+    </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>En avgiftskurs (i %s/kB) som används när det inte finns tillräcklig data för att uppskatta avgiften (förvalt: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>Acceptera vidarebefodrade transaktioner från vitlistade noder även när transaktioner inte vidarebefodras (förvalt: %d)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind till given adress och lyssna alltid på den. Använd [värd]:port notation för IPv6</translation>
     </message>
@@ -2995,6 +3003,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Exekvera kommando när en plånbokstransaktion ändras (%s i cmd är ersatt av TxID)</translation>
+    </message>
+    <message>
+        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
+        <translation>Vidarebefodra alltid transaktioner från vitlistade noder även om de bryter mot lokala reläpolicyn (förvalt: %d)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -3013,6 +3025,10 @@ Var vänlig och försök igen.</translation>
         <translation>Det går inte att binda till %s på den här datorn. Bitcoin Core är förmodligen redan igång.</translation>
     </message>
     <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Argumentet -whitelistalwaysrelay stöds inte utan ignoreras, använd -whitelistrelay och/eller -whitelistforcerelay.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Använd UPnP för att mappa den lyssnande porten (förvalt: 1 när lyssning aktiverat och utan -proxy)</translation>
     </message>
@@ -3027,6 +3043,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Varning: Nätverket verkar inte vara helt överens! Några miners verkar ha problem.</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>Varning: Okända blockversioner bryts! Det är möjligt att okända regler används</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -3047,6 +3067,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; Kan vara:</translation>
+    </message>
+    <message>
+        <source>Append comment to the user agent string</source>
+        <translation>Lägg till kommentar till user-agent-strängen</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3093,6 +3117,10 @@ Var vänlig och försök igen.</translation>
         <translation>Aktivera publicering av råa transaktioner i &lt;adress&gt;</translation>
     </message>
     <message>
+        <source>Enable transaction replacement in the memory pool (default: %u)</source>
+        <translation>Aktivera byte av transaktioner i minnespoolen (förvalt: %u)</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Fel vid initiering av blockdatabasen</translation>
     </message>
@@ -3129,8 +3157,20 @@ Var vänlig och försök igen.</translation>
         <translation>Ogiltig -onion adress:'%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -fallbackfee=&lt;belopp&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Håll minnespoolen över transaktioner under &lt;n&gt; megabyte (förvalt: %u)</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Plats för authcookie (förvalt: datamapp)</translation>
+    </message>
+    <message>
+        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
+        <translation>Minimum antal byte per sigop i transaktioner som vi reläar och bryter (förvalt: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3139,6 +3179,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Anslut enbart till noder i nätverket &lt;net&gt; (IPv4, IPv6 eller onion)</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Visa version och avsluta</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3195,10 +3239,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Wallet options:</source>
         <translation>Plånboksinställningar:</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Varning: Denna version är föråldrad; uppgradering krävs!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3295,10 +3335,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Activating best chain...</source>
         <translation>Aktiverar bästa kedjan...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Vidarebefordra alltid transaktioner från vitlistade noder (förval: %d)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
@@ -3463,6 +3499,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Warning</source>
         <translation>Varning</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Varning: okända nya regler aktiverade (versionsbit %i)</translation>
     </message>
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>

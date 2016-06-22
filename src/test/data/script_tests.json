@@ -700,6 +700,8 @@
 ["0x17 0x3014020002107777777777777777777777777777777701", "0 CHECKSIG NOT", "", "OK", "Zero-length R is correctly encoded"],
 ["0x17 0x3014021077777777777777777777777777777777020001", "0 CHECKSIG NOT", "", "OK", "Zero-length S is correctly encoded for DERSIG"],
 ["0x27 0x302402107777777777777777777777777777777702108777777777777777777777777777777701", "0 CHECKSIG NOT", "", "OK", "Negative S is correctly encoded"],
+ 
+["2147483648", "NOP3", "CHECKSEQUENCEVERIFY", "OK", "CSV passes if stack top bit 1 << 31 is set"],
 
 ["", "DEPTH", "P2SH,STRICTENC",   "EVAL_FALSE", "Test the test: we should have an empty stack after scriptSig evaluation"],
 ["  ", "DEPTH", "P2SH,STRICTENC", "EVAL_FALSE", "and multiple spaces should not change that."],
@@ -855,7 +857,7 @@
 ["2 2 LSHIFT", "8 EQUAL", "P2SH,STRICTENC", "DISABLED_OPCODE", "disabled"],
 ["2 1 RSHIFT", "1 EQUAL", "P2SH,STRICTENC", "DISABLED_OPCODE", "disabled"],
 
-["1","NOP1 CHECKLOCKTIMEVERIFY NOP3 NOP4 NOP5 NOP6 NOP7 NOP8 NOP9 NOP10 2 EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
+["1", "NOP1 CHECKLOCKTIMEVERIFY NOP3 NOP4 NOP5 NOP6 NOP7 NOP8 NOP9 NOP10 2 EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
 ["'NOP_1_to_10' NOP1 CHECKLOCKTIMEVERIFY NOP3 NOP4 NOP5 NOP6 NOP7 NOP8 NOP9 NOP10","'NOP_1_to_11' EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
 
 ["Ensure 100% coverage of discouraged NOPS"],
@@ -1098,7 +1100,7 @@
 "NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIG",
 "P2SH,STRICTENC",
 "OP_COUNT",
-"Fails due to 201 sig op limit"],
+"Fails due to 201 script operation limit"],
 
 ["1",
 "NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY 0 0 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 20 CHECKMULTISIGVERIFY",
@@ -1313,6 +1315,13 @@
     "P2SH",
     "EVAL_FALSE",
     "P2SH(P2PK), bad redeemscript"
+],
+[
+    "0x47 0x30440220781ba4f59a7b207a10db87628bc2168df4d59b844b397d2dbc9a5835fb2f2b7602206ed8fbcc1072fe2dfc5bb25909269e5dc42ffcae7ec2bc81d59692210ff30c2b01 0x41 0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 0x19 0x76a91491b24bf9f5288532960ac687abb035127b1d28a588ac",
+    "HASH160 0x14 0x7f67f0521934a57d3039f77f9f32cf313f3ac74b EQUAL",
+    "P2SH",
+    "OK",
+    "P2SH(P2PKH)"
 ],
 [
     "0x47 0x304402204e2eb034be7b089534ac9e798cf6a2c79f38bcb34d1b179efd6f2de0841735db022071461beb056b5a7be1819da6a3e3ce3662831ecc298419ca101eb6887b5dd6a401 0x19 0x76a9147cf9c846cd4882efec4bf07e44ebdad495c94f4b88ac",
@@ -2109,5 +2118,12 @@
     "P2PK with witness"
 ],
 
+["CHECKSEQUENCEVERIFY tests"], 
+["", "NOP3", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on a empty stack"],
+["-1", "NOP3", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV automatically fails if stack top is negative"],
+["0x0100", "NOP3", "CHECKSEQUENCEVERIFY,MINIMALDATA", "UNKNOWN_ERROR", "CSV fails if stack top is not minimally encoded"],
+["0", "NOP3", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
+["4294967296", "NOP3", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME",
+  "CSV fails if stack top bit 1 << 31 is not set, and tx version < 2"],
 ["The End"]
 ]

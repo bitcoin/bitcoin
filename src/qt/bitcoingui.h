@@ -72,6 +72,7 @@ public:
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
+    void showEvent(QShowEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     bool eventFilter(QObject *object, QEvent *event);
@@ -150,7 +151,7 @@ public Q_SLOTS:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title
@@ -218,6 +219,9 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
+    
+    /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
+    void setTrayIconVisible(bool);
 };
 
 class UnitDisplayStatusBarControl : public QLabel

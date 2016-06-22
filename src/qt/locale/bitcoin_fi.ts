@@ -1474,10 +1474,6 @@
         <translation>Yleinen</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Käytössä oleva OpenSSL-versio</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Käyttää BerkeleyDB-versiota</translation>
     </message>
@@ -2000,6 +1996,10 @@
     <message>
         <source>Custom:</source>
         <translation>Muokattu:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Älykästä rahansiirtokulua ei ole vielä alustettu. Tähän kuluu yleensä aikaa muutaman lohkon verran...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -2908,8 +2908,36 @@
         <translation>Jos &lt;category&gt; on toimittamatta tai jos &lt;category&gt; = 1, tulosta kaikki debug-tieto.</translation>
     </message>
     <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Tarkistathan että tietokoneesi päivämäärä ja kellonaika ovat oikeassa! Jos kellosi on väärässä, Bitcoin Core ei toimi oikein.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Karsinta konfiguroitu alle minimin %d MiB. Käytä surempaa numeroa.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Karsinta: viime lompakon synkronisointi menee karsitun datan taakse. Sinun tarvitsee ajaa -reindex (lataa koko lohkoketju uudelleen tapauksessa jossa karsiva noodi)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Vähennä levytilan tarvetta karsimalla (poistamalla) vanhoja lohkoja. Tämä tila ei ole yhteensopiva -txindex ja -rescan -parametrien kanssa. Varoitus: Tämän asetuksen peruutus vaatii koko lohkoketjun uudelleenlataamisen. (oletus: 0 = poista karsinta käytöstä, &gt;%u = kohdekoko muodossa MiB jota käytetään lohkotiedostoille) </translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Uudelleenskannaukset eivät ole mahdollisia karsivassa tilassa. Sinun täytyy käyttää -reindex joka lataa koko lohkoketjun uudelleen.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Virhe: Kriittinen sisäinen virhe kohdattiin, katso debug.log lisätietoja varten</translation>
+    </message>
+    <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>Kulu (muodossa %s/kB) joka lisätään rahansiirtoihin joita lähetät (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Karsitaan lohkovarastoa...</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2922,6 +2950,10 @@
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Hyväksy yhteyksiä ulkopuolelta (vakioasetus: 1 jos -proxy tai -connect ei määritelty)</translation>
+    </message>
+    <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee on asetettu erittäin suureksi! Tämä on rahansiirtokulu jonka voit maksaa kun arvioitu rahansirtokulu ei ole saatavilla.</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -2966,6 +2998,10 @@
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Varoitus: wallet.dat -lompakkotiedosto on korruptoitunut, tiedot pelastettu. Alkuperäinen wallet.dat -lompakkotiedosto on tallennettu wallet.{timestamp}.bak kansioon %s; jos balanssisi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
+    </message>
+    <message>
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Salli vertaisten yhdistää annetusta verkkomaskista tai IP-osoitteesta. Voidaan määrittää useampia kertoja.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3088,16 +3124,20 @@
         <translation>Lompakon valinnat:</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Varoitus: Tämä versio on vanhentunut; päivittämistä vaaditaan!</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Sinun tulee uudelleenrakentaa tietokanta käyttäen -reindex vaihtaen -txindex</translation>
     </message>
     <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>Salli JSON-RPC-yhteydet määritetystä lähteestä. Kelvolliset arvot &lt;ip&gt; ovat yksittäinen IP (esim. 1.2.3.4), verkko/verkkomaski (esim. 1.2.3.4/255.255.255.0) tai verkko/luokaton reititys (esim. 1.2.3.4/24). Tätä valintatapaa voidaan käyttää useita kertoja</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>Ei voida lukita data-hakemistoa %s. Bitcoin Core on luultavasti jo käynnissä.</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Paljasta omat IP-osoitteet (oletus: 1 kun kuunnellaan ja -externalip tai -proxy ei ole käytössä)</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -3162,6 +3202,10 @@
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
         <translation>Virheellinen määrä -mintxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Pidä enimmillään &lt;n&gt; yhdistämiskelvotonta rahansiirtoa muistissa (oletus: %u)</translation>
     </message>
     <message>
         <source>Node relay options:</source>
@@ -3284,8 +3328,20 @@
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Lompakko vioittunut</translation>
     </message>
     <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee on asetettu erittäin suureksi! Tämänkokoisia kuluja saatetaan maksaa yhdessä rahansiirrossa.</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>-paytxfee on asetettu erittäin suureksi! Tämä on rahansiirtokulu, jonka maksat, mikäli lähetät rahansiirron.</translation>
+    </message>
+    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Älä pidä rahansiirtoja muistivarannoissa kauemmin kuin &lt;n&gt; tuntia (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Virhe lukiessa wallet.dat-tiedostoa! Kaikki avaimet luettiin onnistuneesti, mutta rahansiirtotiedot tai osoitekirjan sisältö saattavat olla muuttuneita tai vääriä.</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
@@ -3298,6 +3354,10 @@
     <message>
         <source>(default: %s)</source>
         <translation>(oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
+        <translation>Pyydä vertaisten osoitteita aina DNS-kyselyjen avulla (oletus: %u)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>
@@ -3328,6 +3388,10 @@
         <translation>Kuuntele yhteyksiä portissa &lt;port&gt; (oletus: %u tai testnet: %u)</translation>
     </message>
     <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Ylläpidä enimmillään &lt;n&gt; yhteyttä vertaisiin (oletus: %u)</translation>
+    </message>
+    <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Aseta lompakko kuuluttamaan rahansiirtoja</translation>
     </message>
@@ -3338,6 +3402,10 @@
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation>Maksimi yhteyttä kohden käytettävä lähetyspuskurin koko, &lt;n&gt;*1000 tavua (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>Lisää debug-tietojen alkuun aikaleimat (oletus: %u)</translation>
     </message>
     <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
@@ -3364,12 +3432,20 @@
         <translation>Määritä asetustiedosto (oletus: %s)</translation>
     </message>
     <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Määritä yhteyden aikakatkaisu millisekunneissa (minimi: 1, oletus: %d)</translation>
+    </message>
+    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Määritä pid-tiedosto (oletus: %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Käytä vahvistamattomia vaihtorahoja lähetettäessä rahansiirtoja (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
+        <translation>Aikaväli sopimattomien vertaisten yhteyksien katkaisuun (oletus: %u)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

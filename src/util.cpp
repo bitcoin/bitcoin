@@ -113,7 +113,7 @@ string strMiscWarning;
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
 bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
 bool fLogIPs = DEFAULT_LOGIPS;
-volatile bool fReopenDebugLog = false;
+std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
 
 /** Init OpenSSL library multithreading support */
@@ -788,19 +788,6 @@ bool SetupNetworking()
         return false;
 #endif
     return true;
-}
-
-void SetThreadPriority(int nPriority)
-{
-#ifdef WIN32
-    SetThreadPriority(GetCurrentThread(), nPriority);
-#else // WIN32
-#ifdef PRIO_THREAD
-    setpriority(PRIO_THREAD, 0, nPriority);
-#else // PRIO_THREAD
-    setpriority(PRIO_PROCESS, 0, nPriority);
-#endif // PRIO_THREAD
-#endif // WIN32
 }
 
 int GetNumCores()

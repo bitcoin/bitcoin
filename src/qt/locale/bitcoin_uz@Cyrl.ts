@@ -1168,10 +1168,6 @@
         <translation>Асосий</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Фойдаланилаётган OpenSSL версияси</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Фойдаланилаётган BerkeleyDB версияси</translation>
     </message>
