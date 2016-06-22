@@ -180,6 +180,10 @@
         <translation>La monujo estas ĉifrita</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Tajpu la malnovan pasvorton kaj la novan pasvorton por la monujo.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>Ĉifrado de la monujo fiaskis</translation>
     </message>
@@ -441,6 +445,30 @@
     <message>
         <source>Catching up...</source>
         <translation>Ĝisdatigante...</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Sumo: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tipo: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Etikedo: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adreso: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -851,6 +879,14 @@
         <translation>MB</translation>
     </message>
     <message>
+        <source>Accept connections from outside</source>
+        <translation>Akcepti konektojn el ekstere</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Permesi envenantajn konektojn</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Reagordi ĉion al defaŭlataj valoroj.</translation>
     </message>
@@ -861,6 +897,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Reto</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Monujo</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -974,12 +1014,24 @@
         <translation>Minita saldo, kiu ankoraŭ ne maturiĝis</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>Saldoj</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Totalo:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
         <translation>via aktuala totala saldo</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation>Elspezebla:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Lastaj transakcioj</translation>
     </message>
     </context>
 <context>
@@ -1027,6 +1079,10 @@
 </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>User Agent</source>
+        <translation>Uzanto Agento</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -1041,6 +1097,10 @@
     <message>
         <source>%1 m</source>
         <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Neniu</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -1119,6 +1179,30 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Aktuala nombro de blokoj</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Ricevita</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Sendita</translation>
+    </message>
+    <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;Samuloj</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Versio</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Uzanto Agento</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>Servoj</translation>
     </message>
     <message>
         <source>Bytes Sent</source>
@@ -1375,6 +1459,10 @@
     <message>
         <source>Change:</source>
         <translation>Restmono:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Krompago:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2231,12 +2319,20 @@
         <translation>Plenumi komandon kiam rilata alerto riceviĝas, aŭ kiam ni vidas tre longan forkon (%s en cms anstataŭiĝas per mesaĝo)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Ne eblas trovi la adreson -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Elekti dosierujon por datumoj dum lanĉo (defaŭlte: 0)</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Informoj</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevalida sumo por -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2285,6 +2381,10 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transakcio estas tro granda</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Uzantinterfaco ebloj:</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>

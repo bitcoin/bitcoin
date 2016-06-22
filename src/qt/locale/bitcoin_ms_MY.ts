@@ -119,6 +119,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Salin Alamat</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Alamat</translation>
     </message>

@@ -228,6 +228,10 @@
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <source>&amp;Label</source>
+        <translation>таңба</translation>
+    </message>
+    <message>
         <source>&amp;Address</source>
         <translation>Адрес</translation>
     </message>
@@ -250,6 +254,10 @@
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Әмиян</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -272,9 +280,17 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Информация</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>Саны</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -339,6 +355,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Саны</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>

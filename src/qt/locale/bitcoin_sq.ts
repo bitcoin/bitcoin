@@ -30,6 +30,10 @@
         <translation>Fshi adresen e selektuar nga lista</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Fshi</translation>
     </message>
@@ -197,6 +201,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Opsione</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Duke marr adresen</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -418,6 +426,10 @@
         <source>Options</source>
         <translation>Opsionet</translation>
     </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Portofol</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -445,6 +457,10 @@
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>&amp;Information</source>
+        <translation>Informacion</translation>
+    </message>
+    <message>
         <source>&amp;Open</source>
         <translation>&amp;Hap</translation>
     </message>
@@ -464,12 +480,24 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Shuma:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etiketë:</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Pastro</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopjo adresen</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Adresë</translation>
@@ -507,6 +535,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Dërgo Monedha</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Fonde te pamjaftueshme</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -567,6 +599,10 @@
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Paguaj drejt:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -617,6 +653,10 @@
     <message>
         <source>Date</source>
         <translation>Data</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>transaksionit</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -751,9 +791,17 @@
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Opsionet:</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>Informacion</translation>

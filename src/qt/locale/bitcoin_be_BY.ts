@@ -840,6 +840,10 @@
         <source>MB</source>
         <translation>Мб</translation>
     </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Гаманец</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -866,9 +870,21 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Інфармацыя</translation>
+    </message>
+    <message>
+        <source>Debug window</source>
+        <translation>Вакно адладкі</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Колькасць:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>Метка:</translation>
@@ -884,6 +900,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Капіяваць адрас</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Адрас</translation>
@@ -929,6 +949,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Даслаць Манеты</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Недастаткова сродкаў</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1040,6 +1064,14 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Паведамленне:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Заплаціць да:</translation>
     </message>
     <message>
         <source>Memo:</source>

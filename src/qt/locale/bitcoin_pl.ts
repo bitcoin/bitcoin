@@ -137,7 +137,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ta operacja wymaga hasła do portfela ażeby odblokować portfel.</translation>
+        <translation>Operacja wymaga hasła portfela, aby go odblokować.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -145,7 +145,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ta operacja wymaga hasła do portfela ażeby odszyfrować portfel.</translation>
+        <translation>Operacja wymaga hasła portfela, aby go odszyfrować.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -161,7 +161,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Uwaga: Jeśli zaszyfrujesz swój portfel i zgubisz hasło to &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCOIN'Y&lt;/b&gt;!</translation>
+        <translation>Uwaga: jeśli zaszyfrujesz swój portfel i zgubisz hasło, &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCOINY&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -169,15 +169,15 @@
     </message>
     <message>
         <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Program Bitcoin Core zamknie się, aby dokończyć proces szyfrowania. Pamiętaj, że szyfrowanie portfela nie zabezpiecza w pełni Twoich bitcoinów przed kradzieżą przez wirusy lub trojany mogące zainfekować Twój komputer.</translation>
+        <translation>Bitcoin Core zamknie się, aby dokończyć proces szyfrowania. Pamiętaj, że szyfrowanie portfela nie zabezpiecza w pełni twoich bitcoinów przed kradzieżą przez złośliwe oprogramowanie mogące zainfekować twój komputer.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>WAŻNE: Wszystkie wykonane wcześniej kopie pliku portfela powinny być zamienione na nowe, szyfrowane pliki. Z powodów bezpieczeństwa, poprzednie kopie nieszyfrowanych plików portfela staną się bezużyteczne jak tylko zaczniesz korzystać z nowego, szyfrowanego portfela.</translation>
+        <translation>WAŻNE: Wszystkie wcześniejsze kopie pliku portfela powinny być zamienione na nowe, szyfrowane pliki. Z powodów bezpieczeństwa, poprzednie kopie nieszyfrowanych plików portfela staną się bezużyteczne jak tylko zaczniesz korzystać z nowego, szyfrowanego portfela.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Uwaga: Klawisz Caps Lock jest włączony!</translation>
+        <translation>Uwaga: klawisz Caps Lock jest włączony!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -296,7 +296,7 @@
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>Rdzeń klienta Bitcoin</translation>
+        <translation>Klient Rdzenia Bitcoina</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -388,7 +388,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -841,7 +841,7 @@
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>version</source>
@@ -896,7 +896,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -2208,6 +2208,11 @@
         <translation>&amp;Zweryfikuj wiadomość</translation>
     </message>
     <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Wpisz adres, wiadomość oraz sygnaturę (podpis) odbiorcy (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.).  Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle. 
+Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji! </translation>
+    </message>
+    <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>Adres Bitcoin, którym została podpisana wiadomość</translation>
     </message>
@@ -2280,7 +2285,7 @@
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -2484,7 +2489,7 @@
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Zatwierdzony (%1 potwierdzeń)</translation>
+        <translation>Zatwierdzone (%1 potwierdzeń)</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -2623,7 +2628,7 @@
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Min suma</translation>
+        <translation>Suma min.</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -3022,7 +3027,7 @@
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>Nie można uzyskać blokady na katalogu z danymi %s. Rdzeń Bitcoin najprawdopodobniej jest już uruchomiony.</translation>
+        <translation>Nie można uzyskać blokady katalogu z danymi „%s”. Rdzeń Bitcoina najprawdopodobniej jest już uruchomiony.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3150,7 +3155,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation>Copyright (C) 2009-%i The Bitcoin Core Developers</translation>
+        <translation>Prawa autorskie © 2009–%i deweloperzy Bitcoin Core’a</translation>
     </message>
     <message>
         <source>Could not parse -rpcbind value %s as network address</source>

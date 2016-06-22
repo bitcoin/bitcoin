@@ -168,6 +168,10 @@
         <translation>Наистина ли желаете да шифрирате портфейла си?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Биткоин сега ще се затоври за да завърши процеса на криптиране. Запомнете, че криптирането на вашия портефейл не може напълно да предпази вашите монети от кражба чрез зловреден софтуер, инфектирал вашия компютър</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>ВАЖНО: Всички стари запазвания, които сте направили на Вашият портфейл трябва да замените с запазване на новополучения, шифриран портфейл. От съображения за сигурност, предишните запазвания на нешифрирани портфейли ще станат неизползваеми веднага, щом започнете да използвате новият, шифриран портфейл.</translation>
     </message>
@@ -411,6 +415,10 @@
         <translation>%1 зад</translation>
     </message>
     <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Последния получен блок е генериран преди %1.</translation>
+    </message>
+    <message>
         <source>Transactions after this will not yet be visible.</source>
         <translation>Транзакции след това няма все още да бъдат видими.</translation>
     </message>
@@ -433,6 +441,18 @@
     <message>
         <source>Catching up...</source>
         <translation>Зарежда блокове...</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Етикет: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Адрес: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -631,6 +651,10 @@
     <message>
         <source>none</source>
         <translation>нищо</translation>
+    </message>
+    <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>Този етикет става червен, когато размера на транзакцията е по-голяма от 1000 бита.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -847,6 +871,10 @@
         <translation>&amp;Мрежа</translation>
     </message>
     <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>Автоматично стартиране на Bitcoin Core след влизане в системата.</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>По&amp;ртфейл</translation>
     </message>
@@ -1045,8 +1073,20 @@
         <translation>Файл за справяне със заявки</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>Заявката за плащане е изтекла.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Невалидна заявка за плащане.</translation>
+    </message>
+    <message>
         <source>Refund from %1</source>
         <translation>Възстановяване на сума от %1</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Заявката за плащане %1 е твърде голям (%2 байта, позволени %3 байта).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -1227,6 +1267,10 @@
     <message>
         <source>Starting Height</source>
         <translation>Стартова височина</translation>
+    </message>
+    <message>
+        <source>Sync Height</source>
+        <translation>Синхронизирана височина</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1545,6 +1589,10 @@
         <translation>за килобайт</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>Скрий</translation>
+    </message>
+    <message>
         <source>total at least</source>
         <translation>Крайна сума поне</translation>
     </message>
@@ -1651,6 +1699,10 @@
     <message>
         <source>Transaction creation failed!</source>
         <translation>Грешка при създаването на транзакция!</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Заявката за плащане е изтекла.</translation>
     </message>
     <message>
         <source>Pay only the minimum fee of %1</source>
@@ -1935,6 +1987,10 @@
         <translation>собствен адрес</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>само гледане</translation>
+    </message>
+    <message>
         <source>label</source>
         <translation>име</translation>
     </message>
@@ -2097,6 +2153,10 @@
         <translation>Емитирани</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>само гледане</translation>
+    </message>
+    <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
@@ -2202,6 +2262,10 @@
     <message>
         <source>Export Transaction History</source>
         <translation>Изнасяне историята на транзакциите</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>само гледане</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -2405,6 +2469,10 @@
     <message>
         <source>Information</source>
         <translation>Информация</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Невалидна сума за -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

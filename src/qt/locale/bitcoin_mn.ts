@@ -227,6 +227,10 @@
         <translation>&amp;Нууц Үгийг Солих...</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Хүлээн авах хаяг</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
@@ -261,6 +265,10 @@
     <message>
         <source>Error</source>
         <translation>Алдаа</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Мэдээллэл</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -415,6 +423,14 @@
         <translation>проксигийн IP хаяг (жишээ нь: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>&amp;Network</source>
+        <translation>Сүлжээ</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Түрүйвч</translation>
+    </message>
+    <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
     </message>
@@ -516,8 +532,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Хэмжээ:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Шошго:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Зурвас:</translation>
     </message>
     <message>
         <source>Show</source>
@@ -546,6 +570,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Хаягийг &amp;Хуулбарлах</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Хаяг</translation>
@@ -706,6 +734,10 @@
     <message>
         <source>Message:</source>
         <translation>Зурвас:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Тѳлѳх хаяг:</translation>
     </message>
     </context>
 <context>
@@ -1025,6 +1057,10 @@
     <message>
         <source>Wallet options:</source>
         <translation>Түрүйвчийн сонголтууд:</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Мэдээллэл</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format</source>

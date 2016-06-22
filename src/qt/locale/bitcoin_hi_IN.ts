@@ -332,6 +332,10 @@
         <translation>विकल्प</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>वॉलेट</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>&amp;ओके</translation>
     </message>
@@ -383,6 +387,10 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>राशि :</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>लेबल:</translation>
     </message>
@@ -397,6 +405,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;पता कॉपी करे</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>पता</translation>
@@ -497,6 +509,10 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt-P</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>प्राप्तकर्ता:</translation>
     </message>
     </context>
 <context>
