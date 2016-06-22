@@ -1,3 +1,9 @@
+bitcoinclassic (1.1.0-trusty1) trusty; urgency=medium
+
+  *  Include various softforks support from Core.
+
+ -- Tom Z <tomz@freedommail.ch>  Wed, 22 Jun 2016 10:00:00 +0100
+
 bitcoinclassic (0.12.1-trusty2) trusty; urgency=medium
 
   *  Fix RPC command getblockchaininfo showing incorrect counts.
