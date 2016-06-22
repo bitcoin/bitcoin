@@ -36,10 +36,13 @@ earlier.
 Notable changes
 ===============
 
-Example item
----------------------------------------
+RPC low-level API changes
+-------------------------
+The rpc response to `getblockchaininfo` will no longer return `bip9_softforks`
+as a JSON array but a JSON object. Instead of iterating over the array, you can
+simply use the name of the softfork as the key to get the softfork status.
 
-Example text.
+
 
 0.12.1 Change log
 =================
