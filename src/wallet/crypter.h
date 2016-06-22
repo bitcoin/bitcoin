@@ -158,6 +158,15 @@ public:
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
+    bool RemoveKey(const CKeyID &address)
+    {
+        {
+            LOCK(cs_KeyStore);
+            if (!IsCrypted())
+                return CBasicKeyStore::RemoveKey(address);
+            return mapCryptedKeys.erase(address) > 0;
+        }
+    }
     bool HaveKey(const CKeyID &address) const
     {
         {
