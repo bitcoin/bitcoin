@@ -649,6 +649,7 @@ public:
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
+    bool EraseFromWallet(const uint256 &hash, CWalletDB* pwalletdb);
     void ResendWalletTransactions(int64_t nBestBlockTime);
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime);
     CAmount GetBalance() const;
