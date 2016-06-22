@@ -34,6 +34,10 @@
         <translation>Ištrinti pasirinktą adresą iš sąrašo</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksportuoti informaciją iš dabartinės lentelės į failą</translation>
+    </message>
+    <message>
         <source>&amp;Export</source>
         <translation>&amp;Eksportuoti</translation>
     </message>
@@ -46,6 +50,10 @@
         <translation>Pasirinkite adresą kuriam siūsite monetas</translation>
     </message>
     <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Pasirinkite adresą su kuriuo gauti monetas</translation>
+    </message>
+    <message>
         <source>C&amp;hoose</source>
         <translation>P&amp;asirinkti</translation>
     </message>
@@ -56,6 +64,14 @@
     <message>
         <source>Receiving addresses</source>
         <translation>Gaunami adresai</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Tai yra jūsų Bitcoin adresai mokėjimų siuntimui. Visada patikrinkite siunčiamą sumą ir gavėjo adresą prieš siųsdami monetas.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Tai yra jūsų Bitcoin adresai mokėjimų gavimui. Rekomenduojame naudoti naujus gavimo adresus kiekvienai tranzakcijai.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -908,10 +924,6 @@
         <translation>Derinimo langas</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Naudojama OpenSSL versija</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Paleidimo laikas</translation>
     </message>
@@ -1689,6 +1701,10 @@
     <message>
         <source>&amp;Export</source>
         <translation>&amp;Eksportuoti</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksportuoti informaciją iš dabartinės lentelės į failą</translation>
     </message>
     <message>
         <source>Backup Wallet</source>

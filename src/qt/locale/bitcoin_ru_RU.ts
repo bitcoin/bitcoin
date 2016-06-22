@@ -1,6 +1,50 @@
 <TS language="ru_RU" version="2.1">
 <context>
     <name>AddressBookPage</name>
+    <message>
+        <source>Create a new address</source>
+        <translation>Создать новый адрес</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>Новый</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>Copy the currently selected address to the system clipboardый адрес в буфер</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>Копировать</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Копировать адрес</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Удалить выбранный адрес из списка</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Экспортировать данные текущей вкладки в файл</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>Экспортировать</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>Выбрать</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -226,6 +270,14 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>Экспорт</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Экспортировать данные текущей вкладки в файл</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

@@ -950,6 +950,10 @@
         <translation>Errore</translation>
     </message>
     <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>GB di spazio libero disponibile</numerusform><numerusform>%n GB di spazio disponibile</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation><numerusform>(di %nGB richiesti)</numerusform><numerusform>(%n GB richiesti)</numerusform></translation>
     </message>
@@ -1469,10 +1473,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>General</source>
         <translation>Generale</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Versione OpenSSL in uso</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
@@ -2850,7 +2850,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unità con cui visualizzare gli importi. Clicca per selezionare un altra unità.</translation>
+        <translation>Unità con cui visualizzare gli importi. Clicca per selezionare un'altra unità.</translation>
     </message>
 </context>
 <context>
@@ -3193,10 +3193,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Opzioni portamonete:</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Attenzione: questa versione è obsoleta. Aggiornamento necessario!</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>È necessario ricostruire il database usando -reindex per cambiare -txindex</translation>
     </message>
@@ -3291,10 +3287,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Activating best chain...</source>
         <translation>Attivazione della blockchain migliore...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Trasmetti sempre le transazioni ricevute da peers whitelisted (default: %d)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>

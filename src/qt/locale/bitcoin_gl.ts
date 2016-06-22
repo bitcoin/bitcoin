@@ -984,10 +984,6 @@
         <translation>Ventana de Depuración</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Usar versión OpenSSL</translation>
-    </message>
-    <message>
         <source>Startup time</source>
         <translation>Tempo de arranque</translation>
     </message>
