@@ -473,6 +473,10 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
 }
 
 void MaybeSetPeerAsAnnouncingHeaderAndIDs(const CNodeState* nodestate, CNode* pfrom) {
+    if (nLocalServices & NODE_WITNESS) {
+        // Don't ever request compact blocks when segwit is enabled.
+        return;
+    }
     if (nodestate->fProvidesHeaderAndIDs) {
         BOOST_FOREACH(const NodeId nodeid, lNodesAnnouncingHeaderAndIDs)
             if (nodeid == pfrom->GetId())
@@ -5286,7 +5290,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER &&
                         (!IsWitnessEnabled(chainActive.Tip(), chainparams.GetConsensus()) || State(pfrom->GetId())->fHaveWitness)) {
                         inv.type |= nFetchFlags;
-                        if (nodestate->fProvidesHeaderAndIDs)
+                        if (nodestate->fProvidesHeaderAndIDs && !(nLocalServices & NODE_WITNESS))
                             vToFetch.push_back(CInv(MSG_CMPCT_BLOCK, inv.hash));
                         else
                             vToFetch.push_back(inv);
@@ -5905,7 +5909,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                             pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
                 }
                 if (vGetData.size() > 0) {
-                    if (nodestate->fProvidesHeaderAndIDs && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
+                    if (nodestate->fProvidesHeaderAndIDs && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN) && !(nLocalServices & NODE_WITNESS)) {
                         // We seem to be rather well-synced, so it appears pfrom was the first to provide us
                         // with this block! Let's get them to announce using compact blocks in the future.
                         MaybeSetPeerAsAnnouncingHeaderAndIDs(nodestate, pfrom);
