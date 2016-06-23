@@ -173,7 +173,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Use UPnP to map the listening port (default: 1 when listening and no -proxy)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Use hierarchical deterministic key generation (HD) after bip32. Only has "
+"Use hierarchical deterministic key generation (HD) after BIP32. Only has "
 "effect during wallet creation/first start"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
