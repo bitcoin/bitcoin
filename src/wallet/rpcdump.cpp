@@ -351,7 +351,7 @@ UniValue forgetaddress(const UniValue& params, bool fHelp)
 
     if (fPurge)
     {
-        for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.cbegin(); i != pwalletMain->mapWallet.cend(); ++i)
+        for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.begin(); i != pwalletMain->mapWallet.end(); ++i)
         {
             if (!pwalletMain->IsMine(i->second)
              && !pwalletMain->IsFromMe(i->second))
@@ -382,7 +382,7 @@ UniValue forgetaddress(const UniValue& params, bool fHelp)
         // and output are deterministic, for testing purposes.
         sort(vDeletes.begin(), vDeletes.end());
 
-        for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.cbegin(); i != pwalletMain->mapWallet.cend(); ++i)
+        for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.begin(); i != pwalletMain->mapWallet.end(); ++i)
         {
             if (!pwalletMain->IsMine(i->second)
              && !pwalletMain->IsFromMe(i->second)
@@ -396,7 +396,7 @@ UniValue forgetaddress(const UniValue& params, bool fHelp)
     if (!vDeletes.empty())
     {
         CWalletDB walletdb(pwalletMain->strWalletFile);
-        for (vector<uint256>::const_iterator pTxID = vDeletes.cbegin(); pTxID != vDeletes.cend(); ++pTxID)
+        for (vector<uint256>::const_iterator pTxID = vDeletes.begin(); pTxID != vDeletes.end(); ++pTxID)
             pwalletMain->EraseFromWallet(*pTxID, &walletdb);
         walletdb.Flush();
         walletdb.Compact();
@@ -443,7 +443,7 @@ UniValue purgetransactions(const UniValue& params, bool fHelp)
 
     vector<uint256> vDeletes;
 
-    for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.cbegin(); i != pwalletMain->mapWallet.cend(); ++i)
+    for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.begin(); i != pwalletMain->mapWallet.end(); ++i)
     {
         if (!pwalletMain->IsMine(i->second)
          && !pwalletMain->IsFromMe(i->second))
@@ -462,7 +462,7 @@ UniValue purgetransactions(const UniValue& params, bool fHelp)
         CWalletDB walletdb(pwalletMain->strWalletFile);
 
         // Remove each transaction.
-        for (vector<uint256>::const_iterator pTxID = vDeletes.cbegin(); pTxID != vDeletes.cend(); ++pTxID)
+        for (vector<uint256>::const_iterator pTxID = vDeletes.begin(); pTxID != vDeletes.end(); ++pTxID)
             pwalletMain->EraseFromWallet(*pTxID, &walletdb);
 
         // Write to the database and the perform a compaction operation --
