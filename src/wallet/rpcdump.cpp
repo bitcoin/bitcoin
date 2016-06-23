@@ -373,8 +373,14 @@ UniValue forgetaddress(const UniValue& params, bool fHelp)
         if (fP2SH)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
         CKeyID keyID;
-        if (address.GetKeyID(keyID) && pwalletMain->mapKeyMetadata.count(keyID))
-            throw JSONRPCError(RPC_WALLET_HAVE_KEY, "Refusing to forget address associated with a known key. Make sure you know what you are doing, then call deleteprivkey first.");
+        CPubKey vchPubKey;
+        if (address.GetKeyID(keyID) && pwalletMain->GetPubKey(keyID, vchPubKey))
+        {
+            //throw JSONRPCError(RPC_WALLET_HAVE_KEY, "Refusing to forget address associated with a known key. Make sure you know what you are doing, then call deleteprivkey first.");
+            UniValue args(UniValue::VARR);
+            args.push_back(HexStr(vchPubKey));
+            deleteprivkey(args, false);
+        }
         RemoveAddress(address);
     } else if (IsHex(params[0].get_str())) {
         std::vector<unsigned char> data(ParseHex(params[0].get_str()));
