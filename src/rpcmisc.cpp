@@ -371,6 +371,13 @@ Value verifymessage(const Array& params, bool fHelp)
     if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
         return false;
 
+    if(pubkey.GetID() != keyID){
+        CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+        CTxDestination dest;
+        ExtractDestination(scriptPubKey,dest);
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Wrong Signing Address: "+CBitcoinAddress(dest).ToString());
+    }
+
     return (pubkey.GetID() == keyID);
 }
 
