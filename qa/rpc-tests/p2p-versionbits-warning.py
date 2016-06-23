@@ -111,7 +111,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         test_node.wait_for_verack()
 
         # 1. Have the node mine one period worth of blocks
-        self.nodes[0].generate(VB_PERIOD)
+        self.nodes[0].wallet.generate(VB_PERIOD)
 
         # 2. Now build one period of blocks on the tip, with < VB_THRESHOLD
         # blocks signaling some unknown bit.
@@ -119,7 +119,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.send_blocks_with_version(test_node, VB_THRESHOLD-1, nVersion)
 
         # Fill rest of period with regular version blocks
-        self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD + 1)
+        self.nodes[0].wallet.generate(VB_PERIOD - VB_THRESHOLD + 1)
         # Check that we're not getting any versionbit-related errors in
         # getinfo()
         assert(not self.vb_pattern.match(self.nodes[0].getinfo()["errors"]))
@@ -127,7 +127,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # 3. Now build one period of blocks with >= VB_THRESHOLD blocks signaling
         # some unknown bit
         self.send_blocks_with_version(test_node, VB_THRESHOLD, nVersion)
-        self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD)
+        self.nodes[0].wallet.generate(VB_PERIOD - VB_THRESHOLD)
         # Might not get a versionbits-related alert yet, as we should
         # have gotten a different alert due to more than 51/100 blocks
         # being of unexpected version.
@@ -137,7 +137,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Mine a period worth of expected blocks so the generic block-version warning
         # is cleared, and restart the node. This should move the versionbit state
         # to ACTIVE.
-        self.nodes[0].generate(VB_PERIOD)
+        self.nodes[0].wallet.generate(VB_PERIOD)
         stop_node(self.nodes[0], 0)
         wait_bitcoinds()
         # Empty out the alert file
@@ -146,7 +146,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""])
 
         # Connecting one block should be enough to generate an error.
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
         assert(len(self.nodes[0].getinfo()["errors"]) != 0)
         stop_node(self.nodes[0], 0)
         wait_bitcoinds()

@@ -85,7 +85,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
     def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature):
         # generate some coins for later
-        self.coinbase_blocks = self.nodes[0].generate(2)
+        self.coinbase_blocks = self.nodes[0].wallet.generate(2)
         self.height = 3  # height of the next block to build
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()

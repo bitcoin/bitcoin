@@ -281,7 +281,7 @@ class WalletTest (BitcoinTestFramework):
         # 1. Send some coins to generate new UTXO
         address_to_import = self.nodes[2].getnewaddress()
         txid = self.nodes[0].sendtoaddress(address_to_import, 1)
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(1, coinbase0)
         self.sync_all()
 
         # 2. Import address from node2 to node1
