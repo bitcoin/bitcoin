@@ -6,7 +6,7 @@ architectures:
 - "amd64"
 packages:
 - "faketime"
-reference_datetime: "2016-01-01 00:00:00"
+reference_datetime: "2016-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoinclassic/bitcoinclassic-detached-sigs.git"
   "dir": "signature"
@@ -33,5 +33,5 @@ script: |
 
   tar -xf ${UNSIGNED}
   ./detached-sig-apply.sh ${UNSIGNED} signature/osx
-  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "Bitcoin-Classic" -no-pad -r -apple -o uncompressed.dmg signed-app
+  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "Bitcoin-Classic" -no-pad -r -dir-mode 0755 -apple -o uncompressed.dmg signed-app
   ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}

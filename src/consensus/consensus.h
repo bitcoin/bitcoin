@@ -17,8 +17,11 @@ static const unsigned int MAX_BLOCK_SIGHASH = 1300 * 1000 * 1000; // 1.3 gigabyt
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 
-/** Flags for LockTime() */
+/** Flags for nSequence and nLockTime locks */
 enum {
+    /* Interpret sequence numbers as relative lock-time constraints. */
+    LOCKTIME_VERIFY_SEQUENCE = (1 << 0),
+
     /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
     LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };

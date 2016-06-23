@@ -91,7 +91,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Błąd przy próbie eksportu</translation>
+        <translation>Błąd przy próbie eksportowania</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -371,7 +371,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Szyfruj klucze prywatne, które są w Twoim portfelu</translation>
+        <translation>Szyfruj klucze prywatne, które są w twoim portfelu</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -403,7 +403,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Żądaj płatności (generuje kod QR oraz bitcoin URI)</translation>
+        <translation>Żądaj płatności (generuje kod QR oraz bitcoinowe URI)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
@@ -495,7 +495,7 @@
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Synchronizuję się...</translation>
+        <translation>Trwa synchronizacja…</translation>
     </message>
     <message>
         <source>Date: %1
@@ -1137,7 +1137,7 @@
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimalizuj do paska przy zegarku zamiast do paska zadań</translation>
+        <translation>&amp;Minimalizuj do zasobnika systemowego zamiast do paska zadań</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -2391,7 +2391,7 @@
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń Bitcoin</translation>
+        <translation>Rdzeń Bitcoina</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -3389,7 +3389,7 @@
     </message>
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Nie trzymaj w pamięci transakcji starszych niż &lt;n&gt; godzin (domyślnie: %u)</translation>
+        <translation>Nie trzymaj w pamięci transakcji starszych niż &lt;n&gt; godz. (domyślnie: %u)</translation>
     </message>
     <message>
         <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>

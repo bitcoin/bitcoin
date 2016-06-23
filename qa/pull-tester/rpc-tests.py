@@ -32,13 +32,13 @@ import re
 from tests_config import *
 
 #If imported values are not defined then set to zero (or disabled)
-if not vars().has_key('ENABLE_WALLET'):
+if 'ENABLE_WALLET' not in vars():
     ENABLE_WALLET=0
-if not vars().has_key('ENABLE_BITCOIND'):
+if 'ENABLE_BITCOIND' not in vars():
     ENABLE_BITCOIND=0
-if not vars().has_key('ENABLE_UTILS'):
+if 'ENABLE_UTILS' not in vars():
     ENABLE_UTILS=0
-if not vars().has_key('ENABLE_ZMQ'):
+if 'ENABLE_ZMQ' not in vars():
     ENABLE_ZMQ=0
 
 ENABLE_COVERAGE=0
@@ -75,6 +75,7 @@ if EXEEXT == ".exe" and "-win" not in opts:
 
 #Tests
 testScripts = [
+    'bip68-112-113-p2p.py',
     'wallet.py',
     'listtransactions.py',
     'receivedby.py',
@@ -96,6 +97,7 @@ testScripts = [
     'signrawtransactions.py',
     'walletbackup.py',
     'nodehandling.py',
+    'bigblocks.py',
     'reindex.py',
     'decodescript.py',
     'p2p-fullblocktest.py',
@@ -107,10 +109,13 @@ testScripts = [
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     'abandonconflict.py',
+    'p2p-versionbits-warning.py',
 ]
 testScriptsExt = [
+    'bip9-softforks.py',
     'bip65-cltv.py',
     'bip65-cltv-p2p.py',
+    'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
@@ -118,7 +123,6 @@ testScriptsExt = [
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'pruning.py',
-    'forknotify.py',
     'invalidateblock.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
@@ -126,7 +130,6 @@ testScriptsExt = [
     'p2p-acceptblock.py',
     'mempool_packages.py',
     'maxuploadtarget.py',
-    'bigblocks.py',
 ]
 
 #Enable ZMQ tests

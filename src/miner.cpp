@@ -140,14 +140,10 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
         pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
-        pblock->nVersion = BASE_VERSION;
-        // Vote for 2 MB until the vote expiration time
-        if (pblock->nTime <= chainparams.GetConsensus().SizeForkExpiration())
-            pblock->nVersion |= FORK_BIT_2MB;
-
+        pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
         // -regtest only: allow overriding block.nVersion with
         // -blockversion=N to test forking scenarios
-        if (Params().MineBlocksOnDemand())
+        if (chainparams.MineBlocksOnDemand())
             pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
         UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
