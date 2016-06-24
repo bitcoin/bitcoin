@@ -851,6 +851,15 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
 static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     UniValue rv(UniValue::VOBJ);
+    if (consensusParams.vDeployments[id].nTimeout == 0) {
+        /*
+         *   A timeout value of 0 guarantees a softfork will never be activated.
+         *   This is used when softfork codes are merged without specifying the deployment schedule.
+         *   In this special case, "not_applicable" is returned instead of "failed".
+         */
+        rv.push_back(Pair("status", "not_applicable"));
+        return rv;
+    }
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
     switch (thresholdState) {
     case THRESHOLD_DEFINED: rv.push_back(Pair("status", "defined")); break;
@@ -901,7 +910,7 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "  ],\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
             "     \"xxxx\" : {                (string) name of the softfork\n"
-            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"lockedin\", \"active\", \"failed\"\n"
+            "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\", \"not_applicable\"\n"
             "        \"bit\": xx,             (numeric) the bit, 0-28, in the block version field used to signal this soft fork\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "        \"timeout\": xx          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
