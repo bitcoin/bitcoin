@@ -1,5 +1,5 @@
 [
-["Format is: [scriptSig, scriptPubKey, flags, expected_scripterror, ... comments]"],
+["Format is: [[wit..., amount]?, scriptSig, scriptPubKey, flags, expected_scripterror, ... comments]"],
 ["It is evaluated as if there was a crediting coinbase transaction with two 0"],
 ["pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,"],
 ["followed by a spending transaction which spends this output as only input (and"],
@@ -1253,6 +1253,12 @@
 ["0x17 0x3014021077777777777777777777777777777777020001", "0 CHECKSIG NOT", "DERSIG", "SIG_DER", "Zero-length S is incorrectly encoded for DERSIG"],
 ["0x27 0x302402107777777777777777777777777777777702108777777777777777777777777777777701", "0 CHECKSIG NOT", "DERSIG", "SIG_DER", "Negative S is incorrectly encoded for DERSIG"],
 
+["Some basic segwit checks"],
+[["00", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "EVAL_FALSE", "Invalid witness script"],
+[["51", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch"],
+[["00", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Invalid witness script without WITNESS"],
+[["51", 0.00000000 ], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Witness script hash mismatch without WITNESS"],
+
 ["Automatically generated test cases"],
 [
     "0x47 0x304402200a5c6163f07b8d3b013c4d1d6dba25e780b39658d79ba37af7057a3b7f15ffa102201fd9b4eaa9943f734928b99a83592c2e7bf342ea2680f6a2bb705167966b742001",
@@ -1827,6 +1833,289 @@
     "CLEANSTACK,P2SH",
     "OK",
     "P2SH with CLEANSTACK"
+],
+[
+    [
+        "304402200d461c140cfdfcf36b94961db57ae8c18d1cb80e9d95a9e47ac22470c1bf125502201c8dc1cbfef6a3ef90acbbb992ca22fe9466ee6f9d4898eda277a7ac3ab4b25101",
+        "410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac",
+        0.00000001
+    ],
+    "",
+    "0 0x20 0xb95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2WSH"
+],
+[
+    [
+        "304402201e7216e5ccb3b61d46946ec6cc7e8c4e0117d13ac2fd4b152197e4805191c74202203e9903e33e84d9ee1dd13fb057afb7ccfb47006c23f6a067185efbc9dd780fc501",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000001
+    ],
+    "",
+    "0 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2WPKH"
+],
+[
+    [
+        "3044022066e02c19a513049d49349cf5311a1b012b7c4fae023795a18ab1d91c23496c22022025e216342c8e07ce8ef51e8daee88f84306a9de66236cab230bb63067ded1ad301",
+        "410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac",
+        0.00000001
+    ],
+    "0x22 0x0020b95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "HASH160 0x14 0xf386c2ba255cc56d20cfa6ea8b062f8b59945518 EQUAL",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2SH(P2WSH)"
+],
+[
+    [
+        "304402200929d11561cd958460371200f82e9cae64c727a495715a31828e27a7ad57b36d0220361732ced04a6f97351ecca21a56d0b8cd4932c1da1f8f569a2b68e5e48aed7801",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000001
+    ],
+    "0x16 0x001491b24bf9f5288532960ac687abb035127b1d28a5",
+    "HASH160 0x14 0x17743beb429c55c942d2ec703b98c4d57c2df5c6 EQUAL",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2SH(P2WPKH)"
+],
+[
+    [
+        "304402202589f0512cb2408fb08ed9bd24f85eb3059744d9e4f2262d0b7f1338cff6e8b902206c0978f449693e0578c71bc543b11079fd0baae700ee5e9a6bee94db490af9fc01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac",
+        0.00000000
+    ],
+    "",
+    "0 0x20 0xac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2WSH with the wrong key"
+],
+[
+    [
+        "304402206ef7fdb2986325d37c6eb1a8bb24aeb46dede112ed8fc76c7d7500b9b83c0d3d02201edc2322c794fe2d6b0bd73ed319e714aa9b86d8891961530d5c9b7156b60d4e01",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf",
+        0.00000000
+    ],
+    "",
+    "0 0x14 0x7cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2WPKH with the wrong key"
+],
+[
+    [
+        "30440220069ea3581afaf8187f63feee1fd2bd1f9c0dc71ea7d6e8a8b07ee2ebcf824bf402201a4fdef4c532eae59223be1eda6a397fc835142d4ddc6c74f4aa85b766a5c16f01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac",
+        0.00000000
+    ],
+    "0x22 0x0020ac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "HASH160 0x14 0x61039a003883787c0d6ebc66d97fdabe8e31449d EQUAL",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2SH(P2WSH) with the wrong key"
+],
+[
+    [
+        "304402204209e49457c2358f80d0256bc24535b8754c14d08840fc4be762d6f5a0aed80b02202eaf7d8fc8d62f60c67adcd99295528d0e491ae93c195cec5a67e7a09532a88001",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf",
+        0.00000000
+    ],
+    "0x16 0x00147cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "HASH160 0x14 0x4e0c2aed91315303fc6a1dc4c7bc21c88f75402e EQUAL",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2SH(P2WPKH) with the wrong key"
+],
+[
+    [
+        "304402202589f0512cb2408fb08ed9bd24f85eb3059744d9e4f2262d0b7f1338cff6e8b902206c0978f449693e0578c71bc543b11079fd0baae700ee5e9a6bee94db490af9fc01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac",
+        0.00000000
+    ],
+    "",
+    "0 0x20 0xac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "P2SH",
+    "OK",
+    "Basic P2WSH with the wrong key but no WITNESS"
+],
+[
+    [
+        "304402206ef7fdb2986325d37c6eb1a8bb24aeb46dede112ed8fc76c7d7500b9b83c0d3d02201edc2322c794fe2d6b0bd73ed319e714aa9b86d8891961530d5c9b7156b60d4e01",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf",
+        0.00000000
+    ],
+    "",
+    "0 0x14 0x7cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "P2SH",
+    "OK",
+    "Basic P2WPKH with the wrong key but no WITNESS"
+],
+[
+    [
+        "30440220069ea3581afaf8187f63feee1fd2bd1f9c0dc71ea7d6e8a8b07ee2ebcf824bf402201a4fdef4c532eae59223be1eda6a397fc835142d4ddc6c74f4aa85b766a5c16f01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac",
+        0.00000000
+    ],
+    "0x22 0x0020ac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "HASH160 0x14 0x61039a003883787c0d6ebc66d97fdabe8e31449d EQUAL",
+    "P2SH",
+    "OK",
+    "Basic P2SH(P2WSH) with the wrong key but no WITNESS"
+],
+[
+    [
+        "304402204209e49457c2358f80d0256bc24535b8754c14d08840fc4be762d6f5a0aed80b02202eaf7d8fc8d62f60c67adcd99295528d0e491ae93c195cec5a67e7a09532a88001",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf",
+        0.00000000
+    ],
+    "0x16 0x00147cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "HASH160 0x14 0x4e0c2aed91315303fc6a1dc4c7bc21c88f75402e EQUAL",
+    "P2SH",
+    "OK",
+    "Basic P2SH(P2WPKH) with the wrong key but no WITNESS"
+],
+[
+    [
+        "3044022066faa86e74e8b30e82691b985b373de4f9e26dc144ec399c4f066aa59308e7c202204712b86f28c32503faa051dbeabff2c238ece861abc36c5e0b40b1139ca222f001",
+        "410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac",
+        0.00000000
+    ],
+    "",
+    "0 0x20 0xb95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2WSH with wrong value"
+],
+[
+    [
+        "304402203b3389b87448d7dfdb5e82fb854fcf92d7925f9938ea5444e36abef02c3d6a9602202410bc3265049abb07fd2e252c65ab7034d95c9d5acccabe9fadbdc63a52712601",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000000
+    ],
+    "",
+    "0 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2WPKH with wrong value"
+],
+[
+    [
+        "3044022000a30c4cfc10e4387be528613575434826ad3c15587475e0df8ce3b1746aa210022008149265e4f8e9dafe1f3ea50d90cb425e9e40ea7ebdd383069a7cfa2b77004701",
+        "410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac",
+        0.00000000
+    ],
+    "0x22 0x0020b95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "HASH160 0x14 0xf386c2ba255cc56d20cfa6ea8b062f8b59945518 EQUAL",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2SH(P2WSH) with wrong value"
+],
+[
+    [
+        "304402204fc3a2cd61a47913f2a5f9107d0ad4a504c7b31ee2d6b3b2f38c2b10ee031e940220055d58b7c3c281aaa381d8f486ac0f3e361939acfd568046cb6a311cdfa974cf01",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000000
+    ],
+    "0x16 0x001491b24bf9f5288532960ac687abb035127b1d28a5",
+    "HASH160 0x14 0x17743beb429c55c942d2ec703b98c4d57c2df5c6 EQUAL",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2SH(P2WPKH) with wrong value"
+],
+[
+    [
+        "304402205ae57ae0534c05ca9981c8a6cdf353b505eaacb7375f96681a2d1a4ba6f02f84022056248e68643b7d8ce7c7d128c9f1f348bcab8be15d094ad5cadd24251a28df8001",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000000
+    ],
+    "",
+    "1 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
+    "DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM,P2SH,WITNESS",
+    "DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM",
+    "P2WPKH with future witness version"
+],
+[
+    [
+        "3044022064100ca0e2a33332136775a86cd83d0230e58b9aebb889c5ac952abff79a46ef02205f1bf900e022039ad3091bdaf27ac2aef3eae9ed9f190d821d3e508405b9513101",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000000
+    ],
+    "",
+    "0 0x1f 0xb34b78da162751647974d5cb7410aa428ad339dbf7d1e16e833f68a0cbf1c3",
+    "P2SH,WITNESS",
+    "WITNESS_PROGRAM_WRONG_LENGTH",
+    "P2WPKH with wrong witness program length"
+],
+[
+    "",
+    "0 0x20 0xb95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "P2SH,WITNESS",
+    "WITNESS_PROGRAM_WITNESS_EMPTY",
+    "P2WSH with empty witness"
+],
+[
+    [
+        "3044022039105b995a5f448639a997a5c90fda06f50b49df30c3bdb6663217bf79323db002206fecd54269dec569fcc517178880eb58bb40f381a282bb75766ff3637d5f4b4301",
+        "400479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac",
+        0.00000000
+    ],
+    "",
+    "0 0x20 0xb95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "P2SH,WITNESS",
+    "WITNESS_PROGRAM_MISMATCH",
+    "P2WSH with witness program mismatch"
+],
+[
+    [
+        "304402201a96950593cb0af32d080b0f193517f4559241a8ebd1e95e414533ad64a3f423022047f4f6d3095c23235bdff3aeff480d0529c027a3f093cb265b7cbf148553b85101",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        "",
+        0.00000000
+    ],
+    "",
+    "0 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
+    "P2SH,WITNESS",
+    "WITNESS_PROGRAM_MISMATCH",
+    "P2WPKH with witness program mismatch"
+],
+[
+    [
+        "304402201a96950593cb0af32d080b0f193517f4559241a8ebd1e95e414533ad64a3f423022047f4f6d3095c23235bdff3aeff480d0529c027a3f093cb265b7cbf148553b85101",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8",
+        0.00000000
+    ],
+    "11",
+    "0 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
+    "P2SH,WITNESS",
+    "WITNESS_MALLEATED",
+    "P2WPKH with non-empty scriptSig"
+],
+[
+    [
+        "304402204209e49457c2358f80d0256bc24535b8754c14d08840fc4be762d6f5a0aed80b02202eaf7d8fc8d62f60c67adcd99295528d0e491ae93c195cec5a67e7a09532a88001",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf",
+        0.00000000
+    ],
+    "11 0x16 0x00147cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "HASH160 0x14 0x4e0c2aed91315303fc6a1dc4c7bc21c88f75402e EQUAL",
+    "P2SH,WITNESS",
+    "WITNESS_MALLEATED_P2SH",
+    "P2SH(P2WPKH) with superfluous push in scriptSig"
+],
+[
+    [
+        "",
+        0.00000000
+    ],
+    "0x47 0x304402200a5c6163f07b8d3b013c4d1d6dba25e780b39658d79ba37af7057a3b7f15ffa102201fd9b4eaa9943f734928b99a83592c2e7bf342ea2680f6a2bb705167966b742001",
+    "0x41 0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG",
+    "P2SH,WITNESS",
+    "WITNESS_UNEXPECTED",
+    "P2PK with witness"
 ],
 
 ["CHECKSEQUENCEVERIFY tests"], 
