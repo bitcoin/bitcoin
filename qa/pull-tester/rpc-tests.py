@@ -138,6 +138,7 @@ testScripts = [
     'p2p-versionbits-warning.py',
     'importprunedfunds.py',
     'signmessages.py',
+    'bumpfee.py'
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')

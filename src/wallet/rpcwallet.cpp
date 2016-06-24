@@ -13,6 +13,7 @@
 #include "netbase.h"
 #include "policy/rbf.h"
 #include "rpc/server.h"
+#include "script/sign.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -336,7 +337,7 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 
-static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
+static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, bool fOptInRBF, CWalletTx& wtxNew)
 {
     CAmount curBalance = pwalletMain->GetBalance();
 
@@ -352,13 +353,13 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
 
     // Create and send the transaction
     CReserveKey reservekey(pwalletMain);
-    CAmount nFeeRequired;
+    CAmount nFeeRequired = 0;
     std::string strError;
     vector<CRecipient> vecSend;
     int nChangePosRet = -1;
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
-    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError)) {
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, NULL, (fOptInRBF ? CREATE_TX_RBF_OPT_IN : CREATE_TX_DEFAULT) )) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -372,7 +373,7 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 2 || params.size() > 5)
+    if (fHelp || params.size() < 2 || params.size() > 6)
         throw runtime_error(
             "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
             "\nSend an amount to a given address.\n"
@@ -387,6 +388,7 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
+            "6. opt-in-RBF (BIP125)    (boolean, optional, default=false) Allows the _unconfirmed_ transaction to be replaced with a transaction paying higher fees.\n"
             "\nResult:\n"
             "\"transactionid\"  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -418,9 +420,13 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
     if (params.size() > 4)
         fSubtractFeeFromAmount = params[4].get_bool();
 
+    bool fOptInRBF = false;
+    if (params.size() > 5)
+        fOptInRBF = params[5].get_bool();
+
     EnsureWalletIsUnlocked();
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx);
+    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, fOptInRBF, wtx);
 
     return wtx.GetHash().GetHex();
 }
@@ -843,7 +849,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
-    SendMoney(address.Get(), nAmount, false, wtx);
+    SendMoney(address.Get(), nAmount, false, false, wtx);
 
     return wtx.GetHash().GetHex();
 }
@@ -854,7 +860,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 2 || params.size() > 5)
+    if (fHelp || params.size() < 2 || params.size() > 6)
         throw runtime_error(
             "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
@@ -872,6 +878,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
+            "6. opt-in-RBF (BIP125)     (boolean, optional, default=false) Allows the _unconfirmed_ transaction to be replaced with a transaction paying higher fees.\n"
             "    [\n"
             "      \"address\"            (string) Subtract fee from this address\n"
             "      ,...\n"
@@ -906,6 +913,9 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     UniValue subtractFeeFromAmount(UniValue::VARR);
     if (params.size() > 4)
         subtractFeeFromAmount = params[4].get_array();
+
+    // set optInRBF create transaction flag
+    CreateTransactionFlags createTxFlags = (params.size() > 5 && params[5].isBool() && params[5].isTrue()) ? CREATE_TX_RBF_OPT_IN : CREATE_TX_DEFAULT;
 
     set<CBitcoinAddress> setAddress;
     vector<CRecipient> vecSend;
@@ -951,7 +961,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     string strFailReason;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason);
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason, NULL, createTxFlags);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     if (!pwalletMain->CommitTransaction(wtx, keyChange))
@@ -2461,16 +2471,133 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
     CMutableTransaction tx(origTx);
-    CAmount nFeeOut;
+    CAmount nFeeOut = 0;
+    CReserveKey reservekey(pwalletMain);
     string strFailReason;
-
-    if(!pwalletMain->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
+    if(!pwalletMain->FundTransaction(tx, reservekey, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hex", EncodeHexTx(tx)));
     result.push_back(Pair("changepos", changePosition));
     result.push_back(Pair("fee", ValueFromAmount(nFeeOut)));
+
+    return result;
+}
+
+UniValue bumpfee(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                            "bumpfee \"txid\"\n"
+                            "\nBumps the fee of a opt-in-RBF transaction.\n"
+                            "\nArguments:\n"
+                            "1. \"transactionid\"  (string, required) The transaction id\n"
+                            "\nResult:\n"
+                            "{\n"
+                            "  \"txid\":    \"value\", (string)  The id of the new transaction\n"
+                            "  \"oldfee\":    n,         (numeric) Fee of the replaced transaction\n"
+                            "  \"fee\":       n,         (numeric) Fee the resulting transaction pays\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            "\nBump the fee, get the new transactions txid\n"
+                            + HelpExampleCli("bumpfee", "<txid>")
+                            );
+
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VSTR));
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    // get the transaction
+    if (!pwalletMain->mapWallet.count(hash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
+    const CWalletTx& wtx = pwalletMain->mapWallet[hash];
+
+    // ownly bump the fee if the transation signals opt-in-RBF after BIP125
+    if (!SignalsOptInRBF(wtx))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction can't be replaced");
+
+    // get the old fee to allow oldfee+newfee
+    CAmount nDebit = wtx.GetDebit(ISMINE_SPENDABLE);
+    CAmount nOldFee = -(wtx.IsFromMe(ISMINE_SPENDABLE) ? wtx.GetValueOut() - nDebit : 0);
+    CFeeRate oldFeeRate(nOldFee, (int)::GetSerializeSize((CTransaction)wtx, SER_NETWORK, PROTOCOL_VERSION));
+    CAmount nFee = 0;
+
+    CMutableTransaction tx(wtx);
+    // remove scriptSigs, the signatures are invalid after mutating the transaction
+    for (std::vector<CTxIn>::iterator it(tx.vin.begin()); it != tx.vin.end(); ++it) {
+        (*it).scriptSig = CScript();
+    }
+
+    // remove "old" change outputs
+    for (std::vector<CTxOut>::iterator it(tx.vout.begin()); it != tx.vout.end();)
+    {
+        // only remove IsMine outputs that are not in the address book (only change)
+        CTxDestination address;
+        if (pwalletMain->IsMine(*it) == ISMINE_SPENDABLE && (!ExtractDestination((*it).scriptPubKey, address) || !pwalletMain->mapAddressBook.count(address))) {
+            it = tx.vout.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    string strFailReason;
+    int nChangePos = -1;
+
+    // double fee rate
+    int estimateFoundTarget = nTxConfirmTarget;
+    CFeeRate newFeeRate = mempool.estimateSmartFee(nTxConfirmTarget, &estimateFoundTarget);
+    // ... unless we don't have enough mempool data for estimatefee, then use fallbackFee
+    if (newFeeRate.GetFeePerK() == 0)
+        newFeeRate = CWallet::fallbackFee;
+
+    if (newFeeRate.GetFeePerK() < oldFeeRate.GetFeePerK()+::minRelayTxFee.GetFeePerK())
+        newFeeRate = CFeeRate(oldFeeRate.GetFeePerK() + ::minRelayTxFee.GetFeePerK());
+
+    //CFeeRate newFeeRate = CFeeRate(oldFeeRate.GetFeePerK()*2);
+
+    // re-fund the transaction, a new change output will be added
+    CReserveKey reservekey(pwalletMain);
+    if(!pwalletMain->FundTransaction(tx, reservekey, nFee, true, newFeeRate, nChangePos, strFailReason, false, false))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
+
+    // sign the new transaction
+    int nIn = 0;
+    CTransaction txNewConst(tx);
+    bool txSignSuccess = false;
+    for (std::vector<CTxIn>::iterator it(tx.vin.begin()); it != tx.vin.end(); ++it)
+    {
+        std::map<uint256, CWalletTx>::const_iterator mi = pwalletMain->mapWallet.find((*it).prevout.hash);
+        if (mi != pwalletMain->mapWallet.end() && (nIn < (int)(*mi).second.vout.size()))
+        {
+            // get the scriptPubKey of the prevout
+            const CScript& scriptPubKey = (*mi).second.vout[(*it).prevout.n].scriptPubKey;
+
+            CScript& scriptSigRes = tx.vin[nIn].scriptSig; //reference to the CMutableTx scriptSig
+            txSignSuccess = ProduceSignature(TransactionSignatureCreator(pwalletMain, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
+
+            if (!txSignSuccess)
+                break;
+        }
+        nIn++;
+    }
+
+    if (!txSignSuccess)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
+
+    // commit/broadcast the transaction
+    CWalletTx wtxBumped(pwalletMain,tx);
+    if (!pwalletMain->CommitTransaction(wtxBumped, reservekey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! Did you already bump the fee for this transaction?");
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("txid", wtxBumped.GetHash().GetHex()));
+    result.push_back(Pair("oldfee", ValueFromAmount(nOldFee)));
+    result.push_back(Pair("fee", ValueFromAmount(nFee)));
 
     return result;
 }
@@ -2492,6 +2619,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "abandontransaction",       &abandontransaction,       false },
     { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true  },
     { "wallet",             "backupwallet",             &backupwallet,             true  },
+    { "wallet",             "bumpfee",                  &bumpfee,                  true  },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              true  },
     { "wallet",             "dumpwallet",               &dumpwallet,               true  },
     { "wallet",             "encryptwallet",            &encryptwallet,            true  },
