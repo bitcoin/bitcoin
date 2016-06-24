@@ -7,7 +7,7 @@ for Debian-based Linux systems. If you compile bitcoind/bitcoin-qt yourself, the
 ## bitcoin: URI support ##
 
 
-bitcoin-qt.desktop  (Gnome / Open Desktop)
+bitcoin-qt.desktop  (Open Desktop / Gnome / KDE)
 To install:
 
 	sudo desktop-file-install bitcoin-qt.desktop
