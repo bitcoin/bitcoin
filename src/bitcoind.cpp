@@ -118,6 +118,12 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
+        try {
+            ReadRWConfigFile(mapArgs, mapMultiArgs);
+        } catch (const std::exception& e) {
+            // Ignore problems here, since we are responsible for this file
+        }
+
         // Command-line RPC
         bool fCommandLine = false;
         for (int i = 1; i < argc; i++)

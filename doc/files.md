@@ -1,6 +1,7 @@
 
 * banlist.dat: stores the IPs/Subnets of banned nodes
 * bitcoin.conf: contains configuration settings for bitcoind or bitcoin-qt
+* bitcoin_rw.conf: contains configuration settings modified by bitcoind or bitcoin-qt: since Knots 0.12.0
 * bitcoind.pid: stores the process id of bitcoind while running
 * blocks/blk000??.dat: block data (custom, 128 MiB per file); since 0.8.0
 * blocks/rev000??.dat; block undo data (custom); since 0.8.0 (format changed since pre-0.8)

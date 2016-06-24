@@ -771,6 +771,7 @@ public:
     static uint64_t GetTotalBytesRecv();
     static uint64_t GetTotalBytesSent();
 
+    static uint64_t GetMaxOutboundTargetRecommendedMinimum();
     //!set the max outbound target in bytes
     static void SetMaxOutboundTarget(uint64_t limit);
     static uint64_t GetMaxOutboundTarget();
