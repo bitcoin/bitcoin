@@ -151,7 +151,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL, bool optInRBF = false);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
@@ -202,6 +202,9 @@ public:
 
     bool transactionCanBeAbandoned(uint256 hash) const;
     bool abandonTransaction(uint256 hash) const;
+
+    bool transactionCanBeReplaced(uint256 hash) const;
+    bool transactionBumpFee(uint256 hash, int displayUnit) const;
 
 private:
     CWallet *wallet;

@@ -14,6 +14,7 @@
 #include "base58.h"
 #include "keystore.h"
 #include "main.h"
+#include "policy/rbf.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "wallet/wallet.h"
@@ -189,7 +190,7 @@ bool WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl, bool optInRBF)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
@@ -274,7 +275,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, optInRBF ? CREATE_TX_RBF_OPT_IN : CREATE_TX_DEFAULT);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
@@ -682,4 +683,57 @@ bool WalletModel::abandonTransaction(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
+}
+
+bool WalletModel::transactionCanBeReplaced(uint256 hash) const
+{
+    LOCK2(cs_main, wallet->cs_wallet);
+    const CWalletTx *wtx = wallet->GetWalletTx(hash);
+    if (!wtx)
+        return false;
+
+    return (SignalsOptInRBF(*wtx) && wallet->IsFromMe(*wtx));
+}
+
+bool WalletModel::transactionBumpFee(uint256 hash, int displayUnit) const
+{
+    CAmount oldFee;
+    CAmount newFee;
+    CWalletTx newTx;
+
+    // get a new change key
+    CReserveKey reserveKey(wallet);
+
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+
+        // get the transaction
+        const CWalletTx *wtx = wallet->GetWalletTx(hash);
+
+        // try to recreate the transaction
+        if (!wallet->BumpFee(*wtx, newTx, reserveKey, oldFee, newFee, 2))
+            return false;
+
+    }
+
+    // ask the user for confirmation
+    // do this without holding the locks
+    // results in accepting the risk that the fee bump will
+    // be rejected due to other replacements comming in over -server
+    // or changed min fee rates
+    QMessageBox msgBox;
+    msgBox.setText(tr("Increase transaction fee?"));
+    msgBox.setInformativeText(tr("Would you like to increase the current transaction fee from %1 to %2?").arg(BitcoinUnits::formatHtmlWithUnit(displayUnit, oldFee), BitcoinUnits::formatHtmlWithUnit(displayUnit, newFee)));
+    msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Cancel);
+    int msgboxRet = msgBox.exec();
+
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        // broadcast the transaction
+        if (msgboxRet == QMessageBox::Ok)
+            return wallet->CommitTransaction(newTx, reserveKey);
+    }
+    // return
+    return true;
 }

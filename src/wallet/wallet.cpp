@@ -16,6 +16,7 @@
 #include "main.h"
 #include "net.h"
 #include "policy/policy.h"
+#include "policy/rbf.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -2055,7 +2056,122 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
     return res;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
+bool CWallet::BumpFee(const CWalletTx& wtxIn, CWalletTx& wtxOut, CReserveKey& reservekeyOut, CAmount& nOldFee, CAmount& newFee, unsigned int blocksToConfirm)
+{
+    // ownly bump the fee if the transation signals opt-in-RBF after BIP125
+    if (!SignalsOptInRBF(wtxIn))
+        return false;
+
+    // calculate the feerate of the old transaction
+    CAmount nDebit = wtxIn.GetDebit(ISMINE_SPENDABLE);
+    nOldFee = -(wtxIn.IsFromMe(ISMINE_SPENDABLE) ? wtxIn.GetValueOut() - nDebit : 0);
+    CFeeRate oldFeeRate(nOldFee, ::GetSerializeSize((CTransaction)wtxIn, SER_NETWORK, PROTOCOL_VERSION));
+
+    // check if there are already conflicting transactions with higher feerates
+    for(const uint256& conflict : wtxIn.GetConflicts())
+    {
+        const CWalletTx *wtxC = GetWalletTx(conflict);
+        if (wtxC)
+        {
+            // calculate the feerate of the old transaction
+            CAmount ncDebit = wtxC->GetDebit(ISMINE_SPENDABLE);
+            CAmount nCFee = -(wtxC->IsFromMe(ISMINE_SPENDABLE) ? wtxC->GetValueOut() - ncDebit : 0);
+            CFeeRate conflictedFeeRate(nCFee, ::GetSerializeSize((CTransaction)*wtxC, SER_NETWORK, PROTOCOL_VERSION));
+            if (conflictedFeeRate > oldFeeRate)
+                return false;
+        }
+    }
+
+    // define the new feerate
+    CFeeRate newFeerate;
+
+    // estimate the current feerate
+    int estimateFoundAtBlocks = blocksToConfirm;
+    CFeeRate estimateFeeRate = mempool.estimateSmartFee(blocksToConfirm, &estimateFoundAtBlocks);
+    if (estimateFeeRate == CFeeRate(0))
+        estimateFeeRate = fallbackFee;
+
+    // for now we assume the new transaction only conflicts
+    // with a single transaction
+
+    // create a new fee rate that would be require
+    // for a transaction replacement of a single conflicting tx
+    CFeeRate oldFeeRatePlusMinRelayTxFee = oldFeeRate;
+    oldFeeRatePlusMinRelayTxFee+=CFeeRate(::minRelayTxFee);
+    newFeerate = oldFeeRatePlusMinRelayTxFee;
+
+    if (oldFeeRatePlusMinRelayTxFee < estimateFeeRate)
+    {
+        // the new estimated fee is sufficient for a replacment
+        newFeerate = CFeeRate(estimateFeeRate);
+    }
+
+    // create the conflicting transaction with the new feerate
+    CTransaction bumpedTx;
+    if (!RecreateTransactionWithFeeRate(wtxIn, bumpedTx, reservekeyOut, newFeerate, newFee))
+        return false;
+
+    // sign the new transaction
+    CMutableTransaction tx(bumpedTx);
+    int nIn = 0;
+    CTransaction txNewConst(tx);
+    bool txSignSuccess = false;
+    for (std::vector<CTxIn>::iterator it(tx.vin.begin()); it != tx.vin.end(); ++it)
+    {
+        std::map<uint256, CWalletTx>::const_iterator mi = pwalletMain->mapWallet.find((*it).prevout.hash);
+        if (mi != pwalletMain->mapWallet.end() && (nIn < (int)(*mi).second.vout.size()))
+        {
+            // get the scriptPubKey of the prevout
+            const CScript& scriptPubKey = (*mi).second.vout[(*it).prevout.n].scriptPubKey;
+
+            CScript& scriptSigRes = tx.vin[nIn].scriptSig; //reference to the CMutableTx scriptSig
+            txSignSuccess = ProduceSignature(TransactionSignatureCreator(pwalletMain, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
+
+            if (!txSignSuccess)
+                break;
+        }
+        nIn++;
+    }
+
+    // form a wallet transaction
+    *static_cast<CTransaction*>(&wtxOut) = tx;
+    wtxOut.fTimeReceivedIsTxTime = true;
+    wtxOut.BindWallet(this);
+    wtxOut.fFromMe = true;
+    
+    return true;
+}
+
+bool CWallet::RecreateTransactionWithFeeRate(const CTransaction& txIn, CTransaction& txOut, CReserveKey& reservekeyOut, const CFeeRate& newFeerate, CAmount& newFeeOut)
+{
+    CMutableTransaction tx(txIn);
+    // remove scriptSigs, the signatures are invalid after mutating the transaction
+    for (std::vector<CTxIn>::iterator it(tx.vin.begin()); it != tx.vin.end(); ++it)
+    {
+        (*it).scriptSig = CScript();
+    }
+
+    // remove "old" change outputs
+    for (std::vector<CTxOut>::iterator it(tx.vout.begin()); it != tx.vout.end();)
+    {
+        if (pwalletMain->IsMine(*it) == ISMINE_SPENDABLE)
+            it = tx.vout.erase(it);
+        else
+            ++it;
+    }
+
+    string strFailReason;
+    int nChangePos = -1;
+
+    // re-fund the transaction, a new change output will be added
+    if(!pwalletMain->FundTransaction(tx, reservekeyOut, newFeeOut, true, newFeerate, nChangePos, strFailReason, false, false))
+        return false;
+
+    txOut = CTransaction(tx);
+    return true;
+}
+
+bool CWallet::FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOut, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
 {
     vector<CRecipient> vecSend;
 
@@ -2076,9 +2192,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         coinControl.Select(txin.prevout);
 
-    CReserveKey reservekey(this);
     CWalletTx wtx;
-    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, &coinControl, false))
+    if (!CreateTransaction(vecSend, wtx, reservekeyOut, nFeeRet, nChangePosInOut, strFailReason, &coinControl, CREATE_TX_DONT_SIGN))
         return false;
 
     if (nChangePosInOut != -1)
@@ -2103,7 +2218,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
 }
 
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, unsigned int flags)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -2325,7 +2440,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // nLockTime set above actually works.
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
-                                              std::numeric_limits<unsigned int>::max()-1));
+                                              std::numeric_limits<unsigned int>::max() - ((flags & CREATE_TX_RBF_OPT_IN) ? 2 : 1) ));
 
                 // Sign
                 int nIn = 0;
@@ -2335,7 +2450,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     bool signSuccess;
                     const CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
-                    if (sign)
+                    if (!(flags & CREATE_TX_DONT_SIGN))
                         signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
                     else
                         signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
@@ -2351,7 +2466,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
 
                 // Remove scriptSigs if we used dummy signatures for fee calculation
-                if (!sign) {
+                if (flags & CREATE_TX_DONT_SIGN) {
                     BOOST_FOREACH (CTxIn& vin, txNew.vin)
                         vin.scriptSig = CScript();
                 }

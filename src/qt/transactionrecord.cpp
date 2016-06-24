@@ -239,6 +239,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
+            if (!wtx.InMempool() && wtx.GetConflicts().size())
+                status.status = TransactionStatus::Conflicted;
             if (wtx.isAbandoned())
                 status.status = TransactionStatus::Abandoned;
         }

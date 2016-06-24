@@ -32,6 +32,7 @@
 #include <QScrollBar>
 #include <QSignalMapper>
 #include <QTableView>
+#include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
 
@@ -138,6 +139,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
+    bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
@@ -157,6 +159,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addAction(showDetailsAction);
     contextMenu->addSeparator();
     contextMenu->addAction(abandonAction);
+    contextMenu->addAction(bumpFeeAction);
     contextMenu->addAction(editLabelAction);
 
     mapperThirdPartyTxUrls = new QSignalMapper(this);
@@ -174,6 +177,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
     connect(abandonAction, SIGNAL(triggered()), this, SLOT(abandonTx()));
+    connect(bumpFeeAction, SIGNAL(triggered()), this, SLOT(bumpTxFee()));
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
@@ -372,6 +376,7 @@ void TransactionView::contextualMenu(const QPoint &point)
     uint256 hash;
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->transactionCanBeAbandoned(hash));
+    bumpFeeAction->setEnabled(model->transactionCanBeReplaced(hash));
 
     if(index.isValid())
     {
@@ -395,6 +400,31 @@ void TransactionView::abandonTx()
 
     // Update the table
     model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
+}
+
+void TransactionView::bumpTxFee()
+{
+    if(!transactionView || !transactionView->selectionModel())
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
+
+    // get the hash from the TxHashRole (QVariant / QString)
+    uint256 hash;
+    QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
+    hash.SetHex(hashQStr.toStdString());
+
+    // Abandon the wallet transaction over the walletModel
+    if (!model->transactionBumpFee(hash, model->getOptionsModel()->getDisplayUnit()))
+    {
+        QMessageBox::critical(0, tr("Increase fee error"),
+                              tr("Could not increase the transaction fee"));
+        return;
+    }
+
+    // update the transaction, needs a second CT_NEW to fully decompose the new state
+    // due to the fact that CT_UPDATED can't handle color/icons updates
+    model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
+    model->getTransactionTableModel()->updateTransaction(hashQStr, CT_NEW, true);
 }
 
 void TransactionView::copyAddress()

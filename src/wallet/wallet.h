@@ -535,6 +535,11 @@ private:
     std::vector<char> _ssExtra;
 };
 
+enum CreateTransactionFlags {
+    CREATE_TX_DEFAULT     = 0,
+    CREATE_TX_DONT_SIGN   = (1U << 0),
+    CREATE_TX_RBF_OPT_IN  = (1U << 1)
+};
 
 /** 
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
@@ -742,11 +747,17 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
 
+    //! bump the fee to the current fee-estimation
+    bool BumpFee(const CWalletTx& wtxIn, CWalletTx& wtxOut, CReserveKey& reservekeyOut, CAmount& oldFee, CAmount& newFee, unsigned int blocksToConfirm = 2);
+
+    //! Creates a conflicting transaction based on a existing transaction providing a new feerate
+    bool RecreateTransactionWithFeeRate(const CTransaction& txIn, CTransaction& txOut, CReserveKey& reservekeyOut, const CFeeRate& newFeerate, CAmount& newFeeOut);
+
     /**
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange = CNoDestination());
+    bool FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOut, CAmount& nFeeRet, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange = CNoDestination());
 
     /**
      * Create a new transaction paying the recipients with a set of coins
@@ -754,7 +765,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, unsigned int flags = CREATE_TX_DEFAULT);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
