@@ -62,11 +62,15 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fInclud
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
+    entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
     entry.push_back(Pair("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION)));
+    entry.push_back(Pair("vsize", (int)::GetVirtualTransactionSize(tx)));
     entry.push_back(Pair("version", tx.nVersion));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
+
     UniValue vin(UniValue::VARR);
-    BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const CTxIn& txin = tx.vin[i];
         UniValue in(UniValue::VOBJ);
         if (tx.IsCoinBase())
             in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
@@ -77,6 +81,17 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
             o.push_back(Pair("asm", ScriptToAsmStr(txin.scriptSig, true)));
             o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
             in.push_back(Pair("scriptSig", o));
+        }
+        if (!tx.wit.IsNull()) {
+            if (!tx.wit.vtxinwit[i].IsNull()) {
+                UniValue txinwitness(UniValue::VARR);
+                for (unsigned int j = 0; j < tx.wit.vtxinwit[i].scriptWitness.stack.size(); j++) {
+                    std::vector<unsigned char> item = tx.wit.vtxinwit[i].scriptWitness.stack[j];
+                    txinwitness.push_back(HexStr(item.begin(), item.end()));
+                }
+                in.push_back(Pair("txinwitness", txinwitness));
+            }
+
         }
         in.push_back(Pair("sequence", (int64_t)txin.nSequence));
         vin.push_back(in);
@@ -134,7 +149,9 @@ UniValue getrawtransaction(const UniValue& params, bool fHelp)
             "{\n"
             "  \"hex\" : \"data\",       (string) The serialized, hex-encoded data for 'txid'\n"
             "  \"txid\" : \"id\",        (string) The transaction id (same as provided)\n"
-            "  \"size\" : n,             (numeric) The transaction size\n"
+            "  \"hash\" : \"id\",        (string) The transaction hash (differs from txid for witness transactions)\n"
+            "  \"size\" : n,             (numeric) The serialized transaction size\n"
+            "  \"vsize\" : n,            (numeric) The virtual transaction size (differs from size for witness transactions)\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
             "  \"vin\" : [               (array of json objects)\n"
@@ -146,6 +163,7 @@ UniValue getrawtransaction(const UniValue& params, bool fHelp)
             "         \"hex\": \"hex\"   (string) hex\n"
             "       },\n"
             "       \"sequence\": n      (numeric) The script sequence number\n"
+            "       \"txinwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
             "     }\n"
             "     ,...\n"
             "  ],\n"
@@ -276,7 +294,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
     if (ntxFound != setTxids.size())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "(Not all) transactions not found in specified block");
 
-    CDataStream ssMB(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssMB(SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     CMerkleBlock mb(block, setTxids);
     ssMB << mb;
     std::string strHex = HexStr(ssMB.begin(), ssMB.end());
@@ -296,7 +314,7 @@ UniValue verifytxoutproof(const UniValue& params, bool fHelp)
             "[\"txid\"]      (array, strings) The txid(s) which the proof commits to, or empty array if the proof is invalid\n"
         );
 
-    CDataStream ssMB(ParseHexV(params[0], "proof"), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssMB(ParseHexV(params[0], "proof"), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     CMerkleBlock merkleBlock;
     ssMB >> merkleBlock;
 
@@ -443,7 +461,9 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"txid\" : \"id\",        (string) The transaction id\n"
+            "  \"hash\" : \"id\",        (string) The transaction hash (differs from txid for witness transactions)\n"
             "  \"size\" : n,             (numeric) The transaction size\n"
+            "  \"vsize\" : n,            (numeric) The virtual transaction size (differs from size for witness transactions)\n"
             "  \"version\" : n,          (numeric) The version\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
             "  \"vin\" : [               (array of json objects)\n"
@@ -454,6 +474,7 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
             "         \"asm\": \"asm\",  (string) asm\n"
             "         \"hex\": \"hex\"   (string) hex\n"
             "       },\n"
+            "       \"txinwitness\": [\"hex\", ...] (array of string) hex-encoded witness data (if any)\n"
             "       \"sequence\": n     (numeric) The script sequence number\n"
             "     }\n"
             "     ,...\n"
@@ -487,7 +508,7 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
 
     CTransaction tx;
 
-    if (!DecodeHexTx(tx, params[0].get_str()))
+    if (!DecodeHexTx(tx, params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
     UniValue result(UniValue::VOBJ);
@@ -571,7 +592,8 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             "         \"txid\":\"id\",             (string, required) The transaction id\n"
             "         \"vout\":n,                  (numeric, required) The output number\n"
             "         \"scriptPubKey\": \"hex\",   (string, required) script key\n"
-            "         \"redeemScript\": \"hex\"    (string, required for P2SH) redeem script\n"
+            "         \"redeemScript\": \"hex\",   (string, required for P2SH or P2WSH) redeem script\n"
+            "         \"amount\": value            (numeric, required) The amount spent\n"
             "       }\n"
             "       ,...\n"
             "    ]\n"
@@ -714,12 +736,15 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
                 if ((unsigned int)nOut >= coins->vout.size())
                     coins->vout.resize(nOut+1);
                 coins->vout[nOut].scriptPubKey = scriptPubKey;
-                coins->vout[nOut].nValue = 0; // we don't know the actual output value
+                coins->vout[nOut].nValue = 0;
+                if (prevOut.exists("amount")) {
+                    coins->vout[nOut].nValue = AmountFromValue(find_value(prevOut, "amount"));
+                }
             }
 
             // if redeemScript given and not using the local wallet (private keys
             // given), add redeemScript to the tempKeystore so it can be signed:
-            if (fGivenKeys && scriptPubKey.IsPayToScriptHash()) {
+            if (fGivenKeys && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash())) {
                 RPCTypeCheckObj(prevOut,
                     {
                         {"txid", UniValueType(UniValue::VSTR)},
@@ -778,18 +803,22 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             continue;
         }
         const CScript& prevPubKey = coins->vout[txin.prevout.n].scriptPubKey;
+        const CAmount& amount = coins->vout[txin.prevout.n].nValue;
 
-        txin.scriptSig.clear();
+        SignatureData sigdata;
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+            ProduceSignature(MutableTransactionSignatureCreator(&keystore, &mergedTx, i, amount, nHashType), prevPubKey, sigdata);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
-            txin.scriptSig = CombineSignatures(prevPubKey, txConst, i, txin.scriptSig, txv.vin[i].scriptSig);
+            sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(txv, i));
         }
+
+        UpdateTransaction(mergedTx, i, sigdata);
+
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx.wit.vtxinwit.size() > i ? &mergedTx.wit.vtxinwit[i].scriptWitness : NULL, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
             TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
         }
     }

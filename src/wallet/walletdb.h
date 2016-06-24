@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
+#include "primitives/transaction.h"
 #include "wallet/db.h"
 #include "key.h"
 

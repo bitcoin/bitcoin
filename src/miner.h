@@ -28,7 +28,8 @@ struct CBlockTemplate
 {
     CBlock block;
     std::vector<CAmount> vTxFees;
-    std::vector<int64_t> vTxSigOps;
+    std::vector<int64_t> vTxSigOpsCost;
+    std::vector<unsigned char> vchCoinbaseCommitment;
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
@@ -39,13 +40,13 @@ struct CTxMemPoolModifiedEntry {
         iter = entry;
         nSizeWithAncestors = entry->GetSizeWithAncestors();
         nModFeesWithAncestors = entry->GetModFeesWithAncestors();
-        nSigOpCountWithAncestors = entry->GetSigOpCountWithAncestors();
+        nSigOpCostWithAncestors = entry->GetSigOpCostWithAncestors();
     }
 
     CTxMemPool::txiter iter;
     uint64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
-    unsigned int nSigOpCountWithAncestors;
+    int64_t nSigOpCostWithAncestors;
 };
 
 /** Comparator for CTxMemPool::txiter objects.
@@ -123,7 +124,7 @@ struct update_for_parent_inclusion
     {
         e.nModFeesWithAncestors -= iter->GetFee();
         e.nSizeWithAncestors -= iter->GetTxSize();
-        e.nSigOpCountWithAncestors -= iter->GetSigOpCount();
+        e.nSigOpCostWithAncestors -= iter->GetSigOpCost();
     }
 
     CTxMemPool::txiter iter;
@@ -139,12 +140,15 @@ private:
     CBlock* pblock;
 
     // Configuration parameters for the block size
-    unsigned int nBlockMaxSize, nBlockMinSize;
+    bool fIncludeWitness;
+    unsigned int nBlockMaxCost, nBlockMaxSize, nBlockMinSize;
+    bool fNeedSizeAccounting;
 
     // Information on the current status of the block
+    uint64_t nBlockCost;
     uint64_t nBlockSize;
     uint64_t nBlockTx;
-    unsigned int nBlockSigOps;
+    uint64_t nBlockSigOpsCost;
     CAmount nFees;
     CTxMemPool::setEntries inBlock;
 
@@ -187,7 +191,7 @@ private:
     /** Remove confirmed (inBlock) entries from given set */
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
     /** Test if a new package would "fit" in the block */
-    bool TestPackage(uint64_t packageSize, unsigned int packageSigOps);
+    bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost);
     /** Test if a set of transactions are all final */
     bool TestPackageFinality(const CTxMemPool::setEntries& package);
     /** Return true if given transaction from mapTx has already been evaluated,
