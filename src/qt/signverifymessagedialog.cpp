@@ -128,6 +128,14 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     /* Clear old signature to ensure users don't get confused on error with an old signature displayed */
     ui->signatureOut_SM->clear();
 
+    WalletModel::UnlockContext ctx(model->requestUnlock());
+    if (!ctx.isValid())
+    {
+        ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel_SM->setText(tr("Wallet unlock was cancelled."));
+        return;
+    }
+
     const char *my_str_literal =ui->addressIn_SM->text().toStdString().c_str();
     char *str = strdup(my_str_literal);  // We own str's memory now.
     char *addressInput;
@@ -146,14 +154,6 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
             ui->addressIn_SM->setValid(false);
             ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
             ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
-            return;
-        }
-
-        WalletModel::UnlockContext ctx(model->requestUnlock());
-        if (!ctx.isValid())
-        {
-            ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-            ui->statusLabel_SM->setText(tr("Wallet unlock was cancelled."));
             return;
         }
 
