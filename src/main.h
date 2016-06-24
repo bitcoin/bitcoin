@@ -53,7 +53,7 @@ static const bool DEFAULT_WHITELISTFORCERELAY = true;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
-static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 5000;  // BU Xtreme Thinblocks change to 5000 or 25MB (5000 x 5000KB max orphan size)
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static const unsigned int DEFAULT_ANCESTOR_LIMIT = 25;
 /** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
@@ -148,6 +148,20 @@ extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
+
+// Xpress Validation: begin section
+/**
+ * Transactions that have already been accepted into the memory pool do not need to be
+ * re-verified and can avoid having to do a second and expensive CheckInputs() when
+ * processing a new block.  (Protected by cs_main)
+ */
+static std::set<uint256> setPreVerifiedTxHash;
+/**
+ * Orphans that are added to the thinblock must be verifed since they have never been
+ *  accepted into the memory pool.
+ */
+static std::set<uint256> setUnVerifiedOrphanTxHash;
+// BU - Xpress Validation: end section
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;

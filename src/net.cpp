@@ -19,6 +19,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include "unlimited.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -1013,8 +1014,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
-    while (true)
-    {
+    while (true) {
         //
         // Disconnect nodes
         //
@@ -1500,7 +1500,8 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
+    if ((mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) ||
+        (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)) // BUIP010 Xtreme Thinblocks
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
@@ -1515,6 +1516,8 @@ void ThreadOpenConnections()
                 }
             }
             MilliSleep(500);
+
+           ConnectToThinBlockNodes();
         }
     }
 
@@ -1714,7 +1717,7 @@ void ThreadMessageHandler()
             }
         }
 
-        bool fSleep = true;
+        bool fSleep = ThinBlockMessageHandler(vNodesCopy);
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
@@ -2365,11 +2368,19 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nNextInvSend = 0;
     fRelayTxes = false;
     pfilter = new CBloomFilter();
+    pThinBlockFilter = new CBloomFilter();
     nPingNonceSent = 0;
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
+    thinBlockWaitingForTxns = -1;
+
+    std::string xmledName;
+    if (addrNameIn != "")
+        xmledName = addrNameIn;
+    else
+        xmledName="ip" + addr.ToStringIP() + "p" + addr.ToStringPort();
 
     {
         LOCK(cs_nLastNodeId);
@@ -2394,6 +2405,7 @@ CNode::~CNode()
 
     if (pfilter)
         delete pfilter;
+    delete pThinBlockFilter;
 
     GetNodeSignals().FinalizeNode(GetId());
 }

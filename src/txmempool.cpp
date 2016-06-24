@@ -15,6 +15,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utiltime.h"
+#include "unlimited.h"
 #include "version.h"
 
 using namespace std;

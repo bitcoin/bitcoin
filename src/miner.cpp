@@ -28,6 +28,7 @@
 #include "utilmoneystr.h"
 #include "validationinterface.h"
 #include "utilstrencodings.h"
+#include "unlimited.h"
 
 #include <boost/tuple/tuple.hpp>
 #include <queue>

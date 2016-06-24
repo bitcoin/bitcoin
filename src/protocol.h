@@ -138,6 +138,27 @@ extern const char *HEADERS;
  */
 extern const char *BLOCK;
 /**
+ * The thinblock message transmits a single serialized thinblock.
+ */
+extern const char *THINBLOCK;
+/**
+ * The xthinblock message transmits a single serializexd xthinblock.
+ */
+extern const char *XTHINBLOCK;
+/**
+ * The xblocktx message transmits a single serialized xblocktx.
+ */
+extern const char *XBLOCKTX;
+/**
+ * The get_xblocktx message transmits a single serialized get_xblocktx.
+ */
+extern const char *GET_XBLOCKTX;
+/**
+ * The get_xthin message transmits a single serialized get_xthin.
+ */
+extern const char *GET_XTHIN;
+
+/**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
  * @see https://bitcoin.org/en/developer-reference#getaddr
@@ -239,6 +260,11 @@ enum {
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
 
+    // NODE_XTHIN means the node supports Xtreme Thinblocks
+    // If this is turned off then the node will not service xthin requests nor
+    // make xthin requests
+    NODE_XTHIN = (1 << 4),
+
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
     // bitcoin-development mailing list. Remember that service bits are just
@@ -316,6 +342,12 @@ enum {
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
     MSG_FILTERED_BLOCK,
+    // BUIP010 Xtreme Thinblocks: a thin block contains all the transactions hashes in a block
+    // and also provides the missing transactions that are needed at the other end to reconstruct the block
+    MSG_THINBLOCK,
+    // BUIP010 Xtreme Thinblocks: an Xtreme thin block contains the first 8 bytes of all the tx hashes 
+    // and also provides the missing transactions that are needed at the other end to reconstruct the block
+    MSG_XTHINBLOCK,
 };
 
 #endif // BITCOIN_PROTOCOL_H
