@@ -844,7 +844,7 @@ inline const char* FormatIterator::streamStateFromFormat(std::ostream& out,
 
 //------------------------------------------------------------------------------
 // Private format function on top of which the public interface is implemented.
-// We enforce a mimimum of one value to be formatted to prevent bugs looking like
+// We enforce a minimum of one value to be formatted to prevent bugs looking like
 //
 //   const char* myStr = "100% broken";
 //   printf(myStr);   // Parses % as a format specifier
