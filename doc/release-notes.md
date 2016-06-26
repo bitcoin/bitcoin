@@ -63,6 +63,8 @@ UTXO set query (`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<tx
 were changed to return status code HTTP_BAD_REQUEST (400) instead of HTTP_INTERNAL_SERVER_ERROR (500) when requests
 contain invalid parameters.
 
+The first boolean argument to `getaddednodeinfo` has been removed. This is an incompatible change.
+
 ### Configuration and command-line options
 
 ### Block and transaction handling
