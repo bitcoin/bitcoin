@@ -14,7 +14,7 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "qt-everywhere-opensource-src-4.6.4.tar.gz"
+- "qt-everywhere-opensource-src-5.2.1.tar.gz"
 script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
@@ -30,15 +30,15 @@ script: |
   # Also build development tools.
   INSTALLPREFIX="$HOME/install"
   # Integrity Check
-  echo "9ad4d46c721b53a429ed5a2eecfd3c239a9ab566562f183f99d3125f1a234250  qt-everywhere-opensource-src-4.6.4.tar.gz" | sha256sum -c
+  #echo "9ad4d46c721b53a429ed5a2eecfd3c239a9ab566562f183f99d3125f1a234250  qt-everywhere-opensource-src-4.6.4.tar.gz" | sha256sum -c
   # Make install directories
   mkdir -p $INSTALLPREFIX
   mkdir -p $INSTALLPREFIX/include
   PKGCONFIGDIR=$INSTALLPREFIX/lib/pkgconfig
   mkdir -p $PKGCONFIGDIR
   #
-  tar xzf qt-everywhere-opensource-src-4.6.4.tar.gz
-  cd qt-everywhere-opensource-src-4.6.4
+  tar xzf qt-everywhere-opensource-src-5.2.1.tar.gz
+  cd qt-everywhere-opensource-src-5.2.1
   QTBUILDDIR=$(pwd)
 
   # Need to build 4.6-versioned host utilities as well (lrelease/qrc/lupdate/...)
@@ -59,7 +59,7 @@ script: |
     make ../../lib/pkgconfig/$MODULE.pc
     sed -e "s,$QTBUILDDIR,$INSTALLPREFIX,g" ../../lib/pkgconfig/$MODULE.pc > $PKGCONFIGDIR/$MODULE.pc
     # create links to existing Qt libraries
-    ln -sf /usr/lib/${ARCH}/lib${MODULE}.so.4 ${INSTALLPREFIX}/lib/lib${MODULE}.so
+    ln -sf /usr/lib/${ARCH}/lib${MODULE}.so.5 ${INSTALLPREFIX}/lib/lib${MODULE}.so
     )
   done
 

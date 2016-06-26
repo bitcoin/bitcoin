@@ -1,52 +1,43 @@
 ---
-name: "bitcoin-linux-0.13"
+name: "bitcoin-osx-0.13"
 enable_cache: true
 suites:
 - "trusty"
 architectures:
 - "amd64"
 packages:
+- "ca-certificates"
 - "curl"
-- "g++-aarch64-linux-gnu"
-- "g++-4.8-aarch64-linux-gnu"
-- "gcc-4.8-aarch64-linux-gnu"
-- "binutils-aarch64-linux-gnu"
-- "g++-arm-linux-gnueabihf"
-- "g++-4.8-arm-linux-gnueabihf"
-- "gcc-4.8-arm-linux-gnueabihf"
-- "binutils-arm-linux-gnueabihf"
-- "g++-4.8-multilib"
-- "gcc-4.8-multilib"
-- "binutils-gold"
+- "g++"
 - "git-core"
 - "pkg-config"
 - "autoconf"
+- "librsvg2-bin"
+- "libtiff-tools"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
-- "ca-certificates"
+- "cmake"
+- "imagemagick"
+- "libcap-dev"
+- "libz-dev"
+- "libbz2-dev"
 - "python"
+- "python-dev"
+- "python-setuptools"
+- "fonts-tuffy"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files: []
+files:
+- "MacOSX10.11.sdk.tar.gz"
 script: |
-
-  #unlock sudo
-  echo "ubuntu" | sudo -S true
-
-  sudo mkdir -p /usr/include/i386-linux-gnu/
-  sudo ln -s /usr/include/x86_64-linux-gnu/asm /usr/include/i386-linux-gnu/asm
-
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  HOSTS="x86_64-apple-darwin11"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
-  FAKETIME_PROGS="date ar ranlib nm"
-  HOST_CFLAGS="-O2 -g"
-  HOST_CXXFLAGS="-O2 -g"
-  HOST_LDFLAGS=-static-libstdc++
+  FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
   export QT_RCC_TEST=1
   export GZIP="-9n"
@@ -59,6 +50,8 @@ script: |
     export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
   fi
+
+  export ZERO_AR_DATE=1
 
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
@@ -92,6 +85,10 @@ script: |
 
   cd bitcoin
   BASEPREFIX=`pwd`/depends
+
+  mkdir -p ${BASEPREFIX}/SDKs
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.11.sdk.tar.gz
+
   # Build dependencies for each host
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
@@ -109,6 +106,7 @@ script: |
   make dist
   SOURCEDIST=`echo bitcoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
+
   # Correct tar file order
   mkdir -p temp
   pushd temp
@@ -126,31 +124,35 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
-    make ${MAKEOPTS} -C src check-security
+    make install-strip DESTDIR=${INSTALLPATH}
 
-    #TODO: This is a quick hack that disables symbol checking for arm.
-    #      Instead, we should investigate why these are popping up.
-    #      For aarch64, we'll need to bump up the min GLIBC version, as the abi
-    #      support wasn't introduced until 2.17.
-    case $i in
-       aarch64-*) : ;;
-       arm-*) : ;;
-       *) make ${MAKEOPTS} -C src check-symbols ;;
-    esac
+    make osx_volname
+    make deploydir
+    OSX_VOLNAME="$(cat osx_volname)"
+    mkdir -p unsigned-app-${i}
+    cp osx_volname unsigned-app-${i}/
+    cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
+    cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
+    cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
+    cp ${BASEPREFIX}/${i}/native/bin/${i}-codesign_allocate unsigned-app-${i}/codesign_allocate
+    cp ${BASEPREFIX}/${i}/native/bin/${i}-pagestuff unsigned-app-${i}/pagestuff
+    mv dist unsigned-app-${i}
+    pushd unsigned-app-${i}
+    find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
+    popd
 
-    make install DESTDIR=${INSTALLPATH}
+    make deploy
+    ${WRAP_DIR}/dmg dmg "${OSX_VOLNAME}.dmg" ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+
     cd installed
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME}/bin -type f -executable -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
-    find ${DISTNAME}/lib -type f -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
-    find ${DISTNAME} -not -name "*.dbg" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
-    find ${DISTNAME} -name "*.dbg" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
+    find ${DISTNAME} | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     cd ../../
-    rm -rf distsrc-${i}
   done
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src
+  mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
