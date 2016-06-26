@@ -1,0 +1,10 @@
+--- old/config.tests/unix/stl/stltest.cpp	2011-06-23 03:45:23.000000000 -0400
++++ new/config.tests/unix/stl/stltest.cpp	2014-08-28 00:54:04.154837604 -0400
+@@ -49,6 +49,7 @@
+ #include <vector>
+ #include <algorithm>
+ #include <iostream>
++#include <cstddef>
+ 
+ // something mean to see if the compiler and C++ standard lib are good enough
+ template<class K, class T>
