@@ -1886,7 +1886,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     mnpayments.UpdatedBlockTip(chainActive.Tip());
     masternodeSync.UpdatedBlockTip(chainActive.Tip());
 
-    // ********************************************************* Step 11d: start dash-darksend thread
+    // ********************************************************* Step 11d: start dash-privatesend thread
 
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 

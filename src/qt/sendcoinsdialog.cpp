@@ -642,9 +642,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     case WalletModel::AnonymizeOnlyUnlocked:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: The wallet was unlocked only to anonymize coins."),
-            QMessageBox::Ok, QMessageBox::Ok);
+        msgParams.first = tr("Transaction creation failed!") + " " + tr("The wallet was unlocked only to anonymize coins."),
+        msgParams.second = CClientUIInterface::MSG_ERROR;
+        break;
     case WalletModel::AbsurdFee:
         msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), maxTxFee));
         break;

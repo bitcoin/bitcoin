@@ -679,7 +679,6 @@ padding-bottom:8px;
 }
 
 QDialog#OptionsDialog QCheckBox {
-qproperty-alignment: 'AlignVCenter';
 min-height:20px;
 }
 
