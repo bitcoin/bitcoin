@@ -94,6 +94,7 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
             nBlockMaxCost = nBlockMaxSize * WITNESS_SCALE_FACTOR;
         }
     }
+
     // Limit cost to between 4K and MAX_BLOCK_COST-4K for sanity:
     nBlockMaxCost = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_COST-4000), nBlockMaxCost));
     // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
@@ -167,13 +168,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
     addPriorityTxs();
-    if (fNeedSizeAccounting) {
-        // addPackageTxs (the CPFP-based algorithm) cannot deal with size based
-        // accounting, so fall back to the old algorithm.
-        addScoreTxs();
-    } else {
-        addPackageTxs();
-    }
+    addPackageTxs();
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
@@ -243,11 +238,19 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 
 // Block size and sigops have already been tested.  Check that all transactions
 // are final.
-bool BlockAssembler::TestPackageFinality(const CTxMemPool::setEntries& package)
+bool BlockAssembler::TestPackageFinalityAndSerializedSize(const CTxMemPool::setEntries& package)
 {
+    uint64_t nPotentialBlockSize = nBlockSize; // only used with fNeedSizeAccounting
     BOOST_FOREACH (const CTxMemPool::txiter it, package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
+        if (fNeedSizeAccounting) {
+            uint64_t nTxSize = ::GetSerializeSize(it->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
+            if (nPotentialBlockSize + nTxSize >= nBlockMaxSize) {
+                return false;
+            }
+            nPotentialBlockSize += nTxSize;
+        }
     }
     return true;
 }
@@ -539,7 +542,7 @@ void BlockAssembler::addPackageTxs()
         ancestors.insert(iter);
 
         // Test if all tx's are Final
-        if (!TestPackageFinality(ancestors)) {
+        if (!TestPackageFinalityAndSerializedSize(ancestors)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
@@ -573,6 +576,7 @@ void BlockAssembler::addPriorityTxs()
         return;
     }
 
+    bool fSizeAccounting = fNeedSizeAccounting;
     fNeedSizeAccounting = true;
 
     // This vector will be sorted into a priority queue:
@@ -624,7 +628,7 @@ void BlockAssembler::addPriorityTxs()
             // If now that this txs is added we've surpassed our desired priority size
             // or have dropped below the AllowFreeThreshold, then we're done adding priority txs
             if (nBlockSize >= nBlockPrioritySize || !AllowFree(actualPriority)) {
-                return;
+                break;
             }
 
             // This tx was successfully added, so
@@ -640,6 +644,7 @@ void BlockAssembler::addPriorityTxs()
             }
         }
     }
+    fNeedSizeAccounting = fSizeAccounting;
 }
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)

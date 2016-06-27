@@ -193,7 +193,7 @@ private:
     /** Test if a new package would "fit" in the block */
     bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost);
     /** Test if a set of transactions are all final */
-    bool TestPackageFinality(const CTxMemPool::setEntries& package);
+    bool TestPackageFinalityAndSerializedSize(const CTxMemPool::setEntries& package);
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx);
