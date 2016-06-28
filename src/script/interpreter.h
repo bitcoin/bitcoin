@@ -101,7 +101,7 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
 class CachedHashes
 {
 public:
-    uint256 hashPrevouts,hashSequence,hashOutputs;
+    uint256 hashPrevouts, hashSequence, hashOutputs;
     bool IsEmpty() const
     {
         CachedHashes empty;

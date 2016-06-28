@@ -29,18 +29,18 @@ public:
     bool TryGet(uint256 txId, CachedHashes* hashes)
     {
         LOCK(cs);
-        if(!map.count(txId))
+        auto iter = map.find(txId);
+        if (iter == map.end())
             return false;
-        *hashes = map[txId];
+        *hashes = iter->second;
         return true;
     }
     bool TrySet(uint256 txId, const CachedHashes& hashes)
     {
         LOCK(cs);
-        if(map.count(txId))
-            return false;
-        map[txId] = hashes;
-        return true;
+        auto sizeBefore = map.size();
+        map.insert(std::pair<uint256, CachedHashes>(txId, hashes));
+        return map.size() != sizeBefore;
     }
 };
 
