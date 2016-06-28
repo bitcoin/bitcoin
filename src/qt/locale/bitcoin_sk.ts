@@ -26,10 +26,6 @@
         <translation>Zatvoriť</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopírovať adresu</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Vymaž vybranú adresu zo zoznamu</translation>
     </message>
@@ -44,73 +40,6 @@
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Zmazať</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Zvoľte adresu kam poslať coins</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Zvoľte adresu na ktorú prijať coins</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>Vybrať</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>Adresa odoslania</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>Prijímacia adresa</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Toto sú Vaše Bitcoin adresy pre posielanie platieb. Vždy skontrolujte množstvo a prijímaciu adresu pred poslaním coins.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Toto sú vaše Bitcoin adresy pre prijímanie platieb. Odporúča sa použiť novú prijímaciu adresu pre každú transakciu.</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation>Kopírovať &amp;popis</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation>&amp;Upraviť</translation>
-    </message>
-    <message>
-        <source>Export Address List</source>
-        <translation>Exportovať zoznam adries</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Čiarkou oddelovaný súbor (*.csv)</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Export zlyhal</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Nastala chyba pri pokuse uložiť zoznam adries do %1. Skúste znovu.</translation>
-    </message>
-</context>
-<context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Popis</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(bez popisu)</translation>
     </message>
 </context>
 <context>
@@ -130,94 +59,6 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Zopakujte nové heslo</translation>
-    </message>
-    <message>
-        <source>Encrypt wallet</source>
-        <translation>Zašifrovať peňaženku</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Táto operácia potrebuje heslo k vašej peňaženke aby ju mohla dešifrovať.</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Odomknúť peňaženku</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Táto operácia potrebuje heslo k vašej peňaženke na dešifrovanie peňaženky.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Dešifrovať peňaženku</translation>
-    </message>
-    <message>
-        <source>Change passphrase</source>
-        <translation>Zmena hesla</translation>
-    </message>
-    <message>
-        <source>Confirm wallet encryption</source>
-        <translation>Potvrďte šifrovanie peňaženky</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Varovanie: Ak zašifrujete peňaženku a stratíte heslo, &lt;b&gt;STRATÍTE VŠETKY VAŠE BITCOINY&lt;/b&gt;!⏎</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Ste si istí, že si želáte zašifrovať peňaženku?</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Jadro Bitcoin sa teraz ukončí pre dokončenie procesu šifrovania. Pamätaj, že šifrovanie peňaženky Ťa nemôže úplne ochrániť pred krádežou bitcoinov pomocou škodlivého software.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>DÔLEŽITÉ: Všetky doterajšie záložné kópie peňaženky ktoré ste zhotovili by mali byť nahradené novým zašifrovaným súborom s peňaženkou. Z bezpečnostných dôvodov sa predchádzajúce kópie nezašifrovanej peňaženky stanú neužitočné keď začnete používať novú zašifrovanú peňaženku.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Varovanie: Caps Lock je zapnutý</translation>
-    </message>
-    <message>
-        <source>Wallet encrypted</source>
-        <translation>Peňaženka zašifrovaná</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Zadajte nové heslo k peňaženke.&lt;br/&gt;Prosím použite heslo s dĺžkou aspoň &lt;b&gt;10 alebo viac náhodných znakov&lt;/b&gt;, alebo &lt;b&gt;8 alebo viac slov&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Zadajte staré a nové heslo k peňaženke.</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed</source>
-        <translation>Šifrovanie peňaženky zlyhalo</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Šifrovanie peňaženky zlyhalo kôli internej chybe. Vaša peňaženka nebola zašifrovaná.</translation>
-    </message>
-    <message>
-        <source>The supplied passphrases do not match.</source>
-        <translation>Zadané heslá nesúhlasia.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock failed</source>
-        <translation>Odomykanie peňaženky zlyhalo</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Zadané heslo pre dešifrovanie peňaženky bolo nesprávne.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Zlyhalo šifrovanie peňaženky.</translation>
-    </message>
-    <message>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>Heslo k peňaženke bolo úspešne zmenené.</translation>
     </message>
 </context>
 <context>
@@ -270,6 +111,10 @@
         <translation>Ukončiť program</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;O %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>O &amp;Qt</translation>
     </message>
@@ -304,14 +149,6 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Otvoriť &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core client</source>
-        <translation>Bitcoin Core klient</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Importujem bloky z disku...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -358,10 +195,6 @@
         <translation>&amp;Prijať</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Zobraziť informácie o Bitcoin Core</translation>
-    </message>
-    <message>
         <source>&amp;Show / Hide</source>
         <translation>Zobraziť / skryť</translation>
     </message>
@@ -398,20 +231,8 @@
         <translation>Lišta záložiek</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Jadro Bitcoin</translation>
-    </message>
-    <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Vyžiadať platby (vygeneruje QR kódy a bitcoin: URI)</translation>
-    </message>
-    <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>O jadre Bitcoin</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Upraviť možnosti nastavenia pre Jadro Bitcoin</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -428,10 +249,6 @@
     <message>
         <source>&amp;Command-line options</source>
         <translation>Možnosti príkazového riadku</translation>
-    </message>
-    <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Zobraziť pomocnú správu od Bitcoin Jadra pre získanie zoznamu dostupných možností príkazového riadku</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -545,13 +362,6 @@
     </message>
 </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Výstraha siete</translation>
-    </message>
-</context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
@@ -629,150 +439,6 @@
         <source>Priority</source>
         <translation>Priorita</translation>
     </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopírovať adresu</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopírovať popis</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopírovať sumu</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Kopírovať ID transakcie</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Uzamknúť neminuté</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Odomknúť neminuté</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>Kopírovať množstvo</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>Kopírovať poplatok</translation>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation>Kopírovať za poplatok</translation>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation>Kopírovať bajty</translation>
-    </message>
-    <message>
-        <source>Copy priority</source>
-        <translation>Kopírovať prioritu</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Kopírovať prach</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>Kopírovať zmenu</translation>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation>najvyššie</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>vyššie</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>vysoké</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>stredne vysoké</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>stredné</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>stredne nízke</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>nízke</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>nižšie</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>najnižšie</translation>
-    </message>
-    <message>
-        <source>(%1 locked)</source>
-        <translation>(%1 zamknutých)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>žiadne</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Tento popis sčervenie ak veľkosť transakcie presiahne 1000 bajtov.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Tento popis sčervenie ak je priorita nižšia ako "stredná".</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Tento popis sčervenie ak ktorýkoľvek príjemca dostane sumu menšiu ako %1.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Môže sa líšiť o +/- %1 satoshi pre každý vstup</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation>áno</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>nie</translation>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>To znamená že požadovaný poplatok je aspoň  %1  za kB.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Môže sa pohybovať +/- 1 bajt pre vstup.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Transakcie s vysokou prioritou sa pravdepodobnejsie dostanú do bloku.</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(bez popisu)</translation>
-    </message>
-    <message>
-        <source>change from %1 (%2)</source>
-        <translation>zmena od %1 (%2)</translation>
-    </message>
-    <message>
-        <source>(change)</source>
-        <translation>(zmena)</translation>
-    </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
@@ -795,38 +461,6 @@
     <message>
         <source>&amp;Address</source>
         <translation>&amp;Adresa</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Nová adresa pre prijímanie</translation>
-    </message>
-    <message>
-        <source>New sending address</source>
-        <translation>Nová adresa pre odoslanie</translation>
-    </message>
-    <message>
-        <source>Edit receiving address</source>
-        <translation>Upraviť prijímacie adresy</translation>
-    </message>
-    <message>
-        <source>Edit sending address</source>
-        <translation>Upraviť odosielaciu adresu</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Vložená adresa "%1" sa už nachádza v adresári.</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Vložená adresa "%1" nieje platnou adresou bitcoin.</translation>
-    </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Nepodarilo sa odomknúť peňaženku.</translation>
-    </message>
-    <message>
-        <source>New key generation failed.</source>
-        <translation>Generovanie nového kľúča zlyhalo.</translation>
     </message>
 </context>
 <context>
@@ -855,20 +489,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Jadro Bitcoin</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>verzia</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <source>About Bitcoin Core</source>
-        <translation>O jadre Bitcoin</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -906,28 +532,12 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Zobraziť uvítaciu obrazovku pri štarte (predvolené: %u)</translation>
     </message>
-    <message>
-        <source>Reset all settings changes made over the GUI</source>
-        <translation>Reštartovať všetky nastavenia urobené v používateľskom rozhraní.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Vitajte</translation>
-    </message>
-    <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Vitajte v jadre Bitcoin.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Keďže spúštate program prvý krát, môžte si vybrať kde bude Bitcoin Jadro ukladať svoje dáta.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Jadro Bitcoin stiahne zo siete a uloží kópiu Bitcoin blockchain. Aspoň %1GB dát bude uložených v tomto priečinku a časom porastie. Peňaženka bude tiež uložená v tomto priečinku.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -936,10 +546,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Použiť vlastný dátový adresár:</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Jadro Bitcoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -975,10 +581,6 @@
     <message>
         <source>Select payment request file</source>
         <translation>Vyberte súbor s výzvou k platbe</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Vyberte ktorý súbor s výzvou k platbe otvoriť</translation>
     </message>
 </context>
 <context>
@@ -1020,10 +622,6 @@
         <translation>Minimalizovať namiesto ukončenia aplikácie keď sa okno zavrie. Keď je zvolená táto možnosť, aplikácia sa zavrie len po zvolení Ukončiť v menu.</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
-        <translation>Tu sa dá nastaviť jazyk užívateľského rozhrania. Toto nastavenie bude účinné po reštartovaní Jadra Bitcoin.</translation>
-    </message>
-    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL tretích strán (napr. prehliadač blockchain) ktoré sa zobrazujú v záložke transakcií ako položky kontextového menu. %s v URL je nahradené hash-om transakcie. Viaceré URL sú oddelené zvislou čiarou |.</translation>
     </message>
@@ -1046,14 +644,6 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Sieť</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Automaticky spustiť Jadro Bitcoin po prihlásení do systému</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>&amp;Spustiť Bitcoin pri spustení systému správy okien</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1284,97 +874,6 @@
     </message>
 </context>
 <context>
-    <name>PaymentServer</name>
-    <message>
-        <source>URI handling</source>
-        <translation>Spracovanie URI</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Neplatná adresa platby %1</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Požiadavka na platbu zamietnutá</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Sieť požiadavky na platbu nie je zhodná so sieťou klienta.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Požiadavka na platbu nie je inicializovaná</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Požadovaná platba sumy  %1 je príliš malá (považovaná za prach).</translation>
-    </message>
-    <message>
-        <source>Payment request error</source>
-        <translation>Chyba pri vyžiadaní platby</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Nedá sa spustiť obslužný program bitcoin: click-to-pay zaplatiť kliknutím</translation>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>URL pre stiahnutie výzvy na zaplatenie je neplatné: %1</translation>
-    </message>
-    <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URI sa nedá analyzovať! To môže byť spôsobené neplatnou Bitcoin adresou alebo zle upravenými vlastnosťami URI.</translation>
-    </message>
-    <message>
-        <source>Payment request file handling</source>
-        <translation>Obsluha súboru s požiadavkou na platbu</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Súbor s výzvou na zaplatenie sa nedá čítať alebo spracovať! To môže byť spôsobené aj neplatným súborom s výzvou.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Vypršala platnosť požiadavky na platbu.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Program nepodporuje neoverené platobné výzvy na vlastná skripty.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Chybná požiadavka na platbu.</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Vrátenie z  %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Požiadavka na platbu %1 je príliš veľká (%2 bajtov, povolené je %3 bajtov).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Chyba komunikácie s %1: %2 </translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Požiadavka na platbu nemôže byť analyzovaná!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Zlá odpoveď zo servera %1</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Platba potvrdená</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Chyba požiadavky siete</translation>
-    </message>
-</context>
-<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -1426,25 +925,6 @@
     <message>
         <source>%1 ms</source>
         <translation>%1 ms</translation>
-    </message>
-</context>
-<context>
-    <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>Uložiť obrázok...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>Kopírovať obrázok</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>Ukladanie QR kódu</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG obrázok (*.png)</translation>
     </message>
 </context>
 <context>
@@ -1512,10 +992,6 @@
     <message>
         <source>Memory usage</source>
         <translation>Využitie pamäte</translation>
-    </message>
-    <message>
-        <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Otvoriť Bitcoin log súbor pre ladenie z aktuálneho dátového adresára. Toto môže trvať niekoľko sekúnd pre veľké súbory.</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1631,10 +1107,6 @@
         <translation>Von:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Dátum zostavenia</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Súbor záznamu ladenia</translation>
     </message>
@@ -1669,10 +1141,6 @@
     <message>
         <source>&amp;Unban Node</source>
         <translation>&amp;odblokovať uzol</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin Core RPC console.</source>
-        <translation>Vitajte v RPC konzole pre Jadro Bitcoin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1801,18 +1269,6 @@
         <source>Remove</source>
         <translation>Odstrániť</translation>
     </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopírovať popis</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Kopírovať správu</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopírovať sumu</translation>
-    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -1831,73 +1287,6 @@
     <message>
         <source>&amp;Save Image...</source>
         <translation>Uložiť obrázok...</translation>
-    </message>
-    <message>
-        <source>Request payment to %1</source>
-        <translation>Vyžiadať platbu pre %1</translation>
-    </message>
-    <message>
-        <source>Payment information</source>
-        <translation>Informácia o platbe</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Suma</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Popis</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Správa</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Výsledné URI príliš dlhé, skráť text pre názov / správu.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Chyba v zakódovaní URI do QR kódu</translation>
-    </message>
-</context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Dátum</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Popis</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Správa</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Suma</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(bez popisu)</translation>
-    </message>
-    <message>
-        <source>(no message)</source>
-        <translation>(žiadna správa)</translation>
-    </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(žiadna suma)</translation>
     </message>
 </context>
 <context>
@@ -2019,14 +1408,6 @@
         <translation>rýchle</translation>
     </message>
     <message>
-        <source>Send as zero-fee transaction if possible</source>
-        <translation>Poslať ako transakciu bez poplatku, ak je to možné</translation>
-    </message>
-    <message>
-        <source>(confirmation may take longer)</source>
-        <translation>(potvrdenie môže trvať dlhšie)</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Poslať viacerým príjemcom naraz</translation>
     </message>
@@ -2058,114 +1439,6 @@
         <source>S&amp;end</source>
         <translation>&amp;Odoslať</translation>
     </message>
-    <message>
-        <source>Confirm send coins</source>
-        <translation>Potvrdiť odoslanie bitcoins</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 do %2</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>Kopírovať množstvo</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopírovať sumu</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>Kopírovať poplatok</translation>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation>Kopírovať za poplatok</translation>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation>Kopírovať bajty</translation>
-    </message>
-    <message>
-        <source>Copy priority</source>
-        <translation>Kopírovať prioritu</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>Kopírovať zmenu</translation>
-    </message>
-    <message>
-        <source>Total Amount %1</source>
-        <translation>Celkové množstvo %1</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>alebo</translation>
-    </message>
-    <message>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>Suma na úhradu musí byť väčšia ako 0.</translation>
-    </message>
-    <message>
-        <source>The amount exceeds your balance.</source>
-        <translation>Suma je vyššia ako Váš zostatok.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Suma celkom prevyšuje Váš zostatok ak sú započítané %1 transakčné poplatky.</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed!</source>
-        <translation>Vytvorenie transakcie zlyhalo!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Transakcia bola zamietnutá! Toto sa môže stať ak niektoré coins vo vašej peňaženke už boli minuté, ako keď použijete kópiu wallet.dat a coins boli minuté z kópie ale neoznačené ako minuté tu.</translation>
-    </message>
-    <message>
-        <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>Poplatok vyšší ako %1 je považovaný za šialene vysoký.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Vypršala platnosť požiadavky na platbu.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Zaplatiť len vyžadovaný poplatok z %1</translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>Adresa príjemcu je neplatná. Prosím, overte ju.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Našla sa duplicitná adresa: každú adresu je možné použiť len raz.</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Varovanie: Nesprávna Bitcoin adresa</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(bez popisu)</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown change address</source>
-        <translation>Varovanie: Neznáma adresa pre výdavok</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Kopírovať prach</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Určite to chcete odoslať?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>pridané ako transakčný poplatok</translation>
-    </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -2176,10 +1449,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Zapla&amp;tiť:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Vložte popis pre túto adresu aby sa pridala do adresára</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2252,10 +1521,6 @@
 </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Bitcoin Core is shutting down...</source>
-        <translation>Jadro Bitcoin sa ukončuje...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Nevypínajte počítač kým toto okno nezmizne.</translation>
@@ -2339,69 +1604,9 @@
         <source>Reset all verify message fields</source>
         <translation>Obnoviť všetky polia v overiť správu</translation>
     </message>
-    <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>Kliknite "Podpísať Správu" na získanie podpisu</translation>
-    </message>
-    <message>
-        <source>The entered address is invalid.</source>
-        <translation>Zadaná adresa je neplatná.</translation>
-    </message>
-    <message>
-        <source>Please check the address and try again.</source>
-        <translation>Prosím skontrolujte adresu a skúste znova.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation>Vložená adresa nezodpovedá žiadnemu kľúcu.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock was cancelled.</source>
-        <translation>Odomknutie peňaženky bolo zrušené.</translation>
-    </message>
-    <message>
-        <source>Private key for the entered address is not available.</source>
-        <translation>Súkromný kľúč pre vložená adresu nieje k dispozícii.</translation>
-    </message>
-    <message>
-        <source>Message signing failed.</source>
-        <translation>Podpísanie správy zlyhalo.</translation>
-    </message>
-    <message>
-        <source>Message signed.</source>
-        <translation>Správa podpísaná.</translation>
-    </message>
-    <message>
-        <source>The signature could not be decoded.</source>
-        <translation>Podpis nie je možné dekódovať.</translation>
-    </message>
-    <message>
-        <source>Please check the signature and try again.</source>
-        <translation>Prosím skontrolujte podpis a skúste znova.</translation>
-    </message>
-    <message>
-        <source>The signature did not match the message digest.</source>
-        <translation>Podpis sa nezhoduje so zhrnutím správy</translation>
-    </message>
-    <message>
-        <source>Message verification failed.</source>
-        <translation>Overenie správy zlyhalo.</translation>
-    </message>
-    <message>
-        <source>Message verified.</source>
-        <translation>Správa overená.</translation>
-    </message>
 </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Jadro Bitcoin</translation>
-    </message>
-    <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Vývojári jadra Bitcoin</translation>
-    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testovacia sieť]</translation>
@@ -2415,411 +1620,10 @@
     </message>
 </context>
 <context>
-    <name>TransactionDesc</name>
-    <message>
-        <source>Open until %1</source>
-        <translation>Otvorené do %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>sporné</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/offline</translation>
-    </message>
-    <message>
-        <source>%1/unconfirmed</source>
-        <translation>%1/nepotvrdené</translation>
-    </message>
-    <message>
-        <source>%1 confirmations</source>
-        <translation>%1 potvrdení</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Stav</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, vysielať cez %n uzol</numerusform><numerusform>, vysielať cez %n uzle</numerusform><numerusform>, vysielať cez %n uzolov</numerusform></translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Dátum</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Zdroj</translation>
-    </message>
-    <message>
-        <source>Generated</source>
-        <translation>Vygenerované</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>od</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>Pre</translation>
-    </message>
-    <message>
-        <source>own address</source>
-        <translation>vlastná adresa</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>Iba sledovanie</translation>
-    </message>
-    <message>
-        <source>label</source>
-        <translation>popis</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation>Kredit</translation>
-    </message>
-    <message>
-        <source>not accepted</source>
-        <translation>neprijaté</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation>Debet</translation>
-    </message>
-    <message>
-        <source>Total debit</source>
-        <translation>Debit spolu</translation>
-    </message>
-    <message>
-        <source>Total credit</source>
-        <translation>Kredit spolu</translation>
-    </message>
-    <message>
-        <source>Transaction fee</source>
-        <translation>Transakčný poplatok</translation>
-    </message>
-    <message>
-        <source>Net amount</source>
-        <translation>Suma netto</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Správa</translation>
-    </message>
-    <message>
-        <source>Comment</source>
-        <translation>Komentár</translation>
-    </message>
-    <message>
-        <source>Transaction ID</source>
-        <translation>ID transakcie</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Kupec</translation>
-    </message>
-    <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Vygenerované mince musia dospieť %1 blokov kým môžu byť minuté. Keď vytvoríte tento blok, bude rozoslaný do siete aby bol akceptovaný do reťaze blokov. Ak sa nedostane do reťazca, jeho stav sa zmení na "zamietnutý" a nebude sa dať minúť. Toto sa môže občas stať ak iný uzol vytvorí blok približne v rovnakom čase.</translation>
-    </message>
-    <message>
-        <source>Debug information</source>
-        <translation>Ladiace informácie</translation>
-    </message>
-    <message>
-        <source>Transaction</source>
-        <translation>Transakcie</translation>
-    </message>
-    <message>
-        <source>Inputs</source>
-        <translation>Vstupy</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Suma</translation>
-    </message>
-    <message>
-        <source>true</source>
-        <translation>pravda</translation>
-    </message>
-    <message>
-        <source>false</source>
-        <translation>nepravda</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, ešte nebola úspešne odoslaná</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Otvorené pre %n ďalší blok</numerusform><numerusform>Otvorené pre %n ďalšie bloky</numerusform><numerusform>Otvorené pre %n ďalších blokov</numerusform></translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>neznámy</translation>
-    </message>
-</context>
-<context>
     <name>TransactionDescDialog</name>
-    <message>
-        <source>Transaction details</source>
-        <translation>Detaily transakcie</translation>
-    </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Táto časť obrazovky zobrazuje detailný popis transakcie</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Dátum</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Typ</translation>
-    </message>
-    <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Nezrelé (%1 potvrdení, bude k dispozícii po %2)</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Otvorené pre %n ďalší blok</numerusform><numerusform>Otvorené pre %n ďalšie bloky</numerusform><numerusform>Otvorené pre %n ďalších blokov</numerusform></translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>Otvorené do %1</translation>
-    </message>
-    <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Potvrdené (%1 potvrdení)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Ten blok nebol prijatý žiadnou inou nódou a pravdepodobne nebude akceptovaný!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>Vygenerované ale neakceptované</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Offline</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Popis</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>Nepotvrdené</translation>
-    </message>
-    <message>
-        <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation> Potvrdzuje sa ( %1 z  %2 odporúčaných potvrdení)</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>V rozpore</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Prijaté s</translation>
-    </message>
-    <message>
-        <source>Received from</source>
-        <translation>Prijaté od:</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Odoslané na</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation>Platba sebe samému</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Vyťažené</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>Iba sledovanie</translation>
-    </message>
-    <message>
-        <source>(n/a)</source>
-        <translation>(n/a)</translation>
-    </message>
-    <message>
-        <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Status transakcie. Pohybujte myšou nad týmto poľom a zjaví sa počet potvrdení.</translation>
-    </message>
-    <message>
-        <source>Date and time that the transaction was received.</source>
-        <translation>Dátum a čas prijatia transakcie.</translation>
-    </message>
-    <message>
-        <source>Type of transaction.</source>
-        <translation>Typ transakcie.</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Či sú ale nie sú, adresy iba na sledovanie zahrnuté v tejto transakcii.</translation>
-    </message>
-    <message>
-        <source>Amount removed from or added to balance.</source>
-        <translation>Suma pridaná alebo odobraná k zostatku.</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>All</source>
-        <translation>Všetko</translation>
-    </message>
-    <message>
-        <source>Today</source>
-        <translation>Dnes</translation>
-    </message>
-    <message>
-        <source>This week</source>
-        <translation>Tento týždeň</translation>
-    </message>
-    <message>
-        <source>This month</source>
-        <translation>Tento mesiac</translation>
-    </message>
-    <message>
-        <source>Last month</source>
-        <translation>Minulý mesiac</translation>
-    </message>
-    <message>
-        <source>This year</source>
-        <translation>Tento rok</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>Rozsah...</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Prijaté s</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Odoslané na</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation>Samému sebe</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Vyťažené</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>Iné</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Vložte adresu alebo popis pre vyhľadávanie</translation>
-    </message>
-    <message>
-        <source>Min amount</source>
-        <translation>Min množstvo</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopírovať adresu</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopírovať popis</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopírovať sumu</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Kopírovať ID transakcie</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>Kopírovať celú tranzakciu</translation>
-    </message>
-    <message>
-        <source>Edit label</source>
-        <translation>Editovať popis</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Zobraziť podrobnosti transakcie</translation>
-    </message>
-    <message>
-        <source>Export Transaction History</source>
-        <translation>Exportovať históriu transakcií</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation>Iba sledovanie</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Export zlyhal</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Vyskytla sa chyba pri pokuse o uloženie histórie transakcií do %1.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Export úspešný</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>História transakciá bola úspešne uložená do %1.</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Čiarkou oddelovaný súbor (*.csv)</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>Potvrdené</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Dátum</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Typ</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Popis</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>ID</source>
-        <translation>ID</translation>
-    </message>
-    <message>
-        <source>Range:</source>
-        <translation>Rozsah:</translation>
-    </message>
-    <message>
-        <source>to</source>
-        <translation>do</translation>
     </message>
 </context>
 <context>
@@ -2827,55 +1631,6 @@
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation>Jednotka pre zobrazovanie súm. Kliknite pre zvolenie inej jednotky.</translation>
-    </message>
-</context>
-<context>
-    <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Nie je načítaná peňaženka.</translation>
-    </message>
-</context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>Poslať Bitcoins</translation>
-    </message>
-</context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Exportovať...</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Exportovať tento náhľad do súboru</translation>
-    </message>
-    <message>
-        <source>Backup Wallet</source>
-        <translation>Zálohovať peňaženku</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Údaje peňaženky (*.dat)</translation>
-    </message>
-    <message>
-        <source>Backup Failed</source>
-        <translation>Záloha zlyhala</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Vyskytla sa chyba pri pokuse o uloženie dát peňaženky do %1.</translation>
-    </message>
-    <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>Dáta peňaženky boli úspešne uložené do %1.</translation>
-    </message>
-    <message>
-        <source>Backup Successful</source>
-        <translation>Záloha úspešná</translation>
     </message>
 </context>
 <context>
@@ -2899,10 +1654,6 @@
     <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Prijímať príkazy z príkazového riadku a JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>Skontrolujte správnosť nastavenia dátumu a času na vašom počítači! Ak je čas nesprávny Jadro Bitcoin nebude správne fungovať.</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
@@ -2929,6 +1680,10 @@
         <translation>Prijať spojenia zvonku (predvolené: 1 ak žiadne -proxy alebo -connect)</translation>
     </message>
     <message>
+        <source>Bitcoin Core</source>
+        <translation>Jadro Bitcoin</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
     </message>
@@ -2953,10 +1708,6 @@
         <translation>Toto je pred-testovacia verzia - použitie je na vlastné riziko - nepoužívajte na tvorbu bitcoin ani obchodovanie.</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation>Nepodarilo sa pripojiť na %s na tomto počítači. Bitcoin Jadro je už pravdepodobne spustené.</translation>
-    </message>
-    <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
         <translation>VAROVANIE: príliš veľa vygenerovaných blokov; %d prijatých blokov v posledných %d hodinách (očakávaných %d)</translation>
     </message>
@@ -2973,10 +1724,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Varovanie: Zjavne sa úplne nezhodujeme s našimi peer-mi! Možno potrebujete prejsť na novšiu verziu alebo ostatné uzly potrebujú vyššiu verziu.</translation>
-    </message>
-    <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varovanie: wallet.dat je poškodený, údaje úspešne získané! Pôvodný wallet.dat uložený ako wallet.{timestamp}.bak v %s; ak váš zostatok alebo transakcie niesu správne, mali by ste súbor obnoviť zo zálohy.</translation>
     </message>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
@@ -3039,6 +1786,18 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Chyba spustenia databázového prostredia peňaženky %s!</translation>
     </message>
     <message>
+        <source>Error loading %s</source>
+        <translation>Chyba načítania %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Chyba načítania %s: Peňaženka je poškodená</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Chyba načítania %s: Peňaženka vyžaduje novšiu verziu %s</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Chyba načítania databázy blokov</translation>
     </message>
@@ -3067,8 +1826,16 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Neplatná -onion adresa:  '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Neplatná suma pre -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Neplatná suma pre -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Načítavam banlist...</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3131,10 +1898,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Voľby peňaženky:</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -txindex</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Povoliť JSON-RPC pripojenia zo zadaného zdroja. Pre &lt;ip&gt; sú platné jednoduché IP (napr. 1.2.3.4), sieť/netmask (napr. 1.2.3.4/255.255.255.0) alebo sieť/CIDR (napr. 1.2.3.4/24). Táto možnosť môže byť zadaná niekoľko krát</translation>
     </message>
@@ -3145,10 +1908,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
         <translation>Spojiť s danou adresou pre počúvanie JSON-RPC spojení. Použite zápis [host]:port pre IPv6. Táto možnosť môže byt zadaná niekoľko krát (predvolené: spojiť so všetkými rozhraniami)</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>Neviem uzamknúť data adresár %s. Jadro Bitcoin je pravdepodobne už spustené.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3187,10 +1946,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Nastaviť najväčšiu veľkosť vysoká-dôležitosť/nízke-poplatky transakcií v bajtoch (prednastavené: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>Nastaviť počet vlákien pre generáciu mincí (-1 = všetky jadrá, predvolené: %d)</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Suma je príliš malá pre odoslanie tranzakcie</translation>
     </message>
@@ -3211,32 +1966,12 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Akceptovať verejné REST žiadosti (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Activating best chain...</source>
-        <translation>Aktivácia najlepšej reťaze...</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
-        <translation>Pokus o obnovenie privátnych kľúčov z poškodenej wallet.dat pri spustení</translation>
-    </message>
-    <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Automaticky vytvoriť skrytú službu Tor (predvolené: %d)</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Nedá sa vyriešiť -whitebind adresa: '%s'</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Pripojiť cez proxy server SOCKS5</translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation>Autorské práva (C) 2009-%i Vývojári jadra Bitcoin</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
-        <translation>Chyba pri čítaní wallet.dat: Peňaženka vyžaduje vyššiu verziu Jadra Bitcoin</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3249,22 +1984,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Information</source>
         <translation>Informácia</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
-        <translation>Inicializačná kontrola zlyhala. Jadro Bitcoin sa ukončuje.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Neplatná suma pre -maxtxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Neplatná suma pre -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Neplatná suma pre -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3289,10 +2008,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>RPC server options:</source>
         <translation>Možnosti servra RPC:</translation>
-    </message>
-    <message>
-        <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Obdržať a zobraziť sieťové P2P varovania (predvolené: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3355,20 +2070,12 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Užívateľské meno pre JSON-RPC spojenia</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
-        <translation>Peňaženka musí byť prepísaná: pre dokončenie reštartujte Jadro Bitcoin</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Upozornenie</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Zmazať všetky transakcie z peňaženky...</translation>
-    </message>
-    <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat je poškodený, záchrana zlyhala</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
@@ -3379,20 +2086,12 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Vykonaj príkaz, ak zmeny v najlepšom bloku (%s v príkaze nahradí blok hash)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Táto pomocná správa</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Povoliť vyhľadávanie DNS pre pridanie nódy a spojenie</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
         <translation>Načítavanie adries...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Chyba načítania wallet.dat: Peňaženka je poškodená</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
@@ -3425,14 +2124,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
         <translation>Vždy sa dotazovať adresy partnerských uzlov cez vyhľadávanie DNS (predvolené: %u)</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Chyba načítania wallet.dat</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: %u)</source>
-        <translation>Generovať mince (predvolené: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -3513,18 +2204,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Neznáma sieť upresnená v -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Nemožno rozriešiť -bind adress: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Nemožno rozriešiť -externalip address: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Neplatná suma pre -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

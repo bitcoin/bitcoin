@@ -13,21 +13,6 @@
         <source>&amp;Delete</source>
         <translation>&amp;Verwyder</translation>
     </message>
-    </context>
-<context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(geen etiket)</translation>
-    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -46,70 +31,6 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Herhaal nuwe wagfrase</translation>
-    </message>
-    <message>
-        <source>Encrypt wallet</source>
-        <translation>Enkripteer beursie</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Hierdie operasie benodig 'n wagwoord om die beursie oop te sluit.</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Sluit beursie oop</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Hierdie operasie benodig 'n wagwoord om die beursie oop te sluit.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Sluit beursie oop</translation>
-    </message>
-    <message>
-        <source>Change passphrase</source>
-        <translation>Verander wagfrase</translation>
-    </message>
-    <message>
-        <source>Confirm wallet encryption</source>
-        <translation>Bevestig beursie enkripsie.</translation>
-    </message>
-    <message>
-        <source>Wallet encrypted</source>
-        <translation>Die beursie is nou bewaak</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Tik in die ou wagfrase en die nuwe wagfrase vir die beursie.</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed</source>
-        <translation>Die beursie kon nie bewaak word nie</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Beursie bewaaking het misluk as gevolg van 'n interne fout. Die beursie is nie bewaak nie!</translation>
-    </message>
-    <message>
-        <source>The supplied passphrases do not match.</source>
-        <translation>Die wagfrase stem nie ooreen nie</translation>
-    </message>
-    <message>
-        <source>Wallet unlock failed</source>
-        <translation>Beursie oopsluiting het misluk</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Die wagfrase wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Beursie dekripsie het misluk</translation>
-    </message>
-    <message>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>Die beursie se wagfrase verandering was suksesvol.</translation>
     </message>
 </context>
 <context>
@@ -195,9 +116,6 @@
     </message>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -211,18 +129,6 @@
         <source>Date</source>
         <translation>Datum</translation>
     </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Maak kopie van adres</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopieer bedrag</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(geen etiket)</translation>
-    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -234,27 +140,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Adres</translation>
     </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Nuwe ontvangende adres</translation>
-    </message>
-    <message>
-        <source>New sending address</source>
-        <translation>Nuwe stuurende adres</translation>
-    </message>
-    <message>
-        <source>Edit receiving address</source>
-        <translation>Wysig ontvangende adres</translation>
-    </message>
-    <message>
-        <source>Edit sending address</source>
-        <translation>Wysig stuurende adres</translation>
-    </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Kon nie die beursie oopsluit nie.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -294,9 +180,6 @@
     </message>
     </context>
 <context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -305,9 +188,6 @@
         <source>Amount</source>
         <translation>Bedrag</translation>
     </message>
-    </context>
-<context>
-    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -326,52 +206,9 @@
         <source>&amp;Message:</source>
         <translation>&amp;Boodskap:</translation>
     </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopieer bedrag</translation>
-    </message>
-</context>
-<context>
-    <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Bedrag</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Boodskap</translation>
-    </message>
     </context>
 <context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Datum</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Boodskap</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Bedrag</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(geen etiket)</translation>
-    </message>
+    <name>ReceiveRequestDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -403,15 +240,7 @@
         <source>S&amp;end</source>
         <translation>S&amp;tuur</translation>
     </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopieer bedrag</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(geen etiket)</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -448,232 +277,10 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
-    <name>TransactionDesc</name>
-    <message>
-        <source>Date</source>
-        <translation>Datum</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>Van</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>Na</translation>
-    </message>
-    <message>
-        <source>own address</source>
-        <translation>eie adres</translation>
-    </message>
-    <message>
-        <source>label</source>
-        <translation>etiket</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation>Krediet</translation>
-    </message>
-    <message>
-        <source>not accepted</source>
-        <translation>nie aanvaar nie</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation>Debiet</translation>
-    </message>
-    <message>
-        <source>Transaction fee</source>
-        <translation>Transaksie fooi</translation>
-    </message>
-    <message>
-        <source>Net amount</source>
-        <translation>Netto bedrag</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Boodskap</translation>
-    </message>
-    <message>
-        <source>Transaction ID</source>
-        <translation>Transaksie ID</translation>
-    </message>
-    <message>
-        <source>Transaction</source>
-        <translation>Transaksie</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Bedrag</translation>
-    </message>
-    <message>
-        <source>true</source>
-        <translation>waar</translation>
-    </message>
-    <message>
-        <source>false</source>
-        <translation>onwaar</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>onbekend</translation>
-    </message>
-</context>
-<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Datum</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tipe</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Ontvang met</translation>
-    </message>
-    <message>
-        <source>Received from</source>
-        <translation>Ontvang van</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Gestuur na</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation>Betalings Aan/na jouself</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Gemyn</translation>
-    </message>
-    <message>
-        <source>(n/a)</source>
-        <translation>(n.v.t)</translation>
-    </message>
-    <message>
-        <source>Date and time that the transaction was received.</source>
-        <translation>Datum en tyd wat die transaksie ontvang was.</translation>
-    </message>
-    <message>
-        <source>Type of transaction.</source>
-        <translation>Tipe transaksie.</translation>
-    </message>
-    </context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>All</source>
-        <translation>Alles</translation>
-    </message>
-    <message>
-        <source>Today</source>
-        <translation>Vandag</translation>
-    </message>
-    <message>
-        <source>This week</source>
-        <translation>Hierdie week</translation>
-    </message>
-    <message>
-        <source>This month</source>
-        <translation>Hierdie maand</translation>
-    </message>
-    <message>
-        <source>Last month</source>
-        <translation>Verlede maand</translation>
-    </message>
-    <message>
-        <source>This year</source>
-        <translation>Hierdie jaar</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>Reeks...</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Ontvang met</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Gestuur na</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation>Aan/na jouself</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Gemyn</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>Ander</translation>
-    </message>
-    <message>
-        <source>Min amount</source>
-        <translation>Min bedrag</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Maak kopie van adres</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopieer bedrag</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Datum</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tipe</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>ID</source>
-        <translation>ID</translation>
-    </message>
-    <message>
-        <source>Range:</source>
-        <translation>Reeks:</translation>
-    </message>
-    <message>
-        <source>to</source>
-        <translation>aan</translation>
-    </message>
-</context>
-<context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>Stuur Munstukke</translation>
-    </message>
-</context>
-<context>
-    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -688,10 +295,6 @@
     <message>
         <source>Information</source>
         <translation>Informasie</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>Hierdie help boodskap</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

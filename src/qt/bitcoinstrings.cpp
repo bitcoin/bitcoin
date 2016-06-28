@@ -165,6 +165,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Unable to rewind the database to a pre-fork state. You will need to "
+"redownload the blockchain"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Unsupported argument -socks found. Setting SOCKS version isn't possible "
 "anymore, only SOCKS5 proxies are supported."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -308,11 +311,13 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Relay and mine data carrier transactions (def
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescan the block chain for missing wallet transactions on startup"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescanning..."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Rewinding blocks..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Run in the background as a daemon and accept commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Send trace/debug info to console instead of debug.log file"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Send transactions as zero-fee transactions if possible (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set key pool size to <n> (default: %u)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Set maximum block cost (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set maximum block size in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set minimum block size in bytes (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set the number of threads to service RPC calls (default: %d)"),
