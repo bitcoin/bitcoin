@@ -162,6 +162,7 @@ BITCOIN_CORE_H = \
   undo.h \
   unlimited.h \
   stat.h \
+  requestManager.h \
   util.h \
   utilmoneystr.h \
   utilstrencodings.h \
@@ -221,6 +222,7 @@ libbitcoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   unlimited.cpp \
+  requestManager.cpp \
   validationinterface.cpp \
   $(BITCOIN_CORE_H)
 

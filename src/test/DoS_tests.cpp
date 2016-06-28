@@ -26,12 +26,6 @@
 extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-struct COrphanTx {
-    CTransaction tx;
-    NodeId fromPeer;
-};
-extern std::map<uint256, COrphanTx> mapOrphanTransactions;
-extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i)
 {

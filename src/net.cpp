@@ -792,7 +792,9 @@ int SocketSendData(CNode* pnode)
         if (nBytes > 0) {
             progress++;  // BU
             pnode->bytesSent += nBytes;  // BU stats
-            pnode->nLastSend = GetTime();
+            int64_t tmp = GetTime();
+            pnode->sendGap << (tmp - pnode->nLastSend);
+            pnode->nLastSend = tmp;
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
             pnode->RecordBytesSent(nBytes);
@@ -1104,6 +1106,7 @@ void ThreadSocketHandler()
         progress = 0;
         fAquiredAllRecvLocks = true;
         stat_io_service.poll(); // BU instrumentation
+        requester.SendRequests(); // BU
         //
         // Disconnect nodes
         //
@@ -1286,21 +1289,23 @@ void ThreadSocketHandler()
                             receiveShaper.leak(nBytes);
                             if (!pnode->ReceiveMsgBytes(recvMsgBuf, nBytes))
                                 pnode->CloseSocketDisconnect();
-                            pnode->nLastRecv = GetTime();
+                            int64_t tmp = GetTime();
+                            pnode->recvGap << (tmp - pnode->nLastRecv);
+                            pnode->nLastRecv = tmp;
                             pnode->nRecvBytes += nBytes;
                             pnode->bytesReceived += nBytes;  // BU stats
                             pnode->RecordBytesRecv(nBytes);
                         } else if (nBytes == 0) {
                             // socket closed gracefully
                             if (!pnode->fDisconnect)
-                                LogPrint("net", "socket closed\n");
+			      LogPrint("net", "Node %s socket closed\n",pnode->addrName.c_str());
                             pnode->CloseSocketDisconnect();
                         } else if (nBytes < 0) {
                             // error
                             int nErr = WSAGetLastError();
                             if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
                                 if (!pnode->fDisconnect)
-                                    LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+				  LogPrintf("Node %s socket recv error '%s'\n", pnode->addrName.c_str(), NetworkErrorString(nErr));
                                 pnode->CloseSocketDisconnect();
                             }
                         }
@@ -1326,16 +1331,16 @@ void ThreadSocketHandler()
             int64_t nTime = GetTime();
             if (nTime - pnode->nTimeConnected > 60) {
                 if (pnode->nLastRecv == 0 || pnode->nLastSend == 0) {
-                    LogPrint("net", "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->id);
+                    LogPrint("net", "Node %s socket no message in first 60 seconds, %d %d from %d\n", pnode->addrName.c_str(), pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->id);
                     pnode->fDisconnect = true;
                 } else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL) {
-                    LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
+                    LogPrint("net", "Node %s socket sending timeout: %is\n", pnode->addrName.c_str(), nTime - pnode->nLastSend);
                     pnode->fDisconnect = true;
                 } else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90 * 60)) {
-                    LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
+                    LogPrint("net", "Node %s socket receive timeout: %is\n", pnode->addrName.c_str(), nTime - pnode->nLastRecv);
                     pnode->fDisconnect = true;
                 } else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros()) {
-                    LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
+                    LogPrint("net", "Node %s ping timeout: %fs\n", pnode->addrName.c_str(), 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
                     pnode->fDisconnect = true;
                 }
             }
@@ -1807,7 +1812,7 @@ void ThreadMessageHandler()
     boost::mutex condition_mutex;
     boost::unique_lock<boost::mutex> lock(condition_mutex);
 
-    SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
+    // SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true) {
         vector<CNode*> vNodesCopy;
         {
@@ -2469,9 +2474,14 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
       }
     bytesSent.init("node/" + xmledName + "/bytesSent");
     bytesReceived.init("node/" + xmledName + "/bytesReceived");
-    //txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
-    //firstTx.init("node/" + xmledName + "/firstTxn");
-    //firstBlock.init("node/" + xmledName + "/firstBlock");
+    txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
+    firstTx.init("node/" + xmledName + "/firstTx");
+    firstBlock.init("node/" + xmledName + "/firstBlock");
+    blocksSent.init("node/" + xmledName + "/blocksSent");
+    txsSent.init("node/" + xmledName + "/txsSent");
+
+    sendGap.init("node/" + xmledName + "/sendGap",STAT_OP_MAX);
+    recvGap.init("node/" + xmledName + "/recvGap",STAT_OP_MAX);
 
     {
         LOCK(cs_nLastNodeId);
@@ -2544,6 +2554,7 @@ void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
     assert(ssSend.size() == 0);
     ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
+    currentCommand = pszCommand;
 }
 
 void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
@@ -2576,6 +2587,8 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
+
+    UpdateSendStats(this, currentCommand, nSize + CMessageHeader::HEADER_SIZE, GetTimeMicros());
 
     // Set the checksum
     uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());

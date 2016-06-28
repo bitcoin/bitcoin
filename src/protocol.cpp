@@ -42,6 +42,9 @@ const char *XBLOCKTX="xblocktx";
 const char *GET_XBLOCKTX="get_xblocktx";
 const char *GET_XTHIN="get_xthin";
 // BUIP010 Xtreme Thinblocks - end section
+const char *XPEDITEDREQUEST="req_xpedited";
+const char *XPEDITEDBLK="Xb";
+const char *XPEDITEDTxn="Xt";
 };
 
 static const char* ppszTypeName[] =

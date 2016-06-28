@@ -9,6 +9,9 @@
 #include "leakybucket.h"
 #include "net.h"
 #include "stat.h"
+#include "thinblock.h"
+#include "consensus/validation.h"
+#include "requestManager.h"
 #include <univalue.h>
 #include <vector>
 
@@ -46,6 +49,9 @@ static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
 /** The minimum value possible for -limitfreerelay when rate limiting */
 static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 // BU - Xtreme Thinblocks Auto Mempool Limiter - end section
+
+// process incoming unsolicited block
+void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
 
 //! The largest block size that we have seen since startup
 extern uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
@@ -91,11 +97,13 @@ extern UniValue setexcessiveblock(const UniValue& params, bool fHelp);
 extern UniValue getminercomment(const UniValue& params, bool fHelp);
 extern UniValue setminercomment(const UniValue& params, bool fHelp);
 
-//? Return a list of all available statistics
+//? RPC Return a list of all available statistics
 extern UniValue getstatlist(const UniValue& params, bool fHelp);
-//? Get a particular statistic
+//? RPC Get a particular statistic
 extern UniValue getstat(const UniValue& params, bool fHelp);
 
+//? RPC Set a node to receive expedited blocks from
+UniValue expedited(const UniValue& params, bool fHelp);
 
 // These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters
 extern CLeakyBucket receiveShaper;
@@ -116,12 +124,38 @@ extern void ConnectToThinBlockNodes();
 extern void CheckNodeSupportForThinBlocks();
 extern void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
 
+extern void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops, const CNode* skip=NULL);
+extern void SendExpeditedBlock(const CBlock& block,const CNode* skip=NULL);
+extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
+extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
+
 // Handle receiving and sending messages from thin block capable nodes only (so that thin block nodes capable nodes are preferred)
 extern bool ThinBlockMessageHandler(std::vector<CNode*>& vNodesCopy);
 extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
+
+// statistics
+void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime);
+
+void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, int64_t nTimeReceived);
 // txn mempool statistics
 extern CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
+
+
+// Protocol changes:
+
+
+enum {
+  EXPEDITED_STOP   = 1,
+  EXPEDITED_BLOCKS = 2,
+  EXPEDITED_TXNS   = 4,
+};
+
+enum {
+  EXPEDITED_MSG_HEADER   = 1,
+  EXPEDITED_MSG_XTHIN    = 2,
+};
+
 
 #endif

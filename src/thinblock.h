@@ -10,7 +10,11 @@
 #include "primitives/block.h"
 #include "bloom.h"
 #include "stat.h"
+#include "consensus/validation.h"
+#include "protocol.h"
+#include <vector>
 
+class CNode;
 
 class CThinBlock
 {
@@ -54,6 +58,9 @@ public:
         READWRITE(vTxHashes);
         READWRITE(vMissingTx);
     }
+    CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
+    bool process(CNode* pfrom);
+    bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state);
 };
 
 // This class is used for retrieving a list of still missing transactions after receiving a "thinblock" message.

@@ -7,6 +7,8 @@
 #define BITCOIN_SYNC_H
 
 #include "threadsafety.h"
+#include "utiltime.h"
+#include "util.h"
 
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
@@ -105,9 +107,17 @@ class SCOPED_LOCKABLE CMutexLock
 {
 private:
     boost::unique_lock<Mutex> lock;
+    int64_t lockedTime;
+    const char* name;
+    const char* file;
+    int line;
 
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
+        int64_t startWait = GetTimeMillis();
+        name = pszName;
+        file = pszFile;
+        line = nLine;
         EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()));
 #ifdef DEBUG_LOCKCONTENTION
         if (!lock.try_lock()) {
@@ -117,14 +127,26 @@ private:
 #ifdef DEBUG_LOCKCONTENTION
         }
 #endif
+        lockedTime = GetTimeMillis();
+        if (lockedTime - startWait > 500)
+	  {
+            LogPrint("lck", "Lock %s at %s:%d waited for %d ms\n", pszName, pszFile, nLine,(lockedTime - startWait));
+	  }
     }
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
     {
+        name = pszName;
+        file = pszFile;
+        line = nLine;
         EnterCritical(pszName, pszFile, nLine, (void*)(lock.mutex()), true);
         lock.try_lock();
         if (!lock.owns_lock())
+	  {
+            lockedTime = 0;
             LeaveCritical();
+	  }
+        else lockedTime = GetTimeMillis();
         return lock.owns_lock();
     }
 
@@ -151,7 +173,14 @@ public:
     ~CMutexLock() UNLOCK_FUNCTION()
     {
         if (lock.owns_lock())
+	  {
             LeaveCritical();
+            int64_t doneTime = GetTimeMillis();
+            if (doneTime - lockedTime > 500)
+	      {
+		LogPrint("lck", "Lock %s at %s:%d remained locked for %d ms\n", name, file, line,doneTime - lockedTime);
+	      }            
+	  }
     }
 
     operator bool()
