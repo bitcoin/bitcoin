@@ -25,7 +25,7 @@ CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block) :
     prefilledtxn[0] = {0, block.vtx[0]};
     for (size_t i = 1; i < block.vtx.size(); i++) {
         const CTransaction& tx = block.vtx[i];
-        shorttxids[i - 1] = GetShortID(tx.GetHash());
+        shorttxids[i - 1] = tx.GetShortID(shorttxidk0, shorttxidk1);
     }
 }
 
@@ -42,7 +42,7 @@ void CBlockHeaderAndShortTxIDs::FillShortTxIDSelector() const {
 
 uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
     static_assert(SHORTTXIDS_LENGTH == 6, "shorttxids calculation assumes 6-byte shorttxids");
-    return SipHashUint256(shorttxidk0, shorttxidk1, txhash) & 0xffffffffffffL;
+    return CTransaction::GetShortID(shorttxidk0, shorttxidk1, txhash) & 0xffffffffffffL;
 }
 
 

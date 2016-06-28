@@ -7,6 +7,7 @@
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
+#include "hash.h"
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -398,6 +399,14 @@ public:
 
     const uint256& GetHash() const {
         return hash;
+    }
+
+    static uint64_t GetShortID(const uint64_t &k0, const uint64_t &k1, const uint256 &txhash) {
+        return SipHashUint256(k0, k1, txhash);
+    }
+
+    uint64_t GetShortID(const uint64_t &k0, const uint64_t &k1) const {
+        return GetShortID(k0, k1, GetHash());
     }
 
     // Compute a hash that includes both transaction and witness data
