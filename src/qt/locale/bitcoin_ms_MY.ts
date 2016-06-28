@@ -18,10 +18,6 @@
         <translation>&amp;Salin</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Salin Alamat</translation>
-    </message>
-    <message>
         <source>&amp;Export</source>
         <translation>&amp;Eksport</translation>
     </message>
@@ -29,30 +25,7 @@
         <source>&amp;Delete</source>
         <translation>&amp;Padam</translation>
     </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Pilih alamat untuk menghantar syiling</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Pilih alamat untuk menerima syiling</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>&amp;Pilih</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fail yang dipisahkan dengan koma</translation>
-    </message>
-    </context>
-<context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     </context>
@@ -67,9 +40,6 @@
     </message>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     </context>
 <context>
@@ -82,7 +52,7 @@
         <source>&amp;Address</source>
         <translation>Alamat</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -102,16 +72,10 @@
     <name>OverviewPage</name>
     </context>
 <context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -125,13 +89,6 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;Salin Alamat</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -156,40 +113,10 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
-    <name>TransactionDesc</name>
-    </context>
-<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
-    <name>TransactionTableModel</name>
-    </context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fail yang dipisahkan dengan koma</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
-    </context>
-<context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    </context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Eksport</translation>
-    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

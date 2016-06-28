@@ -7,17 +7,6 @@
     </message>
     </context>
 <context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Ετικέτα</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Διεύθυνση</translation>
-    </message>
-    </context>
-<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Enter passphrase</source>
@@ -31,11 +20,7 @@
         <source>Repeat new passphrase</source>
         <translation>Επαναλάβετε νέο συνθηματικό</translation>
     </message>
-    <message>
-        <source>Change passphrase</source>
-        <translation>Αλλαγή συνθηματικού</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -55,29 +40,10 @@
     </message>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Date</source>
         <translation>Ημερομηνία</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Αντιγραφή διεύθυνσης</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Αντιγραφή ποσού</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>Αντιγραφή ποσότητας</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>Αντιγραφή αλλαγής</translation>
     </message>
     </context>
 <context>
@@ -90,7 +56,7 @@
         <source>&amp;Address</source>
         <translation>Διεύθυνση</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -126,16 +92,10 @@
     <name>OverviewPage</name>
     </context>
 <context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -150,48 +110,9 @@
         <source>Remove</source>
         <translation>Αφαίρεση</translation>
     </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Αντιγραφή μηνύματος</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Αντιγραφή ποσού</translation>
-    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Διεύθυνση</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Ετικέτα</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Μήνυμα</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Ημερομηνία</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Ετικέτα</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Μήνυμα</translation>
-    </message>
-    <message>
-        <source>(no message)</source>
-        <translation>(κανένα μήνυμα)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -202,18 +123,6 @@
     <message>
         <source>Recommended:</source>
         <translation>Συνίσταται:</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>Αντιγραφή ποσότητας</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Αντιγραφή ποσού</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>Αντιγραφή αλλαγής</translation>
     </message>
     </context>
 <context>
@@ -236,64 +145,10 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
-    <name>TransactionDesc</name>
-    <message>
-        <source>Date</source>
-        <translation>Ημερομηνία</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Μήνυμα</translation>
-    </message>
-    </context>
-<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Ημερομηνία</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Ετικέτα</translation>
-    </message>
-    </context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>Copy address</source>
-        <translation>Αντιγραφή διεύθυνσης</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Αντιγραφή ποσού</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Ημερομηνία</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Ετικέτα</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Διεύθυνση</translation>
-    </message>
-    </context>
-<context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    </context>
-<context>
-    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>

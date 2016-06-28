@@ -26,10 +26,6 @@
         <translation>K&amp;apat</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Adresi Kopyala</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Seçili adresi listeden sil</translation>
     </message>
@@ -44,73 +40,6 @@
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Sil</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Bitcoin yollanacak adresi seç</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Bitcoin alınacak adresi seç</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>S&amp;eç</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>&amp;Gönderme adresleri...</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>Alım adresleri</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Bunlar ödemeleri göndermek için kullanacağınız Bitcoin adreslerinizdir. Bitcoin yollamadan önce miktarı ve alıcının alım adresini daima kontrol ediniz.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Bunlar ödemeleri almak için kullanacağınız Bitcoin adreslerinizdir. Her işlem için yeni bir alım adresi kullanmanız tavsiye edilir.</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation>&amp;Etiketi kopyala</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation>&amp;Düzenle</translation>
-    </message>
-    <message>
-        <source>Export Address List</source>
-        <translation>Adres listesini dışa aktar</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Virgülle ayrılmış değerler dosyası (*.csv)</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Dışa aktarım başarısız oldu</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Adres listesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi. Lütfen tekrar deneyin.</translation>
-    </message>
-</context>
-<context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(etiket yok)</translation>
     </message>
 </context>
 <context>
@@ -130,94 +59,6 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Yeni parolayı tekrarlayınız</translation>
-    </message>
-    <message>
-        <source>Encrypt wallet</source>
-        <translation>Cüzdanı şifrele</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Bu işlem cüzdan kilidini açmak için cüzdan parolanızı gerektirir.</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Cüzdan kilidini aç</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Bu işlem cüzdanın şifrelemesini açmak için cüzdan parolasını gerektirir.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Cüzdanın şifrelemesini aç</translation>
-    </message>
-    <message>
-        <source>Change passphrase</source>
-        <translation>Parolayı değiştir</translation>
-    </message>
-    <message>
-        <source>Confirm wallet encryption</source>
-        <translation>Cüzdanın şifrelemesini teyit eder</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Uyarı: Eğer cüzdanınızı şifrelerseniz ve parolanızı kaybederseniz, &lt;b&gt;TÜM BİTCOİNLERİNİZİ KAYBEDERSİNİZ&lt;/b&gt;!</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Şifreleme işlemini tamamlamak için Bitcoin Çekirdeği şimdi kapanacaktır. Cüzdanınızı şifrelemenin, Bitcoinlerinizin bilgisayara bulaşan kötücül bir yazılım tarafından çalınmaya karşı tamamen koruyamayacağını unutmayınız.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ÖNEMLİ: Önceden yapmış olduğunuz cüzdan dosyası yedeklemelerinin yeni oluşturulan şifrelenmiş cüzdan dosyası ile değiştirilmeleri gerekir. Güvenlik nedenleriyle yeni, şifrelenmiş cüzdanı kullanmaya başladığınızda eski şifrelenmemiş cüzdan dosyaları işe yaramaz hale gelecektir.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Uyarı: Caps Lock tuşu faal durumda!</translation>
-    </message>
-    <message>
-        <source>Wallet encrypted</source>
-        <translation>Cüzdan şifrelendi</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Cüzdan için yeni parolayı giriniz.&lt;br/&gt;Lütfen &lt;b&gt;on ya da daha fazla rastgele karakter&lt;/b&gt; veya &lt;b&gt;sekiz ya da daha fazla kelime&lt;/b&gt; içeren bir parola kullanınız.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Cüzdan için eski parolayı ve yeni parolayı giriniz.</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed</source>
-        <translation>Cüzdan şifrelemesi başarısız oldu</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Dahili bir hata sebebiyle cüzdan şifrelemesi başarısız oldu. Cüzdanınız şifrelenmedi.</translation>
-    </message>
-    <message>
-        <source>The supplied passphrases do not match.</source>
-        <translation>Girilen parolalar birbirleriyle uyumlu değil.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock failed</source>
-        <translation>Cüzdan kilidinin açılması başarısız oldu</translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Cüzdan şifresinin açılması için girilen parola yanlıştı.</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Cüzdan şifresinin açılması başarısız oldu</translation>
-    </message>
-    <message>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>Cüzdan parolası başarılı bir şekilde değiştirildi.</translation>
     </message>
 </context>
 <context>
@@ -270,6 +111,14 @@
         <translation>Uygulamadan çık</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>%1 &amp;hakkında</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>%1 hakkında bilgi göster</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>&amp;Qt hakkında</translation>
     </message>
@@ -280,6 +129,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Seçenekler...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>%1 için yapılandırma ayarlarını değiştir</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -304,14 +157,6 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>&amp;URI aç...</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core client</source>
-        <translation>Bitcoin Çekirdeği istemcisi</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Bloklar diskten içe aktarılıyor...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -358,10 +203,6 @@
         <translation>&amp;Al</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği hakkında bilgi göster</translation>
-    </message>
-    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Göster / Sakla</translation>
     </message>
@@ -398,20 +239,8 @@
         <translation>Sekme araç çubuğu</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
-    </message>
-    <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Ödeme talep et (QR kodu ve bitcoin URI'si oluşturur)</translation>
-    </message>
-    <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği &amp;hakkında</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği yapılandırma seçeneklerini değiştir</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -429,13 +258,17 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Komut satırı seçenekleri</translation>
     </message>
-    <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Bitcoin komut satırı seçeneklerinin listesini elde etmek için Bitcoin Çekirdeği yardım mesajını göster</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>Bitcoin şebekesine %n faal bağlantı</numerusform><numerusform>Bitcoin şebekesine %n faal bağlantı</numerusform></translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Bloklar diske indeksleniyor...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Bloklar diske yazıdırılıyor...</translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -494,6 +327,14 @@
         <translation>Güncel</translation>
     </message>
     <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Olası Bitcoin komut satırı seçeneklerinin listesini görmek için %1 yardım mesajını göster</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 istemcisi</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Aralık kapatılıyor...</translation>
     </message>
@@ -542,13 +383,6 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Cüzdan &lt;b&gt;şifrelenmiştir&lt;/b&gt; ve şu anda &lt;b&gt;kilitlidir&lt;/b&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Şebeke hakkında uyarı</translation>
     </message>
 </context>
 <context>
@@ -629,150 +463,6 @@
         <source>Priority</source>
         <translation>Öncelik</translation>
     </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Adresi kopyala</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Etiketi kopyala</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Meblağı kopyala</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Muamele kimliğini kopyala</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Harcanmamışı kilitle</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Harcanmamışın kilidini aç</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>Miktarı kopyala</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>Ücreti kopyala</translation>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation>Ücretten sonrakini kopyala</translation>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation>Baytları kopyala</translation>
-    </message>
-    <message>
-        <source>Copy priority</source>
-        <translation>Önceliği kopyala</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Tozu kopyala</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>Para üstünü kopyala</translation>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation>azami</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>daha yüksek</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>yüksek</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>orta-yüksek</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>orta</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>düşük-orta</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>düşük</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>daha düşük</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>asgari</translation>
-    </message>
-    <message>
-        <source>(%1 locked)</source>
-        <translation>(%1 kilitlendi)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>boş</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Eğer muamele boyutu 1000 bayttan yüksek ise bu etiket kırmızı hale gelir.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Eğer öncelik "ortadan" düşükse bu etiket kırmızı olur.</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Eğer herhangi bir alıcı %1'den düşük bir meblağ alırsa bu etiket kırmızı olur.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Giriş başına +/- %1 satoshi olarak değişebilir.</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation>evet</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>hayır</translation>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Bu, kB başına en az %1 ücret gerektiği anlamnına gelir.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Girdi başına +/- 1 bayt değişebilir.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Yüksek öncelikli muamelelerin bir bloğa dahil olmaları daha olasıdır.</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(boş etiket)</translation>
-    </message>
-    <message>
-        <source>change from %1 (%2)</source>
-        <translation>%1 unsurundan para üstü (%2)</translation>
-    </message>
-    <message>
-        <source>(change)</source>
-        <translation>(para üstü)</translation>
-    </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
@@ -795,38 +485,6 @@
     <message>
         <source>&amp;Address</source>
         <translation>&amp;Adres</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Yeni alım adresi</translation>
-    </message>
-    <message>
-        <source>New sending address</source>
-        <translation>Yeni gönderi adresi</translation>
-    </message>
-    <message>
-        <source>Edit receiving address</source>
-        <translation>Alım adresini düzenle</translation>
-    </message>
-    <message>
-        <source>Edit sending address</source>
-        <translation>Gönderi adresini düzenle</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Girilen "%1" adresi hâlihazırda adres defterinde mevcuttur.</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Girilen "%1" adresi geçerli bir Bitcoin adresi değildir.</translation>
-    </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Cüzdan kilidi açılamadı.</translation>
-    </message>
-    <message>
-        <source>New key generation failed.</source>
-        <translation>Yeni anahtar oluşturulması başarısız oldu.</translation>
     </message>
 </context>
 <context>
@@ -855,10 +513,6 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>sürüm</translation>
     </message>
@@ -867,8 +521,8 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği hakkında</translation>
+        <source>About %1</source>
+        <translation>%1 Hakkında</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -907,8 +561,8 @@
         <translation>Başlatıldığında başlangıç ekranını göster (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Reset all settings changes made over the GUI</source>
-        <translation>Arayüzde yapılan tüm seçenek değişikliklerini sıfırla</translation>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Grafik arayüzde yapılan tüm seçenek değişikliklerini sıfırla</translation>
     </message>
 </context>
 <context>
@@ -918,16 +572,16 @@
         <translation>Hoş geldiniz</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Bitcoin Çekirdeğine hoş geldiniz.</translation>
+        <source>Welcome to %1.</source>
+        <translation>%1'a hoş geldiniz.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Bu programı ilk kez başlattığınızdan dolayı Bitcoin Çekirdeğinin verilerini nereye saklayacağını seçebilirsiniz.</translation>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Bu programın ilk kez başlatılmasından dolayı %1 yazılımının verilerini nerede saklayacağını seçebilirsiniz.</translation>
     </message>
     <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin çekirdeği Bitcoin blok zincirinin bir kopyasını indirip saklayacaktır. Asgari %1GB bouyutunda veri bu klasörde saklanacak ve zamanla bu boyut artacaktır. Cüzdan da bu klasörde saklanacaktır. </translation>
+        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1, Bitcoin blok zincirinin bir kopyasını indirecek ve saklayacaktır. Bu klasörde en az %2GB veri saklanacak ve bu zamanla artacaktır. Cüzdan da bu klasörde saklanacaktır.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -936,10 +590,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Özel bir veri klasörü kullan:</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -976,10 +626,6 @@
         <source>Select payment request file</source>
         <translation>Ödeme talebi dosyasını seç</translation>
     </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Açılacak ödeme talebi dosyasını seç</translation>
-    </message>
 </context>
 <context>
     <name>OptionsDialog</name>
@@ -990,6 +636,14 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Esas ayarlar</translation>
+    </message>
+    <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>Sistemde oturum açıldığında %1 programını otomatik olarak başlat.</translation>
+    </message>
+    <message>
+        <source>&amp;Start %1 on system login</source>
+        <translation>&amp;Açılışta %1 açılsın</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1020,10 +674,6 @@
         <translation>Pencere kapatıldığında uygulamadan çıkmak yerine uygulamayı küçültür. Bu seçenek etkinleştirildiğinde, uygulama sadece menüden çıkış seçildiğinde kapanacaktır.</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
-        <translation>Kullanıcı arayüzünün dili burada belirtilebilir. Bu ayar Bitcoin Çekirdeği tekrar başlatıldığında etkinleşecektir.</translation>
-    </message>
-    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Muameleler sekmesinde bağlam menüsü unsurları olarak görünen üçüncü taraf bağlantıları (mesela bir blok tarayıcısı). URL'deki %s, muamele hash değeri ile değiştirilecektir. Birden çok bağlantılar düşey çubuklar | ile ayrılacaktır.</translation>
     </message>
@@ -1046,14 +696,6 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Şebeke</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Sistemde oturum açıldığında Bitcoin Çekirdeğini otomatik olarak başlat.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>Bitcoin Çekirdeğini sistem oturumuyla &amp;başlat</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1140,6 +782,14 @@
         <translation>&amp;Pencere</translation>
     </message>
     <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>İkonu sistem çekmecesinden &amp;sakla</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>Sistem çekmecesi ikonunu sakla</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Küçültüldükten sonra sadece çekmece ikonu göster.</translation>
     </message>
@@ -1158,6 +808,10 @@
     <message>
         <source>User Interface &amp;language:</source>
         <translation>Kullanıcı arayüzü &amp;lisanı:</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>Kullanıcı arayüzünün dili burada belirtilebilir. Bu ayar %1 tekrar başlatıldığında etkinleşecektir.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1284,97 +938,6 @@
     </message>
 </context>
 <context>
-    <name>PaymentServer</name>
-    <message>
-        <source>URI handling</source>
-        <translation>URI yönetimi</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Geçersiz ödeme adresi %1</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Ödeme talebi reddedildi</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Ödeme talebi şebekesi istemci şebekesine denk gelmiyor.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Ödeme talebi başlatılmamış.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Talep edilen %1 meblağında ödeme çok düşüktür (toz olarak kabul edilir).</translation>
-    </message>
-    <message>
-        <source>Payment request error</source>
-        <translation>Ödeme talebi hatası</translation>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>Bitcoin başlatılamadı: tıkla-ve-öde yöneticisi</translation>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Ödeme talebini alma URL'i geçersiz: %1</translation>
-    </message>
-    <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>URI okunamadı! Sebebi geçersiz bir Bitcoin adresi veya hatalı URI parametreleri olabilir.</translation>
-    </message>
-    <message>
-        <source>Payment request file handling</source>
-        <translation>Ödeme talebi dosyası yönetimi</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Ödeme talebi okunamaz ya da işlenemez! Bunun sebebi geçersiz bir ödeme talebi dosyası olabilir.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Ödeme talebinin ömrü doldu.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Özel ödeme betiklerine teyit edilmemiş ödeme talepleri desteklenmez.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Geçersiz ödeme talebi.</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>%1 öğesinden iade</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>%1 ödeme talebi çok büyük (%2 bayt, müsaade edilen %3 bayt).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>%1 ile iletişimde hata: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Ödeme talebi ayrıştırılamaz!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>%1 sunucusundan hatalı cevap</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Ödeme teyit edildi</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Şebeke talebi hatası</translation>
-    </message>
-</context>
-<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -1429,25 +992,6 @@
     </message>
 </context>
 <context>
-    <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>Resmi k&amp;aydet...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>Resmi &amp;kopyala</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>QR kodu kaydet</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG resim (*.png)</translation>
-    </message>
-</context>
-<context>
     <name>RPCConsole</name>
     <message>
         <source>Client name</source>
@@ -1476,6 +1020,10 @@
     <message>
         <source>Using BerkeleyDB version</source>
         <translation>Kullanılan BerkeleyDB sürümü</translation>
+    </message>
+    <message>
+        <source>Datadir</source>
+        <translation>Veri konumu</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1512,10 +1060,6 @@
     <message>
         <source>Memory usage</source>
         <translation>Bellek kullanımı</translation>
-    </message>
-    <message>
-        <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Güncel veri klasöründen Bitcoin Çekirdeği hata ayıklama kütük dosyasını açar. Büyük kütük dosyaları için bu birkaç saniye alabilir.</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1564,6 +1108,18 @@
     <message>
         <source>User Agent</source>
         <translation>Kullanıcı Yazılımı</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Güncel veri klasöründen %1 hata ayıklama kütük dosyasını açar. Büyük kütük dosyaları için bu birkaç saniye alabilir.</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Font boyutunu küçült</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Yazıtipi boyutunu büyült</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1634,10 +1190,6 @@
         <translation>Dışarı:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Derleme tarihi</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Hata ayıklama kütük dosyası</translation>
     </message>
@@ -1674,8 +1226,8 @@
         <translation>Düğümün Yasağını Kald&amp;ır</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin Core RPC console.</source>
-        <translation>Bitcoin Çekirdeği RPC konsoluna hoş geldiniz.</translation>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>%1 RPC konsoluna hoş geldiniz.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1804,18 +1356,6 @@
         <source>Remove</source>
         <translation>Kaldır</translation>
     </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Etiketi kopyala</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Mesajı kopyala</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Meblağı kopyala</translation>
-    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -1834,73 +1374,6 @@
     <message>
         <source>&amp;Save Image...</source>
         <translation>Resmi ka&amp;ydet...</translation>
-    </message>
-    <message>
-        <source>Request payment to %1</source>
-        <translation>%1 unsuruna ödeme talep et</translation>
-    </message>
-    <message>
-        <source>Payment information</source>
-        <translation>Ödeme bilgisi</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Meblağ</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mesaj</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Sonuç URI çok uzun, etiket ya da mesaj metnini kısaltmayı deneyiniz.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>URI'nin QR koduna kodlanmasında hata oluştu.</translation>
-    </message>
-</context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Tarih</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mesaj</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Meblağ</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(boş etiket)</translation>
-    </message>
-    <message>
-        <source>(no message)</source>
-        <translation>(boş mesaj)</translation>
-    </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(boş meblağ)</translation>
     </message>
 </context>
 <context>
@@ -2022,14 +1495,6 @@
         <translation>çabuk</translation>
     </message>
     <message>
-        <source>Send as zero-fee transaction if possible</source>
-        <translation>Mümkünse ücretsiz muamele olarak gönder</translation>
-    </message>
-    <message>
-        <source>(confirmation may take longer)</source>
-        <translation>(teyit daha uzun süre alabilir)</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Birçok alıcıya aynı anda gönder</translation>
     </message>
@@ -2061,118 +1526,6 @@
         <source>S&amp;end</source>
         <translation>G&amp;önder</translation>
     </message>
-    <message>
-        <source>Confirm send coins</source>
-        <translation>Gönderiyi teyit ediniz</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 öğesinden %2 unsuruna</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation>Miktarı kopyala</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Meblağı kopyala</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation>Ücreti kopyala</translation>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation>Ücretten sonrakini kopyala</translation>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation>Baytları kopyala</translation>
-    </message>
-    <message>
-        <source>Copy priority</source>
-        <translation>Önceliği kopyala</translation>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation>Para üstünü kopyala</translation>
-    </message>
-    <message>
-        <source>Total Amount %1</source>
-        <translation>Toplam Meblağ %1</translation>
-    </message>
-    <message>
-        <source>or</source>
-        <translation>veya</translation>
-    </message>
-    <message>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>Ödeyeceğiniz tutarın sıfırdan yüksek olması gerekir.</translation>
-    </message>
-    <message>
-        <source>The amount exceeds your balance.</source>
-        <translation>Tutar bakiyenizden yüksektir.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Toplam, %1 muamele ücreti ilâve edildiğinde bakiyenizi geçmektedir.</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed!</source>
-        <translation>Muamelenin oluşturulması başarısız oldu!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Muamele reddedildi! Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
-    </message>
-    <message>
-        <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation>%1 tutarından yüksek ücret saçma derecede yüksek bir ücret olarak kabul edilir.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Ödeme talebinin ömrü doldu.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Sadece gerekli ücret olan %1 tutarını öde</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Tahmini olarak %n blok içinde teyide başlanacaktır.</numerusform><numerusform>Tahmini olarak %n blok içinde teyide başlanacaktır.</numerusform></translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>Alıcı adresi geçerli değildir. Lütfen denetleyiniz.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Çift adres bulundu: adresler herbiri için sadece bir kez kullanılmalıdır.</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Uyarı: geçersiz Bitcoin adresi</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(boş etiket)</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown change address</source>
-        <translation>Uyarı: geçersiz para üstü adresi</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation>Tozu kopyala</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Göndermek istediğinizden emin misiniz?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>muamele ücreti olarak eklendi</translation>
-    </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -2183,10 +1536,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>&amp;Şu adrese öde:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Adres defterinize eklemek için bu adrese ilişik bir etiket giriniz</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2260,8 +1609,8 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Bitcoin Core is shutting down...</source>
-        <translation>Bitcoin Çekirdeği kapanıyor...</translation>
+        <source>%1 is shutting down...</source>
+        <translation>%1 kapanıyor...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2354,69 +1703,9 @@
         <source>Reset all verify message fields</source>
         <translation>Tüm mesaj kontrolü alanlarını sıfırla</translation>
     </message>
-    <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>İmzayı oluşturmak için "Mesaj İmzala" unsurunu tıklayın</translation>
-    </message>
-    <message>
-        <source>The entered address is invalid.</source>
-        <translation>Girilen adres geçersizdir.</translation>
-    </message>
-    <message>
-        <source>Please check the address and try again.</source>
-        <translation>Adresi kontrol edip tekrar deneyiniz.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation>Girilen adres herhangi bir anahtara işaret etmemektedir.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock was cancelled.</source>
-        <translation>Cüzdan kilidinin açılması iptal edildi.</translation>
-    </message>
-    <message>
-        <source>Private key for the entered address is not available.</source>
-        <translation>Girilen adres için özel anahtar mevcut değildir.</translation>
-    </message>
-    <message>
-        <source>Message signing failed.</source>
-        <translation>Mesajın imzalanması başarısız oldu.</translation>
-    </message>
-    <message>
-        <source>Message signed.</source>
-        <translation>Mesaj imzalandı.</translation>
-    </message>
-    <message>
-        <source>The signature could not be decoded.</source>
-        <translation>İmzanın kodu çözülemedi.</translation>
-    </message>
-    <message>
-        <source>Please check the signature and try again.</source>
-        <translation>İmzayı kontrol edip tekrar deneyiniz.</translation>
-    </message>
-    <message>
-        <source>The signature did not match the message digest.</source>
-        <translation>İmza mesajın hash değeri ile eşleşmedi.</translation>
-    </message>
-    <message>
-        <source>Message verification failed.</source>
-        <translation>Mesaj doğrulaması başarısız oldu.</translation>
-    </message>
-    <message>
-        <source>Message verified.</source>
-        <translation>Mesaj doğrulandı.</translation>
-    </message>
 </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
-    </message>
-    <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Bitcoin Çekirdeği geliştiricileri</translation>
-    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -2430,419 +1719,10 @@
     </message>
 </context>
 <context>
-    <name>TransactionDesc</name>
-    <message>
-        <source>Open until %1</source>
-        <translation>%1 değerine dek açık</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>çakışma</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/çevrim dışı</translation>
-    </message>
-    <message>
-        <source>%1/unconfirmed</source>
-        <translation>%1/doğrulanmadı</translation>
-    </message>
-    <message>
-        <source>%1 confirmations</source>
-        <translation>%1 teyit</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Durum</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, %n düğüm vasıtasıyla yayınlandı</numerusform><numerusform>, %n düğüm vasıtasıyla yayınlandı</numerusform></translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Tarih</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Kaynak</translation>
-    </message>
-    <message>
-        <source>Generated</source>
-        <translation>Oluşturuldu</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>Gönderen</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>Alıcı</translation>
-    </message>
-    <message>
-        <source>own address</source>
-        <translation>kendi adresiniz</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>sadece-izlenen</translation>
-    </message>
-    <message>
-        <source>label</source>
-        <translation>etiket</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation>Gider</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>%n ek blok sonrasında olgunlaşacak</numerusform><numerusform>%n ek blok sonrasında olgunlaşacak</numerusform></translation>
-    </message>
-    <message>
-        <source>not accepted</source>
-        <translation>kabul edilmedi</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation>Gelir</translation>
-    </message>
-    <message>
-        <source>Total debit</source>
-        <translation>Toplam gider</translation>
-    </message>
-    <message>
-        <source>Total credit</source>
-        <translation>Toplam gelir</translation>
-    </message>
-    <message>
-        <source>Transaction fee</source>
-        <translation>Muamele ücreti</translation>
-    </message>
-    <message>
-        <source>Net amount</source>
-        <translation>Net meblağ</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mesaj</translation>
-    </message>
-    <message>
-        <source>Comment</source>
-        <translation>Yorum</translation>
-    </message>
-    <message>
-        <source>Transaction ID</source>
-        <translation>Muamele tanımlayıcı</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Tüccar</translation>
-    </message>
-    <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Oluşturulan bitcoin'lerin harcanabilmelerinden önce %1 blok beklemeleri gerekmektedir. Bu blok, oluşturduğunuzda, blok zincirine eklenmesi için ağda yayınlandı. Zincire eklenmesi başarısız olursa, durumu "kabul edilmedi" olarak değiştirilecek ve harcanamayacaktır. Bu, bazen başka bir düğüm sizden birkaç saniye önce ya da sonra blok oluşturursa meydana gelebilir.</translation>
-    </message>
-    <message>
-        <source>Debug information</source>
-        <translation>Hata ayıklama verileri</translation>
-    </message>
-    <message>
-        <source>Transaction</source>
-        <translation>Muamele</translation>
-    </message>
-    <message>
-        <source>Inputs</source>
-        <translation>Girdiler</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Meblağ</translation>
-    </message>
-    <message>
-        <source>true</source>
-        <translation>doğru</translation>
-    </message>
-    <message>
-        <source>false</source>
-        <translation>yanlış</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, henüz başarılı bir şekilde yayınlanmadı</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>%n ilâve blok için açık</numerusform><numerusform>%n ilâve blok için açık</numerusform></translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>bilinmiyor</translation>
-    </message>
-</context>
-<context>
     <name>TransactionDescDialog</name>
-    <message>
-        <source>Transaction details</source>
-        <translation>Muamele detayları</translation>
-    </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Bu pano muamelenin ayrıntılı açıklamasını gösterir</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Tarih</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tür</translation>
-    </message>
-    <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Olgunlaşmamış (%1 teyit, %2 teyit ardından kullanılabilir olacaktır)</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>%n ilâve blok için açık</numerusform><numerusform>%n ilâve blok için açık</numerusform></translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>%1 değerine dek açık</translation>
-    </message>
-    <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Doğrulandı (%1 teyit)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Bu blok başka hiçbir düğüm tarafından alınmamıştır ve muhtemelen kabul edilmeyecektir!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>Oluşturuldu ama kabul edilmedi</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Çevrim dışı</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>Teyit edilmemiş</translation>
-    </message>
-    <message>
-        <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Teyit ediliyor (tavsiye edilen %2 teyit üzerinden %1 doğrulama)</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>Çakışma</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Şununla alındı</translation>
-    </message>
-    <message>
-        <source>Received from</source>
-        <translation>Alındığı kişi</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Gönderildiği adres</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation>Kendinize ödeme</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Madenden çıkarılan</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation>sadece-izlenen</translation>
-    </message>
-    <message>
-        <source>(n/a)</source>
-        <translation>(mevcut değil)</translation>
-    </message>
-    <message>
-        <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Muamele durumu. Doğrulama sayısını görüntülemek için imleci bu alanda tutunuz.</translation>
-    </message>
-    <message>
-        <source>Date and time that the transaction was received.</source>
-        <translation>Muamelenin alındığı tarih ve zaman.</translation>
-    </message>
-    <message>
-        <source>Type of transaction.</source>
-        <translation>Muamele türü.</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Bu muamelede sadece izlenen bir adresin bulunup bulunmadığı.</translation>
-    </message>
-    <message>
-        <source>User-defined intent/purpose of the transaction.</source>
-        <translation>Muamelenin kullanıcı tanımlı niyeti/amacı.</translation>
-    </message>
-    <message>
-        <source>Amount removed from or added to balance.</source>
-        <translation>Bakiyeden alınan ya da bakiyeye eklenen meblağ.</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>All</source>
-        <translation>Hepsi</translation>
-    </message>
-    <message>
-        <source>Today</source>
-        <translation>Bugün</translation>
-    </message>
-    <message>
-        <source>This week</source>
-        <translation>Bu hafta</translation>
-    </message>
-    <message>
-        <source>This month</source>
-        <translation>Bu ay</translation>
-    </message>
-    <message>
-        <source>Last month</source>
-        <translation>Geçen ay</translation>
-    </message>
-    <message>
-        <source>This year</source>
-        <translation>Bu sene</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>Aralık...</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Şununla alınan</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Gönderildiği adres</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation>Kendinize</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Oluşturulan</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>Diğer</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Aranacak adres ya da etiket giriniz</translation>
-    </message>
-    <message>
-        <source>Min amount</source>
-        <translation>Asgari meblağ</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Adresi kopyala</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Etiketi kopyala</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Meblağı kopyala</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Muamele kimliğini kopyala</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>Ham muameleyi kopyala</translation>
-    </message>
-    <message>
-        <source>Edit label</source>
-        <translation>Etiketi düzenle</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Muamele detaylarını göster</translation>
-    </message>
-    <message>
-        <source>Export Transaction History</source>
-        <translation>Muamele tarihçesini dışa aktar</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation>Sadece izlenen</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Dışa aktarım başarısız oldu</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Muamele tarihçesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Dışa aktarım başarılı oldu</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>Muamele tarihçesi başarılı bir şekilde %1 konumuna kaydedildi.</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Virgülle ayrılmış değerler dosyası (*.csv)</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>Doğrulandı</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Tarih</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tür</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiket</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>ID</source>
-        <translation>Tanımlayıcı</translation>
-    </message>
-    <message>
-        <source>Range:</source>
-        <translation>Aralık:</translation>
-    </message>
-    <message>
-        <source>to</source>
-        <translation>ilâ</translation>
     </message>
 </context>
 <context>
@@ -2850,55 +1730,6 @@
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation>Meblağları göstermek için birim. Başka bir birim seçmek için tıklayınız.</translation>
-    </message>
-</context>
-<context>
-    <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Hiçbir cüzdan yüklenmemiştir.</translation>
-    </message>
-</context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>Bitcoin yolla</translation>
-    </message>
-</context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Dışa aktar</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Güncel sekmedeki verileri bir dosyaya aktar</translation>
-    </message>
-    <message>
-        <source>Backup Wallet</source>
-        <translation>Cüzdanı Yedekle</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Cüzdan verileri (*.dat)</translation>
-    </message>
-    <message>
-        <source>Backup Failed</source>
-        <translation>Yedekleme başarısız oldu</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Cüzdan verilerinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi.</translation>
-    </message>
-    <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>Cüzdan verileri %1 konumuna başarıyla kaydedildi.</translation>
-    </message>
-    <message>
-        <source>Backup Successful</source>
-        <translation>Yedekleme başarılı</translation>
     </message>
 </context>
 <context>
@@ -2926,14 +1757,6 @@
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Eğer &lt;kategori&gt; belirtilmemişse ya da &lt;kategori&gt; = 1 ise, tüm hata ayıklama verilerini dök.</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Tek cüzdan muamelesinde kullanılacak azami toplam ücret (%s olarak); bunu çok düşük olarak ayarlamak büyük muameleleri iptal edebilir (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>Lütfen bilgisayarınızın saat ve tarihinin doğru olduğunu kontol ediniz! Saatinizde gecikme varsa Bitcoin Çekirdeği doğru şekilde çalışamaz.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -2976,6 +1799,14 @@
         <translation>Dışarıdan gelen bağlantıları kabul et (varsayılan: -proxy veya -connect yoksa 1)</translation>
     </message>
     <message>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Çekirdeği</translation>
+    </message>
+    <message>
+        <source>The %s developers</source>
+        <translation>%s geliştiricileri</translation>
+    </message>
+    <message>
         <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>-fallbackfee çok yüksek bir değere ayarlanmış! Ücret tahminleri mevcut değilken ödeyebileceğiniz muamele ücretidir bu.</translation>
     </message>
@@ -2992,6 +1823,10 @@
         <translation>Belirtilen adrese bağlan ve daima ondan dinle. IPv6 için [makine]:port yazımını kullanınız</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>%s veri dizininde kilit elde edilemedi. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Tüm cüzdan muamelelerini sil ve başlangıçta -rescan ile sadece blok zincirinin parçası olanları geri getir</translation>
     </message>
@@ -3000,12 +1835,28 @@
         <translation>MIT yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
     </message>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>%s dosyasının okunması sırasında bir hata meydana geldi! Tüm anahtarlar doğru bir şekilde okundu, ancak muamele verileri ya da adres defteri unsurları hatalı veya eksik olabilir.</translation>
+    </message>
+    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Bir cüzdan muamelesi değiştiğinde komutu çalıştır (komuttaki %s muamele kimliği ile değiştirilecektir)</translation>
     </message>
     <message>
         <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
         <translation>Yerel aktarma politikasını ihlal ettiklerinde bile beyaz listedeki eşlerden gelen muamelelerin aktarılmasını zorla (varsayılan: %d)</translation>
+    </message>
+    <message>
+        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
+        <translation>Müsaade edilen azami medyan eş zamanı değişiklik sınırının ayarlaması. Zamanın yerel perspektifi bu miktar kadar ileri ya da geri eşler tarafından etkilenebilir. (Varsayılan %u saniye)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Tek cüzdan muamelesinde ya da ham muamelede kullanılacak azami toplam ücret (%s olarak); bunu çok düşük olarak ayarlamak büyük muameleleri iptal edebilir (varsayılan: %s)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Lütfen bilgisayarınızın saat ve tarihinin doğru olduğunu kontrol ediniz! Saatinizde gecikme varsa %s doğru şekilde çalışamaz.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -3018,14 +1869,6 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Bu yayın öncesi bir deneme sürümüdür - tüm riski siz üstlenmiş olursunuz - bitcoin oluşturmak ya da ticari uygulamalar için kullanmayınız</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. Bitcoin Çekirdeği muhtemelen hâlihazırda çalışmaktadır.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Desteklenmeyen argüman -whitelistalwaysrelay görmezden gelindi, -whitelistrelay ve/veya -whitelistforcerelay kullanın.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
@@ -3044,20 +1887,20 @@
         <translation>Uyarı: şebeke tamamen mutabık değil gibi görünüyor! Bazı madenciler sorun yaşıyor gibi görünüyor.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>İkaz: bilinmeyen blok sürümü oluşturulmaya çalışılıyor. Bilinmeyen kuralların işlemesi mümkündür.</translation>
-    </message>
-    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Uyarı: eşlerimizle tamamen mutabık değiliz gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
     </message>
     <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Uyarı: wallet.dat bozuk, veriler geri kazanıldı! Özgün wallet.dat, wallet.{zamandamgası}.bak olarak %s klasörüne kaydedildi; bakiyeniz ya da muameleleriniz yanlışsa bir yedeklemeden tekrar yüklemeniz gerekir.</translation>
-    </message>
-    <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Belirtilen ağ maskesi ya da IP adresinden bağlanan eşleri beyaz listeye al. Birden fazla kez belirtilebilir.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>-txindex'i değiştirmek için veritabanını -reindex-chainstate kullanarak tekrar inşa etmeniz gerekmektedir</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s bozuk, geri kazanım başarısız oldu</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3072,8 +1915,20 @@
         <translation>Kullanıcı aracı zincirine yorumu ekle</translation>
     </message>
     <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Başlangıçta bozuk bir cüzdandan özel anahtarları geri kazanmayı dene</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Blok oluşturma seçenekleri:</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Çözümlenemedi - %s adres: '%s'</translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation>Aralık dışında değişiklik endeksi</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
@@ -3082,6 +1937,10 @@
     <message>
         <source>Connection options:</source>
         <translation>Bağlantı seçenekleri:</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Telif hakkı (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -3128,6 +1987,18 @@
         <translation>%s cüzdan veritabanı ortamının başlatılmasında hata meydana geldi!</translation>
     </message>
     <message>
+        <source>Error loading %s</source>
+        <translation>%s unsurunun yüklenmesinde hata oluştu</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>%s unsurunun yüklenmesinde hata oluştu: bozuk cüzdan</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>%s unsurunun yüklenmesinde hata oluştu: cüzdan %s programının yeni bir sürümüne ihtiyaç duyuyor</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Blok veritabanının yüklenmesinde hata</translation>
     </message>
@@ -3152,8 +2023,16 @@
         <translation>Yanlış ya da bulunamamış doğuş bloku. Şebeke için yanlış veri klasörü mü?</translation>
     </message>
     <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>Başlatma sınaması başarısız oldu. %s kapatılıyor.</translation>
+    </message>
+    <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>Geçersiz -onion adresi: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>-%s=&lt;meblağ&gt; için geçersiz meblağ: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -3162,6 +2041,10 @@
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Muamele bellek alanını &lt;n&gt; megabayttan düşük tut (varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Yasaklama listesi yükleniyor...</translation>
     </message>
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
@@ -3180,6 +2063,10 @@
         <translation>Sadece &lt;net&gt; şebekesindeki düğümlere bağlan (ipv4, ipv6 veya onion)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Bu yardım mesajını yaz ve çık</translation>
+    </message>
+    <message>
         <source>Print version and exit</source>
         <translation>Sürümü yaz ve çık</translation>
     </message>
@@ -3192,6 +2079,14 @@
         <translation>Budama kipi -txindex ile uyumsuzdur.</translation>
     </message>
     <message>
+        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
+        <translation>Zincir durumu ve blok endeksini diskteki blk*.dat dosyalarından yeniden derle</translation>
+    </message>
+    <message>
+        <source>Rebuild chain state from the currently indexed blocks</source>
+        <translation>Zincir durumunu güncel olarak endekslenen bloklardan yeniden derle</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Veritabanı önbellek boyutunu megabayt olarak belirt (%d ilâ %d, varsayılan: %d)</translation>
     </message>
@@ -3202,6 +2097,10 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Cüzdan dosyası belirtiniz (veri klasörünün içinde)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -3236,12 +2135,16 @@
         <translation>%s cüzdan %s veri klasörünün dışında bulunuyor</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Cüzdan seçenekleri:</translation>
+        <source>Wallet debugging/testing options:</source>
+        <translation>Cüzdan hata ayıklama/test etme seçenekleri:</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>-txindex'i değiştirmek için veritabanını -reindex kullanarak tekrar inşa etmeniz gerekmektedir</translation>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Cüzdanın tekrar yazılması gerekiyordu: işlemi tamamlamak için %s programını yeniden başlatınız</translation>
+    </message>
+    <message>
+        <source>Wallet options:</source>
+        <translation>Cüzdan seçenekleri:</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3254,10 +2157,6 @@
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
         <translation>Belirtilen adrese bağlan ve JSON RPC bağlantıları için dinlemeye geç. IPv6 için [makine]:port imlasını kullanınız. Bu seçenek birden çok kez belirtilebilir (varsayılan: tüm arayüzlere bağlan)</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>%s veri dizininde kilit elde edilemedi. Bitcoin Çekirdeği muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3304,10 +2203,6 @@
         <translation>Yüksek öncelikli/düşük ücretli muamelelerin azami boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>Etkinse bitcoin oluşuturulmasına atanan iş parçacığı sayısını ayarla (-1 = tüm çekirdekler, varsayılan: %d)</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Bu muamele, ücret düşüldükten sonra göndermek için çok düşük</translation>
     </message>
@@ -3332,32 +2227,12 @@
         <translation>Herkese açık REST taleplerini kabul et (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Activating best chain...</source>
-        <translation>En iyi zincir etkinleştiriliyor...</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
-        <translation>Başlangıçta bozuk bir wallet.dat dosyasından özel anahtarları geri kazanmayı dene</translation>
-    </message>
-    <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Otomatik olarak gizli Tor servisi oluştur (varsayılan: %d)</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>-whitebind adresi çözümlenemedi: '%s'</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>SOCKS5 vekil sunucusu vasıtasıyla bağlan</translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation>Telif hakkı 2009-%i Bitcoin Çekirdeği Geliştiricileri</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
-        <translation>wallet.dat dosyasının yüklenmesinde hata: Cüzdan Bitcoin Çekirdeğinin daha yeni bir sürümünü gerektirmektedir</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3370,22 +2245,6 @@
     <message>
         <source>Information</source>
         <translation>Bilgi</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
-        <translation>Başlatma sınaması başarısız oldu. Bitcoin Çekirdeği kapatılıyor.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>-minrelaytxfee=&lt;amount&gt; için geçersiz meblağ: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>-mintxfee=&lt;amount&gt; için geçersiz meblağ: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3410,14 +2269,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>RPC sunucu seçenekleri:</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
-        <translation>Başlangıçta blok zinciri indeksini güncel blk000??.dat dosyalarından tekrar inşa et</translation>
-    </message>
-    <message>
-        <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>P2P ağından gelen önemli uyarıları alın ve gösterin (önseçili değer: %u)</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
@@ -3492,10 +2343,6 @@
         <translation>JSON-RPC bağlantıları için kullanıcı ismi</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
-        <translation>Cüzdanın tekrar yazılması gerekmektedir: tamamlamak için Bitcoin Çekirdeğini yeniden başlatın</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Uyarı</translation>
     </message>
@@ -3516,10 +2363,6 @@
         <translation>ZeroMQ bildirim seçenekleri:</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat bozuk, geri kazanım başarısız oldu</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC bağlantıları için parola</translation>
     </message>
@@ -3528,20 +2371,12 @@
         <translation>En iyi blok değiştiğinde komutu çalıştır (komut için %s parametresi blok hash değeri ile değiştirilecektir)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Bu yardım mesajı</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>-addnode, -seednode ve -connect için DNS aramalarına izin ver</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
         <translation>Adresler yükleniyor...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>wallet.dat dosyasının yüklenmesinde hata oluştu: bozuk cüzdan</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
@@ -3558,10 +2393,6 @@
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Muameleleri bellek alanında &lt;n&gt; saatten fazla tutma (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>wallet.dat dosyasının okunması sırasında bir hata meydana geldi! Tüm anahtarlar doğru bir şekilde okundu, ancak muamele verileri ya da adres defteri unsurları hatalı veya eksik olabilir.</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
@@ -3600,6 +2431,10 @@
         <translation>Desteklenmeyen -socks argümanı bulundu. SOCKS sürümünün ayarlanması artık mümkün değildir, sadece SOCKS5 vekilleri desteklenmektedir.</translation>
     </message>
     <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Desteklenmeyen argüman -whitelistalwaysrelay görmezden gelindi, -whitelistrelay ve/veya -whitelistforcerelay kullanın.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Eşlere gizli Tor servisleri ile ulaşmak için ayrı SOCKS5 vekil sunucusu kullan (varsayılan: %s)</translation>
     </message>
@@ -3608,20 +2443,20 @@
         <translation>JSON-RPC bağlantıları için kullanıcı ismi ve karmalanmış parola. &lt;userpw&gt; alanı şu biçimdedir: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Kanonik bir Python betiği share/rpcuser klasöründe bulunabilir. Bu seçenek birden çok kez belirtilebilir.</translation>
     </message>
     <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>İkaz: bilinmeyen blok sürümü oluşturulmaya çalışılıyor. Bilinmeyen kuralların işlemesi mümkündür.</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Uyarı: wallet.dat bozuk, veriler geri kazanıldı! Özgün %s, %s olarak %s klasörüne kaydedildi; bakiyeniz ya da muameleleriniz yanlışsa bir yedeklemeden tekrar yüklemeniz gerekir.</translation>
+    </message>
+    <message>
         <source>(default: %s)</source>
         <translation>(varsayılan: %s)</translation>
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
         <translation>Eş adresleri sorgulaması için daima DNS aramasını kullan (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>wallet.dat dosyasının yüklenmesinde hata oluştu</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: %u)</source>
-        <translation>Bitcoin oluştur (varsayılan: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -3706,18 +2541,6 @@
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>-onlynet için bilinmeyen bir şebeke belirtildi: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>-bind adresi çözümlenemedi: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>-externalip adresi çözümlenemedi: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>-paytxfee=&lt;meblağ&gt; için geçersiz meblağ: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

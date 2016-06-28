@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Nou</translation>
+        <translation>Nou</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,15 +19,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Copiază</translation>
+        <translation>Copiază</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Î&amp;nchide</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Copiază Adresa</translation>
+        <translation>Închide</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -39,31 +35,37 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportă</translation>
+        <translation>Exportă</translation>
     </message>
     <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Indică adresa de expediere a monedelor</translation>
+        <source>&amp;Delete</source>
+        <translation>Șterge</translation>
     </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Indică adresa de a primi monedele</translation>
-    </message>
-    </context>
-<context>
-    <name>AddressTableModel</name>
-    </context>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
-    </context>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>Secventa de cuvinte a parolei</translation>
+    </message>
+    <message>
+        <source>Enter passphrase</source>
+        <translation>Introduceti parola</translation>
+    </message>
+    <message>
+        <source>New passphrase</source>
+        <translation>Noua parolă</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>Repetati noua parolă</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
-    </context>
-<context>
-    <name>ClientModel</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -90,16 +92,10 @@
     <name>OverviewPage</name>
     </context>
 <context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -109,9 +105,6 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -132,36 +125,10 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
-    <name>TransactionDesc</name>
-    </context>
-<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
-    <name>TransactionTableModel</name>
-    </context>
-<context>
-    <name>TransactionView</name>
-    </context>
-<context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    </context>
-<context>
-    <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Exportă</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation>Exportă datele din tabul curent in fisier</translation>
-    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

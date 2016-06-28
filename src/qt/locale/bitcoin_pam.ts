@@ -26,71 +26,12 @@
         <translation>I&amp;sara</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopyan ing address</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Ilako ya ing kasalungsungan makapiling address keng listahan</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Ilako</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation>Pilinan ing address a magpadalang coins kang</translation>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation>Pilinan ing address a tumanggap coins a atin</translation>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation>P&amp;ilinan</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation>Address king pamag-Send</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation>Address king pamag-Tanggap</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Reni reng kekang Bitcoin address king pamagpadalang kabayaran. Lawan mulang masalese reng alaga ampo ing address na ning tumanggap bayu ka magpadalang barya.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Reni reng kekang Bitcoin addresses keng pamananggap bayad. Rerekomenda mi na gumamit kang bayung address keng balang transaksiyon.</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation>Kopyan ing &amp;Label</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation>&amp;Alilan</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
-    </message>
-    </context>
-<context>
-    <name>AddressTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Address</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(alang label)</translation>
     </message>
 </context>
 <context>
@@ -110,82 +51,6 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Pasibayuan ya ing bayung passphrase</translation>
-    </message>
-    <message>
-        <source>Encrypt wallet</source>
-        <translation>I-encrypt ye ing wallet</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ing operasyun a ini kailangan ne ing kekayung wallet passphrase, ban a-unlock ya ing wallet</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Unlock ya ing wallet</translation>
-    </message>
-    <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ing operasyun a ini kailangan ne ing kekang wallet passphrase ban a-decrypt ne ing wallet.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>I-decrypt ya ing wallet</translation>
-    </message>
-    <message>
-        <source>Change passphrase</source>
-        <translation>Alilan ya ing passphrase</translation>
-    </message>
-    <message>
-        <source>Confirm wallet encryption</source>
-        <translation>Kumpirman ya ing wallet encryption</translation>
-    </message>
-    <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Kapabaluan: Istung in-encrypt me ing kekang wallet at meala ya ing passphrase na, ma-&lt;b&gt;ALA NO NGAN RING KEKANG BITCOINS&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Siguradu na kang buri meng i-encrypt ing kekang wallet?</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>Mayalaga: Reng milabas a backups a gewa mu gamit ing wallet file mu dapat lamung mialilan bayung gawang encrypted wallet file. Para keng seguridad , reng milabas a backups dareng ali maka encrypt a wallet file ma-ala nala istung inumpisan mu nalang gamitan reng bayu, at me encrypt a wallet. </translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Kapabaluan: Makabuklat ya ing Caps Lock key!</translation>
-    </message>
-    <message>
-        <source>Wallet encrypted</source>
-        <translation>Me-encrypt ne ing wallet</translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed</source>
-        <translation>Memali ya ing pamag-encrypt king wallet </translation>
-    </message>
-    <message>
-        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Memali ya ing encryption uli na ning ausan dang internal error. E ya me-encrypt ing wallet yu.</translation>
-    </message>
-    <message>
-        <source>The supplied passphrases do not match.</source>
-        <translation>E la mitutugma ring mibieng passphrase</translation>
-    </message>
-    <message>
-        <source>Wallet unlock failed</source>
-        <translation>Memali ya ing pamag-unlock king wallet </translation>
-    </message>
-    <message>
-        <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>E ya istu ing passphrase a pepalub da para king wallet decryption</translation>
-    </message>
-    <message>
-        <source>Wallet decryption failed</source>
-        <translation>Me-mali ya ing pamag-decrypt king wallet</translation>
-    </message>
-    <message>
-        <source>Wallet passphrase was successfully changed.</source>
-        <translation>Mi-alilan ne ing passphrase na ning wallet.</translation>
     </message>
 </context>
 <context>
@@ -310,10 +175,6 @@
         <translation>Gamit para king Tabs</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Kapilubluban ning Bitcoin</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>Pipamilian command-line</translation>
     </message>
@@ -363,13 +224,6 @@
     </message>
 </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Alertu ning Network</translation>
-    </message>
-</context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Amount:</source>
@@ -387,22 +241,6 @@
         <source>Confirmed</source>
         <translation>Me-kumpirma</translation>
     </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopyan ing address</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopyan ing label</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopyan ing alaga</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(alang label)</translation>
-    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -418,48 +256,12 @@
         <source>&amp;Address</source>
         <translation>&amp;Address</translation>
     </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Bayung address king pamagtanggap</translation>
-    </message>
-    <message>
-        <source>New sending address</source>
-        <translation>Bayung address king pamagpadala</translation>
-    </message>
-    <message>
-        <source>Edit receiving address</source>
-        <translation>Alilan ya ing address king pamagpadala</translation>
-    </message>
-    <message>
-        <source>Edit sending address</source>
-        <translation>Alilan ya ing address king pamagpadala</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Ing pepalub yung address "%1" ati na yu king aklat dareng address</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Ing pepalub yung address "%1" ali ya katanggap-tanggap a Bitcoin address.</translation>
-    </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Ali ya bisang mag-unlock ing wallet</translation>
-    </message>
-    <message>
-        <source>New key generation failed.</source>
-        <translation>Memali ya ing pamangaua king key</translation>
-    </message>
 </context>
 <context>
     <name>FreespaceChecker</name>
     </context>
 <context>
     <name>HelpMessageDialog</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Kapilubluban ning Bitcoin</translation>
-    </message>
     <message>
         <source>version</source>
         <translation>bersion</translation>
@@ -482,10 +284,6 @@
     <message>
         <source>Welcome</source>
         <translation>Malaus ka</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -614,9 +412,6 @@
     </message>
     </context>
 <context>
-    <name>PaymentServer</name>
-    </context>
-<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -629,9 +424,6 @@
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
-    </context>
-<context>
-    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -692,10 +484,6 @@
         <translation>Kabuuan:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Kaaldauan ning pamaglalang</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Debug log file</translation>
     </message>
@@ -718,59 +506,12 @@
         <source>&amp;Label:</source>
         <translation>&amp;Label:</translation>
     </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopyan ing label</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopyan ing alaga</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Kopyan ing address</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Address</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Alaga</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mensayi</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Kaaldauan</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mensayi</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Alaga</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(alang label)</translation>
     </message>
     </context>
 <context>
@@ -815,31 +556,7 @@
         <source>S&amp;end</source>
         <translation>Ipadala</translation>
     </message>
-    <message>
-        <source>Confirm send coins</source>
-        <translation>Kumpirman ing pamagpadalang barya</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopyan ing alaga</translation>
-    </message>
-    <message>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>Ing alaga na ning bayaran dapat mung mas matas ya king 0.</translation>
-    </message>
-    <message>
-        <source>The amount exceeds your balance.</source>
-        <translation>Ing alaga mipasobra ya king kekang balanse.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Ing kabuuan mipasobra ya king kekang balanse istung inabe ya ing %1 a bayad king transaksion </translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(alang label)</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -849,10 +566,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Ibayad &amp;kang:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Magpalub kang label para king address a ini ban a-iabe me king aklat dareng address</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -948,65 +661,9 @@
         <source>Reset all verify message fields</source>
         <translation>Ibalik king dati reng ngan fields na ning pamag beripikang mensayi</translation>
     </message>
-    <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>I-click ing "Pirman ing Mensayi" ban agawa ya ing metung a pirma</translation>
-    </message>
-    <message>
-        <source>The entered address is invalid.</source>
-        <translation>Ing milub a address e ya katanggap-tanggap.</translation>
-    </message>
-    <message>
-        <source>Please check the address and try again.</source>
-        <translation>Maliaring pakilawe pasibayu ing address at pasibayuan ya iti.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation>Ing milub a address ali ya mag-refer king metung a key.</translation>
-    </message>
-    <message>
-        <source>Wallet unlock was cancelled.</source>
-        <translation>Me-kansela ya ing pamag-unlock king wallet.</translation>
-    </message>
-    <message>
-        <source>Private key for the entered address is not available.</source>
-        <translation>Ing private key para king milub a address, ala ya.</translation>
-    </message>
-    <message>
-        <source>Message signing failed.</source>
-        <translation>Me-mali ya ing pamag-pirma king mensayi .</translation>
-    </message>
-    <message>
-        <source>Message signed.</source>
-        <translation>Me-pirman ne ing mensayi.</translation>
-    </message>
-    <message>
-        <source>The signature could not be decoded.</source>
-        <translation>Ing pirma ali ya bisang ma-decode.</translation>
-    </message>
-    <message>
-        <source>Please check the signature and try again.</source>
-        <translation>Maliaring pakilawe pasibayu ing pirma kaibat pasibayuan ya iti.</translation>
-    </message>
-    <message>
-        <source>The signature did not match the message digest.</source>
-        <translation>Ing pirma ali ya makatugma king message digest.</translation>
-    </message>
-    <message>
-        <source>Message verification failed.</source>
-        <translation>Me-mali ya ing pamag-beripika king mensayi.</translation>
-    </message>
-    <message>
-        <source>Message verified.</source>
-        <translation>Me-beripika ne ing mensayi.</translation>
-    </message>
 </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Kapilubluban ning Bitcoin</translation>
-    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -1016,328 +673,14 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
-    <name>TransactionDesc</name>
-    <message>
-        <source>Open until %1</source>
-        <translation>Makabuklat anggang %1</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/offline</translation>
-    </message>
-    <message>
-        <source>%1/unconfirmed</source>
-        <translation>%1/ali me-kumpirma</translation>
-    </message>
-    <message>
-        <source>%1 confirmations</source>
-        <translation>%1 kumpirmasion</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Kabilian</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Kaaldauan</translation>
-    </message>
-    <message>
-        <source>Source</source>
-        <translation>Pikuanan</translation>
-    </message>
-    <message>
-        <source>Generated</source>
-        <translation>Megawa</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>Menibat</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>Para kang</translation>
-    </message>
-    <message>
-        <source>own address</source>
-        <translation>sariling address</translation>
-    </message>
-    <message>
-        <source>label</source>
-        <translation>label</translation>
-    </message>
-    <message>
-        <source>Credit</source>
-        <translation>Credit</translation>
-    </message>
-    <message>
-        <source>not accepted</source>
-        <translation>ali metanggap</translation>
-    </message>
-    <message>
-        <source>Debit</source>
-        <translation>Debit</translation>
-    </message>
-    <message>
-        <source>Transaction fee</source>
-        <translation>Bayad king Transaksion</translation>
-    </message>
-    <message>
-        <source>Net amount</source>
-        <translation>Alaga dareng eganagana</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mensayi</translation>
-    </message>
-    <message>
-        <source>Comment</source>
-        <translation>Komentu</translation>
-    </message>
-    <message>
-        <source>Transaction ID</source>
-        <translation>ID</translation>
-    </message>
-    <message>
-        <source>Debug information</source>
-        <translation>Impormasion ning Debug</translation>
-    </message>
-    <message>
-        <source>Transaction</source>
-        <translation>Transaksion</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Alaga</translation>
-    </message>
-    <message>
-        <source>true</source>
-        <translation>tutu</translation>
-    </message>
-    <message>
-        <source>false</source>
-        <translation>e tutu</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, eya matagumpeng mibalita</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>e miya balu</translation>
-    </message>
-</context>
-<context>
     <name>TransactionDescDialog</name>
-    <message>
-        <source>Transaction details</source>
-        <translation>Detalye ning Transaksion</translation>
-    </message>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ining pane a ini magpakit yang detalyadung description ning transaksion</translation>
     </message>
 </context>
 <context>
-    <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Kaaldauan</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Klase</translation>
-    </message>
-    <message>
-        <source>Open until %1</source>
-        <translation>Makabuklat anggang %1</translation>
-    </message>
-    <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Me-kumpirma(%1 kumpirmasion)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Ing block a ini ali de atanggap deng aliwa pang nodes ania ali ya magsilbing tanggapan</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>Me-generate ya oneng ali ya metanggap</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Atanggap kayabe ning</translation>
-    </message>
-    <message>
-        <source>Received from</source>
-        <translation>Atanggap menibat kang</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Mipadala kang</translation>
-    </message>
-    <message>
-        <source>Payment to yourself</source>
-        <translation>Kabayaran keka</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Me-mina</translation>
-    </message>
-    <message>
-        <source>(n/a)</source>
-        <translation>(n/a)</translation>
-    </message>
-    <message>
-        <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Status ning Transaksion: Itapat me babo na ning field a ini ban ipakit dala reng bilang dareng me-kumpirma na</translation>
-    </message>
-    <message>
-        <source>Date and time that the transaction was received.</source>
-        <translation>Aldo at oras nung kapilan me tanggap ya ing transaksion</translation>
-    </message>
-    <message>
-        <source>Type of transaction.</source>
-        <translation>Klase ning transaksion</translation>
-    </message>
-    <message>
-        <source>Amount removed from or added to balance.</source>
-        <translation>Alagang milako o miragdag king balanse.</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionView</name>
-    <message>
-        <source>All</source>
-        <translation>Eganagana</translation>
-    </message>
-    <message>
-        <source>Today</source>
-        <translation>Aldo iti</translation>
-    </message>
-    <message>
-        <source>This week</source>
-        <translation>Paruminggung iti</translation>
-    </message>
-    <message>
-        <source>This month</source>
-        <translation>Bulan a iti</translation>
-    </message>
-    <message>
-        <source>Last month</source>
-        <translation>Milabas a bulan</translation>
-    </message>
-    <message>
-        <source>This year</source>
-        <translation>Banuang iti</translation>
-    </message>
-    <message>
-        <source>Range...</source>
-        <translation>Angganan...</translation>
-    </message>
-    <message>
-        <source>Received with</source>
-        <translation>Atanggap kayabe ning</translation>
-    </message>
-    <message>
-        <source>Sent to</source>
-        <translation>Mipadala kang</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation>Keng sarili mu</translation>
-    </message>
-    <message>
-        <source>Mined</source>
-        <translation>Me-mina</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>Aliwa</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Magpalub kang address o label para pantunan</translation>
-    </message>
-    <message>
-        <source>Min amount</source>
-        <translation>Pekaditak a alaga</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopyan ing address</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopyan ing label</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopyan ing alaga</translation>
-    </message>
-    <message>
-        <source>Edit label</source>
-        <translation>Alilan ing label</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Ipakit ing detalye ning transaksion</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation>Me-kumpirma</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Kaaldauan</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Klase</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Address</translation>
-    </message>
-    <message>
-        <source>ID</source>
-        <translation>ID</translation>
-    </message>
-    <message>
-        <source>Range:</source>
-        <translation>Angga:</translation>
-    </message>
-    <message>
-        <source>to</source>
-        <translation>para kang</translation>
-    </message>
-</context>
-<context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
-<context>
-    <name>WalletFrame</name>
-    </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>Magpadalang Barya</translation>
-    </message>
-</context>
-<context>
-    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1368,6 +711,10 @@
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1402,24 +749,8 @@
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Eya me-resolve ing -whitebind address: '%s'</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -maxtxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -1446,10 +777,6 @@
         <translation>I-execute ing command istung mialilan ya ing best block (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Ining saup a mensayi</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Payagan ing pamaglawe DNS para king -addnode, -seednode and -connect</translation>
     </message>
@@ -1458,32 +785,12 @@
         <translation>Lo-load da ne ing address...</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Me-mali ya ing pamag-load king wallet.dat: Me-corrupt ya ing wallet</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Me-mali ya ing pamag-load king wallet.dat</translation>
-    </message>
-    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ali katanggap-tanggap a -proxy addresss: '%s'</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>E kilalang network ing mepili king -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Eya me-resolve ing -bind address: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Eya me-resolve ing -externalip address: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
