@@ -9,6 +9,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "compat.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"
@@ -136,6 +137,13 @@ bool AppInit(int argc, char* argv[])
             fprintf(stdout, "Bitcoin server starting\n");
 
             // Daemonize
+#  if HAVE_DECL_DAEMON
+            if (daemon(0, 0)) {
+                fprintf(stderr, "Failed to become daemon: %s",
+                        strerror(errno));
+                return false;
+            }
+#  else
             pid_t pid = fork();
             if (pid < 0)
             {
@@ -151,8 +159,9 @@ bool AppInit(int argc, char* argv[])
             pid_t sid = setsid();
             if (sid < 0)
                 fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+#  endif // HAVE_DECL_DAEMON
         }
-#endif
+#endif // WIN32
         SoftSetBoolArg("-server", true);
 
         // Set this early so that parameter interactions go to console
