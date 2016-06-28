@@ -109,7 +109,7 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
         }
         LogPrintf(" %s\n", i.second.ToString());
     }
-    assert(onlyMaybeDeadlock);
+    // assert(onlyMaybeDeadlock);
 }
 
 static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
