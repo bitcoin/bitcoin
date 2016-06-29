@@ -326,7 +326,7 @@ class BIP68Test(BitcoinTestFramework):
         height = self.nodes[0].getblockcount()
         for i in xrange(2):
             block = create_block(tip, create_coinbase(height), cur_time)
-            block.nVersion = 3
+            block.nVersion = 4
             block.rehash()
             block.solve()
             tip = block.sha256
@@ -386,7 +386,7 @@ class BIP68Test(BitcoinTestFramework):
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
         block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
-        block.nVersion = 3
+        block.nVersion = 4
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
