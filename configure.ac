@@ -107,7 +107,7 @@ AC_ARG_ENABLE(endomorphism,
 AC_ARG_ENABLE(ecmult_static_precomputation,
     AS_HELP_STRING([--enable-ecmult-static-precomputation],[enable precomputed ecmult table for signing (default is yes)]),
     [use_ecmult_static_precomputation=$enableval],
-    [use_ecmult_static_precomputation=yes])
+    [use_ecmult_static_precomputation=auto])
 
 AC_ARG_ENABLE(module_ecdh,
     AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation (experimental)]),
@@ -148,6 +148,34 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
     [ AC_MSG_RESULT([yes]);AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]) ],
     [ AC_MSG_RESULT([no])
     ])
+
+if test x"$use_ecmult_static_precomputation" != x"no"; then
+  save_cross_compiling=$cross_compiling
+  cross_compiling=no
+  TEMP_CC="$CC"
+  CC="$CC_FOR_BUILD"
+  AC_MSG_CHECKING([native compiler: ${CC_FOR_BUILD}])
+  AC_RUN_IFELSE(
+    [AC_LANG_PROGRAM([], [return 0])],
+    [working_native_cc=yes],
+    [working_native_cc=no],[dnl])
+  CC="$TEMP_CC"
+  cross_compiling=$save_cross_compiling
+
+  if test x"$working_native_cc" = x"no"; then
+    set_precomp=no
+    if test x"$use_ecmult_static_precomputation" = x"yes";  then
+      AC_MSG_ERROR([${CC_FOR_BUILD} does not produce working binaries. Please set CC_FOR_BUILD])
+    else
+      AC_MSG_RESULT([${CC_FOR_BUILD} does not produce working binaries. Please set CC_FOR_BUILD])
+    fi
+  else
+    AC_MSG_RESULT([ok])
+    set_precomp=yes
+  fi
+else
+  set_precomp=no
+fi
 
 if test x"$req_asm" = x"auto"; then
   SECP_64BIT_ASM_CHECK
@@ -393,6 +421,7 @@ if test x"$use_external_asm" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
 fi
 
+AC_MSG_NOTICE([Using static precomputation: $set_precomp])
 AC_MSG_NOTICE([Using assembly optimizations: $set_asm])
 AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
