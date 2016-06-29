@@ -1,18 +1,17 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
+Upstream-Name: BitcoinClassic
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: https://github.com/bitcoin/bitcoin
+Source: https://github.com/bitcoinclassic/bitcoinclassic
 
 Files: *
 Copyright: 2009-2016, Bitcoin Core Developers
+           2016 Bitcoin Classic Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
-         as well as the numerous contributors to the project.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
+           2016 Tom Zander <tomz@freedommail.ch>
 License: GPL-2+
 
 Files: debian/manpages/*
