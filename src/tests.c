@@ -2399,9 +2399,7 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
     secp256k1_scalar x, shift;
     int wnaf[256] = {0};
     int i;
-#ifdef USE_ENDOMORPHISM
     int skew;
-#endif
     secp256k1_scalar num = *number;
 
     secp256k1_scalar_set_int(&x, 0);
@@ -2411,10 +2409,8 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
     for (i = 0; i < 16; ++i) {
         secp256k1_scalar_shr_int(&num, 8);
     }
-    skew = secp256k1_wnaf_const(wnaf, num, w);
-#else
-    secp256k1_wnaf_const(wnaf, num, w);
 #endif
+    skew = secp256k1_wnaf_const(wnaf, num, w);
 
     for (i = WNAF_SIZE(w); i >= 0; --i) {
         secp256k1_scalar t;
@@ -2433,10 +2429,8 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
         }
         secp256k1_scalar_add(&x, &x, &t);
     }
-#ifdef USE_ENDOMORPHISM
-    /* Skew num because when encoding 128-bit numbers as odd we use an offset */
+    /* Skew num because when encoding numbers as odd we use an offset */
     secp256k1_scalar_cadd_bit(&num, skew == 2, 1);
-#endif
     CHECK(secp256k1_scalar_eq(&x, &num));
 }
 
