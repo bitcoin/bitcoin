@@ -157,7 +157,7 @@ private:
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
 
-    // Variables used for addScoreTxs and addPriorityTxs
+    // Variables used for addPriorityTxs
     int lastFewTxs;
     bool blockFinished;
 
@@ -174,14 +174,12 @@ private:
     void AddToBlock(CTxMemPool::txiter iter);
 
     // Methods for how to add transactions to a block.
-    /** Add transactions based on modified feerate */
-    void addScoreTxs();
     /** Add transactions based on tx "priority" */
     void addPriorityTxs();
     /** Add transactions based on feerate including unconfirmed ancestors */
     void addPackageTxs();
 
-    // helper function for addScoreTxs and addPriorityTxs
+    // helper function for addPriorityTxs
     /** Test if tx will still "fit" in the block */
     bool TestForBlock(CTxMemPool::txiter iter);
     /** Test if tx still has unconfirmed parents not yet in block */
