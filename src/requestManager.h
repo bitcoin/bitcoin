@@ -45,7 +45,7 @@ class CRequestManager
   typedef std::map<uint256, CUnknownObj> OdMap;
   OdMap mapTxnInfo;
   OdMap mapBlkInfo;
-  CCriticalSection cs_objDownloader;
+  CCriticalSection cs_objDownloader;  // protects mapTxnInfo and mapBlkInfo
 
   OdMap::iterator sendIter;
   OdMap::iterator sendBlkIter;

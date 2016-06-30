@@ -65,9 +65,9 @@ CStatHistory<uint64_t > recvAmt;
 CStatHistory<uint64_t > sendAmt; 
 
 // Expedited blocks
-std::vector<CNode*> xpeditedBlk(256,NULL);    // Who requested expedited blocks from us
-std::vector<CNode*> xpeditedBlkUp(256,NULL);  // Who we requested expedited blocks from
-std::vector<CNode*> xpeditedTxn(256,NULL);  
+std::vector<CNode*> xpeditedBlk(256,(CNode*)NULL);    // Who requested expedited blocks from us
+std::vector<CNode*> xpeditedBlkUp(256,(CNode*)NULL);  // Who we requested expedited blocks from
+std::vector<CNode*> xpeditedTxn(256,(CNode*)NULL);  
 
 #define NUM_XPEDITED_STORE 10
 uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];  // Just save the last few expedited sent blocks so we don't resend (uint256 zeros on construction)

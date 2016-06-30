@@ -313,11 +313,12 @@ int CUnknownObj::NextSource()
 
 void CRequestManager::SendRequests()
 {
-  LOCK(cs_main);  // Must be locked here due to deadlock interaction with cs_objDownloader and  from->cs_vSend
   {
   LOCK(cs_objDownloader);
   if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
   if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
+  }
+
   int64_t now = GetTimeMicros();
   //static int64_t lastPass=0;
  
@@ -326,7 +327,10 @@ void CRequestManager::SendRequests()
     {
       OdMap::iterator itemIter = sendBlkIter;
       CUnknownObj& item = itemIter->second;
+      {
+      LOCK(cs_objDownloader);
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
+      }
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
 	  if (item.lastRequestTime)  // if this is positive, we've requested at least once
@@ -352,7 +356,9 @@ void CRequestManager::SendRequests()
 	      // time the block arrives, the header chain leading up to it is already validated. Not
 	      // doing this will result in the received block being rejected as an orphan in case it is
 	      // not a direct successor.
+	      {
 	      pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), item.obj.hash);
+	      }
 	      if (CanDirectFetch(chainParams.GetConsensus())) // Consider necessity given overall block pacer: && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) 
 		{
 		  // BUIP010 Xtreme Thinblocks: begin section
@@ -397,18 +403,20 @@ void CRequestManager::SendRequests()
 			  else 
 			    {
 			      LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-			      //vToFetch.push_back(inv2);
+                              std::vector<CInv> vToFetch;
                               inv2.type = MSG_BLOCK;
-                              pfrom->PushMessage(NetMsgType::GETDATA, inv2);
+			      vToFetch.push_back(inv2);
+                              pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
 			    }
 			  MarkBlockAsInFlight(pfrom->GetId(), item.obj.hash, chainParams.GetConsensus());
 			}
 		    }
 		  else 
 		    {
-		      //vToFetch.push_back(inv2);
+                      std::vector<CInv> vToFetch;
                       inv2.type = MSG_BLOCK;
-                      pfrom->PushMessage(NetMsgType::GETDATA, inv2);
+		      vToFetch.push_back(inv2);
+                      pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
 		      MarkBlockAsInFlight(pfrom->GetId(), item.obj.hash, chainParams.GetConsensus());
 		      LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
 		    }
@@ -425,7 +433,11 @@ void CRequestManager::SendRequests()
     {
       OdMap::iterator itemIter = sendIter;
       CUnknownObj& item = itemIter->second;
+
+      {
+      LOCK(cs_objDownloader);
       ++sendIter;  // move it forward up here in case we need to erase the item we are working with.
+      }
 
       if (now-item.lastRequestTime > MIN_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
@@ -462,5 +474,4 @@ void CRequestManager::SendRequests()
 
     }
   //lastPass = now;
-  }
 }

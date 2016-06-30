@@ -5997,10 +5997,16 @@ bool SendMessages(CNode* pto)
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
         if (!lockMain)
+	  {
+            LogPrint("net", "skipping SendMessages to %s, cs_main is locked\n",  pto->addr.ToString());
             return true;
+	  }
         TRY_LOCK(pto->cs_vSend, lockSend);
         if (!lockSend)
-          return true;
+	  {
+            LogPrint("net", "skipping SendMessages to %s, pto->cs_vSend is locked\n", pto->addr.ToString());
+            return true;
+	  }
 
         // Address refresh broadcast
         int64_t nNow = GetTimeMicros();
@@ -6257,11 +6263,11 @@ bool SendMessages(CNode* pto)
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNow, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
             if (queuedBlock.nTimeDisconnect > nTimeoutIfRequestedNow) {
-                LogPrint("net", "Reducing block download timeout for peer=%d block=%s, orig=%d new=%d\n", pto->id, queuedBlock.hash.ToString(), queuedBlock.nTimeDisconnect, nTimeoutIfRequestedNow);
+	      LogPrint("net", "Reducing block download timeout for peer=%s (%d) block=%s, orig=%d new=%d\n", pto->addrName.c_str(), pto->id, queuedBlock.hash.ToString(), queuedBlock.nTimeDisconnect, nTimeoutIfRequestedNow);
                 queuedBlock.nTimeDisconnect = nTimeoutIfRequestedNow;
             }
             if (queuedBlock.nTimeDisconnect < nNow) {
-                LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
+	      LogPrintf("Timeout downloading block %s from peer %s (%d), disconnecting\n", queuedBlock.hash.ToString(), pto->addrName.c_str(), pto->id);
                 pto->fDisconnect = true;
             }
         }
