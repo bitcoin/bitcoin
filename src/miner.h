@@ -192,8 +192,11 @@ private:
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
     /** Test if a new package would "fit" in the block */
     bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost);
-    /** Test if a set of transactions are all final */
-    bool TestPackageFinalityAndSerializedSize(const CTxMemPool::setEntries& package);
+    /** Perform checks on each transaction in a package:
+      * locktime, premature-witness, serialized size (if necessary)
+      * These checks should always succeed, and they're here
+      * only as an extra check in case of suboptimal node configuration */
+    bool TestPackageTransactions(const CTxMemPool::setEntries& package);
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx);
