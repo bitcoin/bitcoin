@@ -92,7 +92,8 @@ if ENABLE_WALLET
 BITCOIN_TESTS += \
   test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  test/rpc_wallet_tests.cpp
+  test/rpc_wallet_tests.cpp \
+  test/walletutil_tests.cpp
 endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
