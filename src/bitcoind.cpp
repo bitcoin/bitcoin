@@ -140,7 +140,7 @@ bool AppInit(int argc, char* argv[])
 #  if HAVE_DECL_DAEMON
             // daemon(3) basically does exactly what follows in the else block,
             // but it's best to use library functions where they're available
-            if (daemon(0, 0)) {
+            if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
                 fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
                 return false;
             }
@@ -160,8 +160,6 @@ bool AppInit(int argc, char* argv[])
             pid_t sid = setsid();
             if (sid < 0)
                 fprintf(stderr, "Error: setsid() failed: %s\n", strerror(errno));
-
-            (void)chdir("/");
 
             int fd = open(_PATH_DEVNULL, O_RDWR, 0);
             (void)dup2(fd, STDIN_FILENO);
