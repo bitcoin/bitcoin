@@ -311,26 +311,108 @@ int CUnknownObj::NextSource()
   return next;
 }
 
+void RequestBlock(CNode* pfrom, CInv obj)
+{
+  const CChainParams& chainParams = Params();
+  LOCK(pfrom->cs_vSend);
+
+  // First request the headers preceding the announced block. In the normal fully-synced
+  // case where a new block is announced that succeeds the current tip (no reorganization),
+  // there are no such headers.
+  // Secondly, and only when we are close to being synced, we request the announced block directly,
+  // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
+  // time the block arrives, the header chain leading up to it is already validated. Not
+  // doing this will result in the received block being rejected as an orphan in case it is
+  // not a direct successor.
+  {
+    pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
+  }
+  if (CanDirectFetch(chainParams.GetConsensus())) // Consider necessity given overall block pacer: && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) 
+    {
+      // BUIP010 Xtreme Thinblocks: begin section
+      CInv inv2(obj);
+      CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+      CBloomFilter filterMemPool;
+      if (IsThinBlocksEnabled() && IsChainNearlySyncd()) 
+	{
+	  if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(obj.hash))) 
+	    {
+	      // Must download a block from a ThinBlock peer
+	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) 
+		{ // We can only send one thinblock per peer at a time
+		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+		  inv2.type = MSG_XTHINBLOCK;
+		  std::vector<uint256> vOrphanHashes;
+		  for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+		    vOrphanHashes.push_back((*mi).first);
+		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
+		  ss << inv2;
+		  ss << filterMemPool;
+		  pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
+		  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+		  LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+		}
+	    }
+	  else 
+	    {
+	      // Try to download a thinblock if possible otherwise just download a regular block
+	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) { // We can only send one thinblock per peer at a time
+		pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+		inv2.type = MSG_XTHINBLOCK;
+		std::vector<uint256> vOrphanHashes;
+		for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+		  vOrphanHashes.push_back((*mi).first);
+		BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
+		ss << inv2;
+		ss << filterMemPool;
+		pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
+		LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	      }
+	      else 
+		{
+		  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+		  std::vector<CInv> vToFetch;
+		  inv2.type = MSG_BLOCK;
+		  vToFetch.push_back(inv2);
+		  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
+		}
+	      MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+	    }
+	}
+      else 
+	{
+	  std::vector<CInv> vToFetch;
+	  inv2.type = MSG_BLOCK;
+	  vToFetch.push_back(inv2);
+	  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
+	  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
+	  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	}
+      // BUIP010 Xtreme Thinblocks: end section
+    }
+  LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
+}
+
 void CRequestManager::SendRequests()
 {
-  {
-  LOCK(cs_objDownloader);
-  if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
-  if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
-  }
 
   int64_t now = GetTimeMicros();
   //static int64_t lastPass=0;
  
+  bool atEnd = false;
   // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
+  cs_objDownloader.lock();
+  if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
+
   while ((sendBlkIter != mapBlkInfo.end())&&(blockPacer.try_leak(1)))
     {
       OdMap::iterator itemIter = sendBlkIter;
       CUnknownObj& item = itemIter->second;
-      {
-      LOCK(cs_objDownloader);
+
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
-      }
+
+      //if (itemIter == mapBlkInfo.end()) break;  // double check
+
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
 	  if (item.lastRequestTime)  // if this is positive, we've requested at least once
@@ -340,104 +422,31 @@ void CRequestManager::SendRequests()
           int next = item.NextSource();
 	  if (next != CUnknownObj::MAX_AVAIL_FROM)
 	    {
-              const CChainParams& chainParams = Params();
 	      CNode* pfrom = item.availableFrom[next];
               item.requestCount[next] += 1;
-	      LOCK(pfrom->cs_vSend);
 	      item.receivingFrom |= (1<<next);
 	      item.outstandingReqs++;
 	      item.lastRequestTime = now;
+              CInv obj = item.obj;
 
-	      // First request the headers preceding the announced block. In the normal fully-synced
-	      // case where a new block is announced that succeeds the current tip (no reorganization),
-	      // there are no such headers.
-	      // Secondly, and only when we are close to being synced, we request the announced block directly,
-	      // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
-	      // time the block arrives, the header chain leading up to it is already validated. Not
-	      // doing this will result in the received block being rejected as an orphan in case it is
-	      // not a direct successor.
-	      {
-	      pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), item.obj.hash);
-	      }
-	      if (CanDirectFetch(chainParams.GetConsensus())) // Consider necessity given overall block pacer: && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) 
-		{
-		  // BUIP010 Xtreme Thinblocks: begin section
-		  CInv inv2(item.obj);
-		  CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-		  CBloomFilter filterMemPool;
-		  if (IsThinBlocksEnabled() && IsChainNearlySyncd()) 
-		    {
-		      if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(item.obj.hash))) 
-			{
-			  // Must download a block from a ThinBlock peer
-			  if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) 
-			    { // We can only send one thinblock per peer at a time
-			      pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-			      inv2.type = MSG_XTHINBLOCK;
-			      std::vector<uint256> vOrphanHashes;
-			      for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-				vOrphanHashes.push_back((*mi).first);
-			      BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
-			      ss << inv2;
-			      ss << filterMemPool;
-			      pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-			      MarkBlockAsInFlight(pfrom->GetId(), item.obj.hash, chainParams.GetConsensus());
-			      LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-			    }
-			}
-		      else 
-			{
-			  // Try to download a thinblock if possible otherwise just download a regular block
-			  if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) { // We can only send one thinblock per peer at a time
-			    pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-			    inv2.type = MSG_XTHINBLOCK;
-			    std::vector<uint256> vOrphanHashes;
-			    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-			      vOrphanHashes.push_back((*mi).first);
-			    BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
-			    ss << inv2;
-			    ss << filterMemPool;
-			    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-			    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-			  }
-			  else 
-			    {
-			      LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-                              std::vector<CInv> vToFetch;
-                              inv2.type = MSG_BLOCK;
-			      vToFetch.push_back(inv2);
-                              pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
-			    }
-			  MarkBlockAsInFlight(pfrom->GetId(), item.obj.hash, chainParams.GetConsensus());
-			}
-		    }
-		  else 
-		    {
-                      std::vector<CInv> vToFetch;
-                      inv2.type = MSG_BLOCK;
-		      vToFetch.push_back(inv2);
-                      pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
-		      MarkBlockAsInFlight(pfrom->GetId(), item.obj.hash, chainParams.GetConsensus());
-		      LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-		    }
-		  // BUIP010 Xtreme Thinblocks: end section
-		}
-	      LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, item.obj.hash.ToString(), pfrom->id);
+              cs_objDownloader.unlock();
+              RequestBlock(pfrom, obj);
+              cs_objDownloader.lock();
+
 	    }
 	}    
     }
   
-
+ 
+  if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
   // while (((lastPass + MIN_REQUEST_RETRY_INTERVAL < now)||(inFlight < maxInFlight + droppedTxns()))&&(sendIter != mapTxnInfo.end()))
   while ((sendIter != mapTxnInfo.end())&&(requestPacer.try_leak(1)))
     {
       OdMap::iterator itemIter = sendIter;
       CUnknownObj& item = itemIter->second;
 
-      {
-      LOCK(cs_objDownloader);
       ++sendIter;  // move it forward up here in case we need to erase the item we are working with.
-      }
+      if (itemIter == mapTxnInfo.end()) break;
 
       if (now-item.lastRequestTime > MIN_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
@@ -460,12 +469,16 @@ void CRequestManager::SendRequests()
 		{
 		  CNode* from = item.availableFrom[next];
                   item.requestCount[next] += 1;
-                  LOCK(from->cs_vSend);
 		  item.receivingFrom |= (1<<next);
 		  item.outstandingReqs++;
 		  item.lastRequestTime = now;
+
+                  cs_objDownloader.unlock();
+                  LOCK(from->cs_vSend);
 		  // from->AskFor(item.obj); basically just shoves the req into mapAskFor
 		  from->mapAskFor.insert(std::make_pair(now, item.obj));
+                  cs_objDownloader.lock();
+
 		  inFlight++;
                   inFlightTxns << inFlight;
 		}
@@ -474,4 +487,6 @@ void CRequestManager::SendRequests()
 
     }
   //lastPass = now;
+
+  cs_objDownloader.unlock();
 }
