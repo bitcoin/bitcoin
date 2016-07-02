@@ -423,14 +423,28 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
 
-    CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    CScript scriptPubKey;
+    if(chainActive.Height()+1>=MINERHODLINGHEIGHT){
+        CScript altScriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+        CTxDestination dest;
+        ExtractDestination(altScriptPubKey,dest);
+        scriptPubKey = GetTimeLockScriptForDestination(dest,chainActive.Height()+1+MINERHODLINGPERIOD);
+    }else{
+        scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    }
     return CreateNewBlock(scriptPubKey);
 }
 
 CBlockTemplate* CreateNewBlockWithAddress(std::string address)
 {
-    CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(address).Get());
-            //CScript() << ToByteVector(CBitcoinAddress(address).Get()) << OP_CHECKSIG;
+    CScript scriptPubKey;
+    if(chainActive.Height()+1>=MINERHODLINGHEIGHT){
+        scriptPubKey = GetTimeLockScriptForDestination(CBitcoinAddress(address).Get(),chainActive.Height()+1+MINERHODLINGPERIOD);
+    }
+    else{
+        scriptPubKey = GetScriptForDestination(CBitcoinAddress(address).Get());
+    }
+
     return CreateNewBlock(scriptPubKey);
 }
 

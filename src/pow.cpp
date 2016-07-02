@@ -29,6 +29,11 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const Consens
         return bnPowLimit.GetCompact();
     }
 
+    //25 blocks of small diff to reset diff after fork
+    if (BlockLastSolved->nHeight+1 >= MINERHODLINGHEIGHT && BlockLastSolved->nHeight<MINERHODLINGHEIGHT+PastBlocksMin+1) {
+        return UintToArith256(uint256S("0000F00000000000000000000000000000000000000000000000000000000000")).GetCompact();
+    }
+
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if (PastBlocksMax > 0 && i > PastBlocksMax) { break; }
         CountBlocks++;

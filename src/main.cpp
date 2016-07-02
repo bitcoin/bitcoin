@@ -1972,6 +1972,16 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                block.vtx[0].GetValueOut(), blockReward),
                                REJECT_INVALID, "bad-cb-amount");
 
+    if(pindex->nHeight>=MINERHODLINGHEIGHT){
+        //Extra checks to ensure miner is a HODLER
+        if (block.vtx[0].vout.size() != 1){
+            return state.DoS(100,error("ConnectBlock(): coinbase transaction does not have 1 output"),REJECT_INVALID, "bad-cb-outputtx-number");
+        }
+        if (block.vtx[0].vout[0].scriptPubKey.GetTermDepositReleaseBlock() != pindex->nHeight+MINERHODLINGPERIOD){
+            return state.DoS(100,error("ConnectBlock(): coinbase transaction does not HOdl for one year, hodlblocks=%d",block.vtx[0].vout[0].scriptPubKey.GetTermDepositReleaseBlock()),REJECT_INVALID, "bad-cb-outputtx-hodlingperiod");
+        }
+    }
+
     if (!control.Wait())
         return state.DoS(100, false);
     int64_t nTime2 = GetTimeMicros(); nTimeVerify += nTime2 - nTimeStart;
