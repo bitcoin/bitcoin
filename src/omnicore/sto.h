@@ -16,7 +16,7 @@ struct SendToOwners_compare
 
 //! Fee required to be paid per owner/receiver, nominated in willets
 const int64_t TRANSFER_FEE_PER_OWNER = 1;
-const int64_t TRANSFER_FEE_PER_OWNER_V1 = 100;
+const int64_t TRANSFER_FEE_PER_OWNER_V1 = 1000;
 
 //! Set of owner/receivers, sorted by amount they own or might receive
 typedef std::set<std::pair<int64_t, std::string>, SendToOwners_compare> OwnerAddrType;
