@@ -107,9 +107,9 @@ if [ $RESULT == "true," ]
     printf "FAIL (result:%s)\n" $RESULT
     FAIL=$((FAIL+1))
 fi
-printf "     # Checking the fee cache now has 0.00000600 fee cached for OMNI... "
+printf "     # Checking the fee cache now has 0.00006000 fee cached for OMNI... "
 CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 1 | grep cachedfee | cut -d '"' -f4)
-if [ $CACHEDFEE == "0.00000600" ]
+if [ $CACHEDFEE == "0.00006000" ]
   then
     printf "PASS\n"
     PASS=$((PASS+1))
