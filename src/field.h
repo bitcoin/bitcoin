@@ -94,6 +94,9 @@ static void secp256k1_fe_sqr(secp256k1_fe *r, const secp256k1_fe *a);
  *  itself. */
 static int secp256k1_fe_sqrt_var(secp256k1_fe *r, const secp256k1_fe *a);
 
+/** Checks whether a field element is a quadratic residue. */
+static int secp256k1_fe_is_quad_var(const secp256k1_fe *a);
+
 /** Sets a field element to be the (modular) inverse of another. Requires the input's magnitude to be
  *  at most 8. The output magnitude is 1 (but not guaranteed to be normalized). */
 static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a);
