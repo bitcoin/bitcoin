@@ -5204,14 +5204,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
 	    // Create a map of all 8 bytes tx hashes pointing to their full tx hash counterpart 
 	    // We need to check all transaction sources (orphan list, mempool, and new (incoming) transactions in this block) for a collision.
+	    int missingCount = 0;
+	    int unnecessaryCount = 0;
 	    bool collision = false;
 	    std::map<uint64_t, uint256> mapPartialTxHash;
 	    std::vector<uint256> memPoolHashes;
-            if (1)
-	      {
-  	      LOCK(cs_main);
-	      mempool.queryHashes(memPoolHashes);
-	      }
+
+	    {
+  	    LOCK(mempool.cs);
+	    mempool.queryHashes(memPoolHashes);
+
 	    for (uint64_t i = 0; i < memPoolHashes.size(); i++) {
 	      uint64_t cheapHash = memPoolHashes[i].GetCheapHash();
 	      if(mapPartialTxHash.count(cheapHash)) //Check for collisions
@@ -5248,8 +5250,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	      return true;
 	    }
 
-	    int missingCount = 0;
-	    int unnecessaryCount = 0;
 	    // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
 	    bool fXVal = (thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
 
@@ -5283,6 +5283,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 		// This will push an empty/invalid transaction if we don't have it yet
 		pfrom->thinBlock.vtx.push_back(tx);
 	      }
+	    }
 	    pfrom->thinBlockWaitingForTxns = missingCount;
 	    LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
@@ -5997,6 +5998,7 @@ bool SendMessages(CNode* pto)
                 pto->PushMessage(NetMsgType::PING);
             }
         }
+
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
         if (!lockMain)
