@@ -339,6 +339,8 @@ private:
 
     void trackPackageRemoved(const CFeeRate& rate);
 
+    double nTxPerSec; //BU: tx's per second accepted into the mempool
+
 public:
 
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
@@ -493,6 +495,9 @@ public:
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);
 
+    /** BU: Every transaction that is accepted into the mempool will call this method to update the current value*/
+    void UpdateTransactionsPerSecond();
+
     unsigned long size()
     {
         LOCK(cs);
@@ -510,6 +515,14 @@ public:
         LOCK(cs);
         return (mapTx.count(hash) != 0);
     }
+
+    // BU: begin
+    double TransactionsPerSecond()
+    {
+        LOCK(cs);
+        return nTxPerSec;
+    }
+    // BU: end
 
     bool lookup(uint256 hash, CTransaction& result) const;
 

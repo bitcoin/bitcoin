@@ -99,6 +99,13 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
+// BU: begin
+double ClientModel::getTransactionsPerSecond() const
+{
+    return mempool.TransactionsPerSecond();
+}
+// BU: end
+
 double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
@@ -116,6 +123,7 @@ void ClientModel::updateTimer()
     // the following calls will aquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
+    Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond()); // BU:
 }
 
 void ClientModel::updateNumConnections(int numConnections)
