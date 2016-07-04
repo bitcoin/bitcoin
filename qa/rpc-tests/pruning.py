@@ -151,14 +151,14 @@ class PruneTest(BitcoinTestFramework):
         print("Reconnect nodes")
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[2], 1)
-        sync_blocks(self.nodes[0:3])
+        sync_blocks(self.nodes[0:3], timeout=120)
 
         print("Verify height on node 2:",self.nodes[2].getblockcount())
         print("Usage possibly still high bc of stale blocks in block files:", calc_usage(self.prunedir))
 
         print("Mine 220 more blocks so we have requisite history (some blocks will be big and cause pruning of previous chain)")
         self.nodes[0].generate(220) #node 0 has many large tx's in its mempool from the disconnects
-        sync_blocks(self.nodes[0:3])
+        sync_blocks(self.nodes[0:3], timeout=300)
 
         usage = calc_usage(self.prunedir)
         print("Usage should be below target:", usage)
