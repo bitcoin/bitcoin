@@ -18,6 +18,7 @@ Table of contents
 - [Consensus affecting changes](#consensus-affecting-changes)
   - [Trading of all pairs on the Distributed Exchange](#trading-of-all-pairs-on-the-distributed-exchange)
   - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
+  - [Send to Owners cross property suport](#send-to-owners-cross-property-support)
 - [Other notable changes](#other-notable-changes)
   - [Raw payload creation API](#raw-payload-creation-api)
   - [Other API extensions](#other-api-extensions)
@@ -82,6 +83,18 @@ See also [fee system JSON-RPC API documentation](https://github.com/OmniLayer/om
 
 This change is identified by `"featureid": 9` and labeled by the GUI as `"Fee system (inc 0.05% fee from trades of non-Omni pairs)"`.
 
+Send To Owners cross property support
+-------------------------------------
+
+Once activated distributing tokens via the Send To Owners transaction will be permitted to cross properties if using version 1 of the transaction.
+
+Tokens of property X then may be distributed to holders of property Y.
+
+There is a significantly increased fee (0.00001000 per recipient) for using version 1 of the STO transaction.  The fee remains the same (0.00000001) per recipient for using version 0 of the STO transaction.
+
+Sending an STO transaction via Omni Core that distributes tokens to holders of the same property will automatically be sent as version 0, and sending a cross-property STO will automatically be sent as version 1.
+
+This change is identified by `"featureid": 10` and labeled by the GUI as `"Cross-property Send To Owners"`.
 
 Other notable changes
 =====================

@@ -197,7 +197,7 @@ public:
         if (msc_debug_persistence) PrintToLog("CMPSTOList closed\n");
     }
 
-    void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee);
+    void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *numRecipients);
     std::string getMySTOReceipts(string filterAddress);
     int deleteAboveBlock(int blockNum);
     void printStats();

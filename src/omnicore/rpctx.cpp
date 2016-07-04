@@ -526,17 +526,18 @@ Value omni_sendissuancemanaged(const Array& params, bool fHelp)
 // omni_sendsto - Send to owners
 Value omni_sendsto(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 3 || params.size() > 4)
+    if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "omni_sendsto \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" )\n"
+            "omni_sendsto \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" distributionproperty )\n"
 
             "\nCreate and broadcast a send-to-owners transaction.\n"
 
             "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. propertyid           (number, required) the identifier of the tokens to distribute\n"
-            "3. amount               (string, required) the amount to distribute\n"
-            "4. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
+            "1. fromaddress            (string, required) the address to send from\n"
+            "2. propertyid             (number, required) the identifier of the tokens to distribute\n"
+            "3. amount                 (string, required) the amount to distribute\n"
+            "4. redeemaddress          (string, optional) an address that can spend the transaction dust (sender by default)\n"
+            "5. distributionproperty   (number, optional) the identifier of the property holders to distribute to\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
@@ -551,12 +552,13 @@ Value omni_sendsto(const Array& params, bool fHelp)
     uint32_t propertyId = ParsePropertyId(params[1]);
     int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
     std::string redeemAddress = (params.size() > 3 && !ParseText(params[3]).empty()) ? ParseAddress(params[3]): "";
+    uint32_t distributionPropertyId = (params.size() > 4) ? ParsePropertyId(params[4]) : propertyId;
 
     // perform checks
     RequireBalance(fromAddress, propertyId, amount);
 
     // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_SendToOwners(propertyId, amount);
+    std::vector<unsigned char> payload = CreatePayload_SendToOwners(propertyId, amount, distributionPropertyId);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid;

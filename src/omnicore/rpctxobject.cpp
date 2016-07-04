@@ -13,6 +13,7 @@
 #include "omnicore/pending.h"
 #include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"
+#include "omnicore/sto.h"
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxs.h"
@@ -274,7 +275,7 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
     txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
-    if (extendedDetails) populateRPCExtendedTypeSendToOwners(omniObj.getHash(), extendedDetailsFilter, txobj);
+    if (extendedDetails) populateRPCExtendedTypeSendToOwners(omniObj.getHash(), extendedDetailsFilter, txobj, omniObj.getVersion());
 }
 
 void populateRPCTypeSendAll(CMPTransaction& omniObj, Object& txobj)
@@ -497,13 +498,18 @@ void populateRPCTypeActivation(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("minimumversion", (uint64_t) omniObj.getMinClientVersion()));
 }
 
-void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, Object& txobj)
+void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, Object& txobj, uint16_t version)
 {
     Array receiveArray;
-    uint64_t tmpAmount = 0, stoFee = 0;
+    uint64_t tmpAmount = 0, stoFee = 0, numRecipients = 0;
     LOCK(cs_tally);
-    s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &stoFee);
-    txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
+    s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &numRecipients);
+    if (version == MP_TX_PKT_V0) {
+        stoFee = numRecipients * TRANSFER_FEE_PER_OWNER;
+    } else {
+        stoFee = numRecipients * TRANSFER_FEE_PER_OWNER_V1;
+    }
+    txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always OMNI so always divisible
     txobj.push_back(Pair("recipients", receiveArray));
 }
 

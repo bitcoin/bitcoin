@@ -3052,7 +3052,7 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
   return mySTOReceipts;
 }
 
-void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee)
+void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *numRecipients)
 {
   if (!pdb) return;
 
@@ -3066,9 +3066,8 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
   // iterate through SDB, dropping all records where key is not filterAddress (if filtering)
   int count = 0;
 
-  // ugly way to do this, really we should store the fee used but for now since we know it is
-  // always num_addresses * 0.00000001 MSC we can recalculate it on the fly
-  *stoFee = 0;
+  // the fee is variable based on version of STO - provide number of recipients and allow calling function to work out fee
+  *numRecipients = 0;
 
   Slice skey, svalue;
   Iterator* it = NewIterator();
@@ -3082,7 +3081,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
       size_t txidMatch = strValue.find(txid.ToString());
       if(txidMatch!=std::string::npos)
       {
-          ++*stoFee;
+          ++*numRecipients;
           // the txid exists inside the data, this address was a recipient of this STO, check filter and add the details
           if(filter)
           {

@@ -215,12 +215,13 @@ Create and broadcast a send-to-owners transaction.
 
 **Arguments:**
 
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `fromaddress`       | string  | required | the address to send from                                                                     |
-| `propertyid`        | number  | required | the identifier of the tokens to distribute                                                   |
-| `amount`            | string  | required | the amount to distribute                                                                     |
-| `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
+| Name                   | Type    | Presence | Description                                                                                  |
+|------------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`          | string  | required | the address to send from                                                                     |
+| `propertyid`           | number  | required | the identifier of the tokens to distribute                                                   |
+| `amount`               | string  | required | the amount to distribute                                                                     |
+| `redeemaddress`        | string  | optional | an address that can spend the transaction dust (sender by default)                           |
+| `distributionproperty` | number  | optional | the identifier of the property holders to distribute to                                      |
 
 **Result:**
 ```js
@@ -1721,10 +1722,11 @@ Creates the payload for a send-to-owners transaction.
 
 **Arguments:**
 
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `propertyid`        | number  | required | the identifier of the token to distribute                                                    |
-| `amount`            | string  | required | the amount to distribute                                                                     |
+| Name                   | Type    | Presence | Description                                                                                  |
+|------------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`           | number  | required | the identifier of the token to distribute                                                    |
+| `amount`               | string  | required | the amount to distribute                                                                     |
+| `distributionproperty` | number  | optional | the identifier of the property holders to distribute to                                      |
 
 **Result:**
 ```js

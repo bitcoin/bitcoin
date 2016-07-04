@@ -54,6 +54,9 @@ private:
     // CreatePropertyMananged, GrantTokens, RevokeTokens, ChangeIssuer
     unsigned int property;
 
+    // SendToOwners v1
+    unsigned int distribution_property;
+
     // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged, MetaDEx, SendAll
     unsigned char ecosystem;
 
@@ -196,6 +199,7 @@ public:
     uint32_t getActivationBlock() const { return activation_block; }
     uint32_t getMinClientVersion() const { return min_client_version; }
     unsigned int getIndexInBlock() const { return tx_idx; }
+    uint32_t getDistributionProperty() const { return distribution_property; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -246,6 +250,7 @@ public:
         feature_id = 0;
         activation_block = 0;
         min_client_version = 0;
+        distribution_property = 0;
     }
 
     /** Sets the given values. */
