@@ -86,7 +86,6 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CTxMemPool mempool(::minRelayTxFee);
 
-
 map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -640,6 +639,7 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
 
     mapOrphanTransactions[hash].tx = tx;
     mapOrphanTransactions[hash].fromPeer = peer;
+    mapOrphanTransactions[hash].nEntryTime = GetTime(); // BU - Xtreme Thinblocks;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         mapOrphanTransactionsByPrev[txin.prevout.hash].insert(hash);
 
@@ -681,6 +681,29 @@ void EraseOrphansFor(NodeId peer)
     if (nErased > 0) LogPrint("mempool", "Erased %d orphan tx from peer %d\n", nErased, peer);
 }
 
+// BU - Xtreme Thinblocks: begin
+void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    // Because we have to iterate through the entire orphan cache which can be large we don't want to check this
+    // every time a tx enters the mempool but just once a minute is good enough.
+    static int64_t nLastOrphanCheck = GetTime();
+    if (GetTime() <  nLastOrphanCheck + 60)
+        return;
+
+    int64_t nOrphanTxCutoffTime = GetTime() - GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
+    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+    {
+        uint256 txHash = mi->second.tx.GetHash();
+        if (mi->second.nEntryTime < nOrphanTxCutoffTime)
+        {
+            LogPrint("mempool", "Erased old orphan tx %s of age %d seconds\n", txHash.ToString(), GetTime() - mi->second.nEntryTime);
+            EraseOrphanTx(txHash);
+        }
+    }
+
+    nLastOrphanCheck = GetTime();
+}
+// BU - Xtreme Thinblocks: end
 
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -1299,9 +1322,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             if (!pool.exists(hash))
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
-
         // BU: update tx per second when a tx is valid and accepted
         pool.UpdateTransactionsPerSecond();
+        // BU - Xtreme Thinblocks - trim the orphan pool by entry time and do not allow it to be overidden.
+        EraseOrphansByTime();
     }
 
     SyncWithWallets(tx, NULL);

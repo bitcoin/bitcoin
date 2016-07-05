@@ -542,6 +542,7 @@ static const unsigned int REJECT_CONFLICT = 0x102;
 struct COrphanTx {
     CTransaction tx;
     NodeId fromPeer;
+    int64_t nEntryTime; // BU - Xtreme Thinblocks: used for aging orphans out of the cache
 };
 extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
 extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;

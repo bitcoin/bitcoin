@@ -1106,7 +1106,6 @@ void ThreadSocketHandler()
         progress = 0;
         fAquiredAllRecvLocks = true;
         stat_io_service.poll(); // BU instrumentation
-        requester.SendRequests();  // BU send out any requests for tx or blks that I don't know about yet        
         //
         // Disconnect nodes
         //
@@ -1822,6 +1821,8 @@ void ThreadMessageHandler()
                 pnode->AddRef();
             }
         }
+
+        requester.SendRequests();  // BU send out any requests for tx or blks that I don't know about yet        
 
         bool fSleep = ThinBlockMessageHandler(vNodesCopy);
 
