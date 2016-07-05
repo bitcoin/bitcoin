@@ -395,17 +395,15 @@ void RequestBlock(CNode* pfrom, CInv obj)
 
 void CRequestManager::SendRequests()
 {
+  int64_t now = 0;
 
-  int64_t now = GetTimeMicros();
-  //static int64_t lastPass=0;
- 
-  bool atEnd = false;
   // TODO: if a node goes offline, rerequest txns from someone else and cleanup references right away
   cs_objDownloader.lock();
   if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
 
   while ((sendBlkIter != mapBlkInfo.end())&&(blockPacer.try_leak(1)))
     {
+      now = GetTimeMicros();
       OdMap::iterator itemIter = sendBlkIter;
       CUnknownObj& item = itemIter->second;
 
@@ -442,6 +440,7 @@ void CRequestManager::SendRequests()
   // while (((lastPass + MIN_REQUEST_RETRY_INTERVAL < now)||(inFlight < maxInFlight + droppedTxns()))&&(sendIter != mapTxnInfo.end()))
   while ((sendIter != mapTxnInfo.end())&&(requestPacer.try_leak(1)))
     {
+      now = GetTimeMicros();
       OdMap::iterator itemIter = sendIter;
       CUnknownObj& item = itemIter->second;
 

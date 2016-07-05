@@ -218,8 +218,11 @@ bool GetLeaderboardFromBitnodes(vector<string>& vIPs)
         ctx.set_options( boost::asio::ssl::context::default_workarounds |
         boost::asio::ssl::context::no_sslv2 |
         boost::asio::ssl::context::no_sslv3 |
-        boost::asio::ssl::context::no_tlsv1 |
-        boost::asio::ssl::context::no_tlsv1_1 );
+        boost::asio::ssl::context::no_tlsv1 
+#if (BOOST_VERSON >= 105900) 
+        | boost::asio::ssl::context::no_tlsv1_1 
+#endif
+        );
 
         ctx.set_default_verify_paths();
         client c(io_service, ctx, iterator, cert_hostname, url_host, url_path, timeout);
