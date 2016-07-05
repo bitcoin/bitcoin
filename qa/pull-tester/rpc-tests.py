@@ -58,6 +58,10 @@ PARALLEL_REGEX = re.compile('^-parallel=')
 
 print_help = False
 run_parallel = 4
+if EXEEXT == ".exe":
+    # Don't run tests in parallel on windows by default
+    # to avoid intermittent failures
+    run_parallel = 1
 
 for arg in sys.argv[1:]:
     if arg == "--help" or arg == "-h" or arg == "-?":
