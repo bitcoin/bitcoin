@@ -104,13 +104,33 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(txVerbose3["vin"][0]["valueSat"], amount)
 
         # Check the database index
-        self.nodes[0].generate(1)
+        block_hash = self.nodes[0].generate(1)
         self.sync_all()
 
         txVerbose4 = self.nodes[3].getrawtransaction(txid2, 1)
         assert_equal(txVerbose4["vin"][0]["address"], address2)
         assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
         assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
+
+
+        # Check block deltas
+        print "Testing getblockdeltas..."
+
+        block = self.nodes[3].getblockdeltas(block_hash[0])
+        assert_equal(len(block["deltas"]), 2)
+        assert_equal(block["deltas"][0]["index"], 0)
+        assert_equal(len(block["deltas"][0]["inputs"]), 0)
+        assert_equal(len(block["deltas"][0]["outputs"]), 0)
+        assert_equal(block["deltas"][1]["index"], 1)
+        assert_equal(block["deltas"][1]["txid"], txid2)
+        assert_equal(block["deltas"][1]["inputs"][0]["index"], 0)
+        assert_equal(block["deltas"][1]["inputs"][0]["address"], "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW")
+        assert_equal(block["deltas"][1]["inputs"][0]["satoshis"], amount * -1)
+        assert_equal(block["deltas"][1]["inputs"][0]["prevtxid"], txid)
+        assert_equal(block["deltas"][1]["inputs"][0]["prevout"], 0)
+        assert_equal(block["deltas"][1]["outputs"][0]["index"], 0)
+        assert_equal(block["deltas"][1]["outputs"][0]["address"], "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW")
+        assert_equal(block["deltas"][1]["outputs"][0]["satoshis"], amount)
 
         print "Passed\n"
 
