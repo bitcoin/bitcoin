@@ -2507,9 +2507,13 @@ CNode::~CNode()
 
     if (pfilter)
         delete pfilter;
+
     // BUIP010 - Xtreme Thinblocks - begin section
     if (pThinBlockFilter)
         delete pThinBlockFilter;
+    mapThinBlocksInFlight.clear();
+    thinBlockWaitingForTxns = -1;
+    thinBlock.SetNull();
     // BUIP010 - Xtreme Thinblocks - end section
 
     GetNodeSignals().FinalizeNode(GetId());
