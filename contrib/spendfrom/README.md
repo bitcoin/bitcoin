@@ -15,7 +15,7 @@ With arguments, sends coins received by the `FROMADDRESS` addresses to the `TOAD
 
 ### Notes ###
 
-- You may explictly specify how much fee to pay (a fee more than 1% of the amount
+- You may explicitly specify how much fee to pay (a fee more than 1% of the amount
 will fail,  though, to prevent bitcoin-losing accidents). Spendfrom may fail if
 it thinks the transaction would never be confirmed (if the amount being sent is
 too small, or if the transaction is too many bytes for the fee).
@@ -25,7 +25,7 @@ too small, or if the transaction is too many bytes for the fee).
 
 - If `--datadir` is not specified, the default datadir is used.
 
-- The `--dry_run` option will just create and sign the the transaction and print
+- The `--dry_run` option will just create and sign the transaction and print
 the transaction data (as hexadecimal), instead of broadcasting it.
 
 - If the transaction is created and broadcast successfully, a transaction id

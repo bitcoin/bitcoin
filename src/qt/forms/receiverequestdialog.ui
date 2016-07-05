@@ -22,7 +22,7 @@
      <property name="minimumSize">
       <size>
        <width>300</width>
-       <height>300</height>
+       <height>320</height>
       </size>
      </property>
      <property name="toolTip">
@@ -74,6 +74,9 @@
        <property name="text">
         <string>Copy &amp;URI</string>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -81,12 +84,8 @@
        <property name="text">
         <string>Copy &amp;Address</string>
        </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnCopyImage">
-       <property name="text">
-        <string>&amp;Copy Image</string>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -94,6 +93,9 @@
       <widget class="QPushButton" name="btnSaveAs">
        <property name="text">
         <string>&amp;Save Image...</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

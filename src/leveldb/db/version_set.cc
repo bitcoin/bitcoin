@@ -54,20 +54,6 @@ static int64_t TotalFileSize(const std::vector<FileMetaData*>& files) {
   return sum;
 }
 
-namespace {
-std::string IntSetToString(const std::set<uint64_t>& s) {
-  std::string result = "{";
-  for (std::set<uint64_t>::const_iterator it = s.begin();
-       it != s.end();
-       ++it) {
-    result += (result.size() > 1) ? "," : "";
-    result += NumberToString(*it);
-  }
-  result += "}";
-  return result;
-}
-}  // namespace
-
 Version::~Version() {
   assert(refs_ == 0);
 
@@ -876,12 +862,6 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
       }
       if (!s.ok()) {
         Log(options_->info_log, "MANIFEST write: %s\n", s.ToString().c_str());
-        if (ManifestContains(record)) {
-          Log(options_->info_log,
-              "MANIFEST contains log record despite error; advancing to new "
-              "version to prevent mismatch between in-memory and logged state");
-          s = Status::OK();
-        }
       }
     }
 
@@ -889,8 +869,6 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
     // new CURRENT file that points to it.
     if (s.ok() && !new_manifest_file.empty()) {
       s = SetCurrentFile(env_, dbname_, manifest_file_number_);
-      // No need to double-check MANIFEST in case of error since it
-      // will be discarded below.
     }
 
     mu->Lock();
@@ -1122,31 +1100,6 @@ const char* VersionSet::LevelSummary(LevelSummaryStorage* scratch) const {
            int(current_->files_[5].size()),
            int(current_->files_[6].size()));
   return scratch->buffer;
-}
-
-// Return true iff the manifest contains the specified record.
-bool VersionSet::ManifestContains(const std::string& record) const {
-  std::string fname = DescriptorFileName(dbname_, manifest_file_number_);
-  Log(options_->info_log, "ManifestContains: checking %s\n", fname.c_str());
-  SequentialFile* file = NULL;
-  Status s = env_->NewSequentialFile(fname, &file);
-  if (!s.ok()) {
-    Log(options_->info_log, "ManifestContains: %s\n", s.ToString().c_str());
-    return false;
-  }
-  log::Reader reader(file, NULL, true/*checksum*/, 0);
-  Slice r;
-  std::string scratch;
-  bool result = false;
-  while (reader.ReadRecord(&r, &scratch)) {
-    if (r == Slice(record)) {
-      result = true;
-      break;
-    }
-  }
-  delete file;
-  Log(options_->info_log, "ManifestContains: result = %d\n", result ? 1 : 0);
-  return result;
 }
 
 uint64_t VersionSet::ApproximateOffsetOf(Version* v, const InternalKey& ikey) {

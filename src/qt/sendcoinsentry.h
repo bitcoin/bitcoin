@@ -1,15 +1,16 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SENDCOINSENTRY_H
-#define SENDCOINSENTRY_H
+#ifndef BITCOIN_QT_SENDCOINSENTRY_H
+#define BITCOIN_QT_SENDCOINSENTRY_H
 
 #include "walletmodel.h"
 
 #include <QStackedWidget>
 
 class WalletModel;
+class PlatformStyle;
 
 namespace Ui {
     class SendCoinsEntry;
@@ -25,7 +26,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(QWidget *parent = 0);
+    explicit SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
@@ -45,16 +46,16 @@ public:
 
     void setFocus();
 
-public slots:
-    void setRemoveEnabled(bool enabled);
+public Q_SLOTS:
     void clear();
 
-signals:
+Q_SIGNALS:
     void removeEntry(SendCoinsEntry *entry);
     void payAmountChanged();
+    void subtractFeeFromAmountChanged();
 
-private slots:
-    void on_deleteButton_clicked();
+private Q_SLOTS:
+    void deleteClicked();
     void on_payTo_textChanged(const QString &address);
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
@@ -64,8 +65,9 @@ private:
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
+    const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
 };
 
-#endif // SENDCOINSENTRY_H
+#endif // BITCOIN_QT_SENDCOINSENTRY_H

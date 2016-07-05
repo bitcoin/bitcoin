@@ -20,7 +20,7 @@
 #
 # The PLATFORM_CCFLAGS and PLATFORM_CXXFLAGS might include the following:
 #
-#       -DLEVELDB_CSTDATOMIC_PRESENT if <cstdatomic> is present
+#       -DLEVELDB_ATOMIC_PRESENT     if <atomic> is present
 #       -DLEVELDB_PLATFORM_POSIX     for Posix-based platforms
 #       -DSNAPPY                     if the Snappy library is present
 #
@@ -72,6 +72,12 @@ if [ "$CXX" = "g++" ]; then
 fi
 
 case "$TARGET_OS" in
+    CYGWIN_*)
+        PLATFORM=OS_LINUX
+        COMMON_FLAGS="$MEMCMP_FLAG -lpthread -DOS_LINUX -DCYGWIN"
+        PLATFORM_LDFLAGS="-lpthread"
+        PORT_FILE=port/port_posix.cc
+        ;;
     Darwin)
         PLATFORM=OS_MACOSX
         COMMON_FLAGS="$MEMCMP_FLAG -DOS_MACOSX"
@@ -137,6 +143,16 @@ case "$TARGET_OS" in
         # man ld: +h internal_name
         PLATFORM_SHARED_LDFLAGS="-shared -Wl,+h -Wl,"
         ;;
+    IOS)
+        PLATFORM=IOS
+        COMMON_FLAGS="$MEMCMP_FLAG -DOS_MACOSX"
+        [ -z "$INSTALL_PATH" ] && INSTALL_PATH=`pwd`
+        PORT_FILE=port/port_posix.cc
+        PLATFORM_SHARED_EXT=
+        PLATFORM_SHARED_LDFLAGS=
+        PLATFORM_SHARED_CFLAGS=
+        PLATFORM_SHARED_VERSIONED=
+        ;;
     OS_WINDOWS_CROSSCOMPILE | NATIVE_WINDOWS)
         PLATFORM=OS_WINDOWS
         COMMON_FLAGS="-fno-builtin-memcmp -D_REENTRANT -DOS_WINDOWS -DLEVELDB_PLATFORM_WINDOWS -DWINVER=0x0500 -D__USE_MINGW_ANSI_STDIO=1"
@@ -175,13 +191,14 @@ if [ "$CROSS_COMPILE" = "true" ]; then
 else
     CXXOUTPUT="${TMPDIR}/leveldb_build_detect_platform-cxx.$$"
 
-    # If -std=c++0x works, use <cstdatomic>.  Otherwise use port_posix.h.
+    # If -std=c++0x works, use <atomic> as fallback for when memory barriers
+    # are not available.
     $CXX $CXXFLAGS -std=c++0x -x c++ - -o $CXXOUTPUT 2>/dev/null  <<EOF
-      #include <cstdatomic>
+      #include <atomic>
       int main() {}
 EOF
     if [ "$?" = 0 ]; then
-        COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX -DLEVELDB_CSTDATOMIC_PRESENT"
+        COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX -DLEVELDB_ATOMIC_PRESENT"
         PLATFORM_CXXFLAGS="-std=c++0x"
     else
         COMMON_FLAGS="$COMMON_FLAGS -DLEVELDB_PLATFORM_POSIX"

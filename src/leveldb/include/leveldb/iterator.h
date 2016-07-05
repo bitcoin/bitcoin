@@ -61,7 +61,7 @@ class Iterator {
   // Return the value for the current entry.  The underlying storage for
   // the returned slice is valid only until the next modification of
   // the iterator.
-  // REQUIRES: !AtEnd() && !AtStart()
+  // REQUIRES: Valid()
   virtual Slice value() const = 0;
 
   // If an error has occurred, return it.  Else return an ok status.

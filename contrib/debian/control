@@ -5,51 +5,63 @@ Maintainer: Jonas Smedegaard <dr@jones.dk>
 Uploaders: Micah Anderson <micah@debian.org>
 Build-Depends: debhelper,
  devscripts,
+ automake,
+ libtool,
  bash-completion,
  libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
  libssl-dev,
  pkg-config,
- libminiupnpc8-dev,
+ libminiupnpc8-dev | libminiupnpc-dev (>> 1.6),
  libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
  libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
  libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
  libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
  qt4-qmake,
  libqt4-dev,
- libqrencode-dev
+ libqrencode-dev,
+ libprotobuf-dev, protobuf-compiler,
+ python
 Standards-Version: 3.9.2
-Homepage: http://www.bitcoin.org/
+Homepage: https://bitcoincore.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: http://github.com/bitcoin/bitcoin
+Vcs-Browser: https://github.com/bitcoin/bitcoin
 
 Package: bitcoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Bitcoin is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
+ Bitcoin is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Bitcoin Core
+ is the name of the open source software which enables the use of this currency.
  .
- Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
- .
- This package provides bitcoind, a combined daemon and CLI tool to
- interact with the daemon.
+ This package provides the daemon, bitcoind, and the CLI tool
+ bitcoin-cli to interact with the daemon.
 
 Package: bitcoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Bitcoin is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
- .
- Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
+ Bitcoin is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Bitcoin Core
+ is the name of the open source software which enables the use of this currency.
  .
  This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+
+Package: bitcoin-tx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: peer-to-peer digital currency - standalone transaction tool
+ Bitcoin is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Bitcoin Core
+ is the name of the open source software which enables the use of this currency.
+ .
+ This package provides bitcoin-tx, a command-line transaction creation
+ tool which can be used without a bitcoin daemon.  Some means of
+ exchanging minimal transaction data with peers is still required.

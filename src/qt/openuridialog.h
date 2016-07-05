@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef OPENURIDIALOG_H
-#define OPENURIDIALOG_H
+#ifndef BITCOIN_QT_OPENURIDIALOG_H
+#define BITCOIN_QT_OPENURIDIALOG_H
 
 #include <QDialog>
 
 namespace Ui {
-class OpenURIDialog;
+    class OpenURIDialog;
 }
 
 class OpenURIDialog : public QDialog
@@ -21,14 +21,14 @@ public:
 
     QString getURI();
 
-protected slots:
+protected Q_SLOTS:
     void accept();
 
-private slots:
+private Q_SLOTS:
     void on_selectFileButton_clicked();
 
 private:
     Ui::OpenURIDialog *ui;
 };
 
-#endif // OPENURIDIALOG_H
+#endif // BITCOIN_QT_OPENURIDIALOG_H

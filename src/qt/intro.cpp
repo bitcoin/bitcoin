@@ -1,20 +1,33 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include "config/bitcoin-config.h"
+#endif
 
 #include "intro.h"
 #include "ui_intro.h"
 
+#include "guiutil.h"
+
 #include "util.h"
 
 #include <boost/filesystem.hpp>
+
 #include <QFileDialog>
 #include <QSettings>
 #include <QMessageBox>
 
-/* Minimum free space (in bytes) needed for data directory */
+#include <cmath>
+
 static const uint64_t GB_BYTES = 1000000000LL;
-static const uint64_t BLOCK_CHAIN_SIZE = 10LL * GB_BYTES;
+/* Minimum free space (in GB) needed for data directory */
+static const uint64_t BLOCK_CHAIN_SIZE = 80;
+/* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
+static const uint64_t CHAIN_STATE_SIZE = 2;
+/* Total required space (in GB) depending on user choice (prune, not prune) */
+static uint64_t requiredSpace;
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
@@ -38,10 +51,10 @@ public:
         ST_ERROR
     };
 
-public slots:
+public Q_SLOTS:
     void check();
 
-signals:
+Q_SIGNALS:
     void reply(int status, const QString &message, quint64 available);
 
 private:
@@ -59,7 +72,7 @@ void FreespaceChecker::check()
 {
     namespace fs = boost::filesystem;
     QString dataDirStr = intro->getPathToCheck();
-    fs::path dataDir = fs::path(dataDirStr.toStdString());
+    fs::path dataDir = GUIUtil::qstringToBoostPath(dataDirStr);
     uint64_t freeBytesAvailable = 0;
     int replyStatus = ST_OK;
     QString replyMessage = tr("A new data directory will be created.");
@@ -92,13 +105,13 @@ void FreespaceChecker::check()
                 replyMessage = tr("Path already exists, and is not a directory.");
             }
         }
-    } catch(fs::filesystem_error &e)
+    } catch (const fs::filesystem_error&)
     {
         /* Parent directory does not exist or is not accessible */
         replyStatus = ST_ERROR;
         replyMessage = tr("Cannot create data directory here.");
     }
-    emit reply(replyStatus, replyMessage, freeBytesAvailable);
+    Q_EMIT reply(replyStatus, replyMessage, freeBytesAvailable);
 }
 
 
@@ -109,7 +122,13 @@ Intro::Intro(QWidget *parent) :
     signalled(false)
 {
     ui->setupUi(this);
-    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(BLOCK_CHAIN_SIZE/GB_BYTES));
+    ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));
+    ui->storageLabel->setText(ui->storageLabel->text().arg(tr(PACKAGE_NAME)));
+    uint64_t pruneTarget = std::max<int64_t>(0, GetArg("-prune", 0));
+    requiredSpace = BLOCK_CHAIN_SIZE;
+    if (pruneTarget)
+        requiredSpace = CHAIN_STATE_SIZE + std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
+    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(tr(PACKAGE_NAME)).arg(requiredSpace));
     startThread();
 }
 
@@ -117,7 +136,7 @@ Intro::~Intro()
 {
     delete ui;
     /* Ensure thread is finished before it is deleted */
-    emit stopThread();
+    Q_EMIT stopThread();
     thread->wait();
 }
 
@@ -143,12 +162,12 @@ void Intro::setDataDirectory(const QString &dataDir)
 
 QString Intro::getDefaultDataDirectory()
 {
-    return QString::fromStdString(GetDefaultDataDir().string());
+    return GUIUtil::boostPathToQString(GetDefaultDataDir());
 }
 
-void Intro::pickDataDirectory(bool fIsTestnet)
+void Intro::pickDataDirectory()
 {
-    namespace fs = boost::filesystem;;
+    namespace fs = boost::filesystem;
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
@@ -159,15 +178,12 @@ void Intro::pickDataDirectory(bool fIsTestnet)
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(dataDir.toStdString()) || GetBoolArg("-choosedatadir", false))
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR))
     {
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
         intro.setDataDirectory(dataDir);
-        if (!fIsTestnet)
-            intro.setWindowIcon(QIcon(":icons/bitcoin"));
-        else
-            intro.setWindowIcon(QIcon(":icons/bitcoin_testnet"));
+        intro.setWindowIcon(QIcon(":icons/bitcoin"));
 
         while(true)
         {
@@ -178,18 +194,23 @@ void Intro::pickDataDirectory(bool fIsTestnet)
             }
             dataDir = intro.getDataDirectory();
             try {
-                fs::create_directory(dataDir.toStdString());
+                TryCreateDirectory(GUIUtil::qstringToBoostPath(dataDir));
                 break;
-            } catch(fs::filesystem_error &e) {
-                QMessageBox::critical(0, tr("Bitcoin"),
-                    tr("Error: Specified data directory \"%1\" can not be created.").arg(dataDir));
+            } catch (const fs::filesystem_error&) {
+                QMessageBox::critical(0, tr(PACKAGE_NAME),
+                    tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
         }
 
         settings.setValue("strDataDir", dataDir);
     }
-    SoftSetArg("-datadir", dataDir.toStdString());
+    /* Only override -datadir if different from the default, to make it possible to
+     * override -datadir in the bitcoin.conf file in the default data directory
+     * (to be consistent with bitcoind behavior)
+     */
+    if(dataDir != getDefaultDataDirectory())
+        SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
 }
 
 void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)
@@ -210,10 +231,10 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
     {
         ui->freeSpace->setText("");
     } else {
-        QString freeString = QString::number(bytesAvailable/GB_BYTES) + tr("GB of free space available");
-        if(bytesAvailable < BLOCK_CHAIN_SIZE)
+        QString freeString = tr("%n GB of free space available", "", bytesAvailable/GB_BYTES);
+        if(bytesAvailable < requiredSpace * GB_BYTES)
         {
-            freeString += " " + tr("(of %1GB needed)").arg(BLOCK_CHAIN_SIZE/GB_BYTES);
+            freeString += " " + tr("(of %n GB needed)", "", requiredSpace);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
         } else {
             ui->freeSpace->setStyleSheet("");
@@ -233,7 +254,7 @@ void Intro::on_dataDirectory_textChanged(const QString &dataDirStr)
 
 void Intro::on_ellipsisButton_clicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(0, "Choose data directory", ui->dataDirectory->text());
+    QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(0, "Choose data directory", ui->dataDirectory->text()));
     if(!dir.isEmpty())
         ui->dataDirectory->setText(dir);
 }
@@ -271,7 +292,7 @@ void Intro::checkPath(const QString &dataDir)
     if(!signalled)
     {
         signalled = true;
-        emit requestCheck();
+        Q_EMIT requestCheck();
     }
     mutex.unlock();
 }
