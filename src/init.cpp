@@ -579,7 +579,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
     strUsage += HelpMessageOpt("-blockprioritysize=<n>", strprintf(_("Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"), DEFAULT_BLOCK_PRIORITY_SIZE));
     if (showDebug)
-        strUsage += HelpMessageOpt("-blockversion=<n>", strprintf("Override block version to test forking scenarios (default: %d)", (int)CBlock::CURRENT_VERSION));
+        strUsage += HelpMessageOpt("-blockversion=<n>", "Override block version to test forking scenarios");
 
     strUsage += HelpMessageGroup(_("RPC server options:"));
     strUsage += HelpMessageOpt("-server", _("Accept command line and JSON-RPC commands"));
@@ -1179,12 +1179,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (fPrintToDebugLog)
         OpenDebugLog();
-
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
-#else
-    LogPrintf("Using OpenSSL version %s\n", OpenSSL_version(OPENSSL_VERSION));
-#endif
 
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
@@ -1915,10 +1909,17 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     StartNode(threadGroup, scheduler);
 
     // Monitor the chain, and alert if we get blocks much quicker or slower than expected
-    int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
-    CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
-                                         boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
-    scheduler.scheduleEvery(f, nPowTargetSpacing);
+    // The "bad chain alert" scheduler has been disabled because the current system gives far
+    // too many false positives, such that users are starting to ignore them.
+    // This code will be disabled for 0.12.1 while a fix is deliberated in #7568
+    // this was discussed in the IRC meeting on 2016-03-31.
+    //
+    // --- disabled ---
+    //int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
+    //CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
+    //                                     boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
+    //scheduler.scheduleEvery(f, nPowTargetSpacing);
+    // --- end disabled ---
 
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);

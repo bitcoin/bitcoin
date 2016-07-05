@@ -74,6 +74,7 @@ if EXEEXT == ".exe" and "-win" not in opts:
 
 #Tests
 testScripts = [
+    'bip68-112-113-p2p.py',
     'wallet.py',
     'listtransactions.py',
     'receivedby.py',
@@ -106,10 +107,13 @@ testScripts = [
     'invalidblockrequest.py', # TODO: works, needs dash_hash
     'invalidtxrequest.py', # TODO: works, needs dash_hash
     'abandonconflict.py',
+    'p2p-versionbits-warning.py',
 ]
 testScriptsExt = [
+    'bip9-softforks.py',
     'bip65-cltv.py',
     'bip65-cltv-p2p.py', # TODO: works, needs dash_hash
+    'bip68-sequence.py',
     'bipdersig-p2p.py', # TODO: works, needs dash_hash
     'bipdersig.py',
     'getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651

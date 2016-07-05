@@ -283,13 +283,6 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(walletReindex()));
 
     // set library version labels
-
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
-#else
-    ui->openSSLVersion->setText(OpenSSL_version(OPENSSL_VERSION));
-#endif
-
 #ifdef ENABLE_WALLET
     ui->berkeleyDBVersion->setText(DbEnv::version(0, 0, 0));
     std::string walletPath = GetDataDir().string();
