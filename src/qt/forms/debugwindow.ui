@@ -250,14 +250,14 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="1">
+       <item row="10" column="1">
         <widget class="QLabel" name="masternodeCount">
          <property name="text">
           <string>N/A</string>
          </property>
         </widget>
        </item>
-       <item row="12" column="0">
+       <item row="11" column="0">
         <widget class="QLabel" name="label_10">
          <property name="font">
           <font>
