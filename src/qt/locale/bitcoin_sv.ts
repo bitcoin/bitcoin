@@ -1875,6 +1875,10 @@
         <translation>Detta är ett förhands testbygge - använd på egen risk - använd inte för mining eller handels applikationer</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Kan inte spola tillbaka databasen till obeskärt läge. Du måste ladda ner blockkedjan igen</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Använd UPnP för att mappa den lyssnande porten (förvalt: 1 när lyssning aktiverat och utan -proxy)</translation>
     </message>
@@ -2095,8 +2099,16 @@
         <translation>Återskapa blockkedjans status från aktuella indexerade block</translation>
     </message>
     <message>
+        <source>Rewinding blocks...</source>
+        <translation>Spolar tillbaka blocken...</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Sätt databasens cachestorlek i megabyte (%d till %d, förvalt: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>Sätt maximal blockkostnad (förvalt: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

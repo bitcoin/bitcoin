@@ -255,6 +255,10 @@
         <translation><numerusform>%n connexion active au réseau Bitcoin</numerusform><numerusform>%n connexions actives au réseau Bitcoin</numerusform></translation>
     </message>
     <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Indexation des blocs sur le disque...</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>Aucun bloc source disponible</translation>
     </message>
@@ -305,6 +309,10 @@
     <message>
         <source>Up to date</source>
         <translation>À jour</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 client</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -512,6 +520,10 @@
         <translation>Bienvenue </translation>
     </message>
     <message>
+        <source>Welcome to %1.</source>
+        <translation>Bienvenue sur %1.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Utiliser le répertoire par défaut </translation>
     </message>
@@ -640,6 +652,14 @@
     <message>
         <source>&amp;Window</source>
         <translation>&amp;Fenêtre</translation>
+    </message>
+    <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>&amp;Cacher l'icône dans la zone de notification.</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>Cacher l'icône de la zone de notification</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
@@ -1325,6 +1345,10 @@
     <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Fonctionner en arrière-plan en tant que démon et accepter les commandes</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>Impossible de démarrer le serveur HTTP. Voir le journal de débogage pour plus de détails.</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>

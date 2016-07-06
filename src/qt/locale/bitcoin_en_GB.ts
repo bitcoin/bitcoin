@@ -1879,6 +1879,10 @@
         <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Unable to rewind the database to a pre-fork state. You will need to re-download the blockchain</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</translation>
     </message>
@@ -2099,8 +2103,16 @@
         <translation>Rebuild chain state from the currently indexed blocks</translation>
     </message>
     <message>
+        <source>Rewinding blocks...</source>
+        <translation>Rewinding blocks...</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Set database cache size in megabytes (%d to %d, default: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>Set maximum block cost (default: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

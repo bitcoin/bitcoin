@@ -1010,6 +1010,10 @@
         <translation>Verwendete BerkeleyDB-Version</translation>
     </message>
     <message>
+        <source>Datadir</source>
+        <translation>Datenverz</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Startzeit</translation>
     </message>

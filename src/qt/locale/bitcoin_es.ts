@@ -1878,6 +1878,10 @@
         <translation>Esta es una versión de pre-prueba - utilícela bajo su propio riesgo. No la utilice para usos comerciales o de minería.</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>No es posible reconstruir la base de datos a un estado anterior. Debe descargar de nuevo la cadena de bloques.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Utiliza UPnP para asignar el puerto de escucha (predeterminado: 1 cuando esta escuchando sin -proxy)</translation>
     </message>
@@ -2098,8 +2102,16 @@
         <translation>Reconstruir el estado de la cadena a partir de los bloques indexados</translation>
     </message>
     <message>
+        <source>Rewinding blocks...</source>
+        <translation>Verificando bloques...</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Asignar tamaño de cache en megabytes (entre %d y %d; predeterminado: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>Establecer tamaño máximo de bloque (por defecto: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

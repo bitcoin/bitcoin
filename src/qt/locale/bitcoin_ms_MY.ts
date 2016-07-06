@@ -18,6 +18,15 @@
         <translation>&amp;Salin</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Padam alamat semasa yang dipilih dari senaraiyang dipilih dari senarai</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>
+Alihkan fail data ke dalam tab semasa</translation>
+    </message>
+    <message>
         <source>&amp;Export</source>
         <translation>&amp;Eksport</translation>
     </message>

@@ -64,6 +64,10 @@
 <context>
     <name>BanTableModel</name>
     <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmask</translation>
+    </message>
+    <message>
         <source>Banned Until</source>
         <translation>Със забранен достъп до</translation>
     </message>
@@ -107,6 +111,14 @@
         <translation>Изход от приложението</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>Относно %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Покажи информация относно %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>За &amp;Qt</translation>
     </message>
@@ -117,6 +129,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Опции...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Промени настройки за %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -141,6 +157,10 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Отвори &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Повторно индексиране на блоковете на диска...</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -238,13 +258,45 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Налични команди</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n активна връзка към Биткойн мрежата</numerusform><numerusform>%n активни връзки към Биткойн мрежата</numerusform></translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Индексиране на блокове на диска...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Обработване на блокове на диска...</translation>
+    </message>
     <message>
         <source>No block source available...</source>
         <translation>Липсва източник на блоковете...</translation>
     </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Преработен %n блок от историята с транзакции.</numerusform><numerusform>Преработени %n блокове от историята с транзакции.</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n час</numerusform><numerusform>%n часа</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n ден</numerusform><numerusform>%n дни</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n седмица</numerusform><numerusform>%n седмици</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 и %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n година</numerusform><numerusform>%n години</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -273,6 +325,14 @@
     <message>
         <source>Up to date</source>
         <translation>Синхронизиран</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 клиент</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -415,6 +475,14 @@
         <translation>&amp;Име</translation>
     </message>
     <message>
+        <source>The label associated with this address list entry</source>
+        <translation>Етикетът свързан с това въведение в листа с адреси</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>Адресът свързан с това въведение в листа с адреси. Това може да бъде променено само за адреси за изпращане.</translation>
+    </message>
+    <message>
         <source>&amp;Address</source>
         <translation>&amp;Адрес</translation>
     </message>
@@ -453,6 +521,10 @@
         <translation>(%1-битов)</translation>
     </message>
     <message>
+        <source>About %1</source>
+        <translation>Относно %1</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>Списък с команди</translation>
     </message>
@@ -464,12 +536,44 @@
         <source>command-line options</source>
         <translation>Списък с налични команди</translation>
     </message>
-    </context>
+    <message>
+        <source>UI Options:</source>
+        <translation>Опции на интерфейс:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Избери директория за данни при стартирване (по подразбиране: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Избери език, примерно "de_DE" (по подразбиране: system locale)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Стартирай минимизиран</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Задай SSL root сертификат за молба за изплащане (по подразбиране: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Покажи splash екран при стартирване (по подразбиране %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Нулиране на всички настройки променени в GUI</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Добре дошли</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Добре дошли в %1.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -483,12 +587,28 @@
         <source>Error</source>
         <translation>Грешка</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB свободно пространство на разположение</numerusform><numerusform>%n GB свободно пространство на разположение</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(%n GB е нужен)</numerusform><numerusform>(%n GB са нужни)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
         <translation>Отваряне на URI</translation>
+    </message>
+    <message>
+        <source>Open payment request from URI or file</source>
+        <translation>Отвори молба за изплащане от URI или файл</translation>
+    </message>
+    <message>
+        <source>URI:</source>
+        <translation>URI:</translation>
     </message>
     </context>
 <context>
