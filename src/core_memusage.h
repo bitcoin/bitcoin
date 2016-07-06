@@ -33,13 +33,13 @@ static inline size_t RecursiveDynamicUsage(const CScriptWitness& scriptWit) {
     return mem;
 }
 
-static inline size_t RecursiveDynamicUsage(const CTxinWitness& txinwit) {
+static inline size_t RecursiveDynamicUsage(const CTxInWitness& txinwit) {
     return RecursiveDynamicUsage(txinwit.scriptWitness);
 }
 
 static inline size_t RecursiveDynamicUsage(const CTxWitness& txwit) {
     size_t mem = memusage::DynamicUsage(txwit.vtxinwit);
-    for (std::vector<CTxinWitness>::const_iterator it = txwit.vtxinwit.begin(); it != txwit.vtxinwit.end(); it++) {
+    for (std::vector<CTxInWitness>::const_iterator it = txwit.vtxinwit.begin(); it != txwit.vtxinwit.end(); it++) {
         mem += RecursiveDynamicUsage(*it);
     }
     return mem;
