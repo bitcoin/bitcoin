@@ -7,8 +7,6 @@
 #ifndef _SECP256K1_GROUP_IMPL_H_
 #define _SECP256K1_GROUP_IMPL_H_
 
-#include <string.h>
-
 #include "num.h"
 #include "field.h"
 #include "group.h"
