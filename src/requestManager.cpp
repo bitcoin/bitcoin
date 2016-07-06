@@ -325,8 +325,10 @@ void RequestBlock(CNode* pfrom, CInv obj)
   // doing this will result in the received block being rejected as an orphan in case it is
   // not a direct successor.
   {
+    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
   }
+  // Don't ask for the latest block, if our most recent block is really old (i.e. still doing initial sync?)
   if (CanDirectFetch(chainParams.GetConsensus())) // Consider necessity given overall block pacer: && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) 
     {
       // BUIP010 Xtreme Thinblocks: begin section
@@ -390,7 +392,6 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	}
       // BUIP010 Xtreme Thinblocks: end section
     }
-  LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
 }
 
 void CRequestManager::SendRequests()
@@ -413,13 +414,14 @@ void CRequestManager::SendRequests()
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
-	  if (item.lastRequestTime)  // if this is positive, we've requested at least once
-	    {
-	      LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
-	    }
           int next = item.NextSource();
 	  if (next != CUnknownObj::MAX_AVAIL_FROM)
 	    {
+  	      if (item.lastRequestTime)  // if this is positive, we've requested at least once
+	        {
+	        LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
+	        }
+
 	      CNode* pfrom = item.availableFrom[next];
               item.requestCount[next] += 1;
 	      item.receivingFrom |= (1<<next);

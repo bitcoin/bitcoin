@@ -65,9 +65,9 @@ CStatHistory<uint64_t > recvAmt;
 CStatHistory<uint64_t > sendAmt; 
 
 // Expedited blocks
-std::vector<CNode*> xpeditedBlk(256,(CNode*)NULL);    // Who requested expedited blocks from us
-std::vector<CNode*> xpeditedBlkUp(256,(CNode*)NULL);  // Who we requested expedited blocks from
-std::vector<CNode*> xpeditedTxn(256,(CNode*)NULL);  
+std::vector<CNode*> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us
+std::vector<CNode*> xpeditedBlkUp; //(256,(CNode*)NULL);  // Who we requested expedited blocks from
+std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);  
 
 #define NUM_XPEDITED_STORE 10
 uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];  // Just save the last few expedited sent blocks so we don't resend (uint256 zeros on construction)
@@ -128,7 +128,7 @@ void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
     {
       if (stop)  // If stopping, find the array element and clear it.
 	{
-          LogPrint("thin", "Stopping expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+          LogPrint("blk", "Stopping expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
 	  std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),pfrom);  
           if (it != xpeditedBlk.end())
 	    {
@@ -141,13 +141,21 @@ void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
 	  std::vector<CNode*>::iterator it1 = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),pfrom); 
           if (it1 == xpeditedBlk.end())  // don't add it twice
 	    {
-            LogPrint("thin", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
-            std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),((CNode*)NULL));
-            if (it != xpeditedBlk.end())
-              *it = pfrom;
+            unsigned int maxExpedited = GetArg("-maxexpeditedblockrecipients", 32);
+            if (xpeditedBlk.size() < maxExpedited )
+	      {
+		LogPrint("blk", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+		std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),((CNode*)NULL));
+		if (it != xpeditedBlk.end())
+		  *it = pfrom;
+		else
+		  xpeditedBlk.push_back(pfrom);
+		pfrom->AddRef();
+	      }
             else
-              xpeditedBlk.push_back(pfrom);
-            pfrom->AddRef();
+	      {
+		LogPrint("blk", "Expedited blocks requested from peer %s (%d), but I am full.\n", pfrom->addrName.c_str(),pfrom->id);
+	      }
 	    }
 	}
     }
@@ -155,7 +163,7 @@ void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
     {
       if (stop) // If stopping, find the array element and clear it.
 	{
-          LogPrint("thin", "Stopping expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+          LogPrint("blk", "Stopping expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
 	  std::vector<CNode*>::iterator it = std::find(xpeditedTxn.begin(), xpeditedTxn.end(),pfrom);
           if (it != xpeditedTxn.end())
 	    {
@@ -166,15 +174,23 @@ void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
       else // Otherwise, add the new node to the end
 	{
 	  std::vector<CNode*>::iterator it1 = std::find(xpeditedTxn.begin(), xpeditedTxn.end(),pfrom);
-          if (it1 == xpeditedBlk.end())  // don't add it twice
+          if (it1 == xpeditedTxn.end())  // don't add it twice
 	    {
-              LogPrint("thin", "Starting expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+            unsigned int maxExpedited = GetArg("-maxexpeditedtxrecipients", 32);
+            if (xpeditedTxn.size() < maxExpedited )
+	      {
+              LogPrint("blk", "Starting expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
 	      std::vector<CNode*>::iterator it = std::find(xpeditedTxn.begin(), xpeditedTxn.end(),((CNode*)NULL));
 	      if (it != xpeditedTxn.end())
 		*it = pfrom;
 	      else
 		xpeditedTxn.push_back(pfrom);
               pfrom->AddRef();
+	      }
+            else
+	      {
+		LogPrint("blk", "Expedited transactions requested from peer %s (%d), but I am full.\n", pfrom->addrName.c_str(),pfrom->id);
+	      }
 	    }
 	}
     }
@@ -330,6 +346,9 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-bitnodes", _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"));    
     strUsage += HelpMessageOpt("-forcebitnodes", strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES));
     strUsage += HelpMessageOpt("-usednsseed=<host>", _("Add a custom DNS seed to use.  If at least one custom DNS seed is set, the default DNS seeds will be ignored."));
+    strUsage += HelpMessageOpt("-expeditedblock=<host>", _("Request expedited blocks from this host whenever we are connected to it"));
+    strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>", _("The maximum number of nodes this node will forward expedited blocks to"));
+    strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>", _("The maximum number of nodes this node will forward expedited transactions to"));
     return strUsage;
 }
 
@@ -524,6 +543,10 @@ void UnlimitedSetup(void)
 	new CStatHistory<uint64_t >("net/recv/msg/" +  *i);  // This "leaks" in the sense that it is never freed, but is intended to last the duration of the program.
 	new CStatHistory<uint64_t >("net/send/msg/" +  *i);  // This "leaks" in the sense that it is never freed, but is intended to last the duration of the program.
       }
+
+    xpeditedBlk.reserve(256); 
+    xpeditedBlkUp.reserve(256);
+    xpeditedTxn.reserve(256);  
 }
 
 
@@ -1279,6 +1302,29 @@ void ConnectToThinBlockNodes()
             MilliSleep(500);
         }
     }
+}
+
+bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
+{
+  if ((pfrom->nServices & NODE_XTHIN) && (pfrom->nVersion >= EXPEDITED_VERSION))
+    {
+      if(IsThinBlocksEnabled()) 
+        {
+	  BOOST_FOREACH(string& strAddr, mapMultiArgs["-expeditedblock"]) 
+	    {
+	      if(CNode* pnode = FindLikelyNode(strAddr)) {
+		if (pnode == pfrom) 
+		  {
+		    LogPrint("blk", "Requesting expedited blocks from peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+		    pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST,((uint64_t) EXPEDITED_BLOCKS));
+		    xpeditedBlkUp.push_back(pfrom);
+		    return true;
+		  }
+	      }
+	    }
+	}
+    }
+  return false;
 }
 
 void CheckNodeSupportForThinBlocks()

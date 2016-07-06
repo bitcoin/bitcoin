@@ -4506,6 +4506,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
 
         CheckNodeSupportForThinBlocks(); // BUIP010 Xtreme Thinblocks
+        
+        CheckAndRequestExpeditedBlocks(pfrom); // BU
 
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
@@ -4632,6 +4634,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             LOCK(cs_main);
             State(pfrom->GetId())->fCurrentlyConnected = true;
         }
+
+        CheckAndRequestExpeditedBlocks(pfrom); // BU
 
         if (pfrom->nVersion >= SENDHEADERS_VERSION) {
             // Tell our peer we prefer to receive headers rather than inv's

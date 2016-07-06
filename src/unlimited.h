@@ -124,6 +124,7 @@ extern void ConnectToThinBlockNodes();
 extern void CheckNodeSupportForThinBlocks();
 extern void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
 
+extern bool CheckAndRequestExpeditedBlocks(CNode* pfrom);  // Checks to see if the node is configured in bitcoin.conf to be an expedited block source and if so, request them.
 extern void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops, const CNode* skip=NULL);
 extern void SendExpeditedBlock(const CBlock& block,const CNode* skip=NULL);
 extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
