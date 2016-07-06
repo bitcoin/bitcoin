@@ -7,6 +7,7 @@
 
 #include "net.h"
 #include <univalue.h>
+#include "util.h"
 #include <vector>
 
 class CBlock;
@@ -19,11 +20,14 @@ class CNode;
 extern bool HaveConnectThinblockNodes();
 extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(const uint256 &hash);
-extern bool IsThinBlocksEnabled();
+inline bool IsThinBlocksEnabled()
+{
+    return GetBoolArg("-use-thinblocks", true);
+}
 extern bool IsChainNearlySyncd();
-extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes);
+CBloomFilter createSeededBloomFilter(const std::vector<uint256>& vOrphanHashes);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
-extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
+extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
 extern void CheckNodeSupportForThinBlocks();
 extern void SendXThinBlock(const CBlock &block, CNode* pfrom, const CInv &inv);
 

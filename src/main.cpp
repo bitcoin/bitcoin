@@ -4739,7 +4739,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // BUIP010 Xtreme Thinblocks: begin section
                         CInv inv2(inv);
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        CBloomFilter filterMemPool;
                         if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
                             if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(inv.hash))) {
                                 // Must download a block from a ThinBlock peer
@@ -4749,7 +4748,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     std::vector<uint256> vOrphanHashes;
                                     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                         vOrphanHashes.push_back((*mi).first);
-                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                                    CBloomFilter filterMemPool = createSeededBloomFilter(vOrphanHashes);
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -4765,7 +4764,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     std::vector<uint256> vOrphanHashes;
                                     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                         vOrphanHashes.push_back((*mi).first);
-                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                                    CBloomFilter filterMemPool = createSeededBloomFilter(vOrphanHashes);
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -6229,7 +6228,6 @@ bool SendMessages(CNode* pto)
                 // BUIP010 Xtreme Thinblocks: begin section
                 if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                    CBloomFilter filterMemPool;
                     if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
                         // Must download a block from a ThinBlock peer
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
@@ -6237,7 +6235,7 @@ bool SendMessages(CNode* pto)
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                 vOrphanHashes.push_back((*mi).first);
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                            CBloomFilter filterMemPool = createSeededBloomFilter(vOrphanHashes);
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -6253,7 +6251,7 @@ bool SendMessages(CNode* pto)
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                 vOrphanHashes.push_back((*mi).first);
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                            CBloomFilter filterMemPool = createSeededBloomFilter(vOrphanHashes);
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
