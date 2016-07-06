@@ -1517,7 +1517,16 @@ void ThreadOpenConnections()
             }
             MilliSleep(500);
 
-           ConnectToThinBlockNodes();
+            // Connect to specific thin block addresses
+            if (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)
+            {
+                BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-connect-thinblock"])
+                {
+                    CAddress addr;
+                    OpenNetworkConnection(addr, NULL, strAddr.c_str());
+                    MilliSleep(500);
+                }
+            }
         }
     }
 

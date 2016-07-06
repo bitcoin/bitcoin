@@ -26,13 +26,6 @@
 #include <boost/thread.hpp>
 #include <inttypes.h>
 
-using namespace std;
-
-// Variables for statistics tracking, must be before the "requester" singleton instantiation
-const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
-int operateSampleCount[] = { 30,       12,   24,  30 };
-int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
-
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
 
@@ -46,8 +39,9 @@ bool HaveConnectThinblockNodes()
     {
         LOCK(cs_vNodes);
         BOOST_FOREACH (CNode* pnode, vNodes) {
+            // TODO fix this to not use the debug string addrName, instead use pnode->addr and use the method ToStringIP
            int pos = pnode->addrName.find(":");
-           if (pos <= 0 )
+           if (pos < 0 )
                vNodesIP.push_back(pnode->addrName);
            else
                vNodesIP.push_back(pnode->addrName.substr(0, pos));
@@ -89,16 +83,15 @@ bool HaveConnectThinblockNodes()
 
 bool HaveThinblockNodes()
 {
-    {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH (CNode* pnode, vNodes)
-            if (pnode->ThinBlockCapable())
-                return true;
+    LOCK(cs_vNodes);
+    BOOST_FOREACH (CNode* pnode, vNodes) {
+        if (pnode->ThinBlockCapable())
+            return true;
     }
     return false;
 }
 
-bool CheckThinblockTimer(uint256 hash)
+bool CheckThinblockTimer(const uint256 &hash)
 {
     if (!mapThinBlockTimer.count(hash)) {
         mapThinBlockTimer[hash] = GetTimeMillis();
@@ -185,7 +178,7 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
     LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
 }
 
-void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)
+void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv)
 {
     int64_t startTime = GetTimeMicros();
     CValidationState state;
@@ -237,10 +230,10 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     ClearThinBlockTimer(inv.hash);
 }
 
-bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
+bool ThinBlockMessageHandler(const std::vector<CNode*>& vNodesCopy)
 {
     bool sleep = true;
-    CNodeSignals& signals = GetNodeSignals();
+    CNodeSignals &nodeSignals = GetNodeSignals();
     BOOST_FOREACH (CNode* pnode, vNodesCopy)
     {
         if ((pnode->fDisconnect) || (!pnode->ThinBlockCapable()))
@@ -251,7 +244,7 @@ bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
             TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
             if (lockRecv)
             {
-                if (!signals.ProcessMessages(pnode))
+                if (!nodeSignals.ProcessMessages(pnode))
                     pnode->CloseSocketDisconnect();
 
                 if (pnode->nSendSize < SendBufferSize())
@@ -262,31 +255,17 @@ bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
             }
         }
         boost::this_thread::interruption_point();
-        signals.SendMessages(pnode);
+        nodeSignals.SendMessages(pnode);
         boost::this_thread::interruption_point();
     }
     return sleep;
-}
-
-void ConnectToThinBlockNodes()
-{
-    // Connect to specific addresses
-    if (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)
-    {
-        BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-connect-thinblock"])
-        {
-            CAddress addr;
-            OpenNetworkConnection(addr, NULL, strAddr.c_str());
-            MilliSleep(500);
-        }
-    }
 }
 
 void CheckNodeSupportForThinBlocks()
 {
     if(IsThinBlocksEnabled()) {
         // Check that a nodes pointed to with connect-thinblock actually supports thinblocks
-        BOOST_FOREACH(string& strAddr, mapMultiArgs["-connect-thinblock"]) {
+        BOOST_FOREACH(std::string& strAddr, mapMultiArgs["-connect-thinblock"]) {
             if(CNode* pnode = FindNode(strAddr)) {
                 if(!pnode->ThinBlockCapable()) {
                     LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it - Protocol Version: %d peer=%d\n",
@@ -297,7 +276,7 @@ void CheckNodeSupportForThinBlocks()
     }
 }
 
-void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
+void SendXThinBlock(const CBlock &block, CNode* pfrom, const CInv &inv)
 {
     if (inv.type == MSG_XTHINBLOCK)
     {

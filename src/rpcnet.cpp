@@ -16,7 +16,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
-#include "thinblock.h"
 #include "unlimited.h"
 
 #include <boost/foreach.hpp>
@@ -458,7 +457,6 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  ,...\n"
             "  ]\n"
             "  \"warnings\": \"...\"                    (string) any network warnings (such as alert messages) \n"
-            "  \"thinblockstats\": \"...\"              (string) thin block related statistics \n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getnetworkinfo", "")

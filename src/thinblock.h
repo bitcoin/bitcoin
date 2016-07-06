@@ -78,6 +78,7 @@ public:
         READWRITE(vMissingTx);
     }
 };
+
 // This class is used for retrieving a list of still missing transactions after receiving a "thinblock" message.
 // The CXThinBlockTx when recieved can be used to fill in the missing transactions after which it is sent
 // back to the requestor.  This class uses a 64bit hash as opposed to the normal 256bit hash.

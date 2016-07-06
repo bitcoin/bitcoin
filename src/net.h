@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,6 +28,9 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
+
+// if this is enabled the node will hold an extra int to do reporting. Enable to see size and other stats.
+// #define LOG_XTHINBLOCKS
 
 class CAddrMan;
 class CScheduler;
@@ -362,16 +366,17 @@ public:
     int nRefCount;
     NodeId id;
 
-    // BUIP010 Xtreme Thinblocks: begin section
+    // Xtreme Thinblocks: begin section
     CBlock thinBlock;
-    std::vector<uint256> thinBlockHashes;
     std::vector<uint64_t> xThinBlockHashes;
+#ifdef LOG_XTHINBLOCKS
     int nSizeThinBlock;   // Original on-wire size of the block. Just used for reporting
+#endif
     int thinBlockWaitingForTxns;   // if -1 then not currently waiting
     std::map<uint256, uint64_t> mapThinBlocksInFlight; // map of the hashes of thin blocks in flight with the time they were requested.
     double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
     uint64_t nGetXBlockTxLastTime;  // The last time a get_xblocktx request was made
-    // BUIP010 Xtreme Thinblocks: end section
+    // Xtreme Thinblocks: end section
 
 protected:
 

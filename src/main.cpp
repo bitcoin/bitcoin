@@ -4359,10 +4359,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
 
-                    // BUIP010 Xtreme Thinblocks: begin section
-                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)
+                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK) {
                         SendXThinBlock(block, pfrom, inv);
-                    // BUIP010 Xtreme Thinblocks: end section
+                    }
 
                     else // MSG_FILTERED_BLOCK)
                     {
@@ -5138,8 +5137,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 LogPrint("net", "Large reorg, won't direct fetch to %s (%d)\n",
                         pindexLast->GetBlockHash().ToString(),
                         pindexLast->nHeight);
-            //} else {   BU: We don't support headers first for XThinblocks.
-            } else if (!IsThinBlocksEnabled()) {
+            } else if (!IsThinBlocksEnabled()) { // We don't yet support headers-first for XThinblocks.
                 vector<CInv> vGetData;
                 // Download as much as possible, from earliest to latest.
                 BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch) {
@@ -5182,14 +5180,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> thinBlock;
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+#ifdef LOG_XTHINBLOCKS
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
+        pfrom->nSizeThinBlock = nSizeThinBlock;
+#endif
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
-            LogPrint("thin", "Thinblock received but not requested %s from peer %s (%d)\n",inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->addrName.c_str(), pfrom->id);
+            LogPrint("thin", "Thinblock received but not requested %s from peer %s (%d)\n",inv.hash.ToString(),
+                     pfrom->addrName.c_str(), pfrom->addrName.c_str(), pfrom->id);
             Misbehaving(pfrom->GetId(), 20);
         }
 
-        pfrom->nSizeThinBlock = nSizeThinBlock;
         pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
         pfrom->thinBlock.nBits = thinBlock.header.nBits;
@@ -5289,6 +5290,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv);
+#ifdef LOG_XTHINBLOCKS
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
             LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
                      pfrom->thinBlock.GetHash().ToString(),
@@ -5296,6 +5298,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      nSizeThinBlock,
                      ((float) blockSize) / ((float) nSizeThinBlock)
                      );
+#endif
 
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
             BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes)
@@ -5325,15 +5328,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> thinBlock;
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+#ifdef LOG_XTHINBLOCKS
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
+        pfrom->nSizeThinBlock = nSizeThinBlock;
         LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
+#endif
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
             LogPrint("thin", "Thinblock received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
         }
 
-        pfrom->nSizeThinBlock = nSizeThinBlock;
         pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
         pfrom->thinBlock.nBits = thinBlock.header.nBits;
@@ -5341,7 +5346,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->thinBlock.nTime = thinBlock.header.nTime;
         pfrom->thinBlock.hashMerkleRoot = thinBlock.header.hashMerkleRoot;
         pfrom->thinBlock.hashPrevBlock = thinBlock.header.hashPrevBlock;
-        pfrom->thinBlockHashes = thinBlock.vTxHashes;
 
         // Create the mapMissingTx from all the supplied tx's in the xthinblock
         std::map<uint256, CTransaction> mapMissingTx;
@@ -5388,6 +5392,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv);
+#ifdef LOG_XTHINBLOCKS
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
             LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
                      pfrom->thinBlock.GetHash().ToString(),
@@ -5395,6 +5400,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      nSizeThinBlock,
                      ((float) blockSize) / ((float) nSizeThinBlock)
                      );
+#endif
 
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
             BOOST_FOREACH(uint256 &hash, thinBlock.vTxHashes)
@@ -5443,6 +5449,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv);
 
+#ifdef LOG_XTHINBLOCKS
             // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
             int nSizeThinBlockTx = ::GetSerializeSize(thinBlockTx, SER_NETWORK, PROTOCOL_VERSION);
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
@@ -5453,6 +5460,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      nSizeThinBlockTx,
                      ((float) blockSize) / ( (float) pfrom->nSizeThinBlock + (float) nSizeThinBlockTx )
                      );
+#endif
 
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
@@ -5480,9 +5488,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Check for Misbehaving and DOS
         // If they make more than 20 requests in 10 minutes then disconnect them
         {
+            const uint64_t nNow = GetTime();
             if (pfrom->nGetXBlockTxLastTime <= 0)
-                pfrom->nGetXBlockTxLastTime = GetTime();
-            uint64_t nNow = GetTime();
+                pfrom->nGetXBlockTxLastTime = nNow;
             pfrom->nGetXBlockTxCount *= pow(1.0 - 1.0/600.0, (double)(nNow - pfrom->nGetXBlockTxLastTime));
             pfrom->nGetXBlockTxLastTime = nNow;
             pfrom->nGetXBlockTxCount += 1;
@@ -5700,7 +5708,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CBloomFilter filter;
         vRecv >> filter;
-    
+
         if (!filter.IsWithinSizeConstraints())
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom->GetId(), 100);
