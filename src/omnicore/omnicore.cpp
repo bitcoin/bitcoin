@@ -2378,6 +2378,24 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
     if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
 
+    // Workaround for SigOps limit
+    {
+        if (!FillTxInputCache(wtxNew)) {
+            PrintToLog("%s ERROR: failed to get inputs for %s\n", __func__, wtxNew.GetHash().GetHex());
+        }
+
+        unsigned int nBytesPerSigOp = 20; // default of Bitcoin Core 12.1
+        unsigned int nSize = ::GetSerializeSize(wtxNew, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nSigOps = GetLegacySigOpCount(wtxNew);
+        nSigOps += GetP2SHSigOpCount(wtxNew, view);
+
+        if (nSigOps > nSize / nBytesPerSigOp) {
+            PrintToLog("%s WARNING: %s has too many sigops: %d\n", __func__, wtxNew.GetHash().GetHex(), nSigOps);
+
+            // TODO: workaround here
+        }
+    }
+
     // If this request is only to create, but not commit the transaction then display it and exit
     if (!commit) {
         rawHex = EncodeHexTx(wtxNew);
