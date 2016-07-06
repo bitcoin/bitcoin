@@ -349,20 +349,6 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     BOOST_CHECK(wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet));
     BOOST_CHECK_EQUAL(nValueRet, 1003 * COIN);
     BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
-
-    empty_wallet();
-
-    // Test trimming
-    for (int i = 0; i < 100; i++)
-        add_coin(10 * COIN);
-    for (int i = 0; i < 100; i++)
-        add_coin(1000 * COIN);
-
-    BOOST_CHECK(wallet.SelectCoinsMinConf(100001 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet));
-    // We need all 100 larger coins and exactly one small coin.
-    // Superfluous small coins must be trimmed from the set:
-    BOOST_CHECK_EQUAL(nValueRet, 100010 * COIN);
-    BOOST_CHECK_EQUAL(setCoinsRet.size(), 101);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
