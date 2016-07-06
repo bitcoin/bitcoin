@@ -2244,19 +2244,31 @@ void ThreadScriptCheck() {
 // Called periodically asynchronously; alerts if it smells like
 // we're being fed a bad chain (blocks being generated much
 // too slowly or too quickly).
+// Always returns the constant interval at which it should be scheduled.
 //
-void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const CBlockIndex *const &bestHeader,
+int PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const CBlockIndex *const &bestHeader,
                     int64_t nPowTargetSpacing)
 {
-    if (bestHeader == NULL || initialDownloadCheck()) return;
+    // Aim for one false-positive about every fifty years of normal running:
+    // The sample interval SPAN_SECONDS is chosen as the smallest multiple of target spacing expected
+    // to trigger a too-few-blocks alert only once in fifty years (this will be when 0 blocks are seen):
+    // blocks  cdf(blocks, 0)  alertThreshold
+    //   11    1.67017e-5      4.18569e-6
+    //   12    6.14421e-6      4.56621e-6
+    //   13    2.26033e-6      4.94673e-6 <--- min such that (cdf < threshold)
+    //   14    8.31529e-7      5.32725e-6
+    //   15    3.05902e-7      5.70776e-6
+    //TODO find BLOCKS_EXPECTED dynamically, for correct timing of non-10-minute intervals
+    const int FIFTY_YEARS = 50*365*24*60*60;
+    const int BLOCKS_EXPECTED = 13;
+    const int SPAN_SECONDS = BLOCKS_EXPECTED * nPowTargetSpacing;
+    double alertThreshold = 1.0 / (FIFTY_YEARS / SPAN_SECONDS);
+
+    if (bestHeader == NULL || initialDownloadCheck()) return SPAN_SECONDS;
 
     static int64_t lastAlertTime = 0;
     int64_t now = GetAdjustedTime();
-    if (lastAlertTime > now-60*60*24) return; // Alert at most once per day
-
-    const int SPAN_HOURS=4;
-    const int SPAN_SECONDS=SPAN_HOURS*60*60;
-    int BLOCKS_EXPECTED = SPAN_SECONDS / nPowTargetSpacing;
+    if (lastAlertTime > now-60*60*24) return SPAN_SECONDS; // Alert at most once per day
 
     boost::math::poisson_distribution<double> poisson(BLOCKS_EXPECTED);
 
@@ -2269,30 +2281,28 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     while (i->GetBlockTime() >= startTime) {
         ++nBlocks;
         i = i->pprev;
-        if (i == NULL) return; // Ran out of chain, we must not be fully sync'ed
+        if (i == NULL) return SPAN_SECONDS; // Ran out of chain, we must not be fully sync'ed
     }
 
-    // How likely is it to find that many by chance?
-    double p = boost::math::pdf(poisson, nBlocks);
+    // How likely is it to find at least that many by chance?
+    double pHigh = 1.0 - boost::math::cdf(poisson, std::max(0, nBlocks - 1));
+    // How likely is it to find at most that few by chance?
+    double pLow = boost::math::cdf(poisson, nBlocks);
 
-    LogPrint("partitioncheck", "%s: Found %d blocks in the last %d hours\n", __func__, nBlocks, SPAN_HOURS);
-    LogPrint("partitioncheck", "%s: likelihood: %g\n", __func__, p);
+    LogPrint("partitioncheck", "%s: Found %d blocks in the last %d seconds\n", __func__, nBlocks, SPAN_SECONDS);
+    LogPrint("partitioncheck", "%s: likelihood that many: %g, that few: %g\n", __func__, pHigh, pLow);
 
-    // Aim for one false-positive about every fifty years of normal running:
-    const int FIFTY_YEARS = 50*365*24*60*60;
-    double alertThreshold = 1.0 / (FIFTY_YEARS / SPAN_SECONDS);
-
-    if (p <= alertThreshold && nBlocks < BLOCKS_EXPECTED)
+    if (pLow <= alertThreshold)
     {
         // Many fewer blocks than expected: alert!
-        strWarning = strprintf(_("WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)"),
-                               nBlocks, SPAN_HOURS, BLOCKS_EXPECTED);
+        strWarning = strprintf(_("WARNING: check your network connection, %d blocks received in the last %d seconds (%d expected)"),
+                               nBlocks, SPAN_SECONDS, BLOCKS_EXPECTED);
     }
-    else if (p <= alertThreshold && nBlocks > BLOCKS_EXPECTED)
+    else if (pHigh <= alertThreshold)
     {
         // Many more blocks than expected: alert!
-        strWarning = strprintf(_("WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)"),
-                               nBlocks, SPAN_HOURS, BLOCKS_EXPECTED);
+        strWarning = strprintf(_("WARNING: abnormally high number of blocks generated, %d blocks received in the last %d seconds (%d expected)"),
+                               nBlocks, SPAN_SECONDS, BLOCKS_EXPECTED);
     }
     if (!strWarning.empty())
     {
@@ -2300,6 +2310,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
         AlertNotify(strWarning);
         lastAlertTime = now;
     }
+    return SPAN_SECONDS;
 }
 
 // Protected by cs_main

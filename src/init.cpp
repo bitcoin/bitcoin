@@ -1451,7 +1451,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
     CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
                                          boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
-    scheduler.scheduleEvery(f, nPowTargetSpacing);
+    CBlockIndex *pdummy = NULL;
+    scheduler.scheduleEvery(f, PartitionCheck(&IsInitialBlockDownload, boost::ref(cs_main), boost::cref(pdummy), nPowTargetSpacing));
 
     // ********************************************************* Step 12: finished
 
