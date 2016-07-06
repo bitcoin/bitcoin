@@ -765,6 +765,30 @@
         <source>Tor</source>
         <translation>Tor</translation>
     </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>เชื่อมต่อกับ เครือข่าย Bitcoin ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>ใช้ พร็อกซี่ SOCKS5 แยก เพื่อเข้าถึง peers ผ่าน Tor เซอร์วิสซ่อน:</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;วันโดว์</translation>
+    </message>
+    <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>&amp;ซ่อนไอคอน จากเทรย์ระบบ</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>ซ่อนไอคอนเทรย์</translation>
+    </message>
+    <message>
+        <source>Show only a tray icon after minimizing the window.</source>
+        <translation>แสดงเทรย์ไอคอน หลังมืนิไมส์วินโดว์ เท่านั้น</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>

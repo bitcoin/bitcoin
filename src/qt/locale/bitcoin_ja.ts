@@ -1879,6 +1879,10 @@
         <translation>これはリリース前のテストビルドです - 各自の責任で利用すること - 採掘や商取引に使用しないでください</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>データベースをフォーク前の状態に巻き戻せませんでした。ブロックチェーンを再ダウンロードする必要があります</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>リスン ポートの割当に UPnP を使用 (初期値: リスン中および-proxyが指定されていない場合は1)</translation>
     </message>
@@ -2100,8 +2104,16 @@
         <translation>既にインデックスされたブロックからチェイン状態を再構築する</translation>
     </message>
     <message>
+        <source>Rewinding blocks...</source>
+        <translation>ブロックを巻き戻しています...</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>データベースのキャッシュサイズをメガバイトで設定 (%dから%d。初期値: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>最大ブロックコストを設定 (初期値: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

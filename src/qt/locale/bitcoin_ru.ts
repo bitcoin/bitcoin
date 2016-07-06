@@ -131,6 +131,10 @@
         <translation>&amp;Параметры</translation>
     </message>
     <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Изменить конфигурационные настройки для %1</translation>
+    </message>
+    <message>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Зашифровать бумажник...</translation>
     </message>
@@ -552,7 +556,11 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Показывать экран-заставку при запуске (по умолчанию: %u)</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Сбросить все настройки, измененные в графическом интерфейсе</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -562,6 +570,14 @@
     <message>
         <source>Welcome to %1.</source>
         <translation>Добро пожаловать в %1</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>При первом запуске программы вы можете выбрать где %1 будет хранить свои данные.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 скачает и сохранит копию цепи блоков. Как минимум %2GB будут записаны в этот каталог, и со временем он будет расти. Бумажник также будет сохранен в этом каталоге.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -616,6 +632,14 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Главная</translation>
+    </message>
+    <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>Автоматически запускать %1 после входа в систему.</translation>
+    </message>
+    <message>
+        <source>&amp;Start %1 on system login</source>
+        <translation>&amp;Запускать %1 при входе в систему</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -754,6 +778,10 @@
         <translation>&amp;Окно</translation>
     </message>
     <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>&amp;Скрыть иконку из системного трея.</translation>
+    </message>
+    <message>
         <source>Hide tray icon</source>
         <translation>Скрыть иконку в трее</translation>
     </message>
@@ -776,6 +804,10 @@
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Язык интерфейса:</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>Здесь можно установить язык пользовательского интерфейса. Настройки вступят в силу после перезагрузки %1</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -986,6 +1018,10 @@
         <translation>Используется версия BerkeleyDB</translation>
     </message>
     <message>
+        <source>Datadir</source>
+        <translation>Каталог для данных</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Время запуска</translation>
     </message>
@@ -1068,6 +1104,10 @@
     <message>
         <source>User Agent</source>
         <translation>Юзер-агент</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Открыть отладочный лог-файл %1 из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
     </message>
     <message>
         <source>Services</source>

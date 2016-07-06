@@ -1879,6 +1879,10 @@
         <translation>Dette er en foreløbig testudgivelse - brug på eget ansvar - brug ikke til udvinding eller handelsprogrammer</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Kan ikke spole databasen tilbage til en tilstand inden en splitning. Du er nødt til at downloade blokkæden igen</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Brug UPnP for at konfigurere den lyttende port (standard: 1 under lytning og ingen -proxy)</translation>
     </message>
@@ -2099,8 +2103,16 @@
         <translation>Genopbyg kædetilstand ud fra de aktuelt indekserede blokke</translation>
     </message>
     <message>
+        <source>Rewinding blocks...</source>
+        <translation>Spoler blokke tilbage…</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Sæt cache-størrelse for database i megabytes (%d til %d; standard: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>Sæt maksimal blokudgift (standard: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

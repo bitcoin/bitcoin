@@ -186,12 +186,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is "
 "included in share/rpcuser. This option can be specified multiple times"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"WARNING: abnormally high number of blocks generated, %d blocks received in "
-"the last %d hours (%d expected)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"WARNING: check your network connection, %d blocks received in the last %d "
-"hours (%d expected)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""

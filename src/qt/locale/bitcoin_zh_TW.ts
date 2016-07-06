@@ -1880,6 +1880,10 @@
         <translation>這是個還沒發表的測試版本 - 使用請自負風險 - 請不要用來開採或商業應用</translation>
     </message>
     <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>沒辦法將資料庫倒轉回分岔前的狀態。必須要重新下載區塊鍊。</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>是否要使用「通用即插即用」協定(UPnP)，來設定聽候連線的通訊埠的對應(預設值: 當有聽候連線且沒有指定 -proxy 參數時為 1)</translation>
     </message>
@@ -2100,8 +2104,16 @@
         <translation>從目前已編索引的區塊資料重建區塊鏈狀態</translation>
     </message>
     <message>
+        <source>Rewinding blocks...</source>
+        <translation>倒轉回區塊鏈之前的狀態...</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>設定資料庫快取大小是多少百萬位元組(MB，範圍: %d 到 %d，預設值: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>設定區塊成本的最大值(預設值: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

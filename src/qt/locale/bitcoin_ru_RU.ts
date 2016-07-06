@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Кликните правой кнопкой мыши для редоктирования адреса или ярлыка</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Создать новый адрес</translation>
     </message>
@@ -40,7 +44,11 @@
 </context>
 <context>
     <name>AskPassphraseDialog</name>
-    </context>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation>Повторите новый пароль</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     </context>
