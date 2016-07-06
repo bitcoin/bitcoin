@@ -84,7 +84,7 @@ ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction
  * and witness such that spendingTx spends output zero of creationTx.
  * Also inserts creationTx's output into the coins view.
  */
-void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableTransaction& creationTx, const CScript& scriptPubKey, const CScript& scriptSig, const CTxinWitness& witness)
+void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableTransaction& creationTx, const CScript& scriptPubKey, const CScript& scriptSig, const CTxInWitness& witness)
 {
     creationTx.nVersion = 1;
     creationTx.vin.resize(1);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         // Do not use a valid signature to avoid using wallet operations.
         CScript scriptSig = CScript() << OP_0 << OP_0;
 
-        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CTxinWitness());
+        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CTxInWitness());
         // Legacy counting only includes signature operations in scriptSigs and scriptPubKeys
         // of a transaction and does not take the actual executed sig operations into account.
         // spendingTx in itself does not contain a signature operation.
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
         CScript scriptSig = CScript() << OP_0 << OP_0 << ToByteVector(redeemScript);
 
-        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CTxinWitness());
+        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CTxInWitness());
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2 * WITNESS_SCALE_FACTOR);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
     }
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
         CScript scriptPubKey = GetScriptForWitness(p2pk);
         CScript scriptSig = CScript();
-        CTxinWitness witness;
+        CTxInWitness witness;
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(0));
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptSig = GetScriptForWitness(p2pk);
         CScript scriptPubKey = GetScriptForDestination(CScriptID(scriptSig));
         scriptSig = CScript() << ToByteVector(scriptSig);
-        CTxinWitness witness;
+        CTxInWitness witness;
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(0));
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
         CScript scriptPubKey = GetScriptForWitness(witnessScript);
         CScript scriptSig = CScript();
-        CTxinWitness witness;
+        CTxInWitness witness;
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(0));
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript redeemScript = GetScriptForWitness(witnessScript);
         CScript scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
-        CTxinWitness witness;
+        CTxInWitness witness;
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(vector<unsigned char>(0));
         scriptWitness.stack.push_back(vector<unsigned char>(0));
