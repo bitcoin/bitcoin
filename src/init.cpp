@@ -1447,12 +1447,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     StartNode(threadGroup, scheduler);
 
-    // Monitor the chain, and alert if we get blocks much quicker or slower than expected
-    int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
-    CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
-                                         boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
-    scheduler.scheduleEvery(f, nPowTargetSpacing);
-
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
