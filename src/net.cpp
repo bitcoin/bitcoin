@@ -116,6 +116,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
+static CSemaphore *semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
 // Signals for message handling
@@ -1027,7 +1028,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    int nMaxInbound = nMaxConnections - MAX_OUTBOUND_CONNECTIONS;
+    int nMaxInbound = nMaxConnections - MAX_OUTBOUND_CONNECTIONS - mapMultiArgs["-addnode"].size();
 
     if (hSocket != INVALID_SOCKET)
         if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
@@ -1077,7 +1078,6 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         if (!AttemptToEvictConnection(whitelisted)) {
             // No connection to evict, disconnect the new connection
             LogPrint("net", "failed to find an eviction candidate - connection dropped (full)\n");
-LogPrintf("failed to find an eviction candidate - connection dropped (full)\n");
             CloseSocket(hSocket);
             return;
         }
@@ -1712,6 +1712,13 @@ void ThreadOpenAddedConnections()
         vAddedNodes = mapMultiArgs["-addnode"];
     }
 
+    // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
+    //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
+    if (semOutboundAddNode == NULL) {
+        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), 8);
+        semOutboundAddNode = new CSemaphore(maxAddNodeConnections);
+    }
+
     if (HaveNameProxy()) {
         while(true) {
             list<string> lAddresses(0);
@@ -1722,11 +1729,13 @@ void ThreadOpenAddedConnections()
             }
             BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
                 CAddress addr;
-                CSemaphoreGrant grant(*semOutbound);
+                CSemaphoreGrant grant(*semOutboundAddNode);
                 OpenNetworkConnection(addr, &grant, strAddNode.c_str());
                 MilliSleep(500);
             }
-            MilliSleep(120000); // Retry every 2 minutes
+            // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
+            // nodes reconnect quickly after the remote peers restart
+            MilliSleep(30000); 
         }
     }
 
@@ -1759,26 +1768,33 @@ void ThreadOpenAddedConnections()
             BOOST_FOREACH(CNode* pnode, vNodes)
                 for (list<vector<CService> >::iterator it = lservAddressesToAdd.begin(); it != lservAddressesToAdd.end(); it++)
                     BOOST_FOREACH(const CService& addrNode, *(it))
-                        if (pnode->addr == addrNode)
+                        if (pnode->addr == addrNode && pnode->fSuccessfullyConnected == true)
                         {
                             it = lservAddressesToAdd.erase(it);
                             it--;
                             break;
                         }
         }
+
         BOOST_FOREACH(vector<CService>& vserv, lservAddressesToAdd)
         {
-            CSemaphoreGrant grant(*semOutbound);
+            // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are reduced by
+            //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
+            //     nodes that have restarted.
+            CSemaphoreGrant grant(*semOutboundAddNode);
             OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
             MilliSleep(500);
         }
-        MilliSleep(120000); // Retry every 2 minutes
+        // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
+        // nodes reconnect quickly after the remote peers restart
+        MilliSleep(30000); 
     }
 }
 
 // if successful, this moves the passed grant to the constructed node
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOutbound, const char* pszDest, bool fOneShot)
 {
+
     //
     // Initiate outbound network connection
     //
@@ -2508,12 +2524,18 @@ CNode::~CNode()
     if (pfilter)
         delete pfilter;
 
+
     // BUIP010 - Xtreme Thinblocks - begin section
     if (pThinBlockFilter)
         delete pThinBlockFilter;
     mapThinBlocksInFlight.clear();
     thinBlockWaitingForTxns = -1;
     thinBlock.SetNull();
+
+    // We must set this to false on disconnect otherwise we will have trouble reconnecting -addnode nodes
+    // if the remote peer restarts.
+    fSuccessfullyConnected = false;
+
     // BUIP010 - Xtreme Thinblocks - end section
 
     GetNodeSignals().FinalizeNode(GetId());
