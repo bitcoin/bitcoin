@@ -12,9 +12,11 @@ noinst_HEADERS =
 noinst_HEADERS += src/scalar.h
 noinst_HEADERS += src/scalar_4x64.h
 noinst_HEADERS += src/scalar_8x32.h
+noinst_HEADERS += src/scalar_low.h
 noinst_HEADERS += src/scalar_impl.h
 noinst_HEADERS += src/scalar_4x64_impl.h
 noinst_HEADERS += src/scalar_8x32_impl.h
+noinst_HEADERS += src/scalar_low_impl.h
 noinst_HEADERS += src/group.h
 noinst_HEADERS += src/group_impl.h
 noinst_HEADERS += src/num_gmp.h
@@ -150,7 +152,6 @@ $(gen_context_BIN): $(gen_context_OBJECTS)
 
 $(libsecp256k1_la_OBJECTS): src/ecmult_static_context.h
 $(tests_OBJECTS): src/ecmult_static_context.h
-$(exhaustive_tests_OBJECTS): src/ecmult_static_context.h
 $(bench_internal_OBJECTS): src/ecmult_static_context.h
 
 src/ecmult_static_context.h: $(gen_context_BIN)

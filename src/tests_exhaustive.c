@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2015 Andrew Poelstra                                 *
+ * Copyright (c) 2016 Andrew Poelstra                                 *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -13,8 +13,12 @@
 
 #include <time.h>
 
+#undef USE_ECMULT_STATIC_PRECOMPUTATION
+
 #ifndef EXHAUSTIVE_TEST_ORDER
-#define EXHAUSTIVE_TEST_ORDER 199
+/* see group_impl.h for allowable values */
+#define EXHAUSTIVE_TEST_ORDER 13
+#define EXHAUSTIVE_TEST_LAMBDA 9   /* cube root of 1 mod 13 */
 #endif
 
 #include "include/secp256k1.h"
@@ -59,6 +63,37 @@ void random_fe(secp256k1_fe *x) {
     } while(1);
 }
 /** END stolen from tests.c */
+
+int secp256k1_nonce_function_smallint(unsigned char *nonce32, const unsigned char *msg32,
+                                      const unsigned char *key32, const unsigned char *algo16,
+                                      void *data, unsigned int attempt) {
+    secp256k1_scalar s;
+    int *idata = data;
+    (void)msg32;
+    (void)key32;
+    (void)algo16;
+    /* Some nonces cannot be used because they'd cause s and/or r to be zero.
+     * The signing function has retry logic here that just re-calls the nonce
+     * function with an increased `attempt`. So if attempt > 0 this means we
+     * need to change the nonce to avoid an infinite loop. */
+    if (attempt > 0) {
+        (*idata)++;
+    }
+    secp256k1_scalar_set_int(&s, *idata);
+    secp256k1_scalar_get_b32(nonce32, &s);
+    return 1;
+}
+
+#ifdef USE_ENDOMORPHISM
+void test_exhaustive_endomorphism(const secp256k1_ge *group, int order) {
+    int i;
+    for (i = 0; i < order; i++) {
+        secp256k1_ge res;
+        secp256k1_ge_mul_lambda(&res, &group[i]);
+        ge_equals_ge(&group[i * EXHAUSTIVE_TEST_LAMBDA % EXHAUSTIVE_TEST_ORDER], &res);
+    }
+}
+#endif
 
 void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *groupj, int order) {
     int i, j;
@@ -120,24 +155,88 @@ void test_exhaustive_addition(const secp256k1_ge *group, const secp256k1_gej *gr
     }
 }
 
-void test_exhaustive_ecmult(secp256k1_context *ctx, secp256k1_ge *group, secp256k1_gej *groupj, int order) {
-    int i, j;
-    const int r_log = secp256k1_rand32() % order;  /* TODO be less biased */
-    for (j = 0; j < order; j++) {
-        for (i = 0; i < order; i++) {
-            secp256k1_gej tmp;
-            secp256k1_scalar na, ng;
-            secp256k1_scalar_set_int(&na, i);
-            secp256k1_scalar_set_int(&ng, j);
+void test_exhaustive_ecmult(const secp256k1_context *ctx, const secp256k1_ge *group, const secp256k1_gej *groupj, int order) {
+    int i, j, r_log;
+    for (r_log = 1; r_log < order; r_log++) {
+        for (j = 0; j < order; j++) {
+            for (i = 0; i < order; i++) {
+                secp256k1_gej tmp;
+                secp256k1_scalar na, ng;
+                secp256k1_scalar_set_int(&na, i);
+                secp256k1_scalar_set_int(&ng, j);
 
-            secp256k1_ecmult(&ctx->ecmult_ctx, &tmp, &groupj[r_log], &na, &ng);
-            ge_equals_gej(&group[(i * r_log + j) % order], &tmp);
+                secp256k1_ecmult(&ctx->ecmult_ctx, &tmp, &groupj[r_log], &na, &ng);
+                ge_equals_gej(&group[(i * r_log + j) % order], &tmp);
 
-            /* TODO we cannot exhaustively test ecmult_const as it does a scalar
-             * negation for even numbers, and our code is not designed to handle
-             * such a small scalar modulus. */
+                if (i > 0) {
+                    secp256k1_ecmult_const(&tmp, &group[i], &ng);
+                    ge_equals_gej(&group[(i * j) % order], &tmp);
+                }
+            }
         }
     }
+}
+
+void r_from_k(secp256k1_scalar *r, const secp256k1_ge *group, int k) {
+    secp256k1_fe x;
+    unsigned char x_bin[32];
+    k %= EXHAUSTIVE_TEST_ORDER;
+    x = group[k].x;
+    secp256k1_fe_normalize(&x);
+    secp256k1_fe_get_b32(x_bin, &x);
+    secp256k1_scalar_set_b32(r, x_bin, NULL);
+}
+
+/* hee hee hee */
+int solve_discrete_log(const secp256k1_scalar *x_coord, const secp256k1_ge *group, int order) {
+    int i;
+    for (i = 0; i < order; i++) {
+        secp256k1_scalar check_x;
+        r_from_k(&check_x, group, i);
+        if (*x_coord == check_x) {
+           return i;
+        }
+    }
+    return -1;
+}
+
+void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *group, int order) {
+    int i, j, k;
+
+    /* Loop */
+    for (i = 1; i < order; i++) {  /* message */
+        for (j = 1; j < order; j++) {  /* key */
+            for (k = 1; k < order; k++) {  /* nonce */
+                secp256k1_ecdsa_signature sig;
+                secp256k1_scalar sk, msg, r, s, expected_r;
+                unsigned char sk32[32], msg32[32];
+                secp256k1_scalar_set_int(&msg, i);
+                secp256k1_scalar_set_int(&sk, j);
+                secp256k1_scalar_get_b32(sk32, &sk);
+                secp256k1_scalar_get_b32(msg32, &msg);
+
+                secp256k1_ecdsa_sign(ctx, &sig, msg32, sk32, secp256k1_nonce_function_smallint, &k);
+
+                secp256k1_ecdsa_signature_load(ctx, &r, &s, &sig);
+                /* Note that we compute expected_r *after* signing -- this is important
+                 * because our nonce-computing function function might change k during
+                 * signing. */
+                r_from_k(&expected_r, group, k);
+                CHECK(r == expected_r);
+                CHECK((k * s) % order == (i + r * j) % order ||
+                      (k * (EXHAUSTIVE_TEST_ORDER - s)) % order == (i + r * j) % order);
+            }
+        }
+    }
+
+    /* We would like to verify zero-knowledge here by counting how often every
+     * possible (s, r) tuple appears, but because the group order is larger
+     * than the field order, when coercing the x-values to scalar values, some
+     * appear more often than others, so we are actually not zero-knowledge.
+     * (This effect also appears in the real code, but the difference is on the
+     * order of 1/2^128th the field order, so the deviation is not useful to a
+     * computationally bounded attacker.)
+     */
 }
 
 int main(void) {
@@ -151,18 +250,42 @@ int main(void) {
     /* TODO set z = 1, then do num_tests runs with random z values */
 
     /* Generate the entire group */
-    secp256k1_ge_set_infinity(&group[0]);
     secp256k1_gej_set_infinity(&groupj[0]);
+    secp256k1_ge_set_gej(&group[0], &groupj[0]);
     for (i = 1; i < EXHAUSTIVE_TEST_ORDER; i++) {
+        /* Set a different random z-value for each Jacobian point */
         secp256k1_fe z;
         random_fe(&z);
 
         secp256k1_gej_add_ge(&groupj[i], &groupj[i - 1], &secp256k1_ge_const_g);
         secp256k1_ge_set_gej(&group[i], &groupj[i]);
         secp256k1_gej_rescale(&groupj[i], &z);
+
+        /* Verify against ecmult_gen */
+        {
+            secp256k1_scalar scalar_i;
+            secp256k1_gej generatedj;
+            secp256k1_ge generated;
+
+            secp256k1_scalar_set_int(&scalar_i, i);
+            secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &generatedj, &scalar_i);
+            secp256k1_ge_set_gej(&generated, &generatedj);
+
+            CHECK(group[i].infinity == 0);
+            CHECK(generated.infinity == 0);
+            CHECK(secp256k1_fe_equal_var(&generated.x, &group[i].x));
+            CHECK(secp256k1_fe_equal_var(&generated.y, &group[i].y));
+        }
     }
 
     /* Run the tests */
+    test_exhaustive_sign(ctx, group, EXHAUSTIVE_TEST_ORDER);
+    /* cannot exhaustively test verify, since our verify code
+     * depends on the field order being less than twice the
+     * group order */
+#ifdef USE_ENDOMORPHISM
+    test_exhaustive_endomorphism(group, EXHAUSTIVE_TEST_ORDER);
+#endif
     test_exhaustive_addition(group, groupj, EXHAUSTIVE_TEST_ORDER);
     test_exhaustive_ecmult(ctx, group, groupj, EXHAUSTIVE_TEST_ORDER);
 

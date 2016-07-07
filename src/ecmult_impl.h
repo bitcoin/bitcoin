@@ -13,20 +13,23 @@
 #include "scalar.h"
 #include "ecmult.h"
 
-#include <string.h>
-
-/* optimal for 128-bit and 256-bit exponents. */
-#define WINDOW_A 5
-
 #if defined(EXHAUSTIVE_TEST_ORDER)
+/* We need to lower these values for exhaustive tests because
+ * the tables cannot have infinities in them (this breaks the
+ * affine-isomorphism stuff which tracks z-ratios) */
 #  if EXHAUSTIVE_TEST_ORDER > 128
+#    define WINDOW_A 5
 #    define WINDOW_G 8
 #  elif EXHAUSTIVE_TEST_ORDER > 8
+#    define WINDOW_A 4
 #    define WINDOW_G 4
 #  else
+#    define WINDOW_A 2
 #    define WINDOW_G 2
 #  endif
 #else
+/* optimal for 128-bit and 256-bit exponents. */
+#define WINDOW_A 5
 /** larger numbers may result in slightly better performance, at the cost of
     exponentially larger precomputed tables. */
 #ifdef USE_ENDOMORPHISM
