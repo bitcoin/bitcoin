@@ -36,7 +36,7 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "versionbits.h"
-#include "unlimited.h" // This is here because many files include util, so hopefully it will minimize diffs
+#include "xthinblocks.h"
 
 #include <sstream>
 #include <algorithm>

@@ -15,7 +15,7 @@
 #include "thinblock.h"
 #include "tinyformat.h"
 #include "txmempool.h"
-#include "unlimited.h"
+#include "xthinblocks.h"
 #include "utilstrencodings.h"
 #include "util.h"
 #include "validationinterface.h"

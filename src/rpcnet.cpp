@@ -16,7 +16,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
-#include "unlimited.h"
+#include "xthinblocks.h"
 
 #include <boost/foreach.hpp>
 
