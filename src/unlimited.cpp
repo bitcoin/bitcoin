@@ -39,12 +39,7 @@ bool HaveConnectThinblockNodes()
     {
         LOCK(cs_vNodes);
         BOOST_FOREACH (CNode* pnode, vNodes) {
-            // TODO fix this to not use the debug string addrName, instead use pnode->addr and use the method ToStringIP
-           int pos = pnode->addrName.find(":");
-           if (pos < 0 )
-               vNodesIP.push_back(pnode->addrName);
-           else
-               vNodesIP.push_back(pnode->addrName.substr(0, pos));
+            vNodesIP.push_back(pnode->addr.ToStringIP());
         }
     }
 
