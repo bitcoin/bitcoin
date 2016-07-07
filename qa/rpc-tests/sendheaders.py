@@ -63,6 +63,21 @@ e. Announce 16 more headers that build on that fork.
    Expect: getdata request for 14 more blocks.
 f. Announce 1 more header that builds on that fork.
    Expect: no response.
+
+Part 5: Test handling of headers that don't connect.
+a. Repeat 10 times:
+   1. Announce a header that doesn't connect.
+      Expect: getheaders message
+   2. Send headers chain.
+      Expect: getdata for the missing blocks, tip update.
+b. Then send 9 more headers that don't connect.
+   Expect: getheaders message each time.
+c. Announce a header that does connect.
+   Expect: no response.
+d. Announce 49 headers that don't connect.
+   Expect: getheaders message each time.
+e. Announce one more that doesn't connect.
+   Expect: disconnect.
 '''
 
 class BaseNode(NodeConnCB):
@@ -77,6 +92,8 @@ class BaseNode(NodeConnCB):
         self.last_getdata = None
         self.sleep_time = 0.05
         self.block_announced = False
+        self.last_getheaders = None
+        self.disconnected = False
 
     def clear_last_announcement(self):
         with mininode_lock:
@@ -126,6 +143,12 @@ class BaseNode(NodeConnCB):
 
     def on_pong(self, conn, message):
         self.last_pong = message
+
+    def on_getheaders(self, conn, message):
+        self.last_getheaders = message
+
+    def on_close(self, conn):
+        self.disconnected = True
 
     # Test whether the last announcement we received had the
     # right header or the right inv
@@ -178,11 +201,21 @@ class BaseNode(NodeConnCB):
         self.sync(test_function, timeout)
         return
 
+    def wait_for_getheaders(self, timeout=60):
+        test_function = lambda: self.last_getheaders != None
+        self.sync(test_function, timeout)
+        return
+
     def wait_for_getdata(self, hash_list, timeout=60):
         if hash_list == []:
             return
 
         test_function = lambda: self.last_getdata != None and [x.hash for x in self.last_getdata.inv] == hash_list
+        self.sync(test_function, timeout)
+        return
+
+    def wait_for_disconnect(self, timeout=60):
+        test_function = lambda: self.disconnected
         self.sync(test_function, timeout)
         return
 
@@ -509,6 +542,78 @@ class SendHeadersTest(BitcoinTestFramework):
             assert_equal(test_node.last_getdata, None)
 
         print("Part 4: success!")
+
+        # Now deliver all those blocks we announced.
+        [ test_node.send_message(msg_block(x)) for x in blocks ]
+
+        print("Part 5: Testing handling of unconnecting headers")
+        # First we test that receipt of an unconnecting header doesn't prevent
+        # chain sync.
+        for i in range(10):
+            test_node.last_getdata = None
+            blocks = []
+            # Create two more blocks.
+            for j in range(2):
+                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks[-1].solve()
+                tip = blocks[-1].sha256
+                block_time += 1
+                height += 1
+            # Send the header of the second block -> this won't connect.
+            with mininode_lock:
+                test_node.last_getheaders = None
+            test_node.send_header_for_blocks([blocks[1]])
+            test_node.wait_for_getheaders(timeout=1)
+            test_node.send_header_for_blocks(blocks)
+            test_node.wait_for_getdata([x.sha256 for x in blocks])
+            [ test_node.send_message(msg_block(x)) for x in blocks ]
+            test_node.sync_with_ping()
+            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].sha256)
+
+        blocks = []
+        # Now we test that if we repeatedly don't send connecting headers, we
+        # don't go into an infinite loop trying to get them to connect.
+        MAX_UNCONNECTING_HEADERS = 10
+        for j in range(MAX_UNCONNECTING_HEADERS+1):
+            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks[-1].solve()
+            tip = blocks[-1].sha256
+            block_time += 1
+            height += 1
+
+        for i in range(1, MAX_UNCONNECTING_HEADERS):
+            # Send a header that doesn't connect, check that we get a getheaders.
+            with mininode_lock:
+                test_node.last_getheaders = None
+            test_node.send_header_for_blocks([blocks[i]])
+            test_node.wait_for_getheaders(timeout=1)
+
+        # Next header will connect, should re-set our count:
+        test_node.send_header_for_blocks([blocks[0]])
+
+        # Remove the first two entries (blocks[1] would connect):
+        blocks = blocks[2:]
+
+        # Now try to see how many unconnecting headers we can send
+        # before we get disconnected.  Should be 5*MAX_UNCONNECTING_HEADERS
+        for i in range(5*MAX_UNCONNECTING_HEADERS - 1):
+            # Send a header that doesn't connect, check that we get a getheaders.
+            with mininode_lock:
+                test_node.last_getheaders = None
+            test_node.send_header_for_blocks([blocks[i%len(blocks)]])
+            test_node.wait_for_getheaders(timeout=1)
+
+        # Eventually this stops working.
+        with mininode_lock:
+            self.last_getheaders = None
+        test_node.send_header_for_blocks([blocks[-1]])
+
+        # Should get disconnected
+        test_node.wait_for_disconnect()
+        with mininode_lock:
+            self.last_getheaders = True
+
+        print("Part 5: success!")
 
         # Finally, check that the inv node never received a getdata request,
         # throughout the test
