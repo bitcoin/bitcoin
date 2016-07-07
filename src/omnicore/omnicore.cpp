@@ -2325,7 +2325,7 @@ bool mastercore::UseEncodingClassC(size_t nDataSize)
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
 int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
-                          int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
+                          int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit, unsigned int minInputs)
 {
 #ifdef ENABLE_WALLET
     if (pwalletMain == NULL) return MP_ERR_WALLET_ACCESS;
@@ -2348,7 +2348,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     coinControl.destChange = addr.Get();
 
     // Select the inputs
-    if (0 > SelectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
+    if (0 > SelectCoins(senderAddress, coinControl, referenceAmount, minInputs)) { return MP_INPUTS_INVALID; }
 
     // Encode the data outputs
     switch(omniTxClass) {
@@ -2390,9 +2390,20 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
         nSigOps += GetP2SHSigOpCount(wtxNew, view);
 
         if (nSigOps > nSize / nBytesPerSigOp) {
-            PrintToLog("%s WARNING: %s has too many sigops: %d\n", __func__, wtxNew.GetHash().GetHex(), nSigOps);
+            std::vector<COutPoint> vInputs;
+            coinControl.ListSelected(vInputs);
 
-            // TODO: workaround here
+            // Ensure the requested number of inputs was available, so there may be more
+            if (vInputs.size() >= minInputs) {
+                // Build a new transaction and try to select one additional input to
+                // shift the bytes per sigops ratio in our favor
+                ++minInputs;
+                return ClassAgnosticWalletTXBuilder(senderAddress, receiverAddress, redemptionAddress,
+                    referenceAmount, data, txid, rawHex, commit, minInputs);
+            } else {
+                PrintToLog("%s WARNING: %s has %d sigops, and may not confirm in time\n",
+                        __func__, wtxNew.GetHash().GetHex(), nSigOps);
+            }
         }
     }
 
