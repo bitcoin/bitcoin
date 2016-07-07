@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
 
     CTxMemPool testPool(CFeeRate(0));
-    std::list<CTransaction> removed;
+    std::list<std::shared_ptr<const CTransaction>> removed;
 
     // Nothing in pool, remove should do nothing:
     testPool.removeRecursive(txParent, removed);
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     BOOST_CHECK_EQUAL(pool.size(), 10);
 
     // Now try removing tx10 and verify the sort order returns to normal
-    std::list<CTransaction> removed;
+    std::list<std::shared_ptr<const CTransaction>> removed;
     pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx(), removed);
     CheckSort<descendant_score>(pool, snapshotOrder);
 
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     /* after tx6 is mined, tx7 should move up in the sort */
     std::vector<CTransaction> vtx;
     vtx.push_back(tx6);
-    std::list<CTransaction> dummy;
+    std::list<std::shared_ptr<const CTransaction>> dummy;
     pool.removeForBlock(vtx, 1, dummy, false);
 
     sortedOrder.erase(sortedOrder.begin()+1);
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.addUnchecked(tx7.GetHash(), entry.Fee(9000LL).FromTx(tx7, &pool));
 
     std::vector<CTransaction> vtx;
-    std::list<CTransaction> conflicts;
+    std::list<std::shared_ptr<const CTransaction>> conflicts;
     SetMockTime(42);
     SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
