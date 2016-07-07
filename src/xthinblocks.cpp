@@ -2,39 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "chain.h"
-#include "clientversion.h"
-#include "chainparams.h"
-#include "consensus/consensus.h"
-#include "consensus/params.h"
-#include "consensus/validation.h"
 #include "main.h"
-#include "net.h"
-#include "primitives/block.h"
-#include "rpcserver.h"
+#include "chainparams.h"
 #include "thinblock.h"
-#include "tinyformat.h"
 #include "txmempool.h"
 #include "xthinblocks.h"
-#include "utilstrencodings.h"
-#include "util.h"
-#include "validationinterface.h"
-#include "version.h"
 
+#include <consensus/validation.h>
 #include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
-#include <inttypes.h>
 
-// BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
 
-/**
- *  BUIP010 Xtreme Thinblocks Section
- */
 bool HaveConnectThinblockNodes()
 {
-    // Strip the port from then list of all the current in and outbound ip addresses
     std::vector<std::string> vNodesIP;
     {
         LOCK(cs_vNodes);
