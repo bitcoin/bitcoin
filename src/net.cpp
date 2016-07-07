@@ -1782,7 +1782,7 @@ void ThreadOpenAddedConnections()
             //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
             //     nodes that have restarted.
             CSemaphoreGrant grant(*semOutboundAddNode);
-            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
+            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant, CAddress(vserv[i % vserv.size()]).ToString().c_str());
             MilliSleep(500);
         }
         // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
