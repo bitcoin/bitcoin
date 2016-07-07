@@ -799,7 +799,7 @@ Value omni_sendrawtx(const Array& params, bool fHelp)
     //some sanity checking of the data supplied?
     uint256 newTX;
     std::string rawHex;
-    int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, data, newTX, rawHex, autoCommit);
+    int result = WalletTxBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, data, newTX, rawHex, autoCommit);
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {

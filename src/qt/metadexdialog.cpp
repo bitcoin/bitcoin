@@ -723,7 +723,7 @@ void MetaDExDialog::sendTrade(bool sell)
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
     std::string rawHex;
-    int result = ClassAgnosticWalletTXBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+    int result = WalletTxBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {

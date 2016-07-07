@@ -2324,8 +2324,8 @@ bool mastercore::UseEncodingClassC(size_t nDataSize)
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
-int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
-                          int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit, unsigned int minInputs)
+int mastercore::WalletTxBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+        int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit, unsigned int minInputs)
 {
 #ifdef ENABLE_WALLET
     if (pwalletMain == NULL) return MP_ERR_WALLET_ACCESS;
@@ -2398,7 +2398,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
                 // Build a new transaction and try to select one additional input to
                 // shift the bytes per sigops ratio in our favor
                 ++minInputs;
-                return ClassAgnosticWalletTXBuilder(senderAddress, receiverAddress, redemptionAddress,
+                return WalletTxBuilder(senderAddress, receiverAddress, redemptionAddress,
                     referenceAmount, data, txid, rawHex, commit, minInputs);
             } else {
                 PrintToLog("%s WARNING: %s has %d sigops, and may not confirm in time\n",
@@ -2413,7 +2413,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
-        PrintToLog("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString(), nFeeRet, __LINE__, __FILE__);
+        PrintToLog("%s: %s; nFeeRet = %d\n", __func__, wtxNew.ToString(), nFeeRet);
         if (!pwalletMain->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
         txid = wtxNew.GetHash();
         return 0;
