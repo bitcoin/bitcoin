@@ -392,6 +392,8 @@ public:
     uint64_t nGetXthinLastTime;  // The last time a get_xthin request was made
     // BUIP010 Xtreme Thinblocks: end section
 
+    unsigned short addrFromPort;
+
 protected:
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time

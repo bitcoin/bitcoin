@@ -4507,8 +4507,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CheckNodeSupportForThinBlocks(); // BUIP010 Xtreme Thinblocks
         
-        CheckAndRequestExpeditedBlocks(pfrom); // BU
-
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
@@ -4606,7 +4604,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (fLogIPs)
             remoteAddr = ", peeraddr=" + pfrom->addr.ToString();
 
-        LogPrint("net", "receive version message: %s: version %d, blocks=%d, us=%s, peer=%d%s\n",
+        LogPrintf("receive version message: %s: version %d, blocks=%d, us=%s, peer=%d%s\n",
                   pfrom->cleanSubVer, pfrom->nVersion,
                   pfrom->nStartingHeight, addrMe.ToString(), pfrom->id,
                   remoteAddr);
@@ -4635,7 +4633,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             State(pfrom->GetId())->fCurrentlyConnected = true;
         }
 
-        CheckAndRequestExpeditedBlocks(pfrom); // BU
+        // BU: this step done here after final handshake
+        CheckAndRequestExpeditedBlocks(pfrom);
 
         if (pfrom->nVersion >= SENDHEADERS_VERSION) {
             // Tell our peer we prefer to receive headers rather than inv's
@@ -5185,6 +5184,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
       {
 	HandleExpeditedBlock(vRecv,pfrom);
       }
+    // BU - used to pass BU specific version information similar to NetMsgType::VERSION
+    else if (strCommand == NetMsgType::BUVERSION)
+      {
+        // Each connection can only send one version message
+        if (pfrom->addrFromPort != 0)
+        {
+            pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, string("Duplicate BU version message"));
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 5);
+            return false;
+        }
+
+        vRecv >> pfrom->addrFromPort; // needed for connecting and initializing Xpedited forwarding.
+      }
+
+
     else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // BU received extreme thin block -- but ignore blocks received while importing
     {
         CXThinBlock thinBlock;

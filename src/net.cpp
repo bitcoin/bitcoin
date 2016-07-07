@@ -473,6 +473,10 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
+
+    // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate version
+    // message because we don't know if in the future Core will append more data to the end of the current VERSION message
+    PushMessage(NetMsgType::BUVERSION, GetListenPort());
 }
 
 
@@ -1768,7 +1772,7 @@ void ThreadOpenAddedConnections()
             BOOST_FOREACH(CNode* pnode, vNodes)
                 for (list<vector<CService> >::iterator it = lservAddressesToAdd.begin(); it != lservAddressesToAdd.end(); it++)
                     BOOST_FOREACH(const CService& addrNode, *(it))
-                        if (pnode->addr == addrNode && pnode->fSuccessfullyConnected == true)
+                        if (pnode->addr == addrNode)
                         {
                             it = lservAddressesToAdd.erase(it);
                             it--;
@@ -2481,6 +2485,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+    addrFromPort = 0; // BU
 
     // BU instrumentation
     std::string xmledName;
@@ -2537,6 +2542,8 @@ CNode::~CNode()
     fSuccessfullyConnected = false;
 
     // BUIP010 - Xtreme Thinblocks - end section
+
+    addrFromPort = 0;
 
     GetNodeSignals().FinalizeNode(GetId());
 }
