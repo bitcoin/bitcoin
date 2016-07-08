@@ -2225,7 +2225,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            // Only check inputs when the tx hash in not in the setPreVerifiedTxHash as would only
+            // Only check inputs when the tx hash is not in the setPreVerifiedTxHash as would only
             // happen if this were a regular block or when a tx is found within the returning XThinblock.
             uint256 hash = tx.GetHash();
             bool inOrphanCache = setUnVerifiedOrphanTxHash.count(hash);
@@ -5367,8 +5367,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LOCK(cs_main);
         int missingCount = 0;
         int unnecessaryCount = 0;
-        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
-        bool fXVal = (thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+        // Xpress Validation - only perform xval if the thinblock appends directly onto the chaintip
+        bool fXVal = thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash();
 
         // Look for each transaction in our various pools and buffers.
         BOOST_FOREACH(const uint256 &hash, thinBlock.vTxHashes)
