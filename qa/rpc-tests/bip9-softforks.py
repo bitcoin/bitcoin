@@ -9,7 +9,7 @@ from test_framework.util import *
 from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_NOP3, OP_DROP
+from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
 from io import BytesIO
 import time
 import itertools
@@ -220,7 +220,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         '''Modify the signature in vin 0 of the tx to fail CSV
         Prepends -1 CSV DROP in the scriptSig itself.
         '''
-        tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_NOP3, OP_DROP] +
+        tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP] +
                                       list(CScript(tx.vin[0].scriptSig)))
 
     def sequence_lock_invalidate(self, tx):
