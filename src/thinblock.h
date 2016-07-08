@@ -12,27 +12,6 @@
 
 #include <vector>
 
-class CThinBlock
-{
-public:
-    CBlockHeader header;
-    std::vector<uint256> vTxHashes; // List of all transactions id's in the block
-    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
-
-public:
-    CThinBlock(const CBlock& block, CBloomFilter& filter);
-    CThinBlock() {}
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(header);
-        READWRITE(vTxHashes);
-        READWRITE(vMissingTx);
-    }
-};
-
 class CXThinBlock
 {
 public:
@@ -46,7 +25,7 @@ public:
     CXThinBlock(const CBlock& block);  // Assume client has all of the transactions (except coinbase)
     CXThinBlock() {}
 
-    ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -70,7 +49,7 @@ public:
     CXThinBlockTx(uint256 blockHash, std::vector<CTransaction>& vTx);
     CXThinBlockTx() {}
 
-    ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -93,7 +72,7 @@ public:
     CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>& setHashesToRequest);
     CXRequestThinBlockTx() {}
 
-    ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {

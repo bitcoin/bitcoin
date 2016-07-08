@@ -22,7 +22,7 @@ CBlock TestBlock() { //Thanks dagurval :)
     CBlock block;
     stream >> block;
     return block;
-};
+}
 
 CBloomFilter TestFilter() { //TODO all this should not be here...
     seed_insecure_rand();
@@ -35,33 +35,27 @@ CBloomFilter TestFilter() { //TODO all this should not be here...
     double nFPDecay = .001 + (((double)nElements * 1.8 / MAX_BLOOM_FILTER_SIZE) * .004);
     memPoolFilter = CBloomFilter(nElements, nFPDecay, insecure_rand(), BLOOM_UPDATE_ALL);
     return memPoolFilter;
-};
+}
 
-BOOST_AUTO_TEST_SUITE(thinblock_tests);
+BOOST_AUTO_TEST_SUITE(thinblock_tests)
 
 BOOST_AUTO_TEST_CASE(thinblock_test) {
     /* empty filter */
     CBloomFilter filter = TestFilter();
     CBlock block = TestBlock();
-    CThinBlock thinblock(block, filter);
     CXThinBlock xthinblock(block, &filter);
-    BOOST_CHECK_EQUAL(9, thinblock.vMissingTx.size());
     BOOST_CHECK_EQUAL(9, xthinblock.vMissingTx.size());
 
     /* insert txid not in block */
     const uint256 random_hash = uint256S("3fba505b48865fccda4e248cecc39d5dfbc6b8ef7b4adc9cd27242c1193c7133");
     filter.insert(random_hash);
-    CThinBlock thinblock1(block, filter);
     CXThinBlock xthinblock1(block, &filter);
-    BOOST_CHECK_EQUAL(9, thinblock1.vMissingTx.size());
     BOOST_CHECK_EQUAL(9, xthinblock1.vMissingTx.size());
 
     /* insert txid in block */
     const uint256 hash_in_block = block.vtx[1].GetHash();
     filter.insert(hash_in_block);
-    CThinBlock thinblock2(block, filter);
     CXThinBlock xthinblock2(block, &filter);
-    BOOST_CHECK_EQUAL(8, thinblock2.vMissingTx.size());
     BOOST_CHECK_EQUAL(8, xthinblock2.vMissingTx.size());
 
     /*collision test*/
@@ -73,4 +67,3 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

@@ -6,26 +6,6 @@
 #include <sstream>
 #include <iomanip>
 
-CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
-{
-    header = block.GetBlockHeader();
-
-    unsigned int nTx = block.vtx.size();
-    vTxHashes.reserve(nTx);
-    for (unsigned int i = 0; i < nTx; i++)
-    {
-        const uint256& hash = block.vtx[i].GetHash();
-        vTxHashes.push_back(hash);
-
-        // Find the transactions that do not match the filter.
-        // These are the ones we need to relay back to the requesting peer.
-        // NOTE: We always add the first tx, the coinbase as it is the one
-        //       most often missing.
-        if (!filter.contains(hash) || i == 0)
-            vMissingTx.push_back(block.vtx[i]);
-    }
-}
-
 CXThinBlock::CXThinBlock(const CBlock& block, CBloomFilter* filter)
 {
     header = block.GetBlockHeader();
