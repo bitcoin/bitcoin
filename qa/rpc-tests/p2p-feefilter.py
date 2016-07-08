@@ -23,7 +23,7 @@ def allInvsMatch(invsExpected, testnode):
             if (sorted(invsExpected) == sorted(testnode.txinvs)):
                 return True;
         time.sleep(1)
-    return False;
+    raise AssertionError("Did not match. Timed out");
 
 # TestNode: bare-bones "peer".  Used to track which invs are received from a node
 # and to send the node feefilter messages.
@@ -74,30 +74,34 @@ class FeeFilterTest(BitcoinTestFramework):
 
         # Test that invs are received for all txs at feerate of 20 sat/byte
         node1.settxfee(Decimal("0.00020000"))
-        txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
+        txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         assert(allInvsMatch(txids, test_node))
+        node1.generate(1) # Clear mempool
         test_node.clear_invs()
 
         # Set a filter of 15 sat/byte
         test_node.send_filter(15000)
 
         # Test that txs are still being received (paying 20 sat/byte)
-        txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
+        txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         assert(allInvsMatch(txids, test_node))
+        node1.generate(1) # Clear mempool
         test_node.clear_invs()
 
         # Change tx fee rate to 10 sat/byte and test they are no longer received
         node1.settxfee(Decimal("0.00010000"))
-        [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
+        [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         sync_mempools(self.nodes) # must be sure node 0 has received all txs 
         time.sleep(10) # wait 10 secs to be sure its doesn't relay any
         assert(allInvsMatch([], test_node))
+        node1.generate(1) # Clear mempool
         test_node.clear_invs()
 
         # Remove fee filter and check that txs are received again
         test_node.send_filter(0)
-        txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for x in range(3)]
+        txids = [node1.sendtoaddress(node1.getnewaddress(), 1) for _ in range(3)]
         assert(allInvsMatch(txids, test_node))
+        node1.generate(1) # Clear mempool
         test_node.clear_invs()
 
 if __name__ == '__main__':
