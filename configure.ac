@@ -82,6 +82,8 @@ AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
 
+m4_pattern_forbid([^PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG macro not expanded, please install pkg-config])
+
 # Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--disable-wallet],
