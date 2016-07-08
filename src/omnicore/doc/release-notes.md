@@ -94,6 +94,16 @@ There is a significantly increased fee (0.00001000 per recipient) for using vers
 
 Sending an STO transaction via Omni Core that distributes tokens to holders of the same property will automatically be sent as version 0, and sending a cross-property STO will automatically be sent as version 1.
 
+The transaction format of new Send To Owners version is as follows:
+
+| **Field**                      | **Type**        | **Example** |
+| ------------------------------ | --------------- | ----------- |
+| Transaction version            | 16-bit unsigned | 65535       |
+| Transaction type               | 16-bit unsigned | 65534       |
+| Tokens to transfer             | 32-bit unsigned | 6           |
+| Amount to transfer             | 64-bit signed   | 700009      |
+| Token holders to distribute to | 32-bit unsigned | 23          |
+
 This change is identified by `"featureid": 10` and labeled by the GUI as `"Cross-property Send To Owners"`.
 
 Other notable changes
@@ -184,10 +194,15 @@ The following list includes relevant pull requests merged into this release:
 - #386 Don't warn user about unknown block versions
 - #377 Add release notes for Omni Core 0.0.11
 - #376 Bump version to Omni Core 0.0.11-rc1
+- #390 Add cross-property (v1) Send To Owners
+- #395 Move test scripts into /src/omnicore/test
+- #396 Add workaround for "bytes per sigops" limit
+- #400 Change default confirm target to 15 blocks
+- #398 Update release notes for 0.0.11-rc2
+- #397 Bump version to Omni Core 0.0.11-rc2
 ```
 
 Credits
 =======
 
 Thanks to everyone who contributed to this release, and especially the Bitcoin Core developers for providing the foundation for Omni Core!
-
