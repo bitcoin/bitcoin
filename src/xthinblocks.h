@@ -16,8 +16,6 @@ class CValidationState;
 class CDiskBlockPos;
 class CNode;
 
-// BUIP010 Xtreme Thinblocks:
-extern bool HaveConnectThinblockNodes();
 extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(const uint256 &hash);
 inline bool IsThinBlocksEnabled()
@@ -28,7 +26,6 @@ extern bool IsChainNearlySyncd();
 CBloomFilter createSeededBloomFilter(const std::vector<uint256>& vOrphanHashes);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
-extern void CheckNodeSupportForThinBlocks();
 extern void SendXThinBlock(const CBlock &block, CNode* pfrom, const CInv &inv);
 
 // Handle receiving and sending messages from thin block capable nodes only (so that thin block nodes capable nodes are preferred)

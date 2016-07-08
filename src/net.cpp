@@ -1500,9 +1500,7 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if ((mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) ||
-        (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)) // BUIP010 Xtreme Thinblocks
-    {
+    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) {
         for (int64_t nLoop = 0;; nLoop++)
         {
             ProcessOneShot();
@@ -1516,17 +1514,6 @@ void ThreadOpenConnections()
                 }
             }
             MilliSleep(500);
-
-            // Connect to specific thin block addresses
-            if (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)
-            {
-                BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-connect-thinblock"])
-                {
-                    CAddress addr;
-                    OpenNetworkConnection(addr, NULL, strAddr.c_str());
-                    MilliSleep(500);
-                }
-            }
         }
     }
 

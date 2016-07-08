@@ -13,49 +13,6 @@
 
 std::map<uint256, uint64_t> mapThinBlockTimer;
 
-bool HaveConnectThinblockNodes()
-{
-    std::vector<std::string> vNodesIP;
-    {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH (CNode* pnode, vNodes) {
-            vNodesIP.push_back(pnode->addr.ToStringIP());
-        }
-    }
-
-    // Create a set used to check for cross connected nodes.
-    // A cross connected node is one where we have a connect-thinblock connection to
-    // but we also have another inbound connection which is also using
-    // connect-thinblock. In those cases we have created a dead-lock where no blocks
-    // can be downloaded unless we also have at least one additional connect-thinblock
-    // connection to a different node.
-    std::set<std::string> nNotCrossConnected;
-
-    int nConnectionsOpen = 0;
-    BOOST_FOREACH(const std::string& strAddrNode, mapMultiArgs["-connect-thinblock"]) {
-        std::string strThinblockNode;
-        int pos = strAddrNode.find(":");
-        if (pos <= 0 )
-            strThinblockNode = strAddrNode;
-        else
-            strThinblockNode = strAddrNode.substr(0, pos);
-        BOOST_FOREACH(std::string strAddr, vNodesIP) {
-            if (strAddr == strThinblockNode) {
-                nConnectionsOpen++;
-                if (!nNotCrossConnected.count(strAddr))
-                    nNotCrossConnected.insert(strAddr);
-                else
-                    nNotCrossConnected.erase(strAddr);
-            }
-        }
-    }
-    if (nNotCrossConnected.size() > 0)
-        return true;
-    else if (nConnectionsOpen > 0)
-        LogPrint("thin", "You have a cross connected thinblock node - we may download regular blocks until you resolve the issue\n");
-    return false; // Connections are either not open or they are cross connected.
-}
-
 bool HaveThinblockNodes()
 {
     LOCK(cs_vNodes);
@@ -224,21 +181,6 @@ bool ThinBlockMessageHandler(const std::vector<CNode*>& vNodesCopy)
         boost::this_thread::interruption_point();
     }
     return sleep;
-}
-
-void CheckNodeSupportForThinBlocks()
-{
-    if (IsThinBlocksEnabled()) {
-        // Check that a nodes pointed to with connect-thinblock actually supports thinblocks
-        BOOST_FOREACH(std::string& strAddr, mapMultiArgs["-connect-thinblock"]) {
-            if(CNode* pnode = FindNode(strAddr)) {
-                if(!pnode->ThinBlockCapable()) {
-                    LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it - Protocol Version: %d peer=%d\n",
-                               pnode->nVersion, pnode->id);
-                }
-            }
-        }
-    }
 }
 
 void SendXThinBlock(const CBlock &block, CNode* pfrom, const CInv &inv)

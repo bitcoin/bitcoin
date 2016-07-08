@@ -2226,7 +2226,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             // Only check inputs when the tx hash in not in the setPreVerifiedTxHash as would only
-            // happen if this were a regular block or when a tx is found w?ithin the returning XThinblock.
+            // happen if this were a regular block or when a tx is found within the returning XThinblock.
             uint256 hash = tx.GetHash();
             bool inOrphanCache = setUnVerifiedOrphanTxHash.count(hash);
             if ((inOrphanCache) || (!setPreVerifiedTxHash.count(hash) && !inOrphanCache)) {
@@ -4488,8 +4488,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
 
-        CheckNodeSupportForThinBlocks(); // BUIP010 Xtreme Thinblocks
-
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
@@ -4755,7 +4753,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         CInv inv2(inv);
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
-                            if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(inv.hash))) {
+                            if (HaveThinblockNodes() && CheckThinblockTimer(inv.hash)) {
                                 // Must download a block from a ThinBlock peer
                                 if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
@@ -6247,7 +6245,7 @@ bool SendMessages(CNode* pto)
                 // BUIP010 Xtreme Thinblocks: begin section
                 if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                    if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
+                    if (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash())) {
                         // Must download a block from a ThinBlock peer
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
