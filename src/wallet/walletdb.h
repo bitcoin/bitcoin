@@ -73,9 +73,12 @@ public:
 class CKeyMetadata
 {
 public:
-    static const int CURRENT_VERSION=1;
+    static const int VERSION_BASIC=1;
+    static const int VERSION_WITH_HDKEYPATH=2;
+    static const int CURRENT_VERSION=VERSION_WITH_HDKEYPATH;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
+    std::string hdKeypath; //optional HD/bip32 keypath
 
     CKeyMetadata()
     {
@@ -85,6 +88,7 @@ public:
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = nCreateTime_;
+        hdKeypath.clear();
     }
 
     ADD_SERIALIZE_METHODS;
@@ -94,12 +98,15 @@ public:
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nCreateTime);
+        if (this->nVersion >= VERSION_WITH_HDKEYPATH)
+            READWRITE(hdKeypath);
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
+        hdKeypath.clear();
     }
 };
 
