@@ -901,6 +901,7 @@ public:
 
     /* Set the current hd master key (will reset the chain child index counters) */
     bool SetHDMasterKey(const CKey& key);
+    const CHDChain& GetHDChain() { return hdChain; }
 };
 
 /** A key allocated from the key pool. */
