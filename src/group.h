@@ -47,7 +47,7 @@ static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const se
  *  and a Y coordinate that is a quadratic residue modulo p. The return value
  *  is true iff a coordinate with the given X coordinate exists.
  */
-static int secp256k1_ge_set_xquad_var(secp256k1_ge *r, const secp256k1_fe *x);
+static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x);
 
 /** Set a group element (affine) equal to the point with the given X coordinate, and given oddness
  *  for Y. Return value indicates whether the result is valid. */
