@@ -163,7 +163,7 @@ static void secp256k1_ge_clear(secp256k1_ge *r) {
     secp256k1_fe_clear(&r->y);
 }
 
-static int secp256k1_ge_set_xquad_var(secp256k1_ge *r, const secp256k1_fe *x) {
+static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x) {
     secp256k1_fe x2, x3, c;
     r->x = *x;
     secp256k1_fe_sqr(&x2, x);
@@ -171,11 +171,11 @@ static int secp256k1_ge_set_xquad_var(secp256k1_ge *r, const secp256k1_fe *x) {
     r->infinity = 0;
     secp256k1_fe_set_int(&c, 7);
     secp256k1_fe_add(&c, &x3);
-    return secp256k1_fe_sqrt_var(&r->y, &c);
+    return secp256k1_fe_sqrt(&r->y, &c);
 }
 
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
-    if (!secp256k1_ge_set_xquad_var(r, x)) {
+    if (!secp256k1_ge_set_xquad(r, x)) {
         return 0;
     }
     secp256k1_fe_normalize_var(&r->y);

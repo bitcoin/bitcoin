@@ -1574,7 +1574,7 @@ void random_fe_non_zero(secp256k1_fe *nz) {
 void random_fe_non_square(secp256k1_fe *ns) {
     secp256k1_fe r;
     random_fe_non_zero(ns);
-    if (secp256k1_fe_sqrt_var(&r, ns)) {
+    if (secp256k1_fe_sqrt(&r, ns)) {
         secp256k1_fe_negate(ns, ns, 1);
     }
 }
@@ -1769,7 +1769,7 @@ void run_sqr(void) {
 
 void test_sqrt(const secp256k1_fe *a, const secp256k1_fe *k) {
     secp256k1_fe r1, r2;
-    int v = secp256k1_fe_sqrt_var(&r1, a);
+    int v = secp256k1_fe_sqrt(&r1, a);
     CHECK((v == 0) == (k == NULL));
 
     if (k != NULL) {
@@ -2188,7 +2188,7 @@ void test_group_decompress(const secp256k1_fe* x) {
 
     secp256k1_fe_normalize_var(&fex);
 
-    res_quad = secp256k1_ge_set_xquad_var(&ge_quad, &fex);
+    res_quad = secp256k1_ge_set_xquad(&ge_quad, &fex);
     res_even = secp256k1_ge_set_xo_var(&ge_even, &fex, 0);
     res_odd = secp256k1_ge_set_xo_var(&ge_odd, &fex, 1);
 
