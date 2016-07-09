@@ -10,6 +10,7 @@
 
 #include <consensus/validation.h>
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
 
 std::map<uint256, uint64_t> mapThinBlockTimer;
 
@@ -40,14 +41,6 @@ bool CheckThinblockTimer(const uint256 &hash)
         }
     }
     return true;
-}
-
-void ClearThinBlockTimer(uint256 hash)
-{
-    if (mapThinBlockTimer.count(hash)) {
-        mapThinBlockTimer.erase(hash);
-        LogPrint("thin", "Clearing Preferential Thinblock timer\n");
-    }
 }
 
 bool IsChainNearlySyncd()
@@ -149,7 +142,7 @@ void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBloc
     }
 
     // Clear the thinblock timer used for preferential download
-    ClearThinBlockTimer(inv.hash);
+    mapThinBlockTimer.erase(inv.hash);
 }
 
 bool ThinBlockMessageHandler(const std::vector<CNode*>& vNodesCopy)
