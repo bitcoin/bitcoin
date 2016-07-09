@@ -1711,6 +1711,11 @@ void ThreadOpenConnections()
 
 void ThreadOpenAddedConnections()
 {
+    // BU: This intial sleep fixes a timing issue where a remote peer may be trying to connect using addnode
+    //     at the same time this thread is starting up causing both an outbound and an inbound -addnode connection
+    //     to be possible, when it should not be.
+    MilliSleep(15000);
+
     {
         LOCK(cs_vAddedNodes);
         vAddedNodes = mapMultiArgs["-addnode"];
@@ -1719,7 +1724,7 @@ void ThreadOpenAddedConnections()
     // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == NULL) {
-        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), 8);
+        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), MAX_OUTBOUND_CONNECTIONS);
         semOutboundAddNode = new CSemaphore(maxAddNodeConnections);
     }
 
@@ -1737,9 +1742,9 @@ void ThreadOpenAddedConnections()
                 OpenNetworkConnection(addr, &grant, strAddNode.c_str());
                 MilliSleep(500);
             }
-            // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
+            // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
             // nodes reconnect quickly after the remote peers restart
-            MilliSleep(30000); 
+            MilliSleep(15000); 
         }
     }
 
@@ -1789,9 +1794,9 @@ void ThreadOpenAddedConnections()
             OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
             MilliSleep(500);
         }
-        // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
+        // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
         // nodes reconnect quickly after the remote peers restart
-        MilliSleep(30000); 
+        MilliSleep(15000); 
     }
 }
 
