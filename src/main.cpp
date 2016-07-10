@@ -5166,11 +5166,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->nGetXthinLastTime = nNow;
             pfrom->nGetXthinCount += 1;
             LogPrint("thin", "nGetXthinCount is %f\n", pfrom->nGetXthinCount);
-            if (pfrom->nGetXthinCount >= 20) {
-                LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
-                LOCK(cs_main);
-                Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
-            }
+            if (chainparams.NetworkIDString()=="main") // other networks have variable mining rates
+	      {
+		if (pfrom->nGetXthinCount >= 20) 
+                {
+		  LogPrintf("DOS: Misbehaving - requesting too many get_xthin - disconnecting\n");
+		  LOCK(cs_main);
+		  Misbehaving(pfrom->GetId(), 100);  // If they exceed the limit then disconnect them
+		}
+	      }
         }
 
         CBloomFilter filterMemPool;
