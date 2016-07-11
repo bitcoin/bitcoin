@@ -6,10 +6,10 @@
 
 #include "clientversion.h"
 #include "consensus/transaction.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/utilstrencodings.h"
 #include "random.h"
 #include "sync.h"
-#include "utilmoneystr.h"
 #include "test/test_bitcoin.h"
 
 #include <stdint.h>

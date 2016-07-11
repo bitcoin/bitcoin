@@ -138,7 +138,6 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   util.h \
-  utilmoneystr.h \
   utiltime.h \
   validationinterface.h \
   wallet/crypter.h \
@@ -271,6 +270,8 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/transaction.h \
   consensus/uint256.cpp \
   consensus/uint256.h \
+  consensus/utilmoneystr.cpp \
+  consensus/utilmoneystr.h \
   consensus/utilstrencodings.cpp \
   consensus/utilstrencodings.h \
   consensus/validation.h \
@@ -313,7 +314,7 @@ libbitcoin_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   util.cpp \
-  utilmoneystr.cpp \
+  consensus/utilmoneystr.cpp \
   consensus/utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)

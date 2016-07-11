@@ -19,6 +19,7 @@
 #include "consensus/script.h"
 #include "consensus/tinyformat.h"
 #include "consensus/transaction.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/utilstrencodings.h"
 #include "consensus/validation.h"
 #include "consensus/versionbits.h"
@@ -35,7 +36,6 @@
 #include "ui_interface.h"
 #include "undo.h"
 #include "util.h"
-#include "utilmoneystr.h"
 #include "validationinterface.h"
 
 #include <atomic>

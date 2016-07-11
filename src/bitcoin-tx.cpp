@@ -12,6 +12,7 @@
 #include "consensus/consensus.h"
 #include "consensus/script.h"
 #include "consensus/transaction.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/utilstrencodings.h"
 #include "core_io.h"
 #include "keystore.h"
@@ -19,7 +20,6 @@
 #include "script/sign.h"
 #include <univalue.h>
 #include "util.h"
-#include "utilmoneystr.h"
 
 #include <stdio.h>
 

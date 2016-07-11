@@ -8,12 +8,12 @@
 #include "consensus/script.h"
 #include "consensus/serialize.h"
 #include "consensus/transaction.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/utilstrencodings.h"
 #include "script/standard.h"
 #include "streams.h"
 #include <univalue.h>
 #include "util.h"
-#include "utilmoneystr.h"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>

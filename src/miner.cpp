@@ -14,6 +14,7 @@
 #include "consensus/merkle.h"
 #include "consensus/pow.h"
 #include "consensus/transaction.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "net.h"
@@ -22,7 +23,6 @@
 #include "timedata.h"
 #include "txmempool.h"
 #include "util.h"
-#include "utilmoneystr.h"
 #include "validationinterface.h"
 
 #include <algorithm>
