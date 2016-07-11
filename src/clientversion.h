@@ -11,7 +11,7 @@
 
 // Check that required client information is defined
 #if !defined(CLIENT_VERSION_MAJOR) || !defined(CLIENT_VERSION_MINOR) || !defined(CLIENT_VERSION_REVISION) || !defined(CLIENT_VERSION_BUILD) || !defined(CLIENT_VERSION_IS_RELEASE) || !defined(COPYRIGHT_YEAR)
-#error Client version information missing: wasn't defined by bitcoin-config.h nor defined any other way
+#error Client version information missing: wasn't defined by chaincoin-config.h nor defined any other way
 #endif
 
 /**
@@ -22,7 +22,7 @@
 #define DO_STRINGIZE(X) #X
 
 //! Copyright string used in Windows .rc files
-#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin Core Developers, 2014-" STRINGIZE(COPYRIGHT_YEAR) " The Dash Core Developers"
+#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin Core Developers, Dash Core Decelopers, 2014-" STRINGIZE(COPYRIGHT_YEAR) " The Chaincoin Core Developers"
 
 /**
  * chaincoind-res.rc includes this file, but it cannot cope with real c++ code.
