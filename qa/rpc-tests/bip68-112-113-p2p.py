@@ -173,7 +173,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         tx = self.create_transaction(self.nodes[0], input, self.nodeaddress, Decimal("49.98"))
         tx.nVersion = txversion
         signtx = self.sign_transaction(self.nodes[0], tx)
-        signtx.vin[0].scriptSig = CScript([-1, OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+        signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
         return signtx
 
     def create_bip112txs(self, bip112inputs, varyOP_CSV, txversion, locktime_delta = 0):
@@ -196,9 +196,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
                         tx.nVersion = txversion
                         signtx = self.sign_transaction(self.nodes[0], tx)
                         if (varyOP_CSV):
-                            signtx.vin[0].scriptSig = CScript([relative_locktimes[b31][b25][b22][b18], OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+                            signtx.vin[0].scriptSig = CScript([relative_locktimes[b31][b25][b22][b18], OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
                         else:
-                            signtx.vin[0].scriptSig = CScript([base_relative_locktime, OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+                            signtx.vin[0].scriptSig = CScript([base_relative_locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
                         b18txs.append(signtx)
                     b22txs.append(b18txs)
                 b25txs.append(b22txs)
