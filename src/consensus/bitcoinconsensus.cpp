@@ -5,9 +5,9 @@
 
 #include "bitcoinconsensus.h"
 
-#include "primitives/transaction.h"
+#include "interpreter.h"
 #include "pubkey.h"
-#include "script/interpreter.h"
+#include "transaction.h"
 #include "version.h"
 
 namespace {

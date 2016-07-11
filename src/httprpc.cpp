@@ -6,17 +6,16 @@
 
 #include "base58.h"
 #include "chainparams.h"
+#include "consensus/utilstrencodings.h"
 #include "httpserver.h"
 #include "rpc/protocol.h"
 #include "rpc/server.h"
 #include "random.h"
 #include "sync.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "ui_interface.h"
 #include "crypto/hmac_sha256.h"
 #include <stdio.h>
-#include "utilstrencodings.h"
 
 #include <boost/algorithm/string.hpp> // boost::trim
 #include <boost/foreach.hpp> //BOOST_FOREACH

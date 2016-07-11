@@ -8,17 +8,17 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "coins.h"
+#include "consensus/hash.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "policy/policy.h"
-#include "primitives/transaction.h"
 #include "rpc/server.h"
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"
 #include "util.h"
-#include "utilstrencodings.h"
-#include "hash.h"
 
 #include <stdint.h>
 

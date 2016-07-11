@@ -10,16 +10,16 @@
 #include "clientversion.h"
 #include "coins.h"
 #include "consensus/consensus.h"
+#include "consensus/script.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "core_io.h"
 #include "keystore.h"
 #include "policy/policy.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
 #include "script/sign.h"
 #include <univalue.h>
 #include "util.h"
 #include "utilmoneystr.h"
-#include "utilstrencodings.h"
 
 #include <stdio.h>
 

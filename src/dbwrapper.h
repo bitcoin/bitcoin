@@ -6,10 +6,10 @@
 #define BITCOIN_DBWRAPPER_H
 
 #include "clientversion.h"
-#include "serialize.h"
+#include "consensus/serialize.h"
+#include "consensus/utilstrencodings.h"
 #include "streams.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/filesystem/path.hpp>

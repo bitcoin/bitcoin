@@ -5,9 +5,9 @@
 
 #include "utilmoneystr.h"
 
-#include "primitives/transaction.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
+#include "consensus/tinyformat.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 
 using namespace std;
 

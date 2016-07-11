@@ -4,11 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
-#include "consensus/merkle.h"
 
-#include "tinyformat.h"
+#include "consensus/merkle.h"
+#include "consensus/tinyformat.h"
+#include "consensus/utilstrencodings.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include <assert.h>
 

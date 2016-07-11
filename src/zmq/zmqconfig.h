@@ -16,8 +16,8 @@
 #include <zmq.h>
 #endif
 
-#include "primitives/block.h"
-#include "primitives/transaction.h"
+#include "consensus/block.h"
+#include "consensus/transaction.h"
 
 void zmqError(const char *str);
 

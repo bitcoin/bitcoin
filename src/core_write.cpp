@@ -5,15 +5,15 @@
 #include "core_io.h"
 
 #include "base58.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
+#include "consensus/script.h"
+#include "consensus/serialize.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "script/standard.h"
-#include "serialize.h"
 #include "streams.h"
 #include <univalue.h>
 #include "util.h"
 #include "utilmoneystr.h"
-#include "utilstrencodings.h"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>

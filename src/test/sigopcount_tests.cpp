@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "main.h"
-#include "pubkey.h"
+#include "consensus/pubkey.h"
+#include "consensus/script.h"
+#include "consensus/uint256.h"
 #include "key.h"
-#include "script/script.h"
+#include "main.h"
 #include "script/standard.h"
-#include "uint256.h"
 #include "test/test_bitcoin.h"
 
 #include <vector>

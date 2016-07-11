@@ -5,10 +5,10 @@
 #include "util.h"
 
 #include "clientversion.h"
-#include "primitives/transaction.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "random.h"
 #include "sync.h"
-#include "utilstrencodings.h"
 #include "utilmoneystr.h"
 #include "test/test_bitcoin.h"
 

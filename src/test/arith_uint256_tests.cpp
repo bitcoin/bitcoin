@@ -8,9 +8,10 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
-#include "uint256.h"
-#include "arith_uint256.h"
 #include <string>
+
+#include "consensus/uint256.h"
+#include "consensus/arith_uint256.h"
 #include "version.h"
 #include "test/test_bitcoin.h"
 

@@ -8,7 +8,7 @@
 
 #include "checkpoints.h"
 
-#include "uint256.h"
+#include "consensus/uint256.h"
 #include "test/test_bitcoin.h"
 #include "chainparams.h"
 

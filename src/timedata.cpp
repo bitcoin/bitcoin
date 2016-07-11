@@ -8,11 +8,11 @@
 
 #include "timedata.h"
 
+#include "consensus/utilstrencodings.h"
 #include "netbase.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
 

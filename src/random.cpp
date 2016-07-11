@@ -11,9 +11,9 @@
 #include "compat.h" // for Windows API
 #include <wincrypt.h>
 #endif
-#include "serialize.h"        // for begin_ptr(vec)
+#include "consensus/serialize.h"        // for begin_ptr(vec)
+#include "consensus/utilstrencodings.h" // for GetTime()
 #include "util.h"             // for LogPrint()
-#include "utilstrencodings.h" // for GetTime()
 
 #include <stdlib.h>
 #include <limits>

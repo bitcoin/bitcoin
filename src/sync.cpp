@@ -4,8 +4,8 @@
 
 #include "sync.h"
 
+#include "consensus/utilstrencodings.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include <stdio.h>
 

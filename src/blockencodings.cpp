@@ -4,9 +4,9 @@
 
 #include "blockencodings.h"
 #include "consensus/consensus.h"
+#include "consensus/hash.h"
 #include "consensus/validation.h"
 #include "chainparams.h"
-#include "hash.h"
 #include "random.h"
 #include "streams.h"
 #include "txmempool.h"

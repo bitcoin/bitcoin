@@ -13,13 +13,13 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "consensus/consensus.h"
+#include "consensus/hash.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "crypto/common.h"
 #include "crypto/sha256.h"
-#include "hash.h"
-#include "primitives/transaction.h"
 #include "scheduler.h"
 #include "ui_interface.h"
-#include "utilstrencodings.h"
 
 #ifdef WIN32
 #include <string.h>

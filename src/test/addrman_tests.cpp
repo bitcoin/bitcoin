@@ -6,7 +6,7 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 
-#include "hash.h"
+#include "consensus/hash.h"
 #include "random.h"
 
 using namespace std;

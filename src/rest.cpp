@@ -5,15 +5,15 @@
 
 #include "chain.h"
 #include "chainparams.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
+#include "consensus/block.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "main.h"
 #include "httpserver.h"
 #include "rpc/server.h"
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"
-#include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/algorithm/string.hpp>

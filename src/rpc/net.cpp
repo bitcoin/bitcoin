@@ -6,6 +6,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "consensus/utilstrencodings.h"
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
@@ -14,7 +15,6 @@
 #include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/foreach.hpp>

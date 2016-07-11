@@ -9,13 +9,13 @@
 #include "amount.h"
 #include "bloom.h"
 #include "compat.h"
+#include "consensus/uint256.h"
 #include "limitedmap.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"
 #include "sync.h"
-#include "uint256.h"
 
 #include <atomic>
 #include <deque>

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_BLOCK_ENCODINGS_H
 #define BITCOIN_BLOCK_ENCODINGS_H
 
-#include "primitives/block.h"
+#include "consensus/block.h"
 
 #include <memory>
 

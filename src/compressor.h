@@ -6,9 +6,9 @@
 #ifndef BITCOIN_COMPRESSOR_H
 #define BITCOIN_COMPRESSOR_H
 
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "serialize.h"
+#include "consensus/script.h"
+#include "consensus/serialize.h"
+#include "consensus/transaction.h"
 
 class CKeyID;
 class CPubKey;

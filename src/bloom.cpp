@@ -4,9 +4,9 @@
 
 #include "bloom.h"
 
-#include "primitives/transaction.h"
-#include "hash.h"
-#include "script/script.h"
+#include "consensus/hash.h"
+#include "consensus/script.h"
+#include "consensus/transaction.h"
 #include "script/standard.h"
 #include "random.h"
 #include "streams.h"

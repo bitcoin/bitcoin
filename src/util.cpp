@@ -10,10 +10,10 @@
 #include "util.h"
 
 #include "chainparamsbase.h"
+#include "consensus/serialize.h"
+#include "consensus/utilstrencodings.h"
 #include "random.h"
-#include "serialize.h"
 #include "sync.h"
-#include "utilstrencodings.h"
 #include "utiltime.h"
 
 #include <stdarg.h>

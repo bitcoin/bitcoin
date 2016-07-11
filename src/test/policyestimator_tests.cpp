@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/uint256.h"
 #include "policy/policy.h"
 #include "policy/fees.h"
 #include "txmempool.h"
-#include "uint256.h"
 #include "util.h"
 
 #include "test/test_bitcoin.h"

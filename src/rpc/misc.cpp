@@ -5,6 +5,7 @@
 
 #include "base58.h"
 #include "clientversion.h"
+#include "consensus/utilstrencodings.h"
 #include "init.h"
 #include "main.h"
 #include "net.h"
@@ -12,7 +13,6 @@
 #include "rpc/server.h"
 #include "timedata.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"

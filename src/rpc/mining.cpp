@@ -3,23 +3,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
 #include "amount.h"
+#include "base58.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/params.h"
+#include "consensus/pow.h"
+#include "consensus/utilstrencodings.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
 #include "main.h"
 #include "miner.h"
 #include "net.h"
-#include "pow.h"
 #include "rpc/server.h"
 #include "txmempool.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "validationinterface.h"
 
 #include <stdint.h>

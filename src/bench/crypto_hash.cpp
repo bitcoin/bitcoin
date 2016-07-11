@@ -6,8 +6,8 @@
 
 #include "bench.h"
 #include "bloom.h"
-#include "hash.h"
-#include "uint256.h"
+#include "consensus/hash.h"
+#include "consensus/uint256.h"
 #include "utiltime.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
