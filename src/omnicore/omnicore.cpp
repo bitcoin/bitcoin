@@ -2324,8 +2324,8 @@ bool mastercore::UseEncodingClassC(size_t nDataSize)
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
-int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
-                          int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
+int mastercore::WalletTxBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+        int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit, unsigned int minInputs)
 {
 #ifdef ENABLE_WALLET
     if (pwalletMain == NULL) return MP_ERR_WALLET_ACCESS;
@@ -2348,7 +2348,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     coinControl.destChange = addr.Get();
 
     // Select the inputs
-    if (0 > SelectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
+    if (0 > SelectCoins(senderAddress, coinControl, referenceAmount, minInputs)) { return MP_INPUTS_INVALID; }
 
     // Encode the data outputs
     switch(omniTxClass) {
@@ -2378,13 +2378,42 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
     if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
 
+    // Workaround for SigOps limit
+    {
+        if (!FillTxInputCache(wtxNew)) {
+            PrintToLog("%s ERROR: failed to get inputs for %s\n", __func__, wtxNew.GetHash().GetHex());
+        }
+
+        unsigned int nBytesPerSigOp = 20; // default of Bitcoin Core 12.1
+        unsigned int nSize = ::GetSerializeSize(wtxNew, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nSigOps = GetLegacySigOpCount(wtxNew);
+        nSigOps += GetP2SHSigOpCount(wtxNew, view);
+
+        if (nSigOps > nSize / nBytesPerSigOp) {
+            std::vector<COutPoint> vInputs;
+            coinControl.ListSelected(vInputs);
+
+            // Ensure the requested number of inputs was available, so there may be more
+            if (vInputs.size() >= minInputs) {
+                // Build a new transaction and try to select one additional input to
+                // shift the bytes per sigops ratio in our favor
+                ++minInputs;
+                return WalletTxBuilder(senderAddress, receiverAddress, redemptionAddress,
+                    referenceAmount, data, txid, rawHex, commit, minInputs);
+            } else {
+                PrintToLog("%s WARNING: %s has %d sigops, and may not confirm in time\n",
+                        __func__, wtxNew.GetHash().GetHex(), nSigOps);
+            }
+        }
+    }
+
     // If this request is only to create, but not commit the transaction then display it and exit
     if (!commit) {
         rawHex = EncodeHexTx(wtxNew);
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
-        PrintToLog("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString(), nFeeRet, __LINE__, __FILE__);
+        PrintToLog("%s: %s; nFeeRet = %d\n", __func__, wtxNew.ToString(), nFeeRet);
         if (!pwalletMain->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
         txid = wtxNew.GetHash();
         return 0;

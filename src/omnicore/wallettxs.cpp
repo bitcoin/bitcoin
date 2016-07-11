@@ -162,10 +162,13 @@ int IsMyAddress(const std::string& address)
 /**
  * Selects spendable outputs to create a transaction.
  */
-int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)
+int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional, unsigned int minOutputs)
 {
     // total output funds collected
     int64_t nTotal = 0;
+
+    // total number of outputs selected
+    unsigned int nNumOutputs = 0;
 
 #ifdef ENABLE_WALLET
     if (NULL == pwalletMain) {
@@ -217,11 +220,13 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
                 coinControl.Select(outpoint);
 
                 nTotal += txOut.nValue;
-                if (nMax <= nTotal) break;
+                ++nNumOutputs;
+
+                if (nMax <= nTotal && nNumOutputs >= minOutputs) break;
             }
         }
 
-        if (nMax <= nTotal) break;
+        if (nMax <= nTotal && nNumOutputs >= minOutputs) break;
     }
 #endif
 

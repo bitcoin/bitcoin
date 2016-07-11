@@ -329,8 +329,8 @@ bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 
 std::string FormatIndivisibleMP(int64_t n);
 
-int ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
-                 int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit);
+int WalletTxBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+                 int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit, unsigned int minInputs = 1);
 
 bool isTestEcosystemProperty(uint32_t propertyId);
 bool isMainEcosystemProperty(uint32_t propertyId);
