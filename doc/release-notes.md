@@ -25,7 +25,7 @@ Downgrade warning
 ------------------
 
 Because this release issues a hard-fork of the network, downgrading to prior versions
-will not be possible once the network reaches a block height of 860000.
+will not be possible once the network reaches a block height of 86000.
 
 Notable changes since 1.0.0
 ============================
@@ -53,11 +53,11 @@ For more information about the hard-forking change, please see
 
 **Notice to miners:** HOdlcoin block generation will now automatically
 create a term deposit for a one year length for the generated block.
-This affects ALL newly generated blocks after a chain height of 860000.
+This affects ALL newly generated blocks after a chain height of 86000.
 
 - If you are solo mining, this will affect you the moment you upgrade
   HOdlcoin Core, which must be done prior to the network reaching a 
-  height of 860000.
+  height of 86000.
 
 - If you are mining with the stratum mining protocol: this does not
   affect how you mine, however stratum operators will need to adjust
