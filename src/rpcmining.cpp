@@ -528,8 +528,28 @@ Value getblocktemplate(const Array& params, bool fHelp)
             delete pblocktemplate;
             pblocktemplate = NULL;
         }
-        CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(scriptDummy);
+
+		if (chainActive.Height()+1 >= MINERHODLINGHEIGHT) {
+			LogPrintf("Creating Block post-fork...\n");
+			string ma=GetArg("-miningaddress", "");
+			CReserveKey reservekey(pwalletMain);
+
+			if (ma != "") {
+				if (validateAddress(ma)) {
+					pblocktemplate = CreateNewBlockWithAddress(ma);
+					LogPrintf("Created Block with miningaddress\n");
+				} else {
+					pblocktemplate = CreateNewBlockWithKey(reservekey);
+					LogPrintf("miningaddress invalid, created block with reservekey instead\n");
+				}
+			} else {
+				pblocktemplate = CreateNewBlockWithKey(reservekey);
+				LogPrintf("Created Block with reservekey\n");
+			}
+		} else {
+			CScript scriptDummy = CScript() << OP_TRUE;
+			pblocktemplate = CreateNewBlock(scriptDummy);
+		}
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
