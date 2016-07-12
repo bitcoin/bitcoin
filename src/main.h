@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "chain.h"
 #include "coins.h"
+#include "consensus/blockvalidator.h"
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
@@ -338,7 +339,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * @param[out] flags Script verification flags
  * @return Total signature operation cost of tx
  */
-int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
+int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, unsigned int flags);
 
 /**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
