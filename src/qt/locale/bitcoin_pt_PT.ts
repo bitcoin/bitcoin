@@ -963,10 +963,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Nome do Cliente</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/D</translation>
     </message>
@@ -1810,14 +1806,6 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Utilizar UPnP para mapear a porta de escuta (predefinição: 1 quando escutar e sem -proxy)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>AVISO: gerado um número anormalmente elevado de blocos, %d blocos recebidos nas últimas %d horas (%d esperados)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>AVISO: verifique a sua conexão à rede, %d blocos recebidos nas últimas %d horas (%d esperados)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

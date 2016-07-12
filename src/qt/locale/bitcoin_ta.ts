@@ -372,10 +372,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>வாடிக்கையாளர் பெயர்</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>

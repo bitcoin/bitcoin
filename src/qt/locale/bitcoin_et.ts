@@ -542,10 +542,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Kliendi nimi</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>

@@ -882,10 +882,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Име на клиента</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Несъществуващ</translation>
     </message>

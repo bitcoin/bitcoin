@@ -300,10 +300,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>نام کنسول RPC</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>ویرایش کنسول RPC</translation>
     </message>

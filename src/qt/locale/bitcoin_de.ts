@@ -782,6 +782,14 @@
         <translation>&amp;Programmfenster</translation>
     </message>
     <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>&amp;Das Icon im System Tray verstecken.</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>Tray Icon verstecken</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Nur ein Symbol im Infobereich anzeigen, nachdem das Programmfenster minimiert wurde.</translation>
     </message>
@@ -982,10 +990,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Clientname</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>k.A.</translation>
     </message>
@@ -1011,7 +1015,7 @@
     </message>
     <message>
         <source>Datadir</source>
-        <translation>Datenverz</translation>
+        <translation>Datenverzeichnis</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1096,6 +1100,10 @@
     <message>
         <source>User Agent</source>
         <translation>User-Agent</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Öffnet die %1-Debugprotokolldatei aus dem aktuellen Datenverzeichnis. Dies kann bei großen Protokolldateien einige Sekunden dauern.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1791,6 +1799,10 @@
         <translation>An die angegebene Adresse binden und immer abhören. Für IPv6 "[Host]:Port"-Notation verwenden</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Datenverzeichnis %s kann nicht gesperrt werden. Evtl. wurde %s bereits gestartet.</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Alle Wallet-Transaktionen löschen und nur diese Teilbereiche der Blockkette durch -rescan beim Starten wiederherstellen</translation>
     </message>
@@ -1805,6 +1817,14 @@
     <message>
         <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
         <translation>Leite Transaktionen von Peers auf der Positivliste auf jeden Fall weiter, auch wenn sie die lokale Weiterleitungsregeln verletzen (Standardeinstellung: %d)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da %s ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation>Wenn sie %s nützlich finden, sind Helfer sehr gern gesehen. Besuchen Sie %s um mehr über das Softwareprojekt zu erfahren.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -1823,14 +1843,6 @@
         <translation>UPnP verwenden, um eine Portweiterleitung einzurichten (Standard: 1, wenn abgehört wird und -proxy nicht gesetzt ist)</translation>
     </message>
     <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>Warnung: Es wurde eine ungewöhnlich hohe Anzahl Blöcke erzeugt, %d Blöcke wurden in den letzten %d Stunden empfangen (%d wurden erwartet).</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>Warnung: Überprüpfen Sie ihre Netzwerkverbindung, %d Blöcke wurden in den letzten %d Stunden empfangen (%d wurden erwartet).</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Warnung: Das Netzwerk scheint nicht vollständig übereinzustimmen! Einige Miner scheinen Probleme zu haben.</translation>
     </message>
@@ -1843,6 +1855,14 @@
         <translation>Gegenstellen die sich von der angegebenen Netzmaske oder IP-Adresse aus verbinden immer zulassen. Kann mehrmals angegeben werden.</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>Sie müssen die Datenbank mit Hilfe von -reindex-chainstate neu aufbauen, um -txindex zu verändern</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s beschädigt, Datenrettung fehlgeschlagen</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool muss mindestens %d MB betragen</translation>
     </message>
@@ -1853,6 +1873,10 @@
     <message>
         <source>Append comment to the user agent string</source>
         <translation>Hänge ein Kommentar zur User Agent-Zeichenkette an</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Es wird versucht, private Schlüssel beim Starten aus einem beschädigtem Wallet wiederherzustellen</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1917,6 +1941,14 @@
     <message>
         <source>Error loading %s</source>
         <translation>Fehler beim Laden von %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Fehler beim Laden von %s: Das Wallet ist beschädigt</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Fehler beim Laden von %s: Das Wallet benötigt eine neuere Version von %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>

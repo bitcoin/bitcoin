@@ -930,10 +930,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Назва клієнту</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
@@ -1745,14 +1741,6 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Використовувати UPnP для відображення порту, що прослуховується (типово: 1 при прослуховуванні та за відсутності -proxy)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>УВАГА: аномально висока кількість згенерованих блоків, %d блок(ів) було отримано за останні %d годин(и) (має бути %d)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>УВАГА: перевірте ваше мережеве з'єднання, %d блок(ів) було отримано за останні %d годин(и) (має бути %d)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

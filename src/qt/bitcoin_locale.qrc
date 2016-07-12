@@ -5,6 +5,7 @@
         <file alias="ar">locale/bitcoin_ar.qm</file>
         <file alias="be_BY">locale/bitcoin_be_BY.qm</file>
         <file alias="bg">locale/bitcoin_bg.qm</file>
+        <file alias="bg_BG">locale/bitcoin_bg_BG.qm</file>
         <file alias="ca_ES">locale/bitcoin_ca_ES.qm</file>
         <file alias="ca">locale/bitcoin_ca.qm</file>
         <file alias="ca@valencia">locale/bitcoin_ca@valencia.qm</file>

@@ -742,10 +742,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Nomo de kliento</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>neaplikebla</translation>
     </message>

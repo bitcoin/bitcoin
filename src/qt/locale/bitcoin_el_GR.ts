@@ -835,10 +835,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Όνομα Πελάτη</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Μη διαθέσιμο</translation>
     </message>

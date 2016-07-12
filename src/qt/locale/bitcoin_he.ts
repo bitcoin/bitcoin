@@ -828,10 +828,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>שם לקוח</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>לא זמין</translation>
     </message>

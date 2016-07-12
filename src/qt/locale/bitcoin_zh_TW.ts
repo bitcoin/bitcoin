@@ -994,10 +994,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>客戶端軟體名稱</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>未知</translation>
     </message>
@@ -1865,7 +1861,7 @@
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>如果你覺得 %s 有用，可以捐助我們。關於這個軟體的更多資訊請見 %s。</translation>
+        <translation>如果你覺得 %s 有用，可以幫助我們。關於這個軟體的更多資訊請見 %s。</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -1886,14 +1882,6 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>是否要使用「通用即插即用」協定(UPnP)，來設定聽候連線的通訊埠的對應(預設值: 當有聽候連線且沒有指定 -proxy 參數時為 1)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>警告: 收到了不尋常地多的 %d 個區塊在過去 %d 小時內生產出來(預期是 %d 個)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>警告: 請檢查你的網路連線狀況，收到了 %d 個區塊是在過去 %d 小時內生產出來(預期是 %d 個)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

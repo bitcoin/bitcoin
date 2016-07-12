@@ -918,10 +918,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Název klienta</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -1713,14 +1709,6 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Použít UPnP k namapování naslouchacího portu (výchozí: 1, pokud naslouchá a nepoužívá -proxy)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>UPOZORNĚNÍ: vygenerováno nezvykle mnoho bloků – přijato %d bloků jen za posledních %d hodin (očekáváno %d)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>UPOZORNĚNÍ: zkontroluj své spojení do sítě – bylo přijato %d bloků za posledních %d hodin (očekáváno %d)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

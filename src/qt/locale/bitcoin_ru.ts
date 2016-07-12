@@ -990,10 +990,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Имя клиента</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
@@ -1110,6 +1106,14 @@
         <translation>Открыть отладочный лог-файл %1 из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
     </message>
     <message>
+        <source>Decrease font size</source>
+        <translation>Уменьшить размер текста</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Увеличить размер текста</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation>Сервисы</translation>
     </message>
@@ -1212,6 +1216,10 @@
     <message>
         <source>&amp;Unban Node</source>
         <translation>&amp;Разблокировать узел</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>Добро пожаловать в консоль RPC %1.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1593,6 +1601,10 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
+        <source>%1 is shutting down...</source>
+        <translation>%1 выключается...</translation>
+    </message>
+    <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Не выключайте компьютер, пока это окно не исчезнет.</translation>
     </message>
@@ -1783,8 +1795,20 @@
         <translation>Bitcoin Core</translation>
     </message>
     <message>
+        <source>The %s developers</source>
+        <translation>Разработчики %s</translation>
+    </message>
+    <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>Установлено очень большое значение -fallbackfee! Это комиссия за транзацию, которую вы можете заплатить, если оценка размера комиссии не доступна. </translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Привязаться к указанному адресу и всегда прослушивать только его. Используйте [хост]:порт для IPv6</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Невозможно заблокировать каталог данных %s. %s возможно уже работает.</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -1795,12 +1819,20 @@
         <translation>Распространяется под лицензией MIT, см. приложенный файл COPYING или &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
+    </message>
+    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Выполнить команду, когда меняется транзакция в бумажнике (%s в команде заменяется на TxID)</translation>
     </message>
     <message>
         <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
         <translation>Всегда разрешать транзакции, полученные от участников из белого списка (по умолчанию: %d)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Пожалуйста убедитесь в корректности установки времени и даты на вашем компьютере! Если время установлено неверно, %s не будет работать правильно.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -1819,14 +1851,6 @@
         <translation>Использовать UPnP для проброса порта (по умолчанию: 1, если используется прослушивание и нет -proxy)</translation>
     </message>
     <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>ВНИМАНИЕ: сгенерировано ненормально большое число блоков, %d блоков получено за последние %d часов (ожидалось %d)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>ВНИМАНИЕ: проверьте сетевое подключение, получено %d блоков за последние %d часов (ожидалось %d)</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Внимание: похоже, в сети нет полного согласия! Некоторый майнеры, возможно, испытывают проблемы.</translation>
     </message>
@@ -1837,6 +1861,10 @@
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Вносить в белый список участников, подключающихся с указанной маски сети или IP. Можно использовать многократно.</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s поврежден, восстановить не удалось</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -1851,6 +1879,10 @@
         <translation>Добавить комментарий к строке пользовательского агента</translation>
     </message>
     <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Попытаться восстановить приватные ключи из повреждённого бумажника при запуске</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Параметры создания блоков:</translation>
     </message>
@@ -1861,6 +1893,10 @@
     <message>
         <source>Connection options:</source>
         <translation>Параметры подключения:</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Copyright (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1907,6 +1943,14 @@
         <translation>Ошибка загрузки %s</translation>
     </message>
     <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Ошибка загрузки %s: Бумажник поврежден</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Ошибка загрузки %s: Для бумажника требуется более новая версия %s</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Ошибка чтения базы данных блоков</translation>
     </message>
@@ -1935,8 +1979,16 @@
         <translation>Неверный -onion адрес: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Неверная сумма для -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Сбрасывать транзакции из памяти на диск каждые &lt;n&gt; мегабайт (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Загрузка банлиста...</translation>
     </message>
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
@@ -1951,6 +2003,10 @@
         <translation>Соединяться только по сети &lt;net&gt; (ipv4, ipv6 или onion)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Вывести эту справку и выйти</translation>
+    </message>
+    <message>
         <source>Print version and exit</source>
         <translation>Написать версию и выйти</translation>
     </message>
@@ -1963,8 +2019,16 @@
         <translation>Режим удаления блоков несовместим с -txindex.</translation>
     </message>
     <message>
+        <source>Rebuild chain state from the currently indexed blocks</source>
+        <translation>Перестроить индекс цепи из текущих индексированных блоков</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block cost (default: %d)</source>
+        <translation>Задать максимальную стоимость блока (по умолчанию: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
@@ -1973,6 +2037,14 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Укажите файл бумажника (внутри каталога данных)</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation>Исходный код доступен в %s.</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Невозможно привязаться к %s на этом компьютере. Возможно, %s уже работает.</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -2005,6 +2077,14 @@
     <message>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Бумажник %s располагается вне каталога данных %s</translation>
+    </message>
+    <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>Параметры отладки/тестирования бумажника:</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Необходимо перезаписать бумажник, перезапустите %s для завершения операции.</translation>
     </message>
     <message>
         <source>Wallet options:</source>
@@ -2305,6 +2385,10 @@
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Внимание: Получена неизвестная версия блока! Возможно неизвестные правила вступили в силу.</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Внимание: Файл бумажника поврежден, данные восстановлены! Оригинальный %s сохранен как %s в %s; Если баланс или транзакции некорректны, вы должны восстановить файл из резервной копии.</translation>
     </message>
     <message>
         <source>(default: %s)</source>

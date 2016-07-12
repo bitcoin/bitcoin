@@ -810,10 +810,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Nom du client</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A </translation>
     </message>

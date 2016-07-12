@@ -111,10 +111,6 @@
         <translation>الخروج من التطبيق</translation>
     </message>
     <message>
-        <source>&amp;About %1</source>
-        <translation>&amp;عن %1</translation>
-    </message>
-    <message>
         <source>Show information about %1</source>
         <translation>أظهر المعلومات حولة %1</translation>
     </message>
@@ -307,6 +303,20 @@
         <translation>اللحاق بالركب ...</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>التاريخ %1
+
+
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>علامه: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>المعاملات  المرسلة</translation>
     </message>
@@ -326,8 +336,16 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>اختيار العمله</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>الكمية :</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>بايت</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -342,6 +360,10 @@
         <translation>رسوم :</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>غبار:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>بعد الرسوم :</translation>
     </message>
@@ -350,8 +372,20 @@
         <translation>تعديل :</translation>
     </message>
     <message>
+        <source>(un)select all</source>
+        <translation>عدم اختيار الجميع</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation>صيغة الشجرة</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation>صيغة القائمة</translation>
+    </message>
+    <message>
         <source>Amount</source>
-        <translation>المبلغ</translation>
+        <translation>مبلغ</translation>
     </message>
     <message>
         <source>Received with label</source>
@@ -363,11 +397,11 @@
     </message>
     <message>
         <source>Date</source>
-        <translation>التاريخ</translation>
+        <translation>تاريخ</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>تأكيد</translation>
+        <translation>تأكيدات</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -387,6 +421,14 @@
     <message>
         <source>&amp;Label</source>
         <translation>&amp;وصف</translation>
+    </message>
+    <message>
+        <source>The label associated with this address list entry</source>
+        <translation>الملصق المرتبط بقائمة العناوين المدخلة</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>العنوان المرتبط بقائمة العناوين المدخلة. و التي يمكن تعديلها فقط بواسطة ارسال العناوين</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -443,6 +485,14 @@
         <translation>اختر دليل البيانات عند بدء التشغير (افتراضي: %u)</translation>
     </message>
     <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>أضع لغة, على سبيل المثال " de_DE "  (افتراضي:- مكان النظام)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>الدخول مصغر</translation>
+    </message>
+    <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
         <translation>أضع شهادة بروتوكول الشبقة الأمنية لطلب المدفوع (افتراضي: -نظام-)</translation>
     </message>
@@ -450,7 +500,11 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>أظهر شاشة البداية عند بدء التشغيل (افتراضي: %u)</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>اعد تعديل جميع النظم المتغيرة في GUI</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -472,6 +526,14 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open URI</source>
+        <translation>افتح URL</translation>
+    </message>
+    <message>
+        <source>Open payment request from URI or file</source>
+        <translation>حدد طلب الدفع من ملف او URI</translation>
+    </message>
     <message>
         <source>Select payment request file</source>
         <translation>حدد ملف طلب الدفع</translation>
@@ -528,8 +590,16 @@
         <translation>منفذ البروكسي (مثلا 9050)</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>مستخدم للاتصال بالاصدقاء من خلال:</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>نافذه</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>اخفاء لوحة الايقون</translation>
     </message>
     <message>
         <source>&amp;Display</source>
@@ -616,10 +686,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>اسم العميل</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>غير معروف</translation>
     </message>
@@ -664,6 +730,10 @@
         <translation>تم الإرسال</translation>
     </message>
     <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;اصدقاء</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <translation>جهة</translation>
     </message>
@@ -704,6 +774,22 @@
         <translation>خارج:</translation>
     </message>
     <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;ساعة</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp; يوم</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp; اسبوع</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp; سنة</translation>
+    </message>
+    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>استخدم اسهم الاعلى و الاسفل للتنقل بين السجلات و &lt;b&gt;Ctrl-L&lt;/b&gt;  لمسح الشاشة</translation>
     </message>
@@ -722,6 +808,18 @@
     <message>
         <source>%1 GB</source>
         <translation>%1 قيقا بايت</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>ابدا</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>داخل</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>خارجي</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -809,6 +907,10 @@
         <translation>الكمية :</translation>
     </message>
     <message>
+        <source>Bytes:</source>
+        <translation>بايت</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>القيمة :</translation>
     </message>
@@ -837,6 +939,14 @@
         <translation>إخفاء</translation>
     </message>
     <message>
+        <source>normal</source>
+        <translation>طبيعي</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>سريع</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>إرسال إلى عدة مستلمين في وقت واحد</translation>
     </message>
@@ -847,6 +957,10 @@
     <message>
         <source>Clear all fields of the form.</source>
         <translation>مسح كل حقول النموذج المطلوبة</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>غبار</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -880,6 +994,18 @@
         <translation>&amp;وصف :</translation>
     </message>
     <message>
+        <source>Choose previously used address</source>
+        <translation>اختر عنوانا مستخدم سابقا</translation>
+    </message>
+    <message>
+        <source>This is a normal payment.</source>
+        <translation>هذا دفع اعتيادي</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>عنوان البت كوين المرسل اليه الدفع</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -890,6 +1016,10 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation>ازل هذه المداخله</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -912,6 +1042,10 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;توقيع الرسالة</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>اختر عنوانا مستخدم سابقا</translation>
     </message>
     <message>
         <source>Alt+A</source>

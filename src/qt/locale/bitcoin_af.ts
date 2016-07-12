@@ -257,10 +257,6 @@
         <translation>Bitcoin Kern</translation>
     </message>
     <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>WAARSKUWING:  toets die status van u netwerk, %d blokke ontvang in die laaste %d ure (%d verwag)</translation>
-    </message>
-    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Moenie transaksies vir langer as &lt;n&gt; ure in die geheuepoel hou nie (verstek: %u)</translation>
     </message>

@@ -930,10 +930,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Meno klienta</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>nie je k dispozícii</translation>
     </message>
@@ -1706,14 +1702,6 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Toto je pred-testovacia verzia - použitie je na vlastné riziko - nepoužívajte na tvorbu bitcoin ani obchodovanie.</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>VAROVANIE: príliš veľa vygenerovaných blokov; %d prijatých blokov v posledných %d hodinách (očakávaných %d)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>VAROVANIE: skontrolujte sieťové pripojenie, %d prijatých blokov za posledných %d hodín (očakávané %d)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

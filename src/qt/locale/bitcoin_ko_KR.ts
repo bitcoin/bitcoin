@@ -926,10 +926,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>클라이언트 이름</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>없음</translation>
     </message>
@@ -1757,14 +1753,6 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>리슨(Listen) 포트를 할당하기 위해 UPnP 사용 (기본값: 열려있거나 -proxy 옵션을 사용하지 않을 시 1)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>경고: 비정상적으로 많은 블록이 생성되고 있습니다. %d 블록은 마지막 %d에 수신되었습니다 (%d 예측됨)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>경고: 네트워크 연결을 확인해 주세요. %d 블록은 마지막 %d에 수신되었습니다 (%d 예측됨)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
