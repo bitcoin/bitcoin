@@ -8,6 +8,7 @@ QT_TS = \
   qt/locale/bitcoin_ar.ts \
   qt/locale/bitcoin_be_BY.ts \
   qt/locale/bitcoin_bg.ts \
+  qt/locale/bitcoin_bg_BG.ts \
   qt/locale/bitcoin_ca_ES.ts \
   qt/locale/bitcoin_ca.ts \
   qt/locale/bitcoin_ca@valencia.ts \

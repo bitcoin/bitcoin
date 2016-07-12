@@ -914,10 +914,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Nume client</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>indisponibil</translation>
     </message>

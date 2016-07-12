@@ -806,10 +806,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Kliens néve</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Nem elérhető</translation>
     </message>

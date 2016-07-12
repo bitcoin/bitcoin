@@ -664,10 +664,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>კლიენტი</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>მიუწვდ.</translation>
     </message>

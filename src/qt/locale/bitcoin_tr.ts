@@ -994,10 +994,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>İstemci ismi</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Mevcut değil</translation>
     </message>
@@ -1873,14 +1869,6 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Dinlenecek portu haritalamak için UPnP kullan (varsayılan: dinlenildiğinde ve -proxy olmadığında 1)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>İKAZ: anormal yüksek sayıda blok oluşturulmuştur, %d blok son %d saat içinde alınmıştır (%d bekleniyordu)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>İKAZ: ağ bağlantınızı kontrol ediniz, %d blok son %d saat içinde alınmıştır (%d bekleniyordu)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

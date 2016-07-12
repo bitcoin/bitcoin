@@ -870,10 +870,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Ime odjemalca</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Neznano</translation>
     </message>
@@ -1565,14 +1561,6 @@
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>To je preizkusna različica še neizdanega programa. Uporabljate jo na lastno odgovornost. Programa ne uporabljajte je za rudarjenje ali trgovske aplikacije.</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>OPOZORILO: Generirano je bilo nenavadno veliko število blokov. Št. prejetih blokov: %d v št. ur: %d (pričakovanih je %d blokov)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>OPOZORILO: Preverite vašo omrežno povezavo. Št. prejetih blokov: %d v št. ur: %d (pričakovanih je %d blokov)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

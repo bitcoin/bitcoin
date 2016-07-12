@@ -730,10 +730,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>نام کلاینت</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>ناموجود</translation>
     </message>
