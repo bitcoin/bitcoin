@@ -1306,23 +1306,38 @@ void ConnectToThinBlockNodes()
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
 {
-  if ((pfrom->nServices & NODE_XTHIN) && (pfrom->nVersion >= EXPEDITED_VERSION))
+  if (IsThinBlocksEnabled() && pfrom->ThinBlockCapable() && (pfrom->nVersion >= EXPEDITED_VERSION))
     {
-      if(IsThinBlocksEnabled()) 
+      BOOST_FOREACH(string& strAddr, mapMultiArgs["-expeditedblock"]) 
         {
-	  BOOST_FOREACH(string& strAddr, mapMultiArgs["-expeditedblock"]) 
-	    {
-	      if(CNode* pnode = FindLikelyNode(strAddr)) {
-		if (pnode == pfrom) 
-		  {
-		    LogPrint("blk", "Requesting expedited blocks from peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
-		    pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST,((uint64_t) EXPEDITED_BLOCKS));
-		    xpeditedBlkUp.push_back(pfrom);
-		    return true;
-		  }
-	      }
-	    }
-	}
+          // Add the peer's listening port if it is empty
+          int pos1 = strAddr.rfind(":");
+          int pos2 = strAddr.rfind("]:");
+          if (pos1 <= 0 && pos2 <= 0)
+              strAddr += ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+
+//LogPrintf("Listening from config file %s  strfind is %d\n", strAddr , pos1);
+          string strListeningPeerIP;
+          string strPeerIP;
+          strPeerIP = boost::lexical_cast<std::string>(pfrom->addr.ToString().c_str());
+          pos1 = strPeerIP.rfind(":");
+          pos2 = strPeerIP.rfind("]:");
+          // Handle both ipv4 and ipv6 cases
+          if (pos1 <= 0 && pos2 <= 0) 
+              strListeningPeerIP = strPeerIP + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+          else if (pos1 > 0)
+              strListeningPeerIP = strPeerIP.substr(0, pos1) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+          else
+              strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
+
+//LogPrintf("xped ip is %s remote IP is %s\n", strAddr, strListeningPeerIP);
+	  if(strAddr == strListeningPeerIP) {
+              LogPrint("blk", "Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+              pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t) EXPEDITED_BLOCKS));
+              xpeditedBlkUp.push_back(pfrom);
+              return true;
+          }
+        }
     }
   return false;
 }

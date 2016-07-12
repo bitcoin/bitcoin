@@ -258,6 +258,12 @@ extern const char *XPEDITEDBLK;
  */
 extern const char *XPEDITEDTXN;
 
+extern const char *BUVERSION;
+/**
+ * BU specific version information similar to NetMsgType::VERSION
+ * @since protocol version 80002.
+ */
+extern const char *BUVERSION;
 };
 
 /* Get a vector of all valid message types (see above) */

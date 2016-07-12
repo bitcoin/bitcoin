@@ -45,6 +45,7 @@ const char *GET_XTHIN="get_xthin";
 const char *XPEDITEDREQUEST="req_xpedited";
 const char *XPEDITEDBLK="Xb";
 const char *XPEDITEDTxn="Xt";
+const char *BUVERSION="buversion";
 };
 
 static const char* ppszTypeName[] =
@@ -94,6 +95,10 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GET_XBLOCKTX,
     NetMsgType::GET_XTHIN,
     // BUIP010 Xtreme Thinbocks - end section
+    NetMsgType::XPEDITEDREQUEST,
+    NetMsgType::XPEDITEDBLK,
+    NetMsgType::XPEDITEDTxn,
+    NetMsgType::BUVERSION,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

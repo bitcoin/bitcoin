@@ -473,6 +473,10 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
+
+    // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate version
+    // message because we don't know if in the future Core will append more data to the end of the current VERSION message
+    PushMessage(NetMsgType::BUVERSION, GetListenPort());
 }
 
 
@@ -1707,6 +1711,11 @@ void ThreadOpenConnections()
 
 void ThreadOpenAddedConnections()
 {
+    // BU: This intial sleep fixes a timing issue where a remote peer may be trying to connect using addnode
+    //     at the same time this thread is starting up causing both an outbound and an inbound -addnode connection
+    //     to be possible, when it should not be.
+    MilliSleep(15000);
+
     {
         LOCK(cs_vAddedNodes);
         vAddedNodes = mapMultiArgs["-addnode"];
@@ -1715,7 +1724,7 @@ void ThreadOpenAddedConnections()
     // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == NULL) {
-        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), 8);
+        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), MAX_OUTBOUND_CONNECTIONS);
         semOutboundAddNode = new CSemaphore(maxAddNodeConnections);
     }
 
@@ -1733,9 +1742,9 @@ void ThreadOpenAddedConnections()
                 OpenNetworkConnection(addr, &grant, strAddNode.c_str());
                 MilliSleep(500);
             }
-            // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
+            // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
             // nodes reconnect quickly after the remote peers restart
-            MilliSleep(30000); 
+            MilliSleep(15000); 
         }
     }
 
@@ -1768,7 +1777,7 @@ void ThreadOpenAddedConnections()
             BOOST_FOREACH(CNode* pnode, vNodes)
                 for (list<vector<CService> >::iterator it = lservAddressesToAdd.begin(); it != lservAddressesToAdd.end(); it++)
                     BOOST_FOREACH(const CService& addrNode, *(it))
-                        if (pnode->addr == addrNode && pnode->fSuccessfullyConnected == true)
+                        if (pnode->addr == addrNode)
                         {
                             it = lservAddressesToAdd.erase(it);
                             it--;
@@ -1785,9 +1794,9 @@ void ThreadOpenAddedConnections()
             OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant, CAddress(vserv[i % vserv.size()]).ToString().c_str());
             MilliSleep(500);
         }
-        // Retry every 30 seconds.  It is important to check often to make sure the Xpedited Relay network 
+        // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
         // nodes reconnect quickly after the remote peers restart
-        MilliSleep(30000); 
+        MilliSleep(15000); 
     }
 }
 
@@ -2481,6 +2490,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+    addrFromPort = 0; // BU
 
     // BU instrumentation
     std::string xmledName;
@@ -2537,6 +2547,8 @@ CNode::~CNode()
     fSuccessfullyConnected = false;
 
     // BUIP010 - Xtreme Thinblocks - end section
+
+    addrFromPort = 0;
 
     GetNodeSignals().FinalizeNode(GetId());
 }
