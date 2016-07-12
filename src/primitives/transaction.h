@@ -290,6 +290,8 @@ struct CMutableTransaction;
  */
 template<typename Stream, typename Operation, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, int nType, int nVersion) {
+    const bool fAllowWitness = !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS);
+
     READWRITE(*const_cast<int32_t*>(&tx.nVersion));
     unsigned char flags = 0;
     if (ser_action.ForRead()) {
@@ -298,7 +300,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
         const_cast<CTxWitness*>(&tx.wit)->SetNull();
         /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
         READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-        if (tx.vin.size() == 0 && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
+        if (tx.vin.size() == 0 && fAllowWitness) {
             /* We read a dummy or an empty vin. */
             READWRITE(flags);
             if (flags != 0) {
@@ -309,7 +311,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
             /* We read a non-empty vin. Assume a normal vout follows. */
             READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
         }
-        if ((flags & 1) && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
+        if ((flags & 1) && fAllowWitness) {
             /* The witness flag is present, and we support witnesses. */
             flags ^= 1;
             const_cast<CTxWitness*>(&tx.wit)->vtxinwit.resize(tx.vin.size());
@@ -322,7 +324,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
     } else {
         // Consistency check
         assert(tx.wit.vtxinwit.size() <= tx.vin.size());
-        if (!(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
+        if (fAllowWitness) {
             /* Check whether witnesses need to be serialized. */
             if (!tx.wit.IsNull()) {
                 flags |= 1;
