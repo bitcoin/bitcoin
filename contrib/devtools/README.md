@@ -38,7 +38,7 @@ For example a file changed in 2015 (with 2015 being the current year):
 
 would be changed to:
 
-```// Copyright (c) 2009-2015 The Bitcoin Core developers```
+```// Copyright (c) 2009-2016 The Bitcoin Core developers```
 
 git-subtree-check.sh
 ====================
