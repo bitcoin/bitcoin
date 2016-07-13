@@ -2233,6 +2233,7 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
+CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex);
 CConsensusFlags GetConsensusFlags(const CBlockIndex *pindex, const CChainParams &chainparams);
 
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
@@ -2489,6 +2490,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCallbacks * 0.000001);
 
     return true;
+}
+
+
+CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex)
+{
+    assert(pindex);
+    CConsensusContextInfo contextInfo;
+    contextInfo.height = pindex->nHeight;
+    contextInfo.medianTimePast = pindex->GetMedianTimePast();
+    contextInfo.now = GetAdjustedTime();
+    contextInfo.bestBlock = pindex->GetBlockHeader();
+    return contextInfo;
 }
 
 CConsensusFlags GetConsensusFlags(const CBlockIndex *pindex, const CChainParams &chainparams) {
@@ -3536,12 +3549,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     return true;
 }
 
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev, const CConsensusFlags& consensusFlags)
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CConsensusContextInfo& context, const CConsensusFlags& consensusFlags)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const int nHeight = context.height + 1;
 
     int64_t nLockTimeCutoff = (consensusFlags.locktimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                              ? pindexPrev->GetMedianTimePast()
+                              ? context.medianTimePast
                               : block.GetBlockTime();
 
     // Check that all transactions are finalized
@@ -3691,7 +3704,8 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     }
     if (fNewBlock) *fNewBlock = true;
     CConsensusFlags flags = GetConsensusFlags(pindex, chainparams);
-    if ((!CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime())) || !ContextualCheckBlock(block, state, pindex->pprev, flags)) {
+    CConsensusContextInfo context = GetContextInfo(pindex->pprev);
+    if ((!CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime())) || !ContextualCheckBlock(block, state, context, flags)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -3780,12 +3794,13 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     uint256 hash = block.GetHash();
     indexDummy.phashBlock = &hash;
     CConsensusFlags flags = GetConsensusFlags(&indexDummy, chainparams);
+    CConsensusContextInfo context = GetContextInfo(pindexPrev);
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
-    if (!ContextualCheckBlock(block, state, pindexPrev, flags))
+    if (!ContextualCheckBlock(block, state, context, flags))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;

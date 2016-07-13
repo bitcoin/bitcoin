@@ -16,4 +16,13 @@ public:
     unsigned int locktimeFlags = 0;
 };
 
+class CConsensusContextInfo
+{
+    public:
+        CBlockHeader bestBlock;
+        int64_t medianTimePast = 0;
+        int height = 0;
+        int64_t now = 0;
+};
+
 #endif //BLOCKVALIDATOR_H
