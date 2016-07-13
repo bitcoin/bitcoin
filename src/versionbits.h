@@ -65,6 +65,16 @@ struct VersionBitsCache
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
+namespace Consensus {
+
+/**
+ * Get loosely defined struct containing all the consensus flags.
+ * @TODO incomplete, not all consensus flags yet.
+ */
+int64_t GetFlags(const CBlock& block, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, VersionBitsCache& cache);
+
+} // namespace Consensus
+
 // TODO: make static again
 bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 

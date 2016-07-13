@@ -5,6 +5,7 @@
 #include "versionbits.h"
 
 #include "consensus/params.h"
+#include "script/interpreter.h"
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {
@@ -163,4 +164,37 @@ bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequir
         pstart = pstart->pprev;
     }
     return (nFound >= nRequired);
+}
+
+int64_t Consensus::GetFlags(const CBlock& block, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, VersionBitsCache& cache)
+{
+    // BIP16 didn't become active until Apr 1 2012
+    int64_t nBIP16SwitchTime = 1333238400;
+    bool fStrictPayToScriptHash = (pindexPrev->GetBlockTime() >= nBIP16SwitchTime);
+
+    int64_t flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
+    // when 75% of the network has upgraded:
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+        flags |= SCRIPT_VERIFY_DERSIG;
+    }
+
+    // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
+    // blocks, when 75% of the network has upgraded:
+    if (block.nVersion >= 4 && IsSuperMajority(4, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, cache) == THRESHOLD_ACTIVE) {
+        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    }
+
+    // Start enforcing WITNESS rules using versionbits logic.
+    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, cache) == THRESHOLD_ACTIVE) {
+        flags |= SCRIPT_VERIFY_WITNESS;
+    }
+
+    return flags;
 }
