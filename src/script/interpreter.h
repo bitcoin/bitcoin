@@ -97,6 +97,9 @@ enum
 
     /* BIP34: Verify coinbase transactions commit to the current height. */
     TX_COINBASE_VERIFY_BIP34 = (1U << 13),
+
+    /* BIP30: See Consensus::GetFlags(), Consensus::VerifyTx() and http://r6.ca/blog/20120206T005236Z.html for more information */
+    TX_VERIFY_BIP30 = (1U << 14),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

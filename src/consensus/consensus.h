@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
 
@@ -45,7 +46,7 @@ bool CheckTxCoinbase(const CTransaction& tx, CValidationState& state, const int6
  * Fully verify a CTransaction.
  * @TODO this is incomplete, among other things, the scripts are not checked yet.
  */
-bool VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight);
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight, const CCoinsViewCache& inputs);
 
 } // namespace Consensus
 
