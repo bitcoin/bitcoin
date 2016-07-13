@@ -1,5 +1,4 @@
-Bitcoin Unlimited 0.12.0
-=====================
+Bitcoin Unlimited 0.12.1b
 
 Intro
 -----

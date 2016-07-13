@@ -1318,8 +1318,7 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
 
 //LogPrintf("Listening from config file %s  strfind is %d\n", strAddr , pos1);
           string strListeningPeerIP;
-          string strPeerIP;
-          strPeerIP = boost::lexical_cast<std::string>(pfrom->addr.ToString().c_str());
+          string strPeerIP = pfrom->addr.ToString();
           pos1 = strPeerIP.rfind(":");
           pos2 = strPeerIP.rfind("]:");
           // Handle both ipv4 and ipv6 cases

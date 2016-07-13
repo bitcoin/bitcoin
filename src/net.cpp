@@ -819,7 +819,7 @@ int SocketSendData(CNode* pnode)
                 // error
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
-                    LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
+		  LogPrintf("socket send error '%s' to %s (%d)\n", NetworkErrorString(nErr),pnode->addrName.c_str(),pnode->id);
                     pnode->CloseSocketDisconnect();
                 }
             }
@@ -1191,10 +1191,13 @@ void ThreadSocketHandler()
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH (CNode* pnode, vNodes) {
-                if (pnode->hSocket == INVALID_SOCKET)
+                // It is necessary to use a temporary variable to ensure that pnode->hSocket is not changed by another thread during execution.
+                // If the socket is closed and even reopened for some unrelated connection, the worst case is that we get a spurious wakeup, so a mutex is not needed to protect the entire use of the socket.
+  	        SOCKET hSocket = pnode->hSocket;  
+                if (hSocket == INVALID_SOCKET)
                     continue;
-                FD_SET(pnode->hSocket, &fdsetError);
-                hSocketMax = max(hSocketMax, pnode->hSocket);
+                FD_SET(hSocket, &fdsetError);
+                hSocketMax = max(hSocketMax, hSocket);
                 have_fds = true;
 
                 // Implement the following logic:
@@ -1215,7 +1218,7 @@ void ThreadSocketHandler()
                 {
                     TRY_LOCK(pnode->cs_vSend, lockSend);
                     if (lockSend && !pnode->vSendMsg.empty()) {
-                        FD_SET(pnode->hSocket, &fdsetSend);
+                        FD_SET(hSocket, &fdsetSend);
                         continue;
                     }
                 }
@@ -1223,7 +1226,7 @@ void ThreadSocketHandler()
                     TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                     if (lockRecv && (pnode->vRecvMsg.empty() || !pnode->vRecvMsg.front().complete() ||
                                      pnode->GetTotalRecvSize() <= ReceiveFloodSize()))
-                        FD_SET(pnode->hSocket, &fdsetRecv);
+		      FD_SET(hSocket, &fdsetRecv);
                 }
             }
         }
@@ -1274,9 +1277,10 @@ void ThreadSocketHandler()
             //
             // Receive
             //
-            if (pnode->hSocket == INVALID_SOCKET)
+  	    SOCKET hSocket = pnode->hSocket; // temporary used to make sure that pnode->hSocket isn't closed by another thread during processing here.
+            if (hSocket == INVALID_SOCKET)
                 continue;
-            if (FD_ISSET(pnode->hSocket, &fdsetRecv) || FD_ISSET(pnode->hSocket, &fdsetError)) {
+            if (FD_ISSET(hSocket, &fdsetRecv) || FD_ISSET(hSocket, &fdsetError)) {
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 int64_t amt2Recv = receiveShaper.available(RECV_SHAPER_MIN_FRAG);
                 if (!lockRecv) {
@@ -1285,9 +1289,12 @@ void ThreadSocketHandler()
                 else if (amt2Recv > 0) {
                     {
                         progress++;
+                        hSocket = pnode->hSocket; // get it again inside the lock
+                        if (hSocket == INVALID_SOCKET)
+                          continue;
                         // max of min makes sure amt is in a range reasonable for buffer allocation
                         int64_t amt = max((int64_t)1, min(amt2Recv, MAX_RECV_CHUNK));
-                        int nBytes = recv(pnode->hSocket, recvMsgBuf, amt, MSG_DONTWAIT);
+                        int nBytes = recv(hSocket, recvMsgBuf, amt, MSG_DONTWAIT);
                         if (nBytes > 0) {
                             receiveShaper.leak(nBytes);
                             if (!pnode->ReceiveMsgBytes(recvMsgBuf, nBytes))
@@ -1319,9 +1326,10 @@ void ThreadSocketHandler()
             //
             // Send
             //
-            if (pnode->hSocket == INVALID_SOCKET)
+            hSocket = pnode->hSocket;
+            if (hSocket == INVALID_SOCKET)
                 continue;
-            if (FD_ISSET(pnode->hSocket, &fdsetSend)) {
+            if (FD_ISSET(hSocket, &fdsetSend)) {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend && sendShaper.try_leak(0)) {
                     progress += SocketSendData(pnode);

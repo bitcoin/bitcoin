@@ -74,6 +74,7 @@ if EXEEXT == ".exe" and "-win" not in opts:
 
 #Tests
 testScripts = [
+    'bip68-112-113-p2p.py',
     'wallet.py',
     'excessive.py',
     'listtransactions.py',
@@ -107,10 +108,13 @@ testScripts = [
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     'abandonconflict.py',
+    'p2p-versionbits-warning.py',
 ]
 testScriptsExt = [
+    'bip9-softforks.py',
     'bip65-cltv.py',
     'bip65-cltv-p2p.py',
+    'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',

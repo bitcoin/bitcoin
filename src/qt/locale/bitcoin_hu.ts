@@ -964,6 +964,10 @@
         <translation>Itt beállíthatod a kezelőfelület nyelvét. A beállítás a Bitcoin újraindítása után lép érvénybe.</translation>
     </message>
     <message>
+        <source>Third party transaction URLs</source>
+        <translation>Harmadik fél tranzakció URL-ek</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Minden kliensbeállítás alapértelmezettre állítása.</translation>
     </message>

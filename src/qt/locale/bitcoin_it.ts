@@ -2854,7 +2854,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unità con cui visualizzare gli importi. Clicca per selezionare un altra unità.</translation>
+        <translation>Unità con cui visualizzare gli importi. Clicca per selezionare un'altra unità.</translation>
     </message>
 </context>
 <context>
