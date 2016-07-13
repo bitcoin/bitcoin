@@ -2233,7 +2233,7 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-CConsensusFlags GetConsensusFlags(const CBlock& block, const CBlockIndex *pindex, const CChainParams &chainparams);
+CConsensusFlags GetConsensusFlags(const CBlockIndex *pindex, const CChainParams &chainparams);
 
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
@@ -2330,7 +2330,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
 
-    CConsensusFlags consensusFlags = GetConsensusFlags(block, pindex, chainparams);
+    CConsensusFlags consensusFlags = GetConsensusFlags(pindex, chainparams);
 
     if (consensusFlags.enforceBIP30) {
         BOOST_FOREACH(const CTransaction& tx, block.vtx) {
@@ -2491,7 +2491,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     return true;
 }
 
-CConsensusFlags GetConsensusFlags(const CBlock& block, const CBlockIndex *pindex, const CChainParams &chainparams) {
+CConsensusFlags GetConsensusFlags(const CBlockIndex *pindex, const CChainParams &chainparams) {
     CConsensusFlags consensusFlags;
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
@@ -2527,13 +2527,13 @@ CConsensusFlags GetConsensusFlags(const CBlock& block, const CBlockIndex *pindex
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     // when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
+    if (pindex->nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
         consensusFlags.scriptFlags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
     // blocks, when 75% of the network has upgraded:
-    if (block.nVersion >= 4 && IsSuperMajority(4, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
+    if (pindex->nVersion >= 4 && IsSuperMajority(4, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
         consensusFlags.scriptFlags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
@@ -2550,7 +2550,7 @@ CConsensusFlags GetConsensusFlags(const CBlock& block, const CBlockIndex *pindex
     }
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
+    if (pindex->nVersion >= 2 && IsSuperMajority(2, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
         consensusFlags.enforceBIP34 = true;
     }
 
@@ -3544,7 +3544,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     indexDummy.nVersion = block.nVersion;
     uint256 hash = block.GetHash();
     indexDummy.phashBlock = &hash;
-    CConsensusFlags consensusFlags = GetConsensusFlags(block, &indexDummy, Params());
+    CConsensusFlags consensusFlags = GetConsensusFlags(&indexDummy, Params());
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
 
     int64_t nLockTimeCutoff = (consensusFlags.locktimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
