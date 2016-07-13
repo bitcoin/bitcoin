@@ -103,6 +103,9 @@ enum
 
     /* BIP113: Use GetMedianTimePast() instead of nTime for end point timestamp. */
     LOCKTIME_MEDIAN_TIME_PAST = (1U << 15),
+
+    /* BIP68: Interpret sequence numbers as relative lock-time constraints. */
+    LOCKTIME_VERIFY_SEQUENCE = (1 << 16),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

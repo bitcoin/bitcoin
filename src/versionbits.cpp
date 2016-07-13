@@ -229,7 +229,7 @@ int64_t Consensus::GetFlags(const CBlock& block, const Consensus::Params& consen
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, cache) == THRESHOLD_ACTIVE) {
-        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+        flags |= (SCRIPT_VERIFY_CHECKSEQUENCEVERIFY & LOCKTIME_VERIFY_SEQUENCE);
     }
 
     // Start enforcing WITNESS rules using versionbits logic.
