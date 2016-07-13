@@ -1743,7 +1743,7 @@ void ThreadOpenAddedConnections()
             BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
                 CAddress addr;
                 CSemaphoreGrant grant(*semOutboundAddNode);
-                OpenNetworkConnection(addr, &grant, strAddNode.c_str());
+                OpenNetworkConnection(addr, &grant);
                 MilliSleep(500);
             }
             // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
@@ -1795,7 +1795,7 @@ void ThreadOpenAddedConnections()
             //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
             //     nodes that have restarted.
             CSemaphoreGrant grant(*semOutboundAddNode);
-            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant, CAddress(vserv[i % vserv.size()]).ToString().c_str());
+            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
             MilliSleep(500);
         }
         // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
