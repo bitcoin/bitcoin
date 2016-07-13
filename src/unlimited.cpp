@@ -1316,7 +1316,6 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
           if (pos1 <= 0 && pos2 <= 0)
               strAddr += ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
 
-//LogPrintf("Listening from config file %s  strfind is %d\n", strAddr , pos1);
           string strListeningPeerIP;
           string strPeerIP = pfrom->addr.ToString();
           pos1 = strPeerIP.rfind(":");
@@ -1329,7 +1328,6 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
           else
               strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
 
-//LogPrintf("xped ip is %s remote IP is %s\n", strAddr, strListeningPeerIP);
 	  if(strAddr == strListeningPeerIP) {
               LogPrint("blk", "Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
               pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t) EXPEDITED_BLOCKS));
