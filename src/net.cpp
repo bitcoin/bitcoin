@@ -473,10 +473,6 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
-
-    // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate version
-    // message because we don't know if in the future Core will append more data to the end of the current VERSION message
-    PushMessage(NetMsgType::BUVERSION, GetListenPort());
 }
 
 

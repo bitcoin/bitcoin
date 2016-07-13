@@ -46,6 +46,7 @@ const char *XPEDITEDREQUEST="req_xpedited";
 const char *XPEDITEDBLK="Xb";
 const char *XPEDITEDTxn="Xt";
 const char *BUVERSION="buversion";
+const char *BUVERACK="buverack";
 };
 
 static const char* ppszTypeName[] =
@@ -99,6 +100,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::XPEDITEDBLK,
     NetMsgType::XPEDITEDTxn,
     NetMsgType::BUVERSION,
+    NetMsgType::BUVERACK,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
