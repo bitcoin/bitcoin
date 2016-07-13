@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CORE_MEMUSAGE_H
 #define BITCOIN_CORE_MEMUSAGE_H
 
-#include "primitives/transaction.h"
-#include "primitives/block.h"
+#include "consensus/block.h"
+#include "consensus/transaction.h"
 #include "memusage.h"
 
 static inline size_t RecursiveDynamicUsage(const CScript& script) {

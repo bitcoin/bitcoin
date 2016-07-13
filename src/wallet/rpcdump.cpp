@@ -4,10 +4,10 @@
 
 #include "base58.h"
 #include "chain.h"
+#include "consensus/script.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "main.h"
-#include "script/script.h"
 #include "script/standard.h"
 #include "sync.h"
 #include "util.h"

@@ -15,6 +15,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/validation.h"
 #include "httpserver.h"
 #include "httprpc.h"
@@ -34,7 +35,6 @@
 #include "torcontrol.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "utilmoneystr.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

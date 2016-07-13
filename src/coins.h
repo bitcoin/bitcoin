@@ -7,11 +7,11 @@
 #define BITCOIN_COINS_H
 
 #include "compressor.h"
+#include "consensus/hash.h"
+#include "consensus/serialize.h"
+#include "consensus/uint256.h"
 #include "core_memusage.h"
-#include "hash.h"
 #include "memusage.h"
-#include "serialize.h"
-#include "uint256.h"
 
 #include <assert.h>
 #include <stdint.h>

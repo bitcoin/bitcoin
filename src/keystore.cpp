@@ -5,8 +5,8 @@
 
 #include "keystore.h"
 
+#include "consensus/pubkey.h"
 #include "key.h"
-#include "pubkey.h"
 #include "util.h"
 
 #include <boost/foreach.hpp>

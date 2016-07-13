@@ -6,8 +6,8 @@
 #define BITCOIN_TEST_TEST_BITCOIN_H
 
 #include "chainparamsbase.h"
+#include "consensus/pubkey.h"
 #include "key.h"
-#include "pubkey.h"
 #include "txdb.h"
 #include "txmempool.h"
 

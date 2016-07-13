@@ -90,6 +90,8 @@ BITCOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/pow.h \
+  consensus/versionbits.h \
   core_io.h \
   core_memusage.h \
   httprpc.h \
@@ -110,7 +112,6 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
-  pow.h \
   protocol.h \
   random.h \
   reverselock.h \
@@ -137,10 +138,8 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   util.h \
-  utilmoneystr.h \
   utiltime.h \
   validationinterface.h \
-  versionbits.h \
   wallet/crypter.h \
   wallet/db.h \
   wallet/rpcwallet.h \
@@ -167,6 +166,8 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/pow.cpp \
+  consensus/versionbits.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -178,7 +179,6 @@ libbitcoin_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
-  pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
@@ -194,7 +194,6 @@ libbitcoin_server_a_SOURCES = \
   txmempool.cpp \
   ui_interface.cpp \
   validationinterface.cpp \
-  versionbits.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -246,34 +245,36 @@ libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
   amount.h \
-  arith_uint256.cpp \
-  arith_uint256.h \
+  consensus/arith_uint256.cpp \
+  consensus/arith_uint256.h \
+  consensus/bitcoinconsensus.cpp \
+  consensus/block.cpp \
+  consensus/block.h \
+  consensus/hash.cpp \
+  consensus/hash.h \
+  consensus/interpreter.cpp \
+  consensus/interpreter.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
+  consensus/prevector.h \
+  consensus/pubkey.cpp \
+  consensus/pubkey.h \
+  consensus/script.cpp \
+  consensus/script.h \
+  consensus/script_error.cpp \
+  consensus/script_error.h \
+  consensus/serialize.h \
+  consensus/tinyformat.h \
+  consensus/transaction.cpp \
+  consensus/transaction.h \
+  consensus/uint256.cpp \
+  consensus/uint256.h \
+  consensus/utilmoneystr.cpp \
+  consensus/utilmoneystr.h \
+  consensus/utilstrencodings.cpp \
+  consensus/utilstrencodings.h \
   consensus/validation.h \
-  hash.cpp \
-  hash.h \
-  prevector.h \
-  primitives/block.cpp \
-  primitives/block.h \
-  primitives/transaction.cpp \
-  primitives/transaction.h \
-  pubkey.cpp \
-  pubkey.h \
-  script/bitcoinconsensus.cpp \
-  script/interpreter.cpp \
-  script/interpreter.h \
-  script/script.cpp \
-  script/script.h \
-  script/script_error.cpp \
-  script/script_error.h \
-  serialize.h \
-  tinyformat.h \
-  uint256.cpp \
-  uint256.h \
-  utilstrencodings.cpp \
-  utilstrencodings.h \
   version.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
@@ -313,8 +314,8 @@ libbitcoin_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   util.cpp \
-  utilmoneystr.cpp \
-  utilstrencodings.cpp \
+  consensus/utilmoneystr.cpp \
+  consensus/utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)
 
@@ -399,7 +400,7 @@ bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
-include_HEADERS = script/bitcoinconsensus.h
+include_HEADERS = consensus/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT

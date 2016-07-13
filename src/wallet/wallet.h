@@ -7,10 +7,10 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
+#include "consensus/tinyformat.h"
+#include "consensus/utilstrencodings.h"
 #include "streams.h"
-#include "tinyformat.h"
 #include "ui_interface.h"
-#include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "script/ismine.h"
 #include "wallet/crypter.h"

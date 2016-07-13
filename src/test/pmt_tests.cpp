@@ -2,12 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/arith_uint256.h"
 #include "consensus/merkle.h"
+#include "consensus/serialize.h"
+#include "consensus/uint256.h"
 #include "merkleblock.h"
-#include "serialize.h"
 #include "streams.h"
-#include "uint256.h"
-#include "arith_uint256.h"
 #include "version.h"
 #include "random.h"
 #include "test/test_bitcoin.h"

@@ -6,10 +6,10 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
-#include "pubkey.h"
-#include "serialize.h"
+#include "consensus/pubkey.h"
+#include "consensus/serialize.h"
+#include "consensus/uint256.h"
 #include "support/allocators/secure.h"
-#include "uint256.h"
 
 #include <stdexcept>
 #include <vector>

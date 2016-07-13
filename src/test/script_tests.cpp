@@ -4,19 +4,19 @@
 
 #include "data/script_tests.json.h"
 
+#include "consensus/script.h"
+#include "consensus/script_error.h"
+#include "consensus/utilstrencodings.h"
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "script/script.h"
-#include "script/script_error.h"
 #include "script/sign.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 #include "rpc/server.h"
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/bitcoinconsensus.h"
+#include "consensus/bitcoinconsensus.h"
 #endif
 
 #include <fstream>

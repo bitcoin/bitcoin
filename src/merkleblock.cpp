@@ -5,9 +5,9 @@
 
 #include "merkleblock.h"
 
-#include "hash.h"
 #include "consensus/consensus.h"
-#include "utilstrencodings.h"
+#include "consensus/hash.h"
+#include "consensus/utilstrencodings.h"
 
 using namespace std;
 

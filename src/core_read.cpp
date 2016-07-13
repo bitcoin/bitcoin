@@ -4,14 +4,14 @@
 
 #include "core_io.h"
 
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "serialize.h"
+#include "consensus/block.h"
+#include "consensus/script.h"
+#include "consensus/serialize.h"
+#include "consensus/transaction.h"
+#include "consensus/utilstrencodings.h"
 #include "streams.h"
 #include <univalue.h>
 #include "util.h"
-#include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/algorithm/string/classification.hpp>

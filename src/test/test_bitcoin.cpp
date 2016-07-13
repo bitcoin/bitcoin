@@ -8,11 +8,11 @@
 
 #include "chainparams.h"
 #include "consensus/consensus.h"
+#include "consensus/pubkey.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "main.h"
 #include "miner.h"
-#include "pubkey.h"
 #include "random.h"
 #include "txdb.h"
 #include "txmempool.h"

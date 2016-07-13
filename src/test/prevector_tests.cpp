@@ -3,10 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <vector>
-#include "prevector.h"
+#include "consensus/prevector.h"
+#include "consensus/serialize.h"
 #include "random.h"
-
-#include "serialize.h"
 #include "streams.h"
 
 #include "test/test_bitcoin.h"

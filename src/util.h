@@ -15,7 +15,7 @@
 #endif
 
 #include "compat.h"
-#include "tinyformat.h"
+#include "consensus/tinyformat.h"
 #include "utiltime.h"
 
 #include <atomic>

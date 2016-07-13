@@ -6,15 +6,15 @@
 #include "coins.h"
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
+#include "consensus/pubkey.h"
+#include "consensus/uint256.h"
+#include "consensus/utilstrencodings.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "miner.h"
-#include "pubkey.h"
 #include "script/standard.h"
 #include "txmempool.h"
-#include "uint256.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include "test/test_bitcoin.h"
 

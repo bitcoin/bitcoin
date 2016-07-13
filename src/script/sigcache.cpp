@@ -5,10 +5,10 @@
 
 #include "sigcache.h"
 
+#include "consensus/pubkey.h"
+#include "consensus/uint256.h"
 #include "memusage.h"
-#include "pubkey.h"
 #include "random.h"
-#include "uint256.h"
 #include "util.h"
 
 #include <boost/thread.hpp>

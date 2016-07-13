@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/utilstrencodings.h"
 #include "random.h"
-#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 #include "wallet/crypter.h"
 

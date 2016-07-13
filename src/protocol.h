@@ -11,8 +11,8 @@
 #define BITCOIN_PROTOCOL_H
 
 #include "netbase.h"
-#include "serialize.h"
-#include "uint256.h"
+#include "consensus/serialize.h"
+#include "consensus/uint256.h"
 #include "version.h"
 
 #include <stdint.h>

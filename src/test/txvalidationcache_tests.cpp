@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/pubkey.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "main.h"
 #include "miner.h"
-#include "pubkey.h"
 #include "txmempool.h"
 #include "random.h"
 #include "script/standard.h"

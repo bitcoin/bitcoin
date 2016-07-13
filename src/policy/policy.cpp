@@ -7,10 +7,10 @@
 
 #include "policy/policy.h"
 
+#include "consensus/tinyformat.h"
+#include "consensus/utilstrencodings.h"
 #include "main.h"
-#include "tinyformat.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
 

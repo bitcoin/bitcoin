@@ -9,6 +9,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "consensus/utilstrencodings.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"
@@ -16,7 +17,6 @@
 #include "util.h"
 #include "httpserver.h"
 #include "httprpc.h"
-#include "utilstrencodings.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>

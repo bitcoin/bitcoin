@@ -6,14 +6,14 @@
 
 #include "base58.h"
 #include "clientversion.h"
+#include "consensus/serialize.h"
+#include "consensus/uint256.h"
+#include "consensus/utilstrencodings.h"
 #include "key.h"
 #include "merkleblock.h"
 #include "random.h"
-#include "serialize.h"
 #include "streams.h"
-#include "uint256.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 
 #include <vector>

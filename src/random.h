@@ -6,7 +6,7 @@
 #ifndef BITCOIN_RANDOM_H
 #define BITCOIN_RANDOM_H
 
-#include "uint256.h"
+#include "consensus/uint256.h"
 
 #include <stdint.h>
 

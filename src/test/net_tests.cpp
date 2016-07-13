@@ -5,8 +5,8 @@
 #include "test/test_bitcoin.h"
 #include <string>
 #include <boost/test/unit_test.hpp>
-#include "hash.h"
-#include "serialize.h"
+#include "consensus/hash.h"
+#include "consensus/serialize.h"
 #include "streams.h"
 #include "net.h"
 #include "chainparams.h"

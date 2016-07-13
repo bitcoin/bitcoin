@@ -4,7 +4,7 @@
 
 #include "clientversion.h"
 
-#include "tinyformat.h"
+#include "consensus/tinyformat.h"
 
 #include <string>
 

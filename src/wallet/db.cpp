@@ -6,10 +6,10 @@
 #include "db.h"
 
 #include "addrman.h"
-#include "hash.h"
+#include "consensus/hash.h"
+#include "consensus/utilstrencodings.h"
 #include "protocol.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include <stdint.h>
 

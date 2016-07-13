@@ -7,6 +7,7 @@
 
 #include "clientversion.h"
 #include "consensus/consensus.h"
+#include "consensus/utilmoneystr.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "policy/policy.h"
@@ -14,7 +15,6 @@
 #include "streams.h"
 #include "timedata.h"
 #include "util.h"
-#include "utilmoneystr.h"
 #include "utiltime.h"
 #include "version.h"
 

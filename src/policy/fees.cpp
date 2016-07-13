@@ -7,7 +7,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
-#include "primitives/transaction.h"
+#include "consensus/transaction.h"
 #include "random.h"
 #include "streams.h"
 #include "txmempool.h"

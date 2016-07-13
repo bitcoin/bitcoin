@@ -5,12 +5,12 @@
 
 #include "interpreter.h"
 
-#include "primitives/transaction.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
 #include "pubkey.h"
-#include "script/script.h"
+#include "script.h"
+#include "transaction.h"
 #include "uint256.h"
 
 using namespace std;

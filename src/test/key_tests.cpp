@@ -5,10 +5,10 @@
 #include "key.h"
 
 #include "base58.h"
-#include "script/script.h"
-#include "uint256.h"
+#include "consensus/script.h"
+#include "consensus/uint256.h"
+#include "consensus/utilstrencodings.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 
 #include <string>

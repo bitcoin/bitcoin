@@ -6,6 +6,7 @@
 #include "amount.h"
 #include "base58.h"
 #include "chain.h"
+#include "consensus/utilmoneystr.h"
 #include "core_io.h"
 #include "init.h"
 #include "main.h"
@@ -15,7 +16,6 @@
 #include "rpc/server.h"
 #include "timedata.h"
 #include "util.h"
-#include "utilmoneystr.h"
 #include "wallet.h"
 #include "walletdb.h"
 

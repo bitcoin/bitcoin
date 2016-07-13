@@ -6,12 +6,12 @@
 #include "rpc/server.h"
 
 #include "base58.h"
+#include "consensus/utilstrencodings.h"
 #include "init.h"
 #include "random.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "utilstrencodings.h"
 
 #include <univalue.h>
 

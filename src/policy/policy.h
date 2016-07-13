@@ -7,7 +7,7 @@
 #define BITCOIN_POLICY_POLICY_H
 
 #include "consensus/consensus.h"
-#include "script/interpreter.h"
+#include "consensus/interpreter.h"
 #include "script/standard.h"
 
 #include <string>

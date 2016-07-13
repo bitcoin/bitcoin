@@ -13,10 +13,10 @@
 #include "amount.h"
 #include "chain.h"
 #include "coins.h"
+#include "consensus/script_error.h"
+#include "consensus/versionbits.h"
 #include "net.h"
-#include "script/script_error.h"
 #include "sync.h"
-#include "versionbits.h"
 
 #include <algorithm>
 #include <exception>
