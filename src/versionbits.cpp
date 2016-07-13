@@ -213,29 +213,25 @@ int64_t Consensus::GetFlags(const CBlock& block, const Consensus::Params& consen
     
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     // when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
         flags |= SCRIPT_VERIFY_DERSIG;
-    }
 
     // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
     // blocks, when 75% of the network has upgraded:
-    if (block.nVersion >= 4 && IsSuperMajority(4, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+    if (block.nVersion >= 4 && IsSuperMajority(4, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-    }
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, cache) == THRESHOLD_ACTIVE)
         flags |= LOCKTIME_MEDIAN_TIME_PAST;
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, cache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, cache) == THRESHOLD_ACTIVE)
         flags |= (SCRIPT_VERIFY_CHECKSEQUENCEVERIFY & LOCKTIME_VERIFY_SEQUENCE);
-    }
 
     // Start enforcing WITNESS rules using versionbits logic.
-    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, cache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindexPrev->pprev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, cache) == THRESHOLD_ACTIVE)
         flags |= SCRIPT_VERIFY_WITNESS;
-    }
 
     return flags;
 }
