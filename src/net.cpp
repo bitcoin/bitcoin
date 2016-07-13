@@ -473,10 +473,6 @@ void CNode::PushVersion()
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
                 nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
-
-    // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate version
-    // message because we don't know if in the future Core will append more data to the end of the current VERSION message
-    PushMessage(NetMsgType::BUVERSION, GetListenPort());
 }
 
 
@@ -1747,7 +1743,7 @@ void ThreadOpenAddedConnections()
             BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
                 CAddress addr;
                 CSemaphoreGrant grant(*semOutboundAddNode);
-                OpenNetworkConnection(addr, &grant, strAddNode.c_str());
+                OpenNetworkConnection(addr, &grant);
                 MilliSleep(500);
             }
             // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 
@@ -1799,7 +1795,7 @@ void ThreadOpenAddedConnections()
             //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
             //     nodes that have restarted.
             CSemaphoreGrant grant(*semOutboundAddNode);
-            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant, CAddress(vserv[i % vserv.size()]).ToString().c_str());
+            OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
             MilliSleep(500);
         }
         // Retry every 15 seconds.  It is important to check often to make sure the Xpedited Relay network 

@@ -4964,9 +4964,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             State(pfrom->GetId())->fCurrentlyConnected = true;
         }
 
-        // BU: this step done here after final handshake
-        CheckAndRequestExpeditedBlocks(pfrom);
-
         if (pfrom->nVersion >= SENDHEADERS_VERSION) {
             // Tell our peer we prefer to receive headers rather than inv's
             // We send this to non-NODE NETWORK peers as well, because even
@@ -4977,6 +4974,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (!IsThinBlocksEnabled())
                 pfrom->PushMessage(NetMsgType::SENDHEADERS);
         }
+
+        // BU expedited procecessing requires the exchange of the listening port id but we have to send it in a separate version
+        // message because we don't know if in the future Core will append more data to the end of the current VERSION message.
+        // The BUVERSION should be after the VERACK message otherwise Core may flag an error if another messaged shows up before the VERACK is received.
+        // The BUVERSION message is active from the protocol EXPEDITED_VERSION onwards.
+        if( pfrom->nVersion >= EXPEDITED_VERSION)
+            pfrom->PushMessage(NetMsgType::BUVERSION, GetListenPort());
     }
 
 
@@ -5521,7 +5525,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
       }
     // BU - used to pass BU specific version information similar to NetMsgType::VERSION
     else if (strCommand == NetMsgType::BUVERSION)
-      {
+    {
         // Each connection can only send one version message
         if (pfrom->addrFromPort != 0)
         {
@@ -5532,7 +5536,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         vRecv >> pfrom->addrFromPort; // needed for connecting and initializing Xpedited forwarding.
-      }
+        pfrom->PushMessage(NetMsgType::BUVERACK);
+    }
+    // BU - final handshake for BU specific version information similar to NetMsgType::VERACK
+    else if (strCommand == NetMsgType::BUVERACK)
+    {
+        // BU: this step done here after final handshake
+        CheckAndRequestExpeditedBlocks(pfrom);
+    }
 
 
     else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // BU received extreme thin block -- but ignore blocks received while importing

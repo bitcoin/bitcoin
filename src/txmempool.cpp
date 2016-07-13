@@ -1027,5 +1027,6 @@ void CTxMemPool::UpdateTransactionsPerSecond()
 
     // Add the new tx to the rate
     nTxPerSec += 1/nSecondsToAverage; // The amount that the new tx will add to the tx rate
+    if (nTxPerSec < 0) nTxPerSec = 0;
 }
 // BU: end
