@@ -306,7 +306,7 @@ class SegWitTest(BitcoinTestFramework):
         tx3 = CTransaction()
         tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), CScript([p2sh_program])))
         tx3.vout.append(CTxOut(tx2.vout[0].nValue-1000, scriptPubKey))
-        tx3.wit.vtxinwit.append(CTxinWitness())
+        tx3.wit.vtxinwit.append(CTxInWitness())
         tx3.wit.vtxinwit[0].scriptWitness.stack = [b'a'*400000]
         tx3.rehash()
         self.std_node.test_transaction_acceptance(tx3, True, False, b'no-witness-yet')
