@@ -28,7 +28,14 @@ namespace patternsearch
 		uint32_t* index = (uint32_t*)hash_tmp;
 		uint32_t chunksToProcess=chunks/totalThreads;
 		uint32_t startChunk=threadNumber*chunksToProcess;
-		for( uint32_t i = startChunk; i < startChunk+chunksToProcess;  i++){
+
+        int remainder=0;
+        if(threadNumber+1==totalThreads){
+            //The last thread will also do the remainder
+            remainder=chunks%totalThreads;
+        }
+
+        for( uint32_t i = startChunk; i < startChunk+chunksToProcess+remainder;  i++){
             //This changes the first character of hash_tmp
 			*index = i;
             SHA512((unsigned char*)hash_tmp, sizeof(hash_tmp), (unsigned char*)&(mainMemoryPsuedoRandomData[i*chunkSize]));
@@ -57,7 +64,14 @@ namespace patternsearch
 		//Iterate over the data
 		int searchNumber=comparisonSize/totalThreads;
 		int startLoc=threadNumber*searchNumber;
-		for(uint32_t k=startLoc;k<startLoc+searchNumber;k++){
+
+        int remainder=0;
+        if(threadNumber+1==totalThreads){
+            //The last thread will also do the remainder
+            remainder=chunks%totalThreads;
+        }
+
+        for(uint32_t k=startLoc;k<startLoc+searchNumber+remainder;k++){
 			
             //copy data to first l2 cache
 			memcpy((char*)&cacheMemoryOperatingData[0], (char*)&mainMemoryPsuedoRandomData[k*cacheMemorySize], cacheMemorySize);

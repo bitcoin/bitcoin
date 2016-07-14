@@ -43,11 +43,11 @@ uint256 CBlockHeader::FindBestPatternHash(int& collisions,char *scratchpad,int n
         uint256 midHash = GetMidHash();
 
         //Threads can only be a power of 2
-        int newThreadNumber = 1;
+        /*int newThreadNumber = 1;
         while(newThreadNumber < nThreads){
             newThreadNumber*=2;
         }
-        nThreads=newThreadNumber;
+        nThreads=newThreadNumber;*/
 
 
         std::vector< std::pair<uint32_t,uint32_t> > results =patternsearch::pattern_search( midHash,scratchpad,nThreads);
