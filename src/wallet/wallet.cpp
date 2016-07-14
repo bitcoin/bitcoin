@@ -3291,7 +3291,7 @@ bool CWallet::InitLoadWallet()
     if (fFirstRun)
     {
         // Create new keyUser and set as default key
-        if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET)) {
+        if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && walletInstance->hdChain.masterKeyID.IsNull()) {
             // generate a new master key
             CKey key;
             key.MakeNewKey(true);
