@@ -419,7 +419,7 @@ class CScriptWitness(object):
         return True
 
 
-class CTxinWitness(object):
+class CTxInWitness(object):
     def __init__(self):
         self.scriptWitness = CScriptWitness()
 
@@ -497,7 +497,7 @@ class CTransaction(object):
         else:
             self.vout = deser_vector(f, CTxOut)
         if flags != 0:
-            self.wit.vtxinwit = [CTxinWitness()]*len(self.vin)
+            self.wit.vtxinwit = [CTxInWitness()]*len(self.vin)
             self.wit.deserialize(f)
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
@@ -529,7 +529,7 @@ class CTransaction(object):
                 # vtxinwit must have the same length as vin
                 self.wit.vtxinwit = self.wit.vtxinwit[:len(self.vin)]
                 for i in range(len(self.wit.vtxinwit), len(self.vin)):
-                    self.wit.vtxinwit.append(CTxinWitness())
+                    self.wit.vtxinwit.append(CTxInWitness())
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)
         return r
