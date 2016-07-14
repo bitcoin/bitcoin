@@ -6469,7 +6469,7 @@ bool SendMessages(CNode* pto)
                     CBlock block;
                     assert(ReadBlockFromDisk(block, pBestIndex, consensusParams));
                     CBlockHeaderAndShortTxIDs cmpctblock(block);
-                    pto->PushMessage(NetMsgType::CMPCTBLOCK, cmpctblock);
+                    pto->PushMessageWithFlag(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::CMPCTBLOCK, cmpctblock);
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (state.fPreferHeaders) {
                     if (vHeaders.size() > 1) {
