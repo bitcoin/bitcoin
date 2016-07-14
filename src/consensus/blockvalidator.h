@@ -23,6 +23,7 @@ class CConsensusContextInfo
         int64_t medianTimePast = 0;
         int height = 0;
         int64_t now = 0;
+        int32_t superMajorityVersion = 0;
 };
 
 #endif //BLOCKVALIDATOR_H

@@ -2233,7 +2233,7 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex);
+CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex, const Consensus::Params consensusParams);
 CConsensusFlags GetConsensusFlags(const CBlockIndex *pindex, const CChainParams &chainparams);
 
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
@@ -2493,7 +2493,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 }
 
 
-CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex)
+CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex, const Consensus::Params consensusParams)
 {
     assert(pindex);
     CConsensusContextInfo contextInfo;
@@ -2501,6 +2501,12 @@ CConsensusContextInfo GetContextInfo(const CBlockIndex* pindex)
     contextInfo.medianTimePast = pindex->GetMedianTimePast();
     contextInfo.now = GetAdjustedTime();
     contextInfo.bestBlock = pindex->GetBlockHeader();
+    for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
+        if (IsSuperMajority(version, pindex, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+        {
+            contextInfo.superMajorityVersion = version;
+            break;
+        }
     return contextInfo;
 }
 
@@ -3526,25 +3532,25 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     return commitment;
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex * const pindexPrev, int64_t nAdjustedTime)
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const CConsensusContextInfo& context, unsigned int nextWorkRequired)
 {
     // Check proof of work
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+    if (block.nBits != nextWorkRequired)
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+    if (block.GetBlockTime() <= context.medianTimePast)
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp
-    if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)
+    if (block.GetBlockTime() > context.now + 2 * 60 * 60)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
-        if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", version - 1),
-                                 strprintf("rejected nVersion=0x%08x block", version - 1));
+    if ((2 <= context.superMajorityVersion  && context.superMajorityVersion < 5) && // check for version 2, 3 and 4 upgrades
+        block.nVersion < context.superMajorityVersion)
+        return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", context.superMajorityVersion - 1),
+                             strprintf("rejected nVersion=0x%08x block", context.superMajorityVersion - 1));
 
     return true;
 }
@@ -3658,7 +3664,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
             return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
-        if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
+        CConsensusContextInfo context = GetContextInfo(pindexPrev, chainparams.GetConsensus());
+        if (!ContextualCheckBlockHeader(block, state, context, GetNextWorkRequired(pindexPrev, &block, chainparams.GetConsensus())))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
     }
     if (pindex == NULL)
@@ -3704,7 +3711,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     }
     if (fNewBlock) *fNewBlock = true;
     CConsensusFlags flags = GetConsensusFlags(pindex, chainparams);
-    CConsensusContextInfo context = GetContextInfo(pindex->pprev);
+    CConsensusContextInfo context = GetContextInfo(pindex->pprev, chainparams.GetConsensus());
     if ((!CheckBlock(block, state, chainparams.GetConsensus(), GetAdjustedTime())) || !ContextualCheckBlock(block, state, context, flags)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
@@ -3794,9 +3801,9 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     uint256 hash = block.GetHash();
     indexDummy.phashBlock = &hash;
     CConsensusFlags flags = GetConsensusFlags(&indexDummy, chainparams);
-    CConsensusContextInfo context = GetContextInfo(pindexPrev);
+    CConsensusContextInfo context = GetContextInfo(pindexPrev, chainparams.GetConsensus());
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
+    if (!ContextualCheckBlockHeader(block, state, context, GetNextWorkRequired(pindexPrev, &block, chainparams.GetConsensus())))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
