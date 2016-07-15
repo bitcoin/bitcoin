@@ -784,7 +784,12 @@ int SocketSendData(CNode* pnode)
 
     while (it != pnode->vSendMsg.end()) {
         const CSerializeData& data = *it;
-        assert(data.size() > pnode->nSendOffset);
+        if (data.size() <= 0) {
+            it++;
+            LogPrintf("ERROR:  Trying to send message but data size was %d nSendOffset was %d nSendSize was %d\n", data.size(), pnode->nSendOffset, pnode->nSendSize);
+            continue;
+        }
+        //assert(data.size() > pnode->nSendOffset);
 
         int amt2Send = min((int64_t)(data.size() - pnode->nSendOffset), sendShaper.available(SEND_SHAPER_MIN_FRAG));
         if (amt2Send == 0)
