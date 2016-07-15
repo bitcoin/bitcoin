@@ -9,6 +9,7 @@
 #include "validation.h"
 
 // TODO remove the following dependencies
+#include "main.h" // temporary circular dependency to delay moving IsFinalTx()
 #include "coins.h"
 
 bool Consensus::CheckTxCoinbase(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight)
@@ -25,8 +26,15 @@ bool Consensus::CheckTxCoinbase(const CTransaction& tx, CValidationState& state,
     return true;
 }
 
-bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight, const CCoinsViewCache& inputs)
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, const CCoinsViewCache& inputs)
 {
+    int64_t nLockTimeCutoff = (flags & LOCKTIME_MEDIAN_TIME_PAST)
+                              ? nMedianTimePast
+                              : nBlockTime;
+
+    if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
+
     // This could be moved to Consensus::CheckTxCoinbase() as an
     // optimization, but in a strict sense that would be a hardfork ?
     if (flags & TX_VERIFY_BIP30) { 

@@ -27,9 +27,6 @@ static const int COINBASE_MATURITY = 100;
 enum {
     /* Interpret sequence numbers as relative lock-time constraints. */
     LOCKTIME_VERIFY_SEQUENCE = (1 << 0),
-
-    /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
-    LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };
 
 /** Transaction validation functions */
@@ -46,7 +43,7 @@ bool CheckTxCoinbase(const CTransaction& tx, CValidationState& state, const int6
  * Fully verify a CTransaction.
  * @TODO this is incomplete, among other things, the scripts are not checked yet.
  */
-bool VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight, const CCoinsViewCache& inputs);
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight, const int64_t nMedianTimePast, const int64_t nBlockTime, const CCoinsViewCache& inputs);
 
 } // namespace Consensus
 

@@ -95,11 +95,14 @@ enum
     //
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM = (1U << 12),
 
-    /* BIP34: Verify coinbase transactions commit to the current height. */
-    TX_COINBASE_VERIFY_BIP34 = (1U << 13),
-
     /* BIP30: See Consensus::GetFlags(), Consensus::VerifyTx() and http://r6.ca/blog/20120206T005236Z.html for more information */
-    TX_VERIFY_BIP30 = (1U << 14),
+    TX_VERIFY_BIP30 = (1U << 13),
+
+    /* BIP34: Verify coinbase transactions commit to the current height. */
+    TX_COINBASE_VERIFY_BIP34 = (1U << 14),
+
+    /* BIP113: Use GetMedianTimePast() instead of nTime for end point timestamp. */
+    LOCKTIME_MEDIAN_TIME_PAST = (1U << 15),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
