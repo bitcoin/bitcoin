@@ -47,10 +47,10 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[0].generate(101)
         hd_add = None
         num_hd_adds = 300
-        for _ in range(num_hd_adds):
+        for i in range(num_hd_adds):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].validateaddress(hd_add)
-            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(_+1)+"'")
+            assert_equal(hd_info["hdkeypath"], "m/0'/0'/"+str(i+1)+"'")
             assert_equal(hd_info["hdmasterkeyid"], masterkeyid)
             self.nodes[0].sendtoaddress(hd_add, 1)
             self.nodes[0].generate(1)
