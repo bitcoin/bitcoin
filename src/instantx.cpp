@@ -386,11 +386,12 @@ void UpdateLockedTransaction(CTransaction& tx, bool fForceNotification) {
     // there must be a successfully verified lock request
     if (!mapTxLockReq.count(txHash)) return;
 
+    int nSignatures = GetTransactionLockSignatures(txHash);
+
 #ifdef ENABLE_WALLET
     if(pwalletMain && pwalletMain->UpdatedTransaction(txHash)){
         // bumping this to update UI
         nCompleteTXLocks++;
-        int nSignatures = GetTransactionLockSignatures(txHash);
         // a transaction lock must have enough signatures to trigger this notification
         if(nSignatures == INSTANTX_SIGNATURES_REQUIRED || (fForceNotification && nSignatures > INSTANTX_SIGNATURES_REQUIRED)) {
             // notify an external script once threshold is reached
@@ -403,6 +404,10 @@ void UpdateLockedTransaction(CTransaction& tx, bool fForceNotification) {
         }
     }
 #endif
+
+    if(nSignatures == INSTANTX_SIGNATURES_REQUIRED || (fForceNotification && nSignatures > INSTANTX_SIGNATURES_REQUIRED)) {
+        GetMainSignals().NotifyTransactionLock(tx);
+    }
 }
 
 void LockTransactionInputs(CTransaction& tx) {
