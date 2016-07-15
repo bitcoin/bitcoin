@@ -87,9 +87,8 @@ public:
     }
     CKeyMetadata(int64_t nCreateTime_)
     {
-        nVersion = CKeyMetadata::CURRENT_VERSION;
+        SetNull();
         nCreateTime = nCreateTime_;
-        hdKeypath.clear();
     }
 
     ADD_SERIALIZE_METHODS;
@@ -111,6 +110,7 @@ public:
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
         hdKeypath.clear();
+        hdMasterKeyID.SetNull();
     }
 };
 
