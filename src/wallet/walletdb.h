@@ -41,7 +41,7 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
-/* simple hd chain data model */
+/* simple HD chain data model */
 class CHDChain
 {
 public:
@@ -79,7 +79,7 @@ public:
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath
-    CKeyID hdMasterKeyID; //id of the hd masterkey used to derive this key
+    CKeyID hdMasterKeyID; //id of the HD masterkey used to derive this key
 
     CKeyMetadata()
     {

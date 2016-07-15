@@ -2269,7 +2269,7 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "  \"paytxfee\": x.xxxx,         (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
-            "  \"masterkeyid\": \"<hash160>\", (string) the Hash160 of the hd master pubkey\n"
+            "  \"masterkeyid\": \"<hash160>\", (string) the Hash160 of the HD master pubkey\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -2291,7 +2291,7 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
     CKeyID masterKeyID = pwalletMain->GetHDChain().masterKeyID;
     if (!masterKeyID.IsNull())
-         obj.push_back(Pair("masterkeyid",masterKeyID.GetHex()));
+         obj.push_back(Pair("masterkeyid", masterKeyID.GetHex()));
     return obj;
 }
 
