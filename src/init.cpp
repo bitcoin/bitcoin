@@ -1784,20 +1784,14 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             }
         }
 
-        strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
+        std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()){
             std::string errorMessage;
 
-            CKey key;
-            CPubKey pubkey;
-
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
-            {
+            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
-            }
 
-            activeMasternode.pubKeyMasternode = pubkey;
-
+            LogPrintf("  pubKeyMasternode: %s\n", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }

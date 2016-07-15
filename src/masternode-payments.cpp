@@ -554,17 +554,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     // SIGN MESSAGE TO NETWORK WITH OUR MASTERNODE KEYS
 
     std::string errorMessage;
-    CPubKey pubKeyMasternode;
-    CKey keyMasternode;
-
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-    {
-        LogPrintf("CMasternodePayments::ProcessBlock() - Error upon calling SetKey: %s\n", errorMessage);
-        return false;
-    }
 
     LogPrintf("CMasternodePayments::ProcessBlock() - Signing Winner\n");
-    if(newWinner.Sign(keyMasternode, pubKeyMasternode))
+    if(newWinner.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
     {
         LogPrintf("CMasternodePayments::ProcessBlock() - AddWinningMasternode\n");
 

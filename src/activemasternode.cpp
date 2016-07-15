@@ -106,16 +106,6 @@ void CActiveMasternode::ManageStatus()
             pwalletMain->LockCoin(vin.prevout);
 
             // send to all nodes
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
-
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            {
-                notCapableReason = "Error upon calling SetKey: " + errorMessage;
-                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
-                return;
-            }
-
             CMasternodeBroadcast mnb;
             if(!CreateBroadcast(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb)) {
                 notCapableReason = "Error on CreateBroadcast: " + errorMessage;
@@ -162,15 +152,6 @@ std::string CActiveMasternode::GetStatus() {
 bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
     if(status != ACTIVE_MASTERNODE_STARTED) {
         errorMessage = "Masternode is not in a running status";
-        return false;
-    }
-
-    CPubKey pubKeyMasternode;
-    CKey keyMasternode;
-
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-    {
-        errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
     }
 

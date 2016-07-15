@@ -558,24 +558,15 @@ bool CConsensusVote::Sign()
 {
     std::string errorMessage;
 
-    CKey key2;
-    CPubKey pubkey2;
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
     //LogPrintf("signing strMessage %s \n", strMessage);
-    //LogPrintf("signing privkey %s \n", strMasterNodePrivKey);
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
-    {
-        LogPrintf("CConsensusVote::Sign() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage);
-        return false;
-    }
-
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, key2)) {
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, activeMasternode.keyMasternode)) {
         LogPrintf("CConsensusVote::Sign() - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
+    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("CConsensusVote::Sign() - Verify message failed");
         return false;
     }

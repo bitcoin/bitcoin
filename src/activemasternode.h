@@ -36,6 +36,7 @@ public:
     // Initialized by init.cpp
     // Keys for the main Masternode
     CPubKey pubKeyMasternode;
+    CKey keyMasternode;
 
     // Initialized while registering Masternode
     CTxIn vin;

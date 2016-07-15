@@ -590,21 +590,13 @@ void CDarksendPool::CheckFinalTransaction()
     std::string strMessage = finalTransaction.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string strError = "";
     std::vector<unsigned char> vchSig;
-    CKey key2;
-    CPubKey pubkey2;
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
-    {
-        LogPrintf("CDarksendPool::Check() - ERROR: Invalid Masternodeprivkey: '%s'\n", strError);
-        return;
-    }
-
-    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
+    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendPool::Check() - Sign message failed\n");
         return;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
+    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CDarksendPool::Check() - Verify message failed\n");
         return;
     }
@@ -2186,24 +2178,15 @@ bool CDarksendQueue::Sign()
     if(!fMasterNode) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(time) + boost::lexical_cast<std::string>(ready);
-
-    CKey key2;
-    CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
-    {
-        LogPrintf("CDarksendQueue():Relay - ERROR: Invalid Masternodeprivkey: '%s'\n", errorMessage);
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, activeMasternode.keyMasternode)) {
+        LogPrintf("CDarksendQueue():Sign - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, key2)) {
-        LogPrintf("CDarksendQueue():Relay - Sign message failed");
-        return false;
-    }
-
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CDarksendQueue():Relay - Verify message failed");
+    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, vchSig, strMessage, errorMessage)) {
+        LogPrintf("CDarksendQueue():Sign - Verify message failed");
         return false;
     }
 

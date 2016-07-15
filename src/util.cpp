@@ -104,7 +104,6 @@ using namespace std;
 
 //Dash only features
 bool fMasterNode = false;
-string strMasterNodePrivKey = "";
 string strMasterNodeAddr = "";
 bool fLiteMode = false;
 bool fEnableInstantSend = true;
