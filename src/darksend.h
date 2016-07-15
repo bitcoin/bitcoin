@@ -472,7 +472,7 @@ public:
     bool IsCompatibleWithEntries(std::vector<CTxOut>& vout);
 
     /// Is this amount compatible with other client in the pool?
-    bool IsCompatibleWithSession(CAmount nAmount, CTransaction txCollateral, int &errorID);
+    bool IsCompatibleWithSession(int nDenom, CTransaction txCollateral, int &errorID);
 
     /// Passively run Darksend in the background according to the configuration in settings
     bool DoAutomaticDenominating(bool fDryRun=false);
@@ -514,7 +514,11 @@ public:
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
-    bool CreateDenominated(CAmount nTotalValue);
+    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem);
+    /// Create denominations
+    bool CreateDenominated();
+    bool CreateDenominated(const CompactTallyItem& tallyItem);
+
 
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout, bool fSingleRandomDenom = false);

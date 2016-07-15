@@ -8,6 +8,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
+#include "base58.h"
 #include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -99,6 +100,16 @@ enum AvailableCoinsType
     ONLY_1000 = 5 // find masternode outputs including locked ones (use with caution)
 };
 
+struct CompactTallyItem
+{
+    CBitcoinAddress address;
+    CAmount nAmount;
+    std::vector<CTxIn> vecTxIn;
+    CompactTallyItem()
+    {
+        nAmount = 0;
+    }
+};
 
 /** A key pool entry */
 class CKeyPool
@@ -636,6 +647,7 @@ public:
     bool SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax);
     bool SelectCoinsCollateral(std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet) const ;
     bool SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const;
+    bool SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated = true);
 
     /// Get 1000DASH input that can be used for the Masternode
     bool GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
@@ -734,6 +746,7 @@ public:
     CAmount GetAnonymizedBalance() const;
     double GetAverageAnonymizedRounds() const;
     CAmount GetNormalizedAnonymizedBalance() const;
+    CAmount GetNeedsToBeAnonymizedBalance(CAmount nMinBalance = 0) const;
     CAmount GetDenominatedBalance(bool unconfirmed=false) const;
 
     bool GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool useIX);

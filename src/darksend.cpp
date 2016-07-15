@@ -14,6 +14,7 @@
 #include "instantx.h"
 #include "txmempool.h"
 #include "ui_interface.h"
+#include "coincontrol.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -1076,6 +1077,7 @@ bool CDarksendPool::SignaturesComplete(){
             if(!s.fHasSig) return false;
         }
     }
+
     return true;
 }
 
@@ -1457,35 +1459,21 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         // should have some additional amount for them
         nLowestDenom += DARKSEND_COLLATERAL*4;
 
-    CAmount nBalanceNeedsAnonymized = nAnonymizeDashAmount*COIN - pwalletMain->GetAnonymizedBalance();
-
-    // if balanceNeedsAnonymized is more than pool max, take the pool max
-    if(nBalanceNeedsAnonymized > DARKSEND_POOL_MAX) nBalanceNeedsAnonymized = DARKSEND_POOL_MAX;
-
-    // try to overshoot target DS balance up to nLowestDenom
-    nBalanceNeedsAnonymized += nLowestDenom;
-
-    CAmount nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
+    CAmount nBalanceNeedsAnonymized = pwalletMain->GetNeedsToBeAnonymizedBalance(nLowestDenom);
 
     // anonymizable balance is way too small
-    if(nAnonymizableBalance < nLowestDenom)
+    if(nBalanceNeedsAnonymized < nLowestDenom)
     {
-        LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
-        strAutoDenomResult = _("No funds detected in need of denominating.");
+        LogPrintf("DoAutomaticDenominating : Not enough funds to anonymize\n");
+        strAutoDenomResult = _("Not enough funds to anonymize.");
         return false;
     }
-
-    // not enough funds to anonymze amount we want, try the max we can
-    if(nBalanceNeedsAnonymized > nAnonymizableBalance) nBalanceNeedsAnonymized = nAnonymizableBalance;
 
     LogPrint("privatesend", "DoAutomaticDenominating : nLowestDenom=%d, nBalanceNeedsAnonymized=%d\n", nLowestDenom, nBalanceNeedsAnonymized);
 
     // select coins that should be given to the pool
     if (!pwalletMain->SelectCoinsDark(nValueMin, nBalanceNeedsAnonymized, vCoins, nValueIn, 0, nPrivateSendRounds))
     {
-        nValueIn = 0;
-        vCoins.clear();
-
         if (pwalletMain->SelectCoinsDark(nValueMin, 9999999*COIN, vCoins, nValueIn, -2, 0))
         {
             nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true) + pwalletMain->GetDenominatedBalance() - pwalletMain->GetAnonymizedBalance();
@@ -1501,8 +1489,12 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                             (float)nOnlyDenominatedBalance/COIN,
                             (float)nBalanceNeedsDenominated/COIN);
 
-            if(nBalanceNeedsDenominated < nLowestDenom) return false; // most likely we just waiting for denoms to confirm
-            if(!fDryRun) return CreateDenominated(nBalanceNeedsDenominated);
+            if(nBalanceNeedsDenominated < nLowestDenom) { // most likely we are just waiting for denoms to confirm
+                LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating\n");
+                strAutoDenomResult = _("No funds detected in need of denominating.");
+                return false;
+            }
+            if(!fDryRun) return CreateDenominated();
 
             return true;
         } else {
@@ -1526,7 +1518,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                     (float)nBalanceNeedsDenominated/COIN);
 
     //check if we have should create more denominated inputs
-    if(nBalanceNeedsDenominated > nOnlyDenominatedBalance) return CreateDenominated(nBalanceNeedsDenominated);
+    if(nBalanceNeedsDenominated > 0) return CreateDenominated();
 
     //check if we have the collateral sized inputs
     if(!pwalletMain->HasCollateralInputs()) return !pwalletMain->HasCollateralInputs(false) && MakeCollateralAmounts();
@@ -1702,8 +1694,11 @@ bool CDarksendPool::PrepareDarksendDenominate()
     // Try to use only inputs with the same number of rounds starting from lowest number of rounds possible
     for(int i = 0; i < nPrivateSendRounds; i++) {
         strError = pwalletMain->PrepareDarksendDenominate(i, i+1);
-        LogPrintf("DoAutomaticDenominating : Running PrivateSend denominate for %d rounds. Return '%s'\n", i, strError);
-        if(strError == "") return true;
+        if(strError == "") {
+            LogPrintf("PrepareDenominate : Running PrivateSend denominate for %d rounds, success\n", i);
+            return true;
+        }
+        LogPrintf("PrepareDenominate : Running PrivateSend denominate for %d rounds. Return '%s'\n", i, strError);
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
@@ -1717,15 +1712,32 @@ bool CDarksendPool::PrepareDarksendDenominate()
     return false;
 }
 
-// Split up large inputs or create fee sized inputs
+// Create collaterals by looping through inputs grouped by addresses
 bool CDarksendPool::MakeCollateralAmounts()
+{
+    std::vector<CompactTallyItem> vecTally;
+    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally)) {
+        LogPrint("privatesend", "CWallet::MakeCollateralAmounts() - SelectCoinsGrouppedByAddresses can't find any inputs!\n");
+        return false;
+    }
+
+    BOOST_FOREACH(CompactTallyItem& item, vecTally) {
+        if(!MakeCollateralAmounts(item)) continue;
+        return true;
+    }
+
+    LogPrintf("CWallet::MakeCollateralAmounts() - failed!\n");
+    return false;
+}
+
+// Split up large inputs or create fee sized inputs
+bool CDarksendPool::MakeCollateralAmounts(const CompactTallyItem& tallyItem)
 {
     CWalletTx wtx;
     CAmount nFeeRet = 0;
     int nChangePosRet = -1;
     std::string strFail = "";
-    vector< CRecipient > vecSend;
-    CCoinControl *coinControl = NULL;
+    std::vector<CRecipient> vecSend;
 
     // make our collateral address
     CReserveKey reservekeyCollateral(pwalletMain);
@@ -1739,16 +1751,25 @@ bool CDarksendPool::MakeCollateralAmounts()
 
     vecSend.push_back((CRecipient){scriptCollateral, DARKSEND_COLLATERAL*4, false});
 
-    // try to use non-denominated and not mn-like funds
-    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-            nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED_NOT1000IFMN);
-    if(!success){
+    // try to use non-denominated and not mn-like funds first, select them explicitly
+    CCoinControl coinControl;
+    coinControl.fAllowOtherInputs = false;
+    coinControl.fAllowWatchOnly = false;
+    // send change to the same address so that we were able create more denoms out of it later
+    coinControl.destChange = tallyItem.address.Get();
+    BOOST_FOREACH(const CTxIn& txin, tallyItem.vecTxIn)
+        coinControl.Select(txin.prevout);
+
+    bool fSuccess = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
+            nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED_NOT1000IFMN);
+    if(!fSuccess) {
         // if we failed (most likeky not enough funds), try to use all coins instead -
         // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
         LogPrintf("MakeCollateralAmounts: ONLY_NONDENOMINATED_NOT1000IFMN Error - %s\n", strFail);
-        success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-                nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NOT1000IFMN);
-        if(!success){
+        CCoinControl *coinControlNull = NULL;
+        fSuccess = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
+                nFeeRet, nChangePosRet, strFail, coinControlNull, true, ONLY_NOT1000IFMN);
+        if(!fSuccess) {
             LogPrintf("MakeCollateralAmounts: ONLY_NOT1000IFMN Error - %s\n", strFail);
             reservekeyCollateral.ReturnKey();
             return false;
@@ -1770,23 +1791,34 @@ bool CDarksendPool::MakeCollateralAmounts()
     return true;
 }
 
-// Create denominations
-bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
+// Create denominations by looping through inputs grouped by addresses
+bool CDarksendPool::CreateDenominated()
 {
-    CWalletTx wtx;
-    CAmount nFeeRet = 0;
-    int nChangePosRet = -1;
-    std::string strFail = "";
-    vector< CRecipient > vecSend;
-    CAmount nValueLeft = nTotalValue;
+    std::vector<CompactTallyItem> vecTally;
+    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally)) {
+        LogPrint("privatesend", "CWallet::CreateDenominated() - SelectCoinsGrouppedByAddresses can't find any inputs!\n");
+        return false;
+    }
+
+    BOOST_FOREACH(CompactTallyItem& item, vecTally) {
+        if(!CreateDenominated(item)) continue;
+        return true;
+    }
+
+    LogPrintf("CWallet::CreateDenominated() - failed!\n");
+    return false;
+}
+
+// Create denominations
+bool CDarksendPool::CreateDenominated(const CompactTallyItem& tallyItem)
+{
+    std::vector<CRecipient> vecSend;
+    CAmount nValueLeft = tallyItem.nAmount;
+    nValueLeft -= DARKSEND_COLLATERAL; // leave some room for fees
 
     LogPrintf("CreateDenominated0 %d\n", nValueLeft);
     // make our collateral address
     CReserveKey reservekeyCollateral(pwalletMain);
-    // make our change address
-    CReserveKey reservekeyChange(pwalletMain);
-    // make our denom addresses
-    CReserveKey reservekeyDenom(pwalletMain);
 
     CScript scriptCollateral;
     CPubKey vchPubKey;
@@ -1794,12 +1826,16 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
     scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
 
     // ****** Add collateral outputs ************ /
+
     if(!pwalletMain->HasCollateralInputs()) {
         vecSend.push_back((CRecipient){scriptCollateral, DARKSEND_COLLATERAL*4, false});
         nValueLeft -= DARKSEND_COLLATERAL*4;
     }
 
     // ****** Add denoms ************ /
+
+    // make our denom addresses
+    CReserveKey reservekeyDenom(pwalletMain);
 
     // try few times - skipping smallest denoms first if there are too much already, if failed - use them
     int nOutputsTotal = 0;
@@ -1855,10 +1891,24 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
 
     // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 
-    CCoinControl *coinControl=NULL;
-    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-            nFeeRet, nChangePosRet, strFail, coinControl, true, ONLY_NONDENOMINATED_NOT1000IFMN);
-    if(!success){
+    CCoinControl coinControl;
+    coinControl.fAllowOtherInputs = false;
+    coinControl.fAllowWatchOnly = false;
+    // send change to the same address so that we were able create more denoms out of it later
+    coinControl.destChange = tallyItem.address.Get();
+    BOOST_FOREACH(const CTxIn& txin, tallyItem.vecTxIn)
+        coinControl.Select(txin.prevout);
+
+    CWalletTx wtx;
+    CAmount nFeeRet = 0;
+    int nChangePosRet = -1;
+    std::string strFail = "";
+    // make our change address
+    CReserveKey reservekeyChange(pwalletMain);
+
+    bool fSuccess = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
+            nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED_NOT1000IFMN);
+    if(!fSuccess) {
         LogPrintf("CreateDenominated: Error - %s\n", strFail);
         // TODO: return reservekeyDenom here
         reservekeyCollateral.ReturnKey();
@@ -1868,12 +1918,13 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
     // TODO: keep reservekeyDenom here
     reservekeyCollateral.KeepKey();
 
-    // use the same cachedLastSuccess as for DS mixinx to prevent race
-    if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
-        cachedLastSuccess = pCurrentBlockIndex->nHeight;
-    else
+    if(!pwalletMain->CommitTransaction(wtx, reservekeyChange)) {
         LogPrintf("CreateDenominated: CommitTransaction failed!\n");
+        return false;
+    }
 
+    // use the same cachedLastSuccess as for DS mixing to prevent race
+    cachedLastSuccess = pCurrentBlockIndex->nHeight;
     LogPrintf("CreateDenominated: tx %s\n", wtx.GetHash().GetHex());
 
     return true;
@@ -1891,7 +1942,7 @@ bool CDarksendPool::IsCompatibleWithEntries(std::vector<CTxOut>& vout)
     return true;
 }
 
-bool CDarksendPool::IsCompatibleWithSession(CAmount nDenom, CTransaction txCollateral, int& errorID)
+bool CDarksendPool::IsCompatibleWithSession(int nDenom, CTransaction txCollateral, int& errorID)
 {
     if(nDenom == 0) return false;
 
