@@ -2308,6 +2308,7 @@ void ThreadCheckDarkSendPool()
     RenameThread("dash-privatesend");
 
     unsigned int c = 0;
+    unsigned int nDoAutoNextRun = c + DARKSEND_AUTO_TIMEOUT_MIN;
 
     while (true)
     {
@@ -2335,8 +2336,10 @@ void ThreadCheckDarkSendPool()
             darkSendPool.CheckTimeout();
             darkSendPool.CheckForCompleteQueue();
 
-            if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 15 == 0){
-                darkSendPool.DoAutomaticDenominating();
+            if(nDoAutoNextRun == c) {
+                if(darkSendPool.GetState() == POOL_STATUS_IDLE) darkSendPool.DoAutomaticDenominating();
+
+                nDoAutoNextRun = c + DARKSEND_AUTO_TIMEOUT_MIN + insecure_rand()%(DARKSEND_AUTO_TIMEOUT_MAX - DARKSEND_AUTO_TIMEOUT_MIN);
             }
         }
     }

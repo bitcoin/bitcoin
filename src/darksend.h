@@ -36,6 +36,8 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
+#define DARKSEND_AUTO_TIMEOUT_MIN               5
+#define DARKSEND_AUTO_TIMEOUT_MAX              15
 #define DARKSEND_QUEUE_TIMEOUT                 30
 #define DARKSEND_SIGNING_TIMEOUT               15
 
