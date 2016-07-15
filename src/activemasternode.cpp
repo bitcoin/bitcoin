@@ -7,7 +7,6 @@
 #include "activemasternode.h"
 #include "masternode.h"
 #include "masternode-sync.h"
-#include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "spork.h"
 
@@ -94,7 +93,7 @@ void CActiveMasternode::ManageStatus()
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
 
-        if(GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
+        if(pwalletMain->GetMasternodeVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < Params().GetConsensus().nMasternodeMinimumConfirmations){
                 status = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
@@ -237,7 +236,7 @@ bool CActiveMasternode::CreateBroadcast(std::string strService, std::string strK
         return false;
     }
 
-    if(!GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
+    if(!pwalletMain->GetMasternodeVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
         errorMessage = strprintf("Could not allocate vin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
         LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
         return false;
@@ -284,120 +283,6 @@ bool CActiveMasternode::CreateBroadcast(CTxIn vin, CService service, CKey keyCol
     }
 
     return true;
-}
-
-bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
-    return GetMasterNodeVin(vin, pubkey, secretKey, "", "");
-}
-
-bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    // Find possible candidates
-    TRY_LOCK(pwalletMain->cs_wallet, fWallet);
-    if(!fWallet) return false;
-
-    vector<COutput> possibleCoins = SelectCoinsMasternode();
-    COutput *selectedOutput;
-
-    // Find the vin
-    if(!strTxHash.empty()) {
-        // Let's find it
-        uint256 txHash = uint256S(strTxHash);
-        int outputIndex = atoi(strOutputIndex.c_str());
-        bool found = false;
-        BOOST_FOREACH(COutput& out, possibleCoins) {
-            if(out.tx->GetHash() == txHash && out.i == outputIndex)
-            {
-                selectedOutput = &out;
-                found = true;
-                break;
-            }
-        }
-        if(!found) {
-            LogPrintf("CActiveMasternode::GetMasterNodeVin - Could not locate valid vin\n");
-            return false;
-        }
-    } else {
-        // No output specified,  Select the first one
-        if(possibleCoins.size() > 0) {
-            selectedOutput = &possibleCoins[0];
-        } else {
-            LogPrintf("CActiveMasternode::GetMasterNodeVin - Could not locate specified vin from possible list\n");
-            return false;
-        }
-    }
-
-    // At this point we have a selected output, retrieve the associated info
-    return GetVinFromOutput(*selectedOutput, vin, pubkey, secretKey);
-}
-
-
-// Extract Masternode vin information from output
-bool CActiveMasternode::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    CScript pubScript;
-
-    vin = CTxIn(out.tx->GetHash(),out.i);
-    pubScript = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
-
-    CTxDestination address1;
-    ExtractDestination(pubScript, address1);
-    CBitcoinAddress address2(address1);
-
-    CKeyID keyID;
-    if (!address2.GetKeyID(keyID)) {
-        LogPrintf("CActiveMasternode::GetMasterNodeVin - Address does not refer to a key\n");
-        return false;
-    }
-
-    if (!pwalletMain->GetKey(keyID, secretKey)) {
-        LogPrintf ("CActiveMasternode::GetMasterNodeVin - Private key for address is not known\n");
-        return false;
-    }
-
-    pubkey = secretKey.GetPubKey();
-    return true;
-}
-
-// get all possible outputs for running Masternode
-vector<COutput> CActiveMasternode::SelectCoinsMasternode()
-{
-    vector<COutput> vCoins;
-    vector<COutput> filteredCoins;
-    vector<COutPoint> confLockedCoins;
-
-    // Temporary unlock MN coins from masternode.conf
-    if(GetBoolArg("-mnconflock", true)) {
-        uint256 mnTxHash;
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-            mnTxHash.SetHex(mne.getTxHash());
-            COutPoint outpoint = COutPoint(mnTxHash, atoi(mne.getOutputIndex().c_str()));
-            confLockedCoins.push_back(outpoint);
-            pwalletMain->UnlockCoin(outpoint);
-        }
-    }
-
-    // Retrieve all possible outputs
-    pwalletMain->AvailableCoins(vCoins);
-
-    // Lock MN coins from masternode.conf back if they where temporary unlocked
-    if(!confLockedCoins.empty()) {
-        BOOST_FOREACH(COutPoint outpoint, confLockedCoins)
-            pwalletMain->LockCoin(outpoint);
-    }
-
-    // Filter
-    BOOST_FOREACH(const COutput& out, vCoins)
-    {
-        if(out.tx->vout[out.i].nValue == 1000*COIN) { //exactly
-            filteredCoins.push_back(out);
-        }
-    }
-    return filteredCoins;
 }
 
 // when starting a Masternode, this can enable to run as a hot wallet with no funds

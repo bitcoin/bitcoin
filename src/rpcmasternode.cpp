@@ -206,12 +206,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
         CTxIn vin = CTxIn();
         CPubKey pubkey = CPubKey();
         CKey key;
-        bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
-        if(!found){
+        if(!pwalletMain || !pwalletMain->GetMasternodeVinAndKeys(vin, pubkey, key))
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing masternode input, please look at the documentation for instructions on masternode creation");
-        } else {
-            return activeMasternode.GetStatus();
-        }
+
+        return activeMasternode.GetStatus();
     }
 
     if(strCommand == "enforce")
@@ -402,12 +400,12 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "outputs"){
         // Find possible candidates
-        vector<COutput> possibleCoins = activeMasternode.SelectCoinsMasternode();
+        std::vector<COutput> vPossibleCoins;
+        pwalletMain->AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
 
         UniValue obj(UniValue::VOBJ);
-        BOOST_FOREACH(COutput& out, possibleCoins) {
+        BOOST_FOREACH(COutput& out, vPossibleCoins)
             obj.push_back(Pair(out.tx->GetHash().ToString(), strprintf("%d", out.i)));
-        }
 
         return obj;
 
