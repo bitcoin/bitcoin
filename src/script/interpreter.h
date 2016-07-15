@@ -94,6 +94,9 @@ enum
     // Making v1-v16 witness program non-standard
     //
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM = (1U << 12),
+
+    /* BIP34: Verify coinbase transactions commit to the current height. */
+    TX_COINBASE_VERIFY_BIP34 = (1U << 13),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

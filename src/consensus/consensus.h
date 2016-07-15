@@ -8,6 +8,9 @@
 
 #include <stdint.h>
 
+class CTransaction;
+class CValidationState;
+
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
 /** The maximum allowed cost for a block, see BIP 141 (network rule) */
@@ -27,5 +30,23 @@ enum {
     /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
     LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };
+
+/** Transaction validation functions */
+
+namespace Consensus {
+
+/**
+ * Checks specific to coinbase transactions.
+ * Preconditions: tx.IsCoinBase() is true.
+ */
+bool CheckTxCoinbase(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight);
+
+/**
+ * Fully verify a CTransaction.
+ * @TODO this is incomplete, among other things, the scripts are not checked yet.
+ */
+bool VerifyTx(const CTransaction& tx, CValidationState& state, const int64_t flags, const int64_t nHeight);
+
+} // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

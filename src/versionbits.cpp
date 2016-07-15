@@ -174,6 +174,11 @@ int64_t Consensus::GetFlags(const CBlock& block, const Consensus::Params& consen
 
     int64_t flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
+    // Start enforcing height in coinbase (BIP34), for block.nVersion=2 blocks,
+    // when 75% of the network has upgraded:
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        flags |= TX_COINBASE_VERIFY_BIP34;
+    
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     // when 75% of the network has upgraded:
     if (block.nVersion >= 3 && IsSuperMajority(3, pindexPrev->pprev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
