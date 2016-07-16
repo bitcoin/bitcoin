@@ -5,6 +5,7 @@
 #include "versionbits.h"
 
 #include "consensus/params.h"
+#include "consensus/validation.h"
 #include "script/interpreter.h"
 
 // TODO remove the following dependencies
@@ -234,4 +235,15 @@ int64_t Consensus::GetFlags(const CBlock& block, const Consensus::Params& consen
         flags |= SCRIPT_VERIFY_WITNESS;
 
     return flags;
+}
+
+bool VerifyBlockVersion(int32_t nBlockVersion, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+{
+    // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
+    for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
+        if (nBlockVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", version - 1),
+                                 strprintf("rejected nVersion=0x%08x block", version - 1));
+    
+    return true;
 }

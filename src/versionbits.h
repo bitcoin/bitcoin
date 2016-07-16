@@ -8,6 +8,8 @@
 #include "chain.h"
 #include <map>
 
+class CValidationState;
+
 /** What block version to use for new blocks (pre versionbits) */
 static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
 /** What bits to set in version for versionbits blocks */
@@ -75,7 +77,9 @@ int64_t GetFlags(const CBlock& block, const Consensus::Params& consensusParams, 
 
 } // namespace Consensus
 
-// TODO: make static again
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+/**
+ * Called from ContextualCheckBlockHeader() to reject outdated version blocks.
+ */
+bool VerifyBlockVersion(int32_t nBlockVersion, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 #endif
