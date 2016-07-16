@@ -34,7 +34,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an Alias (friendly name) for your Throne and its address (either clearnet IP and port or Tor onion address and port). The address should be in the format 123.456.789.123:9999 or akjdsafxjkhasdf.onion:9999. A Throne private key and a collateral address will both be automatically generated for you. You must send exactly 250 000 BCR to the collateral address.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an Alias (friendly name) for your Throne and its address (either clearnet IP and port or Tor onion address and port). The address should be in the format 123.456.789.123:9999 or akjdsafxjkhasdf.onion:9999. A Throne private key and a collateral address will both be automatically generated for you. You must send exactly 10 000 CRW to the collateral address.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
