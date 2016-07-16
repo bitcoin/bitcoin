@@ -445,12 +445,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev, int64_t nAdjustedTime);
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindex);
 
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
-bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins,
+bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* const pindex, CCoinsViewCache& coins,
                   const CChainParams& chainparams, bool fJustCheck = false);
 
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
