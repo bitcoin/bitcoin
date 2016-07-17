@@ -22,7 +22,7 @@ packages:
 - "libqt4-test"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/Crowndev/crowncoin.git"
+- "url": "https://github.com/Climbee/crowncoin.git"
   "dir": "crowncoin"
 files:
 - "crowncoin-deps-linux32-gitian-r6.zip"
@@ -59,15 +59,13 @@ script: |
     local: *;
   };' > $LINKER_SCRIPT
   function do_configure {
-      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=crowncoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat --disable-tests --with-gui=qt5
+      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=crowncoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
   cd crowncoin
   ./autogen.sh
   do_configure
-  # make dist
-  make clean
-  make
+  make dist
   DISTNAME=`echo crowncoin-*.tar.gz`
 
   # Build dynamic versions of everything
