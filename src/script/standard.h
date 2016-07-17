@@ -45,6 +45,7 @@ static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 enum txnouttype
 {
     TX_NONSTANDARD,
+    TX_HTLC,
     // 'standard' transaction types:
     TX_PUBKEY,
     TX_PUBKEYHASH,
@@ -79,6 +80,12 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+CScript GetScriptForHTLC(const CPubKey& buyer,
+                         const CPubKey& seller,
+                         const std::vector<unsigned char> image,
+                         uint32_t timeout,
+                         opcodetype hasher_type,
+                         opcodetype timeout_type);
 CScript GetScriptForWitness(const CScript& redeemscript);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H
