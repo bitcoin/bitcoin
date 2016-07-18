@@ -1,9 +1,6 @@
-(note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
+Bitcoin Core version 0.13.0 is now available from:
 
-Bitcoin Core version *version* is now available from:
-
-  <https://bitcoin.org/bin/bitcoin-core-*version*/>
+  <https://bitcoin.org/bin/bitcoin-core-0.13.0/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
@@ -70,18 +67,6 @@ It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
 table by any user on the system.
 
-RPC low-level changes
-----------------------
-
-- `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
-  32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
-  fixed, but this means that the output will be different than from previous versions.
-
-- Full UTF-8 support in the RPC API. Non-ASCII characters in, for example,
-  wallet labels have always been malformed because they weren't taken into account
-  properly in JSON RPC processing. This is no longer the case. This also affects
-  the GUI debug console.
-
 C++11 and Python 3
 -------------------
 
@@ -115,57 +100,12 @@ possible to resolve them.
 Note that Android is not considered ARM Linux in this context. The executables
 are not expected to work out of the box on Android.
 
-0.13.0 Change log
-=================
-
-Detailed release notes follow. This overview includes changes that affect
-behavior, not code moves, refactors and string updates. For convenience in locating
-the code changes and accompanying discussion, both the pull request and
-git merge commit are mentioned.
-
-### RPC and REST
-
-Asm script outputs replacements for OP_NOP2 and OP_NOP3
--------------------------------------------------------
-
-OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
-65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
-
-OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP 
-112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki)
-
-The following outputs are affected by this change:
-- RPC `getrawtransaction` (in verbose mode)
-- RPC `decoderawtransaction`
-- RPC `decodescript`
-- REST `/rest/tx/` (JSON format)
-- REST `/rest/block/` (JSON format when including extended tx details)
-- `bitcoin-tx -json`
-
 New mempool information RPC calls
 ---------------------------------
 
 RPC calls have been added to output detailed statistics for individual mempool
 entries, as well as to calculate the in-mempool ancestors or descendants of a
 transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
-
-### ZMQ
-
-Each ZMQ notification now contains an up-counting sequence number that allows
-listeners to detect lost notifications.
-The sequence number is always the last element in a multi-part ZMQ notification and
-therefore backward compatible.
-Each message type has its own counter.
-(https://github.com/bitcoin/bitcoin/pull/7762)
-
-### Configuration and command-line options
-
-### Block and transaction handling
-
-### P2P protocol and network code
-
-The p2p alert system has been removed in #7692 and the 'alert' message is no longer supported.
-
 
 Fee filtering of invs (BIP 133)
 ------------------------------------
@@ -174,12 +114,6 @@ The optional new p2p message "feefilter" is implemented and the protocol
 version is bumped to 70013. Upon receiving a feefilter message from a peer,
 a node will not send invs for any transactions which do not meet the filter
 feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
-
-### Validation
-
-### Build system
-
-### Wallet
 
 Hierarchical Deterministic Key Generation
 -----------------------------------------
@@ -199,9 +133,83 @@ There is no distinction between internal (change) and external keys.
 
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
+Low-level P2P changes
+----------------------
+
+- The P2P alert system has been removed in PR #7692 and the `alert` P2P message
+  is no longer supported.
+
+Low-level RPC changes
+----------------------
+
+- `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
+  32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
+  fixed, but this means that the output will be different than from previous versions.
+
+- Full UTF-8 support in the RPC API. Non-ASCII characters in, for example,
+  wallet labels have always been malformed because they weren't taken into account
+  properly in JSON RPC processing. This is no longer the case. This also affects
+  the GUI debug console.
+
+- Asm script outputs replacements for OP_NOP2 and OP_NOP3
+
+  - OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
+65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
+
+  - OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP 
+112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki)
+
+  - The following outputs are affected by this change:
+
+    - RPC `getrawtransaction` (in verbose mode)
+    - RPC `decoderawtransaction`
+    - RPC `decodescript`
+    - REST `/rest/tx/` (JSON format)
+    - REST `/rest/block/` (JSON format when including extended tx details)
+    - `bitcoin-tx -json`
+
+Low-level ZMQ changes
+----------------------
+
+- Each ZMQ notification now contains an up-counting sequence number that allows
+  listeners to detect lost notifications.
+  The sequence number is always the last element in a multi-part ZMQ notification and
+  therefore backward compatible. Each message type has its own counter.
+  PR [#7762](https://github.com/bitcoin/bitcoin/pull/7762).
+
+0.13.0 Change log
+=================
+
+Detailed release notes follow. This overview includes changes that affect
+behavior, not code moves, refactors and string updates. For convenience in locating
+the code changes and accompanying discussion, both the pull request and
+git merge commit are mentioned.
+
+### RPC and REST
+
+### ZMQ
+
+### Configuration and command-line options
+
+### Block and transaction handling
+
+### P2P protocol and network code
+
+### Validation
+
+### Build system
+
+### Wallet
+
 ### GUI
 
 ### Tests
 
 ### Miscellaneous
 
+Credits
+=======
+
+Thanks to everyone who directly contributed to this release:
+
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
