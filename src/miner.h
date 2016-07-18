@@ -140,7 +140,7 @@ private:
     CBlock* pblock;
 
     // Configuration parameters for the block size
-    unsigned int nBlockMaxSize, nBlockMinSize;
+    unsigned int nBlockMaxSize;
 
     // Information on the current status of the block
     uint64_t nBlockSize;
@@ -154,7 +154,7 @@ private:
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
 
-    // Variables used for addScoreTxs and addPriorityTxs
+    // Variables used for addPriorityTxs
     int lastFewTxs;
     bool blockFinished;
 
@@ -171,14 +171,12 @@ private:
     void AddToBlock(CTxMemPool::txiter iter);
 
     // Methods for how to add transactions to a block.
-    /** Add transactions based on modified feerate */
-    void addScoreTxs();
     /** Add transactions based on tx "priority" */
     void addPriorityTxs();
     /** Add transactions based on feerate including unconfirmed ancestors */
     void addPackageTxs();
 
-    // helper function for addScoreTxs and addPriorityTxs
+    // helper function for addPriorityTxs
     /** Test if tx will still "fit" in the block */
     bool TestForBlock(CTxMemPool::txiter iter);
     /** Test if tx still has unconfirmed parents not yet in block */
@@ -189,8 +187,11 @@ private:
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
     /** Test if a new package would "fit" in the block */
     bool TestPackage(uint64_t packageSize, unsigned int packageSigOps);
-    /** Test if a set of transactions are all final */
-    bool TestPackageFinality(const CTxMemPool::setEntries& package);
+    /** Perform checks on each transaction in a package:
+      * locktime, premature-witness, serialized size (if necessary)
+      * These checks should always succeed, and they're here
+      * only as an extra check in case of suboptimal node configuration */
+    bool TestPackageTransactions(const CTxMemPool::setEntries& package);
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx);
