@@ -224,7 +224,7 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
             "{\n"
             "  \"blocks\": nnn,             (numeric) The current block\n"
             "  \"currentblocksize\": nnn,   (numeric) The last block size\n"
-            "  \"currentblockcost\": nnn,   (numeric) The last block cost\n"
+            "  \"currentblockweight\": nnn, (numeric) The last block weight\n"
             "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
             "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
             "  \"errors\": \"...\"          (string) Current errors\n"
@@ -243,7 +243,7 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("blocks",           (int)chainActive.Height()));
     obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblockcost", (uint64_t)nLastBlockCost));
+    obj.push_back(Pair("currentblockweight", (uint64_t)nLastBlockWeight));
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
@@ -358,7 +358,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "         ],\n"
             "         \"fee\": n,                   (numeric) difference in value between transaction inputs and outputs (in Satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
             "         \"sigops\" : n,               (numeric) total SigOps cost, as counted for purposes of block limits; if key is not present, sigop cost is unknown and clients MUST NOT assume it is zero\n"
-            "         \"cost\" : n,                 (numeric) total transaction size cost, as counted for purposes of block limits\n"
+            "         \"weight\" : n,               (numeric) total transaction weight, as counted for purposes of block limits\n"
             "         \"required\" : true|false     (boolean) if provided and true, this transaction must be in the final block\n"
             "      }\n"
             "      ,...\n"
@@ -377,7 +377,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "  \"noncerange\" : \"00000000ffffffff\",   (string) A range of valid nonces\n"
             "  \"sigoplimit\" : n,                 (numeric) cost limit of sigops in blocks\n"
             "  \"sizelimit\" : n,                  (numeric) limit of block size\n"
-            "  \"costlimit\" : n,                  (numeric) limit of block cost\n"
+            "  \"weightlimit\" : n,                (numeric) limit of block weight\n"
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxx\",                 (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
@@ -575,7 +575,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         int index_in_template = i - 1;
         entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
         entry.push_back(Pair("sigops", pblocktemplate->vTxSigOpsCost[index_in_template]));
-        entry.push_back(Pair("cost", GetTransactionCost(tx)));
+        entry.push_back(Pair("weight", GetTransactionWeight(tx)));
 
         transactions.push_back(entry);
     }
@@ -659,7 +659,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("noncerange", "00000000ffffffff"));
     result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS_COST));
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SERIALIZED_SIZE));
-    result.push_back(Pair("costlimit", (int64_t)MAX_BLOCK_COST));
+    result.push_back(Pair("weightlimit", (int64_t)MAX_BLOCK_WEIGHT));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));

@@ -45,7 +45,7 @@ using namespace std;
 
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
-uint64_t nLastBlockCost = 0;
+uint64_t nLastBlockWeight = 0;
 
 class ScoreCompare
 {
@@ -77,30 +77,30 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     : chainparams(_chainparams)
 {
     // Block resource limits
-    // If neither -blockmaxsize or -blockmaxcost is given, limit to DEFAULT_BLOCK_MAX_*
+    // If neither -blockmaxsize or -blockmaxweight is given, limit to DEFAULT_BLOCK_MAX_*
     // If only one is given, only restrict the specified resource.
     // If both are given, restrict both.
-    nBlockMaxCost = DEFAULT_BLOCK_MAX_COST;
+    nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
-    bool fCostSet = false;
-    if (mapArgs.count("-blockmaxcost")) {
-        nBlockMaxCost = GetArg("-blockmaxcost", DEFAULT_BLOCK_MAX_COST);
+    bool fWeightSet = false;
+    if (mapArgs.count("-blockmaxweight")) {
+        nBlockMaxWeight = GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
         nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
-        fCostSet = true;
+        fWeightSet = true;
     }
     if (mapArgs.count("-blockmaxsize")) {
         nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
-        if (!fCostSet) {
-            nBlockMaxCost = nBlockMaxSize * WITNESS_SCALE_FACTOR;
+        if (!fWeightSet) {
+            nBlockMaxWeight = nBlockMaxSize * WITNESS_SCALE_FACTOR;
         }
     }
 
-    // Limit cost to between 4K and MAX_BLOCK_COST-4K for sanity:
-    nBlockMaxCost = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_COST-4000), nBlockMaxCost));
+    // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
+    nBlockMaxWeight = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_WEIGHT-4000), nBlockMaxWeight));
     // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
 
-    // Whether we need to account for byte usage (in addition to cost usage)
+    // Whether we need to account for byte usage (in addition to weight usage)
     fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000);
 }
 
@@ -110,7 +110,7 @@ void BlockAssembler::resetBlock()
 
     // Reserve space for coinbase tx
     nBlockSize = 1000;
-    nBlockCost = 4000;
+    nBlockWeight = 4000;
     nBlockSigOpsCost = 400;
     fIncludeWitness = false;
 
@@ -167,7 +167,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
-    nLastBlockCost = nBlockCost;
+    nLastBlockWeight = nBlockWeight;
     LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOpsCost);
 
     // Create coinbase transaction.
@@ -223,8 +223,8 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
 
 bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost)
 {
-    // TODO: switch to cost-based accounting for packages instead of vsize-based accounting.
-    if (nBlockCost + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxCost)
+    // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
+    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxWeight)
         return false;
     if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST)
         return false;
@@ -257,17 +257,17 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 
 bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
 {
-    if (nBlockCost + iter->GetTxCost() >= nBlockMaxCost) {
+    if (nBlockWeight + iter->GetTxWeight() >= nBlockMaxWeight) {
         // If the block is so close to full that no more txs will fit
         // or if we've tried more than 50 times to fill remaining space
         // then flag that the block is finished
-        if (nBlockCost >  nBlockMaxCost - 400 || lastFewTxs > 50) {
+        if (nBlockWeight >  nBlockMaxWeight - 400 || lastFewTxs > 50) {
              blockFinished = true;
              return false;
         }
-        // Once we're within 4000 cost of a full block, only look at 50 more txs
+        // Once we're within 4000 weight of a full block, only look at 50 more txs
         // to try to fill the remaining space.
-        if (nBlockCost > nBlockMaxCost - 4000) {
+        if (nBlockWeight > nBlockMaxWeight - 4000) {
             lastFewTxs++;
         }
         return false;
@@ -315,7 +315,7 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     if (fNeedSizeAccounting) {
         nBlockSize += ::GetSerializeSize(iter->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
     }
-    nBlockCost += iter->GetTxCost();
+    nBlockWeight += iter->GetTxWeight();
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
     nFees += iter->GetFee();
