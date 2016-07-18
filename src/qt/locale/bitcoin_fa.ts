@@ -67,7 +67,11 @@
         <source>IP/Netmask</source>
         <translation>آی‌پی/نت‌ماسک</translation>
     </message>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>مسدود شده تا</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -109,6 +113,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>&amp;حدود%1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>نمایش اطلاعات دربارهٔ %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -510,6 +518,10 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open URI</source>
+        <translation>بازکردن آدرس</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -524,6 +536,10 @@
     <message>
         <source>Accept connections from outside</source>
         <translation>پذیرش اتصالات از بیرون</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>اجازه دادن به اتصالات دریافتی</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -691,7 +707,11 @@
     </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>Ping Time</source>
+        <translation>زمان پینگ</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -798,6 +818,14 @@
         <translation>آخرین دریافتی</translation>
     </message>
     <message>
+        <source>Ping Time</source>
+        <translation>زمان پینگ</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>انتظار پینگ</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>زمان آخرین بلوک</translation>
     </message>
@@ -832,6 +860,22 @@
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>برای نمایش یک مرور کلی از دستورات ممکن، عبارت &lt;b&gt;help&lt;/b&gt; را بنویسید.</translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 بایت</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 کیلوبایت</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 مگابایت</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 گیگابایت</translation>
     </message>
     <message>
         <source>never</source>
@@ -887,7 +931,11 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;کپی نشانی</translation>
     </message>
-    </context>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;ذخیره عکس...</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -933,6 +981,18 @@
     <message>
         <source>Hide</source>
         <translation>پنهان کردن</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>توصیه شده:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>سفارشی:</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>روز تایید:</translation>
     </message>
     <message>
         <source>normal</source>
@@ -1024,6 +1084,10 @@
 </context>
 <context>
     <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down...</source>
+        <translation>%1 در حال خاموش شدن است...</translation>
+    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1249,6 +1313,10 @@
     <message>
         <source>Wallet options:</source>
         <translation>گزینه‌های کیف پول:</translation>
+    </message>
+    <message>
+        <source>(default: %u)</source>
+        <translation>(پیش‌فرض %u)</translation>
     </message>
     <message>
         <source>Information</source>
