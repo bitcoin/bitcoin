@@ -144,34 +144,3 @@ void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBloc
     // Clear the thinblock timer used for preferential download
     mapThinBlockTimer.erase(inv.hash);
 }
-
-bool ThinBlockMessageHandler(const std::vector<CNode*>& vNodesCopy)
-{
-    bool sleep = true;
-    CNodeSignals &nodeSignals = GetNodeSignals();
-    BOOST_FOREACH (CNode* pnode, vNodesCopy)
-    {
-        if ((pnode->fDisconnect) || (!pnode->ThinBlockCapable()))
-            continue;
-
-        // Receive messages
-        {
-            TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-            if (lockRecv)
-            {
-                if (!nodeSignals.ProcessMessages(pnode))
-                    pnode->CloseSocketDisconnect();
-
-                if (pnode->nSendSize < SendBufferSize())
-                {
-                    if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
-                        sleep = false;
-                }
-            }
-        }
-        boost::this_thread::interruption_point();
-        nodeSignals.SendMessages(pnode);
-        boost::this_thread::interruption_point();
-    }
-    return sleep;
-}

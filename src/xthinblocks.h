@@ -27,7 +27,4 @@ CBloomFilter createSeededBloomFilter(const std::vector<uint256>& vOrphanHashes);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
 
-// Handle receiving and sending messages from thin block capable nodes only (so that thin block nodes capable nodes are preferred)
-extern bool ThinBlockMessageHandler(const std::vector<CNode*>& vNodesCopy);
-
 #endif

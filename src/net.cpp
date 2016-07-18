@@ -1707,13 +1707,23 @@ void ThreadMessageHandler()
         vector<CNode*> vNodesCopy;
         {
             LOCK(cs_vNodes);
-            vNodesCopy = vNodes;
-            BOOST_FOREACH(CNode* pnode, vNodesCopy) {
-                pnode->AddRef();
+            vNodesCopy.reserve(vNodes.size());
+            // Prefer thinBlockCapable nodes when doing communications.
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (pnode->ThinBlockCapable()) {
+                    vNodesCopy.push_back(pnode);
+                    pnode->AddRef();
+                }
+            }
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (!pnode->ThinBlockCapable()) {
+                    vNodesCopy.push_back(pnode);
+                    pnode->AddRef();
+                }
             }
         }
 
-        bool fSleep = ThinBlockMessageHandler(vNodesCopy);
+        bool fSleep = true;
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
