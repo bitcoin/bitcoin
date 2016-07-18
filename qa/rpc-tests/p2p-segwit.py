@@ -1065,12 +1065,12 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(wit_block.serialize(False), non_wit_block.serialize())
             assert_equal(wit_block.serialize(True), block.serialize(True))
 
-            # Test size, vsize, cost
+            # Test size, vsize, weight
             rpc_details = self.nodes[0].getblock(block.hash, True)
             assert_equal(rpc_details["size"], len(block.serialize(True)))
             assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
-            cost = 3*len(block.serialize(False)) + len(block.serialize(True))
-            assert_equal(rpc_details["cost"], cost)
+            weight = 3*len(block.serialize(False)) + len(block.serialize(True))
+            assert_equal(rpc_details["weight"], weight)
 
             # Upgraded node should not ask for blocks from unupgraded
             block4 = self.build_next_block(nVersion=4)
