@@ -77,14 +77,14 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     : chainparams(_chainparams)
 {
     // Block resource limits
-    // If neither -blockmaxsize or -blockmaxcost is given, limit to DEFAULT_BLOCK_MAX_*
+    // If neither -blockmaxsize or -blockmaxweight is given, limit to DEFAULT_BLOCK_MAX_*
     // If only one is given, only restrict the specified resource.
     // If both are given, restrict both.
     nBlockMaxCost = DEFAULT_BLOCK_MAX_COST;
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     bool fCostSet = false;
-    if (mapArgs.count("-blockmaxcost")) {
-        nBlockMaxCost = GetArg("-blockmaxcost", DEFAULT_BLOCK_MAX_COST);
+    if (mapArgs.count("-blockmaxweight")) {
+        nBlockMaxCost = GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_COST);
         nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
         fCostSet = true;
     }
