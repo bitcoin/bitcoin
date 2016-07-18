@@ -830,8 +830,10 @@ int SocketSendData(CNode* pnode)
     }
 
     if (it == pnode->vSendMsg.end()) {
-        assert(pnode->nSendOffset == 0);
-        assert(pnode->nSendSize == 0);
+        if (pnode->nSendOffset != 0 || pnode->nSendSize !=  0)
+            LogPrintf("ERROR: One or more values were not Zero - nSendOffset was %d nSendSize was %d\n", pnode->nSendOffset, pnode->nSendSize);
+        //assert(pnode->nSendOffset == 0);
+        //assert(pnode->nSendSize == 0);
     }
     pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
     return progress;
