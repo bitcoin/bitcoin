@@ -784,7 +784,12 @@ int SocketSendData(CNode* pnode)
 
     while (it != pnode->vSendMsg.end()) {
         const CSerializeData& data = *it;
-        assert(data.size() > pnode->nSendOffset);
+        if (data.size() <= 0) {
+            it++;
+            LogPrintf("ERROR:  Trying to send message but data size was %d nSendOffset was %d nSendSize was %d\n", data.size(), pnode->nSendOffset, pnode->nSendSize);
+            continue;
+        }
+        //assert(data.size() > pnode->nSendOffset);
 
         int amt2Send = min((int64_t)(data.size() - pnode->nSendOffset), sendShaper.available(SEND_SHAPER_MIN_FRAG));
         if (amt2Send == 0)
@@ -825,8 +830,10 @@ int SocketSendData(CNode* pnode)
     }
 
     if (it == pnode->vSendMsg.end()) {
-        assert(pnode->nSendOffset == 0);
-        assert(pnode->nSendSize == 0);
+        if (pnode->nSendOffset != 0 || pnode->nSendSize !=  0)
+            LogPrintf("ERROR: One or more values were not Zero - nSendOffset was %d nSendSize was %d\n", pnode->nSendOffset, pnode->nSendSize);
+        //assert(pnode->nSendOffset == 0);
+        //assert(pnode->nSendSize == 0);
     }
     pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
     return progress;

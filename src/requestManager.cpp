@@ -314,7 +314,6 @@ int CUnknownObj::NextSource()
 void RequestBlock(CNode* pfrom, CInv obj)
 {
   const CChainParams& chainParams = Params();
-  LOCK(pfrom->cs_vSend);
 
   // First request the headers preceding the announced block. In the normal fully-synced
   // case where a new block is announced that succeeds the current tip (no reorganization),
