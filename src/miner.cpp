@@ -94,18 +94,14 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
             nBlockMaxCost = nBlockMaxSize * WITNESS_SCALE_FACTOR;
         }
     }
+
     // Limit cost to between 4K and MAX_BLOCK_COST-4K for sanity:
     nBlockMaxCost = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_COST-4000), nBlockMaxCost));
     // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
 
-    // Minimum block size you want to create; block will be filled with free transactions
-    // until there are no more or the block reaches this size:
-    nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
-    nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
-
     // Whether we need to account for byte usage (in addition to cost usage)
-    fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000) || (nBlockMinSize > 0);
+    fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000);
 }
 
 void BlockAssembler::resetBlock()
@@ -167,13 +163,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
     addPriorityTxs();
-    if (fNeedSizeAccounting) {
-        // addPackageTxs (the CPFP-based algorithm) cannot deal with size based
-        // accounting, so fall back to the old algorithm.
-        addScoreTxs();
-    } else {
-        addPackageTxs();
-    }
+    addPackageTxs();
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
@@ -241,13 +231,26 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
     return true;
 }
 
-// Block size and sigops have already been tested.  Check that all transactions
-// are final.
-bool BlockAssembler::TestPackageFinality(const CTxMemPool::setEntries& package)
+// Perform transaction-level checks before adding to block:
+// - transaction finality (locktime)
+// - premature witness (in case segwit transactions are added to mempool before
+//   segwit activation)
+// - serialized size (in case -blockmaxsize is in use)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
+    uint64_t nPotentialBlockSize = nBlockSize; // only used with fNeedSizeAccounting
     BOOST_FOREACH (const CTxMemPool::txiter it, package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
+        if (!fIncludeWitness && !it->GetTx().wit.IsNull())
+            return false;
+        if (fNeedSizeAccounting) {
+            uint64_t nTxSize = ::GetSerializeSize(it->GetTx(), SER_NETWORK, PROTOCOL_VERSION);
+            if (nPotentialBlockSize + nTxSize >= nBlockMaxSize) {
+                return false;
+            }
+            nPotentialBlockSize += nTxSize;
+        }
     }
     return true;
 }
@@ -327,66 +330,6 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
                   dPriority,
                   CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
                   iter->GetTx().GetHash().ToString());
-    }
-}
-
-void BlockAssembler::addScoreTxs()
-{
-    std::priority_queue<CTxMemPool::txiter, std::vector<CTxMemPool::txiter>, ScoreCompare> clearedTxs;
-    CTxMemPool::setEntries waitSet;
-    CTxMemPool::indexed_transaction_set::index<mining_score>::type::iterator mi = mempool.mapTx.get<mining_score>().begin();
-    CTxMemPool::txiter iter;
-    while (!blockFinished && (mi != mempool.mapTx.get<mining_score>().end() || !clearedTxs.empty()))
-    {
-        // If no txs that were previously postponed are available to try
-        // again, then try the next highest score tx
-        if (clearedTxs.empty()) {
-            iter = mempool.mapTx.project<0>(mi);
-            mi++;
-        }
-        // If a previously postponed tx is available to try again, then it
-        // has higher score than all untried so far txs
-        else {
-            iter = clearedTxs.top();
-            clearedTxs.pop();
-        }
-
-        // If tx already in block, skip  (added by addPriorityTxs)
-        if (inBlock.count(iter)) {
-            continue;
-        }
-
-        // cannot accept witness transactions into a non-witness block
-        if (!fIncludeWitness && !iter->GetTx().wit.IsNull())
-            continue;
-
-        // If tx is dependent on other mempool txs which haven't yet been included
-        // then put it in the waitSet
-        if (isStillDependent(iter)) {
-            waitSet.insert(iter);
-            continue;
-        }
-
-        // If the fee rate is below the min fee rate for mining, then we're done
-        // adding txs based on score (fee rate)
-        if (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(iter->GetTxSize()) && nBlockSize >= nBlockMinSize) {
-            return;
-        }
-
-        // If this tx fits in the block add it, otherwise keep looping
-        if (TestForBlock(iter)) {
-            AddToBlock(iter);
-
-            // This tx was successfully added, so
-            // add transactions that depend on this one to the priority queue to try again
-            BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
-            {
-                if (waitSet.count(child)) {
-                    clearedTxs.push(child);
-                    waitSet.erase(child);
-                }
-            }
-        }
     }
 }
 
@@ -539,7 +482,7 @@ void BlockAssembler::addPackageTxs()
         ancestors.insert(iter);
 
         // Test if all tx's are Final
-        if (!TestPackageFinality(ancestors)) {
+        if (!TestPackageTransactions(ancestors)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
@@ -573,6 +516,7 @@ void BlockAssembler::addPriorityTxs()
         return;
     }
 
+    bool fSizeAccounting = fNeedSizeAccounting;
     fNeedSizeAccounting = true;
 
     // This vector will be sorted into a priority queue:
@@ -624,7 +568,7 @@ void BlockAssembler::addPriorityTxs()
             // If now that this txs is added we've surpassed our desired priority size
             // or have dropped below the AllowFreeThreshold, then we're done adding priority txs
             if (nBlockSize >= nBlockPrioritySize || !AllowFree(actualPriority)) {
-                return;
+                break;
             }
 
             // This tx was successfully added, so
@@ -640,6 +584,7 @@ void BlockAssembler::addPriorityTxs()
             }
         }
     }
+    fNeedSizeAccounting = fSizeAccounting;
 }
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
