@@ -459,7 +459,7 @@ struct CMutableTransaction
     uint256 GetHash() const;
 };
 
-/** Compute the cost of a transaction, as defined by BIP 141 */
-int64_t GetTransactionCost(const CTransaction &tx);
+/** Compute the weight of a transaction, as defined by BIP 141 */
+int64_t GetTransactionWeight(const CTransaction &tx);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

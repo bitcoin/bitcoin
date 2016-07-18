@@ -121,7 +121,7 @@ unsigned int CTransaction::CalculateModifiedSize(unsigned int nTxSize) const
     // Providing any more cleanup incentive than making additional inputs free would
     // risk encouraging people to create junk outputs to redeem later.
     if (nTxSize == 0)
-        nTxSize = (GetTransactionCost(*this) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+        nTxSize = (GetTransactionWeight(*this) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
     for (std::vector<CTxIn>::const_iterator it(vin.begin()); it != vin.end(); ++it)
     {
         unsigned int offset = 41U + std::min(110U, (unsigned int)it->scriptSig.size());
@@ -149,7 +149,7 @@ std::string CTransaction::ToString() const
     return str;
 }
 
-int64_t GetTransactionCost(const CTransaction& tx)
+int64_t GetTransactionWeight(const CTransaction& tx)
 {
     return ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 }

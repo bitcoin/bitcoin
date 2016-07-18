@@ -78,7 +78,7 @@ class CTxMemPoolEntry
 private:
     std::shared_ptr<const CTransaction> tx;
     CAmount nFee;              //!< Cached to avoid expensive parent-transaction lookups
-    size_t nTxCost;            //!< ... and avoid recomputing tx cost (also used for GetTxSize())
+    size_t nTxWeight;          //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     size_t nModSize;           //!< ... and modified size for priority
     size_t nUsageSize;         //!< ... and total memory usage
     int64_t nTime;             //!< Local time when entering the mempool
@@ -122,7 +122,7 @@ public:
     double GetPriority(unsigned int currentHeight) const;
     const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const;
-    size_t GetTxCost() const { return nTxCost; }
+    size_t GetTxWeight() const { return nTxWeight; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
