@@ -27,7 +27,7 @@
 #define OMNICORE_VERSION_BUILD       0
 
 // Use "dev" for development versions, switch to "rc" for release candidates
-#define OMNICORE_VERSION_STATUS      rc2
+#define OMNICORE_VERSION_STATUS      rel
 
 
 #endif // HAVE_CONFIG_H
