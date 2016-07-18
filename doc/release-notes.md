@@ -144,6 +144,20 @@ There is no distinction between internal (change) and external keys.
 
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
+Removal of internal miner
+--------------------------
+
+As CPU mining has been useless for a long time, the internal miner has been
+removed in this release, and replaced with a simpler implementation for the
+test framework.
+
+The overall result of this is that `setgenerate` RPC call has been removed, as
+well as the `-gen` and `-genproclimit` command-line options.
+
+For testing, the `generate` call can still be used to mine a block, and a new
+RPC call `generatetoaddress` has been added to mine to a specific address. This
+works with wallet disabled.
+
 Low-level P2P changes
 ----------------------
 
@@ -159,18 +173,20 @@ Low-level P2P changes
   transactions. To compensate for the removal of instant relay, the frequency of
   batch sending was doubled for outgoing peers.
 
-- Since PR 7840 the BIP35 mempool command is also subject to batch processing.
+- Since PR #7840 the BIP35 `mempool` command is also subject to batch processing.
+  Also the `mempool` message is no longer handled for non-whitelisted peers when
+  `NODE_BLOOM` is disabled through `-peerbloomfilters=0`.
 
 - The maximum size of orphan transactions that are kept in memory until their
-  ancestors arrive has been raised in PR 8179 from 5000 to 99999 bytes. They
+  ancestors arrive has been raised in PR #8179 from 5000 to 99999 bytes. They
   are now also removed from memory when they are included in a block, conflict
   with a block, and time out after 20 minutes.
 
 - We respond at most once to a getaddr request during the lifetime of a
-  connection since PR 7856.
+  connection since PR #7856.
 
 - Connections to peers who have recently been the first one to give us a valid
-  new block or transaction are protected from disconnections since PR 8084.
+  new block or transaction are protected from disconnections since PR #8084.
 
 Low-level RPC changes
 ----------------------
@@ -200,6 +216,8 @@ Low-level RPC changes
     - REST `/rest/tx/` (JSON format)
     - REST `/rest/block/` (JSON format when including extended tx details)
     - `bitcoin-tx -json`
+
+- The sorting of the output of the `getrawmempool` output has changed.
 
 Low-level ZMQ changes
 ----------------------
