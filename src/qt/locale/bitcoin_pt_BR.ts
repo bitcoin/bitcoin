@@ -1895,6 +1895,10 @@
         <translation>Adiciona comentário ao user-agent do navegador</translation>
     </message>
     <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Tentando recuperar a chape privada da carteira corrompida ao inicializar</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Opções de criação de blocos:</translation>
     </message>

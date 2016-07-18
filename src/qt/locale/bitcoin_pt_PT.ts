@@ -618,6 +618,10 @@
         <translation>&amp;Principal</translation>
     </message>
     <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>Começar o %1 automaticamente ao iniciar a sessão no sistema.</translation>
+    </message>
+    <message>
         <source>&amp;Start %1 on system login</source>
         <translation>&amp;Iniciar o %1 no início de sessão do sistema</translation>
     </message>
@@ -1830,6 +1834,10 @@
     <message>
         <source>Append comment to the user agent string</source>
         <translation>Anexar um comentário para a entrada de agente do utilizador</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Tentar reuperar as chaves privadas de um "wallet" ao iniciar</translation>
     </message>
     <message>
         <source>Block creation options:</source>
