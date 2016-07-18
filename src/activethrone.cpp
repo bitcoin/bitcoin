@@ -463,7 +463,7 @@ vector<COutput> CActiveThrone::SelectCoinsThroneForPubKey(std::string collateral
     if (chainActive.Tip()->nHeight<145000) {
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        if(out.tx->vout[out.i].scriptPubKey == scriptPubKey && out.tx->vout[out.i].nValue == 250000*COIN) { //exactly
+        if(out.tx->vout[out.i].scriptPubKey == scriptPubKey && out.tx->vout[out.i].nValue == 10000*COIN) { //exactly
         	filteredCoins.push_back(out);
         }
     }
