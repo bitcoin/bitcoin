@@ -1,4 +1,3 @@
-u
 #include "core.h"
 #include "throneconfig.h"
 #include "protocol.h"
