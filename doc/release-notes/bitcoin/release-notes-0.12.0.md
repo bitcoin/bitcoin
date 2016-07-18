@@ -104,9 +104,6 @@ announcing their headers directly, instead of just announcing the hash. In a
 reorganization, all new headers are sent, instead of just the new tip. This
 can often prevent an extra roundtrip before the actual block is downloaded.
 
-With this change, pruning nodes are now able to relay new blocks to compatible
-peers.
-
 Memory pool limiting
 --------------------
 
@@ -187,6 +184,14 @@ combination of data pushes and numeric constant opcodes (OP_1 to OP_16) after
 the OP_RETURN. The limit on OP_RETURN output size is now applied to the entire
 serialized scriptPubKey, 83 bytes by default. (the previous 80 byte default plus
 three bytes overhead)
+
+Relay: New and only new blocks relayed when pruning
+---------------------------------------------------
+
+When running in pruned mode, the client will now relay new blocks. When
+responding to the `getblocks` message, only hashes of blocks that are on disk
+and are likely to remain there for some reasonable time window (1 hour) will be
+returned (previously all relevant hashes were returned).
 
 Relay and Mining: Priority transactions
 ---------------------------------------
@@ -887,5 +892,3 @@ Thanks to everyone who directly contributed to this release:
 - zathras-crypto
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-
-
