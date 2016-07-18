@@ -1,0 +1,178 @@
+---
+name: "osx-native"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "automake"
+- "faketime"
+- "libssl-dev"
+- "libbz2-dev"
+- "libz-dev"
+- "cmake"
+- "libcap-dev"
+- "p7zip-full"
+- "uuid-dev"
+
+reference_datetime: "2013-06-01 00:00:00"
+remotes: []
+files:
+- "10cc648683617cca8bcbeae507888099b41b530c.tar.gz"
+- "cctools-809.tar.gz"
+- "dyld-195.5.tar.gz"
+- "ld64-127.2.tar.gz"
+- "protobuf-2.5.0.tar.bz2"
+- "MacOSX10.7.sdk.tar.gz"
+- "cdrkit-1.1.11.tar.gz"
+- "libdmg-hfsplus-v0.1.tar.gz"
+- "clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz"
+- "cdrkit-deterministic.patch"
+
+
+script: |
+
+  echo "18406961fd4a1ec5c7ea35c91d6a80a2f8bb797a2bd243a610bd75e13eff9aca  10cc648683617cca8bcbeae507888099b41b530c.tar.gz" | sha256sum -c
+  echo "03ba62749b843b131c7304a044a98c6ffacd65b1399b921d69add0375f79d8ad  cctools-809.tar.gz" | sha256sum -c
+  echo "2cf0484c87cf79b606b351a7055a247dae84093ae92c747a74e0cde2c8c8f83c  dyld-195.5.tar.gz" | sha256sum -c
+  echo "97b75547b2bd761306ab3e15ae297f01e7ab9760b922bc657f4ef72e4e052142  ld64-127.2.tar.gz" | sha256sum -c
+  echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
+  echo "d1c030756ecc182defee9fe885638c1785d35a2c2a297b4604c0e0dcc78e47da  cdrkit-1.1.11.tar.gz" | sha256sum -c
+  echo "6569a02eb31c2827080d7d59001869ea14484c281efab0ae7f2b86af5c3120b3  libdmg-hfsplus-v0.1.tar.gz" | sha256sum -c
+  echo "b9d57a88f9514fa1f327a1a703756d0c1c960f4c58494a5bd80313245d13ffff  clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz" | sha256sum -c
+  echo "cc12bdbd7a09f71cb2a6a3e6ec3e0abe885ca7111c2b47857f5095e5980caf4f  cdrkit-deterministic.patch" | sha256sum -c
+
+
+  REVISION=r3
+  export REFERENCE_DATETIME
+  export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+
+  REAL_AR=`which ar`
+  REAL_RANLIB=`which ranlib`
+  REAL_DATE=`which date`
+
+  echo '#!/bin/bash' > $HOME/ar
+  echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/ar
+  echo "$REAL_AR \"\$@\"" >> $HOME/ar
+
+  echo '#!/bin/bash' > $HOME/ranlib
+  echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/ranlib
+  echo "$REAL_RANLIB \"\$@\"" >> $HOME/ranlib
+
+  echo '#!/bin/bash' > $HOME/date
+  echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> $HOME/date
+  echo "$REAL_DATE \"\$@\"" >> $HOME/date
+
+  chmod +x $HOME/ar $HOME/ranlib $HOME/date
+
+
+  export PATH=$HOME:$PATH
+  export SOURCES_PATH=`pwd`
+
+  mkdir -p osx-cross-depends/build
+  cd osx-cross-depends
+
+  NATIVEPREFIX=`pwd`/native-prefix
+  BUILD_BASE=`pwd`/build
+  SDK=`pwd`/SDKs/MacOSX10.7.sdk
+  HOST=x86_64-apple-darwin11
+  MIN_VERSION=10.6
+
+  CFLAGS=""
+  CXXFLAGS="${CFLAGS}"
+  LDFLAGS="-L${NATIVEPREFIX}/lib"
+
+  export PATH=${NATIVEPREFIX}/bin:${PATH}
+
+  mkdir -p ${NATIVEPREFIX}/bin
+  mkdir -p ${NATIVEPREFIX}/lib
+
+  mkdir -p SDKs
+  tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
+
+  #  Clang
+  SOURCE_FILE=${SOURCES_PATH}/clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
+  BUILD_DIR=${BUILD_BASE}/clang+llvm-3.2-x86-linux-ubuntu-12.04
+
+  mkdir -p ${NATIVEPREFIX}/lib/clang/3.2/include
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  cp ${BUILD_DIR}/bin/clang ${NATIVEPREFIX}/bin/
+  cp ${BUILD_DIR}/bin/clang++ ${NATIVEPREFIX}/bin/
+  cp ${BUILD_DIR}/lib/libLTO.so ${NATIVEPREFIX}/lib/
+  cp ${BUILD_DIR}/lib/clang/3.2/include/* ${NATIVEPREFIX}/lib/clang/3.2/include
+
+  # cctools
+  SOURCE_FILE=${SOURCES_PATH}/10cc648683617cca8bcbeae507888099b41b530c.tar.gz
+  BUILD_DIR=${BUILD_BASE}/toolchain4-10cc648683617cca8bcbeae507888099b41b530c
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  mkdir -p ${BUILD_DIR}/sdks
+  pushd ${BUILD_DIR}/sdks;
+  ln -sf ${SDK} MacOSX10.7.sdk
+  ln -sf ${SOURCES_PATH}/cctools-809.tar.gz ${BUILD_DIR}/cctools2odcctools/cctools-809.tar.gz
+  ln -sf ${SOURCES_PATH}/ld64-127.2.tar.gz ${BUILD_DIR}/cctools2odcctools/ld64-127.2.tar.gz
+  ln -sf ${SOURCES_PATH}/dyld-195.5.tar.gz ${BUILD_DIR}/cctools2odcctools/dyld-195.5.tar.gz
+
+  tar -C ${BUILD_DIR} -xf ${SOURCES_PATH}/clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
+  #   Hack in the use of our llvm headers rather than grabbing the old llvm-gcc.
+  sed -i "s|GCC_DIR|LLVM_CLANG_DIR|g" ${BUILD_DIR}/cctools2odcctools/extract.sh
+  sed -i "s|llvmgcc42-2336.1|clang+llvm-3.2-x86-linux-ubuntu-12.04|g" ${BUILD_DIR}/cctools2odcctools/extract.sh
+  sed -i "s|\${LLVM_CLANG_DIR}/llvmCore/include/llvm-c|\${LLVM_CLANG_DIR}/include/llvm-c \${LLVM_CLANG_DIR}/include/llvm |" ${BUILD_DIR}/cctools2odcctools/extract.sh
+
+  sed -i "s|fAC_INIT|AC_INIT|" ${BUILD_DIR}/cctools2odcctools/files/configure.ac
+  sed -i 's/\# Dynamically linked LTO/\t ;\&\n\t linux*)\n# Dynamically linked LTO/' ${BUILD_DIR}/cctools2odcctools/files/configure.ac
+
+  cd ${BUILD_DIR}/cctools2odcctools
+  ./extract.sh --osxver 10.7
+  cd odcctools-809
+  ./configure --prefix=${NATIVEPREFIX} --target=${HOST} CFLAGS="${CFLAGS} -I${NATIVEPREFIX}/include -D__DARWIN_UNIX03 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS" LDFLAGS="${LDFLAGS} -Wl,-rpath=\\\$\$ORIGIN/../lib" --with-sysroot=${SDK}
+
+  #   The 'PC' define in sparc/reg.h conflicts but doesn't get used anyway. Just rename it.
+  sed -i "s|define\tPC|define\tPC_|"  ${BUILD_DIR}/cctools2odcctools/odcctools-809/include/architecture/sparc/reg.h
+  make $MAKEOPTS
+  make install
+  popd
+
+  # protoc
+  SOURCE_FILE=${SOURCES_PATH}/protobuf-2.5.0.tar.bz2
+  BUILD_DIR=${BUILD_BASE}/protobuf-2.5.0
+
+  tar -C ${BUILD_BASE} -xjf ${SOURCE_FILE}
+  pushd ${BUILD_DIR};
+  ./configure --enable-shared=no --disable-dependency-tracking --prefix=${NATIVEPREFIX}
+  make $MAKEOPTS
+  cp ${BUILD_DIR}/src/protoc ${NATIVEPREFIX}/bin/
+  popd
+
+  # cdrkit
+  SOURCE_FILE=${SOURCES_PATH}/cdrkit-1.1.11.tar.gz
+  BUILD_DIR=${BUILD_BASE}/cdrkit-1.1.11
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  pushd ${BUILD_DIR}
+  patch -p1 < ${SOURCES_PATH}/cdrkit-deterministic.patch
+  cmake -DCMAKE_INSTALL_PREFIX=${NATIVEPREFIX}
+  make $MAKEOPTS genisoimage
+  make -C genisoimage install
+  popd
+
+  # libdmg-hfsplus
+  SOURCE_FILE=${SOURCES_PATH}/libdmg-hfsplus-v0.1.tar.gz
+  BUILD_DIR=${BUILD_BASE}/libdmg-hfsplus-libdmg-hfsplus-v0.1
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  mkdir -p ${BUILD_DIR}/build
+  pushd ${BUILD_DIR}/build
+  cmake -DCMAKE_INSTALL_PREFIX:PATH=${NATIVEPREFIX}/bin ..
+  make $MAKEOPTS
+  make install
+  popd
+
+  rm -rf native-prefix/docs
+
+  export GZIP="-9n"
+  find native-prefix | sort | tar --no-recursion -czf osx-native-depends-$REVISION.tar.gz -T -
+  mv osx-native-depends-$REVISION.tar.gz $OUTDIR

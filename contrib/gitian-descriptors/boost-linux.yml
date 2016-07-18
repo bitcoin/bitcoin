@@ -1,0 +1,55 @@
+---
+name: "boost"
+suites:
+- "precise"
+architectures:
+- "i386"
+- "amd64"
+packages:
+- "g++"
+- "unzip"
+- "pkg-config"
+- "libtool"
+- "faketime"
+- "bsdmainutils"
+- "zip"
+- "libz-dev"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "boost_1_55_0.tar.bz2"
+script: |
+  STAGING="$HOME/install"
+  TEMPDIR="$HOME/tmp"
+  export LIBRARY_PATH="$STAGING/lib"
+  export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  # Input Integrity Check
+  echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2" | shasum -c
+
+  mkdir -p "$STAGING"
+  tar --warning=no-timestamp -xjf boost_1_55_0.tar.bz2
+  cd boost_1_55_0
+  GCCVERSION=$(g++ -E -dM $(mktemp --suffix=.h) | grep __VERSION__ | cut -d ' ' -f 3 | cut -d '"' -f 2)
+  # note: bjam with -d+2 reveals that -O3 is implied by default, no need to provide it in cxxflags
+  echo "using gcc : $GCCVERSION : g++
+        :
+        <cxxflags>\"-frandom-seed=boost1 -fPIC\"
+  ;" > user-config.jam
+
+  ./bootstrap.sh --without-icu
+
+  ./bjam toolset=gcc threadapi=pthread threading=multi variant=release link=static runtime-link=shared --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 --layout=tagged --build-type=complete --prefix="$STAGING" $MAKEOPTS -d+2 install
+
+  # post-process all generated libraries to be deterministic
+  # extract them to a temporary directory then re-build them deterministically
+  for LIB in $(find $STAGING -name \*.a); do
+    rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+    ar xv $LIB | cut -b5- > /tmp/list.txt
+    rm $LIB
+    ar crsD $LIB $(cat /tmp/list.txt)
+  done
+  #
+  cd "$STAGING"
+  find | sort | zip -X@ $OUTDIR/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
