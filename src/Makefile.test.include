@@ -17,7 +17,9 @@ EXTRA_DIST += \
 	test/data/txcreate2.hex \
 	test/data/txcreatedata1.hex \
 	test/data/txcreatedata2.hex \
-	test/data/txcreatesign.hex
+	test/data/txcreatesign.hex \
+	test/wallet-utility.py \
+	test/data/wallet.dat
 
 JSON_TEST_FILES = \
   test/data/script_valid.json \
@@ -92,8 +94,7 @@ if ENABLE_WALLET
 BITCOIN_TESTS += \
   test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  test/rpc_wallet_tests.cpp \
-  test/walletutil_tests.cpp
+  test/rpc_wallet_tests.cpp
 endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
@@ -131,8 +132,10 @@ bitcoin_test_clean : FORCE
 check-local:
 	@echo "Running test/bitcoin-util-test.py..."
 	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(srcdir)/test/bitcoin-util-test.py
+if ENABLE_WALLET
 	@echo "Running test/wallet-utility.py..."
 	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(srcdir)/test/wallet-utility.py
+endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 
