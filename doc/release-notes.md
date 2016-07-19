@@ -115,6 +115,17 @@ version is bumped to 70013. Upon receiving a feefilter message from a peer,
 a node will not send invs for any transactions which do not meet the filter
 feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
 
+Compact Block support (BIP 152)
+-------------------------------
+
+Support for block relay using the Compact Blocks protocol has been implemented
+in PR 8068.
+
+The primary goal is reducing the bandwidth spikes at relay time, though in many
+cases it also reduces propagation relay. It is automatically enabled between
+compatible peers.
+[BIP 152](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki)
+
 Hierarchical Deterministic Key Generation
 -----------------------------------------
 Newly created wallets will use hierarchical deterministic key generation
@@ -138,6 +149,28 @@ Low-level P2P changes
 
 - The P2P alert system has been removed in PR #7692 and the `alert` P2P message
   is no longer supported.
+
+- The transaction relay mechanism used to relay one quarter of all transactions
+  instantly, while queueing up the rest and sending them out in batch. As
+  this resulted in chains of dependent transactions being reordered, it
+  systematically hurt transaction relay. The relay code was redesigned in PRs
+  #7840 and #8082, and now always batches transactions announcements while also
+  sorting them according to dependency order. This significantly reduces orphan
+  transactions. To compensate for the removal of instant relay, the frequency of
+  batch sending was doubled for outgoing peers.
+
+- Since PR 7840 the BIP35 mempool command is also subject to batch processing.
+
+- The maximum size of orphan transactions that are kept in memory until their
+  ancestors arrive has been raised in PR 8179 from 5000 to 99999 bytes. They
+  are now also removed from memory when they are included in a block, conflict
+  with a block, and time out after 20 minutes.
+
+- We respond at most once to a getaddr request during the lifetime of a
+  connection since PR 7856.
+
+- Connections to peers who have recently been the first one to give us a valid
+  new block or transaction are protected from disconnections since PR 8084.
 
 Low-level RPC changes
 ----------------------
