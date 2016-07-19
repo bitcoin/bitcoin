@@ -97,6 +97,9 @@ testScripts = [
     'walletbackup.py',
     'nodehandling.py',
     'reindex.py',
+    'addressindex.py',
+    'timestampindex.py',
+    'spentindex.py',
     'decodescript.py',
     'p2p-fullblocktest.py', # TODO: works, needs dash_hash
     'blockchain.py',
