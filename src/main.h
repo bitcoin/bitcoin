@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "chain.h"
 #include "coins.h"
+#include "consensus/blockvalidator.h"
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
@@ -341,7 +342,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * @param[out] flags Script verification flags
  * @return Total signature operation cost of tx
  */
-int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
+int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, unsigned int flags);
 
 /**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
@@ -447,8 +448,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 /** Context-dependent validity checks.
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev, int64_t nAdjustedTime);
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const CConsensusContextInfo& context, unsigned int nextWorkRequired);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CConsensusContextInfo& context, const CConsensusFlags& consensusFlags);
 
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
