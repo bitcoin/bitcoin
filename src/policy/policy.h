@@ -18,10 +18,10 @@ class CCoinsViewCache;
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
 static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 0;
-/** Default for -blockmaxcost, which control the range of block costs the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_COST = 3000000;
-/** The maximum size for transactions we're willing to relay/mine */
-static const unsigned int MAX_STANDARD_TX_COST = 400000;
+/** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
+static const unsigned int DEFAULT_BLOCK_MAX_WEIGHT = 3000000;
+/** The maximum weight for transactions we're willing to relay/mine */
+static const unsigned int MAX_STANDARD_TX_WEIGHT = 400000;
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
 static const unsigned int MAX_P2SH_SIGOPS = 15;
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
@@ -66,8 +66,8 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
      */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
-/** Compute the virtual transaction size (cost reinterpreted as bytes). */
-int64_t GetVirtualTransactionSize(int64_t nCost);
+/** Compute the virtual transaction size (weight reinterpreted as bytes). */
+int64_t GetVirtualTransactionSize(int64_t nWeight);
 int64_t GetVirtualTransactionSize(const CTransaction& tx);
 
 #endif // BITCOIN_POLICY_POLICY_H
