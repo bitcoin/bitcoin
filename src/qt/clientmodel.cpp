@@ -68,6 +68,14 @@ int ClientModel::getNumBlocks() const
     return chainActive.Height();
 }
 
+int ClientModel::getHeaderHeight() const
+{
+    LOCK(cs_main);
+    if (!pindexBestHeader)
+        return 0;
+    return pindexBestHeader->nHeight;
+}
+
 quint64 ClientModel::getTotalBytesRecv() const
 {
     return CNode::GetTotalBytesRecv();
