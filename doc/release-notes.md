@@ -146,6 +146,68 @@ HD wallets are incompatible with older versions of Bitcoin Core.
 
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
+Segregated Witness
+------------------
+
+The code preparations for Segregated Witness ("segwit"), as described in [BIP
+141](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki), [BIP
+143](https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki), [BIP
+144](https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki), and [BIP
+145](https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki) are
+finished and included in this release.  However, BIP 141 does not yet specify
+activation parameters on mainnet, and so this release does not support segwit
+use on mainnet.  Testnet use is supported, and after BIP 141 is updated with
+proposed parameters, a future release of Bitcoin Core is expected that
+implements those parameters for mainnet.
+
+Furthermore, because segwit activation is not yet specified for mainnet,
+version 0.13.0 will behave similarly as other pre-segwit releases even after a
+future activation of BIP 141 on the network.  Upgrading from 0.13.0 will be
+required in order to utilize segwit-related features on mainnet (such as signal
+BIP 141 activation, mine segwit blocks, fully validate segwit blocks, relay
+segwit blocks to other segwit nodes, and use segwit transactions in the
+wallet, etc).
+
+Mining transaction selection ("Child Pays For Parent")
+------------------------------------------------------
+
+The mining transaction selection algorithm has been replaced with an algorithm
+that selects transactions based on their feerate inclusive of unconfirmed
+ancestor transactions.  This means that a low-fee transaction can become more
+likely to be selected if a high-fee transaction that spends its outputs is
+relayed.
+
+With this change, the `-blockminsize` command line option has been removed.
+
+The command line option `-blockmaxsize` remains an option to specify the
+maximum number of serialized bytes in a generated block.  In addition, the new
+command line option `-blockmaxweight` has been added, which specifies the
+maximum "block weight" of a generated block, as defined by [BIP 141 (Segregated
+Witness)] (https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki).
+
+In preparation for Segregated Witness, the mining algorithm has been modified
+to optimize transaction selection for a given block weight, rather than a given
+number of serialized bytes in a block.  In this release, transaction selection
+is unaffected by this distinction (as BIP 141 activation is not supported on
+mainnet in this release, see above), but in future releases and after BIP 141
+activation, these calculations would be expected to differ.
+
+For optimal runtime performance, miners using this release should specify
+`-blockmaxweight` on the command line, and not specify `-blockmaxsize`.
+Additionally (or only) specifying `-blockmaxsize`, or relying on default
+settings for both, may result in performance degradation, as the logic to
+support `-blockmaxsize` performs additional computation to ensure that
+constraint is met.  (Note that for mainnet, in this release, the equivalent
+parameter for `-blockmaxweight` would be four times the desired
+`-blockmaxsize`.  See [BIP 141]
+(https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki) for additional
+details.)
+
+In the future, the `-blockmaxsize` option may be removed, as block creation is
+no longer optimized for this metric.  Feedback is requested on whether to
+deprecate or keep this command line option in future releases.
+
+
 Removal of internal miner
 --------------------------
 
