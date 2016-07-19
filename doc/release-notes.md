@@ -142,6 +142,8 @@ You can't disable HD key generation once you have created a HD wallet.
 
 There is no distinction between internal (change) and external keys.
 
+HD wallets are incompatible with older versions of Bitcoin Core.
+
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
 Low-level P2P changes
