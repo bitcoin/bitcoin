@@ -3299,6 +3299,9 @@ bool CWallet::InitLoadWallet()
             key.MakeNewKey(true);
             if (!walletInstance->SetHDMasterKey(key))
                 throw std::runtime_error("CWallet::GenerateNewKey(): Storing master key failed");
+
+            // ensure this wallet.dat can only be opened by clients supporting HD
+            walletInstance->SetMinVersion(FEATURE_HD);
         }
         CPubKey newDefaultKey;
         if (walletInstance->GetKeyFromPool(newDefaultKey)) {
