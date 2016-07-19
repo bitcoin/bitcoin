@@ -622,7 +622,7 @@ static bool IsKeyType(string strType)
             strType == "mkey" || strType == "ckey");
 }
 
-DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
+DBErrors CWalletDB::LoadWallet(CWallet* pwallet, std::set<std::string>& missingFeatures)
 {
     pwallet->vchDefaultKey = CPubKey();
     CWalletScanState wss;
@@ -637,6 +637,19 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
             if (nMinVersion > CLIENT_VERSION)
                 return DB_TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
+        }
+        std::set<std::string> walletFeatures;
+        if (Read((string)"walletfeatures", walletFeatures))
+        {
+            for (const std::string& requiredFeature : walletFeatures)
+            {
+                if (pwallet->implementedWalletFeatures.find(requiredFeature) == pwallet->implementedWalletFeatures.end())
+                    missingFeatures.insert(requiredFeature);
+            }
+            if (missingFeatures.size() > 0)
+                return DB_MISSING_FEATURE;
+            if (!pwallet->SetRequiredFeatureSet(walletFeatures, true))
+                return DB_CORRUPT;
         }
 
         // Get cursor
@@ -1019,4 +1032,10 @@ bool CWalletDB::WriteHDChain(const CHDChain& chain)
 {
     nWalletDBUpdated++;
     return Write(std::string("hdchain"), chain);
+}
+
+bool CWalletDB::WriteWalletFeatures(const std::set<std::string>& walletFeatures)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("walletfeatures"), walletFeatures);
 }

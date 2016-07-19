@@ -58,6 +58,12 @@ CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_FALLBACK_FEE);
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
+const std::set<std::string> CWallet::implementedWalletFeatures {WalletFeatures::HD_WALLET};
+
+namespace WalletFeatures {
+    const char *HD_WALLET="HD Wallet";
+};
+
 /** @defgroup mapWallet
  *
  * @{
@@ -368,6 +374,37 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
             delete pwalletdb;
     }
 
+    return true;
+}
+
+bool CWallet::SetRequiredFeature(const std::string& requiredFeature)
+{
+    LOCK(cs_wallet);
+    // only add the required feature if it's known by the wallet
+    if (implementedWalletFeatures.find(requiredFeature) == implementedWalletFeatures.end())
+        return false;
+
+    // only add the required feature if its not already present in the set
+    if (requiredWalletFeatures.find(requiredFeature) != requiredWalletFeatures.end())
+        return false;
+
+    requiredWalletFeatures.insert(requiredFeature);
+
+    // ensure this wallet.dat can only be opened by clients supporting FEATURE_FEATURESET
+    SetMinVersion(FEATURE_FEATURESET);
+
+    // store the feature set (only happens if we have sucessfully added a feature)
+    SetRequiredFeatureSet(requiredWalletFeatures);
+    return true;
+}
+
+bool CWallet::SetRequiredFeatureSet(const std::set<std::string>& featureSet, bool memonly)
+{
+    LOCK(cs_wallet);
+    if (!memonly && !CWalletDB(strWalletFile).WriteWalletFeatures(featureSet))
+        throw runtime_error("SetRequiredFeatureSet(): writing feature set failed");
+
+    requiredWalletFeatures = featureSet;
     return true;
 }
 
@@ -2494,12 +2531,12 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
 
 
 
-DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
+DBErrors CWallet::LoadWallet(bool& fFirstRunRet, std::set<std::string>& missingFeatures)
 {
     if (!fFileBacked)
         return DB_LOAD_OK;
     fFirstRunRet = false;
-    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this, missingFeatures);
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
         if (CDB::Rewrite(strWalletFile, "\x04pool"))
@@ -3250,7 +3287,8 @@ bool CWallet::InitLoadWallet()
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     CWallet *walletInstance = new CWallet(walletFile);
-    DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
+    std::set<std::string> missingFeatures;
+    DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun, missingFeatures);
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
@@ -3264,6 +3302,15 @@ bool CWallet::InitLoadWallet()
         else if (nLoadWalletRet == DB_TOO_NEW)
             return InitError(strprintf(_("Error loading %s: Wallet requires newer version of %s"),
                                walletFile, _(PACKAGE_NAME)));
+        else if (nLoadWalletRet == DB_MISSING_FEATURE)
+        {
+            std::string strMissingFeatures;
+            for (const std::string &missingFeature : missingFeatures) strMissingFeatures += missingFeature+", ";
+            if (strMissingFeatures.size() > 2)
+                strMissingFeatures = strMissingFeatures.substr(0, strMissingFeatures.size()-2);
+            return InitError(strprintf(_("Error loading %s: Wallet requires version of %s that supports %s"),
+                                       walletFile, _(PACKAGE_NAME), strMissingFeatures));
+        }
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
             return InitError(strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)));
@@ -3297,6 +3344,10 @@ bool CWallet::InitLoadWallet()
             // generate a new master key
             CKey key;
             key.MakeNewKey(true);
+
+            // ensure this wallet.dat can only be opened by clients supporting WalletFeatures (set of strings)
+            walletInstance->SetRequiredFeature(WalletFeatures::HD_WALLET);
+
             if (!walletInstance->SetHDMasterKey(key))
                 throw std::runtime_error("CWallet::GenerateNewKey(): Storing master key failed");
         }

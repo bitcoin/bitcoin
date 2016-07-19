@@ -11,7 +11,8 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
 
     bool fFirstRun;
     pwalletMain = new CWallet("wallet_test.dat");
-    pwalletMain->LoadWallet(fFirstRun);
+    std::set<std::string> missingFeatures;
+    pwalletMain->LoadWallet(fFirstRun, missingFeatures);
     RegisterValidationInterface(pwalletMain);
 
     RegisterWalletRPCCommands(tableRPC);

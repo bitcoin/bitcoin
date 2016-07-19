@@ -78,8 +78,23 @@ enum WalletFeature
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
 
-    FEATURE_LATEST = 60000
+    FEATURE_FEATURESET = 130000, // wallet supports distinguishable features with a set of strings
+    FEATURE_LATEST = FEATURE_COMPRPUBKEY // FEATURE_FEATURESET is optional, use FEATURE_COMPRPUBKEY as latest version
 };
+
+/**
+ * We use string based wallet features which will allow older
+ * clients to show at least a short string about the missing
+ * feature
+ */
+namespace WalletFeatures {
+
+    /**
+     * Wallet require HD feature
+     */
+    extern const char *HD_WALLET;
+}
+
 
 
 /** A key pool entry */
@@ -580,6 +595,8 @@ private:
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
+    std::set<std::string> requiredWalletFeatures;
+
 public:
     /*
      * Main wallet lock.
@@ -802,7 +819,7 @@ public:
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc);
 
-    DBErrors LoadWallet(bool& fFirstRunRet);
+    DBErrors LoadWallet(bool& fFirstRunRet, std::set<std::string>& missingFeatures);
     DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
 
@@ -902,6 +919,11 @@ public:
     /* Set the current HD master key (will reset the chain child index counters) */
     bool SetHDMasterKey(const CKey& key);
     const CHDChain& GetHDChain() { return hdChain; }
+
+    bool SetRequiredFeature(const std::string& requiredFeature);
+    bool SetRequiredFeatureSet(const std::set<std::string>& featureSet, bool memonly = false);
+
+    static const std::set<std::string> implementedWalletFeatures;
 };
 
 /** A key allocated from the key pool. */

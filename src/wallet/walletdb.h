@@ -38,7 +38,8 @@ enum DBErrors
     DB_NONCRITICAL_ERROR,
     DB_TOO_NEW,
     DB_LOAD_FAIL,
-    DB_NEED_REWRITE
+    DB_NEED_REWRITE,
+    DB_MISSING_FEATURE
 };
 
 /* simple HD chain data model */
@@ -168,7 +169,7 @@ public:
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     DBErrors ReorderTransactions(CWallet* pwallet);
-    DBErrors LoadWallet(CWallet* pwallet);
+    DBErrors LoadWallet(CWallet* pwallet, std::set<std::string>& missingFeatures);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(CWallet* pwallet, std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
@@ -177,6 +178,8 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+
+    bool WriteWalletFeatures(const std::set<std::string>& walletFeatures);
 
 private:
     CWalletDB(const CWalletDB&);
