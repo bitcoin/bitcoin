@@ -8,6 +8,8 @@
 #include "chain.h"
 #include <map>
 
+class CValidationState;
+
 /** What block version to use for new blocks (pre versionbits) */
 static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
 /** What bits to set in version for versionbits blocks */
@@ -64,5 +66,20 @@ struct VersionBitsCache
 
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
+
+namespace Consensus {
+
+/**
+ * Get loosely defined struct containing all the consensus flags.
+ * @TODO incomplete, not all consensus flags yet.
+ */
+int64_t GetFlags(const CBlock& block, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, VersionBitsCache& cache);
+
+} // namespace Consensus
+
+/**
+ * Called from ContextualCheckBlockHeader() to reject outdated version blocks.
+ */
+bool VerifyBlockVersion(int32_t nBlockVersion, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 #endif
