@@ -58,7 +58,7 @@ static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 static const bool DEFAULT_WALLETBROADCAST = true;
 
 //! if set, all keys will be derived by using BIP32
-static const bool DEFAULT_USE_HD_WALLET = true;
+static const bool DEFAULT_CREATE_HD_WALLET = true;
 
 extern const char * DEFAULT_WALLET_DAT;
 
