@@ -13,7 +13,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "xthinblocks.h"
+#include "thinblock.h"
 
 #include <univalue.h>
 

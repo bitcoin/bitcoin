@@ -156,7 +156,6 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   uint256.h \
   undo.h \
-  xthinblocks.h \
   util.h \
   utilmoneystr.h \
   utilstrencodings.h \
@@ -215,7 +214,6 @@ libbitcoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  xthinblocks.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)

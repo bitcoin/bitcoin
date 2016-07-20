@@ -1,4 +1,6 @@
+// Copyright (c) 2015 G. Andrew Stone
 // Copyright (c) 2016 The Bitcoin Unlimited developers
+// Copyright (c) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +12,14 @@
 #include "primitives/block.h"
 #include "bloom.h"
 
+#include "net.h"
+#include "util.h"
+
 #include <vector>
+
+class CBlock;
+class CNode;
+
 
 class CXThinBlock
 {
@@ -81,4 +90,15 @@ public:
     }
 };
 
-#endif // BITCOIN_THINBLOCK_H
+bool HaveThinblockNodes();
+bool CheckThinblockTimer(const uint256 &hash);
+inline bool IsThinBlocksEnabled()
+{
+    return GetBoolArg("-use-thinblocks", true);
+}
+bool IsChainNearlySyncd();
+CBloomFilter createSeededBloomFilter(const std::vector<uint256>& vOrphanHashes);
+void LoadFilter(CNode *pfrom, CBloomFilter *filter);
+void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, const CBlock &block, const CInv &inv);
+
+#endif

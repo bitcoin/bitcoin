@@ -19,7 +19,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
-#include "xthinblocks.h"
+#include "thinblock.h"
 
 #ifdef WIN32
 #include <string.h>
