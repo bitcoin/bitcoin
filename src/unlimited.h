@@ -130,8 +130,6 @@ extern void SendExpeditedBlock(const CBlock& block,const CNode* skip=NULL);
 extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
 extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
 
-// Handle receiving and sending messages from thin block capable nodes only (so that thin block nodes capable nodes are preferred)
-extern bool ThinBlockMessageHandler(std::vector<CNode*>& vNodesCopy);
 extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
 

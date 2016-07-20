@@ -1259,37 +1259,6 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     ClearThinBlockTimer(inv.hash);
 }
 
-bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
-{
-    bool sleep = true;
-    CNodeSignals& signals = GetNodeSignals();
-    BOOST_FOREACH (CNode* pnode, vNodesCopy)
-    {
-        if ((pnode->fDisconnect) || (!pnode->ThinBlockCapable()))
-            continue;
-
-        // Receive messages
-        {
-            TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-            if (lockRecv)
-            {
-                if (!signals.ProcessMessages(pnode))
-                    pnode->CloseSocketDisconnect();
-
-                if (pnode->nSendSize < SendBufferSize())
-                {
-                    if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
-                        sleep = false;
-                }
-            }
-        }
-        boost::this_thread::interruption_point();
-        signals.SendMessages(pnode);
-        boost::this_thread::interruption_point();
-    }
-    return sleep;
-}
-
 void ConnectToThinBlockNodes()
 {
     // Connect to specific addresses

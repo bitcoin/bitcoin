@@ -1849,6 +1849,8 @@ void ThreadMessageHandler()
 
     // SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true) {
+        requester.SendRequests();  // BU send out any requests for tx or blks that I don't know about yet        
+
         vector<CNode*> vNodesCopy;
         {
             LOCK(cs_vNodes);
