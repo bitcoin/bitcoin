@@ -665,7 +665,6 @@ Thanks to everyone who directly contributed to this release:
 - James O'Beirne
 - Jarret Dyrbye
 - Jeremy Rand
-- jl2012
 - jloughry
 - jmacwhyte
 - Joao Fonseca
