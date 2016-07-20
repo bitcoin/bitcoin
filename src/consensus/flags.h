@@ -19,10 +19,11 @@ enum
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
     bitcoinconsensus_LOCKTIME_VERIFY_SEQUENCE                = (1U << 16), // BIP68: Interpret sequence numbers as relative lock-time constraints
+    bitcoinconsensus_TX_VERIFY_BIP30                         = (1U << 17), // BIP30: See http://r6.ca/blog/20120206T005236Z.html for more information
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH | bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
                                                                bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY | bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY |
                                                                bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY | bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS |
-                                                               bitcoinconsensus_LOCKTIME_VERIFY_SEQUENCE,
+                                                               bitcoinconsensus_LOCKTIME_VERIFY_SEQUENCE | bitcoinconsensus_TX_VERIFY_BIP30,
 };
 
 #endif // BITCOIN_CONSENSUS_FLAGS_H
