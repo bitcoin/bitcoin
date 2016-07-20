@@ -1178,7 +1178,7 @@ bool CWallet::SetHDMasterKey(const CKey& key)
     // key metadata is not required
     CPubKey pubkey = key.GetPubKey();
     if (!AddKeyPubKey(key, pubkey))
-        throw std::runtime_error("CWallet::GenerateNewKey(): AddKey failed");
+        throw std::runtime_error("CWallet::SetHDMasterKey(): AddKey failed");
 
     // store the keyid (hash160) together with
     // the child index counter in the database
@@ -1194,7 +1194,7 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
 {
     LOCK(cs_wallet);
     if (!memonly && !CWalletDB(strWalletFile).WriteHDChain(chain))
-        throw runtime_error("AddHDChain(): writing chain failed");
+        throw runtime_error("SetHDChain(): writing chain failed");
 
     hdChain = chain;
     return true;
@@ -3301,7 +3301,7 @@ bool CWallet::InitLoadWallet()
             CKey key;
             key.MakeNewKey(true);
             if (!walletInstance->SetHDMasterKey(key))
-                throw std::runtime_error("CWallet::GenerateNewKey(): Storing master key failed");
+                throw std::runtime_error("CWallet::InitLoadWallet(): Storing master key failed");
         }
         CPubKey newDefaultKey;
         if (walletInstance->GetKeyFromPool(newDefaultKey)) {
