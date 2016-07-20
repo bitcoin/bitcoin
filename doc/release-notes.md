@@ -170,7 +170,7 @@ Low-level P2P changes
   instantly, while queueing up the rest and sending them out in batch. As
   this resulted in chains of dependent transactions being reordered, it
   systematically hurt transaction relay. The relay code was redesigned in PRs
-  #7840 and #8082, and now always batches transactions announcements while also
+  \#7840 and #8082, and now always batches transactions announcements while also
   sorting them according to dependency order. This significantly reduces orphan
   transactions. To compensate for the removal of instant relay, the frequency of
   batch sending was doubled for outgoing peers.
