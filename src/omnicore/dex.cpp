@@ -123,7 +123,13 @@ int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDes
         return 0; // divide by null protection
     }
 
-    return legacy::calculateDesiredBTC(amountOffered, amountDesired, amountAvailable);
+    uint256 amountOffered256 = ConvertTo256(amountOffered);
+    uint256 amountDesired256 = ConvertTo256(amountDesired);
+    uint256 amountAvailable256 = ConvertTo256(amountAvailable);
+
+    amountDesired256 = DivideAndRoundUp((amountDesired256 * amountAvailable256), amountOffered256);
+
+    return ConvertTo64(amountDesired256);
 }
 
 /**
@@ -175,7 +181,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
                         FormatDivisibleMP(balanceReallyAvailable), strMPProperty(propertyId));
 
         // AND we must also re-adjust the BTC desired in this case...
-        amountDesired = calculateDesiredBTC(amountOffered, amountDesired, balanceReallyAvailable);
+        amountDesired = legacy::calculateDesiredBTC(amountOffered, amountDesired, balanceReallyAvailable);
         amountOffered = balanceReallyAvailable;
         if (nAmended) *nAmended = amountOffered;
 
