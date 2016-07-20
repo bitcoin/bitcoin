@@ -122,7 +122,7 @@ Support for block relay using the Compact Blocks protocol has been implemented
 in PR 8068.
 
 The primary goal is reducing the bandwidth spikes at relay time, though in many
-cases it also reduces propagation relay. It is automatically enabled between
+cases it also reduces propagation delay. It is automatically enabled between
 compatible peers.
 [BIP 152](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki)
 
