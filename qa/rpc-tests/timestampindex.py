@@ -35,15 +35,25 @@ class TimestampIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining 5 blocks..."
-        blockhashes = self.nodes[0].generate(5)
-        low = self.nodes[0].getblock(blockhashes[0])["time"]
-        high = self.nodes[0].getblock(blockhashes[4])["time"]
+        print "Mining 25 blocks..."
+        blockhashes = self.nodes[0].generate(25)
+        time.sleep(3)
+        print "Mining 25 blocks..."
+        blockhashes.extend(self.nodes[0].generate(25))
+        time.sleep(3)
+        print "Mining 25 blocks..."
+        blockhashes.extend(self.nodes[0].generate(25))
         self.sync_all()
+        low = self.nodes[1].getblock(blockhashes[0])["time"]
+        high = low + 76
+
         print "Checking timestamp index..."
         hashes = self.nodes[1].getblockhashes(high, low)
-        assert_equal(len(hashes), 5)
-        assert_equal(sorted(blockhashes), sorted(hashes))
+
+        assert_equal(len(hashes), len(blockhashes))
+
+        assert_equal(hashes, blockhashes)
+
         print "Passed\n"
 
 
