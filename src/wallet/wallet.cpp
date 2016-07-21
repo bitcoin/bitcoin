@@ -626,6 +626,15 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         Lock();
         Unlock(strWalletPassphrase);
+
+        // if we are using HD, replace the HD master key with a new one
+        if (!hdChain.masterKeyID.IsNull()) {
+            CKey key;
+            key.MakeNewKey(true);
+            if (!SetHDMasterKey(key))
+                return false;
+        }
+
         NewKeyPool();
         Lock();
 
