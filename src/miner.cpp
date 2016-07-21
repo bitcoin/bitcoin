@@ -28,7 +28,6 @@
 #include "utilmoneystr.h"
 #include "validationinterface.h"
 #include "utilstrencodings.h"
-#include "thinblock.h"
 
 #include <boost/tuple/tuple.hpp>
 #include <queue>

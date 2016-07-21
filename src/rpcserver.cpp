@@ -13,8 +13,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "thinblock.h"
-
 #include <univalue.h>
 
 #include <boost/bind.hpp>

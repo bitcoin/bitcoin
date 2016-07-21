@@ -36,7 +36,6 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "versionbits.h"
-#include "thinblock.h"
 
 #include <sstream>
 #include <algorithm>

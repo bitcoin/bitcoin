@@ -1014,7 +1014,8 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
-    while (true) {
+    while (true)
+    {
         //
         // Disconnect nodes
         //
@@ -1500,7 +1501,8 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) {
+    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
+    {
         for (int64_t nLoop = 0;; nLoop++)
         {
             ProcessOneShot();

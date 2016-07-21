@@ -15,7 +15,6 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utiltime.h"
-#include "thinblock.h"
 #include "version.h"
 
 using namespace std;
