@@ -31,7 +31,7 @@ class WalletHDTest(BitcoinTestFramework):
         tmpdir = self.options.tmpdir
 
         # Make sure we use hd, keep masterkeyid
-        masterkeyid = self.nodes[1].getwalletinfo()['masterkeyid']
+        masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
         assert_equal(len(masterkeyid), 40)
 
         # Import a non-HD private key in the HD wallet
