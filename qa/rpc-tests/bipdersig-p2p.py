@@ -79,9 +79,9 @@ class BIP66Test(ComparisonTestFramework):
         self.nodeaddress = self.nodes[0].getnewaddress()
         self.last_block_time = int(time.time())
 
-        ''' 98 more version 2 blocks '''
+        ''' 298 more version 2 blocks '''
         test_blocks = []
-        for i in range(98):
+        for i in range(298):
             block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
             block.nVersion = 2
             block.rehash()
@@ -124,25 +124,7 @@ class BIP66Test(ComparisonTestFramework):
         self.last_block_time += 1
         self.tip = block.sha256
         height += 1
-        yield TestInstance([[block, True]])
-
-        ''' 
-        Check that the new DERSIG rules are enforced in the 751st version 3
-        block.
-        '''
-        spendtx = self.create_transaction(self.nodes[0],
-                self.coinbase_blocks[1], self.nodeaddress, 1.0)
-        unDERify(spendtx)
-        spendtx.rehash()
-
-        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-        block.nVersion = 3
-        block.vtx.append(spendtx)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
-        block.solve()
-        self.last_block_time += 1
-        yield TestInstance([[block, False]])
+        yield TestInstance([[block, True]])       
 
         ''' Mine 199 new version blocks on last valid tip '''
         test_blocks = []
@@ -176,6 +158,24 @@ class BIP66Test(ComparisonTestFramework):
         self.tip = block.sha256
         height += 1
         yield TestInstance([[block, True]])
+
+        ''' 
+        Check that the new DERSIG rules are enforced in the 951st version 3
+        block.
+        '''
+        spendtx = self.create_transaction(self.nodes[0],
+                self.coinbase_blocks[1], self.nodeaddress, 1.0)
+        unDERify(spendtx)
+        spendtx.rehash()
+
+        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
+        block.nVersion = 3
+        block.vtx.append(spendtx)
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.rehash()
+        block.solve()
+        self.last_block_time += 1
+        yield TestInstance([[block, False]])
 
         ''' Mine 1 old version block, should be invalid '''
         block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
