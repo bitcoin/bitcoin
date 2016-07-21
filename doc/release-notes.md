@@ -192,21 +192,6 @@ is unaffected by this distinction (as BIP 141 activation is not supported on
 mainnet in this release, see above), but in future releases and after BIP 141
 activation, these calculations would be expected to differ.
 
-For optimal runtime performance, miners using this release should specify
-`-blockmaxweight` on the command line, and not specify `-blockmaxsize`.
-Additionally (or only) specifying `-blockmaxsize`, or relying on default
-settings for both, may result in performance degradation, as the logic to
-support `-blockmaxsize` performs additional computation to ensure that
-constraint is met.  (Note that for mainnet, in this release, the equivalent
-parameter for `-blockmaxweight` would be four times the desired
-`-blockmaxsize`.  See [BIP 141]
-(https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki) for additional
-details.)
-
-In the future, the `-blockmaxsize` option may be removed, as block creation is
-no longer optimized for this metric.  Feedback is requested on whether to
-deprecate or keep this command line option in future releases.
-
 
 Removal of internal miner
 --------------------------
