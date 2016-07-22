@@ -510,6 +510,8 @@ void settingsToUserAgentString()
 
 void UnlimitedSetup(void)
 {
+    MIN_TX_REQUEST_RETRY_INTERVAL = GetArg("-txretryinterval", MIN_TX_REQUEST_RETRY_INTERVAL);
+    MIN_BLK_REQUEST_RETRY_INTERVAL = GetArg("-blkretryinterval", MIN_BLK_REQUEST_RETRY_INTERVAL);
     maxGeneratedBlock = GetArg("-blockmaxsize", maxGeneratedBlock);
     excessiveBlockSize = GetArg("-excessiveblocksize", excessiveBlockSize);
     excessiveAcceptDepth = GetArg("-excessiveacceptdepth", excessiveAcceptDepth);

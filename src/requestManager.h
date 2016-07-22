@@ -6,6 +6,8 @@
 #define REQUEST_MANAGER_H
 #include "net.h"
 #include "stat.h"
+extern unsigned int MIN_TX_REQUEST_RETRY_INTERVAL;  // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
+extern unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL;  // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
 
 class CNodeRequestData
 {

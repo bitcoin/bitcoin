@@ -29,8 +29,8 @@ using namespace std;
 // Request management
 CRequestManager requester;
 
-unsigned int MIN_REQUEST_RETRY_INTERVAL = 2*1000*1000;  // When should I request an object from someone else (in microseconds)
-unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 2*1000*1000;  // When should I request a block from someone else (in microseconds)
+unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request an object from someone else (in microseconds)
+unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request a block from someone else (in microseconds)
 
 // defined in main.cpp.  should be moved into a utilities file but want to make rebasing easier
 extern bool CanDirectFetch(const Consensus::Params &consensusParams);
@@ -56,9 +56,9 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
   droppedTxns -= (item.outstandingReqs-1);
   pendingTxns -= 1;
 
-  // Got the data, now add the node as a source
   LOCK(cs_vNodes);
 
+  // remove all the source nodes
   for (CUnknownObj::ObjectSourceList::iterator i = item.availableFrom.begin(); i != item.availableFrom.end(); ++i)
     {
       CNode* node = i->node;
@@ -69,6 +69,7 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
           node->Release();     
 	}
     }
+  item.availableFrom.clear();
 
   if (item.obj.type == MSG_TX)
     {
@@ -285,7 +286,10 @@ void CUnknownObj::AddSource(CNode* from)
   if (std::find_if(availableFrom.begin(), availableFrom.end(), IsCNodeRequestDataThisNode(from)) == availableFrom.end())  // node is not in the request list
     {
       LogPrint("req", "%s added ref to node %d.  Current count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
-      from->AddRef();
+      {
+        LOCK(cs_vNodes);  // This lock is needed to ensure that AddRef happens atomically
+        from->AddRef();
+      }
       CNodeRequestData req(from);
       for (ObjectSourceList::iterator i = availableFrom.begin(); i != availableFrom.end(); ++i)
         {
@@ -297,7 +301,6 @@ void CUnknownObj::AddSource(CNode* from)
         }
       availableFrom.push_back(req);
     }
-
 }
 
 void RequestBlock(CNode* pfrom, CInv obj)
@@ -445,7 +448,7 @@ void CRequestManager::SendRequests()
       ++sendIter;  // move it forward up here in case we need to erase the item we are working with.
       if (itemIter == mapTxnInfo.end()) break;
 
-      if (now-item.lastRequestTime > MIN_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
+      if (now-item.lastRequestTime > MIN_TX_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
           if (!item.rateLimited)
 	    {
