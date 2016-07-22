@@ -58,15 +58,17 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
 
   // Got the data, now add the node as a source
   LOCK(cs_vNodes);
-  for (int i=0;i<CUnknownObj::MAX_AVAIL_FROM;i++)
-    if (item.availableFrom[i] != NULL)
-      {
-        CNode * node = item.availableFrom[i];
-	node->Release();
-        LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n",item.obj.ToString(), node->GetId(), node->GetRefCount());
-	item.availableFrom[i]=NULL; // unnecessary but let's make it very clear
-      }
 
+  for (CUnknownObj::ObjectSourceList::iterator i = item.availableFrom.begin(); i != item.availableFrom.end(); ++i)
+    {
+      CNode* node = i->node;
+      if (node)
+        {
+	  i->clear();
+          LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n",item.obj.ToString(), node->GetId(), node->GetRefCount());
+          node->Release();     
+	}
+    }
 
   if (item.obj.type == MSG_TX)
     {
@@ -252,63 +254,50 @@ void CRequestManager::Rejected(const CInv& obj, CNode* from, unsigned char reaso
     }
 }
 
-int CUnknownObj::AddSource(CNode* from)
+CNodeRequestData::CNodeRequestData(CNode* n)
 {
-  int i;
-  for (i=0;i<CUnknownObj::MAX_AVAIL_FROM;i++)
+  assert(n);
+  node=n;  
+  requestCount=0;
+  desirability=0;
+
+  const int MaxLatency = 10*1000*1000;  // After 10 seconds latency I don't care
+
+  // Calculate how much we like this node:
+
+  if (node->ThinBlockCapable())  // Prefer thin block nodes over low latency ones
     {
-      if (availableFrom[i] == from) break;  // don't add the same node twice
-      if (availableFrom[i] == NULL)
-	{
-	  if (1)
-	    {
-              LOCK(cs_vNodes);
-	      availableFrom[i] = from->AddRef();
-	    }
-	  LogPrint("req", "%s added ref to node %d.  Current count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
-	  // I Don't need to clear this bit in receivingFrom, it should already be 0
-	  if (i==0) // First request for this object
-	    {
-	      from->firstTx += 1;
-	    }
-	  break;
-	}
+      desirability += MaxLatency;
     }
-  return i;
+  
+  // The bigger the latency (in microseconds), the less we want to request from this node
+  int latency = node->txReqLatency.GetTotal().get_int();
+  if (latency==0) // data has never been requested from this node.  Should we encourage investigation into whether this node is fast, or stick with nodes that we do have data on?
+    {
+      latency = 80*1000; // assign it a reasonably average latency (80ms) for sorting purposes
+    }
+  if (latency>MaxLatency) latency=MaxLatency;
+  desirability -= latency;
 }
 
-int CUnknownObj::NextSource()
+void CUnknownObj::AddSource(CNode* from)
 {
-  int next = outstandingReqs%CUnknownObj::MAX_AVAIL_FROM;
-  while (next < CUnknownObj::MAX_AVAIL_FROM)  // Go from last point forward
+  if (std::find_if(availableFrom.begin(), availableFrom.end(), IsCNodeRequestDataThisNode(from)) == availableFrom.end())  // node is not in the request list
     {
-      CNode* from = availableFrom[next];
-      if (from)
-	{
-	  if (from->fDisconnect)  // oops source is gone!
+      LogPrint("req", "%s added ref to node %d.  Current count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
+      from->AddRef();
+      CNodeRequestData req(from);
+      for (ObjectSourceList::iterator i = availableFrom.begin(); i != availableFrom.end(); ++i)
+        {
+	  if (i->desirability < req.desirability)
 	    {
-	      availableFrom[next] = NULL;
-	      from->Release();
+              availableFrom.insert(i, req);
+              return;
 	    }
-	  else if (requestCount[next] == 0) break;
-	}
-      next++;
+        }
+      availableFrom.push_back(req);
     }
-  if (next == CUnknownObj::MAX_AVAIL_FROM)
-    for (next=0;next<CUnknownObj::MAX_AVAIL_FROM;next++)  // Go from the beginning to the last point
-      {
-	CNode* from = availableFrom[next];
-	if (from)
-	  {
-	    if (from->fDisconnect)  // oops source is gone!
-	      {
-		availableFrom[next] = NULL;
-		from->Release();
-	      }
-	    else if (requestCount[next] == 0) break;
-	  }
-      }
-  return next;
+
 }
 
 void RequestBlock(CNode* pfrom, CInv obj)
@@ -393,6 +382,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
     }
 }
 
+
 void CRequestManager::SendRequests()
 {
   int64_t now = 0;
@@ -413,25 +403,32 @@ void CRequestManager::SendRequests()
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
-          int next = item.NextSource();
-	  if (next != CUnknownObj::MAX_AVAIL_FROM)
+          if (!item.availableFrom.empty())
 	    {
-  	      if (item.lastRequestTime)  // if this is positive, we've requested at least once
-	        {
-	        LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
-	        }
+	      CNodeRequestData next = item.availableFrom.front();  // Grab the next location where we can find this object.
+              item.availableFrom.pop_front();
+	      if (next.node != NULL )
+		{
+		  if (item.lastRequestTime)  // if this is positive, we've requested at least once
+		    {
+		      LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
+		    }
 
-	      CNode* pfrom = item.availableFrom[next];
-              item.requestCount[next] += 1;
-	      item.receivingFrom |= (1<<next);
-	      item.outstandingReqs++;
-	      item.lastRequestTime = now;
-              CInv obj = item.obj;
+		  next.requestCount += 1;
+                  next.desirability /= 2;  // Make this node less desirable to re-request.
+		  item.outstandingReqs++;
+		  item.lastRequestTime = now;
+		  item.availableFrom.push_back(next);  // Add the node back onto the end of the list
 
-              cs_objDownloader.unlock();
-              RequestBlock(pfrom, obj);
-              cs_objDownloader.lock();
+		  CInv obj = item.obj;
+		  cs_objDownloader.unlock();
+		  RequestBlock(next.node, obj);
+		  cs_objDownloader.lock();
+		}
+              else
+		{
 
+		}
 	    }
 	}    
     }
@@ -459,28 +456,35 @@ void CRequestManager::SendRequests()
                   droppedTxns += 1;
 		}
 
-              int next = item.NextSource();
-	      if (next == CUnknownObj::MAX_AVAIL_FROM)  // I can't get the object from anywhere.  now what?
+              if (item.availableFrom.empty())
 		{
 		  // TODO: tell someone about this issue, look in a random node, or something.
 		  cleanup(itemIter);
 		}
-	      else // Ok request this item.
-		{
-		  CNode* from = item.availableFrom[next];
-                  item.requestCount[next] += 1;
-		  item.receivingFrom |= (1<<next);
-		  item.outstandingReqs++;
-		  item.lastRequestTime = now;
+              else  // Ok request this item.
+	        {
+	          CNodeRequestData next = item.availableFrom.front();  // Grab the next location where we can find this object.
+                  item.availableFrom.pop_front();
+	          if (next.node != NULL )
+		    {
+  		    next.requestCount += 1;
+                    next.desirability /= 2;  // Make this node less desirable to re-request.
+		    item.outstandingReqs++;
+		    item.lastRequestTime = now;
+    		    item.availableFrom.push_back(next);  // Add the node back onto the end of the list
 
-                  cs_objDownloader.unlock();
-                  LOCK(from->cs_vSend);
-		  // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-		  from->mapAskFor.insert(std::make_pair(now, item.obj));
-                  cs_objDownloader.lock();
+                    if (1)
+                      {
+                      cs_objDownloader.unlock();
+                      LOCK(next.node->cs_vSend);
+  		      // from->AskFor(item.obj); basically just shoves the req into mapAskFor
+                      next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                      cs_objDownloader.lock();
+		      }
 
-		  inFlight++;
-                  inFlightTxns << inFlight;
+  		    inFlight++;
+                    inFlightTxns << inFlight;
+		    }
 		}
 	    }
 	}

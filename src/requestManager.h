@@ -7,35 +7,55 @@
 #include "net.h"
 #include "stat.h"
 
+class CNodeRequestData
+{
+public:
+  int    requestCount;
+  int    desirability;
+  CNode* node;
+  CNodeRequestData(CNode*);
+
+  CNodeRequestData():requestCount(0), desirability(0), node(NULL)
+    {
+    }
+  void clear(void)
+    {
+    requestCount=0;
+    node=0;
+    desirability=0;
+    }
+  bool operator<(const CNodeRequestData &rhs) const { return desirability < rhs.desirability; }
+};
+
+struct IsCNodeRequestDataThisNode // Compare a CNodeRequestData object to a node
+{
+  CNode* node;
+  IsCNodeRequestDataThisNode(CNode* n):node(n) {};
+  inline bool operator()(const CNodeRequestData& nd) const { return nd.node == node; }
+};
+
 class CUnknownObj
 {
 public:
-  enum
-    {
-      MAX_AVAIL_FROM = 8  // We don't really care if the txn is available from more than 8 nodes... that should be enough to grab it.
-    };
+  typedef std::list<CNodeRequestData> ObjectSourceList;
   CInv obj;
   bool rateLimited;
   int64_t lastRequestTime;  // In microseconds, 0 means no request
   unsigned int outstandingReqs;
-  unsigned int receivingFrom;
-  char    requestCount[MAX_AVAIL_FROM];
-  CNode* availableFrom[MAX_AVAIL_FROM];
+  //unsigned int receivingFrom;
+  //char    requestCount[MAX_AVAIL_FROM];
+  //CNode* availableFrom[MAX_AVAIL_FROM];
+  ObjectSourceList availableFrom;
   int priority;
-
   
   CUnknownObj()
   {
-    for (int i =0;i<MAX_AVAIL_FROM;i++) { availableFrom[i] = NULL; requestCount[i] = 0; }
     rateLimited = false;
-    receivingFrom = 0;
     outstandingReqs = 0;
     lastRequestTime = 0;
   }
 
-  int NextSource();
-  int AddSource(CNode* from);
-  //CUnknownObj( const CUnknownObj &) = default;
+  void AddSource(CNode* from);
 };
 
 class CRequestManager

@@ -288,7 +288,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 
   virtual UniValue GetTotal()
   {
-    if (op & STAT_OP_AVE) return UniValue(total/timerCount);  // If the metric is an average, calculate the average before returning it
+    if ((op & STAT_OP_AVE)&&(timerCount != 0)) return UniValue(total/timerCount);  // If the metric is an average, calculate the average before returning it
     return UniValue(total);
   }
 
