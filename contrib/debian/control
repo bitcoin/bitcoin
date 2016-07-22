@@ -22,7 +22,7 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  libevent-dev,
  python
-Standards-Version: 3.9.2
+Standards-Version: 3.9.6
 Homepage: https://bitcoinclassic.com/
 Vcs-Git: git://github.com/bitcoinclassic/bitcoinclassic.git
 Vcs-Browser: https://github.com/bitcoinclassic/bitcoinclassic
