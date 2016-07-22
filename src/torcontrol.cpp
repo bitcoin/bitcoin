@@ -462,7 +462,7 @@ void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& r
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
         if (GetArg("-onion", "") == "") {
-            CService resolved(LookupNumeric("127.0.0.1", 9050));
+            CService resolved(LookupNumeric("127.0.0.1", (uint16_t)9050));
             proxyType addrOnion = proxyType(resolved, true);
             SetProxy(NET_TOR, addrOnion);
             SetLimited(NET_TOR, false);
@@ -474,7 +474,7 @@ void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& r
         // Request hidden service, redirect port.
         // Note that the 'virtual' port doesn't have to be the same as our internal port, but this is just a convenient
         // choice.  TODO; refactor the shutdown sequence some day.
-        conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, GetListenPort(), GetListenPort()),
+        conn.Command(strprintf("ADD_ONION %s Port=%u,127.0.0.1:%u", private_key, GetListenPort(), GetListenPort()),
             boost::bind(&TorController::add_onion_cb, this, _1, _2));
     } else {
         LogPrintf("tor: Authentication failed\n");

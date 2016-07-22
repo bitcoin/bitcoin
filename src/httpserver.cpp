@@ -318,7 +318,7 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 /** Bind HTTP server to specified addresses */
 static bool HTTPBindAddresses(struct evhttp* http)
 {
-    int defaultPort = GetArg("-rpcport", BaseParams().RPCPort());
+    uint16_t defaultPort = GetArg("-rpcport", BaseParams().RPCPort());
     std::vector<std::pair<std::string, uint16_t> > endpoints;
 
     // Determine what addresses to bind to
@@ -331,7 +331,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     } else if (mapArgs.count("-rpcbind")) { // Specific bind address
         const std::vector<std::string>& vbind = mapMultiArgs["-rpcbind"];
         for (std::vector<std::string>::const_iterator i = vbind.begin(); i != vbind.end(); ++i) {
-            int port = defaultPort;
+            uint16_t port = defaultPort;
             std::string host;
             SplitHostPort(*i, port, host);
             endpoints.push_back(std::make_pair(host, port));
@@ -343,12 +343,12 @@ static bool HTTPBindAddresses(struct evhttp* http)
 
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
-        LogPrint("http", "Binding RPC on address %s port %i\n", i->first, i->second);
+        LogPrint("http", "Binding RPC on address %s port %u\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? NULL : i->first.c_str(), i->second);
         if (bind_handle) {
             boundSockets.push_back(bind_handle);
         } else {
-            LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
+            LogPrintf("Binding RPC on address %s port %u failed.\n", i->first, i->second);
         }
     }
     return !boundSockets.empty();
