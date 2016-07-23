@@ -333,8 +333,8 @@ static bool HTTPBindAddresses(struct evhttp* http)
         for (std::vector<std::string>::const_iterator i = vbind.begin(); i != vbind.end(); ++i) {
             uint16_t port = defaultPort;
             std::string host;
-            SplitHostPort(*i, port, host);
-            endpoints.push_back(std::make_pair(host, port));
+            if(SplitHostPort(*i, port, host))
+                endpoints.push_back(std::make_pair(host, port));
         }
     } else { // No specific bind address specified, bind to any
         endpoints.push_back(std::make_pair("::", defaultPort));

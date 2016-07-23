@@ -897,7 +897,7 @@ void RPCConsole::banSelectedNode(int bantime)
         std::string nStr = strNode.toStdString();
         std::string addr;
         uint16_t port = 0;
-        SplitHostPort(nStr, port, addr);
+        if(!SplitHostPort(nStr, port, addr)) return;
 
         CNetAddr resolved;
         if(!LookupHost(addr.c_str(), resolved, false))

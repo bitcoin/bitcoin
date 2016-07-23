@@ -63,23 +63,28 @@ std::string GetNetworkName(enum Network net) {
     }
 }
 
-void SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut) {
+bool SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut) {
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
     bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
     bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
+    bool fResult = true;
     if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
         int32_t n;
         if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
             in = in.substr(0, colon);
             portOut = n;
+        } else {
+            fResult = false;
         }
     }
     if (in.size()>0 && in[0] == '[' && in[in.size()-1] == ']')
         hostOut = in.substr(1, in.size()-2);
     else
         hostOut = in;
+
+    return fResult;
 }
 
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
@@ -209,7 +214,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, uint16_t portDefa
         return false;
     uint16_t port = portDefault;
     std::string hostname = "";
-    SplitHostPort(std::string(pszName), port, hostname);
+    if(!SplitHostPort(std::string(pszName), port, hostname)) return false;
 
     std::vector<CNetAddr> vIP;
     bool fRet = LookupIntern(hostname.c_str(), vIP, nMaxSolutions, fAllowLookup);
@@ -629,7 +634,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     if (outProxyConnectionFailed)
         *outProxyConnectionFailed = false;
 
-    SplitHostPort(std::string(pszDest), port, strDest);
+    if(!SplitHostPort(std::string(pszDest), port, strDest)) return false;
 
     proxyType nameProxy;
     GetNameProxy(nameProxy);
