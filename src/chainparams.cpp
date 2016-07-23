@@ -91,8 +91,9 @@ public:
             scratchpad=new char[(1<<30)];
             while(true){
                 int collisions=0;
-                thash = genesis.FindBestPatternHash(collisions,scratchpad,8);
-                LogPrintf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(),
+								int tmpflag=0;
+								thash = genesis.FindBestPatternHash(collisions,scratchpad,8,&tmpflag);
+								LogPrintf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(),
                 hashTarget.ToString().c_str());
                 if (UintToArith256(thash) <= hashTarget)
                     break;
@@ -197,7 +198,8 @@ public:
             scratchpad=new char[(1<<30)];
             while(true){
                 int collisions=0;
-                thash = genesis.FindBestPatternHash(collisions,scratchpad,8);
+								int tmpflag=0;
+								thash = genesis.FindBestPatternHash(collisions,scratchpad,8,&tmpflag);
                 LogPrintf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(),
                 hashTarget.ToString().c_str());
                 if (UintToArith256(thash) <= hashTarget)
