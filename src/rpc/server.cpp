@@ -88,20 +88,31 @@ void RPCTypeCheck(const UniValue& params,
 }
 
 void RPCTypeCheckObj(const UniValue& o,
-                  const map<string, UniValue::VType>& typesExpected,
-                  bool fAllowNull)
+    const map<string, UniValueType>& typesExpected,
+    bool fAllowNull,
+    bool fStrict)
 {
-    BOOST_FOREACH(const PAIRTYPE(string, UniValue::VType)& t, typesExpected)
-    {
+    for (const auto& t : typesExpected) {
         const UniValue& v = find_value(o, t.first);
         if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
-        if (!((v.type() == t.second) || (fAllowNull && (v.isNull()))))
-        {
+        if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull()))) {
             string err = strprintf("Expected type %s for %s, got %s",
-                                   uvTypeName(t.second), t.first, uvTypeName(v.type()));
+                uvTypeName(t.second.type), t.first, uvTypeName(v.type()));
             throw JSONRPCError(RPC_TYPE_ERROR, err);
+        }
+    }
+
+    if (fStrict)
+    {
+        BOOST_FOREACH(const string& k, o.getKeys())
+        {
+            if (typesExpected.count(k) == 0)
+            {
+                string err = strprintf("Unexpected key %s", k);
+                throw JSONRPCError(RPC_TYPE_ERROR, err);
+            }
         }
     }
 }
@@ -256,73 +267,8 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
-    { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
     { "control",            "help",                   &help,                   true  },
     { "control",            "stop",                   &stop,                   true  },
-
-    /* P2P networking */
-    { "network",            "getnetworkinfo",         &getnetworkinfo,         true  },
-    { "network",            "addnode",                &addnode,                true  },
-    { "network",            "disconnectnode",         &disconnectnode,         true  },
-    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true  },
-    { "network",            "getconnectioncount",     &getconnectioncount,     true  },
-    { "network",            "getnettotals",           &getnettotals,           true  },
-    { "network",            "getpeerinfo",            &getpeerinfo,            true  },
-    { "network",            "ping",                   &ping,                   true  },
-    { "network",            "setban",                 &setban,                 true  },
-    { "network",            "listbanned",             &listbanned,             true  },
-    { "network",            "clearbanned",            &clearbanned,            true  },
-
-    /* Block chain and UTXO */
-    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },
-    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true  },
-    { "blockchain",         "getblockcount",          &getblockcount,          true  },
-    { "blockchain",         "getblock",               &getblock,               true  },
-    { "blockchain",         "getblockhash",           &getblockhash,           true  },
-    { "blockchain",         "getblockheader",         &getblockheader,         true  },
-    { "blockchain",         "getchaintips",           &getchaintips,           true  },
-    { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
-    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
-    { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
-    { "blockchain",         "gettxout",               &gettxout,               true  },
-    { "blockchain",         "gettxoutproof",          &gettxoutproof,          true  },
-    { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true  },
-    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
-    { "blockchain",         "verifychain",            &verifychain,            true  },
-
-    /* Mining */
-    { "mining",             "getblocktemplate",       &getblocktemplate,       true  },
-    { "mining",             "getmininginfo",          &getmininginfo,          true  },
-    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true  },
-    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true  },
-    { "mining",             "submitblock",            &submitblock,            true  },
-
-    /* Coin generation */
-    { "generating",         "getgenerate",            &getgenerate,            true  },
-    { "generating",         "setgenerate",            &setgenerate,            true  },
-    { "generating",         "generate",               &generate,               true  },
-
-    /* Raw transactions */
-    { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true  },
-    { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true  },
-    { "rawtransactions",    "decodescript",           &decodescript,           true  },
-    { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      true  },
-    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false },
-    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false }, /* uses wallet if enabled */
-
-    /* Utility functions */
-    { "util",               "createmultisig",         &createmultisig,         true  },
-    { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
-    { "util",               "verifymessage",          &verifymessage,          true  },
-    { "util",               "estimatefee",            &estimatefee,            true  },
-    { "util",               "estimatepriority",       &estimatepriority,       true  },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       true  },
-    { "util",               "estimatesmartpriority",  &estimatesmartpriority,  true  },
-
-    /* Not shown in help */
-    { "hidden",             "invalidateblock",        &invalidateblock,        true  },
-    { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },
-    { "hidden",             "setmocktime",            &setmocktime,            true  },
 };
 
 CRPCTable::CRPCTable()
@@ -497,6 +443,17 @@ UniValue CRPCTable::execute(const std::string &strMethod, const UniValue &params
     }
 
     g_rpcSignals.PostCommand(*pcmd);
+}
+
+std::vector<std::string> CRPCTable::listCommands() const
+{
+    std::vector<std::string> commandList;
+    typedef std::map<std::string, const CRPCCommand*> commandMap;
+
+    std::transform( mapCommands.begin(), mapCommands.end(),
+                   std::back_inserter(commandList),
+                   boost::bind(&commandMap::value_type::first,_1) );
+    return commandList;
 }
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)

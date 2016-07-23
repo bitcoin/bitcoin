@@ -11,6 +11,7 @@
 #include "net.h"
 
 #include <QWidget>
+#include <QCompleter>
 
 class ClientModel;
 class PlatformStyle;
@@ -77,7 +78,7 @@ private Q_SLOTS:
     void clearSelectedNode();
 
 public Q_SLOTS:
-    void clear();
+    void clear(bool clearHistory = true);
     void fontBigger();
     void fontSmaller();
     void setFontSize(int newSize);
@@ -86,7 +87,7 @@ public Q_SLOTS:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
     /** Go forward or back in history */
@@ -138,6 +139,7 @@ private:
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
     int consoleFontSize;
+    QCompleter *autoCompleter;
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H

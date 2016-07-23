@@ -5,10 +5,8 @@
 
 #include "txdb.h"
 
-#include "chain.h"
 #include "chainparams.h"
 #include "hash.h"
-#include "main.h"
 #include "pow.h"
 #include "uint256.h"
 
@@ -49,7 +47,7 @@ uint256 CCoinsViewDB::GetBestBlock() const {
 }
 
 bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
-    CDBBatch batch(&db.GetObfuscateKey());
+    CDBBatch batch(db);
     size_t count = 0;
     size_t changed = 0;
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
@@ -94,54 +92,52 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read(DB_LAST_BLOCK, nFile);
 }
 
-bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
+CCoinsViewCursor *CCoinsViewDB::Cursor() const
+{
+    CCoinsViewDBCursor *i = new CCoinsViewDBCursor(const_cast<CDBWrapper*>(&db)->NewIterator(), GetBestBlock());
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
-    boost::scoped_ptr<CDBIterator> pcursor(const_cast<CDBWrapper*>(&db)->NewIterator());
-    pcursor->Seek(DB_COINS);
+    i->pcursor->Seek(DB_COINS);
+    // Cache key of first record
+    i->pcursor->GetKey(i->keyTmp);
+    return i;
+}
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    stats.hashBlock = GetBestBlock();
-    ss << stats.hashBlock;
-    CAmount nTotalAmount = 0;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        std::pair<char, uint256> key;
-        CCoins coins;
-        if (pcursor->GetKey(key) && key.first == DB_COINS) {
-            if (pcursor->GetValue(coins)) {
-                stats.nTransactions++;
-                for (unsigned int i=0; i<coins.vout.size(); i++) {
-                    const CTxOut &out = coins.vout[i];
-                    if (!out.IsNull()) {
-                        stats.nTransactionOutputs++;
-                        ss << VARINT(i+1);
-                        ss << out;
-                        nTotalAmount += out.nValue;
-                    }
-                }
-                stats.nSerializedSize += 32 + pcursor->GetValueSize();
-                ss << VARINT(0);
-            } else {
-                return error("CCoinsViewDB::GetStats() : unable to read value");
-            }
-        } else {
-            break;
-        }
-        pcursor->Next();
+bool CCoinsViewDBCursor::GetKey(uint256 &key) const
+{
+    // Return cached key
+    if (keyTmp.first == DB_COINS) {
+        key = keyTmp.second;
+        return true;
     }
-    {
-        LOCK(cs_main);
-        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
-    }
-    stats.hashSerialized = ss.GetHash();
-    stats.nTotalAmount = nTotalAmount;
-    return true;
+    return false;
+}
+
+bool CCoinsViewDBCursor::GetValue(CCoins &coins) const
+{
+    return pcursor->GetValue(coins);
+}
+
+unsigned int CCoinsViewDBCursor::GetValueSize() const
+{
+    return pcursor->GetValueSize();
+}
+
+bool CCoinsViewDBCursor::Valid() const
+{
+    return keyTmp.first == DB_COINS;
+}
+
+void CCoinsViewDBCursor::Next()
+{
+    pcursor->Next();
+    if (!pcursor->Valid() || !pcursor->GetKey(keyTmp))
+        keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
 }
 
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
-    CDBBatch batch(&GetObfuscateKey());
+    CDBBatch batch(*this);
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
         batch.Write(make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
@@ -157,7 +153,7 @@ bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
 }
 
 bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
-    CDBBatch batch(&GetObfuscateKey());
+    CDBBatch batch(*this);
     for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
         batch.Write(make_pair(DB_TXINDEX, it->first), it->second);
     return WriteBatch(batch);
@@ -175,7 +171,7 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts()
+bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex)
 {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 
@@ -189,8 +185,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
             CDiskBlockIndex diskindex;
             if (pcursor->GetValue(diskindex)) {
                 // Construct block index object
-                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
+                CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
+                pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;

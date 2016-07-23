@@ -1,16 +1,23 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 12)
+define(_CLIENT_VERSION_MINOR, 13)
 define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2016)
-AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/bitcoin/bitcoin/issues],[bitcoin])
+define(_COPYRIGHT_HOLDERS,[The %s developers])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
+AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
+
+BITCOIN_DAEMON_NAME=bitcoind
+BITCOIN_GUI_NAME=bitcoin-qt
+BITCOIN_CLI_NAME=bitcoin-cli
+BITCOIN_TX_NAME=bitcoin-tx
 
 AC_CANONICAL_HOST
 
@@ -48,6 +55,8 @@ case $host in
      lt_cv_deplibs_check_method="pass_all"
   ;;
 esac
+dnl Require C++11 compiler (no GNU extensions)
+AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 dnl Libtool init checks.
 LT_INIT([pic-only])
 
@@ -58,7 +67,7 @@ AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
-AC_PATH_PROG(PYTHON, python)
+AC_PATH_PROGS([PYTHON], [python3 python2.7 python2 python])
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
@@ -66,9 +75,9 @@ AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 AC_PATH_TOOL(READELF, readelf)
 AC_PATH_TOOL(CPPFILT, c++filt)
+AC_PATH_TOOL(OBJCOPY, objcopy)
 
-dnl pkg-config check.
-PKG_PROG_PKG_CONFIG
+AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
 # Enable wallet
 AC_ARG_ENABLE([wallet],
@@ -93,6 +102,11 @@ AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
     [use_tests=$enableval],
     [use_tests=yes])
+
+AC_ARG_ENABLE(gui-tests,
+    AS_HELP_STRING([--disable-gui-tests],[do not compile GUI tests (default is to compile if GUI and tests enabled)]),
+    [use_gui_tests=$enableval],
+    [use_gui_tests=$use_tests])
 
 AC_ARG_ENABLE(bench,
     AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
@@ -150,6 +164,12 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
+AC_ARG_WITH([system-univalue],
+  [AS_HELP_STRING([--with-system-univalue],
+  [Build with system UniValue (default is no)])],
+  [system_univalue=$withval],
+  [system_univalue=no]
+)
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
@@ -165,6 +185,9 @@ AC_ARG_ENABLE([debug],
     [enable_debug=$enableval],
     [enable_debug=no])
 
+AC_LANG_PUSH([C++])
+AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
+
 if test "x$enable_debug" = xyes; then
     CPPFLAGS="$CPPFLAGS -DDEBUG -DDEBUG_LOCKORDER"
     if test "x$GCC" = xyes; then
@@ -176,11 +199,19 @@ if test "x$enable_debug" = xyes; then
     fi
 fi
 
-## TODO: Remove these hard-coded paths and flags. They are here for the sake of
-##       compatibility with the legacy buildsystem.
-##
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign"
+  AX_CHECK_COMPILE_FLAG([-Wall],[CXXFLAGS="$CXXFLAGS -Wall"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wextra],[CXXFLAGS="$CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wformat],[CXXFLAGS="$CXXFLAGS -Wformat"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wformat-security],[CXXFLAGS="$CXXFLAGS -Wformat-security"],,[[$CXXFLAG_WERROR]])
+
+  ## Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
+  ## unknown options if any other warning is produced. Test the -Wfoo case, and
+  ## set the -Wno-foo case if it works.
+  AX_CHECK_COMPILE_FLAG([-Wunused-parameter],[CXXFLAGS="$CXXFLAGS -Wno-unused-parameter"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wself-assign],[CXXFLAGS="$CXXFLAGS -Wno-self-assign"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wunused-local-typedef],[CXXFLAGS="$CXXFLAGS -Wno-unused-local-typedef"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wdeprecated-register],[CXXFLAGS="$CXXFLAGS -Wno-deprecated-register"],,[[$CXXFLAG_WERROR]])
 fi
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
@@ -201,8 +232,6 @@ AC_ARG_WITH([daemon],
   [build bitcoind daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
-
-AC_LANG_PUSH([C++])
 
 use_pkgconfig=yes
 case $host in
@@ -247,7 +276,7 @@ case $host in
      fi
 
      CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
-     LEVELDB_TARGET_FLAGS="TARGET_OS=OS_WINDOWS_CROSSCOMPILE"
+     LEVELDB_TARGET_FLAGS="-DOS_WINDOWS"
      if test "x$CXXFLAGS_overridden" = "xno"; then
        CXXFLAGS="$CXXFLAGS -w"
      fi
@@ -269,7 +298,7 @@ case $host in
      ;;
   *darwin*)
      TARGET_OS=darwin
-     LEVELDB_TARGET_FLAGS="TARGET_OS=Darwin"
+     LEVELDB_TARGET_FLAGS="-DOS_MACOSX"
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
        AC_CHECK_PROG([PORT],port, port)
@@ -316,6 +345,9 @@ case $host in
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
+           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
+           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
+           AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -332,10 +364,23 @@ case $host in
      ;;
    *linux*)
      TARGET_OS=linux
+     LEVELDB_TARGET_FLAGS="-DOS_LINUX"
      ;;
    *)
+     OTHER_OS=`echo ${host_os} | awk '{print toupper($0)}'`
+     LEVELDB_TARGET_FLAGS="-DOS_${OTHER_OS}"
      ;;
 esac
+
+if test x$use_pkgconfig = xyes; then
+  m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR(PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh.)])
+  m4_ifdef([PKG_PROG_PKG_CONFIG], [
+  PKG_PROG_PKG_CONFIG
+  if test x"$PKG_CONFIG" = "x"; then
+    AC_MSG_ERROR(pkg-config not found.)
+  fi
+  ])
+fi
 
 if test x$use_comparison_tool != xno; then
   AC_SUBST(JAVA_COMPARISON_TOOL, $use_comparison_tool)
@@ -545,7 +590,7 @@ BITCOIN_QT_INIT
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
-if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
     use_boost=no
 else
     use_boost=yes
@@ -714,12 +759,7 @@ fi
 fi
 
 if test x$use_pkgconfig = xyes; then
-
-  if test x"$PKG_CONFIG" = "x"; then
-    AC_MSG_ERROR(pkg-config not found.)
-  fi
-
-  : #NOP
+  : dnl
   m4_ifdef(
     [PKG_CHECK_MODULES],
     [
@@ -782,6 +822,44 @@ else
     BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
+
+dnl univalue check
+
+if test x$system_univalue != xno ; then
+  found_univalue=no
+  if test x$use_pkgconfig = xyes; then
+    : #NOP
+    m4_ifdef(
+      [PKG_CHECK_MODULES],
+      [
+        PKG_CHECK_MODULES([UNIVALUE],[libunivalue],[found_univalue=yes],[true])
+      ]
+    )
+  else
+    AC_CHECK_HEADER([univalue.h],[
+      AC_CHECK_LIB([univalue],  [main],[
+        UNIVALUE_LIBS=-lunivalue
+        found_univalue=yes
+      ],[true])
+    ],[true])
+  fi
+
+  if test x$found_univalue = xyes ; then
+    system_univalue=yes
+  elif test x$system_univalue = xyes ; then
+    AC_MSG_ERROR([univalue not found])
+  else
+    system_univalue=no
+  fi
+fi
+
+if test x$system_univalue = xno ; then
+  UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
+  UNIVALUE_LIBS='univalue/libunivalue.la'
+fi
+AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$system_univalue = xno])
+AC_SUBST(UNIVALUE_CFLAGS)
+AC_SUBST(UNIVALUE_LIBS)
 
 CXXFLAGS_TEMP="$CXXFLAGS"
 LIBS_TEMP="$LIBS"
@@ -868,8 +946,8 @@ else
 fi
 
 dnl these are only used when qt is enabled
+BUILD_TEST_QT=""
 if test x$bitcoin_enable_qt != xno; then
-  BUILD_QT=qt
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test x$bitcoin_enable_qt_dbus != xno; then
@@ -899,9 +977,9 @@ if test x$bitcoin_enable_qt != xno; then
   fi
 
   AC_MSG_CHECKING([whether to build test_bitcoin-qt])
-  if test x$use_tests$bitcoin_enable_qt_test = xyesyes; then
+  if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
-    BUILD_TEST_QT="test"
+    BUILD_TEST_QT="yes"
   else
     AC_MSG_RESULT([no])
   fi
@@ -912,9 +990,10 @@ AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 AC_MSG_CHECKING([whether to build test_bitcoin])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
-  BUILD_TEST="test"
+  BUILD_TEST="yes"
 else
   AC_MSG_RESULT([no])
+  BUILD_TEST=""
 fi
 
 AC_MSG_CHECKING([whether to reduce exports])
@@ -932,9 +1011,9 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
-AM_CONDITIONAL([ENABLE_TESTS],[test x$use_tests = xyes])
+AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
-AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$use_tests$bitcoin_enable_qt_test = xyesyes])
+AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
@@ -948,13 +1027,24 @@ AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
 AC_DEFINE(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION, [Build revision])
 AC_DEFINE(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD, [Version Build])
 AC_DEFINE(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE, [Version is release])
-AC_DEFINE(COPYRIGHT_YEAR, _COPYRIGHT_YEAR, [Version is release])
+AC_DEFINE(COPYRIGHT_YEAR, _COPYRIGHT_YEAR, [Copyright year])
+AC_DEFINE(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS", [Copyright holder(s) before %s replacement])
+AC_DEFINE(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION", [Replacement for %s in copyright holders string])
+define(_COPYRIGHT_HOLDERS_FINAL, [patsubst(_COPYRIGHT_HOLDERS, [%s], [_COPYRIGHT_HOLDERS_SUBSTITUTION])])
+AC_DEFINE(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL", [Copyright holder(s)])
 AC_SUBST(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR)
 AC_SUBST(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR)
 AC_SUBST(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION)
 AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)
 AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
 AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
+AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
+AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
+AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
+AC_SUBST(BITCOIN_DAEMON_NAME)
+AC_SUBST(BITCOIN_GUI_NAME)
+AC_SUBST(BITCOIN_CLI_NAME)
+AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
@@ -968,14 +1058,20 @@ AC_SUBST(USE_QRCODE)
 AC_SUBST(BOOST_LIBS)
 AC_SUBST(TESTDEFS)
 AC_SUBST(LEVELDB_TARGET_FLAGS)
-AC_SUBST(BUILD_TEST)
-AC_SUBST(BUILD_QT)
-AC_SUBST(BUILD_TEST_QT)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
+AC_SUBST(CRYPTO_LIBS)
+AC_SUBST(SSL_LIBS)
+AC_SUBST(EVENT_LIBS)
+AC_SUBST(EVENT_PTHREADS_LIBS)
+AC_SUBST(ZMQ_LIBS)
+AC_SUBST(PROTOBUF_LIBS)
+AC_SUBST(QR_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests_config.py],[chmod +x qa/pull-tester/tests_config.py])
+AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
+AC_CONFIG_LINKS([qa/pull-tester/rpc-tests.py:qa/pull-tester/rpc-tests.py])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
@@ -1000,8 +1096,12 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
+if test x$system_univalue = xno; then
+  AC_CONFIG_SUBDIRS([src/univalue])
+fi
+
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery"
-AC_CONFIG_SUBDIRS([src/secp256k1 src/univalue])
+AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
 

@@ -166,6 +166,8 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
             "  \"pubkey\" : \"publickeyhex\",    (string) The hex value of the raw public key\n"
             "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
             "  \"account\" : \"account\"         (string) DEPRECATED. The account associated with the address, \"\" is the default account\n"
+            "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
+            "  \"hdmasterkeyid\" : \"<hash160>\" (string, optional) The Hash160 of the HD master pubkey\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
@@ -200,6 +202,12 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
         ret.pushKVs(detail);
         if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
+        CKeyID keyID;
+        if (pwalletMain && address.GetKeyID(keyID) && pwalletMain->mapKeyMetadata.count(keyID) && !pwalletMain->mapKeyMetadata[keyID].hdKeypath.empty())
+        {
+            ret.push_back(Pair("hdkeypath", pwalletMain->mapKeyMetadata[keyID].hdKeypath));
+            ret.push_back(Pair("hdmasterkeyid", pwalletMain->mapKeyMetadata[keyID].hdMasterKeyID.GetHex()));
+        }
 #endif
     }
     return ret;
@@ -312,6 +320,43 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     return result;
 }
 
+UniValue createwitnessaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+    {
+        string msg = "createwitnessaddress \"script\"\n"
+            "\nCreates a witness address for a particular script.\n"
+            "It returns a json object with the address and witness script.\n"
+
+            "\nArguments:\n"
+            "1. \"script\"       (string, required) A hex encoded script\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"address\":\"multisigaddress\",  (string) The value of the new address (P2SH of witness script).\n"
+            "  \"witnessScript\":\"script\"      (string) The string value of the hex-encoded witness script.\n"
+            "}\n"
+        ;
+        throw runtime_error(msg);
+    }
+
+    if (!IsHex(params[0].get_str())) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Script must be hex-encoded");
+    }
+
+    std::vector<unsigned char> code = ParseHex(params[0].get_str());
+    CScript script(code.begin(), code.end());
+    CScript witscript = GetScriptForWitness(script);
+    CScriptID witscriptid(witscript);
+    CBitcoinAddress address(witscriptid);
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("address", address.ToString()));
+    result.push_back(Pair("witnessScript", HexStr(witscript.begin(), witscript.end())));
+
+    return result;
+}
+
 UniValue verifymessage(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -366,6 +411,48 @@ UniValue verifymessage(const UniValue& params, bool fHelp)
     return (pubkey.GetID() == keyID);
 }
 
+UniValue signmessagewithprivkey(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "signmessagewithprivkey \"privkey\" \"message\"\n"
+            "\nSign a message with the private key of an address\n"
+            "\nArguments:\n"
+            "1. \"privkey\"         (string, required) The private key to sign the message with.\n"
+            "2. \"message\"         (string, required) The message to create a signature of.\n"
+            "\nResult:\n"
+            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+            "\nExamples:\n"
+            "\nCreate the signature\n"
+            + HelpExampleCli("signmessagewithprivkey", "\"privkey\" \"my message\"") +
+            "\nVerify the signature\n"
+            + HelpExampleCli("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"signature\" \"my message\"") +
+            "\nAs json rpc\n"
+            + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
+        );
+
+    string strPrivkey = params[0].get_str();
+    string strMessage = params[1].get_str();
+
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(strPrivkey);
+    if (!fGood)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+    CKey key = vchSecret.GetKey();
+    if (!key.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    vector<unsigned char> vchSig;
+    if (!key.SignCompact(ss.GetHash(), vchSig))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+    return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
 UniValue setmocktime(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -395,4 +482,24 @@ UniValue setmocktime(const UniValue& params, bool fHelp)
     }
 
     return NullUniValue;
+}
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+  //  --------------------- ------------------------  -----------------------  ----------
+    { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
+    { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
+    { "util",               "createmultisig",         &createmultisig,         true  },
+    { "util",               "createwitnessaddress",   &createwitnessaddress,   true  },
+    { "util",               "verifymessage",          &verifymessage,          true  },
+    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true  },
+
+    /* Not shown in help */
+    { "hidden",             "setmocktime",            &setmocktime,            true  },
+};
+
+void RegisterMiscRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

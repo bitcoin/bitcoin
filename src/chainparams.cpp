@@ -81,7 +81,23 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        /** 
+        consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
+        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+
+        // Deployment of BIP68, BIP112, and BIP113.
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1462060800; // May 1st, 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
+
+        // Deployment of SegWit (BIP141 and BIP143)
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 0; // Never / undefined
+
+        /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
@@ -90,7 +106,6 @@ public:
         pchMessageStart[1] = 0xbe;
         pchMessageStart[2] = 0xb4;
         pchMessageStart[3] = 0xd9;
-        vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
 
@@ -99,7 +114,7 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
-        vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
+        vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be", true)); // Pieter Wuille
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me")); // Matt Corallo
         vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org")); // Luke Dashjr
         vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com")); // Christian Decker
@@ -162,11 +177,26 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+
+        // Deployment of BIP68, BIP112, and BIP113.
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
+
+        // Deployment of SegWit (BIP141 and BIP143)
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
+
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
         pchMessageStart[3] = 0x07;
-        vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 18333;
         nPruneAfterHeight = 1000;
 
@@ -177,7 +207,9 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("bitcoin.petertodd.org", "testnet-seed.bitcoin.petertodd.org"));
+        // nodes with support for servicebits filtering should be at the top
+        vSeeds.push_back(CDNSSeedData("testnetbitcoin.jonasschnelli.ch", "testnet-seed.bitcoin.jonasschnelli.ch", true));
+        vSeeds.push_back(CDNSSeedData("petertodd.org", "seed.tbtc.petertodd.org", true));
         vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
         vSeeds.push_back(CDNSSeedData("bitcoin.schildbach.de", "testnet-seed.bitcoin.schildbach.de"));
 
@@ -225,6 +257,17 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -238,8 +281,8 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
-        vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
-        vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
+        vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
+        vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
         fMiningRequiresPeers = false;
         fDefaultConsistencyChecks = true;
@@ -287,3 +330,4 @@ void SelectParams(const std::string& network)
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
 }
+ 

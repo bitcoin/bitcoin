@@ -18,6 +18,10 @@ public:
     bool fAllowWatchOnly;
     //! Minimum absolute fee (not per kilobyte)
     CAmount nMinimumTotalFee;
+    //! Override estimated feerate
+    bool fOverrideFeeRate;
+    //! Feerate to use if overrideFeeRate is true
+    CFeeRate nFeeRate;
 
     CCoinControl()
     {
@@ -31,6 +35,8 @@ public:
         fAllowWatchOnly = false;
         setSelected.clear();
         nMinimumTotalFee = 0;
+        nFeeRate = CFeeRate(0);
+        fOverrideFeeRate = false;
     }
 
     bool HasSelected() const
@@ -38,10 +44,9 @@ public:
         return (setSelected.size() > 0);
     }
 
-    bool IsSelected(const uint256& hash, unsigned int n) const
+    bool IsSelected(const COutPoint& output) const
     {
-        COutPoint outpt(hash, n);
-        return (setSelected.count(outpt) > 0);
+        return (setSelected.count(output) > 0);
     }
 
     void Select(const COutPoint& output)

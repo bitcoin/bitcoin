@@ -265,8 +265,8 @@ public:
     void Read(CAutoFile& filein);
 
 private:
-    CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main
-    double minTrackedPriority; //! Set to AllowFreeThreshold
+    CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main
+    double minTrackedPriority; //!< Set to AllowFreeThreshold
     unsigned int nBestSeenHeight;
     struct TxStatsInfo
     {
@@ -285,5 +285,18 @@ private:
     /** Breakpoints to help determine whether a transaction was confirmed by priority or Fee */
     CFeeRate feeLikely, feeUnlikely;
     double priLikely, priUnlikely;
+};
+
+class FeeFilterRounder
+{
+public:
+    /** Create new FeeFilterRounder */
+    FeeFilterRounder(const CFeeRate& minIncrementalFee);
+
+    /** Quantize a minimum fee for privacy purpose before broadcast **/
+    CAmount round(CAmount currentMinFee);
+
+private:
+    std::set<double> feeset;
 };
 #endif /*BITCOIN_POLICYESTIMATOR_H */

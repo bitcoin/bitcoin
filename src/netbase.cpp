@@ -170,7 +170,8 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
         if (aiTrav->ai_family == AF_INET6)
         {
             assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
-            vIP.push_back(CNetAddr(((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr));
+            struct sockaddr_in6* s6 = (struct sockaddr_in6*) aiTrav->ai_addr;
+            vIP.push_back(CNetAddr(s6->sin6_addr, s6->sin6_scope_id));
         }
 
         aiTrav = aiTrav->ai_next;
@@ -290,10 +291,25 @@ struct ProxyCredentials
     std::string password;
 };
 
+std::string Socks5ErrorString(int err)
+{
+    switch(err) {
+        case 0x01: return "general failure";
+        case 0x02: return "connection not allowed";
+        case 0x03: return "network unreachable";
+        case 0x04: return "host unreachable";
+        case 0x05: return "connection refused";
+        case 0x06: return "TTL expired";
+        case 0x07: return "protocol error";
+        case 0x08: return "address type not supported";
+        default:   return "unknown";
+    }
+}
+
 /** Connect using SOCKS5 (as described in RFC1928) */
 static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
-    LogPrintf("SOCKS5 connecting %s\n", strDest);
+    LogPrint("net", "SOCKS5 connecting %s\n", strDest);
     if (strDest.size() > 255) {
         CloseSocket(hSocket);
         return error("Hostname too long");
@@ -317,7 +333,8 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     char pchRet1[2];
     if (!InterruptibleRecv(pchRet1, 2, SOCKS5_RECV_TIMEOUT, hSocket)) {
         CloseSocket(hSocket);
-        return error("Error reading proxy response");
+        LogPrintf("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
+        return false;
     }
     if (pchRet1[0] != 0x05) {
         CloseSocket(hSocket);
@@ -378,19 +395,10 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         return error("Proxy failed to accept request");
     }
     if (pchRet2[1] != 0x00) {
+        // Failures to connect to a peer that are not proxy errors
         CloseSocket(hSocket);
-        switch (pchRet2[1])
-        {
-            case 0x01: return error("Proxy error: general failure");
-            case 0x02: return error("Proxy error: connection not allowed");
-            case 0x03: return error("Proxy error: network unreachable");
-            case 0x04: return error("Proxy error: host unreachable");
-            case 0x05: return error("Proxy error: connection refused");
-            case 0x06: return error("Proxy error: TTL expired");
-            case 0x07: return error("Proxy error: protocol error");
-            case 0x08: return error("Proxy error: address type not supported");
-            default:   return error("Proxy error: unknown");
-        }
+        LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
+        return false;
     }
     if (pchRet2[2] != 0x00) {
         CloseSocket(hSocket);
@@ -422,7 +430,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         CloseSocket(hSocket);
         return error("Error reading from proxy");
     }
-    LogPrintf("SOCKS5 connected %s\n", strDest);
+    LogPrint("net", "SOCKS5 connected %s\n", strDest);
     return true;
 }
 
@@ -613,10 +621,12 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     proxyType nameProxy;
     GetNameProxy(nameProxy);
 
-    CService addrResolved(CNetAddr(strDest, fNameLookup && !HaveNameProxy()), port);
-    if (addrResolved.IsValid()) {
-        addr = addrResolved;
-        return ConnectSocket(addr, hSocketRet, nTimeout);
+    std::vector<CService> addrResolved;
+    if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy(), 256)) {
+        if (addrResolved.size() > 0) {
+            addr = addrResolved[GetRand(addrResolved.size())];
+            return ConnectSocket(addr, hSocketRet, nTimeout);
+        }
     }
 
     addr = CService("0.0.0.0:0");
@@ -629,6 +639,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 void CNetAddr::Init()
 {
     memset(ip, 0, sizeof(ip));
+    scopeId = 0;
 }
 
 void CNetAddr::SetIP(const CNetAddr& ipIn)
@@ -678,24 +689,25 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
     SetRaw(NET_IPV4, (const uint8_t*)&ipv4Addr);
 }
 
-CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
+CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
 {
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
+    scopeId = scope;
 }
 
-CNetAddr::CNetAddr(const char *pszIp, bool fAllowLookup)
+CNetAddr::CNetAddr(const char *pszIp)
 {
     Init();
     std::vector<CNetAddr> vIP;
-    if (LookupHost(pszIp, vIP, 1, fAllowLookup))
+    if (LookupHost(pszIp, vIP, 1, false))
         *this = vIP[0];
 }
 
-CNetAddr::CNetAddr(const std::string &strIp, bool fAllowLookup)
+CNetAddr::CNetAddr(const std::string &strIp)
 {
     Init();
     std::vector<CNetAddr> vIP;
-    if (LookupHost(strIp.c_str(), vIP, 1, fAllowLookup))
+    if (LookupHost(strIp.c_str(), vIP, 1, false))
         *this = vIP[0];
 }
 
@@ -1099,7 +1111,7 @@ CService::CService(const struct sockaddr_in& addr) : CNetAddr(addr.sin_addr), po
     assert(addr.sin_family == AF_INET);
 }
 
-CService::CService(const struct sockaddr_in6 &addr) : CNetAddr(addr.sin6_addr), port(ntohs(addr.sin6_port))
+CService::CService(const struct sockaddr_in6 &addr) : CNetAddr(addr.sin6_addr, addr.sin6_scope_id), port(ntohs(addr.sin6_port))
 {
    assert(addr.sin6_family == AF_INET6);
 }
@@ -1118,35 +1130,35 @@ bool CService::SetSockAddr(const struct sockaddr *paddr)
     }
 }
 
-CService::CService(const char *pszIpPort, bool fAllowLookup)
+CService::CService(const char *pszIpPort)
 {
     Init();
     CService ip;
-    if (Lookup(pszIpPort, ip, 0, fAllowLookup))
+    if (Lookup(pszIpPort, ip, 0, false))
         *this = ip;
 }
 
-CService::CService(const char *pszIpPort, int portDefault, bool fAllowLookup)
+CService::CService(const char *pszIpPort, int portDefault)
 {
     Init();
     CService ip;
-    if (Lookup(pszIpPort, ip, portDefault, fAllowLookup))
+    if (Lookup(pszIpPort, ip, portDefault, false))
         *this = ip;
 }
 
-CService::CService(const std::string &strIpPort, bool fAllowLookup)
+CService::CService(const std::string &strIpPort)
 {
     Init();
     CService ip;
-    if (Lookup(strIpPort.c_str(), ip, 0, fAllowLookup))
+    if (Lookup(strIpPort.c_str(), ip, 0, false))
         *this = ip;
 }
 
-CService::CService(const std::string &strIpPort, int portDefault, bool fAllowLookup)
+CService::CService(const std::string &strIpPort, int portDefault)
 {
     Init();
     CService ip;
-    if (Lookup(strIpPort.c_str(), ip, portDefault, fAllowLookup))
+    if (Lookup(strIpPort.c_str(), ip, portDefault, false))
         *this = ip;
 }
 
@@ -1192,6 +1204,7 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
         memset(paddrin6, 0, *addrlen);
         if (!GetIn6Addr(&paddrin6->sin6_addr))
             return false;
+        paddrin6->sin6_scope_id = scopeId;
         paddrin6->sin6_family = AF_INET6;
         paddrin6->sin6_port = htons(port);
         return true;
@@ -1239,7 +1252,7 @@ CSubNet::CSubNet():
     memset(netmask, 0, sizeof(netmask));
 }
 
-CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
+CSubNet::CSubNet(const std::string &strSubnet)
 {
     size_t slash = strSubnet.find_last_of('/');
     std::vector<CNetAddr> vIP;
@@ -1249,7 +1262,7 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
     memset(netmask, 255, sizeof(netmask));
 
     std::string strAddress = strSubnet.substr(0, slash);
-    if (LookupHost(strAddress.c_str(), vIP, 1, fAllowLookup))
+    if (LookupHost(strAddress.c_str(), vIP, 1, false))
     {
         network = vIP[0];
         if (slash != strSubnet.npos)

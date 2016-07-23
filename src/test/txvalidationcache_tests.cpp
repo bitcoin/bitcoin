@@ -23,7 +23,7 @@ ToMemPool(CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-    return AcceptToMemoryPool(mempool, state, tx, false, NULL, true, false);
+    return AcceptToMemoryPool(mempool, state, tx, false, NULL, true, 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
@@ -48,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 
         // Sign:
         std::vector<unsigned char> vchSig;
-        uint256 hash = SignatureHash(scriptPubKey, spends[i], 0, SIGHASH_ALL);
+        uint256 hash = SignatureHash(scriptPubKey, spends[i], 0, SIGHASH_ALL, 0, SIGVERSION_BASE);
         BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
         vchSig.push_back((unsigned char)SIGHASH_ALL);
         spends[i].vin[0].scriptSig << vchSig;

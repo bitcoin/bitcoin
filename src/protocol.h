@@ -164,13 +164,6 @@ extern const char *PING;
  */
 extern const char *PONG;
 /**
- * The alert message warns nodes of problems that may affect them or the rest
- * of the network.
- * @since protocol version 311.
- * @see https://bitcoin.org/en/developer-reference#alert
- */
-extern const char *ALERT;
-/**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
  * @ince protocol version 70001.
@@ -218,14 +211,47 @@ extern const char *REJECT;
  * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char *SENDHEADERS;
-
+/**
+ * The feefilter message tells the receiving peer not to inv us any txs
+ * which do not meet the specified min fee rate.
+ * @since protocol version 70013 as described by BIP133
+ */
+extern const char *FEEFILTER;
+/**
+ * Contains a 1-byte bool and 8-byte LE version number.
+ * Indicates that a node is willing to provide blocks via "cmpctblock" messages.
+ * May indicate that a node prefers to receive new block announcements via a
+ * "cmpctblock" message rather than an "inv", depending on message contents.
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *SENDCMPCT;
+/**
+ * Contains a CBlockHeaderAndShortTxIDs object - providing a header and
+ * list of "short txids".
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *CMPCTBLOCK;
+/**
+ * Contains a BlockTransactionsRequest
+ * Peer should respond with "blocktxn" message.
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *GETBLOCKTXN;
+/**
+ * Contains a BlockTransactions.
+ * Sent in response to a "getblocktxn" message.
+ * @since protocol version 70014 as described by BIP 152
+ */
+extern const char *BLOCKTXN;
 };
 
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
-enum {
+enum ServiceFlags : uint64_t {
+    // Nothing
+    NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the block chain. It is currently
     // set by all Bitcoin Core nodes, and is unset by SPV clients or other peers that just want
     // network services but don't provide them.
@@ -238,6 +264,9 @@ enum {
     // Bitcoin Core nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
+    // Indicates that a node can be asked for blocks and transactions including
+    // witness data.
+    NODE_WITNESS = (1 << 3),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
@@ -253,7 +282,7 @@ class CAddress : public CService
 {
 public:
     CAddress();
-    explicit CAddress(CService ipIn, uint64_t nServicesIn = NODE_NETWORK);
+    explicit CAddress(CService ipIn, ServiceFlags nServicesIn);
 
     void Init();
 
@@ -269,16 +298,35 @@ public:
         if ((nType & SER_DISK) ||
             (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
             READWRITE(nTime);
-        READWRITE(nServices);
+        uint64_t nServicesInt = nServices;
+        READWRITE(nServicesInt);
+        nServices = (ServiceFlags)nServicesInt;
         READWRITE(*(CService*)this);
     }
 
     // TODO: make private (improves encapsulation)
 public:
-    uint64_t nServices;
+    ServiceFlags nServices;
 
     // disk and network only
     unsigned int nTime;
+};
+
+/** getdata message types */
+const uint32_t MSG_WITNESS_FLAG = 1 << 30;
+const uint32_t MSG_TYPE_MASK    = 0xffffffff >> 2;
+enum GetDataMsg
+{
+    UNDEFINED = 0,
+    MSG_TX,
+    MSG_BLOCK,
+    MSG_TYPE_MAX = MSG_BLOCK,
+    // The following can only occur in getdata. Invs always use TX or BLOCK.
+    MSG_FILTERED_BLOCK,
+    MSG_CMPCT_BLOCK,
+    MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG,
+    MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,
+    MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
 };
 
 /** inv message data */
@@ -287,7 +335,6 @@ class CInv
 public:
     CInv();
     CInv(int typeIn, const uint256& hashIn);
-    CInv(const std::string& strType, const uint256& hashIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -300,22 +347,13 @@ public:
 
     friend bool operator<(const CInv& a, const CInv& b);
 
-    bool IsKnownType() const;
-    const char* GetCommand() const;
+    std::string GetCommand() const;
     std::string ToString() const;
 
     // TODO: make private (improves encapsulation)
 public:
     int type;
     uint256 hash;
-};
-
-enum {
-    MSG_TX = 1,
-    MSG_BLOCK,
-    // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
-    // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
-    MSG_FILTERED_BLOCK,
 };
 
 #endif // BITCOIN_PROTOCOL_H

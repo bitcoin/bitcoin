@@ -39,7 +39,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
         else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
             return tr("%1/offline").arg(nDepth);
         else if (nDepth == 0)
-            return tr("0/unconfirmed, %1").arg((wtx.InMempool() ? tr("in memory pool") : tr("not in memory pool")));
+            return tr("0/unconfirmed, %1").arg((wtx.InMempool() ? tr("in memory pool") : tr("not in memory pool"))) + (wtx.isAbandoned() ? ", "+tr("abandoned") : "");
         else if (nDepth < 6)
             return tr("%1/unconfirmed").arg(nDepth);
         else
@@ -240,7 +240,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     if (wtx.mapValue.count("comment") && !wtx.mapValue["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
-    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + TransactionRecord::formatSubTxId(wtx.GetHash(), rec->idx) + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
+    strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
     // Message from normal bitcoin:URI (bitcoin:123...?message=example)
     Q_FOREACH (const PAIRTYPE(std::string, std::string)& r, wtx.vOrderForm)

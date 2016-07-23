@@ -32,6 +32,15 @@ namespace RPCServer
 class CBlockIndex;
 class CNetAddr;
 
+/** Wrapper for UniValue::VType, which includes typeAny:
+ * Used to denote don't care type. Only used by RPCTypeCheckObj */
+struct UniValueType {
+    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
+    UniValueType() : typeAny(true) {}
+    bool typeAny;
+    UniValue::VType type;
+};
+
 class JSONRequest
 {
 public:
@@ -60,17 +69,17 @@ bool RPCIsInWarmup(std::string *statusOut);
 /**
  * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
  * the right number of arguments are passed, just that any passed are the correct type.
- * Use like:  RPCTypeCheck(params, boost::assign::list_of(str_type)(int_type)(obj_type));
  */
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValue::VType>& typesExpected, bool fAllowNull=false);
 
 /*
   Check for expected keys/value types in an Object.
-  Use like: RPCTypeCheckObj(object, boost::assign::map_list_of("name", str_type)("value", int_type));
 */
 void RPCTypeCheckObj(const UniValue& o,
-                  const std::map<std::string, UniValue::VType>& typesExpected, bool fAllowNull=false);
+    const std::map<std::string, UniValueType>& typesExpected,
+    bool fAllowNull = false,
+    bool fStrict = false);
 
 /** Opaque base class for timers returned by NewTimerFunc.
  * This provides no methods at the moment, but makes sure that delete
@@ -145,6 +154,12 @@ public:
      */
     UniValue execute(const std::string &method, const UniValue &params) const;
 
+    /**
+    * Returns a list of registered commands
+    * @returns List of registered commands.
+    */
+    std::vector<std::string> listCommands() const;
+
 
     /**
      * Appends a CRPCCommand to the dispatch table.
@@ -174,67 +189,6 @@ extern std::string HelpExampleCli(const std::string& methodname, const std::stri
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 extern void EnsureWalletIsUnlocked();
-
-extern UniValue getconnectioncount(const UniValue& params, bool fHelp); // in rpc/net.cpp
-extern UniValue getpeerinfo(const UniValue& params, bool fHelp);
-extern UniValue ping(const UniValue& params, bool fHelp);
-extern UniValue addnode(const UniValue& params, bool fHelp);
-extern UniValue disconnectnode(const UniValue& params, bool fHelp);
-extern UniValue getaddednodeinfo(const UniValue& params, bool fHelp);
-extern UniValue disconnectpeer(const UniValue& params, bool fHelp);
-extern UniValue getnettotals(const UniValue& params, bool fHelp);
-extern UniValue setban(const UniValue& params, bool fHelp);
-extern UniValue listbanned(const UniValue& params, bool fHelp);
-extern UniValue clearbanned(const UniValue& params, bool fHelp);
-
-extern UniValue getgenerate(const UniValue& params, bool fHelp); // in rpc/mining.cpp
-extern UniValue setgenerate(const UniValue& params, bool fHelp);
-extern UniValue generate(const UniValue& params, bool fHelp);
-extern UniValue getnetworkhashps(const UniValue& params, bool fHelp);
-extern UniValue getmininginfo(const UniValue& params, bool fHelp);
-extern UniValue prioritisetransaction(const UniValue& params, bool fHelp);
-extern UniValue getblocktemplate(const UniValue& params, bool fHelp);
-extern UniValue submitblock(const UniValue& params, bool fHelp);
-extern UniValue estimatefee(const UniValue& params, bool fHelp);
-extern UniValue estimatepriority(const UniValue& params, bool fHelp);
-extern UniValue estimatesmartfee(const UniValue& params, bool fHelp);
-extern UniValue estimatesmartpriority(const UniValue& params, bool fHelp);
-
-extern UniValue verifymessage(const UniValue& params, bool fHelp);
-extern UniValue createmultisig(const UniValue& params, bool fHelp);
-extern UniValue validateaddress(const UniValue& params, bool fHelp);
-extern UniValue getinfo(const UniValue& params, bool fHelp);
-extern UniValue getblockchaininfo(const UniValue& params, bool fHelp);
-extern UniValue getnetworkinfo(const UniValue& params, bool fHelp);
-extern UniValue setmocktime(const UniValue& params, bool fHelp);
-
-extern UniValue getrawtransaction(const UniValue& params, bool fHelp); // in rpc/rawtransaction.cpp
-extern UniValue listunspent(const UniValue& params, bool fHelp);
-extern UniValue lockunspent(const UniValue& params, bool fHelp);
-extern UniValue listlockunspent(const UniValue& params, bool fHelp);
-extern UniValue createrawtransaction(const UniValue& params, bool fHelp);
-extern UniValue decoderawtransaction(const UniValue& params, bool fHelp);
-extern UniValue decodescript(const UniValue& params, bool fHelp);
-extern UniValue signrawtransaction(const UniValue& params, bool fHelp);
-extern UniValue sendrawtransaction(const UniValue& params, bool fHelp);
-extern UniValue gettxoutproof(const UniValue& params, bool fHelp);
-extern UniValue verifytxoutproof(const UniValue& params, bool fHelp);
-
-extern UniValue getblockcount(const UniValue& params, bool fHelp); // in rpc/blockchain.cpp
-extern UniValue getbestblockhash(const UniValue& params, bool fHelp);
-extern UniValue getdifficulty(const UniValue& params, bool fHelp);
-extern UniValue settxfee(const UniValue& params, bool fHelp);
-extern UniValue getmempoolinfo(const UniValue& params, bool fHelp);
-extern UniValue getrawmempool(const UniValue& params, bool fHelp);
-extern UniValue getblockhash(const UniValue& params, bool fHelp);
-extern UniValue getblockheader(const UniValue& params, bool fHelp);
-extern UniValue getblock(const UniValue& params, bool fHelp);
-extern UniValue gettxoutsetinfo(const UniValue& params, bool fHelp);
-extern UniValue gettxout(const UniValue& params, bool fHelp);
-extern UniValue verifychain(const UniValue& params, bool fHelp);
-extern UniValue getchaintips(const UniValue& params, bool fHelp);
-extern UniValue invalidateblock(const UniValue& params, bool fHelp);
-extern UniValue reconsiderblock(const UniValue& params, bool fHelp);
 
 bool StartRPC();
 void InterruptRPC();
