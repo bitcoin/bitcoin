@@ -926,7 +926,6 @@ bool HaveThinblockNodes()
 
 bool CheckThinblockTimer(uint256 hash)
 {
-  return false;  // temporarily disable preferential timer
     if (!mapThinBlockTimer.count(hash)) {
         mapThinBlockTimer[hash] = GetTimeMillis();
         LogPrint("thin", "Starting Preferential Thinblock timer\n");
