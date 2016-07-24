@@ -408,8 +408,23 @@ void CRequestManager::SendRequests()
 	{
           if (!item.availableFrom.empty())
 	    {
-	      CNodeRequestData next = item.availableFrom.front();  // Grab the next location where we can find this object.
-              item.availableFrom.pop_front();
+	      CNodeRequestData next;
+              while ((!item.availableFrom.empty())&&(next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+                {
+  	        next = item.availableFrom.front();  // Grab the next location where we can find this object.
+                item.availableFrom.pop_front();
+                if (next.node != NULL)
+                  {
+		    if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
+		      {
+                      LOCK(cs_vNodes);
+                      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                      next.node->Release();
+                      next.node = NULL; // force the loop to get another node            
+		      }
+		  }
+	        }
+
 	      if (next.node != NULL )
 		{
 		  if (item.lastRequestTime)  // if this is positive, we've requested at least once
@@ -417,20 +432,31 @@ void CRequestManager::SendRequests()
 		      LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
 		    }
 
-		  next.requestCount += 1;
-                  next.desirability /= 2;  // Make this node less desirable to re-request.
 		  item.outstandingReqs++;
 		  item.lastRequestTime = now;
-		  item.availableFrom.push_back(next);  // Add the node back onto the end of the list
 
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
 		  RequestBlock(next.node, obj);
 		  cs_objDownloader.lock();
+
+                  if (0) // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
+		    {
+                      next.requestCount += 1;
+                      next.desirability /= 2;  // Make this node less desirable to re-request.
+                      item.availableFrom.push_back(next);  // Add the node back onto the end of the list
+		    }
+                  else
+		    {
+		      LOCK(cs_vNodes);
+		      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+		      next.node->Release();
+		      next.node = NULL;
+		    }
 		}
               else
 		{
-
+		  // node should never be null... but if it is then there's nothing to do.
 		}
 	    }
 	}    
@@ -466,16 +492,27 @@ void CRequestManager::SendRequests()
 		}
               else  // Ok request this item.
 	        {
-	          CNodeRequestData next = item.availableFrom.front();  // Grab the next location where we can find this object.
-                  item.availableFrom.pop_front();
+		  CNodeRequestData next;
+		  while ((!item.availableFrom.empty())&&(next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+                    {
+		    next = item.availableFrom.front();  // Grab the next location where we can find this object.
+		    item.availableFrom.pop_front();
+		    if (next.node != NULL)
+		      {
+			if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
+			  {
+			    LOCK(cs_vNodes);
+			    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+			    next.node->Release();
+			    next.node = NULL; // force the loop to get another node            
+			  }
+		      }
+		    }
+
 	          if (next.node != NULL )
 		    {
-  		    next.requestCount += 1;
-                    next.desirability /= 2;  // Make this node less desirable to re-request.
 		    item.outstandingReqs++;
 		    item.lastRequestTime = now;
-    		    item.availableFrom.push_back(next);  // Add the node back onto the end of the list
-
                     if (1)
                       {
                       cs_objDownloader.unlock();
@@ -484,7 +521,19 @@ void CRequestManager::SendRequests()
                       next.node->mapAskFor.insert(std::make_pair(now, item.obj));
                       cs_objDownloader.lock();
 		      }
-
+                    if (0)  // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
+                      {
+                        next.requestCount += 1;
+                        next.desirability /= 2;  // Make this node less desirable to re-request.
+                        item.availableFrom.push_back(next);  // Add the node back onto the end of the list
+		      }
+                    else
+		      {
+			LOCK(cs_vNodes);
+			LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+			next.node->Release();
+			next.node = NULL;
+		      }
   		    inFlight++;
                     inFlightTxns << inFlight;
 		    }
