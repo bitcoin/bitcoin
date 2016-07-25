@@ -77,6 +77,7 @@ void UnlimitedPushTxns(CNode* dest);
 
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
+bool fIsChainNearlySyncd;
 
 //! The largest block size that we have seen since startup
 uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
@@ -977,17 +978,24 @@ bool CanThinBlockBeDownloaded(CNode* pto)
     return false;
 }
 
-bool IsChainNearlySyncd() 
+// fIsChainNearlySyncd is updated only during startup and whenever we receive a header.
+// This way we avoid having to lock cs_main so often which tends to be a bottleneck.
+void IsChainNearlySyncdInit() 
 {
     LOCK(cs_main);
     if(chainActive.Height() < pindexBestHeader->nHeight - 2)
-        return false;
-    return true;
+        fIsChainNearlySyncd = false;
+    else
+        fIsChainNearlySyncd = true;
+}
+bool IsChainNearlySyncd()
+{
+    return fIsChainNearlySyncd;
 }
 
 void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes, uint256 hash)
 {
-    int64_t nStartTimer= GetTimeMillis();
+    int64_t nStartTimer = GetTimeMillis();
     seed_insecure_rand();
     std::set<uint256> setHighScoreMemPoolHashes;
     std::set<uint256> setPriorityMemPoolHashes;

@@ -117,6 +117,8 @@ extern void ClearThinblockTimer(uint256 hash);
 extern bool IsThinBlocksEnabled();
 extern bool CanThinBlockBeDownloaded(CNode* pto);
 extern bool IsChainNearlySyncd();
+extern void IsChainNearlySyncdInit();
+extern bool fIsChainNearlySyncd;
 extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
@@ -131,7 +133,6 @@ extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
 extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
 
 extern std::map<uint256, uint64_t> mapThinBlockTimer;
-
 
 // statistics
 void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime);
