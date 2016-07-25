@@ -427,17 +427,19 @@ void CRequestManager::SendRequests()
 
 	      if (next.node != NULL )
 		{
-		  if (item.lastRequestTime)  // if this is positive, we've requested at least once
+		  if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
 		    {
 		      LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
 		    }
 
-		  item.outstandingReqs++;
-		  item.lastRequestTime = now;
-
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
-		  RequestBlock(next.node, obj);
+                  if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                    {
+		      RequestBlock(next.node, obj);
+	              item.outstandingReqs++;
+		      item.lastRequestTime = now;
+                    }
 		  cs_objDownloader.lock();
 
                   if (0) // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
@@ -465,7 +467,7 @@ void CRequestManager::SendRequests()
  
   if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
   // while (((lastPass + MIN_REQUEST_RETRY_INTERVAL < now)||(inFlight < maxInFlight + droppedTxns()))&&(sendIter != mapTxnInfo.end()))
-  while ((sendIter != mapTxnInfo.end())&&(requestPacer.try_leak(1)))
+  while ((sendIter != mapTxnInfo.end()) && (requestPacer.try_leak(1)))
     {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendIter;
@@ -478,7 +480,7 @@ void CRequestManager::SendRequests()
 	{
           if (!item.rateLimited)
 	    {
-	      if (item.lastRequestTime)  // if this is positive, we've requested at least once
+	      if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
 		{
 		  LogPrint("req", "Request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
 		  // Not reducing inFlight; its still outstanding; will be cleaned up when item is removed from map
@@ -511,14 +513,17 @@ void CRequestManager::SendRequests()
 
 	          if (next.node != NULL )
 		    {
-		    item.outstandingReqs++;
-		    item.lastRequestTime = now;
                     if (1)
                       {
                       cs_objDownloader.unlock();
                       LOCK(next.node->cs_vSend);
   		      // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                      next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                      if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                        {
+                          next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                          item.outstandingReqs++;
+		          item.lastRequestTime = now;
+                        }
                       cs_objDownloader.lock();
 		      }
                     if (0)  // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 

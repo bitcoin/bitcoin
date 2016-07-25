@@ -5472,6 +5472,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         CheckBlockIndex(chainparams.GetConsensus());
+
+        IsChainNearlySyncdInit(); // BUIP010 XTHIN
     }
 
     // BUIP010 Xtreme Thinblocks: begin section
