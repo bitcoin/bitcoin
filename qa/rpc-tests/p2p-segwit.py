@@ -1086,6 +1086,82 @@ class SegWitTest(BitcoinTestFramework):
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert(block4.sha256 not in self.old_node.getdataset)
 
+    # V0 segwit outputs should be standard after activation, but not before.
+    def test_standardness_v0(self, segwit_activated):
+        print("\tTesting standardness of v0 outputs (%s activation)" % ("after" if segwit_activated else "before"))
+        assert(len(self.utxo))
+
+        witness_program = CScript([OP_TRUE])
+        witness_hash = sha256(witness_program)
+        scriptPubKey = CScript([OP_0, witness_hash])
+
+        p2sh_pubkey = hash160(witness_program)
+        p2sh_scriptPubKey = CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])
+
+        # First prepare a p2sh output (so that spending it will pass standardness)
+        p2sh_tx = CTransaction()
+        p2sh_tx.vin = [CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b"")]
+        p2sh_tx.vout = [CTxOut(self.utxo[0].nValue-1000, p2sh_scriptPubKey)]
+        p2sh_tx.rehash()
+
+        # Mine it on test_node to create the confirmed output.
+        self.test_node.test_transaction_acceptance(p2sh_tx, with_witness=True, accepted=True)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # Now test standardness of v0 P2WSH outputs.
+        # Start by creating a transaction with two outputs.
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
+        tx.vout = [CTxOut(p2sh_tx.vout[0].nValue-10000, scriptPubKey)]
+        tx.vout.append(CTxOut(8000, scriptPubKey)) # Might burn this later
+        tx.rehash()
+
+        self.std_node.test_transaction_acceptance(tx, with_witness=True, accepted=segwit_activated)
+
+        # Now create something that looks like a P2PKH output. This won't be spendable.
+        scriptPubKey = CScript([OP_0, hash160(witness_hash)])
+        tx2 = CTransaction()
+        if segwit_activated:
+            # if tx was accepted, then we spend the second output.
+            tx2.vin = [CTxIn(COutPoint(tx.sha256, 1), b"")]
+            tx2.vout = [CTxOut(7000, scriptPubKey)]
+            tx2.wit.vtxinwit.append(CTxInWitness())
+            tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+        else:
+            # if tx wasn't accepted, we just re-spend the p2sh output we started with.
+            tx2.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
+            tx2.vout = [CTxOut(p2sh_tx.vout[0].nValue-1000, scriptPubKey)]
+        tx2.rehash()
+
+        self.std_node.test_transaction_acceptance(tx2, with_witness=True, accepted=segwit_activated)
+
+        # Now update self.utxo for later tests.
+        tx3 = CTransaction()
+        if segwit_activated:
+            # tx and tx2 were both accepted.  Don't bother trying to reclaim the
+            # P2PKH output; just send tx's first output back to an anyone-can-spend.
+            sync_mempools(self.nodes)
+            tx3.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
+            tx3.vout = [CTxOut(tx.vout[0].nValue-1000, CScript([OP_TRUE]))]
+            tx3.wit.vtxinwit.append(CTxInWitness())
+            tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
+            tx3.rehash()
+            self.test_node.test_transaction_acceptance(tx3, with_witness=True, accepted=True)
+        else:
+            # tx and tx2 didn't go anywhere; just clean up the p2sh_tx output.
+            tx3.vin = [CTxIn(COutPoint(p2sh_tx.sha256, 0), CScript([witness_program]))]
+            tx3.vout = [CTxOut(p2sh_tx.vout[0].nValue-1000, witness_program)]
+            tx3.rehash()
+            self.test_node.test_transaction_acceptance(tx3, with_witness=True, accepted=True)
+
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+        self.utxo.pop(0)
+        self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
+        assert_equal(len(self.nodes[1].getrawmempool()), 0)
+
+
     # Verify that future segwit upgraded transactions are non-standard,
     # but valid in blocks. Can run this before and after segwit activation.
     def test_segwit_versions(self):
@@ -1658,6 +1734,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_witness_tx_relay_before_segwit_activation()
         self.test_block_relay(segwit_activated=False)
         self.test_p2sh_witness(segwit_activated=False)
+        self.test_standardness_v0(segwit_activated=False)
 
         sync_blocks(self.nodes)
 
@@ -1679,6 +1756,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_witness_input_length()
         self.test_block_relay(segwit_activated=True)
         self.test_tx_relay_after_segwit_activation()
+        self.test_standardness_v0(segwit_activated=True)
         self.test_segwit_versions()
         self.test_premature_coinbase_witness_spend()
         self.test_signature_version_1()
