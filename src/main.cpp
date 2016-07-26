@@ -5092,7 +5092,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                if (!fAlreadyHave && !fImporting && !fReindex ) {  // BU request manager keeps track of all sources so no need for: && !mapBlocksInFlight.count(inv.hash)) {
+                if (!fAlreadyHave && !fImporting && !fReindex && IsChainNearlySyncd()) {  // BU request manager keeps track of all sources so no need for: && !mapBlocksInFlight.count(inv.hash)) {
 		    requester.AskFor(inv, pfrom);
                 }
             }
@@ -5964,7 +5964,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         pfrom->AddInventoryKnown(inv);
         
-        if (!IsInitialBlockDownload()) SendExpeditedBlock(block); // BU send the received block out right away
+        if (IsChainNearlySyncd()) SendExpeditedBlock(block); // BU send the received block out right away
         requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
