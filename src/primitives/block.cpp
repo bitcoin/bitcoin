@@ -29,7 +29,7 @@ uint256 CBlockHeader::GetMidHash() const
     //return SerializeHash(*this);
 }
 
-uint256 CBlockHeader::FindBestPatternHash(int& collisions,char *scratchpad,int nThreads) {
+uint256 CBlockHeader::FindBestPatternHash(int& collisions,char *scratchpad,int nThreads,int* minerStopFlag) {
 
         uint256 smallestHashSoFar = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         uint32_t smallestHashLocation=0;
@@ -49,8 +49,7 @@ uint256 CBlockHeader::FindBestPatternHash(int& collisions,char *scratchpad,int n
         }
         nThreads=newThreadNumber;*/
 
-
-        std::vector< std::pair<uint32_t,uint32_t> > results =patternsearch::pattern_search( midHash,scratchpad,nThreads);
+				std::vector< std::pair<uint32_t,uint32_t> > results =patternsearch::pattern_search( midHash,scratchpad,nThreads,minerStopFlag);
         //uint32_t candidateStartLocation=0;
         //uint32_t candidateFinalCalculation=0;
 
