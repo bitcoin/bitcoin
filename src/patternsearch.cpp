@@ -33,8 +33,14 @@ namespace patternsearch
 		EVP_MD_CTX ctx;
 		EVP_MD_CTX_init(&ctx);
 		
+        int remainder=0;
+        if(threadNumber+1==totalThreads){
+        //The last thread will also do the remainder
+            remainder=chunks%totalThreads;
+        }
+
 		//for (uint32_t i = threadNumber; likely(i < chunks - totalThreads); i += totalThreads) {
-		for (uint32_t i = startChunk; likely(i < startChunk + chunksToProcess); i++) {		// && *minerStopFlag == 0
+        for (uint32_t i = startChunk; likely(i < startChunk + chunksToProcess+remainder); i++) {		// && *minerStopFlag == 0
 			*midHash32 = i;
       //SHA512((unsigned char*)&midHash, sizeof(midHash), (unsigned char*)&(mainMemoryPsuedoRandomData[i * chunkSize]));
 			EVP_DigestInit_ex(&ctx, EVP_sha512(), NULL);
@@ -57,8 +63,13 @@ namespace patternsearch
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 
+        int remainder=0;
+        if(threadNumber+1==totalThreads){
+            //The last thread will also do the remainder
+            remainder=chunks%totalThreads;
+        }
 		//for (uint32_t k = threadNumber; likely(k < comparisonSize - totalThreads); k += totalThreads) {
-		for (uint32_t k = startLoc; likely(k < startLoc + searchNumber && *minerStopFlag == 0); k++) {
+        for (uint32_t k = startLoc; likely(k < startLoc + searchNumber + remainder && *minerStopFlag == 0); k++) {
 			memcpy((char*)cache, mainMemoryPsuedoRandomData + k * cacheMemorySize, cacheMemorySize);
 
 			for(unsigned char j = 0; j < AES_ITERATIONS; j++) {
