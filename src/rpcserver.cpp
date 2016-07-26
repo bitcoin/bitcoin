@@ -311,6 +311,8 @@ static const CRPCCommand vRPCCommands[] =
     { "mining",             "setminingmaxblock",      &setminingmaxblock,      true  },  // BU
     { "mining",             "getminercomment",        &getminercomment,        true  },  // BU
     { "mining",             "setminercomment",        &setminercomment,        true  },  // BU
+    { "mining",             "getblockversion",        &getblockversion,        true  },  // BU
+    { "mining",             "setblockversion",        &setblockversion,        true  },  // BU
 
     /* Coin generation */
     { "generating",         "getgenerate",            &getgenerate,            true  },

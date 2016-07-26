@@ -5,6 +5,7 @@
 #include "chain.h"
 #include "clientversion.h"
 #include "chainparams.h"
+#include "miner.h"
 #include "consensus/consensus.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
@@ -40,6 +41,8 @@ uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
 unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
+
+uint32_t blockVersion = 0;  // Overrides the mined block version if non-zero
 
 std::vector<std::string> BUComments = std::vector<std::string>();
 std::string minerComment;
@@ -81,6 +84,22 @@ bool fIsChainNearlySyncd;
 
 //! The largest block size that we have seen since startup
 uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
+
+int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime)
+{
+    if (blockVersion != 0)  // BU: allow override of block version
+      {
+        return blockVersion;
+      }
+    
+    int32_t nVersion = ComputeBlockVersion(pindexPrev, params);
+
+    if (nTime <= params.SizeForkExpiration())
+	  nVersion |= FORK_BIT_2MB;
+ 
+    return nVersion;
+}
+
 
 void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime)
 {
@@ -334,6 +353,7 @@ std::string UnlimitedCmdLineHelp()
 {
     std::string strUsage;
     strUsage += HelpMessageGroup(_("Bitcoin Unlimited Options:"));
+    strUsage += HelpMessageOpt("-blockversion=<n>", _("Generated block version number.  Value must be an integer"));
     strUsage += HelpMessageOpt("-excessiveblocksize=<n>", _("Blocks above this size in bytes are considered excessive"));
     strUsage += HelpMessageOpt("-excessiveacceptdepth=<n>", _("Excessive blocks are accepted anyway if this many blocks are mined on top of them"));
     strUsage += HelpMessageOpt("-receiveburst", _("The maximum rate that data can be received in kB/s.  If there has been a period of lower than average data rates, the client may receive extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
@@ -514,6 +534,7 @@ void UnlimitedSetup(void)
     MIN_TX_REQUEST_RETRY_INTERVAL = GetArg("-txretryinterval", MIN_TX_REQUEST_RETRY_INTERVAL);
     MIN_BLK_REQUEST_RETRY_INTERVAL = GetArg("-blkretryinterval", MIN_BLK_REQUEST_RETRY_INTERVAL);
     maxGeneratedBlock = GetArg("-blockmaxsize", maxGeneratedBlock);
+    blockVersion = GetArg("-blockversion", blockVersion);
     excessiveBlockSize = GetArg("-excessiveblocksize", excessiveBlockSize);
     excessiveAcceptDepth = GetArg("-excessiveacceptdepth", excessiveAcceptDepth);
     settingsToUserAgentString();
@@ -662,6 +683,8 @@ extern UniValue setminercomment(const UniValue& params, bool fHelp)
   return NullUniValue;
 }
 
+
+
 UniValue getexcessiveblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -755,6 +778,65 @@ UniValue setminingmaxblock(const UniValue& params, bool fHelp)
         throw runtime_error("max generated block size must be greater than 100KB");
 
     maxGeneratedBlock = arg;
+
+    return NullUniValue;
+}
+
+UniValue getblockversion(const UniValue& params, bool fHelp)
+{
+  if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getblockversion\n"
+            "\nReturn the block version used when mining."
+            "\nResult\n"
+            "      (integer) block version number\n"
+            "\nExamples:\n" +
+            HelpExampleCli("getblockversion", "") + HelpExampleRpc("getblockversion", ""));
+  const CBlockIndex* pindex = chainActive.Tip();
+  return UnlimitedComputeBlockVersion(pindex, Params().GetConsensus(),pindex->nTime);
+      
+}
+
+UniValue setblockversion(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setblockversion blockVersionNumber\n"
+            "\nSet the block version number.\n"
+            "\nArguments:\n"
+            "1. blockVersionNumber         (integer, hex integer, 'BIP109', 'BASE' or 'default'.  Required) The block version number.\n"
+            "\nExamples:\n"
+            "\nVote for 2MB blocks\n" +
+            HelpExampleCli("setblockversion", "BIP109") +
+            "\nCheck the setting\n" + HelpExampleCli("getblockversion", ""));
+
+    uint32_t arg = 0;
+
+    string temp = params[0].get_str();
+    if (temp == "default")
+      {
+        arg = 0;
+      }
+    else if (temp == "BIP109")
+      {
+        arg = BASE_VERSION | FORK_BIT_2MB;
+      }
+    else if (temp == "BASE")
+      {
+        arg = BASE_VERSION;
+      }
+    else if ((temp[0] == '0') && (temp[1] == 'x'))
+      {
+        std::stringstream ss;
+        ss << std::hex << (temp.c_str()+2);
+        ss >> arg;
+      }
+    else
+      {
+      arg = boost::lexical_cast<unsigned int>(temp);
+      }
+   
+    blockVersion = arg;
 
     return NullUniValue;
 }

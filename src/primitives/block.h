@@ -11,7 +11,7 @@
 #include "uint256.h"
 
 const uint32_t BIP_009_MASK = 0x20000000;
-const uint32_t BASE_VERSION = 0x20000000;  // Will accept 2MB blocks
+const uint32_t BASE_VERSION = 0x20000000;
 const uint32_t FORK_BIT_2MB = 0x10000000;  // Vote for 2MB fork
 const bool DEFAULT_2MB_VOTE = false;
 

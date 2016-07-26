@@ -11,6 +11,7 @@
 #include "stat.h"
 #include "thinblock.h"
 #include "consensus/validation.h"
+#include "consensus/params.h"
 #include "requestManager.h"
 #include <univalue.h>
 #include <vector>
@@ -31,6 +32,7 @@ class CDiskBlockPos;
 class CNode;
 class CChainParams;
 
+extern uint32_t blockVersion;  // Overrides the mined block version if non-zero
 extern uint64_t maxGeneratedBlock;
 extern unsigned int excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
@@ -49,6 +51,9 @@ static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
 /** The minimum value possible for -limitfreerelay when rate limiting */
 static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 // BU - Xtreme Thinblocks Auto Mempool Limiter - end section
+
+// Replace Core's ComputeBlockVersion
+int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime);
 
 // process incoming unsolicited block
 void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
@@ -93,16 +98,20 @@ extern UniValue setminingmaxblock(const UniValue& params, bool fHelp);
 extern UniValue getexcessiveblock(const UniValue& params, bool fHelp);
 extern UniValue setexcessiveblock(const UniValue& params, bool fHelp);
 
-//? Get and set the custom string that miners can place into the coinbase transaction
+// Get and set the custom string that miners can place into the coinbase transaction
 extern UniValue getminercomment(const UniValue& params, bool fHelp);
 extern UniValue setminercomment(const UniValue& params, bool fHelp);
 
-//? RPC Return a list of all available statistics
+// Get and set the generated (mined) block version.  USE CAREFULLY!
+extern UniValue getblockversion(const UniValue& params, bool fHelp);
+extern UniValue setblockversion(const UniValue& params, bool fHelp);
+
+// RPC Return a list of all available statistics
 extern UniValue getstatlist(const UniValue& params, bool fHelp);
-//? RPC Get a particular statistic
+// RPC Get a particular statistic
 extern UniValue getstat(const UniValue& params, bool fHelp);
 
-//? RPC Set a node to receive expedited blocks from
+// RPC Set a node to receive expedited blocks from
 UniValue expedited(const UniValue& params, bool fHelp);
 
 // These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters

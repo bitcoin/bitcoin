@@ -2325,7 +2325,7 @@ public:
     {
         return ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
                ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
+	  ((UnlimitedComputeBlockVersion(pindex->pprev, params,pindex->nTime) >> bit) & 1) == 0;
     }
 };
 
@@ -2755,7 +2755,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         int32_t anUnexpectedVersion=0;
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
-            int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
+	  int32_t nExpectedVersion = UnlimitedComputeBlockVersion(pindex->pprev, chainParams.GetConsensus(),pindex->nTime);
             if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
 	      {
                 anUnexpectedVersion = pindex->nVersion;
