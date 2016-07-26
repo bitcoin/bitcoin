@@ -22,7 +22,7 @@ static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
 );
 
 static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
-    secp256k1_fe zi2; 
+    secp256k1_fe zi2;
     secp256k1_fe zi3;
     secp256k1_fe_sqr(&zi2, zi);
     secp256k1_fe_mul(&zi3, &zi2, zi);
@@ -89,7 +89,7 @@ static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge *r, const secp
     }
 
     azi = (secp256k1_fe *)checked_malloc(cb, sizeof(secp256k1_fe) * count);
-    secp256k1_fe_inv_all_var(count, azi, az);
+    secp256k1_fe_inv_all_var(azi, az, count);
     free(az);
 
     count = 0;
@@ -260,7 +260,7 @@ static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, s
     /** For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
      *  Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
      *  y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
-     *  
+     *
      *  Having said this, if this function receives a point on a sextic twist, e.g. by
      *  a fault attack, it is possible for y to be 0. This happens for y^2 = x^3 + 6,
      *  since -6 does have a cube root mod p. For this point, this function will not set
