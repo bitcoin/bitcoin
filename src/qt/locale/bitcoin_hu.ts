@@ -63,7 +63,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP-cím/maszk</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Kitiltás vége</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -870,6 +878,10 @@
         <translation>&amp;Peerek</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Kitiltott felek</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Peer kijelölése a részletes információkért</translation>
     </message>
@@ -942,6 +954,10 @@
         <translation>Konzol törlése</translation>
     </message>
     <message>
+        <source>Ban Node for</source>
+        <translation>Kitiltás oka</translation>
+    </message>
+    <message>
         <source>1 &amp;hour</source>
         <translation>1 &amp;óra</translation>
     </message>
@@ -956,6 +972,10 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;év</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>Kitiltás &amp;feloldása</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1363,6 +1383,10 @@
         <translation>Parancs, amit akkor hajt végre, amikor egy tárca-tranzakció megváltozik  (%s a parancsban lecserélődik a blokk TxID-re)</translation>
     </message>
     <message>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>UPnP használata porttovábbításra (alapértelmezett: 1, amikor kiszolgál és nem használt a -proxy)</translation>
+    </message>
+    <message>
         <source>Connect only to the specified node(s)</source>
         <translation>Csatlakozás csak a megadott csomóponthoz</translation>
     </message>
@@ -1407,6 +1431,10 @@
         <translation>Helytelen vagy nemlétező genézis blokk. Helytelen hálózati adatkönyvtár?</translation>
     </message>
     <message>
+        <source>Loading banlist...</source>
+        <translation>Tiltólista betöltése...</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Nincs elég fájlleíró. </translation>
     </message>
@@ -1421,6 +1449,18 @@
     <message>
         <source>Wallet options:</source>
         <translation>Tárca beállítások:</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Saját IP-cím felfedezése (alapértelmezett: 1, amikor kiszolgál és nem használt a -externalip)</translation>
+    </message>
+    <message>
+        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
+        <translation>A fehérlistán szereplő felek nem lesznek automatikusan kitiltva és a tranzakcióik is mindig továbbítva lesznek, akkor is ha már a megerősítésre váró listán (mempool) vannak. Hasznos például összekötő csomópontokon (gateway).</translation>
+    </message>
+    <message>
+        <source>(default: %u)</source>
+        <translation>(alapértelmezett: %u)</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -1479,6 +1519,14 @@
     <message>
         <source>Loading addresses...</source>
         <translation>Címek betöltése...</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(alapértelmezett: %s)</translation>
+    </message>
+    <message>
+        <source>Include IP addresses in debug output (default: %u)</source>
+        <translation>IP-címek megjelenítése a naplóban (alapértelmezett: %u)</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>
