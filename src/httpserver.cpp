@@ -318,27 +318,39 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 /** Bind HTTP server to specified addresses */
 static bool HTTPBindAddresses(struct evhttp* http)
 {
-    uint16_t defaultPort = GetArg("-rpcport", BaseParams().RPCPort());
+    uint16_t defaultPort = BaseParams().RPCPort();
+    int rpcPortTmp = GetArg("-rpcport", defaultPort);
+    uint16_t rpcPort;
+
+    if(IsValidPort(rpcPortTmp)) {
+        rpcPort = (uint16_t)rpcPortTmp;
+    } else {
+        rpcPort = defaultPort;
+        LogPrintf("WARNING: -rpcport %d is incorrect, using default %u\n", rpcPortTmp, defaultPort);
+    }
+
     std::vector<std::pair<std::string, uint16_t> > endpoints;
 
     // Determine what addresses to bind to
     if (!mapArgs.count("-rpcallowip")) { // Default to loopback if not allowing external IPs
-        endpoints.push_back(std::make_pair("::1", defaultPort));
-        endpoints.push_back(std::make_pair("127.0.0.1", defaultPort));
+        endpoints.push_back(std::make_pair("::1", rpcPort));
+        endpoints.push_back(std::make_pair("127.0.0.1", rpcPort));
         if (mapArgs.count("-rpcbind")) {
             LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
         }
     } else if (mapArgs.count("-rpcbind")) { // Specific bind address
         const std::vector<std::string>& vbind = mapMultiArgs["-rpcbind"];
         for (std::vector<std::string>::const_iterator i = vbind.begin(); i != vbind.end(); ++i) {
-            uint16_t port = defaultPort;
+            uint16_t port = rpcPort;
             std::string host;
             if(SplitHostPort(*i, port, host))
                 endpoints.push_back(std::make_pair(host, port));
+            else
+                LogPrintf("WARNING: -rpcbind address %s is incorrect, ignoring\n", host);
         }
     } else { // No specific bind address specified, bind to any
-        endpoints.push_back(std::make_pair("::", defaultPort));
-        endpoints.push_back(std::make_pair("0.0.0.0", defaultPort));
+        endpoints.push_back(std::make_pair("::", rpcPort));
+        endpoints.push_back(std::make_pair("0.0.0.0", rpcPort));
     }
 
     // Bind addresses

@@ -121,7 +121,13 @@ void AddOneShot(const std::string& strDest)
 
 uint16_t GetListenPort()
 {
-    return (uint16_t)(GetArg("-port", Params().GetDefaultPort()));
+    uint16_t defaultPort = Params().GetDefaultPort();
+    int port = GetArg("-port", defaultPort);
+    if(!IsValidPort(port)) {
+        port = defaultPort;
+        LogPrintf("WARNING: -port %d is incorrect, using default %u\n", port, defaultPort);
+    }
+    return (uint16_t)port;
 }
 
 // find 'best' local address for a particular peer

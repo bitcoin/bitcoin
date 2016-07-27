@@ -63,6 +63,11 @@ std::string GetNetworkName(enum Network net) {
     }
 }
 
+bool IsValidPort(int port)
+{
+    return port > 0 && port < 0x10000;
+}
+
 bool SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut) {
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
@@ -72,7 +77,7 @@ bool SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut) {
     bool fResult = true;
     if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
         int32_t n;
-        if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
+        if (ParseInt32(in.substr(colon + 1), &n) && IsValidPort(n)) {
             in = in.substr(0, colon);
             portOut = n;
         } else {

@@ -107,6 +107,15 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
     BOOST_CHECK(!TestSplitHost("[::]:-8333", "::", -8333));
     BOOST_CHECK(!TestSplitHost(":-8333", "", -8333));
     BOOST_CHECK(!TestSplitHost("[]:-8333", "", -8333));
+    // should fail if provided port is above upper bound
+    BOOST_CHECK(!TestSplitHost("www.bitcoin.org:65536", "www.bitcoin.org", 65536));
+    BOOST_CHECK(!TestSplitHost("[www.bitcoin.org]:65536", "www.bitcoin.org", 65536));
+    BOOST_CHECK(!TestSplitHost("127.0.0.1:65536", "127.0.0.1", 65536));
+    BOOST_CHECK(!TestSplitHost("[127.0.0.1]:65536", "127.0.0.1", 65536));
+    BOOST_CHECK(!TestSplitHost("[::ffff:127.0.0.1]:65536", "::ffff:127.0.0.1", 65536));
+    BOOST_CHECK(!TestSplitHost("[::]:65536", "::", 65536));
+    BOOST_CHECK(!TestSplitHost(":65536", "", 65536));
+    BOOST_CHECK(!TestSplitHost("[]:65536", "", 65536));
 }
 
 bool static TestParse(string src, string canon)
