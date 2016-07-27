@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_INTERPRETER_H
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
+#include "consensus/flags.h"
 #include "script_error.h"
 #include "primitives/transaction.h"
 
@@ -107,6 +108,29 @@ enum
     //
     SCRIPT_VERIFY_WITNESS_PUBKEYTYPE = (1U << 15),
 };
+
+/** Translator from consensus flags to script flags. */
+static inline unsigned int ScriptFlagsFromConsensus(const uint64_t flags)
+{
+    unsigned int scriptflags = SCRIPT_VERIFY_NONE;
+
+    assert(!(flags & ~bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL));
+    
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH)
+        scriptflags |= SCRIPT_VERIFY_P2SH;
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG)
+        scriptflags |= SCRIPT_VERIFY_DERSIG;
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY)
+        scriptflags |= SCRIPT_VERIFY_NULLDUMMY;
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY)
+        scriptflags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY)
+        scriptflags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS)
+        scriptflags |= SCRIPT_VERIFY_WITNESS;
+
+    return scriptflags;
+}
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
 
