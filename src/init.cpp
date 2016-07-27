@@ -109,6 +109,7 @@ volatile bool fRequestShutdown = false;
 void StartShutdown()
 {
     fRequestShutdown = true;
+    fGenerate = false;
 }
 bool ShutdownRequested()
 {

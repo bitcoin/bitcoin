@@ -497,6 +497,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int nThreads)
 {
 	fGenerate = true;
+	minerStopFlag = 0;
     LogPrintf("HOdlcoinMiner started\n");
     srand(clock());
     string ma=GetArg("-miningaddress", "");
@@ -550,13 +551,14 @@ void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int
 
             if(ma!=""){
             	if(validateAddress(ma)) {
-           		    LogPrintf("HOdlcoinMiner: Mining to User supplied address %s\n",ma);
-                	pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(ma));
+                    LogPrintf("HOdlcoinMiner: Mining to User supplied address %s\n",ma);
+                    pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(ma));
                 }else{
-                	LogPrintf("HOdlcoinMiner: WARNING! User supplied address is invalid, defaulting to mempool address.\n");
-                	pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
+                    LogPrintf("HOdlcoinMiner: WARNING! User supplied address is invalid, defaulting to keypool address.\n");
+                    pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
                 }
             }else{
+                LogPrintf("HOdlcoinMiner: Mining to keypool address.\n");
                 pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
             }
             if (!pblocktemplate.get())
@@ -582,11 +584,13 @@ void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int
 
             while (true) {
                 //pblock->nNonce = (clock()+rand())%9999;
-                minerStopFlag = 0;
+                //minerStopFlag = 0;
+                if (fGenerate)
+                    minerStopFlag = 0;
 
-                for (int i = 0; i < 20 && minerStopFlag == 0 && !ShutdownRequested(); i++) {
-										pblock->nNonce = nNonce;
-				            nNonce += minerN;
+                for (int i = 0; i < 20 && minerStopFlag == 0 && fGenerate && !ShutdownRequested(); i++) {
+                    pblock->nNonce = nNonce;
+                    nNonce += minerN;
                     hash = pblock->FindBestPatternHash(collisions, scratchpad, nThreads, &minerStopFlag);
                     totalHashes = totalHashes + collisions;
                     dHashesPerSec = (time(NULL) != startTime ? totalHashes / (time(NULL) - startTime) : 0);
@@ -673,6 +677,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
     if (minerThreads != NULL)
     {
         isInterrupting=true;
+        minerStopFlag=1;
         minerThreads->interrupt_all();
         minerThreads->join_all();
         delete minerThreads;
@@ -682,6 +687,9 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     if (nThreads == 0 || !fGenerate)
         return;
+
+    if (fGenerate)
+        minerStopFlag=0;
 
     minerThreads = new boost::thread_group();
     int miners=GetArg("-minermemory",1);
