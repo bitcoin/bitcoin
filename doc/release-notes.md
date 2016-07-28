@@ -135,6 +135,8 @@ Existing wallets will still use traditional key generation.
 Backups of HD wallets, regardless of when they have been created, can
 therefore be used to re-generate all possible private keys, even the
 ones which haven't already been generated during the time of the backup.
+**Attention:** Encrypting the wallet will create a new seed which requires
+a new backup!
 
 HD key generation for new wallets can be disabled by `-usehd=0`. Keep in
 mind that this flag only has affect on newly created wallets.
