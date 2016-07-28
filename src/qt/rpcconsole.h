@@ -11,6 +11,7 @@
 #include "net.h"
 
 #include <QWidget>
+#include <QCompleter>
 
 class ClientModel;
 
@@ -98,6 +99,7 @@ private:
     QStringList history;
     int historyPtr;
     NodeId cachedNodeid;
+    QCompleter *autoCompleter;
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H
