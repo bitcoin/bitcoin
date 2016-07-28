@@ -21,6 +21,7 @@
 #include "util.h"
 #include "activethrone.h"
 #include "throneman.h"
+#include "throneconfig.h"
 #include "spork.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
@@ -482,6 +483,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (SoftSetBoolArg("-listen", true))
             LogPrintf("AppInit2 : parameter interaction: -bind set -> setting -listen=1\n");
     }
+
+    // Process masternode config
+    throneConfig.read(GetThroneConfigFile());
 
     if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
