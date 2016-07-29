@@ -7,7 +7,10 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
-#include "wallet/wallet.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h" // for COutput
+#endif // ENABLE_WALLET
 
 #include <QWidget>
 
@@ -38,8 +41,10 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 public Q_SLOTS:
+#ifdef ENABLE_WALLET
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, std::vector<COutput> termDepositInfo);
+#endif // ENABLE_WALLET
 
 Q_SIGNALS:
     void transactionClicked(const QModelIndex &index);

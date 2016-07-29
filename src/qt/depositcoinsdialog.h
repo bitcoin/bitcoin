@@ -6,7 +6,10 @@
 #define BITCOIN_QT_DEPOSITCOINSDIALOG_H
 
 #include "walletmodel.h"
-#include "wallet/wallet.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h" // for COutput
+#endif // ENABLE_WALLET
 
 #include <QDialog>
 #include <QString>
@@ -52,8 +55,10 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
+#ifdef ENABLE_WALLET
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, std::vector<COutput> termDepositInfo);
+#endif // ENABLE_WALLET
 
 private:
     Ui::DepositCoinsDialog *ui;
