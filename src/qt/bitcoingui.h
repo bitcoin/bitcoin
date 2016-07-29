@@ -199,6 +199,9 @@ private Q_SLOTS:
     void miningOff();
     void miningOn();
 
+    /** Update info about mining */
+    void updateMiningIcon();
+
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
@@ -223,9 +226,6 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
-    
-    /** Update info about mining */
-    void updateMiningIcon();
 };
 
 class UnitDisplayStatusBarControl : public QLabel

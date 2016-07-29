@@ -204,12 +204,20 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     
     // Set mining pixmap
     labelMiningIcon->setPixmap(QIcon(":/icons/transaction_conflicted").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-    QTimer *timerMiningIcon = new QTimer(labelMiningIcon);
-    timerMiningIcon->start(MODEL_UPDATE_DELAY);
-    connect(timerMiningIcon, SIGNAL(timeout()), this, SLOT(updateMiningIcon()));
-    // Set initial values for mining icon
-    fGenerate = false;
-    dHashesPerSec = 0;
+#ifdef ENABLE_WALLET
+    if(enableWallet)
+    {
+        QTimer *timerMiningIcon = new QTimer(labelMiningIcon);
+        timerMiningIcon->start(MODEL_UPDATE_DELAY);
+        connect(timerMiningIcon, SIGNAL(timeout()), this, SLOT(updateMiningIcon()));
+        // Set initial values for mining icon
+        fGenerate = false;
+        dHashesPerSec = 0;
+    } else
+#endif // ENABLE_WALLET
+    {
+        labelMiningIcon->setVisible(false);
+    }
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
@@ -309,12 +317,15 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
-    miningOffAction = new QAction(QIcon(":/icons/transaction_conflicted"), tr("Solo Mining Off"), this);
-    miningOffAction->setStatusTip(tr("Stop Mining. May take some time to wind down."));
-    miningOnAction = new QAction(QIcon(":/icons/tx_mined"), tr("Solo Mining On (1GB Required)"), this);
-    miningOnAction->setStatusTip(tr("Mine solo."));
-
 #ifdef ENABLE_WALLET
+    if(enableWallet)
+    {
+        miningOffAction = new QAction(QIcon(":/icons/transaction_conflicted"), tr("Solo Mining Off"), this);
+        miningOffAction->setStatusTip(tr("Stop Mining. May take some time to wind down."));
+        miningOnAction = new QAction(QIcon(":/icons/tx_mined"), tr("Solo Mining On (1GB Required)"), this);
+        miningOnAction->setStatusTip(tr("Mine solo."));
+    }
+
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -447,10 +458,15 @@ void BitcoinGUI::createMenuBar()
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
 
-    QMenu *mining = appMenuBar->addMenu(tr("&Mining"));
-    mining->addSeparator();
-    mining->addAction(miningOnAction);
-    mining->addAction(miningOffAction);
+#ifdef ENABLE_WALLET
+    if(walletFrame)
+    {
+        QMenu *mining = appMenuBar->addMenu(tr("&Mining"));
+        mining->addSeparator();
+        mining->addAction(miningOnAction);
+        mining->addAction(miningOffAction);
+    }
+#endif // ENABLE_WALLET
 }
 
 void BitcoinGUI::createToolBars()
@@ -827,6 +843,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
     progressBar->setToolTip(tooltip);
 }
 
+#ifdef ENABLE_WALLET
 void BitcoinGUI::setMining(bool mining, double hashrate, int miners, int threads)
 {
     if (mining)
@@ -848,6 +865,7 @@ void BitcoinGUI::setMining(bool mining, double hashrate, int miners, int threads
         labelMiningIcon->setToolTip(tr("Not mining."));
     }
 }
+#endif // ENABLE_WALLET
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
@@ -1065,6 +1083,7 @@ void BitcoinGUI::toggleHidden()
     showNormalIfMinimized(true);
 }
 
+#ifdef ENABLE_WALLET
 void BitcoinGUI::updateMiningIcon()
 {
     if (fGenerate)
@@ -1093,6 +1112,7 @@ void BitcoinGUI::miningOn()
 GenerateBitcoins(true, pwalletMain,-1);
 setMining(true,0, 1, -1);
 }
+#endif // ENABLE_WALLET
 
 void BitcoinGUI::detectShutdown()
 {
