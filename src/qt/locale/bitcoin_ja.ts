@@ -2304,10 +2304,6 @@
         <translation>可能な場合には手数料ゼロのトランザクションとしてトランザクションを送信する (初期値: %u)</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block cost (default: %d)</source>
-        <translation>BIP141ブロックコストの最大値を設定 (初期値: %d)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>すべてのデバッグオプションを表示する (使い方: --help -help-debug)</translation>
     </message>

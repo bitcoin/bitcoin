@@ -2303,10 +2303,6 @@
         <translation>Send transactions as zero-fee transactions if possible (default: %u)</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block cost (default: %d)</source>
-        <translation>Set maximum BIP141 block cost (default: %d)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Show all debugging options (usage: --help -help-debug)</translation>
     </message>

@@ -63,9 +63,21 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmask</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Bị cấm đến</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Đồng bộ hóa với mạng</translation>
+    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Tổng quan</translation>
@@ -73,6 +85,14 @@
     <message>
         <source>Node</source>
         <translation>Node</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Giao dịch</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Duyệt tìm lịch sử giao dịch</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -83,6 +103,14 @@
         <translation>Thoát chương trình</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;Thông tin về %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Hiện thông tin về %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Về &amp;Qt</translation>
     </message>
@@ -91,12 +119,48 @@
         <translation>Xem thông tin về Qt</translation>
     </message>
     <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Tùy chọn...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Chỉnh sửa thiết đặt tùy chọn cho %1</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Mã hóa ví tiền</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Sao lưu ví tiền...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Thay đổi mật khẩu...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Địa chỉ gửi</translation>
+    </message>
+    <message>
         <source>&amp;Receiving addresses...</source>
         <translation>Địa chỉ nhận</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Mở &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Gửi coins đến tài khoản Bitcoin</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Sao lưu ví tiền ở vị trí khác</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Tin nhắn xác thực</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -134,6 +198,18 @@
         <source>&amp;Help</source>
         <translation>Trợ &amp;giúp</translation>
     </message>
+    <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Yêu cầu thanh toán(tạo mã QR và địa chỉ Bitcoin: URLs)</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Mở bitcoin:URL hoặc yêu cầu thanh toán</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>7Tùy chọn dòng lệnh</translation>
+    </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation><numerusform>%n giờ</numerusform></translation>
@@ -155,6 +231,10 @@
         <translation><numerusform>%n năm</numerusform></translation>
     </message>
     <message>
+        <source>%1 behind</source>
+        <translation>%1 chậm trễ</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Lỗi</translation>
     </message>
@@ -171,6 +251,36 @@
         <translation>Đã cập nhật</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>Ngày: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Số lượng: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Loại: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Nhãn hiệu: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Địa chỉ: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>Giao dịch đã gửi</translation>
     </message>
@@ -178,7 +288,15 @@
         <source>Incoming transaction</source>
         <translation>Giao dịch đang tới</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Ví tiền &lt;b&gt; đã được mã hóa&lt;/b&gt;và hiện &lt;b&gt;đang mở&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Ví tiền &lt;b&gt; đã được mã hóa&lt;/b&gt;và hiện &lt;b&gt;đang khóa&lt;/b&gt;</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -202,8 +320,24 @@
         <translation>Phí:</translation>
     </message>
     <message>
+        <source>After Fee:</source>
+        <translation>Sau thuế, phí:</translation>
+    </message>
+    <message>
         <source>Change:</source>
         <translation>Thay đổi:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>(bỏ)chọn tất cả</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation>Chế độ cây</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation>Chế độ danh sách</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -229,6 +363,10 @@
 <context>
     <name>EditAddressDialog</name>
     <message>
+        <source>Edit Address</source>
+        <translation>Thay đổi địa chỉ</translation>
+    </message>
+    <message>
         <source>&amp;Label</source>
         <translation>Nhãn</translation>
     </message>
@@ -250,12 +388,40 @@
         <source>version</source>
         <translation>version</translation>
     </message>
+    <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>&amp;Tùy chọn dòng lệnh</translation>
+    </message>
+    <message>
+        <source>Usage:</source>
+        <translation>Mức sử dụng</translation>
+    </message>
+    <message>
+        <source>command-line options</source>
+        <translation>tùy chọn dòng lệnh</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Chọn ngôn ngữ, ví dụ "de_DE" (mặc định: Vị trí hệ thống)</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Đặt chứng nhận SSL gốc cho yêu cầu giao dịch (mặc định: -hệ thống-)</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Chào mừng</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation>Sử dụng vị trí dữ liệu mặc định</translation>
     </message>
     <message>
         <source>Error</source>
@@ -288,12 +454,56 @@
         <translation>MB</translation>
     </message>
     <message>
+        <source>Accept connections from outside</source>
+        <translation>Chấp nhận các kết nối từ bên ngoài</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Cho phép nhận kết nối</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>Địa chỉ IP của proxy (ví dụ IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>Phần mềm giao dịch bên thứ ba URLs</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>Ví</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Kết nối đến máy chủ Bitcoin thông qua SOCKS5 proxy.</translation>
+    </message>
+    <message>
+        <source>Proxy &amp;IP:</source>
+        <translation>Proxy &amp;IP:</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation>&amp;Cổng:</translation>
+    </message>
+    <message>
+        <source>Port of the proxy (e.g. 9050)</source>
+        <translation>Cổng proxy (e.g. 9050) </translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
         <source>&amp;Display</source>
         <translation>&amp;Hiển thị</translation>
+    </message>
+    <message>
+        <source>User Interface &amp;language:</source>
+        <translation>Giao diện người dùng &amp; ngôn ngữ</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -307,12 +517,24 @@
         <source>default</source>
         <translation>mặc định</translation>
     </message>
+    <message>
+        <source>none</source>
+        <translation>Trống</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
         <translation>Form</translation>
+    </message>
+    <message>
+        <source>Available:</source>
+        <translation>Khả dụng</translation>
+    </message>
+    <message>
+        <source>Pending:</source>
+        <translation>Đang chờ</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -399,6 +621,10 @@
     <message>
         <source>Fee:</source>
         <translation>Phí:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Sau thuế, phí:</translation>
     </message>
     <message>
         <source>Change:</source>

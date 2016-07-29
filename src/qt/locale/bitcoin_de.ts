@@ -810,6 +810,10 @@
         <translation>&amp;Sprache der Benutzeroberfläche:</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>Die Benutzeroberflächensprache kann hier festgelegt werden. Diese Einstellung wird nach einem Neustart von %1 wirksam werden.</translation>
+    </message>
+    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Einheit der Beträge:</translation>
     </message>
@@ -1885,6 +1889,10 @@
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>Kann Adresse in -%s nicht auflösen: '%s'</translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation>Änderungsindex außerhalb des Bereichs</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>

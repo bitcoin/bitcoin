@@ -2303,10 +2303,6 @@
         <translation>Send transaktioner som nul-gebyr-transaktioner hvis muligt (standard: %u)</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block cost (default: %d)</source>
-        <translation>Sæt maksimal BIP141-blokudgift (standard: %d)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Vis alle tilvalg for fejlsøgning (brug: --help -help-debug)</translation>
     </message>

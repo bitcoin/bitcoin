@@ -311,6 +311,10 @@
         <translation>Oppdatert</translation>
     </message>
     <message>
+        <source>%1 client</source>
+        <translation>%1 klient</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Laster ned...</translation>
     </message>
@@ -497,6 +501,10 @@
         <translation> (%1-bit)</translation>
     </message>
     <message>
+        <source>About %1</source>
+        <translation>Om %1</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>Kommandolinjevalg</translation>
     </message>
@@ -538,6 +546,10 @@
     <message>
         <source>Welcome</source>
         <translation>Velkommen</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Velkommen til %1.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>

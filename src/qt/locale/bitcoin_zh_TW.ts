@@ -2304,10 +2304,6 @@
         <translation>盡可能送出不用付手續費的交易(預設值: %u)</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block cost (default: %d)</source>
-        <translation>設定區塊成本(BIP141)的最大值(預設值: %d)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>顯示所有的除錯選項 (用法: --help --help-debug)</translation>
     </message>

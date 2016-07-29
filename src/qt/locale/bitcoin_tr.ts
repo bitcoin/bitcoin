@@ -2303,10 +2303,6 @@
         <translation>Muameleleri mümkünse ücretsiz olarak gönder (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Set maximum BIP141 block cost (default: %d)</source>
-        <translation>Azami BIP141 blok maliyetini ayarla (varsayılan: %d)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Tüm hata ayıklama seçeneklerini göster (kullanımı: --help -help-debug)</translation>
     </message>

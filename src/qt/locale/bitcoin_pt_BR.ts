@@ -1883,6 +1883,10 @@
         <translation>Lista Branca pares de ligação da máscara de rede dado ou o endereço IP . Pode ser especificado várias vezes.</translation>
     </message>
     <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrompido, recuperação falhou</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool deve ser pelo menos %d MB</translation>
     </message>
@@ -1909,6 +1913,10 @@
     <message>
         <source>Connection options:</source>
         <translation>Opções de conexão:</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Copyright (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1955,6 +1963,22 @@
         <translation>Erro ao inicializar ambiente de banco de dados de carteira %s!</translation>
     </message>
     <message>
+        <source>Error loading %s</source>
+        <translation>Erro ao carregar %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Erro ao carregar %s Carteira corrompida</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Erro ao carregar %s A carteira requer a versão mais nova do %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
+        <translation>Erro ao carregar %s: Você não pode desabilitar HD numa já existente carteira HD.</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Erro ao carregar banco de dados de blocos</translation>
     </message>
@@ -1983,12 +2007,20 @@
         <translation>Endereço -onion inválido: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Valor inválido para -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Valor inválido para -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Mantenha a mempool de transações abaixo de &lt;n&gt; megabytes (padrão: %u)</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Carregando banlist...</translation>
     </message>
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
@@ -2031,6 +2063,10 @@
         <translation>Especifique o arquivo da carteira (dentro do diretório de dados)</translation>
     </message>
     <message>
+        <source>The source code is available from %s.</source>
+        <translation>O código fonte está disponível pelo %s</translation>
+    </message>
+    <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
         <translation>Argumento não suportado -benchmark ignorado, use -debug=bench.</translation>
     </message>
@@ -2061,6 +2097,14 @@
     <message>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Carteira %s reside fora do diretório de dados %s</translation>
+    </message>
+    <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>Opções de depuração/teste da Carteira</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>A Carteira precisou ser reescrita: reinicie o %s para completar</translation>
     </message>
     <message>
         <source>Wallet options:</source>
