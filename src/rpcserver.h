@@ -231,6 +231,7 @@ extern json_spirit::Value darksend(const json_spirit::Array& params, bool fHelp)
 extern json_spirit::Value spork(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternode(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternodelist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value masternodebroadcast(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnbudget(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnbudgetvoteraw(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnfinalbudget(const json_spirit::Array& params, bool fHelp);

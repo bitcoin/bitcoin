@@ -686,41 +686,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
-        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
-            masternodeSync.AddedMasternodeList(mnb.GetHash());
-            return;
-        }
-        mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
-
         int nDoS = 0;
-        if(!mnb.CheckAndUpdate(nDoS)){
-
-            if(nDoS > 0)
-                Misbehaving(pfrom->GetId(), nDoS);
-
-            //failed
-            return;
-        }
-
-        // make sure the vout that was signed is related to the transaction that spawned the Masternode
-        //  - this is expensive, so it's only done once per Masternode
-        if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
-            LogPrintf("mnb - Got mismatched pubkey and vin\n");
-            Misbehaving(pfrom->GetId(), 33);
-            return;
-        }
-
-        // make sure it's still unspent
-        //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-        if(mnb.CheckInputsAndAdd(nDoS)) {
-            // use this as a peer
-            addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
-            masternodeSync.AddedMasternodeList(mnb.GetHash());
+        if (CheckMnbAndUpdateMasternodeList(mnb, nDoS)) {
+            // use announced Masternode as a peer
+             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
         } else {
-            LogPrintf("mnb - Rejected Masternode entry %s\n", mnb.addr.ToString());
-
-            if (nDoS > 0)
-                Misbehaving(pfrom->GetId(), nDoS);
+            if(nDoS > 0) Misbehaving(pfrom->GetId(), nDoS);
         }
     }
 
@@ -832,4 +803,58 @@ std::string CMasternodeMan::ToString() const
             ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
+}
+
+void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
+    mapSeenMasternodePing.insert(make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
+    mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+    masternodeSync.AddedMasternodeList(mnb.GetHash());
+
+    LogPrintf("CMasternodeMan::UpdateMasternodeList() - addr: %s\n    vin: %s\n", mnb.addr.ToString(), mnb.vin.ToString());
+
+    CMasternode* pmn = Find(mnb.vin);
+    if(pmn == NULL)
+    {
+        CMasternode mn(mnb);
+        Add(mn);
+    } else {
+        pmn->UpdateFromNewBroadcast(mnb);
+    }
+}
+
+bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos) {
+    nDos = 0;
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
+
+    if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+        masternodeSync.AddedMasternodeList(mnb.GetHash());
+        return true;
+    }
+    mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
+
+    if(!mnb.CheckAndUpdate(nDos)){
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
+        return false;
+    }
+
+    // make sure the vout that was signed is related to the transaction that spawned the Masternode
+    //  - this is expensive, so it's only done once per Masternode
+    if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
+        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Got mismatched pubkey and vin\n");
+        nDos = 33;
+        return false;
+    }
+
+    // make sure it's still unspent
+    //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
+    if(mnb.CheckInputsAndAdd(nDos)) {
+        masternodeSync.AddedMasternodeList(mnb.GetHash());
+    } else {
+        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Rejected Masternode entry %s\n", mnb.addr.ToString());
+        return false;
+    }
+
+    return true;
 }
