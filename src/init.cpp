@@ -109,7 +109,9 @@ volatile bool fRequestShutdown = false;
 void StartShutdown()
 {
     fRequestShutdown = true;
+#ifdef ENABLE_WALLET
     fGenerate = false;
+#endif
 }
 bool ShutdownRequested()
 {
