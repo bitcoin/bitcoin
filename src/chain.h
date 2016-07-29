@@ -284,13 +284,16 @@ public:
 class CDiskBlockIndex : public CBlockIndex
 {
 public:
+    uint256 hash;
     uint256 hashPrev;
 
     CDiskBlockIndex() {
+        hash = uint256();
         hashPrev = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+        hash = (hash == uint256() ? pindex->GetBlockHash() : hash);
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
@@ -311,6 +314,8 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
 
+        // block hash
+        READWRITE(hash);
         // block header
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
@@ -322,6 +327,8 @@ public:
 
     uint256 GetBlockHash() const
     {
+        if(hash != uint256()) return hash;
+        // should never really get here, keeping this as a fallback
         CBlockHeader block;
         block.nVersion        = nVersion;
         block.hashPrevBlock   = hashPrev;
