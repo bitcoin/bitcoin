@@ -9,7 +9,10 @@
 #include "walletmodeltransaction.h"
 
 #include "support/allocators/secure.h"
-#include "wallet/wallet.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h" // for COutput
+#endif
 
 
 #include <map>
@@ -138,7 +141,9 @@ public:
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
     CAmount getWatchImmatureBalance() const;
+#ifdef ENABLE_WALLET
     std::vector<COutput> GetTermDepositInfo() const;
+#endif // ENABLE_WALLET
 
     EncryptionStatus getEncryptionStatus() const;
 
@@ -232,9 +237,11 @@ private:
     void checkBalanceChanged();
 
 Q_SIGNALS:
+#ifdef ENABLE_WALLET
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, std::vector<COutput> termDepositInfo);
+#endif // ENABLE_WALLET
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
