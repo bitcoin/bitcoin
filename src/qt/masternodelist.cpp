@@ -99,7 +99,7 @@ void MasternodeList::StartAlias(std::string strAlias)
             std::string errorMessage;
             CMasternodeBroadcast mnb;
 
-            bool result = activeMasternode.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+            bool result = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
             if(result) {
                 statusObj += "<br>Successfully started masternode." ;
@@ -135,7 +135,7 @@ void MasternodeList::StartAll(std::string strCommand)
 
         if(strCommand == "start-missing" && pmn) continue;
 
-        bool result = activeMasternode.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+        bool result = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
         if(result) {
             successful++;

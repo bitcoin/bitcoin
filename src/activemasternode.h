@@ -29,9 +29,6 @@ private:
     /// Ping Masternode
     bool SendMasternodePing(std::string& errorMessage);
 
-    /// Create Masternode broadcast, needs to be relayed manually after that
-    bool CreateBroadcast(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &errorMessage, CMasternodeBroadcast &mnb);
-
 public:
     // Initialized by init.cpp
     // Keys for the main Masternode
@@ -54,8 +51,6 @@ public:
     void ManageStatus(); 
     std::string GetStatus();
 
-    /// Create Masternode broadcast, needs to be relayed manually after that
-    bool CreateBroadcast(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage, CMasternodeBroadcast &mnb, bool fOffline = false);
 
     /// Enable cold wallet mode (run a Masternode with no funds)
     bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);

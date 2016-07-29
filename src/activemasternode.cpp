@@ -107,7 +107,7 @@ void CActiveMasternode::ManageStatus()
 
             // send to all nodes
             CMasternodeBroadcast mnb;
-            if(!CreateBroadcast(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb)) {
+            if(!CMasternodeBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb)) {
                 notCapableReason = "Error on CreateBroadcast: " + errorMessage;
                 LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 return;
@@ -193,77 +193,6 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
         notCapableReason = errorMessage;
         return false;
     }
-
-}
-
-bool CActiveMasternode::CreateBroadcast(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage, CMasternodeBroadcast &mnb, bool fOffline) {
-    CTxIn vin;
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-    CPubKey pubKeyMasternode;
-    CKey keyMasternode;
-
-    //need correct blocks to send ping
-    if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
-        errorMessage = "Sync in progress. Must wait until sync is complete to start Masternode";
-        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    if(!darkSendSigner.SetKey(strKeyMasternode, errorMessage, keyMasternode, pubKeyMasternode))
-    {
-        errorMessage = strprintf("Can't find keys for masternode %s - %s", strService, errorMessage);
-        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    if(!pwalletMain->GetMasternodeVinAndKeys(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
-        errorMessage = strprintf("Could not allocate vin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
-        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    CService service = CService(strService);
-    int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if(service.GetPort() != mainnetDefaultPort) {
-            errorMessage = strprintf("Invalid port %u for masternode %s - only %d is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
-            LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
-            return false;
-        }
-    } else if(service.GetPort() == mainnetDefaultPort) {
-        errorMessage = strprintf("Invalid port %u for masternode %s - %d is only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
-        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
-        return false;
-    }
-
-    addrman.Add(CAddress(service), CNetAddr("127.0.0.1"), 2*60*60);
-
-    return CreateBroadcast(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb);
-}
-
-bool CActiveMasternode::CreateBroadcast(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &errorMessage, CMasternodeBroadcast &mnb) {
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    CMasternodePing mnp(vin);
-    if(!mnp.Sign(keyMasternode, pubKeyMasternode)){
-        errorMessage = strprintf("Failed to sign ping, vin: %s", vin.ToString());
-        LogPrintf("CActiveMasternode::CreateBroadcast() -  %s\n", errorMessage);
-        mnb = CMasternodeBroadcast();
-        return false;
-    }
-
-    mnb = CMasternodeBroadcast(service, vin, pubKeyCollateralAddress, pubKeyMasternode, PROTOCOL_VERSION);
-    mnb.lastPing = mnp;
-    if(!mnb.Sign(keyCollateralAddress)){
-        errorMessage = strprintf("Failed to sign broadcast, vin: %s", vin.ToString());
-        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
-        mnb = CMasternodeBroadcast();
-        return false;
-    }
-
-    return true;
 }
 
 // when starting a Masternode, this can enable to run as a hot wallet with no funds

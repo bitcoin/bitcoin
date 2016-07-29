@@ -290,6 +290,10 @@ public:
     CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
     CMasternodeBroadcast(const CMasternode& mn);
 
+    /// Create Masternode broadcast, needs to be relayed manually after that
+    static bool Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorMessage, CMasternodeBroadcast &mnb);
+    static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CMasternodeBroadcast &mnb, bool fOffline = false);
+
     bool CheckAndUpdate(int& nDos);
     bool CheckInputsAndAdd(int& nDos);
     bool Sign(CKey& keyCollateralAddress);

@@ -354,6 +354,75 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     nLastScanningErrorBlockHeight = mn.nLastScanningErrorBlockHeight;
 }
 
+bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CMasternodeBroadcast &mnb, bool fOffline)
+{
+    CTxIn txin;
+    CPubKey pubKeyCollateral;
+    CKey keyCollateral;
+    CPubKey pubKeyMasternodeNew;
+    CKey keyMasternodeNew;
+
+    //need correct blocks to send ping
+    if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
+        strErrorMessage = "Sync in progress. Must wait until sync is complete to start Masternode";
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
+    if(!darkSendSigner.SetKey(strKeyMasternode, strErrorMessage, keyMasternodeNew, pubKeyMasternodeNew)) {
+        strErrorMessage = strprintf("Can't find keys for masternode %s, error: %s", strService, strErrorMessage);
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
+    if(!pwalletMain->GetMasternodeVinAndKeys(txin, pubKeyCollateral, keyCollateral, strTxHash, strOutputIndex)) {
+        strErrorMessage = strprintf("Could not allocate txin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
+    CService service = CService(strService);
+    uint16_t mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        if(service.GetPort() != mainnetDefaultPort) {
+            strErrorMessage = strprintf("Invalid port %u for masternode %s, only %u is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
+            LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+            return false;
+        }
+    } else if(service.GetPort() == mainnetDefaultPort) {
+        strErrorMessage = strprintf("Invalid port %u for masternode %s, %u is the only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        return false;
+    }
+
+    return Create(txin, CService(strService), keyCollateral, pubKeyCollateral, keyMasternodeNew, pubKeyMasternodeNew, strErrorMessage, mnb);
+}
+
+bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorMessage, CMasternodeBroadcast &mnb)
+{
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
+
+    CMasternodePing mnp(txin);
+    if(!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew)) {
+        strErrorMessage = strprintf("Failed to sign ping: %s", txin.ToString());
+        LogPrintf("CMasternodeBroadcast::Create --  %s\n", strErrorMessage);
+        mnb = CMasternodeBroadcast();
+        return false;
+    }
+
+    mnb = CMasternodeBroadcast(service, txin, pubKeyCollateral, pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnb.lastPing = mnp;
+    if(!mnb.Sign(keyCollateral)) {
+        strErrorMessage = strprintf("Failed to sign broadcast: %s", txin.ToString());
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        mnb = CMasternodeBroadcast();
+        return false;
+    }
+
+    return true;
+}
+
 bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
 {
     nDos = 0;
