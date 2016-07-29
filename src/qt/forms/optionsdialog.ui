@@ -248,7 +248,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="anonymizeDash">
+          <widget class="QSpinBox" name="privateSendAmount">
            <property name="minimum">
             <number>2</number>
            </property>

@@ -121,16 +121,16 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-privatesendrounds");
     nPrivateSendRounds = settings.value("nPrivateSendRounds").toInt();
 
-    if (!settings.contains("nAnonymizeDashAmount")) {
+    if (!settings.contains("nPrivateSendAmount")) {
         // for migration from old settings
-        if (!settings.contains("nAnonymizeDarkcoinAmount"))
-            settings.setValue("nAnonymizeDashAmount", 1000);
+        if (!settings.contains("nAnonymizeDashAmount"))
+            settings.setValue("nPrivateSendAmount", 1000);
         else
-            settings.setValue("nAnonymizeDashAmount", settings.value("nAnonymizeDarkcoinAmount").toInt());
+            settings.setValue("nPrivateSendAmount", settings.value("nAnonymizeDashAmount").toInt());
     }
-    if (!SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDashAmount").toString().toStdString()))
-        addOverriddenOption("-anonymizedashamount");
-    nAnonymizeDashAmount = settings.value("nAnonymizeDashAmount").toInt();
+    if (!SoftSetArg("-privatesendamount", settings.value("nPrivateSendAmount").toString().toStdString()))
+        addOverriddenOption("-privatesendamount");
+    nPrivateSendAmount = settings.value("nPrivateSendAmount").toInt();
 
     if (!settings.contains("fPrivateSendMultiSession"))
         settings.setValue("fPrivateSendMultiSession", fPrivateSendMultiSession);
@@ -253,8 +253,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return fShowAdvancedPSUI;
         case PrivateSendRounds:
             return settings.value("nPrivateSendRounds");
-        case AnonymizeDashAmount:
-            return settings.value("nAnonymizeDashAmount");
+        case PrivateSendAmount:
+            return settings.value("nPrivateSendAmount");
         case ShowMasternodesTab:
             return settings.value("fShowMasternodesTab");
         case PrivateSendMultiSession:
@@ -394,12 +394,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 Q_EMIT privateSendRoundsChanged();
             }
             break;
-        case AnonymizeDashAmount:
-            if (settings.value("nAnonymizeDashAmount") != value)
+        case PrivateSendAmount:
+            if (settings.value("nPrivateSendAmount") != value)
             {
-                nAnonymizeDashAmount = value.toInt();
-                settings.setValue("nAnonymizeDashAmount", nAnonymizeDashAmount);
-                Q_EMIT anonymizeDashAmountChanged();
+                nPrivateSendAmount = value.toInt();
+                settings.setValue("nPrivateSendAmount", nPrivateSendAmount);
+                Q_EMIT privateSentAmountChanged();
             }
             break;
         case ShowMasternodesTab:

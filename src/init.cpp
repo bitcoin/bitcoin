@@ -559,7 +559,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), fEnablePrivateSend));
     strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), fPrivateSendMultiSession));
     strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), nPrivateSendRounds));
-    strUsage += HelpMessageOpt("-anonymizedashamount=<n>", strprintf(_("Keep N DASH anonymized (default: %u)"), nAnonymizeDashAmount));
+    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N DASH anonymized (default: %u)"), nPrivateSendAmount));
     strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider));
 
     strUsage += HelpMessageGroup(_("InstantSend options:"));
@@ -866,8 +866,8 @@ void InitParameterInteraction()
         LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", nLiqProvTmp);
         mapArgs["-privatesendrounds"] = "99999";
         LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=99999\n", nLiqProvTmp);
-        mapArgs["-anonymizedashamount"] = "999999";
-        LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -anonymizedashamount=999999\n", nLiqProvTmp);
+        mapArgs["-privatesendamount"] = "999999";
+        LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=999999\n", nLiqProvTmp);
         mapArgs["-privatesendmultisession"] = "0";
         LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", nLiqProvTmp);
     }
@@ -1829,8 +1829,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     fPrivateSendMultiSession = GetBoolArg("-privatesendmultisession", fPrivateSendMultiSession);
     nPrivateSendRounds = GetArg("-privatesendrounds", nPrivateSendRounds);
     nPrivateSendRounds = std::min(std::max(nPrivateSendRounds, 1), 99999);
-    nAnonymizeDashAmount = GetArg("-anonymizedashamount", nAnonymizeDashAmount);
-    nAnonymizeDashAmount = std::min(std::max(nAnonymizeDashAmount, 2), 999999);
+    nPrivateSendAmount = GetArg("-privatesendamount", nPrivateSendAmount);
+    nPrivateSendAmount = std::min(std::max(nPrivateSendAmount, 2), 999999);
 
     fEnableInstantSend = GetBoolArg("-enableinstantsend", fEnableInstantSend);
     nInstantSendDepth = GetArg("-instantsenddepth", nInstantSendDepth);
@@ -1845,7 +1845,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantSendDepth %d\n", nInstantSendDepth);
     LogPrintf("PrivateSend rounds %d\n", nPrivateSendRounds);
-    LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDashAmount);
+    LogPrintf("PrivateSend amount %d\n", nPrivateSendAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode);
 
     darkSendPool.InitDenominations();

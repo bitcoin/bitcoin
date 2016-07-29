@@ -37,7 +37,7 @@ extern bool fLiteMode;
 extern bool fEnableInstantSend;
 extern int nInstantSendDepth;
 extern int nPrivateSendRounds;
-extern int nAnonymizeDashAmount;
+extern int nPrivateSendAmount;
 extern int nLiquidityProvider;
 extern int nWalletBackups;
 extern bool fEnablePrivateSend;

@@ -109,7 +109,7 @@ bool fLiteMode = false;
 bool fEnableInstantSend = true;
 int nInstantSendDepth = 5;
 int nPrivateSendRounds = 2;
-int nAnonymizeDashAmount = 1000;
+int nPrivateSendAmount = 1000;
 int nLiquidityProvider = 0;
 /**
     nWalletBackups:
