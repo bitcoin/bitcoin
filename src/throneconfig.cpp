@@ -11,7 +11,7 @@ void CThroneConfig::add(std::string alias, std::string ip, std::string privKey, 
     entries.push_back(cme);
 }
 
-bool CThroneConfig::read(std::string& strErr) {
+bool CThroneConfig::read(boost::filesystem::path path) {
     boost::filesystem::ifstream streamConfig(GetThroneConfigFile());
     if (!streamConfig.good()) {
         return true; // No throne.conf file is OK
@@ -25,7 +25,7 @@ bool CThroneConfig::read(std::string& strErr) {
         std::istringstream iss(line);
         std::string alias, ip, privKey, txHash, outputIndex;
         if (!(iss >> alias >> ip >> privKey >> txHash >> outputIndex)) {
-            strErr = "Could not parse throne.conf line: " + line;
+            LogPrintf( "Could not parse throne.conf line: %s\n", line.c_str());
             streamConfig.close();
             return false;
         }
