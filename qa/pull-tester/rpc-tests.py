@@ -118,6 +118,7 @@ testScripts = [
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
+    'wallet-dump.py',
     'listtransactions.py',
     # vv Tests less than 60s vv
     'sendheaders.py', # NOTE: needs dash_hash to pass
