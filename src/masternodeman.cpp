@@ -344,33 +344,34 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     return pBestMasternode;
 }
 
-CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion)
+CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int nProtocolVersion)
 {
     LOCK(cs);
 
-    protocolVersion = protocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : protocolVersion;
+    nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
-    int nCountEnabled = CountEnabled(protocolVersion);
-    LogPrintf("CMasternodeMan::FindRandomNotInVec - nCountEnabled - vecToExclude.size() %d\n", nCountEnabled - vecToExclude.size());
-    if(nCountEnabled - vecToExclude.size() < 1) return NULL;
+    int nCountEnabled = CountEnabled(nProtocolVersion);
+    int nCountNotExcluded = nCountEnabled - vecToExclude.size();
 
-    int rand = GetRandInt(nCountEnabled - vecToExclude.size());
-    LogPrintf("CMasternodeMan::FindRandomNotInVec - rand %d\n", rand);
-    bool found;
+    LogPrintf("CMasternodeMan::FindRandomNotInVec -- %d enabled masternodes, %d masternodes aren't yet exluded\n", nCountEnabled, nCountNotExcluded);
+    if(nCountNotExcluded < 1) return NULL;
 
-    BOOST_FOREACH(CMasternode &mn, vMasternodes) {
-        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
-        found = false;
-        BOOST_FOREACH(CTxIn &usedVin, vecToExclude) {
-            if(mn.vin.prevout == usedVin.prevout) {
-                found = true;
+    std::vector<CMasternode> vMasternodesShuffled = vMasternodes;
+    std::random_shuffle(vMasternodesShuffled.begin(), vMasternodesShuffled.end(), GetRandInt);
+    bool fExclude;
+
+    BOOST_FOREACH(CMasternode &mn, vMasternodesShuffled) {
+        if(mn.protocolVersion < nProtocolVersion || !mn.IsEnabled()) continue;
+        fExclude = false;
+        BOOST_FOREACH(CTxIn &txinToExclude, vecToExclude) {
+            if(mn.vin.prevout == txinToExclude.prevout) {
+                fExclude = true;
                 break;
             }
         }
-        if(found) continue;
-        if(--rand < 1) {
-            return &mn;
-        }
+        if(fExclude) continue;
+        // found the one not in vecToExclude
+        return &mn;
     }
 
     return NULL;
