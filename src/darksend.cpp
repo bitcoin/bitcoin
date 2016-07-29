@@ -1502,14 +1502,13 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             strAutoDenomResult = _("Can't denominate: no compatible inputs left.");
             return false;
         }
-
     }
 
     if(fDryRun) return true;
 
     nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true) + pwalletMain->GetDenominatedBalance() - pwalletMain->GetAnonymizedBalance();
     nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
-    LogPrint("privatesend", "%s -- 'nBalanceNeedsDenominated > nOnlyDenominatedBalance' (%f - (%f + %f - %f = %f) ) = %f\n", __func__,
+    LogPrint("privatesend", "%s -- 'nBalanceNeedsDenominated > 0' (%f - (%f + %f - %f = %f) ) = %f\n", __func__,
                     (float)nBalanceNeedsAnonymized/COIN,
                     (float)pwalletMain->GetDenominatedBalance(true)/COIN,
                     (float)pwalletMain->GetDenominatedBalance()/COIN,
@@ -1716,8 +1715,8 @@ bool CDarksendPool::PrepareDarksendDenominate()
 bool CDarksendPool::MakeCollateralAmounts()
 {
     std::vector<CompactTallyItem> vecTally;
-    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally)) {
-        LogPrint("privatesend", "CWallet::MakeCollateralAmounts() - SelectCoinsGrouppedByAddresses can't find any inputs!\n");
+    if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally, false)) {
+        LogPrint("privatesend", "CDarksendPool::MakeCollateralAmounts() - SelectCoinsGrouppedByAddresses can't find any inputs!\n");
         return false;
     }
 
@@ -1726,7 +1725,7 @@ bool CDarksendPool::MakeCollateralAmounts()
         return true;
     }
 
-    LogPrintf("CWallet::MakeCollateralAmounts() - failed!\n");
+    LogPrintf("CDarksendPool::MakeCollateralAmounts() - failed!\n");
     return false;
 }
 
@@ -1796,7 +1795,7 @@ bool CDarksendPool::CreateDenominated()
 {
     std::vector<CompactTallyItem> vecTally;
     if(!pwalletMain->SelectCoinsGrouppedByAddresses(vecTally)) {
-        LogPrint("privatesend", "CWallet::CreateDenominated() - SelectCoinsGrouppedByAddresses can't find any inputs!\n");
+        LogPrint("privatesend", "CDarksendPool::CreateDenominated() - SelectCoinsGrouppedByAddresses can't find any inputs!\n");
         return false;
     }
 
@@ -1805,7 +1804,7 @@ bool CDarksendPool::CreateDenominated()
         return true;
     }
 
-    LogPrintf("CWallet::CreateDenominated() - failed!\n");
+    LogPrintf("CDarksendPool::CreateDenominated() - failed!\n");
     return false;
 }
 

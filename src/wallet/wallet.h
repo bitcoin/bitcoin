@@ -270,7 +270,6 @@ public:
     mutable bool fCreditCached;
     mutable bool fImmatureCreditCached;
     mutable bool fAvailableCreditCached;
-    mutable bool fAnonymizableCreditCached;
     mutable bool fAnonymizedCreditCached;
     mutable bool fDenomUnconfCreditCached;
     mutable bool fDenomConfCreditCached;
@@ -283,7 +282,6 @@ public:
     mutable CAmount nCreditCached;
     mutable CAmount nImmatureCreditCached;
     mutable CAmount nAvailableCreditCached;
-    mutable CAmount nAnonymizableCreditCached;
     mutable CAmount nAnonymizedCreditCached;
     mutable CAmount nDenomUnconfCreditCached;
     mutable CAmount nDenomConfCreditCached;
@@ -327,7 +325,6 @@ public:
         fCreditCached = false;
         fImmatureCreditCached = false;
         fAvailableCreditCached = false;
-        fAnonymizableCreditCached = false;
         fAnonymizedCreditCached = false;
         fDenomUnconfCreditCached = false;
         fDenomConfCreditCached = false;
@@ -340,7 +337,6 @@ public:
         nCreditCached = 0;
         nImmatureCreditCached = 0;
         nAvailableCreditCached = 0;
-        nAnonymizableCreditCached = 0;
         nAnonymizedCreditCached = 0;
         nDenomUnconfCreditCached = 0;
         nDenomConfCreditCached = 0;
@@ -401,7 +397,6 @@ public:
     {
         fCreditCached = false;
         fAvailableCreditCached = false;
-        fAnonymizableCreditCached = false;
         fAnonymizedCreditCached = false;
         fDenomUnconfCreditCached = false;
         fDenomConfCreditCached = false;
@@ -428,7 +423,6 @@ public:
     CAmount GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const;
     CAmount GetChange() const;
 
-    CAmount GetAnonymizableCredit(bool fUseCache=true) const;
     CAmount GetAnonymizedCredit(bool fUseCache=true) const;
     CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const;
 
@@ -538,6 +532,11 @@ private:
     int64_t nLastResend;
     bool fBroadcastTransactions;
 
+    mutable bool fAnonymizableTallyCached;
+    mutable std::vector<CompactTallyItem> vecAnonymizableTallyCached;
+    mutable bool fAnonymizableTallyCachedNonDenom;
+    mutable std::vector<CompactTallyItem> vecAnonymizableTallyCachedNonDenom;
+
     /**
      * Used to keep track of spent outpoints, and
      * detect and report conflicts (double-spends or
@@ -605,6 +604,10 @@ public:
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
         fWalletUnlockAnonymizeOnly = false;
+        fAnonymizableTallyCached = false;
+        fAnonymizableTallyCachedNonDenom = false;
+        vecAnonymizableTallyCached.clear();
+        vecAnonymizableTallyCachedNonDenom.clear();
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -647,7 +650,7 @@ public:
     bool SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax);
     bool SelectCoinsCollateral(std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet) const ;
     bool SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const;
-    bool SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated = true);
+    bool SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated = true, bool fAnonymizable = true) const;
 
     /// Get 1000DASH input that can be used for the Masternode
     bool GetMasternodeVinAndKeys(CTxIn& vinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");

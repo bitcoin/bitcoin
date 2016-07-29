@@ -686,6 +686,9 @@ void CWallet::MarkDirty()
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
             item.second.MarkDirty();
     }
+
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb)
@@ -819,6 +822,9 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
             boost::thread t(runCommand, strCmd); // thread runs free
         }
 
+        fAnonymizableTallyCached = false;
+        fAnonymizableTallyCachedNonDenom = false;
+
     }
     return true;
 }
@@ -921,6 +927,9 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
         }
     }
 
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
+
     return true;
 }
 
@@ -981,6 +990,9 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
             }
         }
     }
+
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
@@ -998,6 +1010,9 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
         if (mapWallet.count(txin.prevout.hash))
             mapWallet[txin.prevout.hash].MarkDirty();
     }
+
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 
@@ -1659,45 +1674,6 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
     return nCredit;
 }
 
-CAmount CWalletTx::GetAnonymizableCredit(bool fUseCache) const
-{
-    if (pwallet == 0)
-        return 0;
-
-    // Must wait until coinbase is safely deep enough in the chain before valuing it
-    if (IsCoinBase() && GetBlocksToMaturity() > 0)
-        return 0;
-
-    if (fUseCache && fAnonymizableCreditCached)
-        return nAnonymizableCreditCached;
-
-    CAmount nCredit = 0;
-    uint256 hashTx = GetHash();
-    for (unsigned int i = 0; i < vout.size(); i++)
-    {
-        const CTxOut &txout = vout[i];
-        const CTxIn vin = CTxIn(hashTx, i);
-
-        if(pwallet->IsSpent(hashTx, i) || pwallet->IsLockedCoin(hashTx, i)) continue;
-        // do not count MN-like outputs
-        if(fMasterNode && vout[i].nValue == 1000*COIN) continue;
-        // do not count outputs that are 10 times smaller then the smallest denomination
-        // otherwise they will just lead to higher fee / lower priority
-        if(vout[i].nValue <= darkSendDenominations[darkSendDenominations.size() - 1]/10) continue;
-
-        const int rounds = pwallet->GetInputPrivateSendRounds(vin);
-        if(rounds >=-2 && rounds < nPrivateSendRounds) {
-            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAnonamizableCredit() : value out of range");
-        }
-    }
-
-    nAnonymizableCreditCached = nCredit;
-    fAnonymizableCreditCached = true;
-    return nCredit;
-}
-
 CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
 {
     if (pwallet == 0)
@@ -1744,7 +1720,7 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
     int nDepth = GetDepthInMainChain(false);
     if(nDepth < 0) return 0;
 
-    bool isUnconfirmed = !CheckFinalTx(*this) || (!IsTrusted() && nDepth == 0);
+    bool isUnconfirmed = IsTrusted() && nDepth == 0;
     if(unconfirmed != isUnconfirmed) return 0;
 
     if (fUseCache) {
@@ -1913,16 +1889,15 @@ CAmount CWallet::GetAnonymizableBalance() const
 {
     if(fLiteMode) return 0;
 
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            const CWalletTx* pcoin = &(*it).second;
+    std::vector<CompactTallyItem> vecTally;
+    if(!SelectCoinsGrouppedByAddresses(vecTally, false)) return 0;
 
-            if (pcoin->IsTrusted())
-               nTotal += pcoin->GetAnonymizableCredit();
-        }
+    CAmount nTotal = 0;
+
+    BOOST_FOREACH(CompactTallyItem& item, vecTally) {
+        // try to anonymize all denoms and anything greater than sum of 10 smallest denoms
+        if(IsDenominatedAmount(item.nAmount) || item.nAmount >= darkSendDenominations.back() * 10)
+            nTotal += item.nAmount;
     }
 
     return nTotal;
@@ -2618,21 +2593,33 @@ struct CompareByAmount
     }
 };
 
-bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated)
+bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable) const
 {
     LOCK2(cs_main, cs_wallet);
 
-    int nMinDepth = 1;
     isminefilter filter = ISMINE_SPENDABLE;
+
+    // try to use cache
+    if(fAnonymizable) {
+        if(fSkipDenominated && fAnonymizableTallyCachedNonDenom) {
+            vecTallyRet = vecAnonymizableTallyCachedNonDenom;
+            LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for non-denom inputs\n");
+            return true;
+        }
+        if(!fSkipDenominated && fAnonymizableTallyCached) {
+            vecTallyRet = vecAnonymizableTallyCached;
+            LogPrint("selectcoins", "SelectCoinsGrouppedByAddresses - using cache for all inputs\n");
+            return true;
+        }
+    }
 
     // Tally
     map<CBitcoinAddress, CompactTallyItem> mapTally;
-    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
+    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
         const CWalletTx& wtx = (*it).second;
 
-        if(!CheckFinalTx(wtx)) continue;
-        if(wtx.GetDepthInMainChain(false) < nMinDepth) continue;
         if(wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0) continue;
+        if(!fAnonymizable && !wtx.IsTrusted()) continue;
 
         for (unsigned int i = 0; i < wtx.vout.size(); i++) {
             CTxDestination address;
@@ -2642,9 +2629,19 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
             if(!(mine & filter)) continue;
 
             if(IsSpent(wtx.GetHash(), i) || IsLockedCoin(wtx.GetHash(), i)) continue;
-            if(IsCollateralAmount(wtx.vout[i].nValue)) continue;
-            if(fMasterNode && wtx.vout[i].nValue == 1000*COIN) continue;
+
             if(fSkipDenominated && IsDenominatedAmount(wtx.vout[i].nValue)) continue;
+
+            if(fAnonymizable) {
+                // ignore collaterals
+                if(IsCollateralAmount(wtx.vout[i].nValue)) continue;
+                if(fMasterNode && wtx.vout[i].nValue == 1000*COIN) continue;
+                // ignore outputs that are 10 times smaller then the smallest denomination
+                // otherwise they will just lead to higher fee / lower priority
+                if(wtx.vout[i].nValue <= darkSendDenominations.back()/10) continue;
+                // ignore anonymized
+                if(GetInputPrivateSendRounds(CTxIn(wtx.GetHash(), i)) >= nPrivateSendRounds) continue;
+            }
 
             CompactTallyItem& item = mapTally[address];
             item.address = address;
@@ -2657,12 +2654,23 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
     if(mapTally.size() == 0) return false;
 
     // construct resulting vector
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CompactTallyItem)& item, mapTally) {
+    vecTallyRet.clear();
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CompactTallyItem)& item, mapTally)
         vecTallyRet.push_back(item.second);
-    }
 
     // order by amounts per address, from smallest to largest
     sort(vecTallyRet.rbegin(), vecTallyRet.rend(), CompareByAmount());
+
+    // cache anonymizable for later use
+    if(fAnonymizable) {
+        if(fSkipDenominated) {
+            vecAnonymizableTallyCachedNonDenom = vecTallyRet;
+            fAnonymizableTallyCachedNonDenom = true;
+        } else {
+            vecAnonymizableTallyCached = vecTallyRet;
+            fAnonymizableTallyCached = true;
+        }
+    }
 
     // debug
     std::string strMessage = "SelectCoinsGrouppedByAddresses - vecTallyRet:\n";
@@ -4011,6 +4019,9 @@ void CWallet::LockCoin(COutPoint& output)
     setLockedCoins.insert(output);
     std::map<uint256, CWalletTx>::iterator it = mapWallet.find(output.hash);
     if (it != mapWallet.end()) it->second.MarkDirty(); // recalculate all credits for this tx
+
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 void CWallet::UnlockCoin(COutPoint& output)
@@ -4019,6 +4030,9 @@ void CWallet::UnlockCoin(COutPoint& output)
     setLockedCoins.erase(output);
     std::map<uint256, CWalletTx>::iterator it = mapWallet.find(output.hash);
     if (it != mapWallet.end()) it->second.MarkDirty(); // recalculate all credits for this tx
+
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 void CWallet::UnlockAllCoins()
