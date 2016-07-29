@@ -88,6 +88,9 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fShowAdvancedPSUI", false);
     fShowAdvancedPSUI = settings.value("fShowAdvancedPSUI", false).toBool();
 
+    if (!settings.contains("fLowKeysWarning"))
+        settings.setValue("fLowKeysWarning", true);
+
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //
@@ -251,6 +254,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("bSpendZeroConfChange");
         case ShowAdvancedPSUI:
             return fShowAdvancedPSUI;
+        case LowKeysWarning:
+            return settings.value("fLowKeysWarning");
         case PrivateSendRounds:
             return settings.value("nPrivateSendRounds");
         case PrivateSendAmount:
@@ -385,6 +390,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fShowAdvancedPSUI = value.toBool();
             settings.setValue("fShowAdvancedPSUI", fShowAdvancedPSUI);
             Q_EMIT advancedPSUIChanged(fShowAdvancedPSUI);
+            break;
+        case LowKeysWarning:
+            settings.setValue("fLowKeysWarning", value);
             break;
         case PrivateSendRounds:
             if (settings.value("nPrivateSendRounds") != value)

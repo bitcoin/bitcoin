@@ -463,13 +463,18 @@ void OverviewPage::privateSendStatus()
 
     // Warn user that wallet is running out of keys
     if (nWalletBackups > 0 && pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING) {
-        QString strWarn =   tr("Very low number of keys left since last automatic backup!") + "<br><br>" +
-                            tr("We are about to create a new automatic backup for you, however "
-                               "<span style='color:red;'> you should always make sure you have backups "
-                               "saved in some safe place</span>!");
-        ui->labelPrivateSendEnabled->setToolTip(strWarn);
-        LogPrintf("OverviewPage::privateSendStatus - Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
-        QMessageBox::warning(this, tr("PrivateSend"), strWarn, QMessageBox::Ok, QMessageBox::Ok);
+        QSettings settings;
+        if(settings.value("fLowKeysWarning").toBool()) {
+            QString strWarn =   tr("Very low number of keys left since last automatic backup!") + "<br><br>" +
+                                tr("We are about to create a new automatic backup for you, however "
+                                   "<span style='color:red;'> you should always make sure you have backups "
+                                   "saved in some safe place</span>!") + "<br><br>" +
+                                tr("Note: You turn this message off in options.");
+            ui->labelPrivateSendEnabled->setToolTip(strWarn);
+            LogPrintf("OverviewPage::privateSendStatus -- Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
+            QMessageBox::warning(this, tr("PrivateSend"), strWarn, QMessageBox::Ok, QMessageBox::Ok);
+        } else
+            LogPrintf("OverviewPage::privateSendStatus -- Very low number of keys left since last automatic backup, skipping warning and trying to create new backup...\n");
 
         std::string warningString;
         std::string errorString;
