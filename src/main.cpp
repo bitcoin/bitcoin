@@ -56,7 +56,7 @@
 using namespace std;
 
 #if defined(NDEBUG)
-# error "Dash cannot be compiled without assertions."
+# error "Dash Core cannot be compiled without assertions."
 #endif
 
 /**

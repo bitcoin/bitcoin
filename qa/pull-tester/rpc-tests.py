@@ -129,7 +129,7 @@ testScriptsExt = [
     'p2p-acceptblock.py', # TODO: works, needs dash_hash
     'mempool_packages.py',
     'maxuploadtarget.py',
-    # 'replace-by-fee.py', # RBF is disabled in Dash
+    # 'replace-by-fee.py', # RBF is disabled in Dash Core
 ]
 
 #Enable ZMQ tests

@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is also recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Dash Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"Dash Core Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

@@ -37,7 +37,7 @@ for help and more information.
 
 Building
 ---------------------
-The following are developer notes on how to build Dash on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Dash Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
@@ -47,7 +47,7 @@ The following are developer notes on how to build Dash on your native platform. 
 
 Development
 ---------------------
-The Dash repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The Dash Core repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)

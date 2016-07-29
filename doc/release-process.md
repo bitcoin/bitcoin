@@ -15,7 +15,7 @@ Check out the source code in the following directory hierarchy.
 	git clone https://github.com/devrandom/gitian-builder.git
 	git clone https://github.com/dashpay/dash.git
 
-###Dash maintainers/release engineers, update (commit) version in sources
+###Dash Core maintainers/release engineers, update (commit) version in sources
 
 	pushd ./dash
 	contrib/verifysfbinaries/verify.sh

@@ -1,7 +1,7 @@
-TOR SUPPORT IN DASH
+TOR SUPPORT IN DASH CORE
 =======================
 
-It is possible to run Dash as a Tor hidden service, and connect to such services.
+It is possible to run Dash Core as a Tor hidden service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many
 distributions default to having a SOCKS proxy listening on port 9050, but others
@@ -10,10 +10,10 @@ port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.htm
 for how to properly configure Tor.
 
 
-1. Run dash behind a Tor proxy
+1. Run Dash Core behind a Tor proxy
 ----------------------------------
 
-The first step is running Dash behind a Tor proxy. This will already make all
+The first step is running Dash Core behind a Tor proxy. This will already make all
 outgoing connections be anonymized, but more is possible.
 
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -44,7 +44,7 @@ In a typical situation, this suffices to run behind a Tor proxy:
 	./dashd -proxy=127.0.0.1:9050
 
 
-2. Run a dash hidden server
+2. Run a Dash Core hidden server
 -------------------------------
 
 If you configure your Tor system accordingly, it is possible to make your node also
@@ -58,7 +58,7 @@ config file):
 The directory can be different of course, but (both) port numbers should be equal to
 your dashd's P2P listen port (9999 by default).
 
-	-externalip=X   You can tell dash about its publicly reachable address using
+	-externalip=X   You can tell Dash Core about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
 	                configuration, you can find your onion address in
 	                /var/lib/tor/dash-service/hostname. Onion addresses are given
@@ -99,7 +99,7 @@ for normal IPv4/IPv6 communication, use:
 	./dashd -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
 
-3. List of known dash Tor relays
+3. List of known Dash Core Tor relays
 ------------------------------------
 
 * [darkcoinie7ghp67.onion](http://darkcoinie7ghp67.onion/)

@@ -1357,7 +1357,7 @@ void ThreadMapPort()
             }
         }
 
-        string strDesc = "Dash " + FormatFullVersion();
+        string strDesc = "Dash Core " + FormatFullVersion();
 
         try {
             while (true) {

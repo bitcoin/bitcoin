@@ -36,14 +36,14 @@ Instructions: Homebrew
 
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. As such, building with Qt5 is recommended.
 
-### Building `dash`
+### Building `Dash Core`
 
 1. Clone the GitHub tree to get the source code and go into the directory.
 
         git clone https://github.com/dashpay/dash.git
         cd dash
 
-2.  Build dash-core:
+2.  Build Dash Core:
     This will configure and build the headless dash binaries as well as the gui (if Qt is found).
     You can disable the gui build by passing `--without-gui` to configure.
 
@@ -81,7 +81,7 @@ You can ignore this section if you are building `dashd` for your own use.
 
 dashd/dash-cli binaries are not included in the Dash-Qt.app bundle.
 
-If you are building `dashd` or `Dsah Core` for others, your build machine should be set up
+If you are building `dashd` or `Dash Core` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
