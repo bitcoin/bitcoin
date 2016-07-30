@@ -54,6 +54,9 @@ inline int64_t ConvertTo64(const uint256& number)
  */
 inline uint256 DivideAndRoundUp(const uint256& numerator, const uint256& denominator)
 {
+    if (numerator == 0) {
+        return uint256(0);
+    }
     return uint256_const::one + (numerator - uint256_const::one) / denominator;
 }
 
