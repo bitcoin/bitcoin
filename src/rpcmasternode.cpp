@@ -138,9 +138,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         CService addr = CService(strAddress);
 
-        CNode *pnode = ConnectNode((CAddress)addr, NULL, false);
-        if(pnode){
-            pnode->Release();
+        CNode *pnode = ConnectNode((CAddress)addr, NULL);
+        if(pnode) {
             return "successfully connected";
         } else {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error connecting");
