@@ -371,7 +371,7 @@ CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude
         }
         if(fExclude) continue;
         // found the one not in vecToExclude
-        return &mn;
+        return Find(mn.vin);
     }
 
     return NULL;
