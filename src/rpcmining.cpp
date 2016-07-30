@@ -610,7 +610,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     }
 
     result.push_back(Pair("masternode_payments", (int64_t)(pindexPrev->nHeight+1) > Params().GetConsensus().nMasternodePaymentsStartBlock));
-    result.push_back(Pair("enforce_masternode_payments", IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
+    result.push_back(Pair("enforce_masternode_payments", sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
 
     return result;
 }

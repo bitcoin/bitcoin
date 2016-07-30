@@ -2896,18 +2896,49 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     return true;
 }
 
-bool DisconnectBlocksAndReprocess(int blocks)
+bool DisconnectBlocks(int blocks)
 {
     LOCK(cs_main);
 
     CValidationState state;
     const CChainParams& chainparams = Params();
 
-    LogPrintf("DisconnectBlocksAndReprocess: Got command to replay %d blocks\n", blocks);
+    LogPrintf("DisconnectBlocks -- Got command to replay %d blocks\n", blocks);
     for(int i = 0; i <= blocks; i++)
         DisconnectTip(state, chainparams.GetConsensus());
 
     return true;
+}
+
+void ReprocessBlocks(int nBlocks)
+{
+    std::map<uint256, int64_t>::iterator it = mapRejectedBlocks.begin();
+    while(it != mapRejectedBlocks.end()){
+        //use a window twice as large as is usual for the nBlocks we want to reset
+        if((*it).second  > GetTime() - (nBlocks*60*5)) {
+            BlockMap::iterator mi = mapBlockIndex.find((*it).first);
+            if (mi != mapBlockIndex.end() && (*mi).second) {
+                LOCK(cs_main);
+
+                CBlockIndex* pindex = (*mi).second;
+                LogPrintf("ReprocessBlocks -- %s\n", (*it).first.ToString());
+
+                CValidationState state;
+                ReconsiderBlock(state, pindex);
+            }
+        }
+        ++it;
+    }
+
+    CValidationState state;
+    {
+        LOCK(cs_main);
+        DisconnectBlocks(nBlocks);
+    }
+
+    if (state.IsValid()) {
+        ActivateBestChain(state, Params());
+    }
 }
 
 /**
@@ -3443,7 +3474,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    if(IsSporkActive(SPORK_3_INSTANTX_BLOCK_FILTERING)){
+    if(sporkManager.IsSporkActive(SPORK_3_INSTANTX_BLOCK_FILTERING)){
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 //only reject blocks when it's based on complete consensus
@@ -5917,7 +5948,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
             mnpayments.ProcessMessage(pfrom, strCommand, vRecv);
             ProcessMessageInstantX(pfrom, strCommand, vRecv);
-            ProcessSpork(pfrom, strCommand, vRecv);
+            sporkManager.ProcessSpork(pfrom, strCommand, vRecv);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv);
         }

@@ -293,8 +293,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 
-        if(recipients[0].useInstantX && total > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
-            Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.").arg(GetSporkValue(SPORK_5_MAX_VALUE)),
+        if(recipients[0].useInstantX && total > sporkManager.GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
+            Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.").arg(sporkManager.GetSporkValue(SPORK_5_MAX_VALUE)),
                          CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
         }
@@ -304,8 +304,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
 
-        if(recipients[0].useInstantX && newTx->GetValueOut() > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
-            Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.").arg(GetSporkValue(SPORK_5_MAX_VALUE)),
+        if(recipients[0].useInstantX && newTx->GetValueOut() > sporkManager.GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
+            Q_EMIT message(tr("Send Coins"), tr("InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.").arg(sporkManager.GetSporkValue(SPORK_5_MAX_VALUE)),
                          CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
         }

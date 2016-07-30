@@ -1,18 +1,13 @@
-
 // Copyright (c) 2009-2012 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef SPORK_H
 #define SPORK_H
 
-#include "base58.h"
 #include "hash.h"
-#include "protocol.h"
-#include "util.h"
+#include "net.h"
 #include "utilstrencodings.h"
-
-using namespace std;
-using namespace boost;
 
 /*
     Don't ever reuse these IDs for other sporks
@@ -42,37 +37,35 @@ using namespace boost;
 #define SPORK_11_RESET_BUDGET_DEFAULT                         0
 #define SPORK_12_RECONSIDER_BLOCKS_DEFAULT                    0
 #define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   4070908800   //OFF
-    
+
 class CSporkMessage;
 class CSporkManager;
 
 extern std::map<uint256, CSporkMessage> mapSporks;
-extern std::map<int, CSporkMessage> mapSporksActive;
 extern CSporkManager sporkManager;
 
-void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-int64_t GetSporkValue(int nSporkID);
-bool IsSporkActive(int nSporkID);
-void ExecuteSpork(int nSporkID, int nValue);
-void ReprocessBlocks(int nBlocks);
-
 //
-// Spork Class
-// Keeps track of all of the network spork settings
+// Spork classes
+// Keep track of all of the network spork settings
 //
 
 class CSporkMessage
 {
-public:
+private:
     std::vector<unsigned char> vchSig;
+
+public:
     int nSporkID;
     int64_t nValue;
     int64_t nTimeSigned;
 
-    uint256 GetHash(){
-        uint256 n = HashX11(BEGIN(nSporkID), END(nTimeSigned));
-        return n;
-    }
+    CSporkMessage(int nSporkID, int64_t nValue, int64_t nTimeSigned) : nSporkID(nSporkID), nValue(nValue), nTimeSigned(nTimeSigned) {}
+    CSporkMessage() : nSporkID(0), nValue(0), nTimeSigned(0) {}
+
+    uint256 GetHash() { return HashX11(BEGIN(nSporkID), END(nTimeSigned)); }
+    bool Sign(std::string strSignKey);
+    bool CheckSignature();
+    void Relay();
 
     ADD_SERIALIZE_METHODS;
 
@@ -91,20 +84,22 @@ class CSporkManager
 private:
     std::vector<unsigned char> vchSig;
     std::string strMasterPrivKey;
+    std::map<int, CSporkMessage> mapSporksActive;
 
 public:
 
-    CSporkManager() {
-    }
+    CSporkManager() {}
 
-    std::string GetSporkNameByID(int id);
-    int GetSporkIDByName(std::string strName);
+    void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ExecuteSpork(int nSporkID, int nValue);
     bool UpdateSpork(int nSporkID, int64_t nValue);
-    bool SetPrivKey(std::string strPrivKey);
-    bool CheckSignature(CSporkMessage& spork);
-    bool Sign(CSporkMessage& spork);
-    void Relay(CSporkMessage& msg);
 
+    bool IsSporkActive(int nSporkID);
+    int64_t GetSporkValue(int nSporkID);
+    int GetSporkIDByName(std::string strName);
+    std::string GetSporkNameByID(int nSporkID);
+
+    bool SetPrivKey(std::string strPrivKey);
 };
 
 #endif

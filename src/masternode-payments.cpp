@@ -52,10 +52,10 @@ bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
     } else { // we're synced and have data so check the budget schedule
 
         //are these blocks even enabled
-        if(!IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
+        if(!sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
             return block.vtx[0].GetValueOut() <= nExpectedValue;
         }
-        
+
         // 12.1
         // if(nHeight >= Params().GetConsensus().nBudgetPaymentsStartBlock &&
         //     budget.IsBudgetPaymentBlock(nHeight)){
@@ -77,14 +77,14 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     }
 
     //check if it's a budget block
-    // 12.1 
-    // if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
+    // 12.1
+    // if(sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
     //     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
     //         if(budget.IsTransactionValid(txNew, nBlockHeight)){
     //             return true;
     //         } else {
-    //             LogPrintf("Invalid budget payment detected %s\n", txNew.ToString());
-    //             if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
+    //             LogPrintf("Invalid budget payment detected %s", txNew.ToString());
+    //             if(sporkManager.IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
     //                 return false;
     //             } else {
     //                 LogPrintf("Budget enforcement is disabled, accepting block\n");
@@ -99,8 +99,8 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     {
         return true;
     } else {
-        LogPrintf("Invalid mn payment detected %s\n", txNew.ToString());
-        if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)){
+        LogPrintf("Invalid mn payment detected %s", txNew.ToString());
+        if(sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)){
             return false;
         } else {
             LogPrintf("Masternode payment enforcement is disabled, accepting block\n");
@@ -118,7 +118,7 @@ void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
     if(!chainActive.Tip()) return;
 
     // 12.1
-    // if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight+1)){
+    // if(sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight+1)){
     //     budget.FillBlockPayee(txNew, nFees);
     // } else {
     //     mnpayments.FillBlockPayee(txNew, nFees);
@@ -130,7 +130,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
 {
     // 12.1 -- added triggered payments
 
-    // if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(nBlockHeight)){
+    // if(sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(nBlockHeight)){
     //     return budget.GetRequiredPaymentsString(nBlockHeight);
     // } else {
     //     return mnpayments.GetRequiredPaymentsString(nBlockHeight);
@@ -181,7 +181,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFe
 }
 
 int CMasternodePayments::GetMinMasternodePaymentsProto() {
-    return IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
+    return sporkManager.IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)
             ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
             : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
 }

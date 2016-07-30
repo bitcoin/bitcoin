@@ -41,7 +41,7 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
-    if(!IsSporkActive(SPORK_2_INSTANTX)) return;
+    if(!sporkManager.IsSporkActive(SPORK_2_INSTANTX)) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::IX)
@@ -192,8 +192,8 @@ bool IsIXTXValid(const CTransaction& txCollateral){
         }
     }
 
-    if(nValueOut > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
-        LogPrint("instantsend", "IsIXTXValid - Transaction value too high - %s\n", txCollateral.ToString());
+    if(nValueOut > sporkManager.GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
+        LogPrint("instantsend", "IsIXTXValid -- Transaction value too high: nValueOut=%d, txCollateral=%s", nValueOut, txCollateral.ToString());
         return false;
     }
 
@@ -508,7 +508,7 @@ bool IsLockedIXTransaction(uint256 txHash) {
 int GetTransactionLockSignatures(uint256 txHash)
 {
     if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
-    if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
+    if(!sporkManager.IsSporkActive(SPORK_2_INSTANTX)) return -3;
     if(!fEnableInstantSend) return -1;
 
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);

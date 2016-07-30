@@ -236,14 +236,14 @@ UniValue spork(const UniValue& params, bool fHelp)
         UniValue ret(UniValue::VOBJ);
         for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
             if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
-                ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), GetSporkValue(nSporkID)));
+                ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), sporkManager.GetSporkValue(nSporkID)));
         }
         return ret;
     } else if(params.size() == 1 && params[0].get_str() == "active"){
         UniValue ret(UniValue::VOBJ);
         for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
             if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
-                ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), IsSporkActive(nSporkID)));
+                ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), sporkManager.IsSporkActive(nSporkID)));
         }
         return ret;
     } else if (params.size() == 2){
@@ -257,7 +257,7 @@ UniValue spork(const UniValue& params, bool fHelp)
 
         //broadcast new spork
         if(sporkManager.UpdateSpork(nSporkID, nValue)){
-            ExecuteSpork(nSporkID, nValue);
+            sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {
             return "failure";
