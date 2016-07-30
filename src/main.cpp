@@ -6145,6 +6145,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
     }
 
+    else if (strCommand == NetMsgType::NOTFOUND) {
+        // We do not care about the NOTFOUND message, but logging an Unknown Command
+        // message would be undesirable as we transmit it ourselves.
+    }
+
     else {
         // Ignore unknown commands for extensibility
         LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
