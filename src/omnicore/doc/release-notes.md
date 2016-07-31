@@ -1,7 +1,9 @@
-Omni Core v0.0.11
-=================
+Omni Core v0.0.11.1
+===================
 
-v0.0.11 is a major release and consensus critical in terms of the Omni Layer protocol rules. An upgrade is mandatory, and highly recommended. Prior releases will not be compatible with new behavior in this release.
+v0.0.11.1 is a bugfix release which resolves a critical bug in the RPC API whereby under certain circumstances retrieving data about a sell offer may trigger a failsafe and cause the automatic shutdown of the client.
+
+This version is built on top of v0.0.11, which is a major release and consensus critical in terms of the Omni Layer protocol rules. An upgrade is mandatory, and highly recommended. Prior releases will not be compatible with new behavior in this release.
 
 Please report bugs using the issue tracker on GitHub:
 
@@ -10,7 +12,7 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.0.11](#omni-core-v0011)
+- [Omni Core v0.0.11.1](#omni-core-v00111)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
@@ -155,6 +157,7 @@ Various smaller improvements were added Omni Core 0.0.11, such as:
 - Fix Travis CI builds without cache
 - Fix syntax error in walletdb key parser
 - Fix too-aggressive database clean in block reorganization events
+- Fix issues related to `omni_gettransaction` and `getactivedexsells`
 
 Change log
 ==========
@@ -204,6 +207,8 @@ The following list includes relevant pull requests merged into this release:
 - #403 Add consensus hash for block 420,000
 - #405 Use uint256 when calculating desired BTC for DEx 1
 - #404 Bump version to Omni Core 0.0.11-rel
+- #409 Protect uint256 plain integer math
+- #411 Bump version to Omni Core 0.0.11.1-rel
 ```
 
 Credits

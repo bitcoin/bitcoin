@@ -21,10 +21,10 @@
 #define OMNICORE_VERSION_MINOR       11
 
 // Increase with every patch, which is not a feature or consensus affecting
-#define OMNICORE_VERSION_PATCH       0
+#define OMNICORE_VERSION_PATCH       1
 
 // Non-public build number/revision (usually zero)
-#define OMNICORE_VERSION_BUILD       1
+#define OMNICORE_VERSION_BUILD       0
 
 // Use "dev" for development versions, switch to "rc" for release candidates
 #define OMNICORE_VERSION_STATUS      rel
