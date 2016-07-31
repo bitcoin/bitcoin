@@ -4786,7 +4786,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     // Send block from disk
                     CBlock block;
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-                        assert(!"cannot load block from disk");
+                        // assert(!"cannot load block from disk");
+                        { LogPrintf("%s: cannot load block from disk\n", __func__); break; }
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, block);
                     else if (inv.type == MSG_WITNESS_BLOCK)
