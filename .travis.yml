@@ -33,7 +33,7 @@ env:
 # 32-bit + dash
     - HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc python3-zmq openjdk-7-jre-headless" DEP_OPTS="NO_QT=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
 # Win64
-    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=0" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6 bc openjdk-7-jre-headless" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
+    - HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.6 bc openjdk-7-jre-headless" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
 # bitcoind
     - HOST=x86_64-unknown-linux-gnu PACKAGES="bc python3-zmq openjdk-7-jre-headless" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
 # No wallet
@@ -71,16 +71,3 @@ script:
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
-deploy:
-  provider: releases
-  api_key: "c773dedc116eb616328e293172aeaadc079a3040"
-  file:
-    - "$OUTDIR/bin/bitcoind.exe"
-    - "$OUTDIR/bin/bitcoin-cli.exe"
-    - "$OUTDIR/bin/bitcoin-tx.exe"
-    - "$OUTDIR/bin/test_bitcoin.exe"
-    - "$OUTDIR/bin/bench_bitcoin.exe"
-    - "$OUTDIR/bin/bitcoin-qt.exe"
-  skip_cleanup: true
-  on:
-    tags: true
