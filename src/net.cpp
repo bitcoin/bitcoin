@@ -59,7 +59,7 @@
 
 
 namespace {
-    const int MAX_OUTBOUND_CONNECTIONS = 8;
+    const int MAX_OUTBOUND_CONNECTIONS = 75;
 
     struct ListenSocket {
         SOCKET socket;
@@ -1766,7 +1766,8 @@ void ThreadOpenAddedConnections()
             }
         }
 
-        MilliSleep(120000); // Retry every 2 minutes
+        // MilliSleep(120000); // Retry every 2 minutes
+        MilliSleep(5000); // Retry every 5 seconds
     }
 }
 
