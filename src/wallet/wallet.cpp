@@ -171,6 +171,10 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     if (HaveWatchOnly(script))
         RemoveWatchOnly(script);
 
+    // Update current UTXOs to check if some of them were already being tracked
+    // but marked as unspendable.
+    UpdateUnspents();
+
     if (!fFileBacked)
         return true;
     if (!IsCrypted()) {
@@ -529,9 +533,12 @@ bool CWallet::IsSpent(const uint256& hash, unsigned int n) const
 
 void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
 {
+    // since this output is being marked as a spent output, we remove it from the UTXO index
+    RemoveFromUnspents(outpoint);
+
     mapTxSpends.insert(make_pair(outpoint, wtxid));
 
-    pair<TxSpends::iterator, TxSpends::iterator> range;
+    std::pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
     SyncMetaData(range);
 }
@@ -546,6 +553,47 @@ void CWallet::AddToSpends(const uint256& wtxid)
 
     BOOST_FOREACH(const CTxIn& txin, thisTx.vin)
         AddToSpends(txin.prevout, wtxid);
+}
+
+void CWallet::AddToUnspents(const CWalletTx* wtx, bool filterIsMine)
+{
+    uint256 hash = wtx->GetHash();
+
+    for (unsigned int i = 0; i < wtx->vout.size(); ++i) {
+        const COutPoint outpoint(hash, i);
+        std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
+        range = mapTxSpends.equal_range(outpoint);
+
+        // if this output wasn't already marked as spent, we add it as a new UTXO
+        if (range.first == range.second) {
+            isminetype ismine = IsMine(wtx->vout[i]);
+            if (!filterIsMine || ismine) {
+                mapTxUnspents[outpoint] = std::make_pair(wtx, ismine);
+            }
+        }
+    }
+}
+
+void CWallet::RemoveFromUnspents(const COutPoint &outpoint)
+{
+    mapTxUnspents.erase(outpoint);
+}
+
+void CWallet::UpdateUnspents()
+{
+    for (TxUnspents::iterator uit = mapTxUnspents.begin(); uit != mapTxUnspents.end();) {
+        const COutPoint &outpoint = uit->first;
+        const CWalletTx* wtx = (uit->second).first;
+
+        isminetype isMine = IsMine(wtx->vout[outpoint.n]);
+
+        if (isMine) {
+            uit->second.second = isMine;
+            uit++;
+        } else {
+            mapTxUnspents.erase(uit++);
+        }
+    }
 }
 
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
@@ -752,6 +800,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
         wtx.BindWallet(this);
         wtxOrdered.insert(make_pair(wtx.nOrderPos, TxPair(&wtx, (CAccountingEntry*)0)));
         AddToSpends(hash);
+        // Add transaction outputs to the UTXO index
+        AddToUnspents(&wtx);
         BOOST_FOREACH(const CTxIn& txin, wtx.vin) {
             if (mapWallet.count(txin.prevout.hash)) {
                 CWalletTx& prevtx = mapWallet[txin.prevout.hash];
@@ -820,6 +870,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
                              wtxIn.hashBlock.ToString());
             }
             AddToSpends(hash);
+            // Add transaction outputs to the UTXO index
+            AddToUnspents(&wtx, true);
         }
 
         bool fUpdated = false;
@@ -1835,39 +1887,53 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 
     {
         LOCK2(cs_main, cs_wallet);
-        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            const uint256& wtxid = it->first;
-            const CWalletTx* pcoin = &(*it).second;
 
-            if (!CheckFinalTx(*pcoin))
+        std::set<const CWalletTx*> rejectedCoins;
+        for (TxUnspents::const_iterator uit = mapTxUnspents.begin(); uit != mapTxUnspents.end(); ++uit) {
+            const COutPoint& outpoint = uit->first;
+            const uint256& wtxid = outpoint.hash;
+            const CWalletTx* pcoin = (uit->second).first;
+
+            if (!(pcoin->vout[outpoint.n].nValue > 0 || fIncludeZeroValue))
                 continue;
 
-            if (fOnlyConfirmed && !pcoin->IsTrusted())
+            if (IsLockedCoin(wtxid, outpoint.n))
                 continue;
 
-            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+            if (rejectedCoins.find(pcoin) != rejectedCoins.end())
                 continue;
+
+            if (!CheckFinalTx(*pcoin)) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
+
+            if (fOnlyConfirmed && !pcoin->IsTrusted()) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
+
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
 
             int nDepth = pcoin->GetDepthInMainChain();
-            if (nDepth < 0)
-                continue;
 
             // We should not consider coins which aren't at least in our mempool
             // It's possible for these to be conflicted via ancestors which we may never be able to detect
-            if (nDepth == 0 && !pcoin->InMempool())
+            if (nDepth < 0 || (nDepth == 0 && !pcoin->InMempool())) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
+
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(outpoint))
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-                isminetype mine = IsMine(pcoin->vout[i]);
-                if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
-                    !IsLockedCoin((*it).first, i) && (pcoin->vout[i].nValue > 0 || fIncludeZeroValue) &&
-                    (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected(COutPoint((*it).first, i))))
-                        vCoins.push_back(COutput(pcoin, i, nDepth,
-                                                 ((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
-                                                  (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO),
-                                                 (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO));
-            }
+            isminetype mine = (uit->second).second;
+            vCoins.push_back(COutput(pcoin, outpoint.n, nDepth,
+                                     ((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
+                                     (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO), (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO));
         }
     }
 }
@@ -3416,6 +3482,10 @@ bool CWallet::InitLoadWallet()
             }
         }
     }
+
+    // After the initializing is done, we update already tracked unspents
+    walletInstance->UpdateUnspents();
+
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     pwalletMain = walletInstance;

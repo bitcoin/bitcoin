@@ -601,6 +601,15 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
+    /**
+     * Used to keep track of UTXOs
+     */
+    typedef std::map<COutPoint, std::pair<const CWalletTx*, isminetype> > TxUnspents;
+    TxUnspents mapTxUnspents;
+    void AddToUnspents(const CWalletTx *wtx, bool filterIsMine=false);
+    void RemoveFromUnspents(const COutPoint &outpoint);
+    void UpdateUnspents();
+
     CWallet()
     {
         SetNull();
