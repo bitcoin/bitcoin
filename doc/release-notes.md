@@ -54,6 +54,9 @@ For example:
 
     $ echo -e "mysecretcode\n120" | src/bitcoin-cli -stdin walletpassphrase
 
+Warning: when used as described, the command line (including your secret
+walletpassphrase) will be stored in your shell history file.
+
 It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
 table by any user on the system.
