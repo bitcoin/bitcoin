@@ -73,6 +73,7 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+    void UpdateBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight);
 protected:
     CChainParams() {}
 
@@ -97,6 +98,8 @@ protected:
  * startup, except for unit tests.
  */
 const CChainParams &Params();
+
+void UpdateRegtestBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight);
 
 /**
  * @returns CChainParams for the given BIP70 chain name.

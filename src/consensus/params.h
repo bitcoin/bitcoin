@@ -21,6 +21,15 @@ enum DeploymentPos
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 
+/** Block heights at which the buried deployments becomes active */
+enum BuriedDeploymentPos
+{
+    BIP34_HEIGHT_ACTIVE,
+    BIP65_HEIGHT_ACTIVE,
+    BIP66_HEIGHT_ACTIVE,
+    MAX_BURIED_DEPLOYMENTS
+};
+
 /**
  * Struct for each individual consensus rule change using BIP9.
  */

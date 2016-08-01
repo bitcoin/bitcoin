@@ -251,10 +251,10 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
+        consensus.BIP34Height = 100000000; // Configurable with -buriedsfparams
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
-        consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
+        consensus.BIP65Height = 100000000;
+        consensus.BIP66Height = 100000000;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
@@ -322,6 +322,24 @@ static CChainParams *pCurrentParams = 0;
 const CChainParams &Params() {
     assert(pCurrentParams);
     return *pCurrentParams;
+}
+
+void CChainParams::UpdateBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
+{
+        if (deployment == Consensus::BIP34_HEIGHT_ACTIVE) {
+                consensus.BIP34Height = nStartHeight;
+        }
+        if (deployment == Consensus::BIP65_HEIGHT_ACTIVE) {
+                consensus.BIP65Height = nStartHeight;
+        }
+        if (deployment == Consensus::BIP66_HEIGHT_ACTIVE) {
+                consensus.BIP66Height = nStartHeight;
+        }
+}
+
+void UpdateRegtestBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
+{
+    regTestParams.UpdateBuriedDeploymentParameters(deployment, nStartHeight);
 }
 
 CChainParams& Params(const std::string& chain)
