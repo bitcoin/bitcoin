@@ -581,6 +581,7 @@ private:
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
+    bool fFileBacked;
 public:
     /*
      * Main wallet lock.
@@ -591,7 +592,6 @@ public:
      */
     mutable CCriticalSection cs_wallet;
 
-    bool fFileBacked;
     std::string strWalletFile;
 
     std::set<int64_t> setKeyPool;
