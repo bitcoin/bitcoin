@@ -14,7 +14,7 @@ you can use the bitcoin.conf setting (0 = off, 1 = on) as follows:
 2. Using addnode
 ----------------
 
-Due to the low numbers of nodes that support Xthins, initially it is a good idea to find a node which is XTHIN capable and
+Due to the low numbers of nodes that support XTHIN blocks, initially it is a good idea to find a node which is XTHIN capable and
 force a connection using either -addnode or -connect-thinblock.
 
 Using `addnode` is the recommended way of connecting and can be made by a simple config entry.
@@ -30,23 +30,23 @@ You can have muliple addnode entries up to a maximum of 8 connections, so you mi
 
 When you use `addnode` your peer upon receiving a new block announcement by an INV message will begin a 10 second timer.  If an INV
 message is not received within that 10 seconds from an XTHIN capabable node then a request for a full block will be sent out. If it
-does receive and INV within the 10 second period then an Xthin block will be requested.  This process is used as a way to bring a
-full block into the BU Xthin capable network of nodes such that once a peer does get a full block it will then very quickly propagate
-a Xthin to every other peer in the Xthin capable network.  In such a way we avoid potentially splitting the newtwork while at
-the same time maximizing our use of Xthins.
+does receive an INV within the 10 second period then an XTHIN block will be requested.  This process is used as a way to bring a
+full block into the BU XTHIN capable network of nodes such that once a peer does get a full block it will then very quickly propagate
+a XTHIN to every other peer in the XTHIN capable network.  In such a way we avoid potentially splitting the newtwork while at
+the same time maximizing our use of XTHIN technology.
 
 
 3. When to use connect-thinblock
 --------------------------------
 
-the `connect-thinblock` feature is mainly used for the purpose of testing however in some cases it can be useful for very bandwidth 
-constrained nodes that *always* want every downloaded block to be an Xthin.  In such a case you would substitute the addednode entry 
+the `connect-thinblock` feature is mainly used for the purpose of testing, however in some cases it can be useful for very bandwidth 
+constrained nodes that *always* want every downloaded block to be an XTHIN.  In such a case you would substitute the addednode entry 
 above with a connect-thinblockentry.  As with addnode you can have up to 8 `connect-thinblock` entries and your entry would be as 
 follows:
 
 	connect-thinblock=<ip:port>
 
-One thing to keep in my is that with `connect-thinblock`, if the nodes that you are connecting to are down or can not service you then 
+One thing to keep in mind is that with `connect-thinblock`, if the nodes that you are connecting to are down or can not service you then 
 you have the possiblity of not receiving any new blocks until those nodes come back on line.  Therefore use `connect-thinblock` with 
 caution and always use the full 8 connections if you are unsure whether the peers will be online or not.
 
@@ -54,13 +54,13 @@ caution and always use the full 8 connections if you are unsure whether the peer
 4. The thinblock mempool limiter
 ---------------------------------
 
-In order to keep the size of the Xthin bloom filters from getting too large, a way limit the size of mempools was implemented in v11.2
+In order to keep the size of the XTHIN bloom filters from getting too large, a way to limit the size of mempools was implemented in v11.2
 using a simple rate limiting technique.  If the size of the mempool grows to 3X the size of the largest block seen then two things happen, 
 the -minrelaytxfee is gradually increased until it reaches the -maxlimitertxfee, and at the same time the -limitfreerelay is gradually 
 reduced from 150KB per 10 minute interval down to 15KB per 10 minute.  What this system allow us to do is generally allow more zero fee 
-transactions through the system, and as the mempool becomes overfull we start to choke off the free transactions while at the same time 
-still allow all high priority and coinbase spends through. This mempool limiting technique has shown itself to be a great reducing of 
-outbound bandwidth and prevents the propagation of transactions that will never be mined within the default 72 hour window.
+transactions through the system, yet as the mempool becomes overfull we start to choke off the free transactions while at the same time 
+still allowing all high priority and coinbase spends through. This mempool limiting technique has shown itself to be a great way of reducing 
+outbound bandwidth and preventing the propagation of transactions that will never be mined within the default 72 hour window.
 
 During the release of v12.1, Bloom Filter targeting was introduced which supersedes the need for the mempool limiter in keeping bloom 
 filters smaller however it is still a valuable tool in reducing the total amount of outbound bandwidth.
@@ -70,7 +70,7 @@ There are two setting one can change as follows:
 	maxlimitertxfee : default is 3 satoshi/byte
 	minlimitertxfee : default is 0 satoshi/byte
 
-Generally you can just use the defaults but if you know for instance that an attacker is sending many transaction that are 1.014 sat/byte then you
+Generally you can just use the defaults, but if you know for instance that an attacker is sending many transaction that are 1.014 sat/byte then you
 could set your maxlimitertxfee=1.1 which would effectively choke off the attackers transactions while having the least impact to other transactions
 that are likely to be mineable.
 
