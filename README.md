@@ -1,4 +1,4 @@
-[Website](www.bitcoinunlimited.info)  | [Download](www.bitcoinunlimited.info/download) | [Setup](doc/README.md)  |  [Xthin](bu-xthin.md)  |  [Xpedited](bu-xpedited-forwarding.md)  |   [Miner](miner.md)
+[Website](http://www.bitcoinunlimited.info)  | [Download](http://www.bitcoinunlimited.info/download) | [Setup](doc/README.md)  |  [Xthin](doc/bu-xthin.md)  |  [Xpedited](doc/bu-xpedited-forwarding.md)  |   [Miner](doc/miner.md)
 
 What is Bitcoin?
 =====================================
@@ -11,7 +11,7 @@ software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
 the Bitcoin Unlimited software, see https://www.bitcoinunlimited.info/download, or read the
-[original whitepaper](https://www.bitcoinunlimited.info/resources/bitcoin.pdf).
+[original whitepaper](http://www.bitcoinunlimited.info/resources/bitcoin.pdf).
 
 License
 -------
@@ -24,5 +24,5 @@ What is Bitcoin Unlimited?
 
 Bitcoin Unlimited is an implementation of the Bitcoin client software that is based on Bitcoin Core.
 However, Bitcoin Unlimited has a very different philosophy than Core.
-It follows a philosophy and is administered by a formal process described in the [Articles of Federation](https://www.bitcoinunlimited.info/resources/BUarticles.pdf).
+It follows a philosophy and is administered by a formal process described in the [Articles of Federation](http://www.bitcoinunlimited.info/resources/BUarticles.pdf).
 In short, we believe in market driven decision making, emergent consensus, and in giving our users choices.
