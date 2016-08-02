@@ -142,6 +142,7 @@ testScripts = [
     'segwit.py',
     'importprunedfunds.py',
     'signmessages.py',
+    'p2p-compactblocks.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
