@@ -975,11 +975,11 @@ bool CConnman::AttemptToEvictConnection()
     uint64_t naMostConnections;
     unsigned int nMostConnections = 0;
     int64_t nMostConnectionsTime = 0;
-    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapAddrCounts;
+    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapNetGroupNodes;
     BOOST_FOREACH(const NodeEvictionCandidate &node, vEvictionCandidates) {
-        mapAddrCounts[node.nKeyedNetGroup].push_back(node);
-        int64_t grouptime = mapAddrCounts[node.nKeyedNetGroup][0].nTimeConnected;
-        size_t groupsize = mapAddrCounts[node.nKeyedNetGroup].size();
+        mapNetGroupNodes[node.nKeyedNetGroup].push_back(node);
+        int64_t grouptime = mapNetGroupNodes[node.nKeyedNetGroup][0].nTimeConnected;
+        size_t groupsize = mapNetGroupNodes[node.nKeyedNetGroup].size();
 
         if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
             nMostConnections = groupsize;
@@ -989,7 +989,7 @@ bool CConnman::AttemptToEvictConnection()
     }
 
     // Reduce to the network group with the most connections
-    vEvictionCandidates = std::move(mapAddrCounts[naMostConnections]);
+    vEvictionCandidates = std::move(mapNetGroupNodes[naMostConnections]);
 
     // Disconnect from the network group with the most connections
     NodeId evicted = vEvictionCandidates.front().id;
