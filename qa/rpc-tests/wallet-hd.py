@@ -20,7 +20,7 @@ class WalletHDTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.node_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
+        self.node_args = [['-createhdwallet=0'], ['-createhdwallet=1', '-keypool=0']]
 
     def setup_network(self):
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.node_args)
