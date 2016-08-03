@@ -61,7 +61,11 @@ The RPC command line client gained a new argument, `-stdin`
 to read extra arguments from standard input, one per line until EOF/Ctrl-D.
 For example:
 
-    $ echo -e "mysecretcode\n120" | src/bitcoin-cli -stdin walletpassphrase
+    $ src/bitcoin-cli -stdin walletpassphrase
+    mysecretcode
+    120
+    ..... press Ctrl-D here to end input
+    $
 
 It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
