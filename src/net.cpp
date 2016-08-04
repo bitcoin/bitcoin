@@ -1748,8 +1748,7 @@ void ThreadOpenAddedConnections()
                     lAddresses.push_back(strAddNode);
             }
             BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
-	        CService svc(strAddNode);
-  	        CAddress addr(svc);
+  	        CAddress addr;
                 CSemaphoreGrant grant(*semOutboundAddNode);
                 OpenNetworkConnection(addr, &grant);
                 MilliSleep(500);
