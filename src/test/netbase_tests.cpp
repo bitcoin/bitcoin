@@ -93,9 +93,7 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
 
 bool static TestParse(string src, string canon)
 {
-    CService addr;
-    if (!LookupNumeric(src.c_str(), addr, 65535))
-        return canon == "";
+    CService addr(LookupNumeric(src.c_str(), 65535));
     return canon == addr.ToString();
 }
 
@@ -107,7 +105,7 @@ BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
     BOOST_CHECK(TestParse("::", "[::]:65535"));
     BOOST_CHECK(TestParse("[::]:8333", "[::]:8333"));
     BOOST_CHECK(TestParse("[127.0.0.1]", "127.0.0.1:65535"));
-    BOOST_CHECK(TestParse(":::", ""));
+    BOOST_CHECK(TestParse(":::", "[::]:0"));
 }
 
 BOOST_AUTO_TEST_CASE(onioncat_test)

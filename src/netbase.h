@@ -49,7 +49,7 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
 bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup);
 bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup);
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions);
-bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
+CService LookupNumeric(const char *pszName, int portDefault = 0);
 bool LookupSubNet(const char *pszName, CSubNet& subnet);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed = 0);
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed = 0);
