@@ -265,6 +265,20 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(json_obj[0]['chainwork'],          rpc_block_json['chainwork'])
         assert_equal(json_obj[0]['previousblockhash'],  rpc_block_json['previousblockhash'])
 
+        #compare with normal RPC block response and support by block height
+        rpc_block_json = self.nodes[0].getblock(str(json_obj[0]['height']))
+        assert_equal(json_obj[0]['hash'],               rpc_block_json['hash'])
+        assert_equal(json_obj[0]['confirmations'],      rpc_block_json['confirmations'])
+        assert_equal(json_obj[0]['height'],             rpc_block_json['height'])
+        assert_equal(json_obj[0]['version'],            rpc_block_json['version'])
+        assert_equal(json_obj[0]['merkleroot'],         rpc_block_json['merkleroot'])
+        assert_equal(json_obj[0]['time'],               rpc_block_json['time'])
+        assert_equal(json_obj[0]['nonce'],              rpc_block_json['nonce'])
+        assert_equal(json_obj[0]['bits'],               rpc_block_json['bits'])
+        assert_equal(json_obj[0]['difficulty'],         rpc_block_json['difficulty'])
+        assert_equal(json_obj[0]['chainwork'],          rpc_block_json['chainwork'])
+        assert_equal(json_obj[0]['previousblockhash'],  rpc_block_json['previousblockhash'])
+
         #see if we can get 5 headers in one response
         self.nodes[1].generate(5)
         self.sync_all()
