@@ -970,13 +970,13 @@ static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Con
     switch(version)
     {
         case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
+            activated = pindex->nHeight >= consensusParams.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE];
             break;
         case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            activated = pindex->nHeight >= consensusParams.vBuriedDeploymentHeights[Consensus::BIP66_HEIGHT_ACTIVE];
             break;
         case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            activated = pindex->nHeight >= consensusParams.vBuriedDeploymentHeights[Consensus::BIP65_HEIGHT_ACTIVE];
             break;
     }
     rv.push_back(Pair("status", activated));

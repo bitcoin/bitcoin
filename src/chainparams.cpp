@@ -71,10 +71,10 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 227931;
+        consensus.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE] = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-        consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
-        consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
+        consensus.vBuriedDeploymentHeights[Consensus::BIP65_HEIGHT_ACTIVE] = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
+        consensus.vBuriedDeploymentHeights[Consensus::BIP66_HEIGHT_ACTIVE] = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
@@ -169,10 +169,10 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 21111;
+        consensus.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE] = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
-        consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
-        consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
+        consensus.vBuriedDeploymentHeights[Consensus::BIP65_HEIGHT_ACTIVE] = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
+        consensus.vBuriedDeploymentHeights[Consensus::BIP66_HEIGHT_ACTIVE] = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
@@ -251,10 +251,10 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.BIP34Height = 100000000; // Configurable with -buriedsfparams
+        consensus.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE] = 100000000; // Configurable with -buriedsfparams
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 100000000;
-        consensus.BIP66Height = 100000000;
+        consensus.vBuriedDeploymentHeights[Consensus::BIP65_HEIGHT_ACTIVE] = 100000000;
+        consensus.vBuriedDeploymentHeights[Consensus::BIP66_HEIGHT_ACTIVE] = 100000000;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
@@ -326,15 +326,7 @@ const CChainParams &Params() {
 
 void CChainParams::UpdateBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
 {
-        if (deployment == Consensus::BIP34_HEIGHT_ACTIVE) {
-                consensus.BIP34Height = nStartHeight;
-        }
-        if (deployment == Consensus::BIP65_HEIGHT_ACTIVE) {
-                consensus.BIP65Height = nStartHeight;
-        }
-        if (deployment == Consensus::BIP66_HEIGHT_ACTIVE) {
-                consensus.BIP66Height = nStartHeight;
-        }
+    consensus.vBuriedDeploymentHeights[deployment] = nStartHeight;
 }
 
 void UpdateRegtestBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
