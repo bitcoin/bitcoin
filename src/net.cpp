@@ -119,6 +119,10 @@ extern CSemaphore *semOutbound;
 static CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
+// BU  Connection Slot mitigation - used to determine how many connection attempts over time
+std::map<CNetAddr, std::pair<double, int64_t> > mapInboundConnectionTracker;
+CCriticalSection cs_mapInboundConnectionTracker;
+
 // Signals for message handling
 extern CNodeSignals g_signals;
 CNodeSignals& GetNodeSignals() { return g_signals; }
@@ -1090,6 +1094,31 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         }
     }
 
+    // BU - add inbound connection to the ip tracker and increment counter
+    // If connection attempts exceeded within allowable timeframe then ban peer
+    double dConnections = 0;
+    LOCK(cs_mapInboundConnectionTracker);
+    if (mapInboundConnectionTracker.count((CNetAddr)addr)) {
+        // first decay the current number of connections (over 60 seconds) depending on the last connection attempt
+        int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[(CNetAddr)addr].second;
+        double dRatioElapsed = (double)nTimeElapsed / 60;
+        dConnections = mapInboundConnectionTracker[(CNetAddr)addr].first - (dRatioElapsed * mapInboundConnectionTracker[(CNetAddr)addr].first);
+        if (dConnections < 0) 
+            dConnections = 0;
+    }
+
+    dConnections += 1;
+    mapInboundConnectionTracker[(CNetAddr)addr] = std::make_pair(dConnections, GetTime());
+
+    //LogPrintf("dConnections is %f for %s\n", dConnections, addr.ToString());
+
+    if (dConnections > 4) {
+        CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, 60*60);
+        LogPrintf("Banning %s for one hour: Too many connection attempts - connection dropped\n", addr.ToString());
+        return;
+    }
+    // BU - end section
+ 
     CNode* pnode = new CNode(hSocket, addr, "", true);
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;

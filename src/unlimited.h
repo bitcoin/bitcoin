@@ -164,6 +164,10 @@ extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
 // BUIP010 Xtreme Thinblocks: end
 
+// BU  Connection Slot mitigation - used to determine how many connection attempts over time
+extern std::map<CNetAddr, std::pair<double, int64_t> > mapInboundConnectionTracker;
+extern CCriticalSection cs_mapInboundConnectionTracker;
+
 // statistics
 void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime);
 
