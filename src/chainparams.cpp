@@ -70,6 +70,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
+        fAllowsOverriddenSoftFork = false;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE] = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
@@ -168,6 +169,7 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
+        fAllowsOverriddenSoftFork = false;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE] = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
@@ -250,6 +252,7 @@ class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+        fAllowsOverriddenSoftFork = true;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.vBuriedDeploymentHeights[Consensus::BIP34_HEIGHT_ACTIVE] = 100000000; // Configurable with -buriedsfparams
         consensus.BIP34Hash = uint256();
@@ -309,11 +312,6 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
     }
 
-    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-    }
 };
 static CRegTestParams regTestParams;
 
@@ -329,9 +327,10 @@ void CChainParams::UpdateBuriedDeploymentParameters(Consensus::BuriedDeploymentP
     consensus.vBuriedDeploymentHeights[deployment] = nStartHeight;
 }
 
-void UpdateRegtestBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
+void CChainParams::UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
 {
-    regTestParams.UpdateBuriedDeploymentParameters(deployment, nStartHeight);
+    consensus.vDeployments[d].nStartTime = nStartTime;
+    consensus.vDeployments[d].nTimeout = nTimeout;
 }
 
 CChainParams& Params(const std::string& chain)
@@ -351,9 +350,3 @@ void SelectParams(const std::string& network)
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
 }
-
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-{
-    regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
-}
- 

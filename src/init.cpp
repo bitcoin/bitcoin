@@ -1000,9 +1000,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (!mapMultiArgs["-bip9params"].empty()) {
         // Allow overriding BIP9 parameters for testing
-        if (!chainparams.MineBlocksOnDemand()) {
-            return InitError("BIP9 parameters may only be overridden on regtest.");
+        if (!chainparams.AllowsOverriddenSoftFork()) {
+            return InitError("BIP9 parameters can't be overriden on this chain.");
         }
+        CChainParams& mutableParams = Params(Params().NetworkIDString());
         const vector<string>& deployments = mapMultiArgs["-bip9params"];
         for (auto i : deployments) {
             std::vector<std::string> vDeploymentParams;
@@ -1021,7 +1022,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             for (int j=0; j<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j)
             {
                 if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[j].name) == 0) {
-                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                    mutableParams.UpdateBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
                     found = true;
                     LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
                     break;
@@ -1035,9 +1036,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (!mapMultiArgs["-buriedsfparams"].empty()) {
         // Allow overriding ism parameters for testing
-        if (!chainparams.MineBlocksOnDemand()) {
-            return InitError("Buried soft fork parameters may only be overridden on regtest.");
+        if (!chainparams.AllowsOverriddenSoftFork()) {
+            return InitError("Buried soft fork parameters can't be overridden on this chain.");
         }
+        CChainParams& mutableParams = Params(chainparams.NetworkIDString());
         std::map<string, Consensus::BuriedDeploymentPos> buriedDeployments;
         buriedDeployments.insert(std::make_pair("bip34", Consensus::BIP34_HEIGHT_ACTIVE));
         buriedDeployments.insert(std::make_pair("bip65", Consensus::BIP65_HEIGHT_ACTIVE));
@@ -1058,7 +1060,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             if (found == buriedDeployments.end()) {
                 return InitError(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
             }
-            UpdateRegtestBuriedDeploymentParameters(found->second, nStartHeight);
+            mutableParams.UpdateBuriedDeploymentParameters(found->second, nStartHeight);
         }
     }
 
