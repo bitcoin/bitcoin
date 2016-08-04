@@ -67,9 +67,9 @@ uint256 CMutableTransaction::GetHash() const
     return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
 }
 
-void CTransaction::UpdateHash() const
+void CTransaction::UpdateHash()
 {
-    *const_cast<uint256*>(&hash) = SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    hash = SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
 }
 
 uint256 CTransaction::GetWitnessHash() const
@@ -84,12 +84,12 @@ CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion
 }
 
 CTransaction& CTransaction::operator=(const CTransaction &tx) {
-    *const_cast<int*>(&nVersion) = tx.nVersion;
-    *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
-    *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
-    *const_cast<CTxWitness*>(&wit) = tx.wit;
-    *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
-    *const_cast<uint256*>(&hash) = tx.hash;
+    nVersion = tx.nVersion;
+    vin = tx.vin;
+    vout = tx.vout;
+    wit = tx.wit;
+    nLockTime = tx.nLockTime;
+    hash = tx.hash;
     return *this;
 }
 
