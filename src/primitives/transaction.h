@@ -65,6 +65,7 @@ public:
     COutPoint prevout;
     CScript scriptSig;
     uint32_t nSequence;
+    CScriptWitness scriptWitness; //! Only serialized through CTransaction
 
     /* Setting nSequence to this value for every input in a transaction
      * disables nLockTime. */
@@ -211,62 +212,6 @@ public:
     std::string ToString() const;
 };
 
-class CTxInWitness
-{
-public:
-    CScriptWitness scriptWitness;
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(scriptWitness.stack);
-    }
-
-    bool IsNull() const { return scriptWitness.IsNull(); }
-
-    CTxInWitness() { }
-};
-
-class CTxWitness
-{
-public:
-    /** In case vtxinwit is missing, all entries are treated as if they were empty CTxInWitnesses */
-    std::vector<CTxInWitness> vtxinwit;
-
-    ADD_SERIALIZE_METHODS;
-
-    bool IsEmpty() const { return vtxinwit.empty(); }
-
-    bool IsNull() const
-    {
-        for (size_t n = 0; n < vtxinwit.size(); n++) {
-            if (!vtxinwit[n].IsNull()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    void SetNull()
-    {
-        vtxinwit.clear();
-    }
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        for (size_t n = 0; n < vtxinwit.size(); n++) {
-            READWRITE(vtxinwit[n]);
-        }
-        if (IsNull()) {
-            /* It's illegal to encode a witness when all vtxinwit entries are empty. */
-            throw std::ios_base::failure("Superfluous witness record");
-        }
-    }
-};
-
 struct CMutableTransaction;
 
 /**
@@ -294,7 +239,6 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
-    tx.wit.SetNull();
     /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
     s >> tx.vin;
     if (tx.vin.size() == 0 && fAllowWitness) {
@@ -311,8 +255,9 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
-        tx.wit.vtxinwit.resize(tx.vin.size());
-        s >> tx.wit;
+        for (size_t i = 0; i < tx.vin.size(); i++) {
+            s >> tx.vin[i].scriptWitness.stack;
+        }
     }
     if (flags) {
         /* Unknown flag in the serialization */
@@ -328,10 +273,9 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.nVersion;
     unsigned char flags = 0;
     // Consistency check
-    assert(tx.wit.vtxinwit.size() <= tx.vin.size());
     if (fAllowWitness) {
         /* Check whether witnesses need to be serialized. */
-        if (!tx.wit.IsNull()) {
+        if (tx.HasWitness()) {
             flags |= 1;
         }
     }
@@ -345,11 +289,7 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.vout;
     if (flags & 1) {
         for (size_t i = 0; i < tx.vin.size(); i++) {
-            if (i < tx.wit.vtxinwit.size()) {
-                s << tx.wit.vtxinwit[i];
-            } else {
-                s << CTxInWitness();
-            }
+            s << tx.vin[i].scriptWitness.stack;
         }
     }
     s << tx.nLockTime;
@@ -379,7 +319,6 @@ public:
     const int32_t nVersion;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    CTxWitness wit; // Not const: can change without invalidating the txid cache
     const uint32_t nLockTime;
 
 private:
@@ -451,6 +390,16 @@ public:
     }
 
     std::string ToString() const;
+
+    bool HasWitness() const
+    {
+        for (size_t i = 0; i < vin.size(); i++) {
+            if (!vin[i].scriptWitness.IsNull()) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 /** A mutable version of CTransaction. */
@@ -459,7 +408,6 @@ struct CMutableTransaction
     int32_t nVersion;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    CTxWitness wit;
     uint32_t nLockTime;
 
     CMutableTransaction();
@@ -485,6 +433,21 @@ struct CMutableTransaction
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
      */
     uint256 GetHash() const;
+
+    friend bool operator==(const CMutableTransaction& a, const CMutableTransaction& b)
+    {
+        return a.GetHash() == b.GetHash();
+    }
+
+    bool HasWitness() const
+    {
+        for (size_t i = 0; i < vin.size(); i++) {
+            if (!vin[i].scriptWitness.IsNull()) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;

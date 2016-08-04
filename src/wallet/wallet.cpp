@@ -2301,7 +2301,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 nChangePosInOut = nChangePosRequest;
                 txNew.vin.clear();
                 txNew.vout.clear();
-                txNew.wit.SetNull();
                 wtxNew.fFromMe = true;
                 bool fFirst = true;
 
@@ -2488,9 +2487,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                 // Remove scriptSigs if we used dummy signatures for fee calculation
                 if (!sign) {
-                    BOOST_FOREACH (CTxIn& vin, txNew.vin)
+                    BOOST_FOREACH (CTxIn& vin, txNew.vin) {
                         vin.scriptSig = CScript();
-                    txNew.wit.SetNull();
+                        vin.scriptWitness.SetNull();
+                    }
                 }
 
                 // Embed the constructed transaction data in wtxNew.
