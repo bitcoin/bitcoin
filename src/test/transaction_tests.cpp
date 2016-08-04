@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     amount = mapprevOutValues[tx.vin[i].prevout];
                 }
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
-                const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
+                const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
                                                  witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
                                     strTest);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 if (mapprevOutValues.count(tx.vin[i].prevout)) {
                     amount = mapprevOutValues[tx.vin[i].prevout];
                 }
-                const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
+                const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
                                       witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
             }
@@ -351,7 +351,6 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     outputm.vin.resize(1);
     outputm.vin[0].prevout.SetNull();
     outputm.vin[0].scriptSig = CScript();
-    outputm.wit.vtxinwit.resize(1);
     outputm.vout.resize(1);
     outputm.vout[0].nValue = 1;
     outputm.vout[0].scriptPubKey = outscript;
@@ -362,14 +361,12 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     assert(output->vin[0] == outputm.vin[0]);
     assert(output->vout.size() == 1);
     assert(output->vout[0] == outputm.vout[0]);
-    assert(output->wit.vtxinwit.size() == 0);
 
     CMutableTransaction inputm;
     inputm.nVersion = 1;
     inputm.vin.resize(1);
     inputm.vin[0].prevout.hash = output->GetHash();
     inputm.vin[0].prevout.n = 0;
-    inputm.wit.vtxinwit.resize(1);
     inputm.vout.resize(1);
     inputm.vout[0].nValue = 1;
     inputm.vout[0].scriptPubKey = CScript();
@@ -382,20 +379,14 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     assert(input.vin[0] == inputm.vin[0]);
     assert(input.vout.size() == 1);
     assert(input.vout[0] == inputm.vout[0]);
-    if (inputm.wit.IsNull()) {
-        assert(input.wit.IsNull());
-    } else {
-        assert(!input.wit.IsNull());
-        assert(input.wit.vtxinwit.size() == 1);
-        assert(input.wit.vtxinwit[0].scriptWitness.stack == inputm.wit.vtxinwit[0].scriptWitness.stack);
-    }
+    assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
 }
 
 void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);
-    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, inputi.wit.vtxinwit.size() > 0 ? &inputi.wit.vtxinwit[0].scriptWitness : NULL, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue), &error);
+    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue), &error);
     assert(ret == success);
 }
 
