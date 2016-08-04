@@ -289,6 +289,14 @@ Low-level RPC changes
 
 - The sorting of the output of the `getrawmempool` output has changed.
 
+- New RPC commands: `generatetoaddress`, `importprunedfunds`, `removeprunedfunds`, `signmessagewithprivkey`,
+  `getmempoolancestors`, `getmempooldescendants`, `getmempoolentry`,
+  `createwitnessaddress`, `addwitnessaddress`.
+
+- Removed RPC commands: `setgenerate`, `getgenerate`.
+
+- New options were added to `fundrawtransaction`: `includeWatching`, `changeAddress`, `changePosition` and `feeRate`.
+
 Low-level ZMQ changes
 ----------------------
 
