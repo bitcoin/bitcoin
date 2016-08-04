@@ -186,11 +186,11 @@ maximum "block weight" of a generated block, as defined by [BIP 141 (Segregated
 Witness)] (https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki).
 
 In preparation for Segregated Witness, the mining algorithm has been modified
-to optimize transaction selection for a given block weight, rather than a given
-number of serialized bytes in a block.  In this release, transaction selection
-is unaffected by this distinction (as BIP 141 activation is not supported on
-mainnet in this release, see above), but in future releases and after BIP 141
-activation, these calculations would be expected to differ.
+to choose transactions to mine based on their block weight, rather than number
+of serialized bytes.  In this release, transaction selection is unaffected by
+this distinction (as BIP 141 activation is not supported on mainnet in this
+release, see above), but in future releases and after BIP 141 activation,
+these calculations would be expected to differ.
 
 
 Removal of internal miner
