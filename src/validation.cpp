@@ -4007,8 +4007,6 @@ static bool AddGenesisBlock(const CChainParams& chainparams, const CBlock& block
     CBlockIndex *pindex = AddToBlockIndex(block);
     if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
         return error("%s: genesis block not accepted", __func__);
-    if (!ActivateBestChain(state, chainparams, &block))
-        return error("%s: genesis block cannot be activated", __func__);
     return true;
 }
 
