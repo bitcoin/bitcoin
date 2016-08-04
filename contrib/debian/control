@@ -1,7 +1,7 @@
-Source: bitcoin
+Source: bitcoinUnlimited
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
+Maintainer: Andrew Stone <g.andrew.stone@gmail.com>
 Uploaders: Micah Anderson <micah@debian.org>
 Build-Depends: debhelper,
  devscripts,
@@ -34,7 +34,7 @@ Description: peer-to-peer network based digital currency - daemon
  Bitcoin is an experimental new digital currency that enables instant
  payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Unlimited
  is the name of the open source software which enables the use of this currency.
  .
  This package provides the daemon, bitcoind, and the CLI tool
@@ -47,7 +47,7 @@ Description: peer-to-peer network based digital currency - Qt GUI
  Bitcoin is an experimental new digital currency that enables instant
  payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Unlimited
  is the name of the open source software which enables the use of this currency.
  .
  This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
