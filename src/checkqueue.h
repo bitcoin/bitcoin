@@ -51,6 +51,9 @@ public:
         for (typename Q::JOB_TYPE& check : vChecks)
             check.swap(*(next_free_index++));
     }
+    typename decltype(checks)::iterator * get_next_free_index() {
+        return &next_free_index;
+    }
 
     /** reserve tries to set a flag for an element 
              * and returns if it was successful */
@@ -472,6 +475,13 @@ public:
                         << "Added " << vs << " values. nTodo was " << status.nTodo.load() - vs << " now is " << status.nTodo.load() << " \n";
     }
 
+    void Add(std::ptrdiff_t vs)
+    {
+        status.nTodo.fetch_add(vs);
+        if (TEST & testing_level::enable_logging)
+            test_log[0] << "[[" << ++test_log_seq << "]] "
+                        << "Added " << vs << " values. nTodo was " << status.nTodo.load() - vs << " now is " << status.nTodo.load() << " \n";
+    }
     ~CCheckQueue()
     {
     }
@@ -493,6 +503,11 @@ public:
     void sleep()
     {
         should_sleep.store(true);
+    }
+
+
+    JOB_TYPE ** get_next_free_index() {
+        return jobs.get_next_free_index();
     }
 
     size_t TEST_consume(const size_t ID)
@@ -578,6 +593,15 @@ public:
     {
         if (pqueue != NULL)
             pqueue->Add(vChecks);
+    }
+    void Add(std::ptrdiff_t d)
+    {
+        if (pqueue != NULL)
+            pqueue->Add(d);
+    }
+
+    typename Q::JOB_TYPE ** get_next_free_index() {
+        return pqueue ? pqueue->get_next_free_index() : nullptr;
     }
 
     ~CCheckQueueControl()
