@@ -149,6 +149,8 @@ void CMasternodeSync::GetNextAsset()
             LogPrintf("CMasternodeSync::GetNextAsset - Sync has finished\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
+            //try to activate our masternode if possible
+            activeMasternode.ManageStatus();
             break;
     }
     RequestedMasternodeAttempt = 0;
@@ -253,20 +255,18 @@ void CMasternodeSync::Process()
     }
 
     // INITIAL SYNC SETUP / LOG REPORTING
-    {
-        double nSyncProgress = double(RequestedMasternodeAttempt + (RequestedMasternodeAssets - 1) * 8) / (8*4);
-        LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAttempt %d RequestedMasternodeAssets %d nSyncProgress %f\n", tick, RequestedMasternodeAttempt, RequestedMasternodeAssets, nSyncProgress);
-        uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
+    double nSyncProgress = double(RequestedMasternodeAttempt + (RequestedMasternodeAssets - 1) * 8) / (8*4);
+    LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAttempt %d RequestedMasternodeAssets %d nSyncProgress %f\n", tick, RequestedMasternodeAttempt, RequestedMasternodeAssets, nSyncProgress);
+    uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-        if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
+    // sporks synced but blockchain is not, wait until we're almost at a recent block to continue
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST &&
+            !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
-        // sporks synced but blockchain is not, wait until we're almost at a recent block to continue
-        if(Params().NetworkIDString() != CBaseChainParams::REGTEST &&
-                !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
+    TRY_LOCK(cs_vNodes, lockRecv);
+    if(!lockRecv) return;
 
-        TRY_LOCK(cs_vNodes, lockRecv);
-        if(!lockRecv) return;
-    }
+    if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
@@ -293,91 +293,103 @@ void CMasternodeSync::Process()
         {   
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
 
-            if(!pnode->HasFulfilledRequest("spork-sync"))
-            {
+            if(!pnode->HasFulfilledRequest("spork-sync")) {
+                // only request once from each peer
                 pnode->FulfilledRequest("spork-sync");
 
                 // get current network sporks
                 pnode->PushMessage(NetMsgType::GETSPORKS); 
                 
                 // we always ask for sporks, so just skip this
-                if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
-                    GetNextAsset();
-                    return;
-                }
+                if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) GetNextAsset();
+
+                continue; // always get sporks first, switch to the next node without waiting for the next tick
             }
-            
+
             // MNLIST : SYNC MASTERNODE LIST FROM OTHER CONNECTED CLIENTS
 
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST)
-            {
-                if (pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
-
-                // shall we move onto the next asset?
-                if(nMnCount > mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9)
-                {
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
+                // check for timeout first
+                if(lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                    LogPrintf("CMasternodeSync::Process -- tick %d  asset %d -- timeout\n", tick, RequestedMasternodeAssets);
+                    if(RequestedMasternodeAttempt == 0)
+                        LogPrintf("CMasternodeSync::Process -- WARNING: failed to sync %s\n", GetAssetName());
                     GetNextAsset();
                     return;
                 }
 
-                if(lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                // check for data
+                // if we have enough masternodes in or list, switch to the next asset
+                /* Note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
+                   Surely doesn't work right for testnet currently */
+                // try to fetch data from at least one peer though
+                if(RequestedMasternodeAssets > 0 && nMnCount > mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9) {
+                    LogPrintf("CMasternodeSync::Process -- tick %d  asset %d -- found enough data\n", tick, RequestedMasternodeAssets);
                     GetNextAsset();
                     return;
                 }
 
-                // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
-
+                // only request once from each peer
                 if(pnode->HasFulfilledRequest("masternode-sync")) continue;
                 pnode->FulfilledRequest("masternode-sync");
 
-                //see if we've synced the masternode list
-                /* note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock) */
- 
-                mnodeman.DsegUpdate(pnode);
+                if (pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 RequestedMasternodeAttempt++;
+
+                mnodeman.DsegUpdate(pnode);
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
             // MNW : SYNC MASTERNODE WINNERS FROM OTHER CONNECTED CLIENTS
 
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW)
-            {
-                if (pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
-
-                // Shall we move onto the next asset?
-                // --
-                // This might take a lot longer than 2 minutes due to new blocks, but that's OK. It will eventually time out if needed
-                if(lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
+                // check for timeout first
+                // This might take a lot longer than MASTERNODE_SYNC_TIMEOUT minutes due to new blocks,
+                // but that should be OK and it should timeout eventually.
+                if(lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                    LogPrintf("CMasternodeSync::Process -- tick %d  asset %d -- timeout\n", tick, RequestedMasternodeAssets);
+                    if(RequestedMasternodeAttempt == 0)
+                        LogPrintf("CMasternodeSync::Process -- WARNING: failed to sync %s\n", GetAssetName());
                     GetNextAsset();
                     return;
                 }
 
+                // check for data
                 // if mnpayments already has enough blocks and votes, move to the next asset
-                if(mnpayments.IsEnoughData(nMnCount)) {
+                // try to fetch data from at least one peer though
+                if(RequestedMasternodeAssets > 0 && mnpayments.IsEnoughData(nMnCount)) {
+                    LogPrintf("CMasternodeSync::Process -- tick %d  asset %d -- found enough data\n", tick, RequestedMasternodeAssets);
                     GetNextAsset();
                     return;
                 }
 
-                // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
-
+                // only request once from each peer
                 if(pnode->HasFulfilledRequest("masternode-winner-sync")) continue;
                 pnode->FulfilledRequest("masternode-winner-sync");
 
-                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
+                if (pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 RequestedMasternodeAttempt++;
+
+                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
 
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
-           
+
             // GOVOBJ : SYNC GOVERNANCE ITEMS FROM OUR PEERS
 
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_GOVERNANCE){
-                if (pnode->nVersion < MSG_GOVERNANCE_PEER_PROTO_VERSION) continue;
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_GOVERNANCE) {
+                // check for timeout first
+                if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
+                    LogPrintf("CMasternodeSync::Process -- tick %d  asset %d -- timeout\n", tick, RequestedMasternodeAssets);
+                    if(RequestedMasternodeAttempt == 0)
+                        LogPrintf("CMasternodeSync::Process -- WARNING: failed to sync %s\n", GetAssetName());
+                    GetNextAsset();
+                    return;
+                }
 
-
-                // shall we move onto the next asset
+                // check for data
                 // if(countBudgetItemProp > 0 && countBudgetItemFin)
                 // {
                 //     if(governance.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
@@ -390,23 +402,16 @@ void CMasternodeSync::Process()
                 //     }
                 // }
 
-                //we'll start rejecting votes if we accidentally get set as synced too soon, this allows plenty of time
-                if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
-                    GetNextAsset();
+                if (pnode->nVersion < MSG_GOVERNANCE_PEER_PROTO_VERSION) continue;
 
-                    //try to activate our masternode if possible
-                    activeMasternode.ManageStatus();
-                    return;
-                }
-
-                // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
-
+                // only request once from each peer
                 if(pnode->HasFulfilledRequest("governance-sync")) continue;
                 pnode->FulfilledRequest("governance-sync");
 
-                uint256 n = uint256();
-                pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, n); //sync masternode votes
+                if (pnode->nVersion < MSG_GOVERNANCE_PEER_PROTO_VERSION) continue;
                 RequestedMasternodeAttempt++;
+
+                pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, uint256()); //sync masternode votes
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }

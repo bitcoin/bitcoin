@@ -103,11 +103,22 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     if(fLiteMode) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
+    //
+    // REMOVE AFTER MIGRATION TO 12.1
+    //
+    if(pfrom->nVersion < 70201) return;
+    //
+    // END REMOVE
+    //
+
     LOCK(cs_budget);
 
     // GOVERANCE SYNCING FUNCTIONALITY
     if (strCommand == NetMsgType::MNGOVERNANCESYNC)
     {
+
+        // ignore such request until we are fully synced
+        if (!masternodeSync.IsSynced()) return;
 
         uint256 nProp;
         vRecv >> nProp;
@@ -169,15 +180,14 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         mapSeenGovernanceObjects.insert(make_pair(govobj.GetHash(), SEEN_OBJECT_IS_VALID));
         masternodeSync.AddedBudgetItem(govobj.GetHash());
 
-        LogPrintf("Governance object - new! - %s\n", govobj.GetHash().ToString());
+        LogPrintf("MNGOVERNANCEOBJECT -- %s new\n", govobj.GetHash().ToString());
         //We might have active votes for this proposal that are valid now
         CheckOrphanVotes();
     
     }
 
     // NEW GOVERNANCE OBJECT VOTE
-    else if (strCommand == NetMsgType::MNGOVERNANCEVOTE)
-
+    else if (strCommand == NetMsgType::MNGOVERNANCEOBJECTVOTE)
     {
 
         CGovernanceVote vote;
@@ -466,7 +476,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
     std::map<uint256, CGovernanceVote>::iterator it2 = mapVotesByHash.begin();
     while(it2 != mapVotesByHash.end()) {
-        pfrom->PushInventory(CInv(MSG_GOVERNANCE_VOTE, (*it2).first));
+        pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, (*it2).first));
         nInvCount++;
         ++it2;
     }

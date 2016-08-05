@@ -4686,12 +4686,6 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_MASTERNODE_WINNER:
         return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
 
-    case MSG_GOVERNANCE_VOTE:
-        return governance.mapVotesByHash.count(inv.hash);
-
-    case MSG_GOVERNANCE_OBJECT:
-        return governance.mapObjects.count(inv.hash);
-
     case MSG_MASTERNODE_ANNOUNCE:
         return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash);
 
@@ -4700,7 +4694,14 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
     case MSG_DSTX:
         return mapDarksendBroadcastTxes.count(inv.hash);
+
+    case MSG_GOVERNANCE_OBJECT:
+        return governance.mapObjects.count(inv.hash);
+
+    case MSG_GOVERNANCE_OBJECT_VOTE:
+        return governance.mapVotesByHash.count(inv.hash);
     }
+
     // Don't know what it is, just say we already got one
     return true;
 }
@@ -4861,26 +4862,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pushed = true;
                     }
                 }
-            
-                if (!pushed && inv.type == MSG_GOVERNANCE_VOTE) {
-                    if(governance.mapVotesByHash.count(inv.hash)) {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << governance.mapVotesByHash[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNGOVERNANCEVOTE, ss);
-                        pushed = true;
-                    }
-                }
-
-                if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT) {
-                    if(governance.mapObjects.count(inv.hash)) {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << governance.mapObjects[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECT, ss);
-                        pushed = true;
-                    }
-                }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
                     if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
@@ -4917,6 +4898,25 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
+                if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT) {
+                    if(governance.mapObjects.count(inv.hash)) {
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << governance.mapObjects[inv.hash];
+                        pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECT, ss);
+                        pushed = true;
+                    }
+                }
+
+                if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+                    if(governance.mapVotesByHash.count(inv.hash)) {
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << governance.mapVotesByHash[inv.hash];
+                        pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss);
+                        pushed = true;
+                    }
+                }
 
                 if (!pushed)
                     vNotFound.push_back(inv);

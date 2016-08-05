@@ -317,9 +317,20 @@ public:
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
-        ss << pubkey;
-        ss << sigTime;
+        //
+        // REMOVE AFTER MIGRATION TO 12.1
+        //
+        if(protocolVersion < 70201) {
+            ss << sigTime;
+            ss << pubkey;
+        } else {
+        //
+        // END REMOVE
+        //
+            ss << vin;
+            ss << pubkey;
+            ss << sigTime;
+        }
         return ss.GetHash();
     }
 

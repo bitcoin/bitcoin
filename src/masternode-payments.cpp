@@ -194,7 +194,9 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 
 
     if (strCommand == NetMsgType::MNWINNERSSYNC) { //Masternode Payments Request Sync
-        if(fLiteMode) return; //disable all Darksend/Masternode related functionality
+
+        // ignore such request until we are fully synced
+        if (!masternodeSync.IsSynced()) return;
 
         int nCountNeeded;
         vRecv >> nCountNeeded;
@@ -220,32 +222,38 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 
         if(!pCurrentBlockIndex) return;
 
-        if(mapMasternodePayeeVotes.count(winner.GetHash())){
-            LogPrint("mnpayments", "mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString(), pCurrentBlockIndex->nHeight);
+        // can't really verify it until masternode list is synced, reject it for now
+        if (masternodeSync.RequestedMasternodeAssets < MASTERNODE_SYNC_MNW) return;
+
+        if(mapMasternodePayeeVotes.count(winner.GetHash())) {
+            LogPrint("mnpayments", "MNWINNER -- Already seen: hash=%s, nHeight=%d\n", winner.GetHash().ToString(), pCurrentBlockIndex->nHeight);
             masternodeSync.AddedMasternodeWinner(winner.GetHash());
             return;
         }
 
-        int nFirstBlock = pCurrentBlockIndex->nHeight - (mnodeman.CountEnabled()*1.25);
-        if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > pCurrentBlockIndex->nHeight+20){
-            LogPrint("mnpayments", "mnw - winner out of range - FirstBlock %d Height %d bestHeight %d\n", nFirstBlock, winner.nBlockHeight, pCurrentBlockIndex->nHeight);
+        int nFirstBlock = pCurrentBlockIndex->nHeight - mnodeman.CountEnabled()*1.25;
+        if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > pCurrentBlockIndex->nHeight+20) {
+            LogPrint("mnpayments", "MNWINNER -- winner out of range: nFirstBlock=%d, nBlockHeight=%d, nHeight=%d\n", nFirstBlock, winner.nBlockHeight, pCurrentBlockIndex->nHeight);
             return;
         }
 
         std::string strError = "";
-        if(!winner.IsValid(pfrom, strError)){
-            if(strError != "") LogPrint("mnpayments", "mnw - invalid message - %s\n", strError);
+        if(!winner.IsValid(pfrom, pCurrentBlockIndex->nHeight, strError)) {
+            LogPrint("mnpayments", "MNWINNER -- invalid message, error: %s\n", strError);
             return;
         }
 
         if(!CanVote(winner.vinMasternode.prevout, winner.nBlockHeight)){
-            LogPrintf("mnw - masternode already voted - %s\n", winner.vinMasternode.prevout.ToStringShort());
+            LogPrintf("MNWINNER -- masternode already voted: prevout=%s\n", winner.vinMasternode.prevout.ToStringShort());
             return;
         }
 
-        if(!winner.SignatureValid()){
-            LogPrintf("mnw - invalid signature\n");
-            if(masternodeSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
+        if(!winner.SignatureValid()) {
+            // do not ban for old mnw, MN simply might be not active anymore
+            if(masternodeSync.IsSynced() && winner.nBlockHeight > pCurrentBlockIndex->nHeight) {
+                LogPrintf("MNWINNER -- invalid signature\n");
+                Misbehaving(pfrom->GetId(), 20);
+            }
             // it could just be a non-synced masternode
             mnodeman.AskForMN(pfrom, winner.vinMasternode);
             return;
@@ -255,7 +263,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         ExtractDestination(winner.payee, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrint("mnpayments", "mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", address2.ToString(), winner.nBlockHeight, pCurrentBlockIndex->nHeight, winner.vinMasternode.prevout.ToStringShort());
+        LogPrint("mnpayments", "MNWINNER -- winning vote: address=%s, nBlockHeight=%d, nHeight=%d, prevout=%s\n", address2.ToString(), winner.nBlockHeight, pCurrentBlockIndex->nHeight, winner.vinMasternode.prevout.ToStringShort());
 
         if(AddWinningMasternode(winner)){
             winner.Relay();
@@ -464,37 +472,34 @@ void CMasternodePayments::CheckAndRemove()
     LogPrintf("CMasternodePayments::CleanPaymentList() - %s mapSeenSyncMNW %lld\n", ToString(), masternodeSync.mapSeenSyncMNW.size());
 }
 
-bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
+bool CMasternodePaymentWinner::IsValid(CNode* pnode, int nValidationHeight, std::string& strError)
 {
     CMasternode* pmn = mnodeman.Find(vinMasternode);
 
-    if(!pmn)
-    {
-        strError = strprintf("Unknown Masternode %s", vinMasternode.prevout.ToStringShort());
-        LogPrint("mnpayments", "CMasternodePaymentWinner::IsValid - %s\n", strError);
-        mnodeman.AskForMN(pnode, vinMasternode);
+    if(!pmn) {
+        strError = strprintf("Unknown Masternode: prevout=%s", vinMasternode.prevout.ToStringShort());
+        // Only ask if we are already synced and still have no idea about that Masternode
+        if (masternodeSync.IsSynced()) mnodeman.AskForMN(pnode, vinMasternode);
         return false;
     }
 
-    if(pmn->protocolVersion < MIN_MNW_PEER_PROTO_VERSION)
-    {
-        strError = strprintf("Masternode protocol too old %d - req %d", pmn->protocolVersion, MIN_MNW_PEER_PROTO_VERSION);
-        LogPrint("mnpayments", "CMasternodePaymentWinner::IsValid - %s\n", strError);
+    if(pmn->protocolVersion < MIN_MNW_PEER_PROTO_VERSION) {
+        strError = strprintf("Masternode protocol is too old: protocolVersion=%d, MIN_MNW_PEER_PROTO_VERSION=%d", pmn->protocolVersion, MIN_MNW_PEER_PROTO_VERSION);
         return false;
     }
 
-    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);
+    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 100, MIN_MNW_PEER_PROTO_VERSION);
 
-    if(n > MNPAYMENTS_SIGNATURES_TOTAL)
-    {    
-        //It's common to have masternodes mistakenly think they are in the top 10
-        // We don't want to print all of these messages, or punish them unless they're way off
-        if(n > MNPAYMENTS_SIGNATURES_TOTAL*2)
-        {
-            strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, n);
-            LogPrint("mnpayments", "CMasternodePaymentWinner::IsValid - %s\n", strError);
-            if(masternodeSync.IsSynced()) Misbehaving(pnode->GetId(), 20);
+    if(nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
+        // It's common to have masternodes mistakenly think they are in the top 10
+        // We don't want to print all of these messages in normal mode, debug mode should print though
+        strError = strprintf("Masternode is not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, nRank);
+        // Only ban for new mnw which is out of bounds, for old mnw MN list itself might be way too much off
+        if(nRank > MNPAYMENTS_SIGNATURES_TOTAL*2 && nBlockHeight > nValidationHeight) {
+            LogPrintf("CMasternodePaymentWinner::IsValid -- Error: Masternode is not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL*2, nRank);
+            Misbehaving(pnode->GetId(), 20);
         }
+        // Still invalid however
         return false;
     }
 

@@ -586,6 +586,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     } else if (strCommand == NetMsgType::DSEG) { //Get Masternode list or specific entry
 
+        // ignore such request until we are fully synced
+        if (!masternodeSync.IsSynced()) return;
+
         CTxIn vin;
         vRecv >> vin;
 
