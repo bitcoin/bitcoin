@@ -85,6 +85,10 @@ public:
         next_free_index = checks.begin();
     }
 
+    decltype(&checks) TEST_get_checks()
+    {
+        return Q::TEST ? &checks : nullptr;
+    }
 };
 /* round_barrier is used to communicate that a thread has finished
      * all work and reported any bad checks it might have seen.
@@ -260,23 +264,42 @@ struct status_container {
  * @tparam W the maximum number of workers possible
  */
 
-template <typename T, size_t J, size_t W>
+enum testing_level : int {
+    disabled = 0,
+    enable_functions = 1,
+    enable_logging = 2
+};
+constexpr testing_level operator&(testing_level a, testing_level b)
+{
+    return static_cast<testing_level>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+constexpr testing_level operator|(testing_level a, testing_level b)
+{
+    return static_cast<testing_level>(static_cast<int>(a) | static_cast<int>(b));
+}
+template <typename T, size_t J, size_t W, testing_level TEST_ENABLE = testing_level::disabled>
 class CCheckQueue;
-template <typename T, size_t J, size_t W>
+template <typename T, size_t J, size_t W, testing_level TEST_ENABLE>
 class CCheckQueue
 {
 public:
     typedef T JOB_TYPE;
     static const size_t MAX_JOBS = J;
     static const size_t MAX_WORKERS = W;
+    static const testing_level TEST = TEST_ENABLE;
     // We use the Proto version so that we can pass it to job_array, status_container, etc
 
 private:
-    CCheckQueue_Internals::job_array<CCheckQueue<T, J, W> > jobs;
-    CCheckQueue_Internals::status_container<CCheckQueue<T, J, W> > status;
-    CCheckQueue_Internals::round_barrier<CCheckQueue<T, J, W> > done_round;
+    CCheckQueue_Internals::job_array<CCheckQueue<T, J, W, TEST> > jobs;
+    CCheckQueue_Internals::status_container<CCheckQueue<T, J, W, TEST> > status;
+    CCheckQueue_Internals::round_barrier<CCheckQueue<T, J, W, TEST> > done_round;
     std::atomic<bool> should_sleep;
     size_t RT_N_SCRIPTCHECK_THREADS;
+
+    //state only for testing
+    mutable std::atomic<size_t> test_log_seq;
+    mutable std::array<std::ostringstream, MAX_WORKERS> test_log;
 
 
     void wait_all_finished_cleanup() const
@@ -292,7 +315,10 @@ private:
 
     size_t consume(const size_t ID)
     {
-        CCheckQueue_Internals::PriorityWorkQueue<CCheckQueue<T, J, W> > work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
+        if (TEST & testing_level::enable_logging)
+            test_log[ID] << "[[" << ++test_log_seq << "]] "
+                         << "Worker ID [" << ID << "] in consume\n";
+        CCheckQueue_Internals::PriorityWorkQueue<CCheckQueue<T, J, W, TEST> > work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
         bool no_stealing;
         bool got_data;
         size_t job_id;
@@ -303,6 +329,9 @@ private:
             work_queue.add(status.nTodo.load());
             (got_data = work_queue.pop(job_id, no_stealing)) && jobs.reserve(job_id) && (jobs.eval(job_id) || (status.fAllOk.store(false), false));
         } while (status.fAllOk.load() && (no_stealing || got_data));
+        if (TEST & testing_level::enable_logging)
+            test_log[ID] << "[[" << ++test_log_seq << "]] "
+                         << "Worker ID [" << ID << "] leaving consume. fAllOk was " << status.fAllOk.load() << "\n";
         return work_queue.get_total();
     }
     /** Internal function that does bulk of the verification work. */
@@ -312,7 +341,15 @@ private:
             if (ID != 0)
                 maybe_sleep();
 
+            if (TEST & testing_level::enable_logging)
+                test_log[ID] << "[[" << ++test_log_seq << "]] "
+                             << "Worker ID [" << ID << "] starting\n";
+
             size_t prev_total = consume(ID);
+
+            if (TEST & testing_level::enable_logging)
+                test_log[ID] << "[[" << ++test_log_seq << "]] "
+                             << "Worker ID [" << ID << "] saw up to " << prev_total << " master was " << status.masterJoined.load() << " nTodo " << status.nTodo.load() << '\n';
 
             // We only break out of the loop when there is no more work and the master had joined.
             // We won't find more work later, so mark ourselves as completed
@@ -331,6 +368,9 @@ private:
             if (ID == 0) {
                 while (!done_round.load_done())
                     ;
+                if (TEST & testing_level::enable_logging)
+                    test_log[ID] << "[[" << ++test_log_seq << "]] "
+                                 << "Worker ID [" << ID << "] saw all threads finished\n";
                 bool fRet = status.fAllOk;
                 sleep();
                 status.masterJoined.store(false);
@@ -340,6 +380,9 @@ private:
             // We wait until the master reports leaving explicitly
             while (status.masterJoined.load())
                 ;
+            if (TEST & testing_level::enable_logging)
+                test_log[ID] << "[[" << ++test_log_seq << "]] "
+                             << "Worker ID [" << ID << "] saw master leave\n";
 
             // Have ID == 1 perform cleanup as the "slave master slave" as ID == 1 is always there if multicore
             // This frees the master to return with the result before the cleanup occurs
@@ -357,6 +400,9 @@ private:
                 for (size_t i = 0; i < prev_total; i += RT_N_SCRIPTCHECK_THREADS)
                     jobs.reset_flag(i);
 
+                if (TEST & testing_level::enable_logging)
+                    test_log[ID] << "[[" << ++test_log_seq << "]] "
+                                 << "Resetting nTodo and fAllOk" << '\n';
 
                 status.nTodo.store(0);
                 status.fAllOk.store(true);
@@ -378,7 +424,7 @@ private:
     }
 
 public:
-    CCheckQueue() : jobs(), status(), done_round(), should_sleep(true), RT_N_SCRIPTCHECK_THREADS(0)
+    CCheckQueue() : jobs(), status(), done_round(), should_sleep(true), RT_N_SCRIPTCHECK_THREADS(0), test_log_seq(0)
     {
     }
 
@@ -386,6 +432,9 @@ public:
     {
         while (done_round.is_done(0)) {
         }
+        if (TEST & testing_level::enable_logging)
+            test_log[0] << "[[" << ++test_log_seq << "]] "
+                        << "Worker ID [" << 0 << "] cleanup waiting done!\n";
     }
     void reset_jobs()
     {
@@ -403,6 +452,11 @@ public:
     bool Wait()
     {
         status.masterJoined.store(true);
+
+        if (TEST & testing_level::enable_logging)
+            test_log[0] << "[[" << ++test_log_seq << "]] "
+                        << "Master just set masterJoined\n";
+
         return Loop(0);
     }
 
@@ -412,6 +466,10 @@ public:
         jobs.add(vChecks);
         size_t vs = vChecks.size();
         status.nTodo.fetch_add(vs);
+
+        if (TEST & testing_level::enable_logging)
+            test_log[0] << "[[" << ++test_log_seq << "]] "
+                        << "Added " << vs << " values. nTodo was " << status.nTodo.load() - vs << " now is " << status.nTodo.load() << " \n";
     }
 
     ~CCheckQueue()
@@ -437,6 +495,53 @@ public:
         should_sleep.store(true);
     }
 
+    size_t TEST_consume(const size_t ID)
+    {
+        return TEST & testing_level::enable_functions ? consume(ID) : 0;
+    }
+    void TEST_set_masterJoined(const bool b)
+    {
+        if (TEST & testing_level::enable_functions)
+            status.masterJoined.store(b);
+    }
+
+    size_t TEST_count_set_flags()
+    {
+        auto count = 0;
+        if (TEST & testing_level::enable_functions)
+            for (auto t = 0; t < MAX_JOBS; ++t)
+                count += jobs.reserve(t) ? 0 : 1;
+        return count;
+    }
+    void TEST_reset_all_flags()
+    {
+        if (TEST & testing_level::enable_functions)
+            for (auto t = 0; t < MAX_JOBS; ++t)
+                jobs.reset_flag(t);
+    }
+    void TEST_dump_log(const size_t upto) const
+    {
+        if (TEST & testing_level::enable_functions & testing_level::enable_logging)
+            for (auto i = 0; i < upto; ++i)
+                LogPrintf("\n------------------\n%s\n------------------\n\n", test_log[i].str());
+    }
+
+    void TEST_erase_log() const
+    {
+        if (TEST & testing_level::enable_functions & testing_level::enable_logging)
+            for (auto i = 0; i < MAX_WORKERS; ++i) {
+                test_log[i].str("");
+                test_log[i].clear();
+            }
+    }
+    decltype(status) * TEST_introspect_status()
+    {
+        return TEST & testing_level::enable_functions ? &status : nullptr;
+    }
+    decltype(jobs) * TEST_introspect_jobs()
+    {
+        return TEST & testing_level::enable_functions ? &jobs : nullptr;
+    }
 };
 
 /** 
