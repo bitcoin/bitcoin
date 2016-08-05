@@ -93,8 +93,6 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
                     nChecked++;
             fail_queue.TEST_dump_log(nThreads);
             fail_queue.TEST_erase_log();
-            BOOST_MESSAGE("Failed to see failure on round " << i << " only counted " << nChecked << " flags (by job_array).");
-            BOOST_MESSAGE("Failed to see failure on round " << i << " only counted " << n_calls << " flags (by atomic).");
             BOOST_REQUIRE(!success);
         } else if (i == 0) {
             fail_queue.TEST_erase_log();
