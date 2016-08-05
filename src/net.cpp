@@ -938,7 +938,16 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     {
         LOCK(cs_vNodes);
 
-        BOOST_FOREACH(CNode *node, vNodes) {
+        static int64_t nLastTime = GetTime();
+        BOOST_FOREACH(CNode *node, vNodes
+        {
+            // Decay the activity bytes for each node over a period of 2 hours.  This gradually de-prioritizes a connection 
+            // that was once active but has gone stale for some reason and allows lower priority active nodes to climb the ladder.
+            int64_t nNow = GetTime();
+LogPrintf("activity bytes before is %d\n", node->nActivityBytes);
+            node->nActivityBytes *= pow(1.0 - 1.0/7200, (double)(nNow - nLastTime)); // exponential 2 hour decay
+LogPrintf("activity bytes after is %d\n", node->nActivityBytes);
+
             if (node->fWhitelisted)
                 continue;
             if (!node->fInbound)
@@ -954,8 +963,10 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
                 return true;
             }
         }
+        nLastTime = GetTime();
     }
     vEvictionCandidatesByActivity = vEvictionCandidates;
+
 
     if (vEvictionCandidates.empty()) return false;
 
@@ -1046,8 +1057,9 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
         LogPrintf("Number of Evictions is %f for %s\n", nEvictions, vEvictionCandidatesByActivity[0]->addr.ToString());
 
         if (nEvictions > 15) {
-            CNode::Ban((CNetAddr)vEvictionCandidatesByActivity[0]->addr, BanReasonNodeMisbehaving, 4*60*60);
-            LogPrintf("Banning %s for four hours: Too many evictions - connection dropped\n", vEvictionCandidatesByActivity[0]->addr.ToString());
+            int nHoursToBan = 4;
+            CNode::Ban((CNetAddr)vEvictionCandidatesByActivity[0]->addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);
+            LogPrintf("Banning %s for %d hours: Too many evictions - connection dropped\n", vEvictionCandidatesByActivity[0]->addr.ToString(), nHoursToBan);
         }
     }
 
@@ -1141,8 +1153,9 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         LogPrintf("Number of Connection attempts is %f for %s\n", nConnections, addr.ToString());
 
         if (nConnections > 4) {
-            CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, 4*60*60);
-            LogPrintf("Banning %s for one hour: Too many connection attempts - connection dropped\n", addr.ToString());
+            int nHoursToBan = 4;
+            CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);
+            LogPrintf("Banning %s for %d hours: Too many connection attempts - connection dropped\n", addr.ToString(), nHoursToBan);
             return;
         }
     }
