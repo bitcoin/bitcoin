@@ -3,7 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "consensus/validation.h"
+#include "activemasternode.h"
 #include "darksend.h"
+#include "init.h"
 #include "masternode.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -369,7 +371,7 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
         return false;
     }
 
-    if(!darkSendSigner.SetKey(strKeyMasternode, strErrorMessage, keyMasternodeNew, pubKeyMasternodeNew)) {
+    if(!darkSendSigner.GetKeysFromSecret(strKeyMasternode, strErrorMessage, keyMasternodeNew, pubKeyMasternodeNew)) {
         strErrorMessage = strprintf("Can't find keys for masternode %s, error: %s", strService, strErrorMessage);
         LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
         return false;

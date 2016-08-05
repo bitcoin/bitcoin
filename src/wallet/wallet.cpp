@@ -82,7 +82,7 @@ std::string COutput::ToString() const
 
 int COutput::Priority() const
 {
-    BOOST_FOREACH(CAmount d, darkSendDenominations)
+    BOOST_FOREACH(CAmount d, vecPrivateSendDenominations)
         if(tx->vout[i].nValue == d) return 10000;
     if(tx->vout[i].nValue < 1*COIN) return 20000;
 
@@ -1175,7 +1175,7 @@ bool CWallet::IsDenominated(const CTransaction& tx) const
 
 bool CWallet::IsDenominatedAmount(CAmount nInputAmount) const
 {
-    BOOST_FOREACH(CAmount d, darkSendDenominations)
+    BOOST_FOREACH(CAmount d, vecPrivateSendDenominations)
         if(nInputAmount == d)
             return true;
     return false;
@@ -1896,7 +1896,7 @@ CAmount CWallet::GetAnonymizableBalance() const
 
     BOOST_FOREACH(CompactTallyItem& item, vecTally) {
         // try to anonymize all denoms and anything greater than sum of 10 smallest denoms
-        if(IsDenominatedAmount(item.nAmount) || item.nAmount >= darkSendDenominations.back() * 10)
+        if(IsDenominatedAmount(item.nAmount) || item.nAmount >= vecPrivateSendDenominations.back() * 10)
             nTotal += item.nAmount;
     }
 
@@ -2231,7 +2231,7 @@ bool less_then_denom (const COutput& out1, const COutput& out2)
 
     bool found1 = false;
     bool found2 = false;
-    BOOST_FOREACH(CAmount d, darkSendDenominations) // loop through predefined denoms
+    BOOST_FOREACH(CAmount d, vecPrivateSendDenominations) // loop through predefined denoms
     {
         if(pcoin1->vout[out1.i].nValue == d) found1 = true;
         if(pcoin2->vout[out2.i].nValue == d) found2 = true;
@@ -2392,7 +2392,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
     //if we're doing only denominated, we need to round up to the nearest .1DRK
     if(coin_type == ONLY_DENOMINATED) {
         // Make outputs by looping through denominations, from large to small
-        BOOST_FOREACH(CAmount v, darkSendDenominations)
+        BOOST_FOREACH(CAmount v, vecPrivateSendDenominations)
         {
             BOOST_FOREACH(const COutput& out, vCoins)
             {
@@ -2638,7 +2638,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector<CompactTallyItem>& vecT
                 if(fMasterNode && wtx.vout[i].nValue == 1000*COIN) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
-                if(wtx.vout[i].nValue <= darkSendDenominations.back()/10) continue;
+                if(wtx.vout[i].nValue <= vecPrivateSendDenominations.back()/10) continue;
                 // ignore anonymized
                 if(GetInputPrivateSendRounds(CTxIn(wtx.GetHash(), i)) >= nPrivateSendRounds) continue;
             }
@@ -3421,7 +3421,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     if (IsLocked())
         return _("Error: Wallet locked, unable to create transaction!");
 
-    if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS)
+    if(darkSendPool.GetState() != POOL_STATE_ERROR && darkSendPool.GetState() != POOL_STATE_SUCCESS)
         if(darkSendPool.GetEntriesCount() > 0)
             return _("Error: You already have pending entries in the PrivateSend pool");
 
@@ -3438,7 +3438,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         if minRounds >= 0 it means only denominated inputs are going in and coming out
     */
     if(minRounds >= 0){
-        if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, vCoins2, nValueIn, minRounds, maxRounds))
+        if (!SelectCoinsByDenominations(darkSendPool.nSessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, vCoins2, nValueIn, minRounds, maxRounds))
             return _("Error: Can't select current denominated inputs");
     }
 
@@ -3465,13 +3465,13 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     int nStepsMax = 5 + GetRandInt(5);
     while(nStep < nStepsMax) {
 
-        BOOST_FOREACH(CAmount v, darkSendDenominations){
+        BOOST_FOREACH(CAmount v, vecPrivateSendDenominations){
             // only use the ones that are approved
             bool fAccepted = false;
-            if((darkSendPool.sessionDenom & (1 << 0))      && v == ((100*COIN) +100000)) {fAccepted = true;}
-            else if((darkSendPool.sessionDenom & (1 << 1)) && v == ((10*COIN)  +10000)) {fAccepted = true;}
-            else if((darkSendPool.sessionDenom & (1 << 2)) && v == ((1*COIN)   +1000)) {fAccepted = true;}
-            else if((darkSendPool.sessionDenom & (1 << 3)) && v == ((.1*COIN)  +100)) {fAccepted = true;}
+            if((darkSendPool.nSessionDenom & (1 << 0))      && v == ((100*COIN) +100000)) {fAccepted = true;}
+            else if((darkSendPool.nSessionDenom & (1 << 1)) && v == ((10*COIN)  +10000)) {fAccepted = true;}
+            else if((darkSendPool.nSessionDenom & (1 << 2)) && v == ((1*COIN)   +1000)) {fAccepted = true;}
+            else if((darkSendPool.nSessionDenom & (1 << 3)) && v == ((.1*COIN)  +100)) {fAccepted = true;}
             if(!fAccepted) continue;
 
             // try to add it
@@ -3522,7 +3522,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
                 UnlockCoin(v.prevout);
     }
 
-    if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom) {
+    if(darkSendPool.GetDenominations(vOut) != darkSendPool.nSessionDenom) {
         // unlock used coins on failure
         LOCK(cs_wallet);
         BOOST_FOREACH(CTxIn v, vCoinsResult)
@@ -4261,7 +4261,7 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX)
         }
     }
 
-    if(enableIX && nResult < 6 && IsLockedIXTransaction(GetHash()))
+    if(enableIX && nResult < 6 && IsLockedInstandSendTransaction(GetHash()))
         return nInstantSendDepth + nResult;
 
     return nResult;

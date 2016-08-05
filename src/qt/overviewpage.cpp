@@ -452,17 +452,17 @@ void OverviewPage::privateSendStatus()
     int nBestHeight = clientModel->getNumBlocks();
 
     // We are processing more then 1 block per second, we'll just leave
-    if(((nBestHeight - darkSendPool.cachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
+    if(((nBestHeight - darkSendPool.nCachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
     nLastDSProgressBlockTime = GetTimeMillis();
 
     QString strKeysLeftText(tr("keys left: %1").arg(pwalletMain->nKeysLeftSinceAutoBackup));
-    if(pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING) {
+    if(pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         strKeysLeftText = "<span style='color:red;'>" + strKeysLeftText + "</span>";
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
 
     // Warn user that wallet is running out of keys
-    if (nWalletBackups > 0 && pwalletMain->nKeysLeftSinceAutoBackup < PS_KEYS_THRESHOLD_WARNING) {
+    if (nWalletBackups > 0 && pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         QSettings settings;
         if(settings.value("fLowKeysWarning").toBool()) {
             QString strWarn =   tr("Very low number of keys left since last automatic backup!") + "<br><br>" +
@@ -521,8 +521,8 @@ void OverviewPage::privateSendStatus()
     }
 
     if(!fEnablePrivateSend) {
-        if(nBestHeight != darkSendPool.cachedNumBlocks) {
-            darkSendPool.cachedNumBlocks = nBestHeight;
+        if(nBestHeight != darkSendPool.nCachedNumBlocks) {
+            darkSendPool.nCachedNumBlocks = nBestHeight;
             updatePrivateSendProgress();
         }
 
@@ -533,9 +533,9 @@ void OverviewPage::privateSendStatus()
     }
 
     // check darksend status and unlock if needed
-    if(nBestHeight != darkSendPool.cachedNumBlocks) {
+    if(nBestHeight != darkSendPool.nCachedNumBlocks) {
         // Balance and number of transactions might have changed
-        darkSendPool.cachedNumBlocks = nBestHeight;
+        darkSendPool.nCachedNumBlocks = nBestHeight;
         updatePrivateSendProgress();
     }
 
@@ -548,13 +548,11 @@ void OverviewPage::privateSendStatus()
 
     ui->labelPrivateSendLastMessage->setText(s);
 
-    if(darkSendPool.sessionDenom == 0){
+    if(darkSendPool.nSessionDenom == 0){
         ui->labelSubmittedDenom->setText(tr("N/A"));
     } else {
-        std::string out;
-        darkSendPool.GetDenominationsToString(darkSendPool.sessionDenom, out);
-        QString s2(out.c_str());
-        ui->labelSubmittedDenom->setText(s2);
+        QString strDenom(darkSendPool.GetDenominationsToString(darkSendPool.nSessionDenom).c_str());
+        ui->labelSubmittedDenom->setText(strDenom);
     }
 
 }
@@ -564,7 +562,7 @@ void OverviewPage::privateSendAuto(){
 }
 
 void OverviewPage::privateSendReset(){
-    darkSendPool.Reset();
+    darkSendPool.ResetPool();
 
     QMessageBox::warning(this, tr("PrivateSend"),
         tr("PrivateSend was successfully reset."),
@@ -599,7 +597,7 @@ void OverviewPage::togglePrivateSend(){
             if(!ctx.isValid())
             {
                 //unlock was cancelled
-                darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
+                darkSendPool.nCachedNumBlocks = std::numeric_limits<int>::max();
                 QMessageBox::warning(this, tr("PrivateSend"),
                     tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -611,7 +609,7 @@ void OverviewPage::togglePrivateSend(){
     }
 
     fEnablePrivateSend = !fEnablePrivateSend;
-    darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
+    darkSendPool.nCachedNumBlocks = std::numeric_limits<int>::max();
 
     if(!fEnablePrivateSend){
         ui->togglePrivateSend->setText(tr("Start Mixing"));

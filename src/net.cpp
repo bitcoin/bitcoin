@@ -394,7 +394,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fConnectToMas
 {
     if (pszDest == NULL) {
         // we clean masternode connections in CMasternodeMan::ProcessMasternodeConnections()
-        // so should be safe to skip this and connect to local Hot MN on CActiveMasternode::ManageStatus()
+        // so should be safe to skip this and connect to local Hot MN on CActiveMasternode::ManageState()
         if (IsLocal(addrConnect) && !fConnectToMasternode)
             return NULL;
 
@@ -2077,11 +2077,7 @@ void RelayTransaction(const CTransaction& tx)
     ss.reserve(10000);
     uint256 hash = tx.GetHash();
     if(mapDarksendBroadcastTxes.count(hash)) { // MSG_DSTX
-        ss <<
-            mapDarksendBroadcastTxes[hash].tx <<
-            mapDarksendBroadcastTxes[hash].vin <<
-            mapDarksendBroadcastTxes[hash].vchSig <<
-            mapDarksendBroadcastTxes[hash].sigTime;
+        ss << mapDarksendBroadcastTxes[hash];
     } else if(mapTxLockReq.count(hash)) { // MSG_TXLOCK_REQUEST
         ss << mapTxLockReq[hash];
     } else { // MSG_TX

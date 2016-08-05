@@ -31,6 +31,8 @@
 #include <QMessageBox>
 #include <QTimer>
 
+extern CWallet* pwalletMain;
+
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
@@ -257,7 +259,7 @@ void OptionsDialog::on_resetButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
-    darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
+    darkSendPool.nCachedNumBlocks = std::numeric_limits<int>::max();
     pwalletMain->MarkDirty();
     accept();
     updateDefaultProxyNets();

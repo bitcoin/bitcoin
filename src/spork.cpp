@@ -202,7 +202,7 @@ bool CSporkMessage::Sign(std::string strSignKey)
     CPubKey pubkey;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strSignKey, errorMessage, key, pubkey)) {
+    if(!darkSendSigner.GetKeysFromSecret(strSignKey, errorMessage, key, pubkey)) {
         LogPrintf("CSporkMessage::Sign -- ERROR: '%s'\n", errorMessage);
         return false;
     }

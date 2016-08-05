@@ -13,6 +13,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
+#include "darksend.h"
 #include "net.h"
 #include "txmempool.h"
 #include "ui_interface.h"
@@ -74,7 +75,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
 QString ClientModel::getMasternodeCountString() const
 {
     return tr("Total: %1 (PS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
-            .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
+            .arg(QString::number((int)mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION)))
             .arg(QString::number((int)mnodeman.CountEnabled()));
 }
 

@@ -104,13 +104,7 @@ using namespace std;
 
 //Dash only features
 bool fMasterNode = false;
-string strMasterNodeAddr = "";
 bool fLiteMode = false;
-bool fEnableInstantSend = true;
-int nInstantSendDepth = 5;
-int nPrivateSendRounds = 2;
-int nPrivateSendAmount = 1000;
-int nLiquidityProvider = 0;
 /**
     nWalletBackups:
         1..10   - number of automatic backups to keep
@@ -122,10 +116,6 @@ int nWalletBackups = 10;
 /** Spork enforcement enabled time */
 int64_t enforceMasternodePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
-bool fEnablePrivateSend = false;
-bool fPrivateSendMultiSession = false;
-/** All denominations used by darksend */
-std::vector<CAmount> darkSendDenominations;
 string strBudgetMode = "";
 
 const char * const BITCOIN_CONF_FILENAME = "dash.conf";

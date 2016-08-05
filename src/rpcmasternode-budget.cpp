@@ -6,6 +6,7 @@
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
+#include "darksend.h"
 #include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -234,7 +235,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+            if(!darkSendSigner.GetKeysFromSecret(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));

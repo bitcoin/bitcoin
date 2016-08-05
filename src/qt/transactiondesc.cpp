@@ -38,7 +38,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
         QString strUsingIX = "";
         if(signatures >= 0){
 
-            if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
+            if(signatures >= INSTANTSEND_SIGNATURES_REQUIRED){
                 int nDepth = wtx.GetDepthInMainChain();
                 if (nDepth < 0)
                     return tr("conflicted");
@@ -54,11 +54,11 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
                     if (nDepth < 0)
                         return tr("conflicted");
                     else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                        return tr("%1/offline (InstantSend verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                        return tr("%1/offline (InstantSend verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
                     else if (nDepth < 6)
-                        return tr("%1/confirmed (InstantSend verification in progress - %2 of %3 signatures )").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                        return tr("%1/confirmed (InstantSend verification in progress - %2 of %3 signatures )").arg(nDepth).arg(signatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
                     else
-                        return tr("%1 confirmations (InstantSend verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                        return tr("%1 confirmations (InstantSend verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
                 } else {
                     int nDepth = wtx.GetDepthInMainChain();
                     if (nDepth < 0)

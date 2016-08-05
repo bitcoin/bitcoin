@@ -1,4 +1,4 @@
-
+#include "darksend.h"
 #include "darksend-relay.h"
 
 
@@ -42,7 +42,7 @@ bool CDarkSendRelay::Sign(std::string strSharedKey)
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strSharedKey, errorMessage, key2, pubkey2))
+    if(!darkSendSigner.GetKeysFromSecret(strSharedKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CDarkSendRelay():Sign - ERROR: Invalid shared key: '%s'\n", errorMessage);
         return false;
@@ -69,7 +69,7 @@ bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strSharedKey, errorMessage, key2, pubkey2))
+    if(!darkSendSigner.GetKeysFromSecret(strSharedKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CDarkSendRelay()::VerifyMessage - ERROR: Invalid shared key: '%s'\n", errorMessage);
         return false;
@@ -85,7 +85,7 @@ bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
 
 void CDarkSendRelay::Relay()
 {
-    int nCount = std::min(mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION), 20);
+    int nCount = std::min(mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION), 20);
     int nRank1 = (rand() % nCount)+1; 
     int nRank2 = (rand() % nCount)+1; 
 
@@ -101,7 +101,7 @@ void CDarkSendRelay::Relay()
 
 void CDarkSendRelay::RelayThroughNode(int nRank)
 {
-    CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
+    CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, nBlockHeight, MIN_PRIVATESEND_PEER_PROTO_VERSION);
 
     if(pmn != NULL){
         //printf("RelayThroughNode %s\n", pmn->addr.ToString().c_str());

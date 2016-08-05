@@ -13,6 +13,7 @@
 #include "guiutil.h"
 
 #include "amount.h"
+#include "darksend.h"
 #include "init.h"
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
@@ -119,7 +120,7 @@ void OptionsModel::Init(bool resetSettings)
 
     // PrivateSend
     if (!settings.contains("nPrivateSendRounds"))
-        settings.setValue("nPrivateSendRounds", 2);
+        settings.setValue("nPrivateSendRounds", DEFAULT_PRIVATESEND_ROUNDS);
     if (!SoftSetArg("-privatesendrounds", settings.value("nPrivateSendRounds").toString().toStdString()))
         addOverriddenOption("-privatesendrounds");
     nPrivateSendRounds = settings.value("nPrivateSendRounds").toInt();
@@ -127,7 +128,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("nPrivateSendAmount")) {
         // for migration from old settings
         if (!settings.contains("nAnonymizeDashAmount"))
-            settings.setValue("nPrivateSendAmount", 1000);
+            settings.setValue("nPrivateSendAmount", DEFAULT_PRIVATESEND_AMOUNT);
         else
             settings.setValue("nPrivateSendAmount", settings.value("nAnonymizeDashAmount").toInt());
     }
@@ -136,7 +137,7 @@ void OptionsModel::Init(bool resetSettings)
     nPrivateSendAmount = settings.value("nPrivateSendAmount").toInt();
 
     if (!settings.contains("fPrivateSendMultiSession"))
-        settings.setValue("fPrivateSendMultiSession", fPrivateSendMultiSession);
+        settings.setValue("fPrivateSendMultiSession", DEFAULT_PRIVATESEND_MULTISESSION);
     if (!SoftSetBoolArg("-privatesendmultisession", settings.value("fPrivateSendMultiSession").toBool()))
         addOverriddenOption("-privatesendmultisession");
     fPrivateSendMultiSession = settings.value("fPrivateSendMultiSession").toBool();

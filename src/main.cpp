@@ -962,7 +962,7 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
     int nResult = GetInputAge(vin);
     if(nResult < 0) return -1;
 
-    if (nResult < 6 && IsLockedIXTransaction(nTXHash))
+    if (nResult < 6 && IsLockedInstandSendTransaction(nTXHash))
         return nInstantSendDepth + nResult;
 
     return nResult;
@@ -970,7 +970,7 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
 
 int GetIXConfirmations(uint256 nTXHash)
 {
-    if (IsLockedIXTransaction(nTXHash))
+    if (IsLockedInstandSendTransaction(nTXHash))
         return nInstantSendDepth;
 
     return 0;
@@ -4887,12 +4887,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     if(mapDarksendBroadcastTxes.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss <<
-                            mapDarksendBroadcastTxes[inv.hash].tx <<
-                            mapDarksendBroadcastTxes[inv.hash].vin <<
-                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
-                            mapDarksendBroadcastTxes[inv.hash].sigTime;
-
+                        ss << mapDarksendBroadcastTxes[inv.hash];
                         pfrom->PushMessage(NetMsgType::DSTX, ss);
                         pushed = true;
                     }
@@ -5401,46 +5396,30 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<uint256> vEraseQueue;
         CTransaction tx;
 
-        //masternode signed transaction
-        CTxIn vin;
-        vector<unsigned char> vchSig;
-        int64_t sigTime;
-
         if(strCommand == NetMsgType::TX) {
             vRecv >> tx;
         } else if (strCommand == NetMsgType::DSTX) {
             //these allow masternodes to publish a limited amount of free transactions
-            vRecv >> tx >> vin >> vchSig >> sigTime;
+            CDarksendBroadcastTx dstx;
+            vRecv >> dstx;
+            tx = dstx.tx;
 
-            CMasternode* pmn = mnodeman.Find(vin);
+            CMasternode* pmn = mnodeman.Find(dstx.vin);
             if(pmn != NULL)
             {
                 if(!pmn->allowFreeTx){
                     //multiple peers can send us a valid masternode transaction
-                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString());
+                    LogPrint("privatesend", "dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString());
                     return true;
                 }
 
-                std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
-
-                std::string errorMessage = "";
-                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-                    LogPrintf("dstx: Got bad Masternode transaction signature %s\n", vin.ToString());
-                    //pfrom->Misbehaving(20);
-                    return false;
-                }
+                if(!dstx.CheckSignature()) return false;
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString());
 
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
-                    CDarksendBroadcastTx dstx;
-                    dstx.tx = tx;
-                    dstx.vin = vin;
-                    dstx.vchSig = vchSig;
-                    dstx.sigTime = sigTime;
-
                     mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
                 }
             }
@@ -5947,7 +5926,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             darkSendPool.ProcessMessage(pfrom, strCommand, vRecv);
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
             mnpayments.ProcessMessage(pfrom, strCommand, vRecv);
-            ProcessMessageInstantX(pfrom, strCommand, vRecv);
+            ProcessMessageInstantSend(pfrom, strCommand, vRecv);
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv);

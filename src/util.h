@@ -34,19 +34,10 @@
 
 extern bool fMasterNode;
 extern bool fLiteMode;
-extern bool fEnableInstantSend;
-extern int nInstantSendDepth;
-extern int nPrivateSendRounds;
-extern int nPrivateSendAmount;
-extern int nLiquidityProvider;
 extern int nWalletBackups;
-extern bool fEnablePrivateSend;
-extern bool fPrivateSendMultiSession;
 extern int64_t enforceMasternodePaymentsTime;
-extern std::string strMasterNodeAddr;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
-extern std::vector<CAmount> darkSendDenominations;
 extern std::string strBudgetMode;
 
 static const bool DEFAULT_LOGTIMEMICROS = false;

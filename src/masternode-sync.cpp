@@ -150,7 +150,7 @@ void CMasternodeSync::GetNextAsset()
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
             //try to activate our masternode if possible
-            activeMasternode.ManageStatus();
+            activeMasternode.ManageState();
             break;
     }
     RequestedMasternodeAttempt = 0;
@@ -402,7 +402,6 @@ void CMasternodeSync::Process()
                 //     }
                 // }
 
-                if (pnode->nVersion < MSG_GOVERNANCE_PEER_PROTO_VERSION) continue;
 
                 // only request once from each peer
                 if(pnode->HasFulfilledRequest("governance-sync")) continue;

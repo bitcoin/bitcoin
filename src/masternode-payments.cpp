@@ -7,6 +7,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "darksend.h"
+#include "activemasternode.h"
 #include "util.h"
 #include "sync.h"
 #include "spork.h"

@@ -13,6 +13,7 @@
 #include "transactiontablemodel.h"
 
 #include "base58.h"
+#include "darksend.h"
 #include "keystore.h"
 #include "main.h"
 #include "sync.h"

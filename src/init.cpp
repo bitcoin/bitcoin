@@ -34,6 +34,8 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
+#include "instantx.h"
+#include "darksend.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
@@ -556,15 +558,15 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-budgetvotemode=<mode>", _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)"));
 
     strUsage += HelpMessageGroup(_("PrivateSend options:"));
-    strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), fEnablePrivateSend));
-    strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), fPrivateSendMultiSession));
-    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), nPrivateSendRounds));
-    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N DASH anonymized (default: %u)"), nPrivateSendAmount));
+    strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N DASH anonymized (default: %u)"), DEFAULT_PRIVATESEND_AMOUNT));
     strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider));
 
     strUsage += HelpMessageGroup(_("InstantSend options:"));
-    strUsage += HelpMessageOpt("-enableinstantsend=<n>", strprintf(_("Enable InstantSend, show confirmations for locked transactions (0-1, default: %u)"), fEnableInstantSend));
-    strUsage += HelpMessageOpt("-instantsenddepth=<n>", strprintf(_("Show N confirmations for a successfully locked transaction (0-9999, default: %u)"), nInstantSendDepth));
+    strUsage += HelpMessageOpt("-enableinstantsend=<n>", strprintf(_("Enable InstantSend, show confirmations for locked transactions (0-1, default: %u)"), 1));
+    strUsage += HelpMessageOpt("-instantsenddepth=<n>", strprintf(_("Show N confirmations for a successfully locked transaction (0-9999, default: %u)"), DEFAULT_INSTANTSEND_DEPTH));
     strUsage += HelpMessageOpt("-instantsendnotify=<cmd>", _("Execute command when a wallet IS transaction is successfully locked (%s in cmd is replaced by TxID)"));
 
 
@@ -1774,23 +1776,28 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     if(fMasterNode) {
-        LogPrintf("IS DARKSEND MASTER NODE\n");
-        strMasterNodeAddr = GetArg("-masternodeaddr", "");
+        LogPrintf("MASTERNODE:\n");
+        activeMasternode.strMasterNodeAddr = GetArg("-masternodeaddr", "");
 
-        LogPrintf(" addr %s\n", strMasterNodeAddr);
 
-        if(!strMasterNodeAddr.empty()){
-            CService addrTest = CService(strMasterNodeAddr);
-            if (!addrTest.IsValid()) {
-                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
+        CService service;
+        if(activeMasternode.strMasterNodeAddr.empty()) {
+            if(!GetLocal(service)) {
+                LogPrintf("Can't detect external address. Please consider using the masternodeaddr configuration option.\n");
+            }
+        } else {
+            service = CService(activeMasternode.strMasterNodeAddr);
+            if (!service.IsValid()) {
+                return InitError("Invalid masternodeaddr: " + activeMasternode.strMasterNodeAddr);
             }
         }
+        LogPrintf("  service: %s\n", service.ToString());
 
         std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
-        if(!strMasterNodePrivKey.empty()){
-            std::string errorMessage;
+        if(!strMasterNodePrivKey.empty()) {
+            std::string strErrorMessage;
 
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
+            if(!darkSendSigner.GetKeysFromSecret(strMasterNodePrivKey, strErrorMessage, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
 
             LogPrintf("  pubKeyMasternode: %s\n", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
@@ -1825,15 +1832,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     nLiquidityProvider = std::min(std::max(nLiquidityProvider, 0), 100);
     darkSendPool.SetMinBlockSpacing(nLiquidityProvider * 15);
 
-    fEnablePrivateSend = GetBoolArg("-enableprivatesend", fEnablePrivateSend);
-    fPrivateSendMultiSession = GetBoolArg("-privatesendmultisession", fPrivateSendMultiSession);
-    nPrivateSendRounds = GetArg("-privatesendrounds", nPrivateSendRounds);
+    fEnablePrivateSend = GetBoolArg("-enableprivatesend", 0);
+    fPrivateSendMultiSession = GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
+    nPrivateSendRounds = GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS);
     nPrivateSendRounds = std::min(std::max(nPrivateSendRounds, 1), 99999);
-    nPrivateSendAmount = GetArg("-privatesendamount", nPrivateSendAmount);
+    nPrivateSendAmount = GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT);
     nPrivateSendAmount = std::min(std::max(nPrivateSendAmount, 2), 999999);
 
-    fEnableInstantSend = GetBoolArg("-enableinstantsend", fEnableInstantSend);
-    nInstantSendDepth = GetArg("-instantsenddepth", nInstantSendDepth);
+    fEnableInstantSend = GetBoolArg("-enableinstantsend", 1);
+    nInstantSendDepth = GetArg("-instantsenddepth", DEFAULT_INSTANTSEND_DEPTH);
     nInstantSendDepth = std::min(std::max(nInstantSendDepth, 0), 60);
 
     //lite mode disables all Masternode and Darksend related functionality
