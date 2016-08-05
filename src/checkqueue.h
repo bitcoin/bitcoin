@@ -26,7 +26,7 @@ class CCheckQueueControl;
   * the master is done adding work, it temporarily joins the worker pool
   * as an N'th worker, until all jobs are done.
   */
-template <typename T>
+template <typename T, size_t J size_t W>
 class CCheckQueue
 {
 private:
@@ -63,7 +63,7 @@ private:
     bool fQuit;
 
     //! The maximum number of elements to be processed in one batch
-    unsigned int nBatchSize;
+    unsigned int nBatchSize = 128;
 
     /** Internal function that does bulk of the verification work. */
     bool Loop(bool fMaster = false)
@@ -127,6 +127,9 @@ private:
     }
 
 public:
+    typedef T JOB_TYPE;
+    static const size_t MAX_JOBS = J;
+    static const size_t MAX_WORKERS = W;
     //! Create a new check queue
     CCheckQueue(unsigned int nBatchSizeIn) : nIdle(0), nTotal(0), fAllOk(true), nTodo(0), fQuit(false), nBatchSize(nBatchSizeIn) {}
 
@@ -167,21 +170,30 @@ public:
         return (nTotal == nIdle && nTodo == 0 && fAllOk == true);
     }
 
+    void init(size_t nScriptCheckThreads) 
+    {
+        if (nScriptCheckThreads) {
+            for (int i=0; i<nScriptCheckThreads-1; i++) {
+                boost::thread t([=](){Loop();});
+                t.detach();
+        }
+    }
+
 };
 
 /** 
  * RAII-style controller object for a CCheckQueue that guarantees the passed
  * queue is finished before continuing.
  */
-template <typename T>
+template <typename Q>
 class CCheckQueueControl
 {
 private:
-    CCheckQueue<T>* pqueue;
+    Q* pqueue;
     bool fDone;
 
 public:
-    CCheckQueueControl(CCheckQueue<T>* pqueueIn) : pqueue(pqueueIn), fDone(false)
+    CCheckQueueControl(Q* pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or NULL
         if (pqueue != NULL) {
@@ -199,7 +211,7 @@ public:
         return fRet;
     }
 
-    void Add(std::vector<T>& vChecks)
+    void Add(std::vector<typename Q::JOB_TYPE>& vChecks)
     {
         if (pqueue != NULL)
             pqueue->Add(vChecks);

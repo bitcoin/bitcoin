@@ -2231,12 +2231,13 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+static CCheckQueue<CScriptCheck, MAX_SCRIPTCHECKS, MAX_SCRIPTCHECK_THREADS> scriptcheckqueue;
+void StopCCheckQueue() {
 
-void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
-    scriptcheckqueue.Thread();
-}
+};
+void SetupCCheckQueue(size_t RT_N_SCRIPTCHECK_THREADS) {
+    scriptcheckqueue.init(RT_N_SCRIPTCHECK_THREADS);
+};
 
 // Protected by cs_main
 VersionBitsCache versionbitscache;
@@ -2394,7 +2395,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CBlockUndo blockundo;
 
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
+    CCheckQueueControl<decltype(scriptcheckqueue)> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
     std::vector<uint256> vOrphanErase;
     std::vector<int> prevheights;
@@ -2460,6 +2461,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
+
             control.Add(vChecks);
         }
 
