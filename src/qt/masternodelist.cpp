@@ -185,7 +185,7 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->protocolVersion : -1));
     QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->Status() : "MISSING"));
     QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0)));
-    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(pmn ? pmn->lastPing.sigTime : 0));
+    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", pmn ? pmn->lastPing.sigTime : 0)));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubkey.GetID()).ToString() : ""));
 
     ui->tableWidgetMyMasternodes->setItem(nodeRow, 0, aliasItem);
@@ -224,11 +224,19 @@ void MasternodeList::updateMyNodeList(bool reset) {
 
 void MasternodeList::updateNodeList()
 {
-    static int64_t lastListUpdate = 0;
+    static int64_t nTimeListUpdate = 0;
 
-    // update only once in MASTERNODELIST_UPDATE_SECONDS seconds to prevent high cpu usage e.g. on filter change
-    if(GetTime() - lastListUpdate < MASTERNODELIST_UPDATE_SECONDS) return;
-    lastListUpdate = GetTime();
+    // to prevent high cpu usage update only once in MASTERNODELIST_UPDATE_SECONDS seconds
+    // or MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
+    int64_t nTimeToWait =   fFilterUpdated
+                            ? nTimeFilterUpdate - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS
+                            : nTimeListUpdate - GetTime() + MASTERNODELIST_UPDATE_SECONDS;
+
+    if(fFilterUpdated) ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", nTimeToWait)));
+    if(nTimeToWait > 0) return;
+
+    nTimeListUpdate = GetTime();
+    fFilterUpdated = false;
 
     TRY_LOCK(cs_masternodes, lockMasternodes);
     if(!lockMasternodes)
@@ -249,7 +257,7 @@ void MasternodeList::updateNodeList()
         QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(mn.protocolVersion));
         QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(mn.Status()));
         QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(mn.lastPing.sigTime - mn.sigTime)));
-        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(mn.lastPing.sigTime));
+        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M", mn.lastPing.sigTime)));
         QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(CBitcoinAddress(mn.pubkey.GetID()).ToString()));
 
         if (strCurrentFilter != "")
@@ -279,7 +287,9 @@ void MasternodeList::updateNodeList()
 
 void MasternodeList::on_filterLineEdit_textChanged(const QString &filterString) {
     strCurrentFilter = filterString;
-    ui->countLabel->setText("Please wait...");
+    nTimeFilterUpdate = GetTime();
+    fFilterUpdated = true;
+    ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
 void MasternodeList::on_startButton_clicked()

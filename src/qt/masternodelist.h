@@ -10,8 +10,9 @@
 #include <QTimer>
 #include <QWidget>
 
-#define MASTERNODELIST_UPDATE_SECONDS            5
-#define MY_MASTERNODELIST_UPDATE_SECONDS        60
+#define MY_MASTERNODELIST_UPDATE_SECONDS                 60
+#define MASTERNODELIST_UPDATE_SECONDS                    15
+#define MASTERNODELIST_FILTER_COOLDOWN_SECONDS            3
 
 namespace Ui {
     class MasternodeList;
@@ -40,6 +41,8 @@ public:
 
 private:
     QMenu *contextMenu;
+    int64_t nTimeFilterUpdate;
+    bool fFilterUpdated;
 
 public Q_SLOTS:
     void updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn);
