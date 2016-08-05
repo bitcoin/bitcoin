@@ -13,10 +13,17 @@
 #include <chrono>
 #include <sstream>
 #include <iostream>
-// This should be ignored eventually, but needs testing to ensure this works on more platforms
-static_assert(ATOMIC_BOOL_LOCK_FREE, "shared_status not lock free");
-static_assert(ATOMIC_LONG_LOCK_FREE, "shared_status not lock free");
-static_assert(ATOMIC_LLONG_LOCK_FREE, "shared_status not lock free");
+
+
+#ifndef ATOMIC_BOOL_LOCK_FREE
+#pragma message("std::atomic<bool> is not lock free")
+#endif
+#ifndef ATOMIC_LONG_LOCK_FREE
+#pragma message("std::atomic<uint32_t> is not lock free")
+#endif
+#ifndef ATOMIC_LLONG_LOCK_FREE
+#pragma message("std::atomic<uint64_t> is not lock free")
+#endif
 
 
 /** CCheckQueue_Internals contains various components that otherwise could live inside
