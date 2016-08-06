@@ -99,8 +99,16 @@ CPubKey CWallet::GenerateNewKey()
     CKeyMetadata metadata(nCreationTime);
 
     //check if the wallet supports keyflags
-    if (CanSupportFeature(FEATURE_KEYFLAGS)) {
-        metadata.nVersion = CKeyMetadata::VERSION_WITH_FLAGS;
+    if (GetVersion() >= FEATURE_HD) {
+        if (CanSupportFeature(FEATURE_HD_KEYMETA) && SetMinVersion(FEATURE_HD_KEYMETA)) {
+            metadata.nVersion = CKeyMetadata::VERSION_WITH_META;
+        }
+    } else {
+        if (CanSupportFeature(FEATURE_KEYMETA) && SetMinVersion(FEATURE_KEYMETA)) {
+            metadata.nVersion = CKeyMetadata::VERSION_WITH_META;
+        } else if (CanSupportFeature(FEATURE_KEYFLAGS) && SetMinVersion(FEATURE_KEYFLAGS)) {
+            metadata.nVersion = CKeyMetadata::VERSION_WITH_FLAGS;
+        }
     }
     metadata.SetKeyOrigin(IsCrypted() ? CKeyMetadata::KEY_ORIGIN_ENC_WALLET : CKeyMetadata::KEY_ORIGIN_UNENC_WALLET);
 
