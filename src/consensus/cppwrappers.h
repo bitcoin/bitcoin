@@ -6,6 +6,7 @@
 #define BITCOIN_CONSENSUS_CPPWRAPPERS_H
 
 #include "header_verify.h"
+#include "interfaces.h"
 #include "pow.h"
 
 #include <stdint.h>
@@ -17,17 +18,17 @@ namespace Consensus { struct Params; };
 
 inline unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& consensusParams)
 {
-    return PowGetNextWorkRequired(pindexLast, pblock, consensusParams);
+    return PowGetNextWorkRequired(pindexLast, CreateCoreIndexInterface(), pblock, consensusParams);
 }
 
 inline unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& consensusParams)
 {
-    return PowCalculateNextWorkRequired(pindexLast, nFirstBlockTime, consensusParams);
+    return PowCalculateNextWorkRequired(pindexLast, CreateCoreIndexInterface(), nFirstBlockTime, consensusParams);
 }
 
 inline bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
-    return ContextualCheckHeader(block, state, consensusParams, pindexPrev, nAdjustedTime);
+    return ContextualCheckHeader(block, state, consensusParams, pindexPrev, CreateCoreIndexInterface(), nAdjustedTime);
 }
 
 #endif // BITCOIN_CONSENSUS_CPPWRAPPERS_H

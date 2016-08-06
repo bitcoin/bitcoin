@@ -4,13 +4,11 @@
 
 #include "consensus.h"
 
+#include "interfaces.h"
 #include "pow.h"
 #include "primitives/block.h"
 #include "tinyformat.h"
 #include "validation.h"
-
-// TODO remove the following dependencies
-#include "chain.h"
 
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
@@ -21,15 +19,15 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
     return true;
 }
 
-bool ContextualCheckHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
+bool ContextualCheckHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const void* indexObject, const BlockIndexInterface& iBlockIndex, int64_t nAdjustedTime)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    const int nHeight = indexObject == NULL ? 0 : iBlockIndex.GetHeight(indexObject) + 1;
     // Check proof of work
-    if (block.nBits != PowGetNextWorkRequired(pindexPrev, &block, consensusParams))
+    if (block.nBits != PowGetNextWorkRequired(indexObject, iBlockIndex, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+    if (block.GetBlockTime() <= iBlockIndex.GetMedianTime(indexObject))
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp

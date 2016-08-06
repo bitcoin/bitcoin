@@ -93,9 +93,7 @@ BITCOIN_CORE_H = \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
-  consensus/consensus.h \
   consensus/cppwrappers.h \
-  consensus/header_verify.h \
   core_io.h \
   core_memusage.h \
   httprpc.h \
@@ -118,7 +116,6 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
-  pow.h \
   protocol.h \
   random.h \
   reverselock.h \
@@ -178,7 +175,6 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
-  consensus/header_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -190,7 +186,6 @@ libbitcoin_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
-  pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
@@ -261,6 +256,9 @@ libbitcoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  consensus/consensus.h \
+  consensus/header_verify.cpp \
+  consensus/header_verify.h \
   consensus/interfaces.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
@@ -268,6 +266,8 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  pow.cpp \
+  pow.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_POW_H
 #define BITCOIN_POW_H
 
+#include "consensus/interfaces.h"
 #include "consensus/params.h"
 
 #include <stdint.h>
@@ -14,8 +15,8 @@ class CBlockHeader;
 class CBlockIndex;
 class uint256;
 
-unsigned int PowGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
-unsigned int PowCalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
+unsigned int PowGetNextWorkRequired(const void* indexObject, const BlockIndexInterface& iBlockIndex, const CBlockHeader *pblock, const Consensus::Params&);
+unsigned int PowCalculateNextWorkRequired(const void* indexObject, const BlockIndexInterface& iBlockIndex, int64_t nFirstBlockTime, const Consensus::Params&);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
