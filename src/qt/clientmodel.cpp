@@ -74,9 +74,12 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    return tr("Total: %1 (PS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
+    return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION)))
-            .arg(QString::number((int)mnodeman.CountEnabled()));
+            .arg(QString::number((int)mnodeman.CountEnabled()))
+            .arg(QString::number((int)mnodeman.CountByIP(NET_IPV4)))
+            .arg(QString::number((int)mnodeman.CountByIP(NET_IPV6)))
+            .arg(QString::number((int)mnodeman.CountByIP(NET_TOR)));
 }
 
 int ClientModel::getNumBlocks() const

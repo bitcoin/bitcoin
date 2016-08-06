@@ -85,6 +85,8 @@ public:
     void Clear();
 
     int CountEnabled(int protocolVersion = -1);
+    
+    int CountByIP(int nodeType);
 
     void DsegUpdate(CNode* pnode);
 
