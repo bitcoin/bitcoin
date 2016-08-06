@@ -1200,7 +1200,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         CKeyID keyID;
         uint8_t keyFlags = 0;
         if (address.GetKeyID(keyID))
-            keyFlags = pwalletMain->mapKeyMetadata[keyID].keyFlags;
+            keyFlags = pwalletMain->mapKeyMetadata[keyID].GetKeyOrigin();
 
         std::string keyOrigin;
         if (keyFlags & CKeyMetadata::KEY_ORIGIN_UNKNOWN)
