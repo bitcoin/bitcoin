@@ -333,7 +333,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         CMasternode* pmn = Find(s.second);
         if(!pmn) break;
 
-        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
+        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight - 101));
         if(n > nHigh){
             nHigh = n;
             pBestMasternode = pmn;
