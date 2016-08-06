@@ -5,6 +5,8 @@
 
 #include "chain.h"
 
+#include "consensus/interfaces.h"
+
 using namespace std;
 
 /**
@@ -149,4 +151,67 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         return sign * std::numeric_limits<int64_t>::max();
     }
     return sign * r.GetLow64();
+}
+
+// Interface translators: from CPP to C
+
+namespace {
+static inline const CBlockIndex* GetImpl(const void* indexObject) 
+{
+    return (const CBlockIndex*)indexObject;
+}
+
+static const void* GetAncestorImpl(const void* indexObject, const int64_t height)
+{
+    return GetImpl(indexObject)->GetAncestor(height);
+}
+static const unsigned char* GetHashImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->GetBlockHash().GetDataArray();
+}
+static int64_t GetHeightImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->nHeight;
+}
+static int32_t GetVersionImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->nVersion;
+}
+static uint32_t GetTimeImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->nTime;
+}
+static uint32_t GetBitsImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->nBits;
+}
+inline const void* GetPrevImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->pprev;
+}
+inline int64_t GetMedianTimeImpl(const void* indexObject)
+{
+    return GetImpl(indexObject)->GetMedianTimePast();
+}
+static void IndexDeallocatorImpl(void* indexObject)
+{
+    // Bitcoin Core keeps the index in memory: Don't free anything. 
+}
+} // Anonymous namespace 
+
+BlockIndexInterface CreateCoreIndexInterface()
+{
+    BlockIndexInterface intexInt;
+
+    intexInt.GetAncestor = GetAncestorImpl;
+    intexInt.GetHash = GetHashImpl;
+    intexInt.GetHeight = GetHeightImpl;
+    intexInt.GetVersion = GetVersionImpl;
+    intexInt.GetTime = GetTimeImpl;
+    intexInt.GetBits = GetBitsImpl;
+    intexInt.GetPrev = GetPrevImpl;
+    intexInt.GetMedianTime = GetMedianTimeImpl;
+    intexInt.DeleteIndex = IndexDeallocatorImpl;
+
+    return intexInt;
 }
