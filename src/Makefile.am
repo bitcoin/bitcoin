@@ -71,6 +71,7 @@ endif
 # hodlcoin core #
 BITCOIN_CORE_H = \
   addrman.h \
+  aes.h \
   alert.h \
   amount.h \
   arith_uint256.h \
@@ -129,6 +130,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  sha512.h \
   serialize.h \
   streams.h \
   support/allocators/secure.h \
@@ -177,6 +179,7 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
 libbitcoin_server_a_SOURCES = \
   addrman.cpp \
+  aes.cpp \
   alert.cpp \
   bloom.cpp \
   chain.cpp \
@@ -199,6 +202,7 @@ libbitcoin_server_a_SOURCES = \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   script/sigcache.cpp \
+  sha512.cpp \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
@@ -247,6 +251,7 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 # common: shared between hodlcoind, and hodlcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
+  aes.cpp \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -272,6 +277,7 @@ libbitcoin_common_a_SOURCES = \
   script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  sha512.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

@@ -5,7 +5,10 @@
 #include "main.h"
 #include <openssl/evp.h>
 #include <boost/thread.hpp>
+#include <cpuid.h>
 #include "util.h"
+#include "sha512.h"
+#include "aes.h"
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -16,6 +19,11 @@ namespace patternsearch
     #define PSUEDORANDOM_DATA_CHUNK_SIZE 6 //2^6 = 64 bytes //must be same as SHA512_DIGEST_LENGTH 64
     #define L2CACHE_TARGET 12 // 2^12 = 4096 bytes
     #define AES_ITERATIONS 15
+	#define GARBAGE_SIZE        (1 << 30)
+	#define GARBAGE_CHUNK_SIZE  (1 << 6)
+	#define GARBAGE_SLICE_SIZE  (1 << 12)
+	#define TOTAL_CHUNKS        (1 << 24)       // GARBAGE_SIZE / GARBAGE_CHUNK_SIZE
+	#define COMPARE_SIZE        (1 << 18)       // GARBAGE_SIZE / GARBAGE_SLICE_SIZE
 
 	// useful constants
     #define psuedoRandomDataSize (1<<PSUEDORANDOM_DATA_SIZE) //2^30 = 1GB
@@ -24,15 +32,20 @@ namespace patternsearch
     #define chunkSize (1<<(PSUEDORANDOM_DATA_CHUNK_SIZE)) //2^6 = 64 bytes
     #define comparisonSize (1<<(PSUEDORANDOM_DATA_SIZE-L2CACHE_TARGET)) //2^(30-12) = 256K
 
+	typedef union _CacheEntry
+	{
+		uint32_t dwords[GARBAGE_SLICE_SIZE >> 2] __attribute__((aligned(16)));
+	} CacheEntry;
 
 	void static SHA512Filler(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, uint256 midHash, int* minerStopFlag) {
+		printf("using generic sha512\n");
 		uint32_t chunksToProcess = chunks / totalThreads;
 		uint32_t startChunk = threadNumber * chunksToProcess;
 		uint32_t* midHash32 = (uint32_t*)&midHash;
 		unsigned char *data = (unsigned char*) mainMemoryPsuedoRandomData;
 		EVP_MD_CTX ctx;
 		EVP_MD_CTX_init(&ctx);
-		
+
         int remainder=0;
         if(threadNumber+1==totalThreads){
         //The last thread will also do the remainder
@@ -42,7 +55,7 @@ namespace patternsearch
 		//for (uint32_t i = threadNumber; likely(i < chunks - totalThreads); i += totalThreads) {
         for (uint32_t i = startChunk; likely(i < startChunk + chunksToProcess+remainder); i++) {		// && *minerStopFlag == 0
 			*midHash32 = i;
-      //SHA512((unsigned char*)&midHash, sizeof(midHash), (unsigned char*)&(mainMemoryPsuedoRandomData[i * chunkSize]));
+			//SHA512((unsigned char*)&midHash, sizeof(midHash), (unsigned char*)&(mainMemoryPsuedoRandomData[i * chunkSize]));
 			EVP_DigestInit_ex(&ctx, EVP_sha512(), NULL);
 			EVP_DigestUpdate(&ctx, &midHash, sizeof(midHash));
 			EVP_DigestFinal_ex(&ctx, data + i * chunkSize, NULL);
@@ -50,6 +63,30 @@ namespace patternsearch
 		EVP_MD_CTX_cleanup(&ctx);
 	}
 
+	void static SHA512FillerAVX2(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, uint256 midHash, int* minerStopFlag) {
+        CacheEntry *Garbage = (CacheEntry*)mainMemoryPsuedoRandomData;
+        uint64_t* TempBufs[SHA512_PARALLEL_N];
+        uint64_t* desination[SHA512_PARALLEL_N];
+
+        for (int i=0; i<SHA512_PARALLEL_N; ++i) {
+            TempBufs[i] = (uint64_t*)malloc(32);
+            memcpy(TempBufs[i], (char*)&midHash, 32);
+        }
+
+        uint32_t StartChunk = threadNumber * (TOTAL_CHUNKS / totalThreads);
+        for(uint32_t i = StartChunk; i < StartChunk + (TOTAL_CHUNKS / totalThreads); i+= SHA512_PARALLEL_N)
+        {
+            for(int j=0; j<SHA512_PARALLEL_N; ++j) {
+                ((uint32_t*)TempBufs[j])[0] = i + j;
+                desination[j] = (uint64_t*)((uint8_t *)Garbage + ((i+j) * GARBAGE_CHUNK_SIZE));
+            }
+            sha512Compute32b_parallel(TempBufs, desination);
+        }
+
+        for (int i=0; i<SHA512_PARALLEL_N; ++i) {
+            free(TempBufs[i]);
+        }
+	}
 
 	void static aesSearch(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, std::vector< std::pair<uint32_t,uint32_t> > *results, boost::mutex *mtx, int* minerStopFlag){
 		unsigned char cache[cacheMemorySize + 16] __attribute__ ((aligned (16)));
@@ -68,7 +105,6 @@ namespace patternsearch
             //The last thread will also do the remainder
             remainder=chunks%totalThreads;
         }
-		//for (uint32_t k = threadNumber; likely(k < comparisonSize - totalThreads); k += totalThreads) {
         for (uint32_t k = startLoc; likely(k < startLoc + searchNumber + remainder && *minerStopFlag == 0); k++) {
 			memcpy((char*)cache, mainMemoryPsuedoRandomData + k * cacheMemorySize, cacheMemorySize);
 
@@ -81,35 +117,108 @@ namespace patternsearch
 				//EVP_EncryptFinal_ex(&ctx, cache + outlen, &outlen);
 			}
 
-      if (unlikely(cache32[cacheMemorySize / 4 - 1] % comparisonSize < 1000)) {		// check solution
+     	if (unlikely(cache32[cacheMemorySize / 4 - 1] % comparisonSize < 1000)) {		// check solution
 				boost::mutex::scoped_lock lck(*mtx);
 				(*results).push_back(std::make_pair(k, cache32[cacheMemorySize / 4 - 2]));	// set proof of calculation
 			}
 		}
 		EVP_CIPHER_CTX_cleanup(&ctx);
 	}
+	
+	void static aesSearchAESNI(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, std::vector< std::pair<uint32_t,uint32_t> > *results, boost::mutex *mtx, int* minerStopFlag){
+	    // start
+	    CacheEntry *Garbage = (CacheEntry*)mainMemoryPsuedoRandomData;
+	    CacheEntry Cache[AES_PARALLEL_N];
+
+	    uint32_t* data[AES_PARALLEL_N];
+	    const uint32_t* next[AES_PARALLEL_N];
+
+	    for(int n=0; n<AES_PARALLEL_N; ++n) {
+	        data[n] = Cache[n].dwords;
+	    }
+
+	    // Search for pattern in pseudo random data
+	    int searchNumber = COMPARE_SIZE / totalThreads;
+	    int startLoc = threadNumber * searchNumber;
+
+	    for(int32_t k = startLoc; k < startLoc + searchNumber; k+=AES_PARALLEL_N)
+	    {
+	        // copy data to first l2 cache
+	        for (int n=0; n<AES_PARALLEL_N; ++n)
+	            memcpy(Cache[n].dwords, Garbage + k + n, GARBAGE_SLICE_SIZE);
+
+	        for(int j = 0; j < AES_ITERATIONS; ++j)
+	        {
+	        	uint32_t ExpKey[AES_PARALLEL_N*16*4] __attribute__ ((aligned (16)));
+	        	uint32_t ivs[AES_PARALLEL_N*4] __attribute__ ((aligned (16)));
+
+	            // use last 4 bytes of first cache as next location
+	            for(int n=0; n<AES_PARALLEL_N; ++n) {
+	                uint32_t nextLocation = Cache[n].dwords[(GARBAGE_SLICE_SIZE >> 2) - 1] & (COMPARE_SIZE - 1); //% COMPARE_SIZE;
+	                next[n] = Garbage[nextLocation].dwords;
+
+	                uint32_t last[2*4];
+	                for(uint32_t i=0; i<8; ++i) {
+	                	last[i] = Cache[n].dwords[254*4+i] ^ next[n][254*4+i];
+	                }
+
+	                // Key is last 32b of Cache
+	                // IV is last 16b of Cache
+	                ExpandAESKey256_int(&ExpKey[16*4*n], last);
+	                for(int i=0; i<4; ++i) {
+	                  ivs[n*4+i] = last[4+i];
+	                }
+	            }
+	            AES256CBC_int(data, next, ExpKey, ivs);
+	        }
+
+	        // use last X bits as solution
+	        for(int n=0; n<AES_PARALLEL_N; ++n)
+	        if((Cache[n].dwords[(GARBAGE_SLICE_SIZE >> 2) - 1] & (COMPARE_SIZE - 1)) < 1000)
+	        {
+              uint32_t proofOfCalculation=Cache[n].dwords[(GARBAGE_SLICE_SIZE >> 2) - 2];
+              boost::mutex::scoped_lock lck(*mtx);
+              (*results).push_back( std::make_pair( k + n, proofOfCalculation ) );
+	        }
+	    }
+	}
 
 
-  std::vector< std::pair<uint32_t,uint32_t> > pattern_search(uint256 midHash, char *mainMemoryPsuedoRandomData, int totalThreads, int* minerStopFlag) {
-    boost::this_thread::disable_interruption di;
+	std::vector< std::pair<uint32_t,uint32_t> > pattern_search(uint256 midHash, char *mainMemoryPsuedoRandomData, int totalThreads, int* minerStopFlag) {
+		boost::this_thread::disable_interruption di;
 		std::vector< std::pair<uint32_t,uint32_t> > results;
 
-    clock_t t1 = clock();
+
+		uint32_t eax, ebx, ecx, edx;
+		eax = ebx = ecx = edx = 0;
+		__get_cpuid(1, &eax, &ebx, &ecx, &edx);
+		bool aes_ni_supported = (ecx & bit_AES) > 0;
+		bool avx2_supported = __builtin_cpu_supports("avx2");
+		LogPrintf("CPU support: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
+		clock_t t1 = clock();
 		boost::thread_group* sha512Threads = new boost::thread_group();
 		for (int i = 0; i < totalThreads; i++) {
-			sha512Threads->create_thread(boost::bind(&SHA512Filler, mainMemoryPsuedoRandomData, i, totalThreads, midHash, minerStopFlag));
+			if (avx2_supported) {
+				sha512Threads->create_thread(boost::bind(&SHA512FillerAVX2, mainMemoryPsuedoRandomData, i, totalThreads, midHash, minerStopFlag));
+			} else {
+				sha512Threads->create_thread(boost::bind(&SHA512Filler, mainMemoryPsuedoRandomData, i, totalThreads, midHash, minerStopFlag));
+			}
 		}
 		sha512Threads->join_all();
 		delete sha512Threads;
 
-    clock_t t2 = clock();
-    LogPrintf("create sha512 data %d\n", ((double)t2 - (double)t1) / CLOCKS_PER_SEC);
+		clock_t t2 = clock();
+		LogPrintf("create sha512 data %d\n", ((double)t2 - (double)t1) / CLOCKS_PER_SEC);
 
 		if (*minerStopFlag == 0) {
 			boost::mutex mtx;
 			boost::thread_group* aesThreads = new boost::thread_group();
 			for (int i = 0; i < totalThreads; i++) {
-				aesThreads->create_thread(boost::bind(&aesSearch, mainMemoryPsuedoRandomData, i, totalThreads, &results, &mtx, minerStopFlag));
+				if (aes_ni_supported) {
+					aesThreads->create_thread(boost::bind(&aesSearchAESNI, mainMemoryPsuedoRandomData, i, totalThreads, &results, &mtx, minerStopFlag));
+				} else {
+					aesThreads->create_thread(boost::bind(&aesSearch, mainMemoryPsuedoRandomData, i, totalThreads, &results, &mtx, minerStopFlag));
+				}
 			}
 			aesThreads->join_all();
 			delete aesThreads;
