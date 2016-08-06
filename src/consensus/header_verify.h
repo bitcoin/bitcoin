@@ -21,4 +21,6 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
 bool ContextualCheckHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const void* indexObject, const BlockIndexInterface& iBlockIndex, int64_t nAdjustedTime);
 
+bool VerifyHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const void* indexObject, const BlockIndexInterface& iBlockIndex, int64_t nAdjustedTime);
+
 #endif // BITCOIN_CONSENSUS_HEADER_VERIFY_H

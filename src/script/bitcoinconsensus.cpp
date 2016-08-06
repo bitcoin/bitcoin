@@ -5,6 +5,11 @@
 
 #include "bitcoinconsensus.h"
 
+#include "consensus/header_verify.h"
+#include "consensus/interfaces.h"
+#include "consensus/params.h"
+#include "consensus/validation.h"
+#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
 #include "script/interpreter.h"
@@ -120,6 +125,19 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
 
     CAmount am(0);
     return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
+}
+
+int bitcoinconsensus_verify_header(const unsigned char* header, unsigned int headerLen, const void* consensusParams, const void* indexObject, const void* iBlockIndex, int64_t nAdjustedTime, bitcoinconsensus_error* err)
+{
+    try {
+        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, header, headerLen);
+        CBlockHeader blockHeader;
+        stream >> blockHeader;
+        CValidationState state;
+        return VerifyHeader(blockHeader, state, *(const Consensus::Params*)consensusParams, indexObject, *(const BlockIndexInterface*)iBlockIndex, nAdjustedTime);
+    } catch (const std::exception&) {
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+    }
 }
 
 unsigned int bitcoinconsensus_version()
