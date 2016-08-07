@@ -944,9 +944,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
             // Decay the activity bytes for each node over a period of 2 hours.  This gradually de-prioritizes a connection 
             // that was once active but has gone stale for some reason and allows lower priority active nodes to climb the ladder.
             int64_t nNow = GetTime();
-LogPrintf("activity bytes before is %d\n", node->nActivityBytes);
             node->nActivityBytes *= pow(1.0 - 1.0/7200, (double)(nNow - nLastTime)); // exponential 2 hour decay
-LogPrintf("activity bytes after is %d\n", node->nActivityBytes);
 
             if (node->fWhitelisted)
                 continue;
@@ -1041,24 +1039,24 @@ LogPrintf("activity bytes after is %d\n", node->nActivityBytes);
     {
         double nEvictions = 0;
         LOCK(cs_mapInboundConnectionTracker);
-        if (mapInboundConnectionTracker.count((CNetAddr)vEvictionCandidatesByActivity[0]->addr)) {
-            // first decay the current number of evictions (over 1800 seconds) depending on the last eviction
-            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[(CNetAddr)vEvictionCandidatesByActivity[0]->addr].nLastEvictionTime;
+        CNetAddr ipAddress = (CNetAddr)vEvictionCandidatesByActivity[0]->addr;
+        if (mapInboundConnectionTracker.count(ipAddress)) {
+            // Decay the current number of evictions (over 1800 seconds) depending on the last eviction
+            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[ipAddress].nLastEvictionTime;
             double nRatioElapsed = (double)nTimeElapsed / 1800;
-            nEvictions = mapInboundConnectionTracker[(CNetAddr)vEvictionCandidatesByActivity[0]->addr].nEvictions - (nRatioElapsed * mapInboundConnectionTracker[(CNetAddr)vEvictionCandidatesByActivity[0]->addr].nEvictions);
+            nEvictions = mapInboundConnectionTracker[ipAddress].nEvictions - (nRatioElapsed * mapInboundConnectionTracker[ipAddress].nEvictions);
             if (nEvictions < 0) 
                 nEvictions = 0;
         }
 
         nEvictions += 1;
-        mapInboundConnectionTracker[(CNetAddr)vEvictionCandidatesByActivity[0]->addr].nEvictions = nEvictions;
-        mapInboundConnectionTracker[(CNetAddr)vEvictionCandidatesByActivity[0]->addr].nLastEvictionTime = GetTime();
+        mapInboundConnectionTracker[ipAddress].nEvictions = nEvictions;
+        mapInboundConnectionTracker[ipAddress].nLastEvictionTime = GetTime();
 
-        LogPrintf("Number of Evictions is %f for %s\n", nEvictions, vEvictionCandidatesByActivity[0]->addr.ToString());
-
+        LogPrint("evict", "Number of Evictions is %f for %s\n", nEvictions, vEvictionCandidatesByActivity[0]->addr.ToString());
         if (nEvictions > 15) {
             int nHoursToBan = 4;
-            CNode::Ban((CNetAddr)vEvictionCandidatesByActivity[0]->addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);
+            CNode::Ban(ipAddress, BanReasonNodeMisbehaving, nHoursToBan*60*60);
             LogPrintf("Banning %s for %d hours: Too many evictions - connection dropped\n", vEvictionCandidatesByActivity[0]->addr.ToString(), nHoursToBan);
         }
     }
@@ -1137,21 +1135,21 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     {
         double nConnections = 0;
         LOCK(cs_mapInboundConnectionTracker);
-        if (mapInboundConnectionTracker.count((CNetAddr)addr)) {
-            // first decay the current number of connections (over 60 seconds) depending on the last connection attempt
-            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[(CNetAddr)addr].nLastConnectionTime;
+        CNetAddr ipAddress = (CNetAddr)addr;
+        if (mapInboundConnectionTracker.count(ipAddress)) {
+            // Decay the current number of connections (over 60 seconds) depending on the last connection attempt
+            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[ipAddress].nLastConnectionTime;
             double nRatioElapsed = (double)nTimeElapsed / 60;
-            nConnections = mapInboundConnectionTracker[(CNetAddr)addr].nConnections - (nRatioElapsed * mapInboundConnectionTracker[(CNetAddr)addr].nConnections);
+            nConnections = mapInboundConnectionTracker[ipAddress].nConnections - (nRatioElapsed * mapInboundConnectionTracker[ipAddress].nConnections);
             if (nConnections < 0) 
                 nConnections = 0;
         }
 
         nConnections += 1;
-        mapInboundConnectionTracker[(CNetAddr)addr].nConnections = nConnections;
-        mapInboundConnectionTracker[(CNetAddr)addr].nLastConnectionTime = GetTime();
+        mapInboundConnectionTracker[ipAddress].nConnections = nConnections;
+        mapInboundConnectionTracker[ipAddress].nLastConnectionTime = GetTime();
 
-        LogPrintf("Number of Connection attempts is %f for %s\n", nConnections, addr.ToString());
-
+        LogPrint("evict", "Number of Connection attempts is %f for %s\n", nConnections, addr.ToString());
         if (nConnections > 4) {
             int nHoursToBan = 4;
             CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);

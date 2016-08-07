@@ -6627,7 +6627,7 @@ bool SendMessages(CNode* pto)
                 //      giving us useful data.  We give them 10 minutes to be useful but then choke off their inventory.  This
                 //      prevents fake peers from connecting and listening to our inventory while providing no value to the network.
                 //      However we will still send them block inventory in the case they are a pruned node or wallet waiting for block
-                //      announcements.
+                //      announcements, therefore we have to check each inv in pto->vInventoryToSend.
                 if (inv.type == MSG_TX && pto->nActivityBytes == 0 && (GetTime() - pto->nTimeConnected) > 120) {
                     LogPrint("evict", "choking off tx inventory for %s time connected %d\n", pto->addr.ToString(), GetTime() - pto->nTimeConnected);
                     continue;
