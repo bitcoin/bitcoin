@@ -43,7 +43,7 @@ class BIP65Test(ComparisonTestFramework):
     def setup_network(self):
         # Must set the blockversion for this test
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=3', '-buriedsfparams=bip65:1351']],
+                                 extra_args=[['-debug', '-whitelist=127.0.0.1', '-blockversion=3', '-buriedsfparams=bip65:1051']],
                                  binary=[self.options.testbinary])
 
     def run_test(self):
@@ -71,9 +71,9 @@ class BIP65Test(ComparisonTestFramework):
         self.nodeaddress = self.nodes[0].getnewaddress()
         self.last_block_time = int(time.time())
 
-        ''' 398 more version 3 blocks '''
+        ''' 98 more version 3 blocks '''
         test_blocks = []
-        for i in range(398):
+        for i in range(98):
             block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
             block.nVersion = 3
             block.rehash()
