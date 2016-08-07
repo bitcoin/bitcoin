@@ -1,9 +1,9 @@
 #include "aes.h"
 
+#ifdef __AES__
+
 #include <stdint.h>
 #include <x86intrin.h>
-
-#pragma GCC target("aes")
 
 static inline void ExpandAESKey256_sub1(__m128i *tmp1, __m128i *tmp2)
 {
@@ -154,3 +154,16 @@ void AES256CBC_int(uint32_t** data, const uint32_t** next, const uint32_t* Expan
 	return AES256CBC((__m128i**)data, (const __m128i**)next, (const __m128i*)ExpandedKey, (__m128i*)IV);
 }
 
+#else // __AES__
+
+#include <stdlib.h>
+
+// Not supported on this platform. These functions should never be called.
+void ExpandAESKey256_int(uint32_t *keys, const uint32_t *KeyBuf) {
+	exit(1);
+}
+void AES256CBC_int(uint32_t** data, const uint32_t** next, const uint32_t* ExpandedKey, uint32_t* IV) {
+	exit(1);
+}
+
+#endif // __AES__

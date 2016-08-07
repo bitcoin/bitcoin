@@ -1,14 +1,13 @@
-//Dependencies
+#include "sha512.h"
+
+#ifdef __AVX2__
+
 #include <string.h>
 #include <stdlib.h>
 #include "emmintrin.h"
 #include "tmmintrin.h"
 #include "smmintrin.h"
 #include "immintrin.h"
-
-#include "sha512.h"
-
-#pragma GCC target("avx2")
 
 //SHA-512 auxiliary functions
 #define Ch(x, y, z) (((x) & (y)) | (~(x) & (z)))
@@ -236,3 +235,16 @@ void sha512ProcessBlock(Sha512Context context[2])
     context[1].h[6] += g[1];
     context[1].h[7] += h[1];
 }
+
+#else // __AVX2__
+
+#include <stdlib.h>
+
+// Not supported on this platform. These functions should never be called.
+void sha512Compute32b_parallel(
+        uint64_t *data[SHA512_PARALLEL_N],
+        uint64_t *digest[SHA512_PARALLEL_N]) {
+	exit(1);
+}
+
+#endif  // __AVX2__

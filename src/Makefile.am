@@ -28,6 +28,7 @@ LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
+LIBBITCOIN_CRYPTO_X86=libbitcoin_crypto_x86.a
 LIBBITCOIN_UNIVALUE=univalue/libbitcoin_univalue.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
@@ -41,6 +42,7 @@ EXTRA_LIBRARIES = \
   crypto/libbitcoin_crypto.a \
   libbitcoin_util.a \
   libbitcoin_common.a \
+  libbitcoin_crypto_x86.a \
   univalue/libbitcoin_univalue.a \
   libbitcoin_server.a \
   libbitcoin_cli.a
@@ -179,7 +181,6 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
 libbitcoin_server_a_SOURCES = \
   addrman.cpp \
-  aes.cpp \
   alert.cpp \
   bloom.cpp \
   chain.cpp \
@@ -202,7 +203,6 @@ libbitcoin_server_a_SOURCES = \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   script/sigcache.cpp \
-  sha512.cpp \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
@@ -248,10 +248,14 @@ univalue_libbitcoin_univalue_a_SOURCES = \
   univalue/univalue_read.cpp \
   univalue/univalue_write.cpp
 
+libbitcoin_crypto_x86_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(CRYPTO_X86_CXXFLAGS)
+libbitcoin_crypto_x86_a_SOURCES = \
+  aes.cpp \
+  sha512.cpp  
+
 # common: shared between hodlcoind, and hodlcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  aes.cpp \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -277,7 +281,6 @@ libbitcoin_common_a_SOURCES = \
   script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  sha512.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -330,6 +333,7 @@ hodlcoind_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_CRYPTO_X86) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
@@ -371,6 +375,7 @@ hodlcoin_tx_LDADD = \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_CRYPTO_X86) \
   $(LIBSECP256K1)
 
 hodlcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
