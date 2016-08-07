@@ -379,7 +379,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case maxuploadtarget:
         {
             qlonglong nv = value.toLongLong() * 1024 * 1024;
-            if (CNode::GetMaxOutboundTarget() != nv) {
+            if (qlonglong(CNode::GetMaxOutboundTarget()) != nv) {
                 ModifyRWConfigFile("maxuploadtarget", value.toString().toStdString());
                 CNode::SetMaxOutboundTarget(nv);
             }
