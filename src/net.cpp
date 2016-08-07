@@ -939,7 +939,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
         LOCK(cs_vNodes);
 
         static int64_t nLastTime = GetTime();
-        BOOST_FOREACH(CNode *node, vNodes
+        BOOST_FOREACH(CNode *node, vNodes)
         {
             // Decay the activity bytes for each node over a period of 2 hours.  This gradually de-prioritizes a connection 
             // that was once active but has gone stale for some reason and allows lower priority active nodes to climb the ladder.
