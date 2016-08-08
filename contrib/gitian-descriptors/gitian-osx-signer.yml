@@ -8,10 +8,10 @@ packages:
 - "faketime"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin-detached-sigs.git"
+- "url": "https://github.com/BitcoinUnlimited/bitcoin-detached-sigs.git"
   "dir": "signature"
 files:
-- "bitcoin-osx-unsigned.tar.gz"
+- "bitcoinUnlimited-osx-unsigned.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
@@ -28,8 +28,8 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=bitcoin-osx-unsigned.tar.gz
-  SIGNED=bitcoin-osx-signed.dmg
+  UNSIGNED=bitcoinUnlimited-osx-unsigned.tar.gz
+  SIGNED=bitcoinUnlimited-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   ./detached-sig-apply.sh ${UNSIGNED} signature/osx
