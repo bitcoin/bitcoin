@@ -68,9 +68,9 @@ can then be controlled by group membership.
 3b) Mac OS X
 
 Binary:              `/usr/local/bin/dashd`  
-Configuration file:  `~/Library/Application Support/Dash/dash.conf`  
-Data directory:      `~/Library/Application Support/Dash`
-Lock file:           `~/Library/Application Support/Dash/.lock`
+Configuration file:  `~/Library/Application Support/DashCore/dash.conf`  
+Data directory:      `~/Library/Application Support/DashCore`
+Lock file:           `~/Library/Application Support/DashCore/.lock`
 
 4. Installing Service Configuration
 -----------------------------------

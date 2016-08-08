@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-DATADIR="@abs_top_builddir@/.dash"
+DATADIR="@abs_top_builddir@/.dashcore"
 rm -rf "$DATADIR"
 mkdir -p "$DATADIR"/regtest
 touch "$DATADIR/regtest/debug.log"

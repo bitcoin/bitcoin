@@ -35,10 +35,10 @@ def check_json_precision():
 def determine_db_dir():
     """Return the default location of the dash data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Dash/")
+        return os.path.expanduser("~/Library/Application Support/DashCore/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Dash")
-    return os.path.expanduser("~/.dash")
+        return os.path.join(os.environ['APPDATA'], "DashCore")
+    return os.path.expanduser("~/.dashcore")
 
 def read_bitcoin_config(dbdir):
     """Read the dash.conf file from dbdir, returns dictionary of settings"""

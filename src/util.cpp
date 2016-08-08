@@ -517,13 +517,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Dash
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Dash
-    // Mac: ~/Library/Application Support/Dash
-    // Unix: ~/.dash
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\DashCore
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\DashCore
+    // Mac: ~/Library/Application Support/DashCore
+    // Unix: ~/.dashcore
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dash";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "DashCore";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -535,10 +535,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "Dash";
+    return pathRet / "DashCore";
 #else
     // Unix
-    return pathRet / ".dash";
+    return pathRet / ".dashcore";
 #endif
 #endif
 }

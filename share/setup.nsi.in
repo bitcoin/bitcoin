@@ -50,9 +50,9 @@ Var StartMenuGroup
 # Installer attributes
 OutFile @abs_top_srcdir@/dash-${VERSION}-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\Dash
+InstallDir $PROGRAMFILES64\DashCore
 !else
-InstallDir $PROGRAMFILES\Dash
+InstallDir $PROGRAMFILES\DashCore
 !endif
 CRCCheck on
 XPStyle on
