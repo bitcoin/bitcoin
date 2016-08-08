@@ -108,7 +108,7 @@ public:
     int nBlockHeight;
     uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
-    int nExpiration;
+    int nLockExpirationBlock;
     int nTimeout;
 
     bool VotesValid();

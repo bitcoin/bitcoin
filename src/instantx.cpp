@@ -247,7 +247,8 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*60); //locks expire after 60 minutes (24 confirmations)
+        //locks expire after nInstantSendKeepLock confirmations
+        newLock.nLockExpirationBlock = chainActive.Height() + Params().GetConsensus().nInstantSendKeepLock;
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(std::make_pair(tx.GetHash(), newLock));
@@ -338,7 +339,8 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& vote)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
-        newLock.nExpiration = GetTime()+(60*60);
+        //locks expire after nInstantSendKeepLock confirmations
+        newLock.nLockExpirationBlock = chainActive.Height() + Params().GetConsensus().nInstantSendKeepLock;
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = vote.txHash;
         mapTxLocks.insert(std::make_pair(vote.txHash, newLock));
@@ -433,10 +435,10 @@ bool FindConflictingLocks(CTransaction& tx)
                 LogPrintf("FindConflictingLocks -- found two complete conflicting locks, removing both: txid=%s, txin=%s", tx.GetHash().ToString(), mapLockedInputs[txin.prevout].ToString());
 
                 if(mapTxLocks.count(tx.GetHash()))
-                    mapTxLocks[tx.GetHash()].nExpiration = GetTime();
+                    mapTxLocks[tx.GetHash()].nLockExpirationBlock = -1;
 
                 if(mapTxLocks.count(mapLockedInputs[txin.prevout]))
-                    mapTxLocks[mapLockedInputs[txin.prevout]].nExpiration = GetTime();
+                    mapTxLocks[mapLockedInputs[txin.prevout]].nLockExpirationBlock = -1;
 
                 return true;
             }
@@ -452,8 +454,8 @@ void ResolveConflicts(CTransaction& tx)
     if (IsLockedInstandSendTransaction(tx.GetHash()) && !FindConflictingLocks(tx)) { //?????
         LogPrintf("ResolveConflicts -- Found Existing Complete IX Lock, resolving...\n");
 
-        //reprocess the last 15 blocks
-        ReprocessBlocks(15);
+        //reprocess the last nInstantSendReprocessBlocks blocks
+        ReprocessBlocks(Params().GetConsensus().nInstantSendReprocessBlocks);
         if(!mapTxLockReq.count(tx.GetHash()))
             mapTxLockReq.insert(std::make_pair(tx.GetHash(), tx)); //?????
     }
@@ -480,9 +482,10 @@ void CleanTransactionLocksList()
 
     std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
 
+    int nHeight = chainActive.Height();
     while(it != mapTxLocks.end()) {
         CTransactionLock &txLock = it->second;
-        if(GetTime() > txLock.nExpiration){
+        if(GetTime() > txLock.nLockExpirationBlock) {
             LogPrintf("Removing old transaction lock: txid=%s\n", txLock.txHash.ToString());
 
             if(mapTxLockReq.count(txLock.txHash)){
