@@ -91,8 +91,8 @@ int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 bool fAddressesInitialized = false;
 std::string strSubVersion;
 
-vector<CNode*> vNodes;
-CCriticalSection cs_vNodes;
+extern vector<CNode*> vNodes;
+extern CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64_t, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
@@ -115,12 +115,12 @@ CCriticalSection cs_vUseDNSSeeds;
 NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
-static CSemaphore *semOutbound = NULL;
-static CSemaphore *semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
+extern CSemaphore *semOutbound;
+static CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
 // Signals for message handling
-static CNodeSignals g_signals;
+extern CNodeSignals g_signals;
 CNodeSignals& GetNodeSignals() { return g_signals; }
 
 void AddOneShot(const std::string& strDest)
@@ -839,7 +839,7 @@ int SocketSendData(CNode* pnode)
     return progress;
 }
 
-static list<CNode*> vNodesDisconnected;
+extern list<CNode*> vNodesDisconnected;
 
 class CNodeRef {
 public:
@@ -2143,12 +2143,7 @@ bool StopNode()
     return true;
 }
 
-class CNetCleanup
-{
-public:
-    CNetCleanup() {}
-
-    ~CNetCleanup()
+CNetCleanup::~CNetCleanup()
     {
         // Close sockets
         BOOST_FOREACH (CNode* pnode, vNodes)
@@ -2177,7 +2172,7 @@ public:
         WSACleanup();
 #endif
     }
-} instance_of_cnetcleanup;
+
 
 
 void RelayTransaction(const CTransaction& tx)
