@@ -56,7 +56,7 @@ during initial sync of a node, and when catching up after downtime.
 
 
 bitcoin-cli: arguments privacy
---------------------------------
+------------------------------
 
 The RPC command line client gained a new argument, `-stdin`
 to read extra arguments from standard input, one per line until EOF/Ctrl-D.
@@ -74,7 +74,7 @@ table by any user on the system.
 
 
 C++11 and Python 3
--------------------
+------------------
 
 Various code modernizations have been done. The Bitcoin Core code base has
 started using C++11. This means that a C++11-capable compiler is now needed for
@@ -88,7 +88,7 @@ required.
 
 
 Linux ARM builds
-------------------
+----------------
 
 Due to popular request, Linux ARM builds have been added to the uploaded
 executables.
