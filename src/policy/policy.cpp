@@ -7,6 +7,7 @@
 
 #include <policy/policy.h>
 
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <coins.h>
 #include <span.h>
