@@ -1,7 +1,7 @@
 IDI_ICON1 ICON DISCARDABLE "rendered_icons/bitcoin.ico"
-IDI_ICON2 ICON DISCARDABLE "@CMAKE_CURRENT_SOURCE_DIR@/res/icons/bitcoin_testnet.ico"
+IDI_ICON2 ICON DISCARDABLE "rendered_icons/bitcoin_testnet.ico"
 IDI_ICON3 ICON DISCARDABLE "@CMAKE_CURRENT_SOURCE_DIR@/res/icons/bitcoin_signet.ico"
-IDI_ICON4 ICON DISCARDABLE "@CMAKE_CURRENT_SOURCE_DIR@/res/icons/bitcoin_testnet.ico" // testnet4
+IDI_ICON4 ICON DISCARDABLE "rendered_icons/bitcoin_testnet.ico" // testnet4
 
 #include <windows.h>             // needed for VERSIONINFO
 #include <clientversion.h>  // holds the needed client version information

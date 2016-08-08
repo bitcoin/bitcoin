@@ -117,7 +117,15 @@ add_custom_command(
   COMMENT "Generating ${bitcoin_ico} from individual images"
   VERBATIM
 )
-add_custom_target(generate_ico DEPENDS "${bitcoin_ico}")
+set(testnet_ico "${ICON_PATH}/bitcoin_testnet.ico")
+add_custom_command(
+  OUTPUT "${testnet_ico}"
+  COMMAND "${IMAGEMAGICK_CONVERT}" ${bitcoin_ico} -modulate 100,87,9 "${testnet_ico}"
+  DEPENDS ${bitcoin_ico}
+  COMMENT "Generating ${testnet_ico} from ${bitcoin_ico}"
+  VERBATIM
+)
+add_custom_target(generate_ico DEPENDS "${bitcoin_ico}" "${testnet_ico}")
 
 set(nsis_wizard_input "${ICON_PATH}/bitcoin290.png")
 set(nsis_wizard_bmp "${ICON_PATH}/nsis-wizard.bmp")
