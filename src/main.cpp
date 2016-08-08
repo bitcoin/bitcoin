@@ -2459,7 +2459,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     int nChecked = 0;
-    int nOrphansChecked = 0;     
+    int nOrphansChecked = 0;
+    LOCK(cs_xval);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
@@ -5586,6 +5587,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (!alreadyHave)
 	  {
+	    // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
+            bool fXVal;
+            {
+              LOCK(cs_main);
+	      fXVal = (thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+            }
+
 	    pfrom->nSizeThinBlock = nSizeThinBlock;
 	    pfrom->thinBlock.SetNull();
 	    pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
@@ -5610,7 +5618,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	    std::vector<uint256> memPoolHashes;
 
 	    {
-  	    LOCK(mempool.cs);
+  	    LOCK2(mempool.cs, cs_xval);
 	    mempool.queryHashes(memPoolHashes);
 
 	    for (uint64_t i = 0; i < memPoolHashes.size(); i++) {
@@ -5648,9 +5656,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	      LogPrintf("TX HASH COLLISION for xthinblock: re-requesting a thinblock\n");
 	      return true;
 	    }
-
-	    // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
-	    bool fXVal = (thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
 
 	    // Look for each transaction in our various pools and buffers.
 	    // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
@@ -5758,7 +5763,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         BOOST_FOREACH(CTransaction tx, thinBlock.vMissingTx) 
             mapMissingTx[tx.GetHash()] = tx;
 
-        LOCK(cs_main);
+        LOCK2(cs_main, cs_xval);
         int missingCount = 0;
         int unnecessaryCount = 0;
         // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
