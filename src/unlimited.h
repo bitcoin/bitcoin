@@ -28,7 +28,7 @@ enum {
 class CBlock;
 class CBlockIndex;
 class CValidationState;
-class CDiskBlockPos;
+struct CDiskBlockPos;
 class CNode;
 class CChainParams;
 

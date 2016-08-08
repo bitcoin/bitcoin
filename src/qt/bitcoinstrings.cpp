@@ -107,7 +107,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
-"is wrong Bitcoin Core will not work properly."),
+"is wrong Bitcoin will not work properly."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Prune configured below the minimum of %d MiB.  Please use a higher number."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -227,7 +227,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Connect only to the specified node(s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Connect through SOCKS5 proxy"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Connect to a node to retrieve peer addresses, and disconnect"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Connection options:"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) 2009-%i The Bitcoin Core Developers"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) 2009-%i The Bitcoin Developers"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Debugging/Testing options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do not load the wallet and disable wallet RPC calls"),

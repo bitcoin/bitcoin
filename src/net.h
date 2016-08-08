@@ -322,6 +322,14 @@ public:
 
 typedef std::map<CSubNet, CBanEntry> banmap_t;
 
+class CNetCleanup
+{
+public:
+  CNetCleanup() {}
+  ~CNetCleanup();
+};
+
+
 /** Information about a peer */
 class CNode
 {

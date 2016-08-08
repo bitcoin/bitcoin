@@ -1,18 +1,19 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
-Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
+Upstream-Name: BitcoinUnlimited
+Upstream-Contact: Andrew Stone <g.andrew.stone@gmail.com>
  irc://#bitcoin@freenode.net
 Source: https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2016, Bitcoin Core Developers
+Copyright: 2009-2016, Bitcoin Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
-         as well as the numerous contributors to the project.
+Comment: The Bitcoin Developers encompasses the current developers listed on bitcoin.org, 
+         on www.bitcoinunlimited.info and numerous other contributors to the project.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
+           2016, Andrew Stone <g.andrew.stone@gmail.com>
 License: GPL-2+
 
 Files: debian/manpages/*

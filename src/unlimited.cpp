@@ -62,6 +62,15 @@ boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
 
 CStatMap statistics __attribute__((init_priority(102)));
 
+vector<CNode*> vNodes __attribute__((init_priority(109)));
+CCriticalSection cs_vNodes __attribute__((init_priority(109)));
+list<CNode*> vNodesDisconnected __attribute__((init_priority(109)));
+CSemaphore*  semOutbound = NULL;
+CSemaphore*  semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
+CNodeSignals g_signals __attribute__((init_priority(109)));
+CNetCleanup cnet_instance_cleanup __attribute__((init_priority(110)));  // Must construct after statistics, because CNodes use statistics.  In particular, seg fault on osx during exit because constructor/destructor order is not guaranteed between modules in clang.
+
+
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t > recvAmt; 
