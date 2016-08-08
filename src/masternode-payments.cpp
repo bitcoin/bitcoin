@@ -333,9 +333,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
     uint256 blockHash = uint256();
-    if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
-        return false;
-    }
+    if(!GetBlockHash(blockHash, winnerIn.nBlockHeight - 101)) return false;
 
     {
         LOCK2(cs_mapMasternodePayeeVotes, cs_mapMasternodeBlocks);
@@ -489,7 +487,7 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, int nValidationHeight, std:
         return false;
     }
 
-    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 100, MIN_MNW_PEER_PROTO_VERSION);
+    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 101, MIN_MNW_PEER_PROTO_VERSION);
 
     if(nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
         // It's common to have masternodes mistakenly think they are in the top 10
@@ -513,7 +511,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     if(!fMasterNode) return false;
     
-    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);        
+    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, MIN_MNW_PEER_PROTO_VERSION);
        
     if(n == -1)       
     {     
