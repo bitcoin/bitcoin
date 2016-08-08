@@ -682,6 +682,8 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
 
 void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    AssertLockHeld(cs_main);
+
     map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
     if (it == mapOrphanTransactions.end())
         return;
@@ -716,6 +718,8 @@ void EraseOrphansFor(NodeId peer)
 // BU - Xtreme Thinblocks: begin
 void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    AssertLockHeld(cs_main);
+
     // Because we have to iterate through the entire orphan cache which can be large we don't want to check this
     // every time a tx enters the mempool but just once a minute is good enough.
     static int64_t nLastOrphanCheck = GetTime();
@@ -739,6 +743,8 @@ void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    AssertLockHeld(cs_main);
+
     unsigned int nEvicted = 0;
     while (mapOrphanTransactions.size() > nMaxOrphans)
     {
@@ -5698,6 +5704,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	      LogPrint("thin", "thin block stats: %s\n", ss.c_str());
               requester.Received(inv, pfrom, msgSize);
 	      HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
+              LOCK(cs_main);
 	      BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes)
                 EraseOrphanTx(mapPartialTxHash[cheapHash]);
 	    }
@@ -5881,6 +5888,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
+            LOCK(cs_main);
             for (unsigned int i = 0; i < vTx.size(); i++)
                 EraseOrphanTx(vTx[i].GetHash());
         }
@@ -5922,35 +5930,35 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         {
-        LOCK(cs_main);
-        std::vector<CTransaction> vTx;
-        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-        if (mi == mapBlockIndex.end())
-	  {
-	    LogPrint("thin", "Requested block is not available");          
-	  }
-        else
-	  {
-	    CBlock block;
-	    const Consensus::Params& consensusParams = Params().GetConsensus();
-	    if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-	      {
-		LogPrint("thin", "Cannot load block from disk -- Block txn request before assembled");
-	      }
+            LOCK(cs_main);
+            std::vector<CTransaction> vTx;
+            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+            if (mi == mapBlockIndex.end())
+            {
+                LogPrint("thin", "Requested block is not available");          
+            }
             else
-	      {
-		for (unsigned int i = 0; i < block.vtx.size(); i++)
-		  { 
-		    uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
-		    if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
-		      vTx.push_back(block.vtx[i]);
-		  }
-	      }
-	  }
-        pfrom->AddInventoryKnown(inv);
-        CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
-        pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
-        pfrom->blocksSent += 1;
+            {
+                CBlock block;
+                const Consensus::Params& consensusParams = Params().GetConsensus();
+                if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
+                {
+                    LogPrint("thin", "Cannot load block from disk -- Block txn request before assembled");
+                }
+                else
+                {
+                    for (unsigned int i = 0; i < block.vtx.size(); i++)
+                    { 
+                        uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
+                        if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
+                            vTx.push_back(block.vtx[i]);
+                    }
+                }
+            }
+            pfrom->AddInventoryKnown(inv);
+            CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
+            pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
+            pfrom->blocksSent += 1;
         }
     }
     // BUIP010 Xtreme Thinblocks: end section
@@ -5971,6 +5979,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
+        LOCK(cs_main);
         for (unsigned int i = 0; i < block.vtx.size(); i++)
             EraseOrphanTx(block.vtx[i].GetHash());
     }

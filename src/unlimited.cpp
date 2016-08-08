@@ -1347,6 +1347,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 
         // When we no longer have any thinblocks in flight then clear the set
         // just to make sure we don't somehow get growth over time.
+        LOCK(cs_main); //TODO: we should create a separate lock here to get away from using cs_main
         if (nTotalThinBlocksInFlight == 0) {
             setPreVerifiedTxHash.clear();
             setUnVerifiedOrphanTxHash.clear();
