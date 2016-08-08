@@ -5508,13 +5508,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         LoadFilter(pfrom, &filterMemPool);
 
-        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-        CBlock block;
-        const Consensus::Params& consensusParams = Params().GetConsensus();
-        if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-            assert(!"cannot load block from disk");
+        {
+            LOCK(cs_main);
+            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+            CBlock block;
+            const Consensus::Params& consensusParams = Params().GetConsensus();
+            if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
+                assert(!"cannot load block from disk");
 
-        SendXThinBlock(block, pfrom, inv);
+            SendXThinBlock(block, pfrom, inv);
+        }
     }
     else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
       {
