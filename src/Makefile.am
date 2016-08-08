@@ -872,6 +872,7 @@ RES_RENDERED_ICON_SRC = qt/res/src/bitcoin.svg
 
 RES_RENDERED_ICONS = \
   qt/res/rendered_icons/bitcoin.ico \
+  qt/res/rendered_icons/bitcoin_testnet.ico \
   qt/res/rendered_icons/bitcoin1024.png
 
 RES_ALL_RENDERED_ICONS = $(RES_RENDERED_ICONS) \
@@ -896,6 +897,9 @@ qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.
 
 qt/res/rendered_icons/bitcoin.ico: qt/res/rendered_icons/bitcoin32d8.gif $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 64 48 32 20 16)
 	$(IMAGEMAGICK_CONVERT) $^ $@
+
+qt/res/rendered_icons/bitcoin_testnet.ico: qt/res/rendered_icons/bitcoin.ico
+	$(IMAGEMAGICK_CONVERT) $^ -modulate 100,87,9 $@
 
 qt/res/rendered_icons/nsis-wizard.bmp: qt/res/rendered_icons/bitcoin290.png
 	$(IMAGEMAGICK_CONVERT) $^ -crop 164x290+62+0 -border 0x12 -strip BMP3:$@
