@@ -1,0 +1,9 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libunivalue
+Description: libunivalue, C++ universal value object and JSON library
+Version: @VERSION@
+Libs: ${pc_top_builddir}/${pcfiledir}/libunivalue.la

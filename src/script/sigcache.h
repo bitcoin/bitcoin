@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,15 +10,19 @@
 
 #include <vector>
 
+// DoS prevention: limit cache size to less than 40MB (over 500000
+// entries on 64-bit systems).
+static const unsigned int DEFAULT_MAX_SIG_CACHE_SIZE = 40;
+
 class CPubKey;
 
-class CachingSignatureChecker : public SignatureChecker
+class CachingTransactionSignatureChecker : public TransactionSignatureChecker
 {
 private:
     bool store;
 
 public:
-    CachingSignatureChecker(const CTransaction& txToIn, unsigned int nInIn, bool storeIn=true) : SignatureChecker(txToIn, nInIn), store(storeIn) {}
+    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amount, bool storeIn) : TransactionSignatureChecker(txToIn, nInIn, amount), store(storeIn) {}
 
     bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 };

@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bitcoinamountfield.h"
@@ -20,6 +20,7 @@
 class AmountSpinBox: public QAbstractSpinBox
 {
     Q_OBJECT
+
 public:
     explicit AmountSpinBox(QWidget *parent):
         QAbstractSpinBox(parent),
@@ -60,7 +61,7 @@ public:
     void setValue(const CAmount& value)
     {
         lineEdit()->setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
-        emit valueChanged();
+        Q_EMIT valueChanged();
     }
 
     void stepBy(int steps)
@@ -70,23 +71,6 @@ public:
         val = val + steps * singleStep;
         val = qMin(qMax(val, CAmount(0)), BitcoinUnits::maxMoney());
         setValue(val);
-    }
-
-    StepEnabled stepEnabled() const
-    {
-        StepEnabled rv = 0;
-        if(text().isEmpty()) // Allow step-up with empty field
-            return StepUpEnabled;
-        bool valid = false;
-        CAmount val = value(&valid);
-        if(valid)
-        {
-            if(val > 0)
-                rv |= StepDownEnabled;
-            if(val < BitcoinUnits::maxMoney())
-                rv |= StepUpEnabled;
-        }
-        return rv;
     }
 
     void setDisplayUnit(int unit)
@@ -139,6 +123,7 @@ public:
         }
         return cachedMinimumSizeHint;
     }
+
 private:
     int currentUnit;
     CAmount singleStep;
@@ -179,7 +164,27 @@ protected:
         return QAbstractSpinBox::event(event);
     }
 
-signals:
+    StepEnabled stepEnabled() const
+    {
+        if (isReadOnly()) // Disable steps when AmountSpinBox is read-only
+            return StepNone;
+        if (text().isEmpty()) // Allow step-up with empty field
+            return StepUpEnabled;
+
+        StepEnabled rv = 0;
+        bool valid = false;
+        CAmount val = value(&valid);
+        if(valid)
+        {
+            if(val > 0)
+                rv |= StepDownEnabled;
+            if(val < BitcoinUnits::maxMoney())
+                rv |= StepUpEnabled;
+        }
+        return rv;
+    }
+
+Q_SIGNALS:
     void valueChanged();
 };
 
@@ -273,7 +278,6 @@ void BitcoinAmountField::setValue(const CAmount& value)
 void BitcoinAmountField::setReadOnly(bool fReadOnly)
 {
     amount->setReadOnly(fReadOnly);
-    unit->setEnabled(!fReadOnly);
 }
 
 void BitcoinAmountField::unitChanged(int idx)

@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_INTRO_H
@@ -8,6 +8,8 @@
 #include <QDialog>
 #include <QMutex>
 #include <QThread>
+
+static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 class FreespaceChecker;
 
@@ -43,14 +45,14 @@ public:
      */
     static QString getDefaultDataDirectory();
 
-signals:
+Q_SIGNALS:
     void requestCheck();
     void stopThread();
 
-public slots:
+public Q_SLOTS:
     void setStatus(int status, const QString &message, quint64 bytesAvailable);
 
-private slots:
+private Q_SLOTS:
     void on_dataDirectory_textChanged(const QString &arg1);
     void on_ellipsisButton_clicked();
     void on_dataDirDefault_clicked();
