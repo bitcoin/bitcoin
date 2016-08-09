@@ -42,6 +42,11 @@ public:
         memset(data, 0, sizeof(data));
     }
 
+    const unsigned char* GetDataArray()
+    {
+        return data;
+    }
+
     inline int Compare(const base_blob& other) const { return memcmp(data, other.data, sizeof(data)); }
 
     friend inline bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
@@ -125,6 +130,10 @@ public:
     uint256() {}
     uint256(const base_blob<256>& b) : base_blob<256>(b) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+    explicit uint256(const unsigned char* arrayData) : base_blob<256>()
+    {
+        std::memcpy(data, arrayData, WIDTH);
+    }
 
     /** A cheap hash function that just returns 64 bits from the result, it can be
      * used when the contents are considered uniformly random. It is not appropriate
