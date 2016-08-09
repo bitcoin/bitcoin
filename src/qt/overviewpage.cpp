@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -219,7 +219,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+        filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
 
         ui->listTransactions->setModel(filter);
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -82,6 +82,11 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     /* Display elements init */
     QDir translations(":translations");
+
+    ui->bitcoinAtStartup->setToolTip(ui->bitcoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->bitcoinAtStartup->setText(ui->bitcoinAtStartup->text().arg(tr(PACKAGE_NAME)));
+
+    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     Q_FOREACH(const QString &langStr, translations.entryList())
     {
@@ -214,6 +219,7 @@ void OptionsDialog::setMapper()
 
     /* Window */
 #ifndef Q_OS_MAC
+    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
 #endif
@@ -268,6 +274,19 @@ void OptionsDialog::on_okButton_clicked()
 void OptionsDialog::on_cancelButton_clicked()
 {
     reject();
+}
+
+void OptionsDialog::on_hideTrayIcon_stateChanged(int fState)
+{
+    if(fState)
+    {
+        ui->minimizeToTray->setChecked(false);
+        ui->minimizeToTray->setEnabled(false);
+    }
+    else
+    {
+        ui->minimizeToTray->setEnabled(true);
+    }
 }
 
 void OptionsDialog::showRestartWarning(bool fPersistent)

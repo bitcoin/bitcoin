@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2015 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,9 +23,6 @@
      * 2. P2SH scripts with a crazy number of expensive
      *    CHECKSIG/CHECKMULTISIG operations
      *
-     * Check transaction inputs, and make sure any
-     * pay-to-script-hash transactions are evaluating IsStandard scripts
-     * 
      * Why bother? To avoid denial-of-service attacks; an attacker
      * can submit a standard HASH... OP_EQUAL transaction,
      * which will get accepted into blocks. The redemption
@@ -58,7 +55,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
-    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
+    if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
         return false;
     }
@@ -67,8 +64,8 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
-    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-    if (sz >= MAX_STANDARD_TX_SIZE) {
+    unsigned int sz = GetTransactionCost(tx);
+    if (sz >= MAX_STANDARD_TX_COST) {
         reason = "tx-size";
         return false;
     }
@@ -76,12 +73,12 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
-        // keys. (remember the 520 byte limit on redeemScript size) That works
+        // keys (remember the 520 byte limit on redeemScript size). That works
         // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
         // bytes of scriptSig, which we round off to 1650 bytes for some minor
         // future-proofing. That's also enough to spend a 20-of-20
         // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
-        // considered standard)
+        // considered standard.
         if (txin.scriptSig.size() > 1650) {
             reason = "scriptsig-size";
             return false;
@@ -135,46 +132,31 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CScript& prevScript = prev.scriptPubKey;
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
-        int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
-        if (nArgsExpected < 0)
-            return false;
-
-        // Transactions with extra stuff in their scriptSigs are
-        // non-standard. Note that this EvalScript() call will
-        // be quick, because if there are any operations
-        // beside "push data" in the scriptSig
-        // IsStandardTx() will have already returned false
-        // and this method isn't called.
-        std::vector<std::vector<unsigned char> > stack;
-        if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
-            return false;
 
         if (whichType == TX_SCRIPTHASH)
         {
+            std::vector<std::vector<unsigned char> > stack;
+            // convert the scriptSig into a stack, so we can inspect the redeemScript
+            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
+                return false;
             if (stack.empty())
                 return false;
             CScript subscript(stack.back().begin(), stack.back().end());
-            std::vector<std::vector<unsigned char> > vSolutions2;
-            txnouttype whichType2;
-            if (Solver(subscript, whichType2, vSolutions2))
-            {
-                int tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
-                if (tmpExpected < 0)
-                    return false;
-                nArgsExpected += tmpExpected;
-            }
-            else
-            {
-                // Any other Script with less than 15 sigops OK:
-                unsigned int sigops = subscript.GetSigOpCount(true);
-                // ... extra data left on the stack after execution is OK, too:
-                return (sigops <= MAX_P2SH_SIGOPS);
+            if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+                return false;
             }
         }
-
-        if (stack.size() != (unsigned int)nArgsExpected)
-            return false;
     }
 
     return true;
+}
+
+int64_t GetVirtualTransactionSize(int64_t nCost)
+{
+    return (nCost + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+}
+
+int64_t GetVirtualTransactionSize(const CTransaction& tx)
+{
+    return GetVirtualTransactionSize(GetTransactionCost(tx));
 }

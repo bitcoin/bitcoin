@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,6 +62,10 @@
 #include <QUrlQuery>
 #endif
 
+#if QT_VERSION >= 0x50200
+#include <QFontDatabase>
+#endif
+
 #if BOOST_FILESYSTEM_VERSION >= 3
 static boost::filesystem::detail::utf8_codecvt_facet utf8;
 #endif
@@ -90,6 +94,9 @@ QString dateTimeStr(qint64 nTime)
 
 QFont fixedPitchFont()
 {
+#if QT_VERSION >= 0x50200
+    return QFontDatabase::systemFont(QFontDatabase::FixedFont);
+#else
     QFont font("Monospace");
 #if QT_VERSION >= 0x040800
     font.setStyleHint(QFont::Monospace);
@@ -97,6 +104,24 @@ QFont fixedPitchFont()
     font.setStyleHint(QFont::TypeWriter);
 #endif
     return font;
+#endif
+}
+
+// Just some dummy data to generate an convincing random-looking (but consistent) address
+static const uint8_t dummydata[] = {0xeb,0x15,0x23,0x1d,0xfc,0xeb,0x60,0x92,0x58,0x86,0xb6,0x7d,0x06,0x52,0x99,0x92,0x59,0x15,0xae,0xb1,0x72,0xc0,0x66,0x47};
+
+// Generate a dummy address with invalid CRC, starting with the network prefix.
+static std::string DummyAddress(const CChainParams &params)
+{
+    std::vector<unsigned char> sourcedata = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
+    sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
+    for(int i=0; i<256; ++i) { // Try every trailing byte
+        std::string s = EncodeBase58(begin_ptr(sourcedata), end_ptr(sourcedata));
+        if (!CBitcoinAddress(s).IsValid())
+            return s;
+        sourcedata[sourcedata.size()-1] += 1;
+    }
+    return "";
 }
 
 void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
@@ -107,7 +132,8 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg("1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L"));
+    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg(
+        QString::fromStdString(DummyAddress(Params()))));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -217,7 +243,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
     if (!info.message.isEmpty())
     {
-        QString msg(QUrl::toPercentEncoding(info.message));;
+        QString msg(QUrl::toPercentEncoding(info.message));
         ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
         paramCount++;
     }
@@ -897,6 +923,12 @@ QString formatServicesStr(quint64 mask)
                 break;
             case NODE_GETUTXO:
                 strList.append("GETUTXO");
+                break;
+            case NODE_BLOOM:
+                strList.append("BLOOM");
+                break;
+            case NODE_WITNESS:
+                strList.append("WITNESS");
                 break;
             default:
                 strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));

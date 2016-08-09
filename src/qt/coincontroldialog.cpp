@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -130,7 +130,7 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *platformStyle, QWidget
     ui->treeWidget->setColumnWidth(COLUMN_DATE, 110);
     ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 100);
     ui->treeWidget->setColumnWidth(COLUMN_PRIORITY, 100);
-    ui->treeWidget->setColumnHidden(COLUMN_TXHASH, true);         // store transacton hash in this column, but don't show it
+    ui->treeWidget->setColumnHidden(COLUMN_TXHASH, true);         // store transaction hash in this column, but don't show it
     ui->treeWidget->setColumnHidden(COLUMN_VOUT_INDEX, true);     // store vout index in this column, but don't show it
     ui->treeWidget->setColumnHidden(COLUMN_AMOUNT_INT64, true);   // store amount int64 in this column, but don't show it
     ui->treeWidget->setColumnHidden(COLUMN_PRIORITY_INT64, true); // store priority int64 in this column, but don't show it
@@ -408,10 +408,8 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
             CoinControlDialog::updateLabels(model, this);
     }
 
-    // todo: this is a temporary qt5 fix: when clicking a parent node in tree mode, the parent node
-    //       including all children are partially selected. But the parent node should be fully selected
-    //       as well as the children. Children should never be partially selected in the first place.
-    //       Please remove this ugly fix, once the bug is solved upstream.
+    // TODO: Remove this temporary qt5 fix after Qt5.3 and Qt5.4 are no longer used.
+    //       Fixed in Qt5.5 and above: https://bugreports.qt.io/browse/QTBUG-43473
 #if QT_VERSION >= 0x050000
     else if (column == COLUMN_CHECKBOX && item->childCount() > 0)
     {
@@ -487,6 +485,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     unsigned int nQuantity      = 0;
     int nQuantityUncompressed   = 0;
     bool fAllowFree             = false;
+    bool fWitness               = false;
 
     std::vector<COutPoint> vCoinControl;
     std::vector<COutput>   vOutputs;
@@ -515,7 +514,14 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         // Bytes
         CTxDestination address;
-        if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+        int witnessversion = 0;
+        std::vector<unsigned char> witnessprogram;
+        if (out.tx->vout[out.i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))
+        {
+            nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+            fWitness = true;
+        }
+        else if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
         {
             CPubKey pubkey;
             CKeyID *keyid = boost::get<CKeyID>(&address);
@@ -536,6 +542,14 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     {
         // Bytes
         nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
+        if (fWitness)
+        {
+            // there is some fudging in these numbers related to the actual virtual transaction size calculation that will keep this estimate from being exact.
+            // usually, the result will be an overestimate within a couple of satoshis so that the confirmation dialog ends up displaying a slightly smaller fee.
+            // also, the witness stack size value value is a variable sized integer. usually, the number of stack items will be well under the single byte var int limit.
+            nBytes += 2; // account for the serialized marker and flag bytes
+            nBytes += nQuantity; // account for the witness byte that holds the number of stack items for each input.
+        }
 
         // Priority
         double mempoolEstimatePriority = mempool.estimateSmartPriority(nTxConfirmTarget);
@@ -637,14 +651,14 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     // tool tips
     QString toolTip1 = tr("This label turns red if the transaction size is greater than 1000 bytes.") + "<br /><br />";
-    toolTip1 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CWallet::GetRequiredFee(1000))) + "<br /><br />";
+    toolTip1 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, CWallet::GetRequiredFee(1000))) + "<br /><br />";
     toolTip1 += tr("Can vary +/- 1 byte per input.");
 
     QString toolTip2 = tr("Transactions with higher priority are more likely to get included into a block.") + "<br /><br />";
     toolTip2 += tr("This label turns red if the priority is smaller than \"medium\".") + "<br /><br />";
-    toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CWallet::GetRequiredFee(1000)));
+    toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, CWallet::GetRequiredFee(1000)));
 
-    QString toolTip3 = tr("This label turns red if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, ::minRelayTxFee.GetFee(546)));
+    QString toolTip3 = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
     double dFeeVary;
@@ -798,7 +812,7 @@ void CoinControlDialog::updateView()
             }
 
             // set checkbox
-            if (coinControl->IsSelected(txhash, out.i))
+            if (coinControl->IsSelected(COutPoint(txhash, out.i)))
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
         }
 

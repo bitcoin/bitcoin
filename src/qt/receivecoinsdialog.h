@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,7 +36,7 @@ public:
     enum ColumnWidths {
         DATE_COLUMN_WIDTH = 130,
         LABEL_COLUMN_WIDTH = 120,
-        AMOUNT_MINIMUM_COLUMN_WIDTH = 160,
+        AMOUNT_MINIMUM_COLUMN_WIDTH = 180,
         MINIMUM_COLUMN_WIDTH = 130
     };
 

@@ -1,10 +1,10 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
 #include "chain.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "init.h"
 #include "main.h"
 #include "script/script.h"
@@ -13,6 +13,8 @@
 #include "util.h"
 #include "utiltime.h"
 #include "wallet.h"
+#include "merkleblock.h"
+#include "core_io.h"
 
 #include <fstream>
 #include <stdint.h>
@@ -165,6 +167,11 @@ void ImportScript(const CScript& script, const string& strLabel, bool isRedeemSc
         if (!pwalletMain->HaveCScript(script) && !pwalletMain->AddCScript(script))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
         ImportAddress(CBitcoinAddress(CScriptID(script)), strLabel);
+    } else {
+        CTxDestination destination;
+        if (ExtractDestination(script, destination)) {
+            pwalletMain->SetAddressBook(destination, strLabel, "receive");
+        }
     }
 }
 
@@ -192,7 +199,9 @@ UniValue importaddress(const UniValue& params, bool fHelp)
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
-            "If you have the full public key, you should call importpublickey instead of this.\n"
+            "If you have the full public key, you should call importpubkey instead of this.\n"
+            "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
+            "as change, and not show up in many RPCs.\n"
             "\nExamples:\n"
             "\nImport a script with rescan\n"
             + HelpExampleCli("importaddress", "\"myscript\"") +
@@ -239,6 +248,109 @@ UniValue importaddress(const UniValue& params, bool fHelp)
         pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         pwalletMain->ReacceptWalletTransactions();
     }
+
+    return NullUniValue;
+}
+
+UniValue importprunedfunds(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "importprunedfunds\n"
+            "\nImports funds without rescan. Corresponding address or script must previously be included in wallet. Aimed towards pruned wallets. The end-user is responsible to import additional transactions that subsequently spend the imported outputs or rescan after the point in the blockchain the transaction is included.\n"
+            "\nArguments:\n"
+            "1. \"rawtransaction\" (string, required) A raw transaction in hex funding an already-existing address in wallet\n"
+            "2. \"txoutproof\"     (string, required) The hex output from gettxoutproof that contains the transaction\n"
+            "3. \"label\"          (string, optional) An optional label\n"
+        );
+
+    CTransaction tx;
+    if (!DecodeHexTx(tx, params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    uint256 hashTx = tx.GetHash();
+    CWalletTx wtx(pwalletMain,tx);
+
+    CDataStream ssMB(ParseHexV(params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION);
+    CMerkleBlock merkleBlock;
+    ssMB >> merkleBlock;
+
+    string strLabel = "";
+    if (params.size() == 3)
+        strLabel = params[2].get_str();
+
+    //Search partial merkle tree in proof for our transaction and index in valid block
+    vector<uint256> vMatch;
+    vector<unsigned int> vIndex;
+    unsigned int txnIndex = 0;
+    if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
+
+        LOCK(cs_main);
+
+        if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+
+        vector<uint256>::const_iterator it;
+        if ((it = std::find(vMatch.begin(), vMatch.end(), hashTx))==vMatch.end()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction given doesn't exist in proof");
+        }
+
+        txnIndex = vIndex[it - vMatch.begin()];
+    }
+    else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Something wrong with merkleblock");
+    }
+
+    wtx.nIndex = txnIndex;
+    wtx.hashBlock = merkleBlock.header.GetHash();
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    if (pwalletMain->IsMine(tx)) {
+        CWalletDB walletdb(pwalletMain->strWalletFile, "r+", false);
+        pwalletMain->AddToWallet(wtx, false, &walletdb);
+        return NullUniValue;
+    }
+
+    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No addresses in wallet correspond to included transaction");
+}
+
+UniValue removeprunedfunds(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "removeprunedfunds \"txid\"\n"
+            "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will effect wallet balances.\n"
+            "\nArguments:\n"
+            "1. \"txid\"           (string, required) The hex-encoded id of the transaction you are deleting\n"
+            "\nExamples:\n"
+            + HelpExampleCli("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("removprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+    vector<uint256> vHash;
+    vHash.push_back(hash);
+    vector<uint256> vHashOut;
+
+    if(pwalletMain->ZapSelectTx(vHash, vHashOut) != DB_LOAD_OK) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not properly delete the transaction.");
+    }
+
+    if(vHashOut.empty()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction does not exist in wallet.");
+    }
+
+    ThreadFlushWalletDB(pwalletMain->strWalletFile);
 
     return NullUniValue;
 }
@@ -485,7 +597,7 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
+    file << strprintf("# Wallet dump created by Bitcoin %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));

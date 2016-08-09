@@ -5,7 +5,7 @@ Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
 Source: https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2015, Bitcoin Core Developers
+Copyright: 2009-2016, Bitcoin Core Developers
 License: Expat
 Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
@@ -21,6 +21,7 @@ License: GPL-3+
 
 Files: src/qt/res/icons/add.png
        src/qt/res/icons/address-book.png
+       src/qt/res/icons/chevron.png
        src/qt/res/icons/configure.png
        src/qt/res/icons/debugwindow.png
        src/qt/res/icons/edit.png
@@ -56,6 +57,8 @@ Comment: Inspired by Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
+       src/qt/res/icons/fontbigger.png
+       src/qt/res/icons/fontsmaller.png
 Copyright: Jonas Schnelli
 License: Expat
 Comment:

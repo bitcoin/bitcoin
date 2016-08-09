@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
+#include "random.h"
 #include "streams.h"
 #include "txmempool.h"
 #include "util.h"
@@ -87,7 +88,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     int maxbucketindex = buckets.size() - 1;
 
     // requireGreater means we are looking for the lowest fee/priority such that all higher
-    // values pass, so we start at maxbucketindex (highest fee) and look at succesively
+    // values pass, so we start at maxbucketindex (highest fee) and look at successively
     // smaller buckets until we reach failure.  Otherwise, we are looking for the highest
     // fee/priority such that all lower values fail, and we go in the opposite direction.
     unsigned int startbucket = requireGreater ? maxbucketindex : 0;
@@ -579,4 +580,22 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein)
     feeStats.Read(filein);
     priStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
+}
+
+FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
+{
+    CAmount minFeeLimit = minIncrementalFee.GetFeePerK() / 2;
+    feeset.insert(0);
+    for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
+        feeset.insert(bucketBoundary);
+    }
+}
+
+CAmount FeeFilterRounder::round(CAmount currentMinFee)
+{
+    std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
+    if ((it != feeset.begin() && insecure_rand() % 3 != 0) || it == feeset.end()) {
+        it--;
+    }
+    return *it;
 }
