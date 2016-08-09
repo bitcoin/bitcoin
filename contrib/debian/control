@@ -1,4 +1,4 @@
-Source: bitcoinUnlimited
+Source: bitcoinunlimited
 Section: utils
 Priority: optional
 Maintainer: Andrew Stone <g.andrew.stone@gmail.com>
@@ -40,7 +40,7 @@ Description: peer-to-peer network based digital currency - daemon
  This package provides the daemon, bitcoind, and the CLI tool
  bitcoin-cli to interact with the daemon.
 
-Package: bitcoin-qt
+Package: bitcoinunlimited-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
