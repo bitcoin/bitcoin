@@ -66,7 +66,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
             bool ok = ActivateBestChain(state, chainparams);
             BOOST_CHECK(ok);
         }
-        nScriptCheckThreads = 3;
+        nScriptCheckThreads = std::max(3, GetNumCores()); // Take at least three cores
 
         if (!one_time_setup.test_and_set())
             SetupCCheckQueue(nScriptCheckThreads);
