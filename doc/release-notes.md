@@ -253,6 +253,19 @@ RPC call `generatetoaddress` has been added to mine to a specific address. This
 works with wallet disabled.
 
 
+New bytespersigop implementation
+--------------------------------
+
+The former implementation of the bytespersigop filter accidentally broke bare
+multisig (which is meant to be controlled by the `permitbaremultisig` option),
+since the consensus protocol always counts these older transaction forms as 20
+sigops for backwards compatibility. Simply fixing this bug by counting more
+accurately would have reintroduced a vulnerability. It has therefore been
+replaced with a new implementation that rather than filter such transactions,
+instead treats them (for fee purposes only) as if they were in fact the size
+of a transaction actually using all 20 sigops.
+
+
 Low-level P2P changes
 ----------------------
 
