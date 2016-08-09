@@ -2232,7 +2232,8 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 static CCheckQueue<CScriptCheck, MAX_SCRIPTCHECKS, MAX_SCRIPTCHECK_THREADS> scriptcheckqueue;
 void StopCCheckQueue() {
-
+    LogPrintf("Shutting down CCheckQueue\n");
+    scriptcheckqueue.quit();
 };
 void SetupCCheckQueue(size_t RT_N_SCRIPTCHECK_THREADS) {
     scriptcheckqueue.init(RT_N_SCRIPTCHECK_THREADS);

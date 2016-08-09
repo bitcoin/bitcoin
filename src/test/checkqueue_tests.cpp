@@ -10,9 +10,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <atomic>
+#include <thread>
+#include <vector>
 
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
 #include <unordered_set>
 
 #include "random.h"
@@ -20,6 +20,25 @@ BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, BasicTestingSetup)
 
 // Logging off by default because of memory leak
 static const testing_level TEST = testing_level::enable_functions;
+
+class RAII_ThreadGroup {
+    std::vector<std::thread> threadGroup;
+    public:
+    template <typename Callable>
+    void create_thread(Callable c) {
+        std::thread t(c);
+        threadGroup.push_back(std::move(t));
+    };
+    void join_all(){
+        for (auto& t: threadGroup)
+            t.join();
+        threadGroup.clear();
+    };
+    ~RAII_ThreadGroup() {
+        join_all();
+    };
+
+};
 
 struct FakeJob {
 };
@@ -150,40 +169,43 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue)
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_job_array)
 {
-    boost::thread_group threadGroup;
     static CCheckQueue_Internals::job_array<big_queue_proto> jobs;
     static std::atomic<size_t> m;
     for (size_t i = 0; i < big_queue::MAX_JOBS; ++i)
         jobs.reset_flag(i);
     m = 0;
-    threadGroup.create_thread([]() {
+    std::thread t([]() {
             for (size_t i = 0; i < big_queue::MAX_JOBS; ++i)
             m += jobs.reserve(i) ? 1 : 0;
     });
 
-    threadGroup.create_thread([]() {
+
+    std::thread t2([]() {
             for (size_t i = 0; i < big_queue::MAX_JOBS; ++i)
             m += jobs.reserve(i) ? 1 : 0;
     });
-    threadGroup.join_all();
+    t.join();
+    t2.join();
 
     BOOST_REQUIRE(m == big_queue::MAX_JOBS);
 }
 BOOST_AUTO_TEST_CASE(test_CheckQueue_round_barrier)
 {
-    boost::thread_group threadGroup;
+    RAII_ThreadGroup threadGroup;
     static CCheckQueue_Internals::round_barrier<big_queue> barrier;
     size_t nThreads = 8;
     barrier.init(nThreads);
     for (size_t i = 0; i < nThreads; ++i)
         barrier.reset(i);
-    for (size_t i = 0; i < nThreads; ++i)
+    for (size_t i = 0; i < nThreads; ++i) {
         threadGroup.create_thread([=]() {
             barrier.mark_done(i);
             while (!barrier.load_done());
         });
+    }
 
     threadGroup.join_all();
+
 }
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
@@ -201,15 +223,16 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
     std::array<std::atomic<size_t>, 8> results;
     std::atomic<size_t> spawned{0};
 
-    boost::thread_group threadGroup;
+    RAII_ThreadGroup threadGroup;
 
     for (auto& a : results)
         a = 0;
-    for (size_t i = 0; i < nThreads; ++i)
+    for (size_t i = 0; i < nThreads; ++i) {
         threadGroup.create_thread([&, i]() {
             ++spawned;
             results[i] = fast_queue.TEST_consume(i);
         });
+    }
 
     threadGroup.create_thread([&]() {
         while (spawned != nThreads);
@@ -225,6 +248,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
     });
 
     threadGroup.join_all();
+
 
 
     for (auto& a : results) {

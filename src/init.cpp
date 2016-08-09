@@ -199,6 +199,7 @@ void Shutdown()
 #endif
     StopNode();
     StopTorControl();
+    StopCCheckQueue();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)

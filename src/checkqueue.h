@@ -26,6 +26,28 @@
 #endif
 
 
+/** Forward Declaration on CCheckQueue. Note default no testing. */
+enum testing_level : int {
+    disabled = 0,
+    enable_functions = 1,
+    enable_logging = 2
+};
+constexpr testing_level operator&(testing_level a, testing_level b)
+{
+    return static_cast<testing_level>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+constexpr testing_level operator|(testing_level a, testing_level b)
+{
+    return static_cast<testing_level>(static_cast<int>(a) | static_cast<int>(b));
+}
+template <typename T, size_t J, size_t W, testing_level TEST_ENABLE = testing_level::disabled>
+class CCheckQueue;
+/** Forward Declaration on CCheckQueueControl */
+template <typename Q>
+class CCheckQueueControl;
+
+
 /** CCheckQueue_Internals contains various components that otherwise could live inside
  * of CCheckQueue, but is separate for easier testability and modularity */
 namespace CCheckQueue_Internals
@@ -58,7 +80,8 @@ public:
         for (typename Q::JOB_TYPE& check : vChecks)
             check.swap(*(next_free_index++));
     }
-    typename decltype(checks)::iterator * get_next_free_index() {
+    typename decltype(checks)::iterator* get_next_free_index()
+    {
         return &next_free_index;
     }
 
@@ -274,22 +297,6 @@ struct status_container {
  * @tparam W the maximum number of workers possible
  */
 
-enum testing_level : int {
-    disabled = 0,
-    enable_functions = 1,
-    enable_logging = 2
-};
-constexpr testing_level operator&(testing_level a, testing_level b)
-{
-    return static_cast<testing_level>(static_cast<int>(a) & static_cast<int>(b));
-}
-
-constexpr testing_level operator|(testing_level a, testing_level b)
-{
-    return static_cast<testing_level>(static_cast<int>(a) | static_cast<int>(b));
-}
-template <typename T, size_t J, size_t W, testing_level TEST_ENABLE = testing_level::disabled>
-class CCheckQueue;
 template <typename T, size_t J, size_t W, testing_level TEST_ENABLE>
 class CCheckQueue
 {
@@ -304,12 +311,26 @@ private:
     CCheckQueue_Internals::job_array<CCheckQueue<T, J, W, TEST> > jobs;
     CCheckQueue_Internals::status_container<CCheckQueue<T, J, W, TEST> > status;
     CCheckQueue_Internals::round_barrier<CCheckQueue<T, J, W, TEST> > done_round;
-    std::atomic<bool> should_sleep;
+    struct sleep_status {
+        struct states {
+            static const uint8_t asleep_alive = 0b00000001;
+            static const uint8_t awake_alive = 0b00000000;
+            static const uint8_t asleep_dead = 0b00000011;
+            static const uint8_t awake_dead = 0b00000010;
+        };
+        struct switches {
+            static const uint8_t kill_or = 0b00000010;
+            static const uint8_t wakeup_and = 0b11111110;
+            static const uint8_t sleep_or = 0b00000001;
+        };
+    };
+    std::atomic<uint8_t> should_sleep;
     size_t RT_N_SCRIPTCHECK_THREADS;
 
     //state only for testing
     mutable std::atomic<size_t> test_log_seq;
     mutable std::array<std::ostringstream, MAX_WORKERS> test_log;
+    std::vector<std::thread> threads;
 
 
     void wait_all_finished_cleanup() const
@@ -317,10 +338,20 @@ private:
         while (status.nFinishedCleanup.load() != RT_N_SCRIPTCHECK_THREADS - 1)
             ;
     }
-    void maybe_sleep() const
+    bool maybe_sleep() const
     {
-        while (should_sleep)
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        for (;;) {
+            switch (should_sleep.load()) {
+            case sleep_status::states::asleep_alive:
+                std::this_thread::sleep_for(std::chrono::microseconds(1));
+                break;
+            case sleep_status::states::awake_alive:
+                return false;
+            case sleep_status::states::asleep_dead: // covers dead && awake
+            case sleep_status::states::awake_dead:
+                return true;
+            }
+        }
     }
 
     size_t consume(const size_t ID)
@@ -348,8 +379,10 @@ private:
     bool Loop(const size_t ID)
     {
         for (;;) {
-            if (ID != 0)
-                maybe_sleep();
+            if (maybe_sleep()) {
+                LogPrintf("CCheckQueue @%#010x Worker %q shutting down\n", this, ID);
+                return status.fAllOk.load();
+            }
 
             if (TEST & testing_level::enable_logging)
                 test_log[ID] << "[[" << ++test_log_seq << "]] "
@@ -434,7 +467,7 @@ private:
     }
 
 public:
-    CCheckQueue() : jobs(), status(), done_round(), should_sleep(true), RT_N_SCRIPTCHECK_THREADS(0), test_log_seq(0)
+    CCheckQueue() : jobs(), status(), done_round(), should_sleep(sleep_status::states::asleep_alive), RT_N_SCRIPTCHECK_THREADS(0), test_log_seq(0)
     {
     }
 
@@ -454,6 +487,7 @@ public:
     void Thread(size_t ID)
     {
         RenameThread("bitcoin-scriptcheck");
+        LogPrintf("Starting CCheckQueue Worker %q on CCheckQueue %#010x\n", ID, this);
         Loop(ID);
     }
 
@@ -491,6 +525,7 @@ public:
     }
     ~CCheckQueue()
     {
+        quit();
     }
 
     void init(const size_t RT_N_SCRIPTCHECK_THREADS_)
@@ -499,21 +534,29 @@ public:
         done_round.init(RT_N_SCRIPTCHECK_THREADS);
 
         for (size_t id = 1; id < RT_N_SCRIPTCHECK_THREADS; ++id) {
-            std::thread t([=]() {Loop(id); });
-            t.detach();
+            std::thread t([=]() {Thread(id); });
+            threads.push_back(std::move(t));
         }
     }
     void wakeup()
     {
-        should_sleep.store(false);
+        should_sleep.fetch_and(sleep_status::switches::wakeup_and);
     }
     void sleep()
     {
-        should_sleep.store(true);
+        should_sleep.fetch_or(sleep_status::switches::sleep_or);
+    }
+    void quit()
+    {
+        should_sleep.fetch_or(sleep_status::switches::kill_or);
+        for (auto& t : threads)
+            t.join();
+        threads.clear();
     }
 
 
-    JOB_TYPE ** get_next_free_index() {
+    JOB_TYPE** get_next_free_index()
+    {
         return jobs.get_next_free_index();
     }
 
@@ -607,7 +650,8 @@ public:
             pqueue->Add(d);
     }
 
-    typename Q::JOB_TYPE ** get_next_free_index() {
+    typename Q::JOB_TYPE** get_next_free_index()
+    {
         return pqueue ? pqueue->get_next_free_index() : nullptr;
     }
 
