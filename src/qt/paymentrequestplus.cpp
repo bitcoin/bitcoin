@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,16 +9,15 @@
 
 #include "paymentrequestplus.h"
 
+#include "util.h"
+
 #include <stdexcept>
 
-#include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
 
 #include <QDateTime>
 #include <QDebug>
 #include <QSslCertificate>
-
-using namespace std;
 
 class SSLVerifyError : public std::runtime_error
 {
@@ -30,25 +29,25 @@ bool PaymentRequestPlus::parse(const QByteArray& data)
 {
     bool parseOK = paymentRequest.ParseFromArray(data.data(), data.size());
     if (!parseOK) {
-        qWarning() << "PaymentRequestPlus::parse : Error parsing payment request";
+        qWarning() << "PaymentRequestPlus::parse: Error parsing payment request";
         return false;
     }
     if (paymentRequest.payment_details_version() > 1) {
-        qWarning() << "PaymentRequestPlus::parse : Received up-version payment details, version=" << paymentRequest.payment_details_version();
+        qWarning() << "PaymentRequestPlus::parse: Received up-version payment details, version=" << paymentRequest.payment_details_version();
         return false;
     }
 
     parseOK = details.ParseFromString(paymentRequest.serialized_payment_details());
     if (!parseOK)
     {
-        qWarning() << "PaymentRequestPlus::parse : Error parsing payment details";
+        qWarning() << "PaymentRequestPlus::parse: Error parsing payment details";
         paymentRequest.Clear();
         return false;
     }
     return true;
 }
 
-bool PaymentRequestPlus::SerializeToString(string* output) const
+bool PaymentRequestPlus::SerializeToString(std::string* output) const
 {
     return paymentRequest.SerializeToString(output);
 }
@@ -56,12 +55,6 @@ bool PaymentRequestPlus::SerializeToString(string* output) const
 bool PaymentRequestPlus::IsInitialized() const
 {
     return paymentRequest.IsInitialized();
-}
-
-QString PaymentRequestPlus::getPKIType() const
-{
-    if (!IsInitialized()) return QString("none");
-    return QString::fromStdString(paymentRequest.pki_type());
 }
 
 bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) const
@@ -81,17 +74,17 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         digestAlgorithm = EVP_sha1();
     }
     else if (paymentRequest.pki_type() == "none") {
-        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: pki_type == none";
+        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: pki_type == none";
         return false;
     }
     else {
-        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
+        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
         return false;
     }
 
     payments::X509Certificates certChain;
     if (!certChain.ParseFromString(paymentRequest.pki_data())) {
-        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: error parsing pki_data";
+        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: error parsing pki_data";
         return false;
     }
 
@@ -101,12 +94,12 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         QByteArray certData(certChain.certificate(i).data(), certChain.certificate(i).size());
         QSslCertificate qCert(certData, QSsl::Der);
         if (currentTime < qCert.effectiveDate() || currentTime > qCert.expiryDate()) {
-            qWarning() << "PaymentRequestPlus::getMerchant : Payment request: certificate expired or not yet active: " << qCert;
+            qWarning() << "PaymentRequestPlus::getMerchant: Payment request: certificate expired or not yet active: " << qCert;
             return false;
         }
 #if QT_VERSION >= 0x050000
         if (qCert.isBlacklisted()) {
-            qWarning() << "PaymentRequestPlus::getMerchant : Payment request: certificate blacklisted: " << qCert;
+            qWarning() << "PaymentRequestPlus::getMerchant: Payment request: certificate blacklisted: " << qCert;
             return false;
         }
 #endif
@@ -116,14 +109,14 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             certs.push_back(cert);
     }
     if (certs.empty()) {
-        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: empty certificate chain";
+        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: empty certificate chain";
         return false;
     }
 
     // The first cert is the signing cert, the rest are untrusted certs that chain
     // to a valid root authority. OpenSSL needs them separately.
     STACK_OF(X509) *chain = sk_X509_new_null();
-    for (int i = certs.size()-1; i > 0; i--) {
+    for (int i = certs.size() - 1; i > 0; i--) {
         sk_X509_push(chain, certs[i]);
     }
     X509 *signing_cert = certs[0];
@@ -132,7 +125,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     // load the signing cert into it and verify.
     X509_STORE_CTX *store_ctx = X509_STORE_CTX_new();
     if (!store_ctx) {
-        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: error creating X509_STORE_CTX";
+        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: error creating X509_STORE_CTX";
         return false;
     }
 
@@ -150,7 +143,13 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         int result = X509_verify_cert(store_ctx);
         if (result != 1) {
             int error = X509_STORE_CTX_get_error(store_ctx);
-            throw SSLVerifyError(X509_verify_cert_error_string(error));
+            // For testing payment requests, we allow self signed root certs!
+            // This option is just shown in the UI options, if -help-debug is enabled.
+            if (!(error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT && GetBoolArg("-allowselfsignedrootcertificates", DEFAULT_SELFSIGNED_ROOTCERTS))) {
+                throw SSLVerifyError(X509_verify_cert_error_string(error));
+            } else {
+               qDebug() << "PaymentRequestPlus::getMerchant: Allowing self signed root certificate, because -allowselfsignedrootcertificates is true.";
+            }
         }
         X509_NAME *certname = X509_get_subject_name(signing_cert);
 
@@ -165,9 +164,8 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         EVP_MD_CTX_init(&ctx);
         if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, NULL) ||
             !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
-            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), paymentRequest.signature().size(), pubkey)) {
-
-            throw SSLVerifyError("Bad signature, invalid PaymentRequest.");
+            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), (unsigned int)paymentRequest.signature().size(), pubkey)) {
+            throw SSLVerifyError("Bad signature, invalid payment request.");
         }
 
         // OpenSSL API for getting human printable strings from certs is baroque.
@@ -181,10 +179,9 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         }
         // TODO: detect EV certificates and set merchant = business name instead of unfriendly NID_commonName ?
     }
-    catch (SSLVerifyError& err)
-    {
+    catch (const SSLVerifyError& err) {
         fResult = false;
-        qWarning() << "PaymentRequestPlus::getMerchant : SSL error: " << err.what();
+        qWarning() << "PaymentRequestPlus::getMerchant: SSL error: " << err.what();
     }
 
     if (website)
@@ -204,7 +201,7 @@ QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
         const unsigned char* scriptStr = (const unsigned char*)details.outputs(i).script().data();
         CScript s(scriptStr, scriptStr+details.outputs(i).script().size());
 
-        result.append(make_pair(s, details.outputs(i).amount()));
+        result.append(std::make_pair(s, details.outputs(i).amount()));
     }
     return result;
 }

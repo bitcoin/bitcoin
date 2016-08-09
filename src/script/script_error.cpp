@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,6 +47,10 @@ const char* ScriptErrorString(const ScriptError serror)
             return "OP_RETURN was encountered";
         case SCRIPT_ERR_UNBALANCED_CONDITIONAL:
             return "Invalid OP_IF construction";
+        case SCRIPT_ERR_NEGATIVE_LOCKTIME:
+            return "Negative locktime";
+        case SCRIPT_ERR_UNSATISFIED_LOCKTIME:
+            return "Locktime requirement not satisfied";
         case SCRIPT_ERR_SIG_HASHTYPE:
             return "Signature hash type missing or not understood";
         case SCRIPT_ERR_SIG_DER:
@@ -61,8 +65,22 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Dummy CHECKMULTISIG argument must be zero";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS:
             return "NOPx reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM:
+            return "Witness version reserved for soft-fork upgrades";
         case SCRIPT_ERR_PUBKEYTYPE:
             return "Public key is neither compressed or uncompressed";
+        case SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH:
+            return "Witness program has incorrect length";
+        case SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY:
+            return "Witness program was passed an empty witness";
+        case SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH:
+            return "Witness program hash mismatch";
+        case SCRIPT_ERR_WITNESS_MALLEATED:
+            return "Witness requires empty scriptSig";
+        case SCRIPT_ERR_WITNESS_MALLEATED_P2SH:
+            return "Witness requires only-redeemscript scriptSig";
+        case SCRIPT_ERR_WITNESS_UNEXPECTED:
+            return "Witness provided for non-witness script";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
         default: break;

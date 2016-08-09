@@ -1,126 +1,207 @@
 (note: this is a temporary file, to be added-to by anybody, and moved to
 release-notes at release time)
 
-Block file backwards-compatibility warning
-===========================================
+Bitcoin Core version *version* is now available from:
 
-Because release 0.10.0 makes use of headers-first synchronization and parallel
-block download, the block files and databases are not backwards-compatible
-with older versions of Bitcoin Core:
+  <https://bitcoin.org/bin/bitcoin-core-*version*/>
 
-* Blocks will be stored on disk out of order (in the order they are
-received, really), which makes it incompatible with some tools or
-other programs. Reindexing using earlier versions will also not work
-anymore as a result of this.
+This is a new major version release, including new features, various bugfixes
+and performance improvements, as well as updated translations.
 
-* The block index database will now hold headers for which no block is
-stored on disk, which earlier versions won't support.
+Please report bugs using the issue tracker at github:
 
-If you want to be able to downgrade smoothly, make a backup of your entire data
-directory. Without this your node will need start syncing (or importing from
-bootstrap.dat) anew afterwards.
+  <https://github.com/bitcoin/bitcoin/issues>
 
-This does not affect wallet forward or backward compatibility.
+To receive security and update notifications, please subscribe to:
 
-Transaction fee changes
-=======================
+  <https://bitcoincore.org/en/list/announcements/join/>
 
-This release automatically estimates how high a transaction fee (or how
-high a priority) transactions require to be confirmed quickly. The default
-settings will create transactions that confirm quickly; see the new
-'txconfirmtarget' setting to control the tradeoff between fees and
-confirmation times.
+Compatibility
+==============
 
-Prior releases used hard-coded fees (and priorities), and would
-sometimes create transactions that took a very long time to confirm.
+Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
+an OS initially released in 2001. This means that not even critical security
+updates will be released anymore. Without security updates, using a bitcoin
+wallet on a XP machine is irresponsible at least.
 
-Statistics used to estimate fees and priorities are saved in the
-data directory in the `fee_estimates.dat` file just before
-program shutdown, and are read in at startup.
+In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
+randomly crashing on Windows XP. It is [not clear](https://github.com/bitcoin/bitcoin/issues/7681#issuecomment-217439891)
+what the source of these crashes is, but it is likely that upstream
+libraries such as Qt are no longer being tested on XP.
 
-New Command Line Options
----------------------------
+We do not have time nor resources to provide support for an OS that is
+end-of-life. From 0.13.0 on, Windows XP is no longer supported. Users are
+suggested to upgrade to a newer verion of Windows, or install an alternative OS
+that is supported.
 
-- `-txconfirmtarget=n` : create transactions that have enough fees (or priority)
-so they are likely to confirm within n blocks (default: 1). This setting
-is over-ridden by the -paytxfee option.
+No attempt is made to prevent installing or running the software on Windows XP,
+you can still do so at your own risk, but do not expect it to work: do not
+report issues about Windows XP to the issue tracker.
 
-New RPC methods
-----------------
+Notable changes
+===============
 
-- `estimatefee nblocks` : Returns approximate fee-per-1,000-bytes needed for
-a transaction to be confirmed within nblocks. Returns -1 if not enough
-transactions have been observed to compute a good estimate.
+Database cache memory increased
+--------------------------------
 
-- `estimatepriority nblocks` : Returns approximate priority needed for
-a zero-fee transaction to confirm within nblocks. Returns -1 if not
-enough free transactions have been observed to compute a good
-estimate.
+As a result of growth of the UTXO set, performance with the prior default
+database cache of 100 MiB has suffered.
+For this reason the default was changed to 300 MiB in this release.
 
-RPC access control changes
-==========================================
+For nodes on low-memory systems, the database cache can be changed back to
+100 MiB (or to another value) by either:
 
-Subnet matching for the purpose of access control is now done
-by matching the binary network address, instead of with string wildcard matching.
-For the user this means that `-rpcallowip` takes a subnet specification, which can be
+- Adding `dbcache=100` in bitcoin.conf
+- Changing it in the GUI under `Options → Size of database cache`
 
-- a single IP address (e.g. `1.2.3.4` or `fe80::0012:3456:789a:bcde`)
-- a network/CIDR (e.g. `1.2.3.0/24` or `fe80::0000/64`)
-- a network/netmask (e.g. `1.2.3.4/255.255.255.0` or `fe80::0012:3456:789a:bcde/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff`)
+Note that the database cache setting has the most performance impact
+during initial sync of a node, and when catching up after downtime.
 
-An arbitrary number of `-rpcallow` arguments can be given. An incoming connection will be accepted if its origin address
-matches one of them.
+bitcoin-cli: arguments privacy
+--------------------------------
 
+The RPC command line client gained a new argument, `-stdin`
+to read extra arguments from standard input, one per line until EOF/Ctrl-D.
 For example:
 
-| 0.9.x and before                           | 0.10.x                                |
-|--------------------------------------------|---------------------------------------|
-| `-rpcallowip=192.168.1.1`                  | `-rpcallowip=192.168.1.1` (unchanged) |
-| `-rpcallowip=192.168.1.*`                  | `-rpcallowip=192.168.1.0/24`          |
-| `-rpcallowip=192.168.*`                    | `-rpcallowip=192.168.0.0/16`          |
-| `-rpcallowip=*` (dangerous!)               | `-rpcallowip=::/0`                    |
+    $ echo -e "mysecretcode\n120" | src/bitcoin-cli -stdin walletpassphrase
 
-Using wildcards will result in the rule being rejected with the following error in debug.log:
+It is recommended to use this for sensitive information such as wallet
+passphrases, as command-line arguments can usually be read from the process
+table by any user on the system.
 
-    Error: Invalid -rpcallowip subnet specification: *. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).
+RPC low-level changes
+----------------------
 
-RPC Server "Warm-Up" Mode
-=========================
+- `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
+  32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
+  fixed, but this means that the output will be different than from previous versions.
 
-The RPC server is started earlier now, before most of the expensive
-intialisations like loading the block index.  It is available now almost
-immediately after starting the process.  However, until all initialisations
-are done, it always returns an immediate error with code -28 to all calls.
+- Full UTF-8 support in the RPC API. Non-ASCII characters in, for example,
+  wallet labels have always been malformed because they weren't taken into account
+  properly in JSON RPC processing. This is no longer the case. This also affects
+  the GUI debug console.
 
-This new behaviour can be useful for clients to know that a server is already
-started and will be available soon (for instance, so that they do not
-have to start it themselves).
+C++11 and Python 3
+-------------------
 
-Improved signing security
-=========================
+Various code modernizations have been done. The Bitcoin Core code base has
+started using C++11. This means that a C++11-capable compiler is now needed for
+building. Effectively this means GCC 4.7 or higher, or Clang 3.3 or higher.
 
-For 0.10 the security of signing against unusual attacks has been
-improved by making the signatures constant time and deterministic.
+When cross-compiling for a target that doesn't have C++11 libraries, configure with
+`./configure --enable-glibc-back-compat ... LDFLAGS=-static-libstdc++`.
 
-This change is a result of switching signing to use libsecp256k1
-instead of OpenSSL. Libsecp256k1 is a cryptographic library
-optimized for the curve Bitcoin uses which was created by Bitcoin
-Core developer Pieter Wuille.
+For running the functional tests in `qa/rpc-tests`, Python3.4 or higher is now
+required.
 
-There exist attacks[1] against most ECC implementations where an
-attacker on shared virtual machine hardware could extract a private
-key if they could cause a target to sign using the same key hundreds
-of times. While using shared hosts and reusing keys are inadvisable
-for other reasons, it's a better practice to avoid the exposure.
+Linux ARM builds
+------------------
 
-OpenSSL has code in their source repository for derandomization
-and reduction in timing leaks, and we've  eagerly wanted to use
-it for a long time but this functionality has still not made its
-way into a released version of OpenSSL. Libsecp256k1 achieves
-significantly stronger protection: As far as we're aware this is
-the only deployed implementation of constant time signing for
-the curve Bitcoin uses and we have reason to believe that
-libsecp256k1 is better tested and more thoroughly reviewed
-than the implementation in OpenSSL.
+Due to popular request, Linux ARM builds have been added to the uploaded
+executables.
 
-[1] https://eprint.iacr.org/2014/161.pdf
+The following extra files can be found in the download directory or torrent:
+
+- `bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries for the most
+  common 32-bit ARM architecture.
+- `bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries for the most
+  common 64-bit ARM architecture.
+
+ARM builds are still experimental. If you have problems on a certain device or
+Linux distribution combination please report them on the bug tracker, it may be
+possible to resolve them.
+
+Note that Android is not considered ARM Linux in this context. The executables
+are not expected to work out of the box on Android.
+
+0.13.0 Change log
+=================
+
+Detailed release notes follow. This overview includes changes that affect
+behavior, not code moves, refactors and string updates. For convenience in locating
+the code changes and accompanying discussion, both the pull request and
+git merge commit are mentioned.
+
+### RPC and REST
+
+Asm script outputs replacements for OP_NOP2 and OP_NOP3
+-------------------------------------------------------
+
+OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
+65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
+
+OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP 
+112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki)
+
+The following outputs are affected by this change:
+- RPC `getrawtransaction` (in verbose mode)
+- RPC `decoderawtransaction`
+- RPC `decodescript`
+- REST `/rest/tx/` (JSON format)
+- REST `/rest/block/` (JSON format when including extended tx details)
+- `bitcoin-tx -json`
+
+New mempool information RPC calls
+---------------------------------
+
+RPC calls have been added to output detailed statistics for individual mempool
+entries, as well as to calculate the in-mempool ancestors or descendants of a
+transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
+
+### ZMQ
+
+Each ZMQ notification now contains an up-counting sequence number that allows
+listeners to detect lost notifications.
+The sequence number is always the last element in a multi-part ZMQ notification and
+therefore backward compatible.
+Each message type has its own counter.
+(https://github.com/bitcoin/bitcoin/pull/7762)
+
+### Configuration and command-line options
+
+### Block and transaction handling
+
+### P2P protocol and network code
+
+The p2p alert system has been removed in #7692 and the 'alert' message is no longer supported.
+
+
+Fee filtering of invs (BIP 133)
+------------------------------------
+
+The optional new p2p message "feefilter" is implemented and the protocol
+version is bumped to 70013. Upon receiving a feefilter message from a peer,
+a node will not send invs for any transactions which do not meet the filter
+feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
+
+### Validation
+
+### Build system
+
+### Wallet
+
+Hierarchical Deterministic Key Generation
+-----------------------------------------
+Newly created wallets will use hierarchical deterministic key generation
+according to BIP32 (keypath m/0'/0'/k').
+Existing wallets will still use traditional key generation.
+
+Backups of HD wallets, regardless of when they have been created, can
+therefore be used to re-generate all possible private keys, even the
+ones which haven't already been generated during the time of the backup.
+
+HD key generation for new wallets can be disabled by `-usehd=0`. Keep in
+mind that this flag only has affect on newly created wallets.
+You can't disable HD key generation once you have created a HD wallet.
+
+There is no distinction between internal (change) and external keys.
+
+[Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
+
+### GUI
+
+### Tests
+
+### Miscellaneous
+
