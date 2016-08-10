@@ -214,6 +214,24 @@ no longer optimized for this metric.  Feedback is requested on whether to
 deprecate or keep this command line option in future releases.
 
 
+Reindexing changes
+------------------
+
+In earlier versions, reindexing did validation while reading through the block
+files on disk. These two have now been split up, so that all blocks are known
+before validation starts. This was necessary to make certain optimizations that
+are available during normal synchronizations also available during reindexing.
+
+The two phases are distinct in the Bitcoin-Qt GUI. During the first one,
+"Reindexing blocks on disk" is shown. During the second (slower) one,
+"Processing blocks on disk" is shown.
+
+It is possible to only redo validation now, without rebuilding the block index,
+using the command line option `-reindex-chainstate` (in addition to
+`-reindex` which does both). This new option is useful when the blocks on disk
+are assumed to be fine, but the chainstate is still corrupted. It is also
+useful for benchmarks.
+
 Removal of internal miner
 --------------------------
 
