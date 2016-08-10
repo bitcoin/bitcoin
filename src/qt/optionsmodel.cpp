@@ -164,6 +164,9 @@ void OptionsModel::Reset()
     // Set strDataDir
     settings.setValue("strDataDir", dataDir);
 
+    // Set that this was reset
+    settings.setValue("fReset", true);
+
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())
         GUIUtil::SetStartOnSystemStartup(false);
