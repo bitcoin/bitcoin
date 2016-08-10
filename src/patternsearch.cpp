@@ -5,7 +5,9 @@
 #include "main.h"
 #include <openssl/evp.h>
 #include <boost/thread.hpp>
+#if (__x86_64__ || __i386__)
 #include <cpuid.h>
+#endif
 #include "util.h"
 #include "sha512.h"
 #include "aes.h"
@@ -188,13 +190,16 @@ namespace patternsearch
 		boost::this_thread::disable_interruption di;
 		std::vector< std::pair<uint32_t,uint32_t> > results;
 
-
+		bool aes_ni_supported = false;
+		bool avx2_supported = false;
+#if (__x86_64__ || __i386__)
 		uint32_t eax, ebx, ecx, edx;
 		eax = ebx = ecx = edx = 0;
 		__get_cpuid(1, &eax, &ebx, &ecx, &edx);
-		bool aes_ni_supported = (ecx & bit_AES) > 0;
-		bool avx2_supported = __builtin_cpu_supports("avx2");
+		aes_ni_supported = (ecx & bit_AES) > 0;
+		avx2_supported = __builtin_cpu_supports("avx2");
 		LogPrintf("CPU support: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
+#endif
 		clock_t t1 = clock();
 		boost::thread_group* sha512Threads = new boost::thread_group();
 		for (int i = 0; i < totalThreads; i++) {
