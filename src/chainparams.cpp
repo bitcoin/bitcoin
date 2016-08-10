@@ -10,6 +10,7 @@
 #include "arith_uint256.h"
 
 #include <assert.h>
+#include <mm_malloc.h>
 
 #include <boost/assign/list_of.hpp>
 
@@ -88,7 +89,7 @@ public:
             arith_uint256 hashTarget = arith_uint256().SetCompact(genesis.nBits);
             uint256 thash;
             char *scratchpad;
-            scratchpad=new char[(1<<30)];
+            scratchpad = (char*)_mm_malloc(1<<30, 32);
             while(true){
                 int collisions=0;
 								int tmpflag=0;
@@ -195,7 +196,7 @@ public:
             arith_uint256 hashTarget = arith_uint256().SetCompact(genesis.nBits);
             uint256 thash;
             char *scratchpad;
-            scratchpad=new char[(1<<30)];
+            scratchpad=(char*)_mm_malloc(1<<30, 32);
             while(true){
                 int collisions=0;
 								int tmpflag=0;
