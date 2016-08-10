@@ -104,7 +104,7 @@ public:
                     ++genesis.nTime;
                 }
             }
-            delete scratchpad;
+            _mm_free(scratchpad);
             LogPrintf("block.nTime = %u \n", genesis.nTime);
             LogPrintf("block.nNonce = %u \n", genesis.nNonce);
             LogPrintf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
@@ -211,7 +211,7 @@ public:
                     ++genesis.nTime;
                 }
             }
-            delete scratchpad;
+            _mm_free(scratchpad);
             LogPrintf("block.nTime = %u \n", genesis.nTime);
             LogPrintf("block.nNonce = %u \n", genesis.nNonce);
             LogPrintf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
