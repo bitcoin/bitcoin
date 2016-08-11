@@ -376,6 +376,25 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
+bool validateAddress(std::string address)
+{
+    CBitcoinAddress addressParsed(address);
+    return addressParsed.IsValid();
+}
+
+CBlockTemplate* CreateNewBlockWithAddress(std::string address)
+{
+    CScript scriptPubKey;
+    if(chainActive.Height()+1>=MINERHODLINGHEIGHT){
+        scriptPubKey = GetTimeLockScriptForDestination(CBitcoinAddress(address).Get(),chainActive.Height()+1+MINERHODLINGPERIOD);
+    }
+    else{
+        scriptPubKey = GetScriptForDestination(CBitcoinAddress(address).Get());
+    }
+
+    return CreateNewBlock(scriptPubKey);
+}
+
 #ifdef ENABLE_WALLET
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -433,19 +452,6 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
     }else{
         scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
     }
-    return CreateNewBlock(scriptPubKey);
-}
-
-CBlockTemplate* CreateNewBlockWithAddress(std::string address)
-{
-    CScript scriptPubKey;
-    if(chainActive.Height()+1>=MINERHODLINGHEIGHT){
-        scriptPubKey = GetTimeLockScriptForDestination(CBitcoinAddress(address).Get(),chainActive.Height()+1+MINERHODLINGPERIOD);
-    }
-    else{
-        scriptPubKey = GetScriptForDestination(CBitcoinAddress(address).Get());
-    }
-
     return CreateNewBlock(scriptPubKey);
 }
 
@@ -648,12 +654,6 @@ void static BitcoinMiner(CWallet *pwallet, uint32_t minerI, uint32_t minerN, int
         fGenerate = false;
         return;
     }
-}
-
-bool validateAddress(std::string address)
-{
-    CBitcoinAddress addressParsed(address);
-    return addressParsed.IsValid();
 }
 
 static bool isInterrupting=false;
