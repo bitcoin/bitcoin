@@ -261,39 +261,6 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 }
 
 
-BOOST_AUTO_TEST_CASE(test_CheckQueue_Performance)
-{
-    struct FakeJobNoWork {
-        bool operator()()
-        {
-            return true;
-        }
-        void swap(FakeJobNoWork& x){};
-    };
-    static CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS> fast_queue;
-    fast_queue.init(nScriptCheckThreads);
-
-    std::vector<FakeJobNoWork> vChecks;
-    vChecks.reserve(100);
-    auto start_time = GetTimeMicros();
-    size_t ROUNDS = 10000;
-    for (size_t i = 0; i < ROUNDS; ++i) {
-        size_t total = 0;
-        {
-            CCheckQueueControl<decltype(fast_queue)> control(&fast_queue);
-            for (size_t j = 0; j < 101; ++j) {
-                size_t r = 30;
-                total += r;
-                vChecks.clear();
-                for (size_t k = 0; k < r; ++k)
-                    vChecks.push_back(FakeJobNoWork{});
-                control.Add(vChecks);
-            }
-        }
-    }
-    auto end_time = GetTimeMicros();
-    BOOST_TEST_MESSAGE("Perf Test took " << end_time - start_time << " microseconds for " << ROUNDS << " rounds, " << (ROUNDS * 1000000.0) / (end_time - start_time) << "rps");
-}
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
 {
