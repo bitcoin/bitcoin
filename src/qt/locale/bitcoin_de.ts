@@ -1892,7 +1892,7 @@
     </message>
     <message>
         <source>Change index out of range</source>
-        <translation>Änderungsindex außerhalb des Bereichs</translation>
+        <translation>Position des Wechselgelds außerhalb des Bereichs</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>

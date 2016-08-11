@@ -2100,6 +2100,10 @@
         <translation>データベースのキャッシュサイズをメガバイトで設定 (%dから%d。初期値: %d)</translation>
     </message>
     <message>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>BIP141ブロック重みの最大値を設定 (初期値: %d)</translation>
+    </message>
+    <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>最大ブロックサイズをバイトで設定 (初期値: %d)</translation>
     </message>

@@ -198,6 +198,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>Welcome</source>
+        <translation>bienvenido</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>

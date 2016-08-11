@@ -75,6 +75,10 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <source>Sign &amp;message...</source>
+        <translation>Chứ ký &amp; Tin nhắn...</translation>
+    </message>
+    <message>
         <source>Synchronizing with network...</source>
         <translation>Đồng bộ hóa với mạng</translation>
     </message>
@@ -85,6 +89,10 @@
     <message>
         <source>Node</source>
         <translation>Node</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Hiện thỉ thông tin sơ lược chung về Ví</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -151,12 +159,24 @@
         <translation>Mở &amp;URI...</translation>
     </message>
     <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Đánh chỉ số (indexing) lại các khối (blocks) trên ổ đĩa ...</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Gửi coins đến tài khoản Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
         <translation>Sao lưu ví tiền ở vị trí khác</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Thay đổi cụm mật mã dùng cho mã hoá Ví</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Cửa sổ xử lý lỗi (debug)</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -187,6 +207,18 @@
         <translation>Hiện hoặc ẩn cửa sổ chính</translation>
     </message>
     <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Mã hoá các khoá bí mật trong Ví của bạn.</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Dùng địa chỉ Bitcoin của bạn ký các tin nhắn để xác minh những nội dung tin nhắn đó là của bạn.</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Kiểm tra các tin nhắn để chắc chắn rằng chúng được ký bằng các địa chỉ Bitcoin xác định.</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -199,8 +231,20 @@
         <translation>Trợ &amp;giúp</translation>
     </message>
     <message>
+        <source>Tabs toolbar</source>
+        <translation>Thanh công cụ (toolbar)</translation>
+    </message>
+    <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Yêu cầu thanh toán(tạo mã QR và địa chỉ Bitcoin: URLs)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Hiện thỉ danh sách các địa chỉ và nhãn đã dùng để gửi.</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Hiện thỉ danh sách các địa chỉ và nhãn đã dùng để nhận.</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
@@ -235,6 +279,14 @@
         <translation>%1 chậm trễ</translation>
     </message>
     <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Khối (block) cuối cùng nhận được cách đây %1</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Những giao dịch sau đó sẽ không hiện thị.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Lỗi</translation>
     </message>
@@ -249,6 +301,10 @@
     <message>
         <source>Up to date</source>
         <translation>Đã cập nhật</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Bắt kịp...</translation>
     </message>
     <message>
         <source>Date: %1
