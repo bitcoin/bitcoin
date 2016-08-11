@@ -529,27 +529,51 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
 
-		if (chainActive.Height()+1 >= MINERHODLINGHEIGHT) {
-			LogPrintf("Creating Block post-fork...\n");
-			string ma=GetArg("-miningaddress", "");
-			CReserveKey reservekey(pwalletMain);
+        // Post-fork block requirements need the coinbase transaction
+        // to be term-locked for 1 year. The below logic restricts the
+        // use of getblocktemplate to the following pathway:
+        //
+        // 1. Use the user supplied miningaddress (if present & valid)
+        // 2. Fallback to random keypool address
+        // 3. Throw an error if no wallet loaded and no miningaddress
+        //
+        // This guards against using an invalid dummy address and forces
+        // users that run without a wallet to supply a valid miningaddress
+        // at runtime (in the conf file or on the command line)
+        if (chainActive.Height()+1 >= MINERHODLINGHEIGHT) {
+            LogPrintf("Creating Block post-fork...\n");
+            string ma=GetArg("-miningaddress", "");
+#ifdef ENABLE_WALLET
+            CReserveKey reservekey(pwalletMain);
 
-			if (ma != "") {
-				if (validateAddress(ma)) {
-					pblocktemplate = CreateNewBlockWithAddress(ma);
-					LogPrintf("Created Block with miningaddress\n");
-				} else {
-					pblocktemplate = CreateNewBlockWithKey(reservekey);
-					LogPrintf("miningaddress invalid, created block with reservekey instead\n");
-				}
-			} else {
-				pblocktemplate = CreateNewBlockWithKey(reservekey);
-				LogPrintf("Created Block with reservekey\n");
-			}
-		} else {
-			CScript scriptDummy = CScript() << OP_TRUE;
-			pblocktemplate = CreateNewBlock(scriptDummy);
-		}
+            if (ma != "") {
+                if (validateAddress(ma)) {
+                    pblocktemplate = CreateNewBlockWithAddress(ma);
+                    LogPrintf("Created Block with miningaddress\n");
+                } else {
+                    pblocktemplate = CreateNewBlockWithKey(reservekey);
+                    LogPrintf("miningaddress invalid, created block with reservekey instead\n");
+                }
+            } else {
+                pblocktemplate = CreateNewBlockWithKey(reservekey);
+                LogPrintf("Created Block with reservekey\n");
+            }
+#else
+            if (ma != "") {
+                if (validateAddress(ma)) {
+                    pblocktemplate = CreateNewBlockWithAddress(ma);
+                    LogPrintf("Created Block with miningaddress\n");
+                } else {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid mingingaddress supplied");
+                }
+            } else {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No runtime miningaddress supplied");
+            }
+#endif
+        } else {
+            CScript scriptDummy = CScript() << OP_TRUE;
+            pblocktemplate = CreateNewBlock(scriptDummy);
+        }
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
