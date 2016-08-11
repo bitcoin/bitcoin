@@ -902,17 +902,22 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
 #ifndef Q_OS_MAC // Ignored on Mac
     if(clientModel && clientModel->getOptionsModel())
     {
-        if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
-           !clientModel->getOptionsModel()->getMinimizeOnClose())
+        if(!clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             // close rpcConsole in case it was open to make some space for the shutdown window
             rpcConsole->close();
 
             QApplication::quit();
         }
+        else
+        {
+            QMainWindow::showMinimized();
+            event->ignore();
+        }
     }
-#endif
+#else
     QMainWindow::closeEvent(event);
+#endif
 }
 
 void BitcoinGUI::showEvent(QShowEvent *event)
