@@ -1979,7 +1979,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             return state.DoS(100,error("ConnectBlock(): coinbase transaction does not have 1 output"),REJECT_INVALID, "bad-cb-outputtx-number");
         }
         if (block.vtx[0].vout[0].scriptPubKey.GetTermDepositReleaseBlock() != pindex->nHeight+MINERHODLINGPERIOD){
-            return state.DoS(100,error("ConnectBlock(): coinbase transaction does not HOdl for one year, hodlblocks=%d",block.vtx[0].vout[0].scriptPubKey.GetTermDepositReleaseBlock()),REJECT_INVALID, "bad-cb-outputtx-hodlingperiod");
+            return state.DoS(100,error("ConnectBlock(): coinbase transaction does not HOdl for one year, hodlblocks=%d, expected=%d\n",block.vtx[0].vout[0].scriptPubKey.GetTermDepositReleaseBlock(),pindex->nHeight+MINERHODLINGPERIOD),REJECT_INVALID, "bad-cb-outputtx-hodlingperiod");
         }
     }
 
