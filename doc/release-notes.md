@@ -392,6 +392,7 @@ git merge commit are mentioned.
 - #8305 `3730393` Improve handling of unconnecting headers (sdaftuar)
 - #8363 `fca1a41` Rename "block cost" to "block weight" (sdaftuar)
 - #8381 `f84ee3d` Make witness v0 outputs non-standard (jl2012)
+- #8364 `3f65ba2` Treat high-sigop transactions as larger rather than rejecting them (sipa)
 
 ### P2P protocol and network code
 
@@ -644,6 +645,7 @@ git merge commit are mentioned.
 - #7951 `5c7df70` Test_framework: Properly print exception (MarcoFalke)
 - #8070 `7771aa5` Remove non-determinism which is breaking net_tests #8069 (EthanHeilman)
 - #8309 `bb2646a` Add wallet-hd test (MarcoFalke)
+- #8444 `cd0910b` Fix p2p-feefilter.py for changed tx relay behavior (sdaftuar)
 
 ### Mining
 
@@ -656,6 +658,7 @@ git merge commit are mentioned.
 - #8295 `f5660d3` Mining-related fixups for 0.13.0 (sdaftuar)
 - #7796 `536b75e` Add support for negative fee rates, fixes `prioritizetransaction` (MarcoFalke)
 - #8362 `86edc20` Scale legacy sigop count in CreateNewBlock (sdaftuar)
+- #8489 `8b0eee6` Bugfix: Use pre-BIP141 sigops until segwit activates (GBT) (luke-jr)
 
 ### Documentation and miscellaneous
 
