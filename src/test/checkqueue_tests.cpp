@@ -14,7 +14,7 @@
 #include <vector>
 
 #include <unordered_set>
-
+#include <memory>
 #include "random.h"
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
 
@@ -45,17 +45,12 @@ struct FakeJob {
 
 typedef CCheckQueue<FakeJob, (size_t)100000, MAX_SCRIPTCHECK_THREADS, TEST> big_queue;
 typedef CCheckQueue<FakeJob, (size_t)2000, MAX_SCRIPTCHECK_THREADS, TEST> medium_queue;
-
-struct big_queue_proto {
-    typedef big_queue::JOB_TYPE JOB_TYPE;
-    static const size_t MAX_JOBS = big_queue::MAX_JOBS;
-    static const size_t MAX_WORKERS = big_queue::MAX_WORKERS;
-};
+typedef typename big_queue::JOB_TYPE JT; // This is a "recursive template" hack
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
     fPrintToConsole = true;
-    static std::atomic<size_t> n_calls;
+    static std::atomic<size_t> n_calls {0};
     struct FailingJob {
         bool f;
         bool call_state;
@@ -76,12 +71,14 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
             std::swap(tag, x.tag);
         };
     };
-    static CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, testing_level::enable_functions> fail_queue;
-    fail_queue.init(nScriptCheckThreads);
+    typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, testing_level::enable_functions> T;
+    auto fail_queue = std::unique_ptr<T>(new T());
+
+    fail_queue->init(nScriptCheckThreads);
 
     for (size_t i = 10; i < 1001; ++i) {
         n_calls = 0;
-        CCheckQueueControl<decltype(fail_queue)> control(&fail_queue);
+        CCheckQueueControl<T> control(fail_queue.get());
         size_t checksum = 0;
 
         std::vector<FailingJob> vChecks;
@@ -105,18 +102,18 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
         bool success = control.Wait();
         if (success && i > 0) {
             size_t nChecked = 0;
-            auto jobs = fail_queue.TEST_introspect_jobs()->TEST_get_checks();
+            auto jobs = fail_queue->TEST_introspect_jobs()->TEST_get_checks();
             for (size_t x = 0; x < i; ++x)
                 if ((*jobs)[x].call_state)
                     nChecked++;
-            fail_queue.TEST_dump_log(nScriptCheckThreads);
-            fail_queue.TEST_erase_log();
+            fail_queue->TEST_dump_log(nScriptCheckThreads);
+            fail_queue->TEST_erase_log();
             BOOST_REQUIRE(!success);
         } else if (i == 0) {
-            fail_queue.TEST_erase_log();
+            fail_queue->TEST_erase_log();
             BOOST_REQUIRE(success);
         }
-        fail_queue.TEST_erase_log();
+        fail_queue->TEST_erase_log();
     }
     fPrintToConsole = false;
 }
@@ -168,21 +165,22 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue)
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_job_array)
 {
-    static CCheckQueue_Internals::job_array<big_queue_proto> jobs;
-    static std::atomic<size_t> m;
+    typedef CCheckQueue_Internals::job_array<big_queue> J;
+    auto jobs = std::shared_ptr<J>(new J());
+    std::atomic<size_t> m;
     for (size_t i = 0; i < big_queue::MAX_JOBS; ++i)
-        jobs.reset_flag(i);
+        jobs->reset_flag(i);
     m = 0;
-    std::thread t([]() {
+    std::thread t([&](std::atomic<size_t>& m) {
         for (size_t i = 0; i < big_queue::MAX_JOBS; ++i)
-            m += jobs.reserve(i) ? 1 : 0;
-    });
+            m += jobs->reserve(i) ? 1 : 0;
+    }, std::ref(m));
 
 
-    std::thread t2([]() {
+    std::thread t2([&](std::atomic<size_t>& m) {
         for (size_t i = 0; i < big_queue::MAX_JOBS; ++i)
-            m += jobs.reserve(i) ? 1 : 0;
-    });
+            m += jobs->reserve(i) ? 1 : 0;
+    }, std::ref(m));
     t.join();
     t2.join();
 
@@ -191,16 +189,17 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_job_array)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_round_barrier)
 {
     RAII_ThreadGroup threadGroup;
-    static CCheckQueue_Internals::round_barrier<big_queue> barrier;
-    barrier.init(nScriptCheckThreads);
+    typedef CCheckQueue_Internals::round_barrier<big_queue> B;
+    auto barrier = std::shared_ptr<B>(new B());
+    barrier->init(nScriptCheckThreads);
     for (int i = 0; i < nScriptCheckThreads; ++i)
-        barrier.reset(i);
-    for (int i = 0; i < nScriptCheckThreads; ++i) {
-        threadGroup.create_thread([=]() {
-            barrier.mark_done(i);
-            while (!barrier.load_done());
+        barrier->reset(i);
+
+    for (int i = 0; i < nScriptCheckThreads; ++i) 
+        threadGroup.create_thread([&, i]() {
+            barrier->mark_done(i);
+            while (!barrier->load_done());
         });
-    }
 
     threadGroup.join_all();
 
@@ -215,8 +214,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
         }
         void swap(FakeJobNoWork& x){};
     };
-    static CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS, testing_level::enable_functions> fast_queue{};
-    fast_queue.init(nScriptCheckThreads);
+    typedef CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS, testing_level::enable_functions> C;
+    auto fast_queue = std::shared_ptr<C>(new C());
+    fast_queue->init(nScriptCheckThreads);
     std::array<std::atomic<size_t>, MAX_SCRIPTCHECK_THREADS> results;
     std::atomic<int> spawned{0};
 
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
     for (int i = 0; i < nScriptCheckThreads; ++i) {
         threadGroup.create_thread([&, i]() {
             ++spawned;
-            results[i] = fast_queue.TEST_consume(i);
+            results[i] = fast_queue->TEST_consume(i);
         });
     }
 
@@ -238,10 +238,10 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
             for (auto x = 0; x< 100; ++x) {
                 w.push_back(FakeJobNoWork{});
             }
-            fast_queue.Add(w);
+            fast_queue->Add(w);
             MilliSleep(1);
         }
-        fast_queue.TEST_set_masterJoined(true);
+        fast_queue->TEST_set_masterJoined(true);
     });
 
     threadGroup.join_all();
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
             BOOST_REQUIRE(v == 1000);
         }
     }
-    size_t count = fast_queue.TEST_count_set_flags();
+    size_t count = fast_queue->TEST_count_set_flags();
     BOOST_TEST_MESSAGE("Got: " << count);
     BOOST_REQUIRE(count == 1000);
 }
@@ -273,14 +273,15 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
         }
         void swap(FakeJobCheckCompletion& x){};
     };
-    static CCheckQueue<FakeJobCheckCompletion, (size_t)100, MAX_SCRIPTCHECK_THREADS> small_queue;
-    small_queue.init(nScriptCheckThreads);
+    typedef CCheckQueue<FakeJobCheckCompletion, (size_t)100, MAX_SCRIPTCHECK_THREADS> C;
+    auto small_queue = std::shared_ptr<C>(new C);
+    small_queue->init(nScriptCheckThreads);
 
     for (size_t i = 0; i < 101; ++i) {
         size_t total = i;
         n_calls = 0;
         {
-            CCheckQueueControl<decltype(small_queue)> control(&small_queue);
+            CCheckQueueControl<C> control(small_queue.get());
             while (total) {
                 size_t r = GetRand(10);
                 std::vector<FakeJobCheckCompletion> vChecks;

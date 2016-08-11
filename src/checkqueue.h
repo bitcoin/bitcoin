@@ -65,7 +65,7 @@ class job_array
              * */
     std::array<std::atomic_flag, Q::MAX_JOBS> flags;
     /** used as the insertion point into the array. */
-    typename decltype(checks)::iterator next_free_index;
+    typename Q::JOB_TYPE* next_free_index;
 
 public:
     job_array() : next_free_index(checks.begin())
@@ -80,7 +80,7 @@ public:
         for (typename Q::JOB_TYPE& check : vChecks)
             check.swap(*(next_free_index++));
     }
-    typename decltype(checks)::iterator* get_next_free_index()
+    typename Q::JOB_TYPE** get_next_free_index()
     {
         return &next_free_index;
     }
@@ -599,11 +599,13 @@ public:
                 test_log[i].clear();
             }
     }
-    decltype(status) * TEST_introspect_status()
+
+
+    CCheckQueue_Internals::status_container<CCheckQueue<T, J, W, TEST> >* TEST_introspect_status()
     {
         return TEST & testing_level::enable_functions ? &status : nullptr;
     }
-    decltype(jobs) * TEST_introspect_jobs()
+    CCheckQueue_Internals::job_array<CCheckQueue<T, J, W, TEST> >* TEST_introspect_jobs()
     {
         return TEST & testing_level::enable_functions ? &jobs : nullptr;
     }

@@ -18,14 +18,15 @@ static void CCheckQueueSpeed(benchmark::State& state)
         }
         void swap(FakeJobNoWork& x){};
     };
-    static CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS> fast_queue;
-    fast_queue.init(GetNumCores());
+    typedef CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS> T;
+    auto fast_queue = std::unique_ptr<T>(new T());
+    fast_queue->init(GetNumCores());
     std::vector<FakeJobNoWork> vChecks;
     vChecks.reserve(100);
     while (state.KeepRunning()) {
         size_t total = 0;
         {
-            CCheckQueueControl<decltype(fast_queue)> control(&fast_queue);
+            CCheckQueueControl<T> control(fast_queue.get());
             for (size_t j = 0; j < 101; ++j) {
                 size_t r = 30;
                 total += r;
