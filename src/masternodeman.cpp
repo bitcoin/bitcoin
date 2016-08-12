@@ -218,38 +218,18 @@ int CMasternodeMan::CountEnabled(int protocolVersion)
     return i;
 }
 
-int CMasternodeMan::CountByIP(int nodeType)
+int CMasternodeMan::CountByIP(int nNetworkType)
 {
-    int nIPv4_nodes = 0;
-    int nIPv6_nodes = 0;
-    int nTOR_nodes = 0;
+    int nNodeCount = 0;
 
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        if(mn.addr.IsIPv6()){
-            nIPv6_nodes++;
-        } else if(mn.addr.IsTor()){
-            nTOR_nodes++;
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+        if( (nNetworkType == NET_IPV4 && mn.addr.IsIPv4()) ||
+            (nNetworkType == NET_TOR  && mn.addr.IsTor())  ||
+            (nNetworkType == NET_IPV6 && mn.addr.IsIPv6())) {
+                nNodeCount++;
         }
-        else{
-            nIPv4_nodes++; // Must be IPv4 if it isn't IPv6 or TOR
-        }
-    }
 
-    switch(nodeType)
-    {
-        case NET_IPV4:
-            return nIPv4_nodes;
-            
-        case NET_IPV6:
-            return nIPv6_nodes;
-            
-        case NET_TOR:
-            return nTOR_nodes;
-
-        default:
-            return nIPv4_nodes + nIPv6_nodes + nTOR_nodes; // Default: return all nodes
-    }
-
+    return nNodeCount;
 }
 
 void CMasternodeMan::DsegUpdate(CNode* pnode)

@@ -85,8 +85,9 @@ public:
     void Clear();
 
     int CountEnabled(int protocolVersion = -1);
-    
-    int CountByIP(int nodeType);
+
+    /// Count Masternodes by network type - NET_IPV4, NET_IPV6, NET_TOR
+    int CountByIP(int nNetworkType);
 
     void DsegUpdate(CNode* pnode);
 
