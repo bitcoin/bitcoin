@@ -152,20 +152,6 @@ extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 extern bool fEnableReplacement;  // BU TODO is this RBF flag?
 
-// BU - Xpress Validation: begin section
-/**
- * Transactions that have already been accepted into the memory pool do not need to be
- * re-verified and can avoid having to do a second and expensive CheckInputs() when 
- * processing a new block.  (Protected by cs_main)
- */
-static std::set<uint256> setPreVerifiedTxHash;
-/**
- * Orphans that are added to the thinblock must be verifed since they have never been
- *  accepted into the memory pool.
- */
-static std::set<uint256> setUnVerifiedOrphanTxHash;
-// BU - Xpress Validation: end section
-
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
 

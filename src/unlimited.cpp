@@ -35,6 +35,10 @@
 
 using namespace std;
 
+set<uint256> setPreVerifiedTxHash;
+set<uint256> setUnVerifiedOrphanTxHash;
+CCriticalSection cs_xval;
+
 extern CTxMemPool mempool; // from main.cpp
 
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
@@ -1343,19 +1347,22 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     // was passed to us (&block), so do not use it after this.
     {
         int nTotalThinBlocksInFlight = 0;
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes) {
-            if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
-                pnode->mapThinBlocksInFlight.erase(inv.hash); 
-                pnode->thinBlockWaitingForTxns = -1;
-                pnode->thinBlock.SetNull();
+        {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
+                    pnode->mapThinBlocksInFlight.erase(inv.hash); 
+                    pnode->thinBlockWaitingForTxns = -1;
+                    pnode->thinBlock.SetNull();
+                }
+                if (pnode->mapThinBlocksInFlight.size() > 0)
+                    nTotalThinBlocksInFlight++;
             }
-            if (pnode->mapThinBlocksInFlight.size() > 0)
-                nTotalThinBlocksInFlight++;
         }
 
         // When we no longer have any thinblocks in flight then clear the set
         // just to make sure we don't somehow get growth over time.
+        LOCK(cs_xval);
         if (nTotalThinBlocksInFlight == 0) {
             setPreVerifiedTxHash.clear();
             setUnVerifiedOrphanTxHash.clear();

@@ -118,7 +118,21 @@ UniValue expedited(const UniValue& params, bool fHelp);
 extern CLeakyBucket receiveShaper;
 extern CLeakyBucket sendShaper;
 
-// BUIP010 Xtreme Thinblocks:
+// BUIP010 Xtreme Thinblocks: begin
+
+// Xpress Validation: begin
+// Transactions that have already been accepted into the memory pool do not need to be
+// re-verified and can avoid having to do a second and expensive CheckInputs() when 
+// processing a new block.  (Protected by cs_xval)
+extern std::set<uint256> setPreVerifiedTxHash;
+
+// Orphans that are added to the thinblock must be verifed since they have never been
+// accepted into the memory pool.  (Protected by cs_xval)
+extern std::set<uint256> setUnVerifiedOrphanTxHash;
+
+extern CCriticalSection cs_xval;
+// Xpress Validation: end
+
 extern bool HaveConnectThinblockNodes();
 extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(uint256 hash);
@@ -142,6 +156,8 @@ extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
 extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
 
 extern std::map<uint256, uint64_t> mapThinBlockTimer;
+
+// BUIP010 Xtreme Thinblocks: end
 
 // statistics
 void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime);

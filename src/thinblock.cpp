@@ -195,6 +195,7 @@ bool CXThinBlock::process(CNode* pfrom)  // TODO: request from the "best" txn so
 
   // Look for each transaction in our various pools and buffers.
   // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
+  LOCK(cs_xval);
   BOOST_FOREACH(uint64_t &cheapHash, vTxHashes) 
     {
       // Replace the truncated hash with the full hash value if it exists
