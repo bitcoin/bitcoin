@@ -485,7 +485,7 @@ void CleanTransactionLocksList()
     int nHeight = chainActive.Height();
     while(it != mapTxLocks.end()) {
         CTransactionLock &txLock = it->second;
-        if(GetTime() > txLock.nLockExpirationBlock) {
+        if(nHeight > txLock.nLockExpirationBlock) {
             LogPrintf("Removing old transaction lock: txid=%s\n", txLock.txHash.ToString());
 
             if(mapTxLockReq.count(txLock.txHash)){
