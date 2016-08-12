@@ -150,6 +150,8 @@ Threads
 
 - StartNode : Starts other threads.
 
+- ThreadBitnodesAddressSeed : Runs initial bitnodes seeding when no peers.dat exists.
+
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 
 - ThreadMapPort : Universal plug-and-play startup/shutdown
