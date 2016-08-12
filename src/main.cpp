@@ -723,13 +723,17 @@ void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return;
 
     int64_t nOrphanTxCutoffTime = GetTime() - GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
-    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+    nOrphanTxCutoffTime = GetTime() - 60;
+    map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
+    while (iter != mapOrphanTransactions.end())
     {
-        uint256 txHash = mi->second.tx.GetHash();
-        if (mi->second.nEntryTime < nOrphanTxCutoffTime)
+        map<uint256, COrphanTx>::iterator mi = iter++; // increment to avoid iterator becoming invalid
+        int64_t nEntryTime = mi->second.nEntryTime;
+        if (nEntryTime < nOrphanTxCutoffTime)
         {
-            LogPrint("mempool", "Erased old orphan tx %s of age %d seconds\n", txHash.ToString(), GetTime() - mi->second.nEntryTime);
+            uint256 txHash = mi->second.tx.GetHash();
             EraseOrphanTx(txHash);
+            LogPrint("mempool", "Erased old orphan tx %s of age %d seconds\n", txHash.ToString(), GetTime() - nEntryTime);
         }
     }
 
