@@ -31,7 +31,7 @@ libraries such as Qt are no longer being tested on XP.
 
 We do not have time nor resources to provide support for an OS that is
 end-of-life. From 0.13.0 on, Windows XP is no longer supported. Users are
-suggested to upgrade to a newer verion of Windows, or install an alternative OS
+suggested to upgrade to a newer version of Windows, or install an alternative OS
 that is supported.
 
 No attempt is made to prevent installing or running the software on Windows XP,
