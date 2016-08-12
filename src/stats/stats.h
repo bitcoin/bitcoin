@@ -41,12 +41,17 @@ public:
 class CStats
 {
 private:
+    static size_t maxStatsMemory;                  //maximum amount of memory to use for the stats
+
     static CStats* m_shared_instance;
     mutable RecursiveMutex cs_stats;
 
     CStatsMempool m_mempool_stats; //mempool stats container
 
 public:
+    static const size_t DEFAULT_MAX_STATS_MEMORY; //default maximum of memory to use
+    static const bool DEFAULT_STATISTICS_ENABLED; //default value for enabling statistics
+
     static std::atomic<bool> m_stats_enabled; //if enabled, stats will be collected
     static CStats* DefaultStats(); //shared instance
 
@@ -58,6 +63,15 @@ public:
 
     /* get all mempool samples in range */
     mempoolSamples_t mempoolGetValuesInRange(uint64_t& fromTime, uint64_t& toTime);
+
+    /* set the target for the maximum memory consumption (in bytes) */
+    void setMaxMemoryUsageTarget(size_t maxMem);
+
+    /* register the statistics module help strings */
+    static void AddStatsOptions();
+
+    /* access the parameters and map it to the internal model */
+    static bool parameterInteraction();
 };
 
 #endif // BITCOIN_STATS_STATS_H
