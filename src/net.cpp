@@ -64,7 +64,6 @@
 using namespace std;
 
 namespace {
-    const int MAX_OUTBOUND_CONNECTIONS = 8;
 
     struct ListenSocket {
         SOCKET socket;
@@ -88,6 +87,7 @@ uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
+int nMaxOutConnections = DEFAULT_MAX_OUTBOUND_CONNECTIONS;
 bool fAddressesInitialized = false;
 std::string strSubVersion;
 
@@ -1035,7 +1035,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    int nMaxInbound = nMaxConnections - MAX_OUTBOUND_CONNECTIONS - mapMultiArgs["-addnode"].size();
+    int nMaxInbound = nMaxConnections - nMaxOutConnections - mapMultiArgs["-addnode"].size();
 
     if (hSocket != INVALID_SOCKET)
         if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
@@ -1735,7 +1735,7 @@ void ThreadOpenAddedConnections()
     // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == NULL) {
-        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), MAX_OUTBOUND_CONNECTIONS);
+        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), nMaxOutConnections);
         semOutboundAddNode = new CSemaphore(maxAddNodeConnections);
     }
 
@@ -2082,7 +2082,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (semOutbound == NULL) {
         // initialize semaphore
-        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, nMaxConnections);
+        int nMaxOutbound = min(nMaxOutConnections, nMaxConnections);
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
@@ -2131,7 +2131,7 @@ bool StopNode()
     LogPrintf("StopNode()\n");
     MapPort(false);
     if (semOutbound)
-        for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
+        for (int i=0; i<nMaxOutConnections; i++)
             semOutbound->post();
 
     if (fAddressesInitialized)
