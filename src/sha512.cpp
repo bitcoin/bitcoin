@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <endian.h>
+#include <compat/endian.h>
 #include "emmintrin.h"
 #include "tmmintrin.h"
 #include "smmintrin.h"

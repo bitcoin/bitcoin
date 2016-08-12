@@ -5,6 +5,7 @@
 #include "main.h"
 #include <openssl/evp.h>
 #include <boost/thread.hpp>
+#include <mm_malloc.h>
 #if (__x86_64__ || __i386__)
 #include <cpuid.h>
 #endif
@@ -91,7 +92,7 @@ namespace patternsearch
 	}
 
 	void static aesSearch(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, std::vector< std::pair<uint32_t,uint32_t> > *results, boost::mutex *mtx, int* minerStopFlag){
-		unsigned char cache[cacheMemorySize + 16] __attribute__ ((aligned (16)));
+		unsigned char* cache = (unsigned char*)_mm_malloc(sizeof(char)* (cacheMemorySize + 16), 16);
 		uint32_t* cache32 = (uint32_t*)cache;
 		uint64_t* cache64 = (uint64_t*)cache;
 		uint64_t* data64 = (uint64_t*)mainMemoryPsuedoRandomData;
@@ -125,12 +126,13 @@ namespace patternsearch
 			}
 		}
 		EVP_CIPHER_CTX_cleanup(&ctx);
+		_mm_free(cache);
 	}
 	
 	void static aesSearchAESNI(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, std::vector< std::pair<uint32_t,uint32_t> > *results, boost::mutex *mtx, int* minerStopFlag){
 	    // start
-	    CacheEntry *Garbage = (CacheEntry*)mainMemoryPsuedoRandomData;
-	    CacheEntry Cache[AES_PARALLEL_N];
+	    CacheEntry* Garbage = (CacheEntry*)mainMemoryPsuedoRandomData;
+	    CacheEntry* Cache = (CacheEntry*)_mm_malloc(sizeof(CacheEntry) * AES_PARALLEL_N, 16);
 
 	    uint32_t* data[AES_PARALLEL_N];
 	    const uint32_t* next[AES_PARALLEL_N];
@@ -138,6 +140,9 @@ namespace patternsearch
 	    for(int n=0; n<AES_PARALLEL_N; ++n) {
 	        data[n] = Cache[n].dwords;
 	    }
+	    uint32_t* ExpKey = (uint32_t*)_mm_malloc(sizeof(uint32_t) * AES_PARALLEL_N * 16 * 4, 16);
+	    uint32_t* ivs = (uint32_t*)_mm_malloc(sizeof(uint32_t) * AES_PARALLEL_N * 4, 16);
+	    uint32_t* last = (uint32_t*)_mm_malloc(sizeof(uint32_t) * 2 * 4, 16);
 
 	    // Search for pattern in pseudo random data
 	    int searchNumber = COMPARE_SIZE / totalThreads;
@@ -151,15 +156,12 @@ namespace patternsearch
 
 	        for(int j = 0; j < AES_ITERATIONS; ++j)
 	        {
-	        	uint32_t ExpKey[AES_PARALLEL_N*16*4] __attribute__ ((aligned (16)));
-	        	uint32_t ivs[AES_PARALLEL_N*4] __attribute__ ((aligned (16)));
 
 	            // use last 4 bytes of first cache as next location
 	            for(int n=0; n<AES_PARALLEL_N; ++n) {
 	                uint32_t nextLocation = Cache[n].dwords[(GARBAGE_SLICE_SIZE >> 2) - 1] & (COMPARE_SIZE - 1); //% COMPARE_SIZE;
 	                next[n] = Garbage[nextLocation].dwords;
 
-	                uint32_t last[2*4];
 	                for(uint32_t i=0; i<8; ++i) {
 	                	last[i] = Cache[n].dwords[254*4+i] ^ next[n][254*4+i];
 	                }
@@ -183,6 +185,11 @@ namespace patternsearch
               (*results).push_back( std::make_pair( k + n, proofOfCalculation ) );
 	        }
 	    }
+
+	    _mm_free(last);
+	    _mm_free(ivs);
+	    _mm_free(ExpKey);
+	    _mm_free(Cache);
 	}
 
 
