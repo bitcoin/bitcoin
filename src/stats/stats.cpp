@@ -12,7 +12,9 @@
 
 static const uint32_t SAMPLE_MIN_DELTA_IN_SEC = 2;
 static const int CLEANUP_SAMPLES_THRESHOLD = 100;
-static const size_t MAX_MEMORY_STATS = 10 * 1024 * 1024; //10 MB
+size_t CStats::maxStatsMemory = 0;
+const size_t CStats::DEFAULT_MAX_STATS_MEMORY = 10 * 1024 * 1024; //10 MB
+const bool CStats::DEFAULT_STATISTICS_ENABLED = false;
 std::atomic<bool> CStats::m_stats_enabled(false); //disable stats by default
 
 CStats* CStats::m_shared_instance{nullptr};
@@ -50,13 +52,13 @@ void CStats::addMempoolSample(int64_t txcount, int64_t dynUsage, int64_t current
         // check if we should cleanup the container
         if (m_mempool_stats.m_cleanup_counter >= CLEANUP_SAMPLES_THRESHOLD) {
             //check memory usage
-            int32_t memDelta = memusage::DynamicUsage(m_mempool_stats.m_samples) - MAX_MEMORY_STATS;
+            int32_t memDelta = memusage::DynamicUsage(m_mempool_stats.m_samples) - maxStatsMemory;
             if (memDelta > 0 && m_mempool_stats.m_samples.size()) {
                 // only shrink if the vector.capacity() is > the target for performance reasons
                 m_mempool_stats.m_samples.shrink_to_fit();
                 int32_t memUsage = memusage::DynamicUsage(m_mempool_stats.m_samples);
                 // calculate the amount of samples we need to remove
-                size_t itemsToRemove = ceil((memUsage - MAX_MEMORY_STATS) / sizeof(m_mempool_stats.m_samples[0]));
+                size_t itemsToRemove = ceil((memUsage - maxStatsMemory) / sizeof(m_mempool_stats.m_samples[0]));
 
                 // make sure the vector contains more items then we'd like to remove
                 if (m_mempool_stats.m_samples.size() > itemsToRemove)
@@ -115,4 +117,26 @@ mempoolSamples_t CStats::mempoolGetValuesInRange(uint64_t& fromTime, uint64_t& t
     fromTime = m_mempool_stats.m_start_time + m_mempool_stats.m_samples.front().m_time_delta;
     toTime = m_mempool_stats.m_start_time + m_mempool_stats.m_samples.back().m_time_delta;
     return m_mempool_stats.m_samples;
+}
+
+void CStats::setMaxMemoryUsageTarget(size_t maxMem)
+{
+    m_stats_enabled = (maxMem > 0);
+
+    LOCK(cs_stats);
+    maxStatsMemory = maxMem;
+}
+
+void CStats::AddStatsOptions()
+{
+    gArgs.AddArg("-statsenable", strprintf("Enable statistics (default: %u)", DEFAULT_STATISTICS_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
+    gArgs.AddArg("-statsmaxmemorytarget=<n>", strprintf("Set the memory limit target for statistics in bytes (default: %u)", DEFAULT_MAX_STATS_MEMORY), ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
+}
+
+bool CStats::parameterInteraction()
+{
+    if (gArgs.GetBoolArg("-statsenable", DEFAULT_STATISTICS_ENABLED))
+        DefaultStats()->setMaxMemoryUsageTarget(gArgs.GetIntArg("-statsmaxmemorytarget", DEFAULT_MAX_STATS_MEMORY));
+
+    return true;
 }
