@@ -1552,7 +1552,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 
             CMasternode* pmn = mnodeman.Find(dsq.vin);
             if(pmn == NULL) {
-                LogPrintf("CDarksendPool::DoAutomaticDenominating -- dsq vin is not in masternode list! vin=%s\n", dsq.vin.ToString());
+                LogPrintf("CDarksendPool::DoAutomaticDenominating -- dsq masternode is not in masternode list! vin=%s\n", dsq.vin.ToString());
                 continue;
             }
 
@@ -2084,13 +2084,13 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(const CTxIn& txin, const CPubKey
     return false;
 }
 
-bool CDarkSendSigner::GetKeysFromSecret(std::string strSecret, std::string& strErrorMessageRet, CKey& keyRet, CPubKey& pubkeyRet)
+bool CDarkSendSigner::GetKeysFromSecret(std::string strSecret, std::string& strErrorRet, CKey& keyRet, CPubKey& pubkeyRet)
 {
     CBitcoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if(!fGood) {
-        strErrorMessageRet = _("Invalid secret.");
+        strErrorRet = _("Invalid secret.");
         return false;
     }
 
@@ -2100,21 +2100,21 @@ bool CDarkSendSigner::GetKeysFromSecret(std::string strSecret, std::string& strE
     return true;
 }
 
-bool CDarkSendSigner::SignMessage(std::string strMessage, std::string& strErrorMessageRet, std::vector<unsigned char>& vchSigRet, CKey key)
+bool CDarkSendSigner::SignMessage(std::string strMessage, std::string& strErrorRet, std::vector<unsigned char>& vchSigRet, CKey key)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << strMessage;
 
     if(!key.SignCompact(ss.GetHash(), vchSigRet)) {
-        strErrorMessageRet = _("Signing failed.");
+        strErrorRet = _("Signing failed.");
         return false;
     }
 
     return true;
 }
 
-bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, const std::vector<unsigned char>& vchSig, std::string strMessage, std::string& strErrorMessageRet)
+bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, const std::vector<unsigned char>& vchSig, std::string strMessage, std::string& strErrorRet)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
@@ -2122,12 +2122,12 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, const std::vector<unsigned c
 
     CPubKey pubkeyFromSig;
     if(!pubkeyFromSig.RecoverCompact(ss.GetHash(), vchSig)) {
-        strErrorMessageRet = _("Error recovering public key.");
+        strErrorRet = _("Error recovering public key.");
         return false;
     }
 
     if(pubkeyFromSig.GetID() != pubkey.GetID()) {
-        strErrorMessageRet = strprintf("keys don't match: pubkey=%s, pubkeyFromSig=%s, strMessage=%s, vchSig=%s",
+        strErrorRet = strprintf("keys don't match: pubkey=%s, pubkeyFromSig=%s, strMessage=%s, vchSig=%s",
                     pubkey.GetID().ToString(), pubkeyFromSig.GetID().ToString(), strMessage,
                     EncodeBase64(&vchSig[0], vchSig.size()));
         return false;
@@ -2177,9 +2177,9 @@ bool CDarksendQueue::Sign()
     if(!fMasterNode) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
-    std::string strErrorMessage = "";
+    std::string strError = "";
 
-    if(!darkSendSigner.SignMessage(strMessage, strErrorMessage, vchSig, activeMasternode.keyMasternode)) {
+    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendQueue::Sign -- SignMessage() failed\n");
         return false;
     }
@@ -2193,9 +2193,9 @@ bool CDarksendQueue::CheckSignature()
     if(pmn == NULL) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
-    std::string strErrorMessage = "";
+    std::string strError = "";
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strErrorMessage)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
         LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature, vin=%s\n", vin.ToString());
         return false;
     }

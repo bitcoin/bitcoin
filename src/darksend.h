@@ -77,7 +77,8 @@ public:
     CTxDSIn(const CTxIn& txin) :
         CTxIn(txin),
         fHasSig(false),
-        nSentTimes(0) {}
+        nSentTimes(0)
+        {}
 };
 
 /** Holds an mixing output
@@ -89,7 +90,8 @@ public:
 
     CTxDSOut(const CTxOut& out) :
         CTxOut(out),
-        nSentTimes(0) {}
+        nSentTimes(0)
+        {}
 };
 
 // A clients transaction in the mixing pool
@@ -107,7 +109,8 @@ public:
         txCollateral(CTransaction()),
         nAmount(0),
         nTimeAdded(0),
-        isSet(false) {}
+        isSet(false)
+        {}
 
     /// Add entries to use for mixing
     bool Add(const std::vector<CTxIn> vecTxIn, CAmount nAmount, const CTransaction txCollateral, const std::vector<CTxOut> vecTxOut);
@@ -130,13 +133,21 @@ public:
     bool fReady; //ready for submit
     std::vector<unsigned char> vchSig;
 
-    CDarksendQueue() { CDarksendQueue(0, CTxIn(), 0, false); }
+    CDarksendQueue() :
+        nDenom(0),
+        vin(CTxIn()),
+        nTime(0),
+        fReady(false),
+        vchSig(std::vector<unsigned char>())
+        {}
 
     CDarksendQueue(int nDenom, CTxIn vin, int64_t nTime, bool fReady) :
         nDenom(nDenom),
         vin(vin),
         nTime(nTime),
-        fReady(fReady) { vchSig = std::vector<unsigned char>(); }
+        fReady(fReady),
+        vchSig(std::vector<unsigned char>())
+        {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -179,10 +190,19 @@ public:
     std::vector<unsigned char> vchSig;
     int64_t sigTime;
 
-    CDarksendBroadcastTx() { CDarksendBroadcastTx(CTransaction(), CTxIn(), 0); }
+    CDarksendBroadcastTx() :
+        tx(CTransaction()),
+        vin(CTxIn()),
+        vchSig(std::vector<unsigned char>()),
+        sigTime(0)
+        {}
 
     CDarksendBroadcastTx(CTransaction tx, CTxIn vin, int64_t sigTime) :
-        tx(tx), vin(vin), sigTime(sigTime) { vchSig = std::vector<unsigned char>(); }
+        tx(tx),
+        vin(vin),
+        vchSig(std::vector<unsigned char>()),
+        sigTime(sigTime)
+        {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -203,14 +223,14 @@ public:
 class CDarkSendSigner
 {
 public:
-    /// Is the inputs associated with this public key? (and there is 1000 DASH - checking if valid masternode)
+    /// Is the input associated with this public key? (and there is 1000 DASH - checking if valid masternode)
     bool IsVinAssociatedWithPubkey(const CTxIn& vin, const CPubKey& pubkey);
     /// Set the private/public key values, returns true if successful
-    bool GetKeysFromSecret(std::string strSecret, std::string& strErrorMessageRet, CKey& keyRet, CPubKey& pubkeyRet);
+    bool GetKeysFromSecret(std::string strSecret, std::string& strErrorRet, CKey& keyRet, CPubKey& pubkeyRet);
     /// Sign the message, returns true if successful
-    bool SignMessage(std::string strMessage, std::string& strErrorMessageRet, std::vector<unsigned char>& vchSigRet, CKey key);
+    bool SignMessage(std::string strMessage, std::string& strErrorRet, std::vector<unsigned char>& vchSigRet, CKey key);
     /// Verify the message, returns true if succcessful
-    bool VerifyMessage(CPubKey pubkey, const std::vector<unsigned char>& vchSig, std::string strMessage, std::string& strErrorMessageRet);
+    bool VerifyMessage(CPubKey pubkey, const std::vector<unsigned char>& vchSig, std::string strMessage, std::string& strErrorRet);
 };
 
 /** Used to keep track of current status of mixing pool
