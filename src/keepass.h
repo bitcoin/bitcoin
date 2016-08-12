@@ -5,18 +5,15 @@
 #ifndef _KEEPASS_H_
 #define _KEEPASS_H_
 
-#define KEEPASS_CRYPTO_KEY_SIZE 32
-#define KEEPASS_CRYPTO_BLOCK_SIZE 16
-#define KEEPASS_KEEPASSHTTP_HOST "localhost"
-#define KEEPASS_KEEPASSHTTP_PORT 19455
-#define KEEPASS_KEEPASSHTTP_CONNECT_TIMEOUT 30
-
-#include <string>
-#include <vector>
-#include <map>
+#include "support/allocators/secure.h"
 
 #include <univalue.h>
-#include "support/allocators/secure.h"
+
+static const int KEEPASS_CRYPTO_KEY_SIZE                = 32;
+static const int KEEPASS_CRYPTO_BLOCK_SIZE              = 16;
+static const int KEEPASS_HTTP_CONNECT_TIMEOUT           = 30;
+static const unsigned int DEFAULT_KEEPASS_HTTP_PORT     = 19455;
+static const char* KEEPASS_HTTP_HOST                    = "localhost";
 
 class CKeePassIntegrator {
 
