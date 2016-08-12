@@ -103,10 +103,10 @@ static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
 /** Average delay between trickled inventory broadcasts in seconds.
  *  Blocks, whitelisted receivers, and a random 25% of transactions bypass this. */
 static const unsigned int AVG_INVENTORY_BROADCAST_INTERVAL = 5;
-/** Block download timeout base, expressed in millionths of the block interval (i.e. 10 min) */
-static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
-/** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
-static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
+/** Block download timeout base, expressed in millionths of the block interval (i.e. 2.5 min) */
+static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 250000;
+/** Additional block download timeout per parallel downloading peer (i.e. 1.25 min) */
+static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 125000;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
