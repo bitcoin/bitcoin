@@ -834,6 +834,12 @@ fi
 
 dnl univalue check
 
+need_bundled_univalue=yes
+
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
+  need_bundled_univalue=no
+else
+
 if test x$system_univalue != xno ; then
   found_univalue=no
   if test x$use_pkgconfig = xyes; then
@@ -855,6 +861,7 @@ if test x$system_univalue != xno ; then
 
   if test x$found_univalue = xyes ; then
     system_univalue=yes
+    need_bundled_univalue=no
   elif test x$system_univalue = xyes ; then
     AC_MSG_ERROR([univalue not found])
   else
@@ -862,11 +869,14 @@ if test x$system_univalue != xno ; then
   fi
 fi
 
-if test x$system_univalue = xno ; then
+if test x$need_bundled_univalue = xyes ; then
   UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
   UNIVALUE_LIBS='univalue/libunivalue.la'
 fi
-AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$system_univalue = xno])
+
+fi
+
+AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$need_bundled_univalue = xyes])
 AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
 
@@ -1105,7 +1115,7 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
-if test x$system_univalue = xno; then
+if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
