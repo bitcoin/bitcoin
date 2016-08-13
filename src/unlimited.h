@@ -37,6 +37,8 @@ extern uint64_t maxGeneratedBlock;
 extern unsigned int excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
+/** BU Default maximum number of Outbound connections to simultaneously allow*/
+extern int nMaxOutConnections;
 
 extern std::vector<std::string> BUComments;  // BU005: Strings specific to the config of this client that should be communicated to other clients
 extern std::string minerComment;  // An arbitrary field that miners can change to annotate their blocks
@@ -51,6 +53,9 @@ static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
 /** The minimum value possible for -limitfreerelay when rate limiting */
 static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 // BU - Xtreme Thinblocks Auto Mempool Limiter - end section
+
+// print out a configuration warning during initialization
+// bool InitWarning(const std::string &str);
 
 // Replace Core's ComputeBlockVersion
 int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime);

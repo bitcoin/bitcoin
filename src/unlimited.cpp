@@ -21,6 +21,7 @@
 #include "txmempool.h"
 #include "unlimited.h"
 #include "utilstrencodings.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "validationinterface.h"
 #include "version.h"
@@ -45,6 +46,7 @@ uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
 unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
+int nMaxOutConnections = DEFAULT_MAX_OUTBOUND_CONNECTIONS;
 
 uint32_t blockVersion = 0;  // Overrides the mined block version if non-zero
 
@@ -390,6 +392,7 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-expeditedblock=<host>", _("Request expedited blocks from this host whenever we are connected to it"));
     strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>", _("The maximum number of nodes this node will forward expedited blocks to"));
     strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>", _("The maximum number of nodes this node will forward expedited transactions to"));
+    strUsage += HelpMessageOpt("-maxoutconnections=<n>", strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than --maxconnections, it will be reduced to --maxconnections."), DEFAULT_MAX_OUTBOUND_CONNECTIONS));
     return strUsage;
 }
 
@@ -591,6 +594,17 @@ void UnlimitedSetup(void)
     xpeditedBlk.reserve(256); 
     xpeditedBlkUp.reserve(256);
     xpeditedTxn.reserve(256);  
+
+    // make outbound conns modifiable by the user
+    int nUserMaxOutConnections = GetArg("-maxoutconnections", DEFAULT_MAX_OUTBOUND_CONNECTIONS);
+    nMaxOutConnections = std::max(nUserMaxOutConnections,0);
+
+    if (nMaxConnections < nMaxOutConnections) {
+      // uiInterface.ThreadSafeMessageBox((strprintf(_("Reducing -maxoutconnections from %d to %d, because this value is higher than max available connections."), nUserMaxOutConnections, nMaxConnections)),"", CClientUIInterface::MSG_WARNING);
+      LogPrintf("Reducing -maxoutconnections from %d to %d, because this value is higher than max available connections.\n", nUserMaxOutConnections, nMaxConnections);
+      nMaxOutConnections = nMaxConnections;
+    }
+
 }
 
 
