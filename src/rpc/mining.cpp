@@ -650,7 +650,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
-        // Because BIP 34 changed how the generation transaction is serialised, we can only use version/force back to v2 blocks
+        // Because BIP 34 changed how the generation transaction is serialized, we can only use version/force back to v2 blocks
         // This is safe to do [otherwise-]unconditionally only because we are throwing an exception above if a non-force deployment gets activated
         // Note that this can probably also be removed entirely after the first BIP9 non-force deployment (ie, probably segwit) gets activated
         aMutable.push_back("version/force");
