@@ -11,7 +11,7 @@
 
 #include "addrman.h"
 #include "chainparams.h"
-#include "clientversion.h"n
+#include "clientversion.h"
 #include "consensus/consensus.h"
 #include "crypto/common.h"
 #include "hash.h"
@@ -1000,34 +1000,37 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
 //    if (vEvictionCandidates.empty()) return false;
 
+// *** BU - we do not need to deprioritize based on netgroup and it can have unwanted repercussions for xpedited network setup
+//          as well as testing setups.
     // Identify the network group with the most connections and youngest member.
     // (vEvictionCandidates is sorted by reverse connect time)
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
-    std::vector<unsigned char> naMostConnections;
-    unsigned int nMostConnections = 0;
-    int64_t nMostConnectionsTime = 0;
-    std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
-    BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
-        mapAddrCounts[node->addr.GetGroup()].push_back(node);
-        int64_t grouptime = mapAddrCounts[node->addr.GetGroup()][0]->nTimeConnected;
-        size_t groupsize = mapAddrCounts[node->addr.GetGroup()].size();
+//    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+//    std::vector<unsigned char> naMostConnections;
+//    unsigned int nMostConnections = 0;
+//    int64_t nMostConnectionsTime = 0;
+//    std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
+//    BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
+//        mapAddrCounts[node->addr.GetGroup()].push_back(node);
+//        int64_t grouptime = mapAddrCounts[node->addr.GetGroup()][0]->nTimeConnected;
+//        size_t groupsize = mapAddrCounts[node->addr.GetGroup()].size();
 
-        if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
-            nMostConnections = groupsize;
-            nMostConnectionsTime = grouptime;
-            naMostConnections = node->addr.GetGroup();
-        }
-    }
+//        if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
+//            nMostConnections = groupsize;
+//            nMostConnectionsTime = grouptime;
+//            naMostConnections = node->addr.GetGroup();
+//        }
+//    }
 
     // Reduce to the network group with the most connections
-    vEvictionCandidates = mapAddrCounts[naMostConnections];
+//    vEvictionCandidates = mapAddrCounts[naMostConnections];
 
     // Do not disconnect peers if there is only one unprotected connection from their network group.
-    if (vEvictionCandidates.size() > 1) {
-        // Disconnect from the network group with the most connections
-        vEvictionCandidates[0]->fDisconnect = true;
-        return true;
-    }
+//    if (vEvictionCandidates.size() > 1) {
+//        // Disconnect from the network group with the most connections
+//        vEvictionCandidates[0]->fDisconnect = true;
+//        return true;
+//    }
+// *** BU end section
 
     // If we get here then we prioritize connections based on activity.  The least active incoming peer is
     // de-prioritized based on bytes in and bytes out.  A whitelisted peer will always get a connection and there is
