@@ -883,9 +883,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
     int nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
-    // make outbound conns modifialbe by the user
-    int nUserMaxOutConnections = GetArg("-maxoutconnections", DEFAULT_MAX_OUTBOUND_CONNECTIONS);
-    nMaxOutConnections = std::max(nUserMaxOutConnections,0);
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
@@ -896,11 +893,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
-
-    if (nMaxConnections < nMaxOutConnections) {
-	InitWarning(strprintf(_("Reducing -maxoutconnections from %d to %d, because higher than max available connections."), nUserMaxOutConnections, nMaxConnections));
-	nMaxOutConnections = nMaxConnections;
-    }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 

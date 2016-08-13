@@ -64,6 +64,7 @@
 using namespace std;
 
 namespace {
+    // BU replaced this with a configuration option const int MAX_OUTBOUND_CONNECTIONS = 8;
 
     struct ListenSocket {
         SOCKET socket;
@@ -87,7 +88,6 @@ uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
-int nMaxOutConnections = DEFAULT_MAX_OUTBOUND_CONNECTIONS;
 bool fAddressesInitialized = false;
 std::string strSubVersion;
 
