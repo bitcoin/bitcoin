@@ -517,11 +517,11 @@ public:
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool fCurrentEstimate = true);
 
-    void removeRecursive(const CTransaction &tx, std::list<CTransaction>& removed);
+    void removeRecursive(const CTransaction &tx, std::list<std::shared_ptr<const CTransaction>>& removed);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
-    void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
+    void removeConflicts(const CTransaction &tx, std::list<std::shared_ptr<const CTransaction>>& removed);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                        std::list<CTransaction>& conflicts, bool fCurrentEstimate = true);
+                        std::list<std::shared_ptr<const CTransaction>>& conflicts, bool fCurrentEstimate = true);
     void clear();
     void _clear(); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
@@ -547,8 +547,10 @@ public:
      *  in a block.
      *  Set updateDescendants to true when removing a tx that was in a block, so
      *  that any in-mempool descendants have their ancestor state updated.
+     *  Optional removed parameter is used to std::move() transactions instead of
+     *  copying them in some cases.
      */
-    void RemoveStaged(setEntries &stage, bool updateDescendants);
+    void RemoveStaged(setEntries &stage, bool updateDescendants, std::list<std::shared_ptr<const CTransaction>>* removed = NULL);
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally
@@ -676,8 +678,10 @@ private:
      *  given transaction that is removed, so we can't remove intermediate
      *  transactions in a chain before we've updated all the state for the
      *  removal.
+     *  If removed parameter is not NULL, it is used to std::move() transaction
+     *  instead of copying it some time earlier.
      */
-    void removeUnchecked(txiter entry);
+    void removeUnchecked(txiter entry, std::list<std::shared_ptr<const CTransaction>>* removed);
 };
 
 /** 

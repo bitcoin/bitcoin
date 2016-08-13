@@ -450,7 +450,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     return true;
 }
 
-void CTxMemPool::removeUnchecked(txiter it)
+void CTxMemPool::removeUnchecked(txiter it, std::list<std::shared_ptr<const CTransaction>>* removed)
 {
     const uint256 hash = it->GetTx().GetHash();
     BOOST_FOREACH(const CTxIn& txin, it->GetTx().vin)
@@ -464,6 +464,9 @@ void CTxMemPool::removeUnchecked(txiter it)
             vTxHashes.shrink_to_fit();
     } else
         vTxHashes.clear();
+
+    if (removed)
+        removed->push_back(std::move(it->GetSharedTx()));
 
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
@@ -503,7 +506,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants
     }
 }
 
-void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<CTransaction>& removed)
+void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<std::shared_ptr<const CTransaction>>& removed)
 {
     // Remove transaction from memory pool
     {
@@ -530,10 +533,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<CTransact
         BOOST_FOREACH(txiter it, txToRemove) {
             CalculateDescendants(it, setAllRemoves);
         }
-        BOOST_FOREACH(txiter it, setAllRemoves) {
-            removed.push_back(it->GetTx());
-        }
-        RemoveStaged(setAllRemoves, false);
+        RemoveStaged(setAllRemoves, false, &removed);
     }
 }
 
@@ -568,15 +568,14 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
         }
     }
     BOOST_FOREACH(const CTransaction& tx, transactionsToRemove) {
-        list<CTransaction> removed;
+        list<shared_ptr<const CTransaction>> removed;
         removeRecursive(tx, removed);
     }
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
+void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<std::shared_ptr<const CTransaction>>& removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
-    list<CTransaction> result;
     LOCK(cs);
     BOOST_FOREACH(const CTxIn &txin, tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
@@ -595,7 +594,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
 void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                                std::list<CTransaction>& conflicts, bool fCurrentEstimate)
+                                std::list<std::shared_ptr<const CTransaction>>& conflicts, bool fCurrentEstimate)
 {
     LOCK(cs);
     std::vector<CTxMemPoolEntry> entries;
@@ -991,11 +990,11 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants) {
+void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, std::list<std::shared_ptr<const CTransaction>>* removed) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);
     BOOST_FOREACH(const txiter& it, stage) {
-        removeUnchecked(it);
+        removeUnchecked(it, removed);
     }
 }
 
@@ -1114,16 +1113,12 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRe
         CalculateDescendants(mapTx.project<0>(it), stage);
         nTxnRemoved += stage.size();
 
-        std::vector<CTransaction> txn;
+        std::list<std::shared_ptr<const CTransaction>> txn;
+        RemoveStaged(stage, false, pvNoSpendsRemaining ? &txn : NULL);
+
         if (pvNoSpendsRemaining) {
-            txn.reserve(stage.size());
-            BOOST_FOREACH(txiter it, stage)
-                txn.push_back(it->GetTx());
-        }
-        RemoveStaged(stage, false);
-        if (pvNoSpendsRemaining) {
-            BOOST_FOREACH(const CTransaction& tx, txn) {
-                BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+            BOOST_FOREACH(std::shared_ptr<const CTransaction>& tx, txn) {
+                BOOST_FOREACH(const CTxIn& txin, tx->vin) {
                     if (exists(txin.prevout.hash))
                         continue;
                     auto it = mapNextTx.lower_bound(COutPoint(txin.prevout.hash, 0));
