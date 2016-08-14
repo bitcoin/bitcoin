@@ -121,7 +121,7 @@ public:
         return Q::TEST_FUNCTIONS_ENABLE ? &checks : nullptr;
     }
 };
-/* round_barrier is used to communicate that a thread has finished
+/* barrier is used to communicate that a thread has finished
      * all work and reported any bad checks it might have seen.
      *
      * Results should normally be cached thread locally (once a thread is done, it
@@ -139,33 +139,23 @@ public:
     /** Default state is false so that first round looks like no prior round*/
     barrier() : RT_N_SCRIPTCHECK_THREADS(0), count(0) {
     }
-
     void init(const size_t rt)
     {
         RT_N_SCRIPTCHECK_THREADS = rt;
     }
-
     void finished()
     {
         ++count;
     }
-
     void wait_all_finished() const
     {
         while (count != RT_N_SCRIPTCHECK_THREADS)
             ;
     }
-
-    /** resets one bool
-             *
-             */
     void reset()
     {
         count.store(0);
     }
-
-    /** Waits until state is set false
-            */
     void wait_reset() const 
     {
         while (count.load() != 0)
@@ -255,22 +245,6 @@ public:
         return false;
     }
 };
-
-/** status_container stores the 
-     * shared state for all nodes
-     *
-     * TODO: cache align things.*/
-template <typename Q>
-struct status_container {
-    /** nTodo and  materJoined can be packed into one struct if desired*/
-    std::atomic<size_t> nTodo;
-    /** true if all checks were successful, false if any failure occurs */
-    std::atomic<bool> fAllOk;
-    /** true if the master has joined, false otherwise. A round may not terminate unless masterJoined */
-    std::atomic<bool> masterJoined;
-
-    status_container() : nTodo(0), fAllOk(true), masterJoined(false){}
-};
 }
 
 
@@ -299,17 +273,21 @@ public:
     static const size_t MAX_WORKERS = W;
     static const bool TEST_FUNCTIONS_ENABLE = TFE;
     static const bool TEST_LOGGING_ENABLE = TLE;
-    // We use the Proto version so that we can pass it to job_array, status_container, etc
 
 private:
     CCheckQueue_Internals::job_array<SELF> jobs;
-    CCheckQueue_Internals::status_container<SELF> status;
     CCheckQueue_Internals::barrier<SELF> work;
     CCheckQueue_Internals::barrier<SELF> cleanup;
     std::atomic<uint8_t> should_sleep;
     size_t RT_N_SCRIPTCHECK_THREADS;
     std::mutex control_mtx;
 
+    /** nTodo and  materJoined can be packed into one struct if desired*/
+    std::atomic<size_t> nTodo;
+    /** true if all checks were successful, false if any failure occurs */
+    std::atomic<bool> fAllOk;
+    /** true if the master has joined, false otherwise. A round may not terminate unless masterJoined */
+    std::atomic<bool> masterJoined;
     //state only for testing
     mutable std::atomic<size_t> test_log_seq;
     mutable std::array<std::ostringstream, MAX_WORKERS> test_log;
@@ -355,13 +333,13 @@ private:
         do {
             // Note: Must check masterJoined before nTodo, otherwise
             // {Thread A: nTodo.load();} {Thread B:nTodo++; masterJoined = true;} {Thread A: masterJoined.load()}
-            no_stealing = !status.masterJoined.load();
-            work_queue.add(status.nTodo.load());
-            (got_data = work_queue.pop(job_id, no_stealing)) && jobs.reserve(job_id) && (jobs.eval(job_id) || (status.fAllOk.store(false), false));
-        } while (status.fAllOk.load() && (no_stealing || got_data));
+            no_stealing = !masterJoined.load();
+            work_queue.add(nTodo.load());
+            (got_data = work_queue.pop(job_id, no_stealing)) && jobs.reserve(job_id) && (jobs.eval(job_id) || (fAllOk.store(false), false));
+        } while (fAllOk.load() && (no_stealing || got_data));
             
         TEST_log(ID, [&, this](std::ostringstream& o) {
-            o << "Leaving consume. fAllOk was " << status.fAllOk.load() << "\n";
+            o << "Leaving consume. fAllOk was " << fAllOk.load() << "\n";
         });
         return work_queue.get_total();
     }
@@ -370,15 +348,15 @@ private:
         const size_t ID = 0;
 
         work.wait_reset();
-        status.masterJoined.store(true);
+        masterJoined.store(true);
         TEST_log(ID, [](std::ostringstream& o) { o << "Master just set masterJoined\n"; });
         consume(ID);
         work.finished();
         work.wait_all_finished();
         TEST_log(ID, [](std::ostringstream& o) { o << "(Master) saw all threads finished\n"; });
-        bool fRet = status.fAllOk;
+        bool fRet = fAllOk;
         sleep();
-        status.masterJoined.store(false);
+        masterJoined.store(false);
         return fRet;
     }
     void Loop(const size_t ID)
@@ -388,14 +366,14 @@ private:
             size_t prev_total = consume(ID);
             TEST_log(ID, [&, this](std::ostringstream& o) {
                 o << "saw up to " << prev_total << " master was "
-                << status.masterJoined.load() << " nTodo " << status.nTodo.load() << '\n';
+                << masterJoined.load() << " nTodo " << nTodo.load() << '\n';
             });
             // Only spins here if !fAllOk, otherwise consume finished all
-            while (!status.masterJoined.load())
+            while (!masterJoined.load())
                 ;
             work.finished();
             // We wait until the master reports leaving explicitly
-            while (status.masterJoined.load())
+            while (masterJoined.load())
                 ;
             TEST_log(ID, [](std::ostringstream& o) { o << "Saw master leave\n"; });
             jobs.reset_flags_for(ID, prev_total);
@@ -412,9 +390,8 @@ private:
     }
 
 public:
-    CCheckQueue() : jobs(), status(), work(), cleanup(), should_sleep(0), RT_N_SCRIPTCHECK_THREADS(0), test_log_seq(0)
-    {
-    }
+    CCheckQueue() : jobs(), work(), cleanup(), should_sleep(0), RT_N_SCRIPTCHECK_THREADS(0),
+    nTodo(0), fAllOk(true), masterJoined(false), test_log_seq(0) {}
 
     void reset_jobs()
     {
@@ -433,8 +410,8 @@ public:
         TEST_log(0, [](std::ostringstream& o) {
             o << "Resetting nTodo and fAllOk" << '\n';
         });
-        status.nTodo.store(0);
-        status.fAllOk.store(true);
+        nTodo.store(0);
+        fAllOk.store(true);
         wakeup();
         reset_jobs();
     }
@@ -458,10 +435,10 @@ public:
 
     void Add(std::ptrdiff_t vs)
     {
-        status.nTodo.fetch_add(vs);
+        nTodo.fetch_add(vs);
         TEST_log(0, [&, this](std::ostringstream& o) {
             o << "Added " << vs << " values. nTodo was " 
-            << status.nTodo.load() - vs << " now is " << status.nTodo.load() << " \n";
+            << nTodo.load() - vs << " now is " << nTodo.load() << " \n";
         });
     }
     ~CCheckQueue()
@@ -495,7 +472,7 @@ public:
     void TEST_set_masterJoined(const bool b)
     {
         if (TEST_FUNCTIONS_ENABLE)
-            status.masterJoined.store(b);
+            masterJoined.store(b);
     }
 
     size_t TEST_count_set_flags()
@@ -540,10 +517,6 @@ public:
     }
 
 
-    CCheckQueue_Internals::status_container<SELF>* TEST_introspect_status()
-    {
-        return TEST_FUNCTIONS_ENABLE ? &status : nullptr;
-    }
     CCheckQueue_Internals::job_array<SELF>* TEST_introspect_jobs()
     {
         return TEST_FUNCTIONS_ENABLE ? &jobs : nullptr;
