@@ -69,6 +69,11 @@ def getutxo(txid):
     utxo["txid"] = txid
     return utxo
 
+def find_unspent(node, min_value):
+    for utxo in node.listunspent():
+        if utxo['amount'] >= min_value:
+            return utxo
+
 class SegWitTest(BitcoinTestFramework):
 
     def setup_chain(self):
@@ -117,8 +122,21 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
     def run_test(self):
-        self.nodes[0].generate(160) #block 160
+        self.nodes[0].generate(161) #block 161
 
+        print("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
+        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(tmpl['sigoplimit'] == 20000)
+        assert(tmpl['transactions'][0]['hash'] == txid)
+        assert(tmpl['transactions'][0]['sigops'] == 2)
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        assert(tmpl['sigoplimit'] == 20000)
+        assert(tmpl['transactions'][0]['hash'] == txid)
+        assert(tmpl['transactions'][0]['sigops'] == 2)
+        self.nodes[0].generate(1) #block 162
+
+        balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
         p2sh_ids = [] # p2sh_ids[NODE][VER] is an array of txids that spend to a witness version VER pkscript to an address for NODE embedded in p2sh
         wit_ids = [] # wit_ids[NODE][VER] is an array of txids that spend to a witness version VER pkscript to an address for NODE via bare witness
@@ -137,18 +155,18 @@ class SegWitTest(BitcoinTestFramework):
         for i in range(5):
             for n in range(3):
                 for v in range(2):
-                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], self.nodes[0].listunspent()[0], self.pubkey[n], False, Decimal("49.999")))
-                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], self.nodes[0].listunspent()[0], self.pubkey[n], True, Decimal("49.999")))
+                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
+                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
 
-        self.nodes[0].generate(1) #block 161
+        self.nodes[0].generate(1) #block 163
         sync_blocks(self.nodes)
 
         # Make sure all nodes recognize the transactions as theirs
-        assert_equal(self.nodes[0].getbalance(), 60*50 - 60*50 + 20*Decimal("49.999") + 50)
+        assert_equal(self.nodes[0].getbalance(), balance_presetup - 60*50 + 20*Decimal("49.999") + 50)
         assert_equal(self.nodes[1].getbalance(), 20*Decimal("49.999"))
         assert_equal(self.nodes[2].getbalance(), 20*Decimal("49.999"))
 
-        self.nodes[0].generate(262) #block 423
+        self.nodes[0].generate(260) #block 423
         sync_blocks(self.nodes)
 
         print("Verify default node can't accept any witness format txs before fork")
@@ -204,6 +222,26 @@ class SegWitTest(BitcoinTestFramework):
         self.success_mine(self.nodes[0], wit_ids[NODE_0][WIT_V1][0], True) #block 433
         self.success_mine(self.nodes[0], p2sh_ids[NODE_0][WIT_V0][0], True) #block 434
         self.success_mine(self.nodes[0], p2sh_ids[NODE_0][WIT_V1][0], True) #block 435
+
+        print("Verify sigops are counted in GBT with BIP141 rules after the fork")
+        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
+        assert(tmpl['sigoplimit'] == 80000)
+        assert(tmpl['transactions'][0]['txid'] == txid)
+        assert(tmpl['transactions'][0]['sigops'] == 8)
+
+        print("Verify non-segwit miners get a valid GBT response after the fork")
+        send_to_witness(1, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[0], False, Decimal("49.998"))
+        try:
+            tmpl = self.nodes[0].getblocktemplate({})
+            assert(len(tmpl['transactions']) == 1)  # Doesn't include witness tx
+            assert(tmpl['sigoplimit'] == 20000)
+            assert(tmpl['transactions'][0]['hash'] == txid)
+            assert(tmpl['transactions'][0]['sigops'] == 2)
+            assert(('!segwit' in tmpl['rules']) or ('segwit' not in tmpl['rules']))
+        except JSONRPCException:
+            # This is an acceptable outcome
+            pass
 
 if __name__ == '__main__':
     SegWitTest().main()

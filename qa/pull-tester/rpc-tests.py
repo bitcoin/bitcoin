@@ -107,6 +107,7 @@ testScripts = [
     'bip68-112-113-p2p.py',
     'wallet.py',
     'wallet-hd.py',
+    'wallet-dump.py',
     'listtransactions.py',
     'receivedby.py',
     'mempool_resurrect_test.py',
@@ -141,6 +142,7 @@ testScripts = [
     'segwit.py',
     'importprunedfunds.py',
     'signmessages.py',
+    'p2p-compactblocks.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -158,7 +160,7 @@ testScriptsExt = [
     'txn_clone.py --mineblock',
     'forknotify.py',
     'invalidateblock.py',
-#    'rpcbind_test.py', #temporary, bug in libevent, see #6655
+    'rpcbind_test.py',
     'smartfees.py',
     'maxblocksinflight.py',
     'p2p-acceptblock.py',
