@@ -87,7 +87,7 @@ typedef CCheckQueue<FakeJobNoWork, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, 
 
 typedef typename Standard_Queue::JOB_TYPE JT; // This is a "recursive template" hack
 typedef CCheckQueue_Internals::job_array<Standard_Queue> J;
-typedef CCheckQueue_Internals::round_barrier<Standard_Queue> B;
+typedef CCheckQueue_Internals::barrier<Standard_Queue> B;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
     fPrintToConsole = true;
@@ -110,12 +110,14 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
             size_t r = GetRand(10);
             std::vector<FailingJob> vChecks2;
             vChecks2.reserve(r);
+            auto p = control.get_next_free_index();
+            auto p_ = *p;
             for (size_t k = 0; k < r && !vChecks.empty(); k++) {
-                vChecks2.emplace_back(vChecks.back());
+                ((*p)++)->swap(vChecks.back());
                 vChecks.pop_back();
             }
-            checksum += vChecks2.size();
-            control.Add(vChecks2);
+            checksum += std::distance(p_, *p);
+            control.Add(std::distance(p_, *p));
         }
         BOOST_REQUIRE(checksum == i);
         bool success = control.Wait();
@@ -207,15 +209,14 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_job_array)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_round_barrier)
 {
     RAII_ThreadGroup threadGroup;
-    auto barrier = std::shared_ptr<B>(new B());
-    barrier->init(nScriptCheckThreads);
-    for (int i = 0; i < nScriptCheckThreads; ++i)
-        barrier->reset(i);
+    auto b = std::shared_ptr<B>(new B());
+    b->init(nScriptCheckThreads);
+    b->reset();
 
     for (int i = 0; i < nScriptCheckThreads; ++i) 
         threadGroup.create_thread([&, i]() {
-            barrier->finished(i);
-            barrier->wait_all_finished();
+            b->finished();
+            b->wait_all_finished();
         });
 
     threadGroup.join_all();
@@ -243,11 +244,12 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
     threadGroup.create_thread([&]() {
         while (spawned != nScriptCheckThreads);
         for (auto y = 0; y < 10; ++y) {
-            std::vector<FakeJobNoWork> w;
+            auto p = fast_queue->get_next_free_index();
+            auto p_ = *p;
             for (auto x = 0; x< 100; ++x) {
-                w.push_back(FakeJobNoWork{});
+                new ((*p)++) FakeJobNoWork{};
             }
-            fast_queue->Add(w);
+            fast_queue->Add(std::distance(p_, *p));
             MilliSleep(1);
         }
         fast_queue->TEST_set_masterJoined(true);
@@ -284,13 +286,13 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
             CCheckQueueControl<Correct_Queue> control(small_queue.get());
             while (total) {
                 size_t r = GetRand(10);
-                std::vector<FakeJobCheckCompletion> vChecks;
-                vChecks.reserve(r);
+                auto p = control.get_next_free_index();
+                auto p_ = *p; 
                 for (size_t k = 0; k < r && total; k++) {
                     total--;
-                    vChecks.push_back(FakeJobCheckCompletion{});
+                    new ((*p)++) FakeJobCheckCompletion{};
                 }
-                control.Add(vChecks);
+                control.Add(std::distance(p_, *p));
             }
         }
         small_queue->TEST_dump_log(nScriptCheckThreads);

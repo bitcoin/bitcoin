@@ -129,16 +129,15 @@ public:
      */
 
 template <typename Q>
-class round_barrier
+class barrier
 {
     std::array<std::atomic_bool, Q::MAX_WORKERS> state;
     size_t RT_N_SCRIPTCHECK_THREADS;
+    std::atomic<size_t> count;
 
 public:
     /** Default state is false so that first round looks like no prior round*/
-    round_barrier() : RT_N_SCRIPTCHECK_THREADS(0) {
-        for (auto& s : state)
-            s.store(false);
+    barrier() : RT_N_SCRIPTCHECK_THREADS(0), count(0) {
     }
 
     void init(const size_t rt)
@@ -146,34 +145,30 @@ public:
         RT_N_SCRIPTCHECK_THREADS = rt;
     }
 
-    void finished(const size_t id)
+    void finished()
     {
-        state[id] = true;
+        ++count;
     }
 
-    /** Iterates from [0,upto) to fetch status updates on unfinished workers.
-             *
-             * @param upto 
-             * @returns if all entries up to upto were true*/
     void wait_all_finished() const
     {
-        for (auto i = 0; i < RT_N_SCRIPTCHECK_THREADS; i = state[i].load() ? i+1 : 0) {
-        }
+        while (count != RT_N_SCRIPTCHECK_THREADS)
+            ;
     }
 
     /** resets one bool
              *
              */
-    void reset(const size_t i)
+    void reset()
     {
-        state[i] = false;
+        count.store(0);
     }
 
     /** Waits until state is set false
             */
-    void wait_reset(const size_t i) const 
+    void wait_reset() const 
     {
-        while (state[i])
+        while (count.load() != 0)
             ;
     }
 };
@@ -273,10 +268,8 @@ struct status_container {
     std::atomic<bool> fAllOk;
     /** true if the master has joined, false otherwise. A round may not terminate unless masterJoined */
     std::atomic<bool> masterJoined;
-    /** used to count how many threads have finished cleanup operations */
-    std::atomic_uint nFinishedCleanup;
 
-    status_container() : nTodo(0), fAllOk(true), masterJoined(false), nFinishedCleanup(0) {}
+    status_container() : nTodo(0), fAllOk(true), masterJoined(false){}
 };
 }
 
@@ -311,7 +304,8 @@ public:
 private:
     CCheckQueue_Internals::job_array<SELF> jobs;
     CCheckQueue_Internals::status_container<SELF> status;
-    CCheckQueue_Internals::round_barrier<SELF> barrier;
+    CCheckQueue_Internals::barrier<SELF> work;
+    CCheckQueue_Internals::barrier<SELF> cleanup;
     std::atomic<uint8_t> should_sleep;
     size_t RT_N_SCRIPTCHECK_THREADS;
     std::mutex control_mtx;
@@ -322,10 +316,17 @@ private:
     std::vector<std::thread> threads;
 
 
-    void wait_all_finished_cleanup() const
+    void wakeup()
     {
-        while (status.nFinishedCleanup.load() != RT_N_SCRIPTCHECK_THREADS - 1)
-            ;
+        ++should_sleep;
+    }
+    void sleep()
+    {
+        --should_sleep;
+    }
+    void die()
+    {
+        should_sleep.store(3);
     }
     bool maybe_sleep() const
     {
@@ -335,9 +336,9 @@ private:
                 std::this_thread::sleep_for(std::chrono::microseconds(1));
                 break;
             case 1:
-                return false;
-            default:
                 return true;
+            default:
+                return false;
             }
         }
     }
@@ -368,23 +369,13 @@ private:
     bool Master() {
         const size_t ID = 0;
 
-        wait_for_cleanup();
+        work.wait_reset();
         status.masterJoined.store(true);
-
-        TEST_log(ID, [&, this](std::ostringstream& o) {
-            o << "Master just set masterJoined\n";
-        });
+        TEST_log(ID, [](std::ostringstream& o) { o << "Master just set masterJoined\n"; });
         consume(ID);
-        barrier.finished(ID);
-        //  1) Wait till all threads finish
-        //  2) read fAllOk
-        //  3) Tell threads to sleep (otherwise, they may stay up)
-        //  4) Mark master as gone
-        //  5) return
-        barrier.wait_all_finished();
-        TEST_log(ID, [&, this](std::ostringstream& o) {
-            o << "(Master) saw all threads finished\n";
-        });
+        work.finished();
+        work.wait_all_finished();
+        TEST_log(ID, [](std::ostringstream& o) { o << "(Master) saw all threads finished\n"; });
         bool fRet = status.fAllOk;
         sleep();
         status.masterJoined.store(false);
@@ -392,80 +383,39 @@ private:
     }
     void Loop(const size_t ID)
     {
-        for (;;) {
-            if (maybe_sleep()) {
-                LogPrintf("CCheckQueue @%#010x Worker %q shutting down\n", this, ID);
-                return;
-            }
-            TEST_log(ID, [&, this](std::ostringstream& o) {
-                o << "Round starting\n";
-            });
-
+        while (maybe_sleep()) {
+            TEST_log(ID, [](std::ostringstream& o) {o << "Round starting\n";});
             size_t prev_total = consume(ID);
-
             TEST_log(ID, [&, this](std::ostringstream& o) {
                 o << "saw up to " << prev_total << " master was "
                 << status.masterJoined.load() << " nTodo " << status.nTodo.load() << '\n';
             });
-
-            // We only break out of the loop when there is no more work and the master had joined.
-            // We won't find more work later, so mark ourselves as completed
-            // Any error would have already been reported
-            // If we don't wait for the master to join, it is because an error check was found. Not waiting would cause a race condtion.
+            // Only spins here if !fAllOk, otherwise consume finished all
             while (!status.masterJoined.load())
                 ;
-            barrier.finished(ID);
-
-
+            work.finished();
             // We wait until the master reports leaving explicitly
             while (status.masterJoined.load())
                 ;
-            TEST_log(ID, [&, this](std::ostringstream& o) {
-                o << "Saw master leave\n";
-            });
-
-            // Have ID == 1 perform cleanup as the "slave master slave" as ID == 1 is always there if multicore
-            // This frees the master to return with the result before the cleanup occurs
-            // And allows for the ID == 1 to do the master's cleanup for it
-            // We can immediately begin cleanup because all threads waited for master to
-            // exit on previous round and master waited for all workers.
-
-
-            // We reset all the flags we think we'll use (also warms cache)
+            TEST_log(ID, [](std::ostringstream& o) { o << "Saw master leave\n"; });
             jobs.reset_flags_for(ID, prev_total);
-            ++status.nFinishedCleanup;
+            cleanup.finished();
             if (ID == 1) {
                 // Reset master flags too
                 jobs.reset_flags_for(0, prev_total);
-
-                TEST_log(ID, [&, this](std::ostringstream& o) {
-                    o << "Resetting nTodo and fAllOk" << '\n';
-                });
-
-
-                wait_all_finished_cleanup();
-                status.nFinishedCleanup.store(0);
-                // We have all the threads wait on their barrier to be reset, so we
-                // Release all the threads, master must be last to keep master from rejoining
-                for (auto i = RT_N_SCRIPTCHECK_THREADS; i > 0;)
-                    barrier.reset(--i);
+                cleanup.wait_all_finished();
+                cleanup.reset();
+                work.reset();
             }
-            barrier.wait_reset(ID);
         }
+        LogPrintf("CCheckQueue @%#010x Worker %q shutting down\n", this, ID);
     }
 
 public:
-    CCheckQueue() : jobs(), status(), barrier(), should_sleep(0), RT_N_SCRIPTCHECK_THREADS(0), test_log_seq(0)
+    CCheckQueue() : jobs(), status(), work(), cleanup(), should_sleep(0), RT_N_SCRIPTCHECK_THREADS(0), test_log_seq(0)
     {
     }
 
-    void wait_for_cleanup() const
-    {
-        barrier.wait_reset(0);
-        TEST_log(0, [](std::ostringstream& o) mutable {
-            o << "Cleanup waiting done!\n";
-        });
-    }
     void reset_jobs()
     {
         jobs.reset_jobs();
@@ -480,9 +430,13 @@ public:
 
     void ControlLock() {
         control_mtx.lock();
+        TEST_log(0, [](std::ostringstream& o) {
+            o << "Resetting nTodo and fAllOk" << '\n';
+        });
         status.nTodo.store(0);
         status.fAllOk.store(true);
-
+        wakeup();
+        reset_jobs();
     }
     void ControlUnlock() {
         control_mtx.unlock();
@@ -493,19 +447,14 @@ public:
     {
         return Master();
     }
-
-    //! Add a batch of checks to the queue
-    void Add(std::vector<T>& vChecks)
+    void quit()
     {
-        jobs.add(vChecks);
-        size_t vs = vChecks.size();
-        status.nTodo.fetch_add(vs);
-
-        TEST_log(0, [&, this](std::ostringstream& o) {
-            o << "Added " << vs << " values. nTodo was " << status.nTodo.load() - vs
-            << " now is " << status.nTodo.load() << " \n";
-        });
+        die();
+        for (auto& t : threads)
+            t.join();
+        threads.clear();
     }
+
 
     void Add(std::ptrdiff_t vs)
     {
@@ -523,28 +472,14 @@ public:
     void init(const size_t RT_N_SCRIPTCHECK_THREADS_)
     {
         RT_N_SCRIPTCHECK_THREADS = RT_N_SCRIPTCHECK_THREADS_;
-        barrier.init(RT_N_SCRIPTCHECK_THREADS);
+        work.init(RT_N_SCRIPTCHECK_THREADS);
+        cleanup.init(RT_N_SCRIPTCHECK_THREADS-1);
         jobs.init(RT_N_SCRIPTCHECK_THREADS);
 
         for (size_t id = 1; id < RT_N_SCRIPTCHECK_THREADS; ++id) {
             std::thread t([=]() {Thread(id); });
             threads.push_back(std::move(t));
         }
-    }
-    void wakeup()
-    {
-        ++should_sleep;
-    }
-    void sleep()
-    {
-        --should_sleep;
-    }
-    void quit()
-    {
-        should_sleep.store(3);
-        for (auto& t : threads)
-            t.join();
-        threads.clear();
     }
 
 
@@ -623,17 +558,14 @@ template <typename Q>
 class CCheckQueueControl
 {
 private:
-    Q* pqueue;
+    Q * const pqueue;
     bool fDone;
 
 public:
     CCheckQueueControl(Q* pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
-        if (pqueue) {
+        if (pqueue) 
             pqueue->ControlLock();
-            pqueue->wakeup();
-            pqueue->reset_jobs();
-        }
     }
 
     bool Wait()
@@ -645,11 +577,6 @@ public:
         return fRet;
     }
 
-    void Add(std::vector<typename Q::JOB_TYPE>& vChecks)
-    {
-        if (pqueue != NULL)
-            pqueue->Add(vChecks);
-    }
     void Add(std::ptrdiff_t d)
     {
         if (pqueue != NULL)

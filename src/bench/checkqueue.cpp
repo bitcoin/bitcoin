@@ -21,8 +21,6 @@ static void CCheckQueueSpeed(benchmark::State& state)
     typedef CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS> T;
     auto fast_queue = std::unique_ptr<T>(new T());
     fast_queue->init(GetNumCores());
-    std::vector<FakeJobNoWork> vChecks;
-    vChecks.reserve(100);
     while (state.KeepRunning()) {
         size_t total = 0;
         {
@@ -30,10 +28,11 @@ static void CCheckQueueSpeed(benchmark::State& state)
             for (size_t j = 0; j < 101; ++j) {
                 size_t r = 30;
                 total += r;
-                vChecks.clear();
+                auto p = control.get_next_free_index();
+                auto p_ = *p;
                 for (size_t k = 0; k < r; ++k)
-                    vChecks.push_back(FakeJobNoWork{});
-                control.Add(vChecks);
+                    new ((*p)++) FakeJobNoWork{};
+                control.Add(std::distance(p_, *p));
             }
         }
     }
