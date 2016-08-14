@@ -68,10 +68,16 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
      */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
+<<<<<<< HEAD
 extern unsigned int nBytesPerSigOp;
 
 /** Compute the virtual transaction size (weight reinterpreted as bytes). */
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost);
 int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost = 0);
+=======
+/** Compute the virtual transaction size (weight reinterpreted as bytes). */
+int64_t GetVirtualTransactionSize(int64_t nWeight);
+int64_t GetVirtualTransactionSize(const CTransaction& tx);
+>>>>>>> bitcoin/0.13
 
 #endif // BITCOIN_POLICY_POLICY_H

@@ -2388,10 +2388,6 @@
         <translation>Definir tamanho do banco de memória da chave para &lt;n&gt; (predefinição: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Definir tamanho minímo de um bloco em bytes (por defeito: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Defina o número de processos para servir as chamadas RPC (por defeito: %d)</translation>
     </message>

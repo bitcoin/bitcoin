@@ -1863,10 +1863,6 @@
         <translation>Adresa -proxy nevalidă: '%s'</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Setare mărime minimă bloc în octeţi (implicit: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Specificaţi fişierul configuraţie (implicit: %s)</translation>
     </message>
