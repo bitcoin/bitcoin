@@ -18,8 +18,6 @@
 #include "random.h"
 BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, TestingSetup)
 
-// Logging off by default because of memory leak
-static const testing_level TEST = testing_level::enable_functions;
 
 class RAII_ThreadGroup {
     std::vector<std::thread> threadGroup;
@@ -42,7 +40,7 @@ class RAII_ThreadGroup {
 
 struct FakeJob {
 };
-typedef CCheckQueue<FakeJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, TEST> Standard_Queue;
+typedef CCheckQueue<FakeJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, true> Standard_Queue;
 struct FakeJobCheckCompletion {
     static std::atomic<size_t> n_calls;
     bool operator()()
@@ -53,7 +51,7 @@ struct FakeJobCheckCompletion {
     void swap(FakeJobCheckCompletion& x){};
 };
 std::atomic<size_t> FakeJobCheckCompletion::n_calls {0};
-typedef CCheckQueue<FakeJobCheckCompletion, (size_t)100, MAX_SCRIPTCHECK_THREADS> Correct_Queue;
+typedef CCheckQueue<FakeJobCheckCompletion, (size_t)100, MAX_SCRIPTCHECK_THREADS, true, true> Correct_Queue;
 
 struct FailingJob {
     bool f;
@@ -77,7 +75,7 @@ struct FailingJob {
     };
 };
 std::atomic<size_t> FailingJob::n_calls {0};
-typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, testing_level::enable_functions> Failing_Queue;
+typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, true> Failing_Queue;
 struct FakeJobNoWork {
     bool operator()()
     {
@@ -85,7 +83,7 @@ struct FakeJobNoWork {
     }
     void swap(FakeJobNoWork& x){};
 };
-typedef CCheckQueue<FakeJobNoWork, (size_t)1000, MAX_SCRIPTCHECK_THREADS, testing_level::enable_functions> Consume_Queue;
+typedef CCheckQueue<FakeJobNoWork, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, true> Consume_Queue;
 
 typedef typename Standard_Queue::JOB_TYPE JT; // This is a "recursive template" hack
 typedef CCheckQueue_Internals::job_array<Standard_Queue> J;
@@ -216,8 +214,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_round_barrier)
 
     for (int i = 0; i < nScriptCheckThreads; ++i) 
         threadGroup.create_thread([&, i]() {
-            barrier->mark_done(i);
-            while (!barrier->load_done());
+            barrier->finished(i);
+            barrier->wait_all_finished();
         });
 
     threadGroup.join_all();
@@ -275,6 +273,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
 {
+    fPrintToConsole = true;
     auto small_queue = std::shared_ptr<Correct_Queue>(new Correct_Queue);
     small_queue->init(nScriptCheckThreads);
 
@@ -294,6 +293,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
                 control.Add(vChecks);
             }
         }
+        small_queue->TEST_dump_log(nScriptCheckThreads);
+        small_queue->TEST_erase_log();
         if (FakeJobCheckCompletion::n_calls != i) {
             BOOST_REQUIRE(FakeJobCheckCompletion::n_calls == i);
             BOOST_TEST_MESSAGE("Failure on trial " << i << " expected, got " << FakeJobCheckCompletion::n_calls);
