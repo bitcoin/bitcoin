@@ -40,7 +40,7 @@ class RAII_ThreadGroup {
 
 struct FakeJob {
 };
-typedef CCheckQueue<FakeJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, true> Standard_Queue;
+typedef CCheckQueue<FakeJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Standard_Queue;
 struct FakeJobCheckCompletion {
     static std::atomic<size_t> n_calls;
     bool operator()()
@@ -51,7 +51,7 @@ struct FakeJobCheckCompletion {
     void swap(FakeJobCheckCompletion& x){};
 };
 std::atomic<size_t> FakeJobCheckCompletion::n_calls {0};
-typedef CCheckQueue<FakeJobCheckCompletion, (size_t)100, MAX_SCRIPTCHECK_THREADS, true, true> Correct_Queue;
+typedef CCheckQueue<FakeJobCheckCompletion, (size_t)100, MAX_SCRIPTCHECK_THREADS, true, false> Correct_Queue;
 
 struct FailingJob {
     bool f;
@@ -75,7 +75,7 @@ struct FailingJob {
     };
 };
 std::atomic<size_t> FailingJob::n_calls {0};
-typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, true> Failing_Queue;
+typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Failing_Queue;
 struct FakeJobNoWork {
     bool operator()()
     {
@@ -83,14 +83,13 @@ struct FakeJobNoWork {
     }
     void swap(FakeJobNoWork& x){};
 };
-typedef CCheckQueue<FakeJobNoWork, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, true> Consume_Queue;
+typedef CCheckQueue<FakeJobNoWork, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Consume_Queue;
 
 typedef typename Standard_Queue::JOB_TYPE JT; // This is a "recursive template" hack
 typedef CCheckQueue_Internals::job_array<Standard_Queue> J;
 typedef CCheckQueue_Internals::barrier<Standard_Queue> B;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
-    fPrintToConsole = true;
     auto fail_queue = std::unique_ptr<Failing_Queue>(new Failing_Queue());
 
     fail_queue->init(nScriptCheckThreads);
@@ -136,7 +135,6 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
         }
         fail_queue->TEST_erase_log();
     }
-    fPrintToConsole = false;
 }
 BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue)
 {
@@ -275,7 +273,6 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
 {
-    fPrintToConsole = true;
     auto small_queue = std::shared_ptr<Correct_Queue>(new Correct_Queue);
     small_queue->init(nScriptCheckThreads);
 
