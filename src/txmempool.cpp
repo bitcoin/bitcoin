@@ -75,7 +75,11 @@ void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
 
 size_t CTxMemPoolEntry::GetTxSize() const
 {
+<<<<<<< HEAD
     return GetVirtualTransactionSize(nTxWeight, sigOpCost);
+=======
+    return GetVirtualTransactionSize(nTxWeight);
+>>>>>>> bitcoin/0.13
 }
 
 // Update the given tx for any in-mempool descendants.
