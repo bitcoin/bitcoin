@@ -503,7 +503,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants
     }
 }
 
-void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<CTransaction>* removed)
+void CTxMemPool::removeRecursive(const CTransaction &origTx, std::vector<std::shared_ptr<const CTransaction>>* removed)
 {
     // Remove transaction from memory pool
     {
@@ -532,7 +532,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<CTransact
         }
         if (removed) {
             BOOST_FOREACH(txiter it, setAllRemoves) {
-                removed->push_back(it->GetTx());
+                removed->emplace_back(it->GetSharedTx());
             }
         }
         RemoveStaged(setAllRemoves, false);
@@ -576,7 +576,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     RemoveStaged(setAllRemoves, false);
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>* removed)
+void CTxMemPool::removeConflicts(const CTransaction &tx, std::vector<std::shared_ptr<const CTransaction>>* removed)
 {
     // Remove transactions which depend on inputs of tx, recursively
     LOCK(cs);
@@ -597,7 +597,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
 void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                                std::list<CTransaction>* conflicts, bool fCurrentEstimate)
+                                std::vector<std::shared_ptr<const CTransaction>>* conflicts, bool fCurrentEstimate)
 {
     LOCK(cs);
     std::vector<CTxMemPoolEntry> entries;
