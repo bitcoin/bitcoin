@@ -541,7 +541,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     LOCK(cs);
-    list<CTransaction> transactionsToRemove;
+    setEntries txToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
@@ -549,16 +549,16 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
         if (!CheckFinalTx(tx, flags) || !CheckSequenceLocks(tx, flags, &lp, validLP)) {
             // Note if CheckSequenceLocks fails the LockPoints may still be invalid
             // So it's critical that we remove the tx and not depend on the LockPoints.
-            transactionsToRemove.push_back(tx);
+            txToRemove.insert(it);
         } else if (it->GetSpendsCoinbase()) {
             BOOST_FOREACH(const CTxIn& txin, tx.vin) {
                 indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
                 if (it2 != mapTx.end())
                     continue;
                 const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
-		if (nCheckFrequency != 0) assert(coins);
+                if (nCheckFrequency != 0) assert(coins);
                 if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
-                    transactionsToRemove.push_back(tx);
+                    txToRemove.insert(it);
                     break;
                 }
             }
@@ -567,10 +567,11 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
             mapTx.modify(it, update_lock_points(lp));
         }
     }
-    BOOST_FOREACH(const CTransaction& tx, transactionsToRemove) {
-        list<CTransaction> removed;
-        removeRecursive(tx, removed);
+    setEntries setAllRemoves;
+    for (txiter it : txToRemove) {
+        CalculateDescendants(it, setAllRemoves);
     }
+    RemoveStaged(setAllRemoves, false);
 }
 
 void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed)
