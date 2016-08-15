@@ -21,7 +21,6 @@ static inline void ExpandAESKey256_sub1(__m128i *tmp1, __m128i *tmp2)
 static inline void ExpandAESKey256_sub2(__m128i *tmp1, __m128i *tmp3)
 {
     __m128i tmp2, tmp4;
-
     tmp4 = _mm_aeskeygenassist_si128(*tmp1, 0x00);
     tmp2 = _mm_shuffle_epi32(tmp4, 0xAA);
     tmp4 = _mm_slli_si128(*tmp3, 0x04);
@@ -38,9 +37,10 @@ static inline void ExpandAESKey256_sub2(__m128i *tmp1, __m128i *tmp3)
 static void ExpandAESKey256(__m128i *keys, const __m128i *KeyBuf)
 {
     __m128i tmp1, tmp2, tmp3;
-
-    tmp1 = keys[0] = KeyBuf[0];
-    tmp3 = keys[1] = KeyBuf[1];
+    tmp1 = _mm_loadu_si128(&KeyBuf[0]);
+    tmp3 = _mm_loadu_si128(&KeyBuf[1]);
+    keys[0] = tmp1;
+    keys[1] = tmp3;
 
     tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x01);
     ExpandAESKey256_sub1(&tmp1, &tmp2);
