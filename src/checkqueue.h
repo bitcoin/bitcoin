@@ -426,6 +426,7 @@ public:
     }
     void quit()
     {
+        std::lock_guard<std::mutex> l(control_mtx);
         die();
         for (auto& t : threads)
             t.join();
@@ -452,6 +453,7 @@ public:
         work.init(RT_N_SCRIPTCHECK_THREADS);
         cleanup.init(RT_N_SCRIPTCHECK_THREADS-1);
         jobs.init(RT_N_SCRIPTCHECK_THREADS);
+        should_sleep.store(0);
 
         for (size_t id = 1; id < RT_N_SCRIPTCHECK_THREADS; ++id) {
             std::thread t([=]() {Thread(id); });

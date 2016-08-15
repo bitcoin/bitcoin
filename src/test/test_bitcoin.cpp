@@ -47,8 +47,7 @@ BasicTestingSetup::~BasicTestingSetup()
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
-    static std::atomic_flag one_time_setup = ATOMIC_FLAG_INIT;
-    const CChainParams& chainparams = Params();
+        const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
         RegisterAllCoreRPCCommands(tableRPC);
@@ -67,8 +66,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
             BOOST_CHECK(ok);
         }
         nScriptCheckThreads = 3;
-        if (!one_time_setup.test_and_set())
-            SetupCCheckQueue(nScriptCheckThreads);
+        SetupCCheckQueue(nScriptCheckThreads);
         RegisterNodeSignals(GetNodeSignals());
 }
 
@@ -77,6 +75,7 @@ TestingSetup::~TestingSetup()
         UnregisterNodeSignals(GetNodeSignals());
         threadGroup.interrupt_all();
         threadGroup.join_all();
+        StopCCheckQueue();
         UnloadBlockIndex();
         delete pcoinsTip;
         delete pcoinsdbview;
