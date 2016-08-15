@@ -157,8 +157,16 @@ class CECKey(object):
         sig_size0 = ctypes.c_uint32()
         sig_size0.value = ssl.ECDSA_size(self.k)
         mb_sig = ctypes.create_string_buffer(sig_size0.value)
-        result = ssl.ECDSA_sign(0, hash, len(hash), mb_sig, ctypes.byref(sig_size0), self.k)
-        assert 1 == result
+        ok = False
+        while not ok:
+          result = ssl.ECDSA_sign(0, hash, len(hash), mb_sig, ctypes.byref(sig_size0), self.k)
+          assert 1 == result
+          assert mb_sig.raw[0] == 0x30
+          assert mb_sig.raw[1] == sig_size0.value - 2
+          assert mb_sig.raw[2] == 2
+          assert mb_sig.raw[4 + mb_sig.raw[3]] == 2
+          # Hacky test for lowS DER signature
+          ok = (mb_sig.raw[5 + mb_sig.raw[3]] < 33) and (mb_sig.raw[6 + mb_sig.raw[3]] <= 0xFE)
         return mb_sig.raw[:sig_size0.value]
 
     def verify(self, hash, sig):
