@@ -62,7 +62,15 @@ public:
     CSporkMessage(int nSporkID, int64_t nValue, int64_t nTimeSigned) : nSporkID(nSporkID), nValue(nValue), nTimeSigned(nTimeSigned) {}
     CSporkMessage() : nSporkID(0), nValue(0), nTimeSigned(0) {}
 
-    uint256 GetHash() { return HashX11(BEGIN(nSporkID), END(nTimeSigned)); }
+    uint256 GetHash()
+    {
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << nSporkID;
+        ss << nValue;
+        ss << nTimeSigned;
+        return ss.GetHash();
+    }
+
     bool Sign(std::string strSignKey);
     bool CheckSignature();
     void Relay();
