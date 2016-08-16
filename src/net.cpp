@@ -1755,11 +1755,6 @@ void ThreadOpenAddedConnections()
     //     to be possible, when it should not be.
     MilliSleep(15000);
 
-    {
-        LOCK(cs_vAddedNodes);
-        vAddedNodes = mapMultiArgs["-addnode"];
-    }
-
     // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == NULL) {
@@ -2120,6 +2115,16 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         // initialize semaphore
         int nMaxOutbound = min(nMaxOutConnections, nMaxConnections);
         semOutbound = new CSemaphore(nMaxOutbound);
+    }
+
+    //We need to initialize vAddedNodes here.  It is now used in AcceptConnection to limit the number of inbound
+    //connections based on the configured "addnode" options from bitcoin.conf/command line, however the old
+    //initialization location in ThreadOpenAddedConnections was both started after ThreadSocketHandler, which
+    //calls AcceptConnection, and has an explicit 15 second delay to the start of ThreadOpenAddedConnections
+    //which allows any nodes actively trying to connect to this node during startup to exceed the inbound connection limit
+    {
+        LOCK(cs_vAddedNodes);
+        vAddedNodes = mapMultiArgs["-addnode"];
     }
 
     if (pnodeLocalHost == NULL)
