@@ -22,7 +22,7 @@ private:
     bool store;
 
 public:
-    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amount, bool storeIn) : TransactionSignatureChecker(txToIn, nInIn, amount), store(storeIn) {}
+    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amount, bool storeIn, CachedHashes& cachedHashesIn) : TransactionSignatureChecker(txToIn, nInIn, amount, cachedHashesIn), store(storeIn) {}
 
     bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 };
