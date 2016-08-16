@@ -132,6 +132,10 @@ ones which haven't already been generated during the time of the backup.
 **Attention:** Encrypting the wallet will create a new seed which requires
 a new backup!
 
+Wallet dumps (created using the `dumpwallet` RPC) will contain the deterministic
+seed. This is expected to allow future versions to import the seed and all
+associated funds, but this is not yet implemented.
+
 HD key generation for new wallets can be disabled by `-usehd=0`. Keep in
 mind that this flag only has affect on newly created wallets.
 You can't disable HD key generation once you have created a HD wallet.
