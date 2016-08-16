@@ -72,8 +72,12 @@ endif
 .PHONY: FORCE check-symbols check-security
 # bitcoin core #
 BITCOIN_CORE_H = \
+  AdminProtocol.h \
+  AdminServer.h \
+  AdminRPCBinding.h \
   addrman.h \
   amount.h \
+  Application.h \
   arith_uint256.h \
   base58.h \
   bloom.h \
@@ -109,10 +113,16 @@ BITCOIN_CORE_H = \
   main.h \
   memusage.h \
   merkleblock.h \
+  Message.h \
   miner.h \
   net.h \
   netbase.h \
   noui.h \
+  networkManager/NetworkConnection.h \
+  networkManager/NetworkEndPoint.h \
+  networkManager/NetworkEnums.h \
+  networkManager/NetworkManager.h \
+  networkManager/NetworkManager_p.h \
   policy/fees.h \
   policy/policy.h \
   pow.h \
@@ -138,6 +148,11 @@ BITCOIN_CORE_H = \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
   support/pagelocker.h \
+  streaming/BufferPool.h \
+  streaming/ConstBuffer.h \
+  streaming/MessageBuilder.h \
+  streaming/MessageBuilder_p.h \
+  streaming/MessageParser.h \
   sync.h \
   thinblock.h \
   threadsafety.h \
@@ -177,6 +192,9 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
+  Application.cpp \
+  AdminServer.cpp \
+  AdminRPCBinding.cpp \
   addrman.cpp \
   bloom.cpp \
   chain.cpp \
@@ -190,6 +208,8 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  networkManager/NetworkConnection.cpp \
+  networkManager/NetworkManager.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
@@ -295,6 +315,7 @@ libbitcoin_util_a_SOURCES = \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
+  Message.cpp \
   random.cpp \
   rpcprotocol.cpp \
   support/cleanse.cpp \
@@ -304,6 +325,10 @@ libbitcoin_util_a_SOURCES = \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
+  streaming/BufferPool.cpp \
+  streaming/ConstBuffer.cpp \
+  streaming/MessageBuilder.cpp \
+  streaming/MessageParser.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT

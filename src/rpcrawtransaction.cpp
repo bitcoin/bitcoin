@@ -623,8 +623,8 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             ssData >> tx;
             txVariants.push_back(tx);
         }
-        catch (const std::exception&) {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+        catch (const std::exception &e) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, std::string("TX decode failed with ") + e.what());
         }
     }
 
