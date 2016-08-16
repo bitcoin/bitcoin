@@ -302,13 +302,18 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # We'll add an unnecessary witness to this transaction that would cause
-        # it to be too large according to IsStandard.
+        # it to be non-standard, to test that violating policy with a witness before
+        # segwit activation doesn't blind a node to a transaction.  Transactions
+        # rejected for having a witness before segwit activation shouldn't be added
+        # to the rejection cache.
         tx3 = CTransaction()
         tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), CScript([p2sh_program])))
         tx3.vout.append(CTxOut(tx2.vout[0].nValue-1000, scriptPubKey))
         tx3.wit.vtxinwit.append(CTxInWitness())
         tx3.wit.vtxinwit[0].scriptWitness.stack = [b'a'*400000]
         tx3.rehash()
+        # Note that this should be rejected for the premature witness reason,
+        # rather than a policy check, since segwit hasn't activated yet.
         self.std_node.test_transaction_acceptance(tx3, True, False, b'no-witness-yet')
 
         # If we send without witness, it should be accepted.
