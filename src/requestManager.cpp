@@ -379,7 +379,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	  vToFetch.push_back(inv2);
 	  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
 	  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
-	  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	  LogPrint("req", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
 	}
       // BUIP010 Xtreme Thinblocks: end section
     }
@@ -459,8 +459,15 @@ void CRequestManager::SendRequests()
               else
 		{
 		  // node should never be null... but if it is then there's nothing to do.
+                  LogPrint("req", "Block %s has no sources\n",item.obj.ToString());
 		}
 	    }
+	  else
+	    {
+	      // node should never be null... but if it is then there's nothing to do.
+	      LogPrint("req", "Block %s has no available sources\n",item.obj.ToString());
+	    }
+
 	}    
     }
   

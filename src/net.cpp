@@ -2096,7 +2096,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     //
 
     // BITCOINUNLIMITED START
-    if (!GetBoolArg("-bitnodes", true))
+    if ((!GetBoolArg("-bitnodes", true)) || (Params().NetworkIDString() != "main"))
         LogPrintf("Bitnodes API seeding disabled\n");
     else
         threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "bitnodes", &ThreadBitnodesAddressSeed));
@@ -2548,12 +2548,18 @@ CNode::~CNode()
     CloseSocket(hSocket);
 
     if (pfilter)
+      {
         delete pfilter;
+	pfilter = NULL;  // BU
+      }
 
 
     // BUIP010 - Xtreme Thinblocks - begin section
     if (pThinBlockFilter)
+      {
         delete pThinBlockFilter;
+        pThinBlockFilter = NULL;
+      }
     mapThinBlocksInFlight.clear();
     thinBlockWaitingForTxns = -1;
     thinBlock.SetNull();

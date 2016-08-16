@@ -162,20 +162,20 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(utx!=False, True)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
-        outputs = { self.nodes[0].getnewaddress() : Decimal(5.0) - fee - feeTolerance }
+        outputs = { self.nodes[0].getnewaddress() : Decimal(5.0) - fee } #  - feeTolerance }  # BU having the fee tolerance in there creates a very small change output
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
-        fee = rawtxfund['fee']
+        txfee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         totalOut = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
 
         assert_equal(rawtxfund['changepos'], -1)
-        assert_equal(fee + totalOut, utx['amount']) #compare vin total and totalout+fee
+        assert_equal(txfee + totalOut, utx['amount']) #compare vin total and totalout+fee
 
 
 

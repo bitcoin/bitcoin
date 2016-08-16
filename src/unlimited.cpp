@@ -1099,10 +1099,14 @@ bool CanThinBlockBeDownloaded(CNode* pto)
 void IsChainNearlySyncdInit() 
 {
     LOCK(cs_main);
-    if(chainActive.Height() < pindexBestHeader->nHeight - 2)
-        fIsChainNearlySyncd = false;
+    if (!pindexBestHeader) fIsChainNearlySyncd = false;  // Not nearly synced if we don't have any blocks!
     else
+      {
+      if(chainActive.Height() < pindexBestHeader->nHeight - 2)
+        fIsChainNearlySyncd = false;
+      else
         fIsChainNearlySyncd = true;
+      }
 }
 bool IsChainNearlySyncd()
 {
