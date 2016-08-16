@@ -1735,8 +1735,13 @@ void ThreadOpenAddedConnections()
     // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == NULL) {
-        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), nMaxOutConnections);
-        semOutboundAddNode = new CSemaphore(maxAddNodeConnections);
+        //NOTE: Because the number of "-addnode" values can be changed via RPC calls to "addnode add|remove"
+        //      we should always set the semaphore to have a count of nMaxOutConnections, otherwise
+        //      the user's configuration could unintentionally limit the number of "-addnode" connections
+        //      that can be made through RPC.  In the worst case, if no "-addnode" options were configured,
+        //      this would break the RPC addnode functionality as the semaphore would have an initial count
+        //      condition of 0 and grants would never succeed.
+        semOutboundAddNode = new CSemaphore(nMaxOutConnections);
     }
 
     if (HaveNameProxy()) {
