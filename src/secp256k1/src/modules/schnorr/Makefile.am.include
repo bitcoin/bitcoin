@@ -6,5 +6,5 @@ noinst_HEADERS += src/modules/schnorr/tests_impl.h
 if USE_BENCHMARK
 noinst_PROGRAMS += bench_schnorr_verify
 bench_schnorr_verify_SOURCES = src/bench_schnorr_verify.c
-bench_schnorr_verify_LDADD = libsecp256k1.la $(SECP_LIBS)
+bench_schnorr_verify_LDADD = libsecp256k1.la $(SECP_LIBS) $(COMMON_LIB)
 endif
