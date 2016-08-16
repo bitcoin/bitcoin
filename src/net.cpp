@@ -1628,6 +1628,9 @@ void static ProcessOneShot()
     }
     CAddress addr;
     CSemaphoreGrant grant(*semOutbound, true);
+    //Seeding nodes track against the original outbound semaphore.
+    //Uses try-wait methodology because if a grant is given, there are outbound
+    //slots to fill, and if the grant isn't given, there's no seeding to do.
     if (grant) {
         if (!OpenNetworkConnection(addr, &grant, strDest.c_str(), true))
             AddOneShot(strDest);
@@ -1646,6 +1649,8 @@ void ThreadOpenConnections()
             BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-connect"])
             {
                 CAddress addr;
+                //NOTE: Because the only nodes we are connecting to here are the ones the user put in their
+                //      bitcoin.conf/commandline args as "-connect", we don't use the semaphore to limit outbound connections
                 OpenNetworkConnection(addr, NULL, strAddr.c_str());
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
@@ -1658,6 +1663,9 @@ void ThreadOpenConnections()
            ConnectToThinBlockNodes();
            // BUIP010 Xtreme Thinblocks: end section
         }
+
+        //NOTE: If we are in this block, then no seeding should occur as both "-connect" and
+        //      "-connect-thinblock" are intended as "only make outbound connections to the configured nodes".
     }
 
     // Initiate network connections
@@ -1732,6 +1740,7 @@ void ThreadOpenConnections()
         }
 
         if (addrConnect.IsValid())
+            //Seeded outbound connections track against the original semaphore
             OpenNetworkConnection(addrConnect, &grant);
     }
 }
@@ -1769,7 +1778,10 @@ void ThreadOpenAddedConnections()
                     lAddresses.push_back(strAddNode);
             }
             BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
-  	        CAddress addr;
+  	            CAddress addr;
+                // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are reduced by
+                //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
+                //     nodes that have restarted.
                 CSemaphoreGrant grant(*semOutboundAddNode);
                 OpenNetworkConnection(addr, &grant, strAddNode.c_str());
                 MilliSleep(500);

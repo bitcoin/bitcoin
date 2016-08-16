@@ -1399,6 +1399,8 @@ void ConnectToThinBlockNodes()
         BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-connect-thinblock"])
         {
             CAddress addr;
+            //NOTE: Because the only nodes we are connecting to here are the ones the user put in their
+            //      bitcoin.conf/commandline args as "-connect-thinblock", we don't use the semaphore to limit outbound connections
             OpenNetworkConnection(addr, NULL, strAddr.c_str());
             MilliSleep(500);
         }
