@@ -1042,8 +1042,11 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     //   Otherwise we waste inbound connection slots on outbound addnodes that are blocked waiting on the semaphore.
     //2. BUT, if less than nMaxOutConnections in vAddedNodes, open up any of the unreserved
     //   "-addnode" connection slots to the inbound pool to prevent holding presently unneeded outbound connection slots.
-    LOCK(cs_vAddedNodes);
-    int nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
+    int nMaxAddNodeOutbound = nMaxOutConnections;
+    {
+        LOCK(cs_vAddedNodes);
+        nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
+    }
     int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
     //REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't tracked
     //         b. This also doesn't take into account whether or not the tracked vAddedNodes are valid or connected
