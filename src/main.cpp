@@ -1559,7 +1559,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         EraseOrphansByTime();
     }
 
-    SyncWithWallets(tx, NULL);
+    if (!fRejectAbsurdFee) SyncWithWallets(tx, NULL);
 
     return true;
     }
@@ -5103,9 +5103,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                if (!fAlreadyHave && !fImporting && !fReindex && IsChainNearlySyncd()) {  // BU request manager keeps track of all sources so no need for: && !mapBlocksInFlight.count(inv.hash)) {
+                if (!fAlreadyHave && !fImporting && !fReindex) {  // BU request manager keeps track of all sources so no need for: && !mapBlocksInFlight.count(inv.hash)) {
 		    requester.AskFor(inv, pfrom);
                 }
+                else
+		  {
+		    LogPrint("net", "skipping request of block %s.  already have: %d  importing: %d  reindex: %d  isChainNearlySyncd: %d\n",inv.hash.ToString(),fAlreadyHave,fImporting,fReindex,IsChainNearlySyncd());
+		  }
             }
             else
             {
