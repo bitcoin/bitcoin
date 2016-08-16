@@ -3,10 +3,11 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-
+import pdb
 from mininode import *
 from blockstore import BlockStore, TxStore
 from util import p2p_port
+import time
 
 '''
 This is a tool for comparing two or more bitcoinds to each other
@@ -221,7 +222,7 @@ class TestManager(object):
                 blockhash in node.block_request_map and node.block_request_map[blockhash]
                 for node in self.test_nodes
             )
-
+        time.sleep(22)  # The BU xthin preferential thinblock timer will delay sync so we need to wait longer for sync
         # --> error if not requested
         if not wait_until(blocks_requested, attempts=20*num_blocks):
             # print [ c.cb.block_request_map for c in self.connections ]

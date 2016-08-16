@@ -4,7 +4,7 @@
 #
 # Helpful routines for regression testing
 #
-
+import pdb
 # Add python-bitcoinrpc to module search path:
 import os
 import sys
@@ -76,6 +76,7 @@ def sync_blocks(rpc_connections, wait=1):
     """
     while True:
         counts = [ x.getblockcount() for x in rpc_connections ]
+        # print counts
         if counts == [ counts[0] ]*len(counts):
             break
         time.sleep(wait)
@@ -108,6 +109,13 @@ def initialize_datadir(dirname, n):
         f.write("port="+str(p2p_port(n))+"\n")
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
+        f.write("debug=net\n")
+        f.write("debug=blk\n")
+        f.write("debug=thin\n")
+        f.write("debug=lck\n")
+        f.write("debug=mempool\n")
+        f.write("debug=req\n")
+        f.write("maxlimitertxfee=0\n")
     return datadir
 
 def initialize_chain(test_dir):
