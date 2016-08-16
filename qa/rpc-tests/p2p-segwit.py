@@ -946,8 +946,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_node.test_transaction_acceptance(tx, with_witness=True, accepted=False)
 
         # Verify that removing the witness succeeds.
-        # Re-announcing won't result in a getdata for ~2.5 minutes, so just
-        # deliver the modified transaction.
+        self.test_node.announce_tx_and_wait_for_getdata(tx)
         self.test_node.test_transaction_acceptance(tx, with_witness=False, accepted=True)
 
         # Now try to add extra witness data to a valid witness tx.
