@@ -54,6 +54,7 @@ For nodes on low-memory systems, the database cache can be changed back to
 Note that the database cache setting has the most performance impact
 during initial sync of a node, and when catching up after downtime.
 
+
 bitcoin-cli: arguments privacy
 --------------------------------
 
@@ -71,6 +72,7 @@ It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
 table by any user on the system.
 
+
 C++11 and Python 3
 -------------------
 
@@ -83,6 +85,7 @@ When cross-compiling for a target that doesn't have C++11 libraries, configure w
 
 For running the functional tests in `qa/rpc-tests`, Python3.4 or higher is now
 required.
+
 
 Linux ARM builds
 ------------------
@@ -104,20 +107,6 @@ possible to resolve them.
 Note that Android is not considered ARM Linux in this context. The executables
 are not expected to work out of the box on Android.
 
-New mempool information RPC calls
----------------------------------
-
-RPC calls have been added to output detailed statistics for individual mempool
-entries, as well as to calculate the in-mempool ancestors or descendants of a
-transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
-
-Fee filtering of invs (BIP 133)
-------------------------------------
-
-The optional new p2p message "feefilter" is implemented and the protocol
-version is bumped to 70013. Upon receiving a feefilter message from a peer,
-a node will not send invs for any transactions which do not meet the filter
-feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
 
 Compact Block support (BIP 152)
 -------------------------------
@@ -129,6 +118,7 @@ The primary goal is reducing the bandwidth spikes at relay time, though in many
 cases it also reduces propagation delay. It is automatically enabled between
 compatible peers.
 [BIP 152](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki)
+
 
 Hierarchical Deterministic Key Generation
 -----------------------------------------
@@ -142,6 +132,10 @@ ones which haven't already been generated during the time of the backup.
 **Attention:** Encrypting the wallet will create a new seed which requires
 a new backup!
 
+Wallet dumps (created using the `dumpwallet` RPC) will contain the deterministic
+seed. This is expected to allow future versions to import the seed and all
+associated funds, but this is not yet implemented.
+
 HD key generation for new wallets can be disabled by `-usehd=0`. Keep in
 mind that this flag only has affect on newly created wallets.
 You can't disable HD key generation once you have created a HD wallet.
@@ -151,6 +145,7 @@ There is no distinction between internal (change) and external keys.
 HD wallets are incompatible with older versions of Bitcoin Core.
 
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
+
 
 Segregated Witness
 ------------------
@@ -173,6 +168,7 @@ required in order to utilize segwit-related features on mainnet (such as signal
 BIP 141 activation, mine segwit blocks, fully validate segwit blocks, relay
 segwit blocks to other segwit nodes, and use segwit transactions in the
 wallet, etc).
+
 
 Mining transaction selection ("Child Pays For Parent")
 ------------------------------------------------------
@@ -232,6 +228,7 @@ using the command line option `-reindex-chainstate` (in addition to
 are assumed to be fine, but the chainstate is still corrupted. It is also
 useful for benchmarks.
 
+
 Removal of internal miner
 --------------------------
 
@@ -246,8 +243,14 @@ For testing, the `generate` call can still be used to mine a block, and a new
 RPC call `generatetoaddress` has been added to mine to a specific address. This
 works with wallet disabled.
 
+
 Low-level P2P changes
 ----------------------
+
+- The optional new p2p message "feefilter" is implemented and the protocol
+  version is bumped to 70013. Upon receiving a feefilter message from a peer,
+  a node will not send invs for any transactions which do not meet the filter
+  feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
 
 - The P2P alert system has been removed in PR #7692 and the `alert` P2P message
   is no longer supported.
@@ -276,8 +279,13 @@ Low-level P2P changes
 - Connections to peers who have recently been the first one to give us a valid
   new block or transaction are protected from disconnections since PR #8084.
 
+
 Low-level RPC changes
 ----------------------
+
+- RPC calls have been added to output detailed statistics for individual mempool
+  entries, as well as to calculate the in-mempool ancestors or descendants of a
+  transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
 
 - `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
   32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
@@ -315,6 +323,7 @@ Low-level RPC changes
 
 - New options were added to `fundrawtransaction`: `includeWatching`, `changeAddress`, `changePosition` and `feeRate`.
 
+
 Low-level ZMQ changes
 ----------------------
 
@@ -323,6 +332,7 @@ Low-level ZMQ changes
   The sequence number is always the last element in a multi-part ZMQ notification and
   therefore backward compatible. Each message type has its own counter.
   PR [#7762](https://github.com/bitcoin/bitcoin/pull/7762).
+
 
 0.13.0 Change log
 =================
@@ -541,10 +551,8 @@ git merge commit are mentioned.
 - #7649 `4900641` Prevent multiple calls to CWallet::AvailableCoins (promag)
 - #7646 `e5c3511` Fix lockunspent help message (promag)
 - #7558 `b35a591` Add import/removeprunedfunds rpc call (instagibbs)
-- #7691 `30c2dd8` Refactor wallet/init interaction (jonasschnelli)
 - #6215 `48c5adf` add bip32 pub key serialization (jonasschnelli)
 - #7913 `bafd075` Fix for incorrect locking in GetPubKey() (keystore.cpp) (yurizhykin)
-- #7816 `0c95ebc` Slighly refactor GetOldestKeyPoolTime() (jonasschnelli)
 - #8036 `41138f9` init: Move berkeleydb version reporting to wallet (laanwj)
 - #8028 `373b50d` Fix insanity of CWalletDB::WriteTx and CWalletTx::WriteToDisk (pstratem)
 - #8061 `f6b7df3` Improve Wallet encapsulation (pstratem)
@@ -589,11 +597,9 @@ git merge commit are mentioned.
 - #7764 `a65b36c` Don't run pruning.py twice (MarcoFalke)
 - #7773 `7c80e72` Fix comments in tests (btcdrak)
 - #7489 `e9723cb` tests: Make proxy_test work on travis servers without IPv6 (laanwj)
-- #7778 `ff5874b` Bug fixes and refactor (MarcoFalke)
 - #7801 `70ac71b` Remove misleading "errorString syntax" (MarcoFalke)
 - #7803 `401c65c` maxblocksinflight: Actually enable test (MarcoFalke)
 - #7802 `3bc71e1` httpbasics: Actually test second connection (MarcoFalke)
-- #7818 `3911a0a` Refactor script tests (sipa)
 - #7849 `ab8586e` tests: add varints_bitpatterns test (laanwj)
 - #7846 `491171f` Clean up lockorder data of destroyed mutexes (sipa)
 - #7853 `6ef5e00` py2: Unfiddle strings into bytes explicitly (MarcoFalke)
@@ -609,7 +615,6 @@ git merge commit are mentioned.
 - #7814 `77b637f` Switch to py3 (MarcoFalke)
 - #8030 `409a8a1` Revert fatal-ness of missing python-zmq (laanwj)
 - #8018 `3e90fe6` Autofind rpc tests --srcdir (jonasschnelli)
-- #7971 `4e14afe` Refactor test_framework and pull tester (MarcoFalke)
 - #8016 `5767e80` Fix multithread CScheduler and reenable test (paveljanik)
 - #7972 `423ca30` pull-tester: Run rpc test in parallel  (MarcoFalke)
 - #8039 `69b3a6d` Bench: Add crypto hash benchmarks (laanwj)
@@ -653,7 +658,6 @@ git merge commit are mentioned.
 - #7663 `c87f51e` Make the generate RPC call function for non-regtest (sipa)
 - #7671 `e2ebd25` Add generatetoaddress RPC to mine to an address (achow101)
 - #7935 `66ed450` Versionbits: GBT support (luke-jr)
-- #7598 `e1486eb` Refactor CreateNewBlock to be a method of the BlockAssembler class (morcos)
 - #7600 `66db2d6` Select transactions using feerate-with-ancestors (sdaftuar)
 - #8295 `f5660d3` Mining-related fixups for 0.13.0 (sdaftuar)
 - #7796 `536b75e` Add support for negative fee rates, fixes `prioritizetransaction` (MarcoFalke)
