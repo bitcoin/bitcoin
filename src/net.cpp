@@ -2185,6 +2185,9 @@ CNetCleanup::~CNetCleanup()
         vhListenSocket.clear();
         delete semOutbound;
         semOutbound = NULL;
+        //BU: clean up the "-addnode" semaphore
+        delete semOutboundAddNode;
+        semOutboundAddNode = NULL;
         delete pnodeLocalHost;
         pnodeLocalHost = NULL;
 
