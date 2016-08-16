@@ -54,6 +54,7 @@ For nodes on low-memory systems, the database cache can be changed back to
 Note that the database cache setting has the most performance impact
 during initial sync of a node, and when catching up after downtime.
 
+
 bitcoin-cli: arguments privacy
 --------------------------------
 
@@ -71,6 +72,7 @@ It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
 table by any user on the system.
 
+
 C++11 and Python 3
 -------------------
 
@@ -83,6 +85,7 @@ When cross-compiling for a target that doesn't have C++11 libraries, configure w
 
 For running the functional tests in `qa/rpc-tests`, Python3.4 or higher is now
 required.
+
 
 Linux ARM builds
 ------------------
@@ -104,20 +107,6 @@ possible to resolve them.
 Note that Android is not considered ARM Linux in this context. The executables
 are not expected to work out of the box on Android.
 
-New mempool information RPC calls
----------------------------------
-
-RPC calls have been added to output detailed statistics for individual mempool
-entries, as well as to calculate the in-mempool ancestors or descendants of a
-transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
-
-Fee filtering of invs (BIP 133)
-------------------------------------
-
-The optional new p2p message "feefilter" is implemented and the protocol
-version is bumped to 70013. Upon receiving a feefilter message from a peer,
-a node will not send invs for any transactions which do not meet the filter
-feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
 
 Compact Block support (BIP 152)
 -------------------------------
@@ -129,6 +118,7 @@ The primary goal is reducing the bandwidth spikes at relay time, though in many
 cases it also reduces propagation delay. It is automatically enabled between
 compatible peers.
 [BIP 152](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki)
+
 
 Hierarchical Deterministic Key Generation
 -----------------------------------------
@@ -152,6 +142,7 @@ HD wallets are incompatible with older versions of Bitcoin Core.
 
 [Pull request](https://github.com/bitcoin/bitcoin/pull/8035/files), [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 
+
 Segregated Witness
 ------------------
 
@@ -173,6 +164,7 @@ required in order to utilize segwit-related features on mainnet (such as signal
 BIP 141 activation, mine segwit blocks, fully validate segwit blocks, relay
 segwit blocks to other segwit nodes, and use segwit transactions in the
 wallet, etc).
+
 
 Mining transaction selection ("Child Pays For Parent")
 ------------------------------------------------------
@@ -232,6 +224,7 @@ using the command line option `-reindex-chainstate` (in addition to
 are assumed to be fine, but the chainstate is still corrupted. It is also
 useful for benchmarks.
 
+
 Removal of internal miner
 --------------------------
 
@@ -246,8 +239,14 @@ For testing, the `generate` call can still be used to mine a block, and a new
 RPC call `generatetoaddress` has been added to mine to a specific address. This
 works with wallet disabled.
 
+
 Low-level P2P changes
 ----------------------
+
+- The optional new p2p message "feefilter" is implemented and the protocol
+  version is bumped to 70013. Upon receiving a feefilter message from a peer,
+  a node will not send invs for any transactions which do not meet the filter
+  feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
 
 - The P2P alert system has been removed in PR #7692 and the `alert` P2P message
   is no longer supported.
@@ -276,8 +275,13 @@ Low-level P2P changes
 - Connections to peers who have recently been the first one to give us a valid
   new block or transaction are protected from disconnections since PR #8084.
 
+
 Low-level RPC changes
 ----------------------
+
+- RPC calls have been added to output detailed statistics for individual mempool
+  entries, as well as to calculate the in-mempool ancestors or descendants of a
+  transaction: see `getmempoolentry`, `getmempoolancestors`, `getmempooldescendants`.
 
 - `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
   32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
@@ -315,6 +319,7 @@ Low-level RPC changes
 
 - New options were added to `fundrawtransaction`: `includeWatching`, `changeAddress`, `changePosition` and `feeRate`.
 
+
 Low-level ZMQ changes
 ----------------------
 
@@ -323,6 +328,7 @@ Low-level ZMQ changes
   The sequence number is always the last element in a multi-part ZMQ notification and
   therefore backward compatible. Each message type has its own counter.
   PR [#7762](https://github.com/bitcoin/bitcoin/pull/7762).
+
 
 0.13.0 Change log
 =================
