@@ -146,6 +146,7 @@ testScripts = [
     'sendheaders.py', # NOTE: needs dash_hash to pass
     'keypool.py',
     'keypool-hd.py',
+    'p2p-mempool.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py', # NOTE: needs dash_hash to pass
     'invalidtxrequest.py', # NOTE: needs dash_hash to pass
@@ -204,6 +205,7 @@ def runtests():
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
     flags = ["--srcdir=%s/src" % BUILDDIR] + passon_args
+    flags.append("--cachedir=%s/qa/cache" % BUILDDIR)
     if coverage:
         flags.append(coverage.flag)
 
