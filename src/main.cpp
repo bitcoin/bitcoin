@@ -1994,11 +1994,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 assert(coins);
 
                 // Verify signature
-                CScriptCheck check =  CScriptCheck(*coins, tx, i, flags, cacheStore);
+                CScriptCheck check;
                 CScriptCheck * const ptr = inserter();
-                if (ptr)
-                    ptr->swap(check);
-                else if (!check()) {
+                new (ptr ? ptr : &check) CScriptCheck(*coins, tx, i, flags, cacheStore);
+                if (!ptr && !check()) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
