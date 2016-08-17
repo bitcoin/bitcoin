@@ -135,11 +135,11 @@ public:
     {
         next_free_index = checks.begin();
     }
-    void clear_all_data()
+    void clear_check_memory()
     {
-        for (size_t i = 0; i < Q::MAX_JOBS; ++i) {
+        for (auto it = checks.begin(); it != next_free_index; ++it) {
             typename Q::JOB_TYPE tmp {};
-            checks[i].swap(tmp);
+            it->swap(tmp);
         }
     }
 
@@ -425,6 +425,7 @@ private:
             if (ID == 1) {
                 // Reset master flags too
                 jobs.reset_flags_for(0, prev_total);
+                jobs.clear_check_memory();
                 cleanup.wait_all_finished();
                 cleanup.reset();
                 work.reset();
@@ -475,7 +476,7 @@ public:
         for (auto& t : threads)
             t.join();
         threads.clear();
-        jobs.clear_all_data();
+        jobs.clear_check_memory();
     }
 
     JOB_TYPE* get_next_free_index() {
