@@ -56,7 +56,7 @@ during initial sync of a node, and when catching up after downtime.
 
 
 bitcoin-cli: arguments privacy
---------------------------------
+------------------------------
 
 The RPC command line client gained a new argument, `-stdin`
 to read extra arguments from standard input, one per line until EOF/Ctrl-D.
@@ -74,7 +74,7 @@ table by any user on the system.
 
 
 C++11 and Python 3
--------------------
+------------------
 
 Various code modernizations have been done. The Bitcoin Core code base has
 started using C++11. This means that a C++11-capable compiler is now needed for
@@ -88,7 +88,7 @@ required.
 
 
 Linux ARM builds
-------------------
+----------------
 
 Due to popular request, Linux ARM builds have been added to the uploaded
 executables.
@@ -118,6 +118,15 @@ The primary goal is reducing the bandwidth spikes at relay time, though in many
 cases it also reduces propagation delay. It is automatically enabled between
 compatible peers.
 [BIP 152](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki)
+
+As a side-effect, ordinary non-mining nodes will download and upload blocks
+faster if those blocks were produced by miners using similar transaction
+filtering policies. This means that a miner who produces a block with many
+transactions discouraged by your node will be relayed slower than one with
+only transactions already in your memory pool. The overall effect of such
+relay differences on the network may result in blocks which include widely-
+discouraged transactions losing a stale block race, and therefore miners may
+wish to configure their node to take common relay policies into consideration.
 
 
 Hierarchical Deterministic Key Generation
@@ -242,6 +251,19 @@ well as the `-gen` and `-genproclimit` command-line options.
 For testing, the `generate` call can still be used to mine a block, and a new
 RPC call `generatetoaddress` has been added to mine to a specific address. This
 works with wallet disabled.
+
+
+New bytespersigop implementation
+--------------------------------
+
+The former implementation of the bytespersigop filter accidentally broke bare
+multisig (which is meant to be controlled by the `permitbaremultisig` option),
+since the consensus protocol always counts these older transaction forms as 20
+sigops for backwards compatibility. Simply fixing this bug by counting more
+accurately would have reintroduced a vulnerability. It has therefore been
+replaced with a new implementation that rather than filter such transactions,
+instead treats them (for fee purposes only) as if they were in fact the size
+of a transaction actually using all 20 sigops.
 
 
 Low-level P2P changes
