@@ -1682,7 +1682,7 @@ void ThreadOpenConnections()
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
-            // only consider nodes missing relevant services after 40 failed attemps
+            // only consider nodes missing relevant services after 40 failed attempts
             if ((addr.nServices & nRelevantServices) != nRelevantServices && nTries < 40)
                 continue;
 
