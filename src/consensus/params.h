@@ -44,6 +44,7 @@ struct Params {
     int nInstantSendReprocessBlocks;
     int nBudgetPaymentsStartBlock;
     int nBudgetPaymentsCycleBlocks;
+    int nSuperblockCycle;
     int nBudgetPaymentsWindowBlocks;
     int nBudgetProposalEstablishingTime; // in seconds
     int nMasternodeMinimumConfirmations;

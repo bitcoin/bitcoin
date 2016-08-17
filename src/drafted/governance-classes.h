@@ -169,7 +169,7 @@ public:
         READWRITE(LIMITED_STRING(strURL, 64));
         READWRITE(nTime);
         READWRITE(vecSig);
-        READWRITE(nFeeTXHash);
+        READWRITE(nCollateralHash);
     }
 
 };
@@ -207,7 +207,7 @@ public:
 //         READWRITE(LIMITED_STRING(strURL, 64));
 //         READWRITE(nTime);
 //         READWRITE(vecSig);
-//         READWRITE(nFeeTXHash);
+//         READWRITE(nCollateralHash);
 //     }
 
 // };
@@ -260,7 +260,7 @@ public:
 //         READWRITE(LIMITED_STRING(strURL, 64));
 //         READWRITE(nTime);
 //         READWRITE(vecSig);
-//         READWRITE(nFeeTXHash);
+//         READWRITE(nCollateralHash);
 //     }
 
 // };
@@ -329,7 +329,7 @@ public:
 //         READWRITE(LIMITED_STRING(strURL, 64));
 //         READWRITE(nTime);
 //         READWRITE(vecSig);
-//         READWRITE(nFeeTXHash);
+//         READWRITE(nCollateralHash);
 //     }
 // };
 
@@ -394,7 +394,7 @@ public:
 //         READWRITE(LIMITED_STRING(strURL, 64));
 //         READWRITE(nTime);
 //         READWRITE(vecSig);
-//         READWRITE(nFeeTXHash);
+//         READWRITE(nCollateralHash);
 //     }
 
 // };

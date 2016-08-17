@@ -51,7 +51,7 @@ bool CMasternodeSync::IsBlockchainSynced()
 }
 
 void CMasternodeSync::Reset()
-{   
+{
     lastMasternodeList = GetTime();
     lastMasternodeWinner = GetTime();
     lastBudgetItem = GetTime();
@@ -122,6 +122,7 @@ std::string CMasternodeSync::GetAssetName()
         case(MASTERNODE_SYNC_GOVERNANCE):
             return "MASTERNODE_SYNC_GOVERNANCE";
     }
+    return "error";
 }
 
 void CMasternodeSync::GetNextAsset()
@@ -204,7 +205,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
                 countBudgetItemFin++;
                 break;
         }
-        
+
         LogPrintf("CMasternodeSync:ProcessMessage - ssc - got inventory count %d %d\n", nItemID, nCount);
     }
 }
@@ -235,14 +236,14 @@ void CMasternodeSync::Process()
     // RESET SYNCING INCASE OF FAILURE
     {
         if(IsSynced()) {
-            /* 
+            /*
                 Resync if we lose all masternodes from sleep/wake or failure to sync originally
             */
             if(nMnCount == 0) {
                 Reset();
             } else {
                 //if syncing is complete and we have masternodes, return
-                return; 
+                return;
             }
         }
 
@@ -276,7 +277,7 @@ void CMasternodeSync::Process()
             if(RequestedMasternodeAttempt <= 2) {
                 pnode->PushMessage(NetMsgType::GETSPORKS); //get current network sporks
             } else if(RequestedMasternodeAttempt < 4) {
-                mnodeman.DsegUpdate(pnode); 
+                mnodeman.DsegUpdate(pnode);
             } else if(RequestedMasternodeAttempt < 6) {
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
@@ -290,7 +291,7 @@ void CMasternodeSync::Process()
         }
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
-        {   
+        {
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
 
             if(!pnode->HasFulfilledRequest("spork-sync")) {
@@ -298,8 +299,8 @@ void CMasternodeSync::Process()
                 pnode->FulfilledRequest("spork-sync");
 
                 // get current network sporks
-                pnode->PushMessage(NetMsgType::GETSPORKS); 
-                
+                pnode->PushMessage(NetMsgType::GETSPORKS);
+
                 // we always ask for sporks, so just skip this
                 if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) GetNextAsset();
 

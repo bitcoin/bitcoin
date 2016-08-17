@@ -44,6 +44,22 @@ class CGovernanceVote;
 #define VOTE_SIGNAL_CUSTOM_START        16 // SENTINEL CUSTOM ACTIONS 
 #define VOTE_SIGNAL_CUSTOM_END          35 //        16-35
 
+
+/**
+* Governance Voting
+*
+*   Static class for accessing governance data
+*/
+
+class CGovernanceVoting
+{
+public:
+    static int ConvertVoteOutcome(std::string strVoteOutcome);
+    static int ConvertVoteSignal(std::string strVoteSignal);
+    static std::string ConvertOutcomeToString(int nOutcome);
+    static std::string ConvertSignalToString(int nSignal);
+};
+
 //
 // CGovernanceVote - Allow a masternode node to vote and broadcast throughout the network
 //
@@ -93,6 +109,12 @@ public:
         return ss.GetHash();
     }
 
+    std::string ToString()
+    {
+        std::string strRet = CGovernanceVoting::ConvertOutcomeToString(nVoteOutcome) + ":" + CGovernanceVoting::ConvertSignalToString(nVoteSignal);
+        return strRet;
+    }
+
     /**
     *   GetTypeHash()
     *
@@ -121,7 +143,7 @@ public:
         return ss.GetHash();
     }
 
-    uint256 GetParentHash(){
+    uint256 GetParentHash() const {
         return nParentHash;
     }
 
