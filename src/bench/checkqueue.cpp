@@ -28,11 +28,9 @@ static void CCheckQueueSpeed(benchmark::State& state)
             for (size_t j = 0; j < 101; ++j) {
                 size_t r = 30;
                 total += r;
-                auto p = control.get_next_free_index();
-                auto p_ = *p;
+                auto inserter = control.get_inserter();
                 for (size_t k = 0; k < r; ++k)
-                    new ((*p)++) FakeJobNoWork{};
-                control.Add(std::distance(p_, *p));
+                    new (inserter()) FakeJobNoWork{};
             }
         }
     }

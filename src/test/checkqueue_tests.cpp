@@ -12,6 +12,7 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <mutex>
 
 #include <unordered_set>
 #include <memory>
@@ -85,6 +86,26 @@ struct FakeJobNoWork {
 };
 typedef CCheckQueue<FakeJobNoWork, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Consume_Queue;
 
+
+struct UniqueJob {
+    static std::mutex m;
+    static std::unordered_multiset<size_t> results;
+    size_t job_id;
+    UniqueJob(size_t job_id_in) : job_id(job_id_in){};
+    UniqueJob() : job_id(0){};
+    bool operator()()
+    {
+        std::lock_guard<std::mutex> l(m);
+        results.insert(job_id);
+        return true;
+    }
+    void swap(UniqueJob& x){std::swap(x.job_id, job_id);};
+};
+std::mutex UniqueJob::m;
+std::unordered_multiset<size_t> UniqueJob::results;
+typedef CCheckQueue<UniqueJob, (size_t)100, MAX_SCRIPTCHECK_THREADS, true, false> Unique_Queue;
+
+
 typedef typename Standard_Queue::JOB_TYPE JT; // This is a "recursive template" hack
 typedef CCheckQueue_Internals::job_array<Standard_Queue> J;
 typedef CCheckQueue_Internals::barrier<Standard_Queue> B;
@@ -109,14 +130,12 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
             size_t r = GetRand(10);
             std::vector<FailingJob> vChecks2;
             vChecks2.reserve(r);
-            auto p = control.get_next_free_index();
-            auto p_ = *p;
+            auto inserter = control.get_inserter();
             for (size_t k = 0; k < r && !vChecks.empty(); k++) {
-                ((*p)++)->swap(vChecks.back());
+                (inserter())->swap(vChecks.back());
                 vChecks.pop_back();
+                ++checksum;
             }
-            checksum += std::distance(p_, *p);
-            control.Add(std::distance(p_, *p));
         }
         BOOST_REQUIRE(checksum == i);
         bool success = control.Wait();
@@ -142,18 +161,18 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue)
     auto m = 0;
     work.add(100);
     size_t x = 0;
-    work.pop(x, false);
+    work.pop(x, true);
     BOOST_REQUIRE(x == 0);
-    work.pop(x, false);
+    work.pop(x, true);
     BOOST_REQUIRE(x == 16);
     m = 2;
-    while (work.pop(x, false)) {
+    while (work.pop(x, true)) {
         ++m;
     }
     BOOST_REQUIRE(m == 100);
     work.add(200);
     std::unordered_set<size_t> results;
-    while (work.pop(x, false)) {
+    while (work.pop(x, true)) {
         results.insert(x);
         ++m;
     }
@@ -165,12 +184,12 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue)
     BOOST_REQUIRE(m == 200);
 
     work.add(300);
-    work.pop(x, false);
+    work.pop(x, true);
     work.add(400);
     do {
         results.insert(x);
         ++m;
-    } while (work.pop(x, false));
+    } while (work.pop(x, true));
     for (auto i = 200; i < 400; ++i) {
         BOOST_REQUIRE(results.count(i));
         results.erase(i);
@@ -225,29 +244,24 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 {
     auto fast_queue = std::shared_ptr<Consume_Queue>(new Consume_Queue());
     fast_queue->init(nScriptCheckThreads);
-    std::array<std::atomic<size_t>, MAX_SCRIPTCHECK_THREADS> results;
     std::atomic<int> spawned{0};
 
     RAII_ThreadGroup threadGroup;
 
-    for (auto& a : results)
-        a = 0;
     for (int i = 0; i < nScriptCheckThreads; ++i) {
         threadGroup.create_thread([&, i]() {
             ++spawned;
-            results[i] = fast_queue->TEST_consume(i);
+            fast_queue->TEST_consume(i);
         });
     }
 
     threadGroup.create_thread([&]() {
         while (spawned != nScriptCheckThreads);
         for (auto y = 0; y < 10; ++y) {
-            auto p = fast_queue->get_next_free_index();
-            auto p_ = *p;
+            auto inserter = CCheckQueue_Internals::inserter<Consume_Queue>(fast_queue.get()); 
             for (auto x = 0; x< 100; ++x) {
-                new ((*p)++) FakeJobNoWork{};
+                new (inserter()) FakeJobNoWork{};
             }
-            fast_queue->Add(std::distance(p_, *p));
             MilliSleep(1);
         }
         fast_queue->TEST_set_masterJoined(true);
@@ -256,14 +270,6 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
     threadGroup.join_all();
 
 
-
-    for (auto a = 0; a < nScriptCheckThreads; ++a) {
-        auto v = results[a].load();
-        if (v != 1000) {
-            BOOST_TEST_MESSAGE("Error, Got: " << v);
-            BOOST_REQUIRE(v == 1000);
-        }
-    }
     size_t count = fast_queue->TEST_count_set_flags();
     BOOST_TEST_MESSAGE("Got: " << count);
     BOOST_REQUIRE(count == 1000);
@@ -283,13 +289,11 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
             CCheckQueueControl<Correct_Queue> control(small_queue.get());
             while (total) {
                 size_t r = GetRand(10);
-                auto p = control.get_next_free_index();
-                auto p_ = *p; 
+                auto inserter = control.get_inserter();
                 for (size_t k = 0; k < r && total; k++) {
                     total--;
-                    new ((*p)++) FakeJobCheckCompletion{};
+                    new (inserter()) FakeJobCheckCompletion{};
                 }
-                control.Add(std::distance(p_, *p));
             }
         }
         small_queue->TEST_dump_log(nScriptCheckThreads);
@@ -299,6 +303,29 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct)
             BOOST_TEST_MESSAGE("Failure on trial " << i << " expected, got " << FakeJobCheckCompletion::n_calls);
         }
     }
+}
+
+
+
+BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueJob)
+{
+    auto queue = std::shared_ptr<Unique_Queue>(new Unique_Queue);
+    queue->init(nScriptCheckThreads);
+
+    size_t COUNT = 100;
+    size_t total = COUNT;
+    {
+        CCheckQueueControl<Unique_Queue> control(queue.get());
+        while (total) {
+            size_t r = GetRand(10);
+            auto inserter = control.get_inserter();
+            for (size_t k = 0; k < r && total; k++) {
+                new (inserter()) UniqueJob{--total};
+            }
+        }
+    }
+    for (size_t i = 0; i < COUNT; ++i)
+        BOOST_REQUIRE(UniqueJob::results.count(i) == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

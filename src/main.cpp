@@ -1969,7 +1969,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 }
 }// namespace Consensus
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, CScriptCheck **pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::function<CScriptCheck * ()> inserter)
 {
     if (!tx.IsCoinBase())
     {
@@ -1994,12 +1994,11 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 assert(coins);
 
                 // Verify signature
-                CScriptCheck check;
-                bool validMemory = pvChecks && *pvChecks;
-                if (validMemory)
-                    (*pvChecks)->~CScriptCheck();
-                new(validMemory ? (*pvChecks)++ : &check) CScriptCheck(*coins, tx, i, flags, cacheStore);
-                if (!validMemory && !check()) {
+                CScriptCheck check =  CScriptCheck(*coins, tx, i, flags, cacheStore);
+                CScriptCheck * const ptr = inserter();
+                if (ptr)
+                    ptr->swap(check);
+                else if (!check()) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
@@ -2022,6 +2021,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
+
         }
     }
 
@@ -2395,7 +2395,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CBlockUndo blockundo;
 
-    CCheckQueueControl<decltype(scriptcheckqueue)> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
+    CCheckQueueControl<decltype(scriptcheckqueue)> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
     std::vector<uint256> vOrphanErase;
     std::vector<int> prevheights;
@@ -2457,13 +2457,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            CScriptCheck **  ptr = control.get_next_free_index();
-            CScriptCheck * initial = *ptr;
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? ptr : NULL))
+            std::function<CScriptCheck*()> inserter = control.get_inserter();
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, inserter))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
-
-            control.Add(std::distance(initial, *ptr));
         }
 
         CTxUndo undoDummy;

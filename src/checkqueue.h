@@ -39,6 +39,26 @@ class CCheckQueueControl;
  * of CCheckQueue, but is separate for easier testability and modularity */
 namespace CCheckQueue_Internals
 {
+template <typename Q>
+class inserter {
+    Q * const queue;
+    typename Q::JOB_TYPE * start;
+    typename Q::JOB_TYPE * free_index;
+    public:
+    inserter(Q * const queueIn) :
+       queue(queueIn), start(queue ? queue->get_next_free_index() : nullptr), free_index(start) {}
+
+
+    typename Q::JOB_TYPE * operator()()
+    {
+        return start ? free_index++ : nullptr;
+    }
+    ~inserter()
+    {
+        if (queue)
+            queue->Flush(std::distance(start, free_index));
+    }
+};
 /** job_array holds the atomic flags and the job data for the queue
      * and provides methods to assist in accessing or adding jobs.
      */
@@ -56,8 +76,10 @@ class job_array
     size_t RT_N_SCRIPTCHECK_THREADS;
 
 public:
-    job_array() : next_free_index(checks.begin()), RT_N_SCRIPTCHECK_THREADS(0)
+    job_array() :  next_free_index(checks.begin()), RT_N_SCRIPTCHECK_THREADS(0)
     {
+        for (size_t i = 0; i < Q::MAX_JOBS; ++i) 
+            checks[i] = typename Q::JOB_TYPE {};
         for (auto& i : flags)
             i.clear();
     }
@@ -66,18 +88,16 @@ public:
     {
         RT_N_SCRIPTCHECK_THREADS = rt;
     }
-    /** add swaps a vector of checks into the checks array and increments the pointer
-             * not threadsafe */
-    void add(std::vector<typename Q::JOB_TYPE>& vChecks)
-    {
-        for (typename Q::JOB_TYPE& check : vChecks)
-            check.swap(*(next_free_index++));
-    }
-    typename Q::JOB_TYPE** get_next_free_index()
-    {
-        return &next_free_index;
-    }
 
+    typename Q::JOB_TYPE* get_next_free_index()
+    {
+        return next_free_index;
+    }
+    void Add(ptrdiff_t n) 
+    {
+        next_free_index += n;
+    }
+    
     /** reserve tries to set a flag for an element 
              * and returns if it was successful */
     bool reserve(const size_t i)
@@ -114,6 +134,13 @@ public:
     void reset_jobs()
     {
         next_free_index = checks.begin();
+    }
+    void clear_all_data()
+    {
+        for (size_t i = 0; i < Q::MAX_JOBS; ++i) {
+            typename Q::JOB_TYPE tmp {};
+            checks[i].swap(tmp);
+        }
     }
 
     decltype(&checks) TEST_get_checks()
@@ -225,14 +252,14 @@ public:
     /* Get one first from out own work stack (take the first one) and then try from neighbors sequentially
              * (from the last one on that neighbors stack)
              */
-    bool pop(size_t& val, const bool no_stealing)
+    bool pop(size_t& val, const bool stealing)
     {
         val = (id + (n_done[id]) * RT_N_SCRIPTCHECK_THREADS);
         if (val < total) {
             ++n_done[id];
             return true;
         }
-        if (no_stealing)
+        if (!stealing)
             return false;
         // Iterate untill id2 wraps around to id.
         for (; id2_cache != id; id2_cache = (id2_cache + 1) % RT_N_SCRIPTCHECK_THREADS) {
@@ -243,6 +270,42 @@ public:
             }
         }
         return false;
+    }
+};
+
+class atomic_condition {
+    std::atomic<uint8_t> state;
+    public:
+    atomic_condition() : state(0) {};
+    void wakeup()
+    {
+        ++state;
+    }
+    void sleep()
+    {
+        --state;
+    }
+    void kill()
+    {
+        state.store(3);
+    }
+    void resurrect()
+    {
+        state.store(0);
+    }
+    bool wait() const
+    {
+        for (;;) {
+            switch (state.load()) {
+                case 0:
+                    std::this_thread::sleep_for(std::chrono::microseconds(1));
+                    break;
+                case 1:
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 };
 }
@@ -278,75 +341,55 @@ private:
     CCheckQueue_Internals::job_array<SELF> jobs;
     CCheckQueue_Internals::barrier<SELF> work;
     CCheckQueue_Internals::barrier<SELF> cleanup;
-    std::atomic<uint8_t> should_sleep;
+    CCheckQueue_Internals::atomic_condition sleeper;
     size_t RT_N_SCRIPTCHECK_THREADS;
-    std::mutex control_mtx;
-
-    /** nTodo and  materJoined can be packed into one struct if desired*/
-    std::atomic<size_t> nTodo;
+    /** The number of checks put into the queue, done or not */
+    std::atomic<size_t> nAvail;
     /** true if all checks were successful, false if any failure occurs */
     std::atomic<bool> fAllOk;
     /** true if the master has joined, false otherwise. A round may not terminate unless masterJoined */
     std::atomic<bool> masterJoined;
-    //state only for testing
+    /** hold handles for work */
+    std::vector<std::thread> threads;
+    /** Makes sure only one thread is using control functionality at a time*/
+    std::mutex control_mtx;
+    /** state only for testing */
     mutable std::atomic<size_t> test_log_seq;
     mutable std::array<std::ostringstream, MAX_WORKERS> test_log;
-    std::vector<std::thread> threads;
 
 
-    void wakeup()
-    {
-        ++should_sleep;
-    }
-    void sleep()
-    {
-        --should_sleep;
-    }
-    void die()
-    {
-        should_sleep.store(3);
-    }
-    bool maybe_sleep() const
-    {
-        for (;;) {
-            switch (should_sleep.load()) {
-            case 0:
-                std::this_thread::sleep_for(std::chrono::microseconds(1));
-                break;
-            case 1:
-                return true;
-            default:
-                return false;
-            }
-        }
-    }
 
-    size_t consume(const size_t ID)
+    void consume(const size_t ID)
     {
         TEST_log(ID, [](std::ostringstream& o) {
             o << "In consume\n";
         });
         CCheckQueue_Internals::PriorityWorkQueue<SELF> work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
-        bool no_stealing;
-        bool got_data;
-        size_t job_id;
-        do {
-            // Note: Must check masterJoined before nTodo, otherwise
-            // {Thread A: nTodo.load();} {Thread B:nTodo++; masterJoined = true;} {Thread A: masterJoined.load()}
-            no_stealing = !masterJoined.load();
-            work_queue.add(nTodo.load());
-            (got_data = work_queue.pop(job_id, no_stealing)) && jobs.reserve(job_id) && (jobs.eval(job_id) || (fAllOk.store(false), false));
-        } while (fAllOk.load() && (no_stealing || got_data));
+        for (;;) {
+            // Note: Must check masterJoined before nAvail, otherwise
+            // {Thread A: nAvail.load();} {Thread B:nAvail++; masterJoined = true;} {Thread A: masterJoined.load()}
+            bool stealing = masterJoined.load();
+            work_queue.add(nAvail.load());
+            size_t job_id;
+            bool got_data = work_queue.pop(job_id, stealing);
+            if (got_data && jobs.reserve(job_id)) {
+                if (!jobs.eval(job_id)) {
+                    fAllOk.store(false);
+                    return;
+                }
+            }
+            else if (stealing && !got_data)
+                break;
+
+        } 
             
         TEST_log(ID, [&, this](std::ostringstream& o) {
             o << "Leaving consume. fAllOk was " << fAllOk.load() << "\n";
         });
-        return work_queue.get_total();
     }
     /** Internal function that does bulk of the verification work. */
     bool Master() {
         const size_t ID = 0;
-
         work.wait_reset();
         masterJoined.store(true);
         TEST_log(ID, [](std::ostringstream& o) { o << "Master just set masterJoined\n"; });
@@ -355,22 +398,23 @@ private:
         work.wait_all_finished();
         TEST_log(ID, [](std::ostringstream& o) { o << "(Master) saw all threads finished\n"; });
         bool fRet = fAllOk;
-        sleep();
+        sleeper.sleep();
         masterJoined.store(false);
         return fRet;
     }
     void Loop(const size_t ID)
     {
-        while (maybe_sleep()) {
+        while (sleeper.wait()) {
             TEST_log(ID, [](std::ostringstream& o) {o << "Round starting\n";});
-            size_t prev_total = consume(ID);
-            TEST_log(ID, [&, this](std::ostringstream& o) {
-                o << "saw up to " << prev_total << " master was "
-                << masterJoined.load() << " nTodo " << nTodo.load() << '\n';
-            });
+            consume(ID);
             // Only spins here if !fAllOk, otherwise consume finished all
             while (!masterJoined.load())
                 ;
+            size_t prev_total = nAvail.load();
+            TEST_log(ID, [&, this](std::ostringstream& o) {
+                o << "saw up to " << prev_total << " master was "
+                << masterJoined.load() << " nAvail " << nAvail.load() << '\n';
+            });
             work.finished();
             // We wait until the master reports leaving explicitly
             while (masterJoined.load())
@@ -390,8 +434,8 @@ private:
     }
 
 public:
-    CCheckQueue() : jobs(), work(), cleanup(), should_sleep(0), RT_N_SCRIPTCHECK_THREADS(0),
-    nTodo(0), fAllOk(true), masterJoined(false), test_log_seq(0) {}
+    CCheckQueue() : jobs(), work(), cleanup(), sleeper(), RT_N_SCRIPTCHECK_THREADS(0),
+    nAvail(0), fAllOk(true), masterJoined(false), test_log_seq(0) {}
 
     void reset_jobs()
     {
@@ -408,11 +452,11 @@ public:
     void ControlLock() {
         control_mtx.lock();
         TEST_log(0, [](std::ostringstream& o) {
-            o << "Resetting nTodo and fAllOk" << '\n';
+            o << "Resetting nAvail and fAllOk" << '\n';
         });
-        nTodo.store(0);
+        nAvail.store(0);
         fAllOk.store(true);
-        wakeup();
+        sleeper.wakeup();
         reset_jobs();
     }
     void ControlUnlock() {
@@ -427,19 +471,23 @@ public:
     void quit()
     {
         std::lock_guard<std::mutex> l(control_mtx);
-        die();
+        sleeper.kill();
         for (auto& t : threads)
             t.join();
         threads.clear();
+        jobs.clear_all_data();
     }
 
-
-    void Add(std::ptrdiff_t vs)
+    JOB_TYPE* get_next_free_index() {
+        return jobs.get_next_free_index();
+    }
+    void Flush(std::ptrdiff_t n)
     {
-        nTodo.fetch_add(vs);
+        nAvail.fetch_add(n);
+        jobs.Add(n);
         TEST_log(0, [&, this](std::ostringstream& o) {
-            o << "Added " << vs << " values. nTodo was " 
-            << nTodo.load() - vs << " now is " << nTodo.load() << " \n";
+            o << "Added " << n << " values. nAvail was " 
+            << nAvail.load() - n << " now is " << nAvail.load() << " \n";
         });
     }
     ~CCheckQueue()
@@ -449,28 +497,26 @@ public:
 
     void init(const size_t RT_N_SCRIPTCHECK_THREADS_)
     {
+        std::lock_guard<std::mutex> l(control_mtx);
         RT_N_SCRIPTCHECK_THREADS = RT_N_SCRIPTCHECK_THREADS_;
         work.init(RT_N_SCRIPTCHECK_THREADS);
         cleanup.init(RT_N_SCRIPTCHECK_THREADS-1);
         jobs.init(RT_N_SCRIPTCHECK_THREADS);
-        should_sleep.store(0);
-
+        sleeper.resurrect();
         for (size_t id = 1; id < RT_N_SCRIPTCHECK_THREADS; ++id) {
             std::thread t([=]() {Thread(id); });
             threads.push_back(std::move(t));
         }
     }
 
+    /** Various testing functionalities */
 
-    JOB_TYPE** get_next_free_index()
+    void TEST_consume(const size_t ID)
     {
-        return jobs.get_next_free_index();
+        if (TEST_FUNCTIONS_ENABLE)
+            consume(ID);
     }
 
-    size_t TEST_consume(const size_t ID)
-    {
-        return TEST_FUNCTIONS_ENABLE ? consume(ID) : 0;
-    }
     void TEST_set_masterJoined(const bool b)
     {
         if (TEST_FUNCTIONS_ENABLE)
@@ -480,17 +526,17 @@ public:
     size_t TEST_count_set_flags()
     {
         auto count = 0;
-        if (TEST_FUNCTIONS_ENABLE)
-            for (auto t = 0; t < MAX_JOBS; ++t)
-                count += jobs.reserve(t) ? 0 : 1;
+        for (auto t = 0; t < MAX_JOBS && TEST_FUNCTIONS_ENABLE; ++t)
+            count += jobs.reserve(t) ? 0 : 1;
         return count;
     }
+
     void TEST_reset_all_flags()
     {
-        if (TEST_FUNCTIONS_ENABLE)
-            for (auto t = 0; t < MAX_JOBS; ++t)
-                jobs.reset_flag(t);
+        for (auto t = 0; t < MAX_JOBS && TEST_FUNCTIONS_ENABLE; ++t)
+            jobs.reset_flag(t);
     }
+
     template <typename Callable>
     void TEST_log(const size_t ID, Callable c) const
     {
@@ -499,9 +545,9 @@ public:
             c(test_log[ID]);
         }
     }
+
     void TEST_dump_log(const size_t upto) const
     {
-
         if (TEST_FUNCTIONS_ENABLE) {
             LogPrintf("\n#####################\n## Round Beginning ##\n#####################");
             for (auto i = 0; i < upto; ++i)
@@ -511,13 +557,11 @@ public:
 
     void TEST_erase_log() const
     {
-        if (TEST_FUNCTIONS_ENABLE)
-            for (auto i = 0; i < MAX_WORKERS; ++i) {
-                test_log[i].str("");
-                test_log[i].clear();
-            }
+        for (auto i = 0; i < MAX_WORKERS && TEST_FUNCTIONS_ENABLE; ++i) {
+            test_log[i].str("");
+            test_log[i].clear();
+        }
     }
-
 
     CCheckQueue_Internals::job_array<SELF>* TEST_introspect_jobs()
     {
@@ -545,30 +589,21 @@ public:
 
     bool Wait()
     {
-        if (pqueue == NULL)
+        if (!pqueue || fDone)
             return true;
         bool fRet = pqueue->Wait();
         fDone = true;
+        pqueue->ControlUnlock();
         return fRet;
     }
 
-    void Add(std::ptrdiff_t d)
-    {
-        if (pqueue != NULL)
-            pqueue->Add(d);
-    }
-
-    typename Q::JOB_TYPE** get_next_free_index()
-    {
-        return pqueue ? pqueue->get_next_free_index() : nullptr;
+    CCheckQueue_Internals::inserter<Q> get_inserter() {
+        return CCheckQueue_Internals::inserter<Q>(pqueue);
     }
 
     ~CCheckQueueControl()
     {
-        if (!fDone)
-            Wait();
-        if (pqueue)
-            pqueue->ControlUnlock();
+        Wait();
     }
 };
 
