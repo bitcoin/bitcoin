@@ -328,4 +328,42 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueJob)
         BOOST_REQUIRE(UniqueJob::results.count(i) == 1);
 }
 
+
+
+struct MemoryJob {
+    std::vector<std::array<unsigned char, 1000000>> mb_memory; 
+    bool operator()()
+    {
+        return true;
+    }
+    MemoryJob() {};
+    MemoryJob(bool b) {
+        if (b)
+            mb_memory.reserve(200);
+    };
+    void swap(MemoryJob& x){mb_memory.swap(x.mb_memory);};
+};
+typedef CCheckQueue<MemoryJob, (size_t)10000, MAX_SCRIPTCHECK_THREADS> Memory_Queue;
+BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
+{
+    auto queue = std::shared_ptr<Memory_Queue>(new Memory_Queue{});
+    queue->init(nScriptCheckThreads);
+
+    for (size_t i = 9999;  i < 9999; --i) {
+        size_t total = i;
+        {
+            CCheckQueueControl<Memory_Queue> control(queue.get());
+            while (total) {
+                size_t r = GetRand(10);
+                auto inserter = control.get_inserter();
+                for (size_t k = 0; k < r && total; k++) {
+                    total--;
+                    new (inserter()) MemoryJob{total == 0};
+                }
+            }
+        }
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
