@@ -2655,7 +2655,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // retrieve logical timestamp of the previous block
         if (pindex->pprev)
             if (!pblocktree->ReadTimestampBlockIndex(pindex->pprev->GetBlockHash(), prevLogicalTS))
-                LogPrintf("%s: Failed to read previous block's logical timestamp", __func__);
+                LogPrintf("%s: Failed to read previous block's logical timestamp\n", __func__);
 
         if (logicalTS <= prevLogicalTS) {
             logicalTS = prevLogicalTS + 1;

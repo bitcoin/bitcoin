@@ -275,7 +275,6 @@ UniValue getrawmempool(const UniValue& params, bool fHelp)
     return mempoolToJSON(fVerbose);
 }
 
-
 UniValue getblockhashes(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2)
