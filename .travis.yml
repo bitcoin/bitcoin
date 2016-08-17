@@ -1,10 +1,5 @@
 sudo: required
 dist: trusty
-
-#workaround for https://github.com/travis-ci/travis-ci/issues/5227
-addons:
-  hostname: bitcoin-tester
-
 os: linux
 language: generic
 cache:
