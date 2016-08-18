@@ -144,6 +144,32 @@ static void secp256k1_num_mod_inverse(secp256k1_num *r, const secp256k1_num *a, 
     memset(v, 0, sizeof(v));
 }
 
+static int secp256k1_num_jacobi(const secp256k1_num *a, const secp256k1_num *b) {
+    int ret;
+    mpz_t ga, gb;
+    secp256k1_num_sanity(a);
+    secp256k1_num_sanity(b);
+    VERIFY_CHECK(!b->neg && (b->limbs > 0) && (b->data[0] & 1));
+
+    mpz_inits(ga, gb, NULL);
+
+    mpz_import(gb, b->limbs, -1, sizeof(mp_limb_t), 0, 0, b->data);
+    mpz_import(ga, a->limbs, -1, sizeof(mp_limb_t), 0, 0, a->data);
+    if (a->neg) {
+        mpz_neg(ga, ga);
+    }
+
+    ret = mpz_jacobi(ga, gb);
+
+    mpz_clears(ga, gb, NULL);
+
+    return ret;
+}
+
+static int secp256k1_num_is_one(const secp256k1_num *a) {
+    return (a->limbs == 1 && a->data[0] == 1);
+}
+
 static int secp256k1_num_is_zero(const secp256k1_num *a) {
     return (a->limbs == 1 && a->data[0] == 0);
 }
