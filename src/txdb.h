@@ -24,6 +24,8 @@ struct CAddressIndexIteratorKey;
 struct CAddressIndexIteratorHeightKey;
 struct CTimestampIndexKey;
 struct CTimestampIndexIteratorKey;
+struct CTimestampBlockIndexKey;
+struct CTimestampBlockIndexValue;
 struct CSpentIndexKey;
 struct CSpentIndexValue;
 class uint256;
@@ -77,10 +79,13 @@ public:
                           std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
                           int start = 0, int end = 0);
     bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
-    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &vect);
+    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, const bool fActiveOnly, std::vector<std::pair<uint256, unsigned int> > &vect);
+    bool WriteTimestampBlockIndex(const CTimestampBlockIndexKey &blockhashIndex, const CTimestampBlockIndexValue &logicalts);
+    bool ReadTimestampBlockIndex(const uint256 &hash, unsigned int &logicalTS);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();
+    bool blockOnchainActive(const uint256 &hash);
 };
 
 #endif // BITCOIN_TXDB_H

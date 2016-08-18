@@ -24,6 +24,7 @@ static const char DB_TXINDEX = 't';
 static const char DB_ADDRESSINDEX = 'a';
 static const char DB_ADDRESSUNSPENTINDEX = 'u';
 static const char DB_TIMESTAMPINDEX = 's';
+static const char DB_BLOCKHASHINDEX = 'z';
 static const char DB_SPENTINDEX = 'p';
 static const char DB_BLOCK_INDEX = 'b';
 
@@ -275,7 +276,7 @@ bool CBlockTreeDB::WriteTimestampIndex(const CTimestampIndexKey &timestampIndex)
     return WriteBatch(batch);
 }
 
-bool CBlockTreeDB::ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes) {
+bool CBlockTreeDB::ReadTimestampIndex(const unsigned int &high, const unsigned int &low, const bool fActiveOnly, std::vector<std::pair<uint256, unsigned int> > &hashes) {
 
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 
@@ -284,14 +285,37 @@ bool CBlockTreeDB::ReadTimestampIndex(const unsigned int &high, const unsigned i
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, CTimestampIndexKey> key;
-        if (pcursor->GetKey(key) && key.first == DB_TIMESTAMPINDEX && key.second.timestamp <= high) {
-            hashes.push_back(key.second.blockHash);
+        if (pcursor->GetKey(key) && key.first == DB_TIMESTAMPINDEX && key.second.timestamp < high) {
+            if (fActiveOnly) {
+                if (blockOnchainActive(key.second.blockHash)) {
+                    hashes.push_back(std::make_pair(key.second.blockHash, key.second.timestamp));
+                }
+            } else {
+                hashes.push_back(std::make_pair(key.second.blockHash, key.second.timestamp));
+            }
+
             pcursor->Next();
         } else {
             break;
         }
     }
 
+    return true;
+}
+
+bool CBlockTreeDB::WriteTimestampBlockIndex(const CTimestampBlockIndexKey &blockhashIndex, const CTimestampBlockIndexValue &logicalts) {
+    CDBBatch batch(&GetObfuscateKey());
+    batch.Write(make_pair(DB_BLOCKHASHINDEX, blockhashIndex), logicalts);
+    return WriteBatch(batch);
+}
+
+bool CBlockTreeDB::ReadTimestampBlockIndex(const uint256 &hash, unsigned int &ltimestamp) {
+
+    CTimestampBlockIndexValue(lts);
+    if (!Read(std::make_pair(DB_BLOCKHASHINDEX, hash), lts))
+	return false;
+
+    ltimestamp = lts.ltimestamp;
     return true;
 }
 
@@ -304,6 +328,16 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     if (!Read(std::make_pair(DB_FLAG, name), ch))
         return false;
     fValue = ch == '1';
+    return true;
+}
+
+bool CBlockTreeDB::blockOnchainActive(const uint256 &hash) {
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    if (!chainActive.Contains(pblockindex)) {
+	return false;
+    }
+
     return true;
 }
 

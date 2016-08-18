@@ -357,6 +357,65 @@ struct CTimestampIndexKey {
     }
 };
 
+struct CTimestampBlockIndexKey {
+    uint256 blockHash;
+
+    size_t GetSerializeSize(int nType, int nVersion) const {
+        return 32;
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s, int nType, int nVersion) const {
+        blockHash.Serialize(s, nType, nVersion);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int nType, int nVersion) {
+        blockHash.Unserialize(s, nType, nVersion);
+    }
+
+    CTimestampBlockIndexKey(uint256 hash) {
+        blockHash = hash;
+    }
+
+    CTimestampBlockIndexKey() {
+        SetNull();
+    }
+
+    void SetNull() {
+        blockHash.SetNull();
+    }
+};
+
+struct CTimestampBlockIndexValue {
+    unsigned int ltimestamp;
+    size_t GetSerializeSize(int nType, int nVersion) const {
+        return 4;
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s, int nType, int nVersion) const {
+        ser_writedata32be(s, ltimestamp);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int nType, int nVersion) {
+        ltimestamp = ser_readdata32be(s);
+    }
+
+    CTimestampBlockIndexValue (unsigned int time) {
+        ltimestamp = time;
+    }
+
+    CTimestampBlockIndexValue() {
+        SetNull();
+    }
+
+    void SetNull() {
+        ltimestamp = 0;
+    }
+};
+
 struct CAddressUnspentKey {
     unsigned int type;
     uint160 hashBytes;
@@ -699,7 +758,7 @@ public:
     ScriptError GetScriptError() const { return error; }
 };
 
-bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes);
+bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, const bool fActiveOnly, std::vector<std::pair<uint256, unsigned int> > &hashes);
 bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
 bool GetAddressIndex(uint160 addressHash, int type,
                      std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
