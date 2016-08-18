@@ -46,9 +46,9 @@ class inserter {
     typename Q::JOB_TYPE * free_index;
     public:
     inserter(Q * const queueIn) :
-       queue(queueIn), start(queue ? queue->get_next_free_index() : nullptr), free_index(start) {}
-
-
+       queue(queueIn),
+       start(queue ? queue->get_next_free_index() : nullptr),
+       free_index(start) {}
     typename Q::JOB_TYPE * operator()()
     {
         return start ? free_index++ : nullptr;
@@ -119,7 +119,10 @@ public:
     /** eval runs a check at specified index */
     bool eval(const size_t i)
     {
-        return checks[i]();
+        bool b = checks[i]();
+        typename Q::JOB_TYPE tmp {};
+        checks[i].swap(tmp);
+        return b;
     }
 
     /** reset_jobs resets the insertion index only, so should only be run on master.
@@ -357,13 +360,9 @@ private:
     mutable std::atomic<size_t> test_log_seq;
     mutable std::array<std::ostringstream, MAX_WORKERS> test_log;
 
-
-
     void consume(const size_t ID)
     {
-        TEST_log(ID, [](std::ostringstream& o) {
-            o << "In consume\n";
-        });
+        TEST_log(ID, [](std::ostringstream& o) {o << "In consume\n";});
         CCheckQueue_Internals::PriorityWorkQueue<SELF> work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
         for (;;) {
             // Note: Must check masterJoined before nAvail, otherwise
@@ -383,9 +382,7 @@ private:
 
         } 
             
-        TEST_log(ID, [&, this](std::ostringstream& o) {
-            o << "Leaving consume. fAllOk was " << fAllOk.load() << "\n";
-        });
+        TEST_log(ID, [&, this](std::ostringstream& o) {o << "Leaving consume. fAllOk was " << fAllOk.load() << "\n";});
     }
     /** Internal function that does bulk of the verification work. */
     bool Master() {
