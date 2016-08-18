@@ -182,7 +182,6 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
     threadGroup.join_all();
 
     size_t count = fast_queue->TEST_count_set_flags();
-    BOOST_TEST_MESSAGE("Got: " << count);
     BOOST_REQUIRE(count == 100000);
 }
 
@@ -254,27 +253,21 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 }
 
 struct FailingJob {
-    bool f;
+    bool fails;
     bool call_state;
-    size_t tag;
-    static std::atomic<size_t> n_calls;
-    FailingJob(bool fails) : f(fails), call_state(false), tag(0xdeadbeef){};
-    FailingJob() : f(true), call_state(false){};
+    FailingJob(bool fails) : fails(fails), call_state(false){};
+    FailingJob() : fails(true), call_state(false){};
     bool operator()()
     {
-        n_calls++;
         call_state = true;
-        return !f;
+        return !fails;
     }
     void swap(FailingJob& x)
     {
-        std::swap(f, x.f);
-
+        std::swap(fails, x.fails);
         std::swap(call_state, x.call_state);
-        std::swap(tag, x.tag);
     };
 };
-std::atomic<size_t> FailingJob::n_calls{0};
 typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Failing_Queue;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
@@ -282,29 +275,15 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 
     fail_queue->init(nScriptCheckThreads);
 
-    for (size_t i = 10; i < 1001; ++i) {
-        FailingJob::n_calls = 0;
+    for (size_t i = 0; i < 1001; ++i) {
         CCheckQueueControl<Failing_Queue> control(fail_queue.get());
-        size_t checksum = 0;
-
-        std::vector<FailingJob> vChecks;
-        vChecks.reserve(i);
-        for (size_t x = 0; x < i; ++x)
-            vChecks.push_back(FailingJob{});
-        if (i > 0)
-            vChecks[0].f = true;
-        while (!vChecks.empty()) {
+        size_t remaining = i;
+        while (remaining) {
             size_t r = GetRand(10);
-            std::vector<FailingJob> vChecks2;
-            vChecks2.reserve(r);
             auto inserter = control.get_inserter();
-            for (size_t k = 0; k < r && !vChecks.empty(); k++) {
-                (inserter())->swap(vChecks.back());
-                vChecks.pop_back();
-                ++checksum;
-            }
+            for (size_t k = 0; k < r && remaining; k++, remaining--)
+                new (inserter()) FailingJob{remaining == 1};
         }
-        BOOST_REQUIRE(checksum == i);
         bool success = control.Wait();
         if (success && i > 0) {
             size_t nChecked = 0;
@@ -320,6 +299,28 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
             BOOST_REQUIRE(success);
         }
         fail_queue->TEST_erase_log();
+    }
+}
+BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
+{
+    auto fail_queue = std::unique_ptr<Failing_Queue>(new Failing_Queue());
+    std::array<FailingJob, 100> checks;
+    fail_queue->init(nScriptCheckThreads);
+
+    for (auto times = 0; times < 10; ++times) {
+        std::array<bool, 2> result;
+        for (size_t i : {0, 1}) {
+            CCheckQueueControl<Failing_Queue> control(fail_queue.get());
+            {
+                auto inserter = control.get_inserter();
+                for (size_t k = 0; k < 100-i; ++k)
+                    new (inserter()) FailingJob {k == 99};
+            }
+            result[i] = control.Wait();
+            fail_queue->TEST_erase_log();
+        }
+        BOOST_CHECK(!result[0]);
+        BOOST_CHECK(result[1]);
     }
 }
 
