@@ -284,7 +284,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
                 pdb = NULL;
                 --bitdb.mapFileUseCount[strFile];
                 strFile = "";
-                throw runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFile));
+                throw runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
             }
 
             if (fCreate && !Exists(string("version"))) {
