@@ -32,6 +32,9 @@ static void secp256k1_num_set_bin(secp256k1_num *r, const unsigned char *a, unsi
 /** Compute a modular inverse. The input must be less than the modulus. */
 static void secp256k1_num_mod_inverse(secp256k1_num *r, const secp256k1_num *a, const secp256k1_num *m);
 
+/** Compute the jacobi symbol (a|b). b must be positive and odd. */
+static int secp256k1_num_jacobi(const secp256k1_num *a, const secp256k1_num *b);
+
 /** Compare the absolute value of two numbers. */
 static int secp256k1_num_cmp(const secp256k1_num *a, const secp256k1_num *b);
 
@@ -56,6 +59,9 @@ static void secp256k1_num_shift(secp256k1_num *r, int bits);
 
 /** Check whether a number is zero. */
 static int secp256k1_num_is_zero(const secp256k1_num *a);
+
+/** Check whether a number is one. */
+static int secp256k1_num_is_one(const secp256k1_num *a);
 
 /** Check whether a number is strictly negative. */
 static int secp256k1_num_is_neg(const secp256k1_num *a);
