@@ -509,7 +509,7 @@ Wallet:
 - `c898846` Add support for watch-only addresses
 - `d5087d1` Use script matching rather than destination matching for watch-only
 - `d88af56` Fee fixes
-- `a35b55b` Dont run full check every time we decrypt wallet
+- `a35b55b` Don’t run full check every time we decrypt wallet
 - `3a7c348` Fix make_change to not create half-satoshis
 - `f606bb9` fix a possible memory leak in CWalletDB::Recover
 - `870da77` fix possible memory leaks in CWallet::EncryptWallet
