@@ -73,7 +73,7 @@ if EXEEXT == ".exe" and "-win" not in opts:
     sys.exit(0)
 
 #Tests
-testScripts1 = [
+testScripts = [
     'bip68-112-113-p2p.py',
     'wallet.py',
     'excessive.py',
@@ -110,7 +110,6 @@ testScripts1 = [
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
 ]
-testScripts = []
 
 testScriptsExt = [
     'bip9-softforks.py',
