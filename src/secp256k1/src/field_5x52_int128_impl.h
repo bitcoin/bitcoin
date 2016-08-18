@@ -137,7 +137,7 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint64_t *r, const uint64_t 
     VERIFY_BITS(r[2], 52);
     VERIFY_BITS(c, 63);
     /* [d 0 0 0 t4 t3+c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-    c   += d * R + t3;;
+    c   += d * R + t3;
     VERIFY_BITS(c, 100);
     /* [t4 c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
     r[3] = c & M; c >>= 52;
@@ -259,7 +259,7 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t 
     VERIFY_BITS(c, 63);
     /* [d 0 0 0 t4 t3+c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-    c   += d * R + t3;;
+    c   += d * R + t3;
     VERIFY_BITS(c, 100);
     /* [t4 c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
     r[3] = c & M; c >>= 52;

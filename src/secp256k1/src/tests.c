@@ -473,6 +473,8 @@ void test_num_negate(void) {
 }
 
 void test_num_add_sub(void) {
+    int i;
+    secp256k1_scalar s;
     secp256k1_num n1;
     secp256k1_num n2;
     secp256k1_num n1p2, n2p1, n1m2, n2m1;
@@ -498,6 +500,110 @@ void test_num_add_sub(void) {
     CHECK(!secp256k1_num_eq(&n2p1, &n1));
     secp256k1_num_sub(&n2p1, &n2p1, &n2); /* n2p1 = R2 + R1 - R2 = R1 */
     CHECK(secp256k1_num_eq(&n2p1, &n1));
+
+    /* check is_one */
+    secp256k1_scalar_set_int(&s, 1);
+    secp256k1_scalar_get_num(&n1, &s);
+    CHECK(secp256k1_num_is_one(&n1));
+    /* check that 2^n + 1 is never 1 */
+    secp256k1_scalar_get_num(&n2, &s);
+    for (i = 0; i < 250; ++i) {
+        secp256k1_num_add(&n1, &n1, &n1);    /* n1 *= 2 */
+        secp256k1_num_add(&n1p2, &n1, &n2);  /* n1p2 = n1 + 1 */
+        CHECK(!secp256k1_num_is_one(&n1p2));
+    }
+}
+
+void test_num_mod(void) {
+    int i;
+    secp256k1_scalar s;
+    secp256k1_num order, n;
+
+    /* check that 0 mod anything is 0 */
+    random_scalar_order_test(&s); 
+    secp256k1_scalar_get_num(&order, &s);
+    secp256k1_scalar_set_int(&s, 0);
+    secp256k1_scalar_get_num(&n, &s);
+    secp256k1_num_mod(&n, &order);
+    CHECK(secp256k1_num_is_zero(&n));
+
+    /* check that anything mod 1 is 0 */
+    secp256k1_scalar_set_int(&s, 1);
+    secp256k1_scalar_get_num(&order, &s);
+    secp256k1_scalar_get_num(&n, &s);
+    secp256k1_num_mod(&n, &order);
+    CHECK(secp256k1_num_is_zero(&n));
+
+    /* check that increasing the number past 2^256 does not break this */
+    random_scalar_order_test(&s); 
+    secp256k1_scalar_get_num(&n, &s);
+    /* multiply by 2^8, which'll test this case with high probability */
+    for (i = 0; i < 8; ++i) {
+        secp256k1_num_add(&n, &n, &n);
+    }
+    secp256k1_num_mod(&n, &order);
+    CHECK(secp256k1_num_is_zero(&n));
+}
+
+void test_num_jacobi(void) {
+    secp256k1_scalar sqr;
+    secp256k1_scalar small;
+    secp256k1_scalar five;  /* five is not a quadratic residue */
+    secp256k1_num order, n;
+    int i;
+    /* squares mod 5 are 1, 4 */
+    const int jacobi5[10] = { 0, 1, -1, -1, 1, 0, 1, -1, -1, 1 };
+
+    /* check some small values with 5 as the order */
+    secp256k1_scalar_set_int(&five, 5);
+    secp256k1_scalar_get_num(&order, &five);
+    for (i = 0; i < 10; ++i) {
+        secp256k1_scalar_set_int(&small, i);
+        secp256k1_scalar_get_num(&n, &small);
+        CHECK(secp256k1_num_jacobi(&n, &order) == jacobi5[i]);
+    }
+
+    /** test large values with 5 as group order */
+    secp256k1_scalar_get_num(&order, &five);
+    /* we first need a scalar which is not a multiple of 5 */
+    do {
+        secp256k1_num fiven;
+        random_scalar_order_test(&sqr); 
+        secp256k1_scalar_get_num(&fiven, &five);
+        secp256k1_scalar_get_num(&n, &sqr);
+        secp256k1_num_mod(&n, &fiven);
+    } while (secp256k1_num_is_zero(&n));
+    /* next force it to be a residue. 2 is a nonresidue mod 5 so we can
+     * just multiply by two, i.e. add the number to itself */
+    if (secp256k1_num_jacobi(&n, &order) == -1) {
+        secp256k1_num_add(&n, &n, &n);
+    }
+
+    /* test residue */
+    CHECK(secp256k1_num_jacobi(&n, &order) == 1);
+    /* test nonresidue */
+    secp256k1_num_add(&n, &n, &n);
+    CHECK(secp256k1_num_jacobi(&n, &order) == -1);
+
+    /** test with secp group order as order */
+    secp256k1_scalar_order_get_num(&order);
+    random_scalar_order_test(&sqr); 
+    secp256k1_scalar_sqr(&sqr, &sqr);
+    /* test residue */
+    secp256k1_scalar_get_num(&n, &sqr);
+    CHECK(secp256k1_num_jacobi(&n, &order) == 1);
+    /* test nonresidue */
+    secp256k1_scalar_mul(&sqr, &sqr, &five);
+    secp256k1_scalar_get_num(&n, &sqr);
+    CHECK(secp256k1_num_jacobi(&n, &order) == -1);
+    /* test multiple of the order*/
+    CHECK(secp256k1_num_jacobi(&order, &order) == 0);
+
+    /* check one less than the order */
+    secp256k1_scalar_set_int(&small, 1);
+    secp256k1_scalar_get_num(&n, &small);
+    secp256k1_num_sub(&n, &order, &n);
+    CHECK(secp256k1_num_jacobi(&n, &order) == 1);  /* sage confirms this is 1 */
 }
 
 void run_num_smalltests(void) {
@@ -505,6 +611,8 @@ void run_num_smalltests(void) {
     for (i = 0; i < 100*count; i++) {
         test_num_negate();
         test_num_add_sub();
+        test_num_mod();
+        test_num_jacobi();
     }
 }
 #endif
@@ -689,6 +797,10 @@ void scalar_test(void) {
             secp256k1_scalar_inverse(&inv, &inv);
             /* Inverting one must result in one. */
             CHECK(secp256k1_scalar_is_one(&inv));
+#ifndef USE_NUM_NONE
+            secp256k1_scalar_get_num(&invnum, &inv);
+            CHECK(secp256k1_num_is_one(&invnum));
+#endif
         }
     }
 
@@ -855,7 +967,7 @@ void run_scalar_tests(void) {
         secp256k1_scalar zzv;
 #endif
         int overflow;
-        unsigned char chal[32][2][32] = {
+        unsigned char chal[33][2][32] = {
             {{0xff, 0xff, 0x03, 0x07, 0x00, 0x00, 0x00, 0x00,
               0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03,
               0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0xff, 0xff,
@@ -1111,9 +1223,17 @@ void run_scalar_tests(void) {
              {0xff, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf8, 0xff,
               0xff, 0xff, 0xff, 0xff, 0xff, 0x1f, 0x00, 0x00,
               0xf8, 0x07, 0x00, 0x80, 0xff, 0xff, 0xff, 0xff,
-              0xff, 0xc7, 0xff, 0xff, 0xe0, 0xff, 0xff, 0xff}}
+              0xff, 0xc7, 0xff, 0xff, 0xe0, 0xff, 0xff, 0xff}},
+            {{0x82, 0xc9, 0xfa, 0xb0, 0x68, 0x04, 0xa0, 0x00,
+              0x82, 0xc9, 0xfa, 0xb0, 0x68, 0x04, 0xa0, 0x00,
+              0xff, 0xff, 0xff, 0xff, 0xff, 0x6f, 0x03, 0xfb,
+              0xfa, 0x8a, 0x7d, 0xdf, 0x13, 0x86, 0xe2, 0x03},
+             {0x82, 0xc9, 0xfa, 0xb0, 0x68, 0x04, 0xa0, 0x00,
+              0x82, 0xc9, 0xfa, 0xb0, 0x68, 0x04, 0xa0, 0x00,
+              0xff, 0xff, 0xff, 0xff, 0xff, 0x6f, 0x03, 0xfb,
+              0xfa, 0x8a, 0x7d, 0xdf, 0x13, 0x86, 0xe2, 0x03}}
         };
-        unsigned char res[32][2][32] = {
+        unsigned char res[33][2][32] = {
             {{0x0c, 0x3b, 0x0a, 0xca, 0x8d, 0x1a, 0x2f, 0xb9,
               0x8a, 0x7b, 0x53, 0x5a, 0x1f, 0xc5, 0x22, 0xa1,
               0x07, 0x2a, 0x48, 0xea, 0x02, 0xeb, 0xb3, 0xd6,
@@ -1369,10 +1489,18 @@ void run_scalar_tests(void) {
              {0xe4, 0xf1, 0x23, 0x84, 0xe1, 0xb5, 0x9d, 0xf2,
               0xb8, 0x73, 0x8b, 0x45, 0x2b, 0x35, 0x46, 0x38,
               0x10, 0x2b, 0x50, 0xf8, 0x8b, 0x35, 0xcd, 0x34,
-              0xc8, 0x0e, 0xf6, 0xdb, 0x09, 0x35, 0xf0, 0xda}}
+              0xc8, 0x0e, 0xf6, 0xdb, 0x09, 0x35, 0xf0, 0xda}},
+            {{0xdb, 0x21, 0x5c, 0x8d, 0x83, 0x1d, 0xb3, 0x34,
+              0xc7, 0x0e, 0x43, 0xa1, 0x58, 0x79, 0x67, 0x13,
+              0x1e, 0x86, 0x5d, 0x89, 0x63, 0xe6, 0x0a, 0x46,
+              0x5c, 0x02, 0x97, 0x1b, 0x62, 0x43, 0x86, 0xf5},
+             {0xdb, 0x21, 0x5c, 0x8d, 0x83, 0x1d, 0xb3, 0x34,
+              0xc7, 0x0e, 0x43, 0xa1, 0x58, 0x79, 0x67, 0x13,
+              0x1e, 0x86, 0x5d, 0x89, 0x63, 0xe6, 0x0a, 0x46,
+              0x5c, 0x02, 0x97, 0x1b, 0x62, 0x43, 0x86, 0xf5}}
         };
         secp256k1_scalar_set_int(&one, 1);
-        for (i = 0; i < 32; i++) {
+        for (i = 0; i < 33; i++) {
             secp256k1_scalar_set_b32(&x, chal[i][0], &overflow);
             CHECK(!overflow);
             secp256k1_scalar_set_b32(&y, chal[i][1], &overflow);
@@ -1446,7 +1574,7 @@ void random_fe_non_zero(secp256k1_fe *nz) {
 void random_fe_non_square(secp256k1_fe *ns) {
     secp256k1_fe r;
     random_fe_non_zero(ns);
-    if (secp256k1_fe_sqrt_var(&r, ns)) {
+    if (secp256k1_fe_sqrt(&r, ns)) {
         secp256k1_fe_negate(ns, ns, 1);
     }
 }
@@ -1641,7 +1769,7 @@ void run_sqr(void) {
 
 void test_sqrt(const secp256k1_fe *a, const secp256k1_fe *k) {
     secp256k1_fe r1, r2;
-    int v = secp256k1_fe_sqrt_var(&r1, a);
+    int v = secp256k1_fe_sqrt(&r1, a);
     CHECK((v == 0) == (k == NULL));
 
     if (k != NULL) {
@@ -1951,8 +2079,8 @@ void test_add_neg_y_diff_x(void) {
      * of the sum to be wrong (since infinity has no xy coordinates).
      * HOWEVER, if the x-coordinates are different, infinity is the
      * wrong answer, and such degeneracies are exposed. This is the
-     * root of https://github.com/bitcoin/secp256k1/issues/257 which
-     * this test is a regression test for.
+     * root of https://github.com/bitcoin-core/secp256k1/issues/257
+     * which this test is a regression test for.
      *
      * These points were generated in sage as
      * # secp256k1 params
@@ -2051,15 +2179,16 @@ void run_ec_combine(void) {
 void test_group_decompress(const secp256k1_fe* x) {
     /* The input itself, normalized. */
     secp256k1_fe fex = *x;
-    secp256k1_fe tmp;
+    secp256k1_fe fez;
     /* Results of set_xquad_var, set_xo_var(..., 0), set_xo_var(..., 1). */
     secp256k1_ge ge_quad, ge_even, ge_odd;
+    secp256k1_gej gej_quad;
     /* Return values of the above calls. */
     int res_quad, res_even, res_odd;
 
     secp256k1_fe_normalize_var(&fex);
 
-    res_quad = secp256k1_ge_set_xquad_var(&ge_quad, &fex);
+    res_quad = secp256k1_ge_set_xquad(&ge_quad, &fex);
     res_even = secp256k1_ge_set_xo_var(&ge_even, &fex, 0);
     res_odd = secp256k1_ge_set_xo_var(&ge_odd, &fex, 1);
 
@@ -2085,13 +2214,29 @@ void test_group_decompress(const secp256k1_fe* x) {
         CHECK(secp256k1_fe_equal_var(&ge_odd.x, x));
 
         /* Check that the Y coordinate result in ge_quad is a square. */
-        CHECK(secp256k1_fe_sqrt_var(&tmp, &ge_quad.y));
-        secp256k1_fe_sqr(&tmp, &tmp);
-        CHECK(secp256k1_fe_equal_var(&tmp, &ge_quad.y));
+        CHECK(secp256k1_fe_is_quad_var(&ge_quad.y));
 
         /* Check odd/even Y in ge_odd, ge_even. */
         CHECK(secp256k1_fe_is_odd(&ge_odd.y));
         CHECK(!secp256k1_fe_is_odd(&ge_even.y));
+
+        /* Check secp256k1_gej_has_quad_y_var. */
+        secp256k1_gej_set_ge(&gej_quad, &ge_quad);
+        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
+        do {
+            random_fe_test(&fez);
+        } while (secp256k1_fe_is_zero(&fez));
+        secp256k1_gej_rescale(&gej_quad, &fez);
+        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
+        secp256k1_gej_neg(&gej_quad, &gej_quad);
+        CHECK(!secp256k1_gej_has_quad_y_var(&gej_quad));
+        do {
+            random_fe_test(&fez);
+        } while (secp256k1_fe_is_zero(&fez));
+        secp256k1_gej_rescale(&gej_quad, &fez);
+        CHECK(!secp256k1_gej_has_quad_y_var(&gej_quad));
+        secp256k1_gej_neg(&gej_quad, &gej_quad);
+        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
     }
 }
 
@@ -2383,9 +2528,7 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
     secp256k1_scalar x, shift;
     int wnaf[256] = {0};
     int i;
-#ifdef USE_ENDOMORPHISM
     int skew;
-#endif
     secp256k1_scalar num = *number;
 
     secp256k1_scalar_set_int(&x, 0);
@@ -2395,10 +2538,8 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
     for (i = 0; i < 16; ++i) {
         secp256k1_scalar_shr_int(&num, 8);
     }
-    skew = secp256k1_wnaf_const(wnaf, num, w);
-#else
-    secp256k1_wnaf_const(wnaf, num, w);
 #endif
+    skew = secp256k1_wnaf_const(wnaf, num, w);
 
     for (i = WNAF_SIZE(w); i >= 0; --i) {
         secp256k1_scalar t;
@@ -2417,10 +2558,8 @@ void test_constant_wnaf(const secp256k1_scalar *number, int w) {
         }
         secp256k1_scalar_add(&x, &x, &t);
     }
-#ifdef USE_ENDOMORPHISM
-    /* Skew num because when encoding 128-bit numbers as odd we use an offset */
+    /* Skew num because when encoding numbers as odd we use an offset */
     secp256k1_scalar_cadd_bit(&num, skew == 2, 1);
-#endif
     CHECK(secp256k1_scalar_eq(&x, &num));
 }
 
@@ -3484,12 +3623,14 @@ void run_ecdsa_end_to_end(void) {
 
 int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_der, int certainly_not_der) {
     static const unsigned char zeroes[32] = {0};
+#ifdef ENABLE_OPENSSL_TESTS
     static const unsigned char max_scalar[32] = {
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
         0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
         0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x40
     };
+#endif
 
     int ret = 0;
 
@@ -3607,13 +3748,13 @@ static void assign_big_endian(unsigned char *ptr, size_t ptrlen, uint32_t val) {
 static void damage_array(unsigned char *sig, size_t *len) {
     int pos;
     int action = secp256k1_rand_bits(3);
-    if (action < 1) {
+    if (action < 1 && *len > 3) {
         /* Delete a byte. */
         pos = secp256k1_rand_int(*len);
         memmove(sig + pos, sig + pos + 1, *len - pos - 1);
         (*len)--;
         return;
-    } else if (action < 2) {
+    } else if (action < 2 && *len < 2048) {
         /* Insert a byte. */
         pos = secp256k1_rand_int(1 + *len);
         memmove(sig + pos + 1, sig + pos, *len - pos);
@@ -3785,6 +3926,7 @@ void run_ecdsa_der_parse(void) {
         int certainly_der = 0;
         int certainly_not_der = 0;
         random_ber_signature(buffer, &buflen, &certainly_der, &certainly_not_der);
+        CHECK(buflen <= 2048);
         for (j = 0; j < 16; j++) {
             int ret = 0;
             if (j > 0) {
