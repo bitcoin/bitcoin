@@ -23,10 +23,10 @@ class AddressIndexTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-relaypriority=0"]))
         self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-addressindex"]))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-addressindex"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-addressindex", "-relaypriority=0"]))
         self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-addressindex"]))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
@@ -208,7 +208,7 @@ class AddressIndexTest(BitcoinTestFramework):
 
         utxos2 = self.nodes[1].getaddressutxos({"addresses": [address2]})
         assert_equal(len(utxos2), 1)
-        assert_equal(utxos2[0]["satoshis"], 5000000000)
+        assert_equal(utxos2[0]["satoshis"], amount)
 
         # Check sorting of utxos
         self.nodes[2].generate(150)
