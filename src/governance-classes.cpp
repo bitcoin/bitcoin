@@ -415,9 +415,10 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, CAmount nF
 
     // CONFIGURE SUPERBLOCK OUTPUTS 
 
+    // Superblock payments are appended to the end of the coinbase vout vector
+
     DBG( cout << "CSuperblockManager::CreateSuperblock Number payments: " << pBlock->CountPayments() << endl; );
 
-    txNew.vout.resize(pBlock->CountPayments());
     for(int i = 0; i < pBlock->CountPayments(); i++)  {
         CGovernancePayment payment;
         DBG( cout << "CSuperblockManager::CreateSuperblock i = " << i << endl; );
@@ -425,8 +426,7 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, CAmount nF
             DBG( cout << "CSuperblockManager::CreateSuperblock Payment found " << endl; );
             // SET COINBASE OUTPUT TO SUPERBLOCK SETTING
 
-            txNew.vout[i].scriptPubKey = payment.script;
-            txNew.vout[i].nValue = payment.nAmount;
+            txNew.vout.push_back(CTxOut(payment.nAmount, payment.script));
 
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
@@ -590,27 +590,43 @@ bool CSuperblock::IsValid(const CTransaction& txNew)
 
     // CONFIGURE SUPERBLOCK OUTPUTS 
 
-    int nPayments = CountPayments();    
+    int nOutputs = txNew.vout.size();
+    int nPayments = CountPayments();
+    int nMinerPayments = nOutputs - nPayments;
+
+    // We require an exact match (including order) between the expected
+    // superblock payments and the payments actually in the block, after
+    // skipping any initial miner payments.
+
+    if(nMinerPayments<0)  {
+        // This means the block cannot have all the superblock payments
+        // so it is not valid.
+        LogPrintf("CSuperblock::IsValid WARNING: Block invalid: Too few superblock payments");
+        return false;
+    }
+
     for(int i = 0; i < nPayments; i++) {
         CGovernancePayment payment;
-        if(GetPayment(i, payment)) {
-            // SET COINBASE OUTPUT TO SUPERBLOCK SETTING
+        if(!GetPayment(i, payment))  {
+            // This shouldn't happen so log a warning
+            LogPrintf("CSuperblock::IsValid WARNING: Failed to find payment: %d of %d total payments", i, nPayments);
+            continue;
+        }
 
-            if(payment.script == txNew.vout[i].scriptPubKey && payment.nAmount == txNew.vout[i].nValue) {
-                // WE FOUND THE CORRECT SUPERBLOCK OUTPUT!
-            } else {
-                // MISMATCHED SUPERBLOCK OUTPUT!
+        int nVoutIndex = nMinerPayments + i;
 
-                CTxDestination address1;
-                ExtractDestination(payment.script, address1);
-                CBitcoinAddress address2(address1);
+        bool fPaymentMatch = ((payment.script == txNew.vout[nVoutIndex].scriptPubKey) &&
+                              (payment.nAmount == txNew.vout[nVoutIndex].nValue));
 
-                // TODO: PRINT NICE N.N DASH OUTPUT
+        if(!fPaymentMatch)  {
+            // MISMATCHED SUPERBLOCK OUTPUT!
 
-                LogPrintf("SUPERBLOCK: output n %d payment %d to %s\n", i, payment.nAmount, address2.ToString());
+            CTxDestination address1;
+            ExtractDestination(payment.script, address1);
+            CBitcoinAddress address2(address1);
+            LogPrintf("CSuperblock::IsValid WARNING: Block invalid: output n %d payment %d to %s\n", nVoutIndex, payment.nAmount, address2.ToString());
 
-                return false;
-            }
+            return false;
         }
     }
 

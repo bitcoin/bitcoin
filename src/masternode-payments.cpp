@@ -72,11 +72,11 @@ bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
 
     bool valueok = (block.vtx[0].GetValueOut() <= nExpectedValue);
 
-    // IF WE'RE NOT SYNCED, WE MAY NOT HAVE SUPERBLOCK DATA, SO RETURN THE USUAL CHECK 
+    // IF WE'RE NOT SYNCED, WE MAY NOT HAVE SUPERBLOCK DATA, SO RETURN TRUE FOR NOW 
 
     if(!masternodeSync.IsSynced()) {
         // IF NOT SYNCED, WE WILL SIMPLY FIND THE LONGEST CHAIN
-        return valueok;
+        return true;
     }
 
     // IF THIS IS A VALID SUPERBLOCK RETURN TRUE SINCE SUPERBLOCKS ARE CHECKED

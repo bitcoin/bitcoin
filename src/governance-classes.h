@@ -244,7 +244,7 @@ public:
 
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentOut) 
     {
-        if(nPaymentIndex >= (int)vecPayments.size()) {
+        if((nPaymentIndex<0) || (nPaymentIndex >= (int)vecPayments.size())) {
             return false;
         }
 

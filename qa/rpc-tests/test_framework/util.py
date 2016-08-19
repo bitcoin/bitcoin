@@ -55,6 +55,15 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
+def get_mnsync_status(node):
+    result = node.mnsync("status")
+    return result['IsSynced']
+
+def wait_to_sync(node):
+    synced = False
+    while not synced:
+        synced = get_mnsync_status(node)
+        time.sleep(0.5)
 
 def p2p_port(n):
     return 11000 + n + os.getpid()%999
@@ -95,6 +104,10 @@ def sync_mempools(rpc_connections, wait=1):
         if num_match == len(rpc_connections):
             break
         time.sleep(wait)
+
+def sync_masternodes(rpc_connections):
+    for node in rpc_connections:
+        wait_to_sync(node)
 
 bitcoind_processes = {}
 
