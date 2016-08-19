@@ -171,6 +171,7 @@ void Interrupt(boost::thread_group& threadGroup)
     InterruptRPC();
     InterruptREST();
     InterruptTorControl();
+    InterruptMapPort();
     threadGroup.interrupt_all();
 }
 
@@ -199,6 +200,7 @@ void Shutdown()
 #endif
     StopNode();
     StopTorControl();
+    StopMapPort();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)

@@ -39,6 +39,9 @@
 #include <boost/thread.hpp>
 
 #include <math.h>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 // Dump addresses to peers.dat and banlist.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
@@ -1365,6 +1368,11 @@ void ThreadSocketHandler()
 
 
 #ifdef USE_UPNP
+static std::condition_variable upnp_cond;
+static std::mutex cs_upnp;
+static bool upnp_interrupted = false;
+static std::thread* upnp_thread = NULL;
+
 void ThreadMapPort()
 {
     std::string port = strprintf("%u", GetListenPort());
@@ -1414,35 +1422,33 @@ void ThreadMapPort()
         }
 
         std::string strDesc = "Bitcoin " + FormatFullVersion();
-
-        try {
-            while (true) {
+        bool interrupted = false;
+        while (!interrupted) {
 #ifndef UPNPDISCOVER_SUCCESS
-                /* miniupnpc 1.5 */
-                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
+            /* miniupnpc 1.5 */
+            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0);
 #else
-                /* miniupnpc 1.6 */
-                r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
-                                    port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
+            /* miniupnpc 1.6 */
+            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype,
+                                port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", 0, "0");
 #endif
 
-                if(r!=UPNPCOMMAND_SUCCESS)
-                    LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
-                        port, port, lanaddr, r, strupnperror(r));
-                else
-                    LogPrintf("UPnP Port Mapping successful.\n");
+            if(r!=UPNPCOMMAND_SUCCESS)
+                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
+                    port, port, lanaddr, r, strupnperror(r));
+            else
+                LogPrintf("UPnP Port Mapping successful.\n");
 
-                MilliSleep(20*60*1000); // Refresh every 20 minutes
-            }
+            std::unique_lock<std::mutex> lock(cs_upnp);
+            interrupted = upnp_cond.wait_for(lock, std::chrono::minutes(20), []{return upnp_interrupted; });
         }
-        catch (const boost::thread_interrupted&)
+        if(interrupted)
         {
             r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", 0);
             LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
             freeUPNPDevlist(devlist); devlist = 0;
             FreeUPNPUrls(&urls);
-            throw;
         }
     } else {
         LogPrintf("No valid UPnP IGDs found\n");
@@ -1452,32 +1458,61 @@ void ThreadMapPort()
     }
 }
 
-void MapPort(bool fUseUPnP)
+void InterruptMapPort()
 {
-    static boost::thread* upnp_thread = NULL;
-
-    if (fUseUPnP)
+    LogPrintf("Interrupting UPnP\n");
     {
-        if (upnp_thread) {
-            upnp_thread->interrupt();
-            upnp_thread->join();
-            delete upnp_thread;
-        }
-        upnp_thread = new boost::thread(boost::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort));
+        std::lock_guard<std::mutex> lock(cs_upnp);
+        upnp_interrupted = true;
     }
-    else if (upnp_thread) {
-        upnp_thread->interrupt();
+    upnp_cond.notify_all();
+}
+
+void StopMapPort()
+{
+    if(upnp_thread) {
+        LogPrintf("Stopping UPnP\n");
         upnp_thread->join();
         delete upnp_thread;
         upnp_thread = NULL;
     }
+    std::lock_guard<std::mutex> lock(cs_upnp);
+    upnp_interrupted = false;
 }
+
+void MapPort(bool fUseUPnP)
+{
+
+    if (fUseUPnP)
+    {
+        if (upnp_thread) {
+            InterruptMapPort();
+            StopMapPort();
+        }
+        upnp_thread = new std::thread(std::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort));
+    }
+    else if (upnp_thread) {
+        InterruptMapPort();
+        StopMapPort();
+    }
+}
+
 
 #else
 void MapPort(bool)
 {
     // Intentionally left blank.
 }
+void StopMapPort()
+{
+    // Intentionally left blank.
+}
+
+void InterruptMapPort()
+{
+    // Intentionally left blank.
+}
+
 #endif
 
 
