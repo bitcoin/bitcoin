@@ -6,7 +6,6 @@
 #include "bench.h"
 #include "util.h"
 #include "main.h"
-#include <vector>
 #include "checkqueue.h"
 
 static void CCheckQueueSpeed(benchmark::State& state)
