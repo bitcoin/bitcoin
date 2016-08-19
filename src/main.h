@@ -568,9 +568,12 @@ struct COrphanTx {
     NodeId fromPeer;
     int64_t nEntryTime; // BU - Xtreme Thinblocks: used for aging orphans out of the cache
 };
-extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
-extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
+// BU: begin creating separate critical section for orphan cache and untangling from cs_main.
+extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
+extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
+extern CCriticalSection cs_orphancache;
 
-void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
+// BU: end
 
 #endif // BITCOIN_MAIN_H

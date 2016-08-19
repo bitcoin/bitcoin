@@ -24,7 +24,11 @@
 #include <boost/thread.hpp>
 #include <inttypes.h>
 
+
+
 using namespace std;
+
+extern CCriticalSection cs_orphancache; // from main.h
 
 // Request management
 CRequestManager requester;
@@ -337,7 +341,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
 		  inv2.type = MSG_XTHINBLOCK;
 		  std::vector<uint256> vOrphanHashes;
                   {
-                    LOCK(cs_main);
+                    LOCK(cs_orphancache);
                     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                         vOrphanHashes.push_back((*mi).first);
                   }
@@ -357,7 +361,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
 		  inv2.type = MSG_XTHINBLOCK;
 		  std::vector<uint256> vOrphanHashes;
                   {
-                    LOCK(cs_main);
+                    LOCK(cs_orphancache);
                     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                         vOrphanHashes.push_back((*mi).first);
                   }

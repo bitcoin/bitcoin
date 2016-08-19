@@ -87,9 +87,13 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CTxMemPool mempool(::minRelayTxFee);
 
-map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
-map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
-void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+// BU: change locking of orphan map from using cs_main to cs_orphancache.  There is too much dependance on cs_main locks which
+//     are generally too broad in scope.
+CCriticalSection cs_orphancache;
+map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
+map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
+void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
+
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -642,8 +646,11 @@ CBlockTreeDB *pblocktree = NULL;
 // mapOrphanTransactions
 //
 
-bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache)
 {
+
+    AssertLockHeld(cs_orphancache);
+
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
         return false;
@@ -680,9 +687,9 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
     return true;
 }
 
-void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_orphancache);
 
     map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
     if (it == mapOrphanTransactions.end())
@@ -699,8 +706,11 @@ void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     mapOrphanTransactions.erase(it);
 }
 
-void EraseOrphansFor(NodeId peer)
+void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache)
 {
+
+    AssertLockHeld(cs_orphancache);
+
     int nErased = 0;
     map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
     while (iter != mapOrphanTransactions.end())
@@ -716,9 +726,9 @@ void EraseOrphansFor(NodeId peer)
 }
 
 // BU - Xtreme Thinblocks: begin
-void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_orphancache);
 
     // Because we have to iterate through the entire orphan cache which can be large we don't want to check this
     // every time a tx enters the mempool but just once a minute is good enough.
@@ -745,9 +755,9 @@ void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 }
 // BU - Xtreme Thinblocks: end
 
-unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_orphancache);
 
     unsigned int nEvicted = 0;
     while (mapOrphanTransactions.size() > nMaxOrphans)
@@ -1556,10 +1566,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // BU: update tx per second when a tx is valid and accepted
         pool.UpdateTransactionsPerSecond();
         // BU - Xtreme Thinblocks - trim the orphan pool by entry time and do not allow it to be overidden.
-        EraseOrphansByTime();
     }
 
     if (!fRejectAbsurdFee) SyncWithWallets(tx, NULL);
+
+    //  BU: Xtreme thinblocks - purge orphans that are too old
+    LOCK(cs_orphancache);
+    EraseOrphansByTime();
 
     return true;
     }
@@ -5336,7 +5349,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     mempool.check(pcoinsTip);
                 }
             }
-
+            
+            LOCK(cs_orphancache);
             BOOST_FOREACH(uint256 hash, vEraseQueue)
                 EraseOrphanTx(hash);
         }
@@ -5718,7 +5732,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	      LogPrint("thin", "thin block stats: %s\n", ss.c_str());
               requester.Received(inv, pfrom, msgSize);
 	      HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
-              LOCK(cs_main);
+              LOCK(cs_orphancache);
 	      BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes)
                 EraseOrphanTx(mapPartialTxHash[cheapHash]);
 	    }
@@ -5826,6 +5840,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             LogPrint("thin", "thin block stats: %s\n", CThinBlockStats::ToString());
 
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
+            LOCK(cs_orphancache);
             BOOST_FOREACH(uint256 &hash, thinBlock.vTxHashes)
                 EraseOrphanTx(hash);
         }
@@ -5902,7 +5917,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
-            LOCK(cs_main);
+            LOCK(cs_orphancache);
             for (unsigned int i = 0; i < vTx.size(); i++)
                 EraseOrphanTx(vTx[i].GetHash());
         }
@@ -5993,7 +6008,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
-        LOCK(cs_main);
+        LOCK(cs_orphancache);
         for (unsigned int i = 0; i < block.vtx.size(); i++)
             EraseOrphanTx(block.vtx[i].GetHash());
     }
