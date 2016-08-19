@@ -2,7 +2,7 @@
 
 # Helpful little script that spits out a comma-separated list of
 # language codes for Qt icons that should be included
-# in binary dash distributions
+# in binary Dash Core distributions
 
 import glob
 import os

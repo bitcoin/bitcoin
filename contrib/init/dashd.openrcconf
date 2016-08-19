@@ -1,7 +1,7 @@
 # /etc/conf.d/dashd: config file for /etc/init.d/dashd
 
 # Config file location
-#BITCOIND_CONFIGFILE="/etc/dash/dash.conf"
+#BITCOIND_CONFIGFILE="/etc/dashcore/dash.conf"
 
 # What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
 #BITCOIND_PIDDIR="/var/run/dashd"
@@ -13,8 +13,8 @@
 #BITCOIND_DATADIR="/var/lib/dashd"
 
 # User and group to own dashd process
-#BITCOIND_USER="dash"
-#BITCOIND_GROUP="dash"
+#BITCOIND_USER="dashcore"
+#BITCOIND_GROUP="dashcore"
 
 # Path to dashd executable
 #BITCOIND_BIN="/usr/bin/dashd"

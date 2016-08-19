@@ -40,7 +40,7 @@ The following can be set when running make: make FOO=bar
     DEBUG: disable some optimizations and enable more runtime checking
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to dash's configure. In this case, `--disable-wallet`.
+options will be passed to Dash Core's configure. In this case, `--disable-wallet`.
 
 Additional targets:
 

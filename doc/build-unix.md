@@ -6,7 +6,7 @@ Some notes on how to build Dash Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile dash and the dependencies,
+Always use absolute paths to configure and compile Dash Core and the dependencies,
 for example, when specifying the the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
@@ -211,7 +211,7 @@ Hardening enables the following features:
 
 * Non-executable Stack
     If the stack is executable then trivial stack based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, dash should be built with a non-executable stack
+    vulnerable buffers are found. By default, Dash Core should be built with a non-executable stack
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
@@ -227,7 +227,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, dash may be compiled in
+When the intention is to run only a P2P node without a wallet, Dash Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet

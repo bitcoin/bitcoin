@@ -892,7 +892,7 @@ void InitLogging()
     LogPrintf("Dash Core version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
 }
 
-/** Initialize dash.
+/** Initialize Dash Core.
  *  @pre Parameters should be parsed and config file should be read.
  */
 bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
