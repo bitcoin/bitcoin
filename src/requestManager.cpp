@@ -65,7 +65,7 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
       if (node)
         {
 	  i->clear();
-          LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n",item.obj.ToString(), node->GetId(), node->GetRefCount());
+          LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(), node->GetRefCount());
           node->Release();     
 	}
     }
@@ -86,7 +86,7 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
 // Get this object from somewhere, asynchronously.
 void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 {
-  //LogPrint("req", "ReqMgr: Ask for %s.\n",obj.ToString().c_str());
+  //LogPrint("req", "ReqMgr: Ask for %s.\n", obj.ToString().c_str());
 
   LOCK(cs_objDownloader);
   if (obj.type == MSG_TX)
@@ -110,7 +110,7 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
       // Got the data, now add the node as a source
       data.AddSource(from);
     }
-  else if ((obj.type == MSG_BLOCK)||(obj.type == MSG_THINBLOCK)||(obj.type == MSG_XTHINBLOCK))
+  else if ((obj.type == MSG_BLOCK) || (obj.type == MSG_THINBLOCK) || (obj.type == MSG_XTHINBLOCK))
     {
       uint256 temp = obj.hash;
       OdMap::value_type v(temp,CUnknownObj());
@@ -123,7 +123,7 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 	}
       data.priority = max(priority,data.priority);
       data.AddSource(from);
-      LogPrint("blk", "%s available at %s\n",obj.ToString().c_str(),from->addrName.c_str());
+      LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
     }
   else
     {
@@ -153,17 +153,17 @@ void CRequestManager::Received(const CInv& obj, CNode* from, int bytes)
     {
       OdMap::iterator item = mapTxnInfo.find(obj.hash);
       if (item ==  mapTxnInfo.end()) return;  // item has already been removed
-      LogPrint("req", "ReqMgr: TX received for %s.\n",item->second.obj.ToString().c_str());
+      LogPrint("req", "ReqMgr: TX received for %s.\n", item->second.obj.ToString().c_str());
       from->txReqLatency << (now - item->second.lastRequestTime);  // keep track of response latency of this node
       // will be decremented in the item cleanup: if (inFlight) inFlight--;
       cleanup(item); // remove the item
       receivedTxns += 1;
     }
-  else if ((obj.type == MSG_BLOCK)||(obj.type == MSG_THINBLOCK)||(obj.type == MSG_XTHINBLOCK))
+  else if ((obj.type == MSG_BLOCK) || (obj.type == MSG_THINBLOCK) || (obj.type == MSG_XTHINBLOCK))
     {
       OdMap::iterator item = mapBlkInfo.find(obj.hash);
       if (item ==  mapBlkInfo.end()) return;  // item has already been removed
-      LogPrint("blk", "%s removed from request queue (received from %s (%d)).\n",item->second.obj.ToString().c_str(),from->addrName.c_str(), from->id);
+      LogPrint("blk", "%s removed from request queue (received from %s (%d)).\n", item->second.obj.ToString().c_str(),from->addrName.c_str(), from->id);
       //from->blkReqLatency << (now - item->second.lastRequestTime);  // keep track of response latency of this node
       cleanup(item); // remove the item
       //receivedTxns += 1;
@@ -180,7 +180,7 @@ void CRequestManager::AlreadyReceived(const CInv& obj)
     item = mapBlkInfo.find(obj.hash);
     if (item ==  mapBlkInfo.end()) return;  // Not in any map
     }
-  LogPrint("req", "ReqMgr: Already received %s.  Removing request.\n",item->second.obj.ToString().c_str());
+  LogPrint("req", "ReqMgr: Already received %s.  Removing request.\n", item->second.obj.ToString().c_str());
   // will be decremented in the item cleanup: if (inFlight) inFlight--;
   cleanup(item); // remove the item
 }
@@ -203,18 +203,18 @@ void CRequestManager::Rejected(const CInv& obj, CNode* from, unsigned char reaso
 
       rejectedTxns += 1;
     }
-  else if ((obj.type == MSG_BLOCK)||(obj.type == MSG_THINBLOCK)||(obj.type == MSG_XTHINBLOCK))
+  else if ((obj.type == MSG_BLOCK) || (obj.type == MSG_THINBLOCK) || (obj.type == MSG_XTHINBLOCK))
     {
       item = mapBlkInfo.find(obj.hash);
       if (item ==  mapBlkInfo.end()) 
 	{
-	  LogPrint("req", "ReqMgr: Unknown object rejected %s.\n",obj.ToString().c_str());
+	  LogPrint("req", "ReqMgr: Unknown object rejected %s.\n", obj.ToString().c_str());
 	  return;  // item has already been removed
 	}
 
     }
 
-  LogPrint("req", "ReqMgr: Request rejected for %s.\n",item->second.obj.ToString().c_str());
+  LogPrint("req", "ReqMgr: Request rejected for %s.\n", item->second.obj.ToString().c_str());
 
   if (reason == REJECT_MALFORMED)
     {
@@ -285,7 +285,7 @@ void CUnknownObj::AddSource(CNode* from)
 {
   if (std::find_if(availableFrom.begin(), availableFrom.end(), IsCNodeRequestDataThisNode(from)) == availableFrom.end())  // node is not in the request list
     {
-      LogPrint("req", "%s added ref to node %d.  Current count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
+      LogPrint("req", "%s added ref to node %d.  Current count %d.\n", obj.ToString(), from->GetId(), from->GetRefCount());
       {
         LOCK(cs_vNodes);  // This lock is needed to ensure that AddRef happens atomically
         from->AddRef();
@@ -394,22 +394,22 @@ void CRequestManager::SendRequests()
   cs_objDownloader.lock();
   if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
 
-  while ((sendBlkIter != mapBlkInfo.end())&&(blockPacer.try_leak(1)))
+  // Get Blocks
+  while ((sendBlkIter != mapBlkInfo.end()) && blockPacer.try_leak(1))
     {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendBlkIter;
       CUnknownObj& item = itemIter->second;
 
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
-
-      //if (itemIter == mapBlkInfo.end()) break;  // double check
+      if (itemIter == mapBlkInfo.end()) break;
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
           if (!item.availableFrom.empty())
 	    {
 	      CNodeRequestData next;
-              while ((!item.availableFrom.empty())&&(next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+              while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
                 {
   	        next = item.availableFrom.front();  // Grab the next location where we can find this object.
                 item.availableFrom.pop_front();
@@ -418,7 +418,7 @@ void CRequestManager::SendRequests()
 		    if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
 		      {
                       LOCK(cs_vNodes);
-                      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
                       next.node->Release();
                       next.node = NULL; // force the loop to get another node            
 		      }
@@ -429,7 +429,7 @@ void CRequestManager::SendRequests()
 		{
 		  if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
 		    {
-		      LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
+		      LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		    }
 
 		  CInv obj = item.obj;
@@ -451,7 +451,7 @@ void CRequestManager::SendRequests()
                   else
 		    {
 		      LOCK(cs_vNodes);
-		      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+		      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
 		      next.node->Release();
 		      next.node = NULL;
 		    }
@@ -471,10 +471,9 @@ void CRequestManager::SendRequests()
 	}    
     }
   
- 
+  // Get Transactions
   if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
-  // while (((lastPass + MIN_REQUEST_RETRY_INTERVAL < now)||(inFlight < maxInFlight + droppedTxns()))&&(sendIter != mapTxnInfo.end()))
-  while ((sendIter != mapTxnInfo.end()) && (requestPacer.try_leak(1)))
+  while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
     {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendIter;
@@ -489,7 +488,7 @@ void CRequestManager::SendRequests()
 	    {
 	      if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
 		{
-		  LogPrint("req", "Request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
+		  LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		  // Not reducing inFlight; its still outstanding; will be cleaned up when item is removed from map
                   droppedTxns += 1;
 		}
@@ -502,7 +501,7 @@ void CRequestManager::SendRequests()
               else  // Ok request this item.
 	        {
 		  CNodeRequestData next;
-		  while ((!item.availableFrom.empty())&&(next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+		  while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
                     {
 		    next = item.availableFrom.front();  // Grab the next location where we can find this object.
 		    item.availableFrom.pop_front();
@@ -511,7 +510,7 @@ void CRequestManager::SendRequests()
 			if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
 			  {
 			    LOCK(cs_vNodes);
-			    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+			    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
 			    next.node->Release();
 			    next.node = NULL; // force the loop to get another node            
 			  }
@@ -542,7 +541,7 @@ void CRequestManager::SendRequests()
                     else
 		      {
 			LOCK(cs_vNodes);
-			LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+			LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
 			next.node->Release();
 			next.node = NULL;
 		      }
@@ -554,7 +553,6 @@ void CRequestManager::SendRequests()
 	}
 
     }
-  //lastPass = now;
 
   cs_objDownloader.unlock();
 }
