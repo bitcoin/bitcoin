@@ -4807,7 +4807,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     const CChainParams& chainparams = Params();
     RandAddSeedPerfmon();
     unsigned int msgSize = vRecv.size(); // BU for statistics
-    UpdateRecvStats(pfrom,strCommand,msgSize,nTimeReceived);
+    UpdateRecvStats(pfrom, strCommand, msgSize, nTimeReceived);
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), msgSize, pfrom->id);
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
@@ -5582,18 +5582,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	  }
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
-        requester.Received(inv, pfrom, msgSize);
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
-        bool alreadyHave = false;
+
+        bool fAlreadyHave = false;
+        // An expedited block can arrive and beat the thin block response        
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
             LogPrint("thin", "Thinblock %s received but beaten by expedited from peer %s (%d)\n",inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
-            //Misbehaving(pfrom->GetId(), 20);  // An expedited block can arrive and beat the thin block response
-            alreadyHave = AlreadyHave(inv);
-            // I'll still process this just in case the expedited block was incomplete
+            fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted xpedited block yet
+            if (fAlreadyHave)
+                requester.Received(inv, pfrom, msgSize); // record the bytes received from the thinblock even though we had it already
         }
 
-        if (!alreadyHave)
+        if (!fAlreadyHave)
 	  {
 	    // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
             bool fXVal;
