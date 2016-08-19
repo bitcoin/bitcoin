@@ -196,24 +196,23 @@ bool CSporkManager::SetPrivKey(std::string strPrivKey)
 
 bool CSporkMessage::Sign(std::string strSignKey)
 {
-    std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
-
     CKey key;
     CPubKey pubkey;
-    std::string errorMessage = "";
+    std::string strError = "";
+    std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
 
-    if(!darkSendSigner.GetKeysFromSecret(strSignKey, errorMessage, key, pubkey)) {
-        LogPrintf("CSporkMessage::Sign -- ERROR: '%s'\n", errorMessage);
+    if(!darkSendSigner.GetKeysFromSecret(strSignKey, key, pubkey)) {
+        LogPrintf("CSporkMessage::Sign -- GetKeysFromSecret() failed, invalid spork key %s\n", strSignKey);
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, key)) {
-        LogPrintf("CSporkMessage::Sign -- SignMessage() failed");
+    if(!darkSendSigner.SignMessage(strMessage, vchSig, key)) {
+        LogPrintf("CSporkMessage::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CSporkMessage::Sign -- VerifyMessage() failed");
+    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, strError)) {
+        LogPrintf("CSporkMessage::Sign -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
 
@@ -223,12 +222,12 @@ bool CSporkMessage::Sign(std::string strSignKey)
 bool CSporkMessage::CheckSignature()
 {
     //note: need to investigate why this is failing
+    std::string strError = "";
     std::string strMessage = boost::lexical_cast<std::string>(nSporkID) + boost::lexical_cast<std::string>(nValue) + boost::lexical_cast<std::string>(nTimeSigned);
     CPubKey pubkey(ParseHex(Params().SporkPubKey()));
 
-    std::string errorMessage = "";
-    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
-        LogPrintf("CSporkMessage::CheckSignature -- VerifyMessage() failed");
+    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, strError)) {
+        LogPrintf("CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
 

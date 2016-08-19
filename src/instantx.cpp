@@ -560,7 +560,7 @@ bool CConsensusVote::CheckSignature()
     }
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, strError)) {
-        LogPrintf("CConsensusVote::CheckSignature -- VerifyMessage() failed\n");
+        LogPrintf("CConsensusVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
 
@@ -573,13 +573,13 @@ bool CConsensusVote::Sign()
 
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
 
-    if(!darkSendSigner.SignMessage(strMessage, strError, vchMasterNodeSignature, activeMasternode.keyMasternode)) {
-        LogPrintf("CConsensusVote::Sign -- SignMessage() failed");
+    if(!darkSendSigner.SignMessage(strMessage, vchMasterNodeSignature, activeMasternode.keyMasternode)) {
+        LogPrintf("CConsensusVote::Sign -- SignMessage() failed\n");
         return false;
     }
 
     if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, vchMasterNodeSignature, strMessage, strError)) {
-        LogPrintf("CConsensusVote::Sign -- VerifyMessage() failed");
+        LogPrintf("CConsensusVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
 

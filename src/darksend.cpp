@@ -2084,15 +2084,11 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(const CTxIn& txin, const CPubKey
     return false;
 }
 
-bool CDarkSendSigner::GetKeysFromSecret(std::string strSecret, std::string& strErrorRet, CKey& keyRet, CPubKey& pubkeyRet)
+bool CDarkSendSigner::GetKeysFromSecret(std::string strSecret, CKey& keyRet, CPubKey& pubkeyRet)
 {
     CBitcoinSecret vchSecret;
-    bool fGood = vchSecret.SetString(strSecret);
 
-    if(!fGood) {
-        strErrorRet = _("Invalid secret.");
-        return false;
-    }
+    if(!vchSecret.SetString(strSecret)) return false;
 
     keyRet = vchSecret.GetKey();
     pubkeyRet = keyRet.GetPubKey();
@@ -2100,18 +2096,13 @@ bool CDarkSendSigner::GetKeysFromSecret(std::string strSecret, std::string& strE
     return true;
 }
 
-bool CDarkSendSigner::SignMessage(std::string strMessage, std::string& strErrorRet, std::vector<unsigned char>& vchSigRet, CKey key)
+bool CDarkSendSigner::SignMessage(std::string strMessage, std::vector<unsigned char>& vchSigRet, CKey key)
 {
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << strMessage;
 
-    if(!key.SignCompact(ss.GetHash(), vchSigRet)) {
-        strErrorRet = _("Signing failed.");
-        return false;
-    }
-
-    return true;
+    return key.SignCompact(ss.GetHash(), vchSigRet);
 }
 
 bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, const std::vector<unsigned char>& vchSig, std::string strMessage, std::string& strErrorRet)
@@ -2122,12 +2113,12 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, const std::vector<unsigned c
 
     CPubKey pubkeyFromSig;
     if(!pubkeyFromSig.RecoverCompact(ss.GetHash(), vchSig)) {
-        strErrorRet = _("Error recovering public key.");
+        strErrorRet = "Error recovering public key.";
         return false;
     }
 
     if(pubkeyFromSig.GetID() != pubkey.GetID()) {
-        strErrorRet = strprintf("keys don't match: pubkey=%s, pubkeyFromSig=%s, strMessage=%s, vchSig=%s",
+        strErrorRet = strprintf("Keys don't match: pubkey=%s, pubkeyFromSig=%s, strMessage=%s, vchSig=%s",
                     pubkey.GetID().ToString(), pubkeyFromSig.GetID().ToString(), strMessage,
                     EncodeBase64(&vchSig[0], vchSig.size()));
         return false;
@@ -2177,9 +2168,8 @@ bool CDarksendQueue::Sign()
     if(!fMasterNode) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
-    std::string strError = "";
 
-    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, activeMasternode.keyMasternode)) {
+    if(!darkSendSigner.SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendQueue::Sign -- SignMessage() failed\n");
         return false;
     }
@@ -2196,7 +2186,7 @@ bool CDarksendQueue::CheckSignature()
     std::string strError = "";
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
-        LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature, vin=%s\n", vin.ToString());
+        LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature, vin=%s, error: %s\n", vin.ToString(), strError);
         return false;
     }
 
@@ -2235,9 +2225,8 @@ bool CDarksendBroadcastTx::Sign()
     if(!fMasterNode) return false;
 
     std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
-    std::string strError = "";
 
-    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, activeMasternode.keyMasternode)) {
+    if(!darkSendSigner.SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
         LogPrintf("CDarksendBroadcastTx::Sign -- SignMessage() failed\n");
         return false;
     }
@@ -2254,7 +2243,7 @@ bool CDarksendBroadcastTx::CheckSignature()
     std::string strError = "";
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
-        LogPrintf("CDarksendBroadcastTx::CheckSignature -- Got bad dstx signature\n");
+        LogPrintf("CDarksendBroadcastTx::CheckSignature -- Got bad dstx signature, error: %s\n", strError);
         return false;
     }
 

@@ -312,10 +312,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if(!darkSendSigner.GetKeysFromSecret(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+            if(!darkSendSigner.GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)) {
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
+                statusObj.push_back(Pair("errorMessage", strprintf("Invalid masternode key %s.", mne.getPrivKey())));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }

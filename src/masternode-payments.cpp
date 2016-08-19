@@ -316,20 +316,20 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 
 bool CMasternodePaymentWinner::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
-    std::string errorMessage;
+    std::string strError;
     std::string strMasterNodeSignMessage;
 
     std::string strMessage =  vinMasternode.prevout.ToStringShort() +
                 boost::lexical_cast<std::string>(nBlockHeight) +
                 ScriptToAsmStr(payee);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
-        LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage);
+    if(!darkSendSigner.SignMessage(strMessage, vchSig, keyMasternode)) {
+        LogPrintf("CMasternodePaymentWinner::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage);
+    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        LogPrintf("CMasternodePing::Sign() -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }
 
@@ -628,13 +628,13 @@ bool CMasternodePaymentWinner::SignatureValid()
 
     if(pmn != NULL)
     {
+        std::string strError = "";
         std::string strMessage =  vinMasternode.prevout.ToStringShort() +
                     boost::lexical_cast<std::string>(nBlockHeight) +
                     ScriptToAsmStr(payee);
 
-        std::string errorMessage = "";
-        if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-            return error("CMasternodePaymentWinner::SignatureValid() - Got bad Masternode payment signature %s", vinMasternode.ToString().c_str());
+        if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
+            return error("CMasternodePaymentWinner::CheckSignature -- Got bad Masternode payment signature: vin=%s, error: %s", vinMasternode.ToString().c_str(), strError);
         }
 
         return true;
