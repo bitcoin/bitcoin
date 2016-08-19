@@ -1969,7 +1969,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 }
 }// namespace Consensus
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::function<CScriptCheck * ()> inserter)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::function<CScriptCheck * (CScriptCheck *)> inserter)
 {
     if (!tx.IsCoinBase())
     {
@@ -1995,9 +1995,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 
                 // Verify signature
                 CScriptCheck check;
-                CScriptCheck * const ptr = inserter();
-                new (ptr ? ptr : &check) CScriptCheck(*coins, tx, i, flags, cacheStore);
-                if (!ptr && !check()) {
+                CScriptCheck * const ptr = inserter(&check);
+                new (ptr) CScriptCheck(*coins, tx, i, flags, cacheStore);
+                if (ptr == &check && !check()) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
@@ -2456,8 +2456,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            std::function<CScriptCheck*()> inserter = control.get_inserter();
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, inserter))
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, control.get_inserter()))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
         }

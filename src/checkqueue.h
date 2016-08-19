@@ -49,9 +49,13 @@ class inserter {
        queue(queueIn),
        start(queue ? queue->get_next_free_index() : nullptr),
        free_index(start) {}
+    typename Q::JOB_TYPE * operator()(typename Q::JOB_TYPE * def)
+    {
+        return free_index ? free_index++ : def;
+    }
     typename Q::JOB_TYPE * operator()()
     {
-        return start ? free_index++ : nullptr;
+        return free_index++;
     }
     ~inserter()
     {
