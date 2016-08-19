@@ -387,14 +387,13 @@ private:
     /** Internal function that does bulk of the verification work. */
     bool Master() {
         const size_t ID = 0;
-        work.wait_reset();
         masterJoined.store(true);
         TEST_log(ID, [](std::ostringstream& o) { o << "Master just set masterJoined\n"; });
         consume(ID);
         work.finished();
         work.wait_all_finished();
         TEST_log(ID, [](std::ostringstream& o) { o << "(Master) saw all threads finished\n"; });
-        bool fRet = fAllOk;
+        bool fRet = fAllOk.load();
         sleeper.sleep();
         masterJoined.store(false);
         return fRet;
@@ -425,6 +424,9 @@ private:
                 jobs.clear_check_memory();
                 cleanup.wait_all_finished();
                 cleanup.reset();
+                TEST_log(0, [](std::ostringstream& o) { o << "Resetting nAvail and fAllOk\n"; });
+                nAvail.store(0);
+                fAllOk.store(true);
                 work.reset();
             }
         }
@@ -449,13 +451,9 @@ public:
 
     void ControlLock() {
         control_mtx.lock();
-        TEST_log(0, [](std::ostringstream& o) {
-            o << "Resetting nAvail and fAllOk" << '\n';
-        });
-        nAvail.store(0);
-        fAllOk.store(true);
-        sleeper.wakeup();
         reset_jobs();
+        sleeper.wakeup();
+        work.wait_reset();
     }
     void ControlUnlock() {
         control_mtx.unlock();
@@ -544,11 +542,11 @@ public:
         }
     }
 
-    void TEST_dump_log(const size_t upto) const
+    void TEST_dump_log() const
     {
         if (TEST_FUNCTIONS_ENABLE) {
             LogPrintf("\n#####################\n## Round Beginning ##\n#####################");
-            for (auto i = 0; i < upto; ++i)
+            for (auto i = 0; i < RT_N_SCRIPTCHECK_THREADS; ++i)
                 LogPrintf("\n------------------\n%s\n------------------\n\n", test_log[i].str());
         }
     }
