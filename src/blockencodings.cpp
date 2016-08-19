@@ -75,7 +75,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     }
     prefilled_count = cmpctblock.prefilledtxn.size();
 
-    // Calculate map of txids -> positions and check mempool to see what we have (or dont)
+    // Calculate map of txids -> positions and check mempool to see what we have (or don't)
     // Because well-formed cmpctblock messages will have a (relatively) uniform distribution
     // of short IDs, any highly-uneven distribution of elements can be safely treated as a
     // READ_STATUS_FAILED.
