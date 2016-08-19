@@ -75,10 +75,12 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_emits_all)
         results.insert(x);
         ++m;
     }
+    bool b = true;
     for (auto i = 0; i < 200; ++i) {
-        BOOST_REQUIRE(results.count(i) == 1);
+        b = b && results.count(i) == 1;
         results.erase(i);
     }
+    BOOST_REQUIRE(b);
     BOOST_REQUIRE(results.empty());
     BOOST_REQUIRE(m == 200);
 }
@@ -93,19 +95,23 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_stealing)
         results.insert(x);
         ++m;
     }
+    bool b = true;
     for (auto i = 0; i < 160; i+=16) {
-        BOOST_REQUIRE(results.count(i) == 1);
+        b = b &&results.count(i) == 1;
         results.erase(i);
     }
+    BOOST_REQUIRE(b);
     BOOST_REQUIRE(results.empty());
     while (work.pop(x, true)) {
         results.insert(x);
         ++m;
     }
+    bool b2 = true;
     for (auto i = 0; i < 160; ++i) {
-        BOOST_REQUIRE(results.count(i) == 1 || (i %16) == 0);
+        b2 = b2 && (results.count(i) == 1 || (i %16) == 0);
         results.erase(i);
     }
+    BOOST_REQUIRE(b2);
 }
 
 typedef CCheckQueue_Internals::job_array<Standard_Queue> J;
@@ -217,7 +223,7 @@ void Correct_Queue_range(std::vector<size_t> range)
             }
         }
         if (print_Correct_Queue) {
-            small_queue->TEST_dump_log(nScriptCheckThreads);
+            small_queue->TEST_dump_log();
             small_queue->TEST_erase_log();
         }
         if (FakeJobCheckCompletion::n_calls != i) {
@@ -291,7 +297,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
             for (size_t x = 0; x < i; ++x)
                 if ((*jobs)[x].call_state)
                     nChecked++;
-            fail_queue->TEST_dump_log(nScriptCheckThreads);
+            fail_queue->TEST_dump_log();
             fail_queue->TEST_erase_log();
             BOOST_REQUIRE(!success);
         } else if (i == 0) {
@@ -309,14 +315,15 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 
     for (auto times = 0; times < 10; ++times) {
         std::array<bool, 2> result;
-        for (size_t i : {0, 1}) {
+        for (bool end_fails : {true, false}) {
             CCheckQueueControl<Failing_Queue> control(fail_queue.get());
             {
                 auto inserter = control.get_inserter();
-                for (size_t k = 0; k < 100-i; ++k)
-                    new (inserter()) FailingJob {k == 99};
+                for (size_t k = 0; k < 100; ++k)
+                    new (inserter()) FailingJob {k == 99 && end_fails};
             }
-            result[i] = control.Wait();
+            result[end_fails ? 0 : 1] = control.Wait();
+            fail_queue->TEST_dump_log();
             fail_queue->TEST_erase_log();
         }
         BOOST_CHECK(!result[0]);
@@ -357,8 +364,10 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueJob)
                 new (inserter()) UniqueJob{--total};
         }
     }
+    bool r = true;
     for (size_t i = 0; i < COUNT; ++i)
-        BOOST_REQUIRE(UniqueJob::results.count(i) == 1);
+        r = r && UniqueJob::results.count(i) == 1;
+    BOOST_REQUIRE(r);
 
 }
 
@@ -399,5 +408,56 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
     }
 }
 
+struct FrozenCleanupJob {
+    static std::atomic<bool> frozen;
+    bool operator()()
+    {
+        return true;
+    }
+    FrozenCleanupJob() {}
+    ~FrozenCleanupJob()
+    {
+        while (frozen)
+            ;
+    }
+    void swap(FrozenCleanupJob& x) {};
+};
+
+std::atomic<bool> FrozenCleanupJob::frozen {false};
+typedef CCheckQueue<FrozenCleanupJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS> FrozenCleanup_Queue;
+BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
+{
+    auto queue = std::shared_ptr<FrozenCleanup_Queue>(new FrozenCleanup_Queue{});
+    queue->init(nScriptCheckThreads);
+    std::thread t0([&](){
+        CCheckQueueControl<FrozenCleanup_Queue> control(queue.get());
+        {
+            auto inserter = control.get_inserter();
+            new (inserter()) FrozenCleanupJob{};
+        }
+        FrozenCleanupJob::frozen = true;
+        BOOST_REQUIRE(control.Wait());
+    });
+    std::atomic<bool> made_control{false};
+    std::thread t1([&](){
+        CCheckQueueControl<FrozenCleanup_Queue> control(queue.get());
+        made_control = true;
+    });
+    std::thread t2([&](){
+        bool b = true;
+        for (auto i = 0; i < 3000; ++i) {
+            b = b && !made_control;
+            MilliSleep(1);
+        }
+        FrozenCleanupJob::frozen = false;
+        while (!made_control){}
+
+
+    });
+    t1.join();
+    t2.join();
+    t0.join();
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
