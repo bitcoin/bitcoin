@@ -2007,6 +2007,10 @@
         <translation>Nur zu Knoten des Netzwerktyps &lt;net&gt; verbinden (ipv4, ipv6 oder onion)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Drucke diese Hilfemeldung und beende</translation>
+    </message>
+    <message>
         <source>Print version and exit</source>
         <translation>Gibt die Versionsnummer aus und beendet das Programm</translation>
     </message>

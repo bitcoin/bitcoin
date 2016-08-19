@@ -300,7 +300,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 wstecz</translation>
+        <translation>%1 za</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
