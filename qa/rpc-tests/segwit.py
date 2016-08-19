@@ -10,8 +10,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import sha256, ripemd160
-import os
-import shutil
 
 NODE_0 = 0
 NODE_1 = 1
