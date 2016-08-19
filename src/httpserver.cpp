@@ -319,7 +319,7 @@ static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 static bool HTTPBindAddresses(struct evhttp* http)
 {
     uint16_t defaultPort = BaseParams().RPCPort();
-    int rpcPortTmp = GetArg("-rpcport", defaultPort);
+    int64_t rpcPortTmp = GetArg("-rpcport", defaultPort);
     uint16_t rpcPort;
 
     if(IsValidPort(rpcPortTmp)) {

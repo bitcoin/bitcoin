@@ -122,7 +122,7 @@ void AddOneShot(const std::string& strDest)
 uint16_t GetListenPort()
 {
     uint16_t defaultPort = Params().GetDefaultPort();
-    int port = GetArg("-port", defaultPort);
+    int64_t port = GetArg("-port", defaultPort);
     if(!IsValidPort(port)) {
         port = defaultPort;
         LogPrintf("WARNING: -port %d is incorrect, using default %u\n", port, defaultPort);
@@ -2075,7 +2075,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (pnodeLocalHost == NULL) {
         CNetAddr local;
         LookupHost("127.0.0.1", local, false);
-        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService(local, (uint16_t)0), nLocalServices));
+        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices));
     }
 
     Discover(threadGroup);

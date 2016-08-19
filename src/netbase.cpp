@@ -63,7 +63,7 @@ std::string GetNetworkName(enum Network net) {
     }
 }
 
-bool IsValidPort(int port)
+bool IsValidPort(int64_t port)
 {
     return port > 0 && port < 0x10000;
 }

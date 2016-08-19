@@ -39,7 +39,7 @@ public:
 
 enum Network ParseNetwork(std::string net);
 std::string GetNetworkName(enum Network net);
-bool IsValidPort(int port);
+bool IsValidPort(int64_t port);
 bool SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut);
 bool SetProxy(enum Network net, const proxyType &addrProxy);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);

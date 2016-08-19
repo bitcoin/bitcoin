@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(netbase_splithost)
 
 bool static TestParse(string src, string canon)
 {
-    CService addr(LookupNumeric(src.c_str(), (uint16_t)65535));
+    CService addr(LookupNumeric(src.c_str(), 65535));
     return canon == addr.ToString();
 }
 

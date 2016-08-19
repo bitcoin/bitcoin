@@ -149,7 +149,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
 {
     std::string host = GetArg("-rpcconnect", DEFAULT_RPCCONNECT);
 
-    int portTmp = GetArg("-rpcport", BaseParams().RPCPort());
+    int64_t portTmp = GetArg("-rpcport", BaseParams().RPCPort());
     if(portTmp <= 0 || portTmp >= 0x10000)
         throw runtime_error(strprintf("-rpcport %d is incorrect", portTmp));
     uint16_t port = (uint16_t)portTmp;
