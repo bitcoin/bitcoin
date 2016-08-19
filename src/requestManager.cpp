@@ -336,8 +336,11 @@ void RequestBlock(CNode* pfrom, CInv obj)
 		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
 		  inv2.type = MSG_XTHINBLOCK;
 		  std::vector<uint256> vOrphanHashes;
-		  for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-		    vOrphanHashes.push_back((*mi).first);
+                  {
+                    LOCK(cs_main);
+                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                        vOrphanHashes.push_back((*mi).first);
+                  }
 		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
 		  ss << inv2;
 		  ss << filterMemPool;
@@ -350,17 +353,20 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	    {
 	      // Try to download a thinblock if possible otherwise just download a regular block
 	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) { // We can only send one thinblock per peer at a time
-		pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-		inv2.type = MSG_XTHINBLOCK;
-		std::vector<uint256> vOrphanHashes;
-		for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-		  vOrphanHashes.push_back((*mi).first);
-		BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
-		ss << inv2;
-		ss << filterMemPool;
-		pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-		LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-	      }
+		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+		  inv2.type = MSG_XTHINBLOCK;
+		  std::vector<uint256> vOrphanHashes;
+                  {
+                    LOCK(cs_main);
+                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                        vOrphanHashes.push_back((*mi).first);
+                  }
+		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
+		  ss << inv2;
+		  ss << filterMemPool;
+		  pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
+		  LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	        }
 	      else 
 		{
 		  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
