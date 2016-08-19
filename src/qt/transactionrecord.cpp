@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "consensus/consensus.h"
 #include "main.h"
+#include "policy/rbf.h"
 #include "timedata.h"
 #include "wallet/wallet.h"
 
@@ -239,6 +240,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
+            if (wtx.signalsOptInRBF())
+                status.status = TransactionStatus::Replaceable;
             if (wtx.isAbandoned())
                 status.status = TransactionStatus::Abandoned;
         }

@@ -16,6 +16,7 @@
 #include "main.h"
 #include "net.h"
 #include "policy/policy.h"
+#include "policy/rbf.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -3575,4 +3576,9 @@ bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, CAmount nAbsurdFee)
 {
     CValidationState state;
     return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, false, nAbsurdFee);
+}
+
+bool CMerkleTx::signalsOptInRBF() const
+{
+    return SignalsOptInRBF(*this);
 }
