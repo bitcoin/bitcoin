@@ -461,7 +461,25 @@ void OverviewPage::privateSendStatus()
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
 
+    if (!fEnablePrivateSend) {
+        if (nBestHeight != darkSendPool.nCachedNumBlocks) {
+            darkSendPool.nCachedNumBlocks = nBestHeight;
+            updatePrivateSendProgress();
+        }
+
+        ui->labelPrivateSendLastMessage->setText("");
+        ui->togglePrivateSend->setText(tr("Start Mixing"));
+
+        QString strEnabled = tr("Disabled");
+        // Show how many keys left in advanced PS UI mode only
+        if (fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
+        ui->labelPrivateSendEnabled->setText(strEnabled);
+
+        return;
+    }
+
     // Warn user that wallet is running out of keys
+    // NOTE: we do NOT warn user and do NOT create autobackups if mixing is not running
     if (nWalletBackups > 0 && pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING) {
         QSettings settings;
         if(settings.value("fLowKeysWarning").toBool()) {
@@ -518,18 +536,6 @@ void OverviewPage::privateSendStatus()
         // We were able to create automatic backup but keypool was not replenished because wallet is locked.
         QString strWarning = tr("WARNING! Failed to replenish keypool, please unlock your wallet to do so.");
         ui->labelPrivateSendEnabled->setToolTip(strWarning);
-    }
-
-    if(!fEnablePrivateSend) {
-        if(nBestHeight != darkSendPool.nCachedNumBlocks) {
-            darkSendPool.nCachedNumBlocks = nBestHeight;
-            updatePrivateSendProgress();
-        }
-
-        ui->labelPrivateSendLastMessage->setText("");
-        ui->togglePrivateSend->setText(tr("Start Mixing"));
-
-        return;
     }
 
     // check darksend status and unlock if needed

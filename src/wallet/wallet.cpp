@@ -3658,6 +3658,7 @@ bool CWallet::NewKeyPool()
         BOOST_FOREACH(int64_t nIndex, setKeyPool)
             walletdb.ErasePool(nIndex);
         setKeyPool.clear();
+        fEnablePrivateSend = false;
         pwalletMain->nKeysLeftSinceAutoBackup = 0;
 
         if (IsLocked())
