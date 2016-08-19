@@ -683,3 +683,8 @@ bool WalletModel::abandonTransaction(uint256 hash) const
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
 }
+
+bool WalletModel::hdEnabled() const
+{
+    return wallet->IsHDEnabled();
+}
