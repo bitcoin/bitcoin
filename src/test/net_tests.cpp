@@ -53,7 +53,7 @@ public:
         s << nUBuckets;
 
         CService serv;
-        Lookup("252.1.1.1", serv, 7777, false);
+        Lookup("252.1.1.1", serv, (uint16_t)7777, false);
         CAddress addr = CAddress(serv, NODE_NONE);
         CNetAddr resolved;
         LookupHost("252.2.2.2", resolved, false);
@@ -80,13 +80,13 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     addrmanUncorrupted.MakeDeterministic();
 
     CService addr1, addr2, addr3;
-    Lookup("250.7.1.1", addr1, 8333, false);
-    Lookup("250.7.2.2", addr2, 9999, false);
-    Lookup("250.7.3.3", addr3, 9999, false);
+    Lookup("250.7.1.1", addr1, (uint16_t)8333, false);
+    Lookup("250.7.2.2", addr2, (uint16_t)9999, false);
+    Lookup("250.7.3.3", addr3, (uint16_t)9999, false);
 
     // Add three addresses to new table.
     CService source;
-    Lookup("252.5.1.1", source, 8333, false);
+    Lookup("252.5.1.1", source, (uint16_t)8333, false);
     addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
     addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
     addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
