@@ -452,19 +452,10 @@ void CRequestManager::SendRequests()
                     }
 		  cs_objDownloader.lock();
 
-                  if (0) // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
-		    {
-                      next.requestCount += 1;
-                      next.desirability /= 2;  // Make this node less desirable to re-request.
-                      item.availableFrom.push_back(next);  // Add the node back onto the end of the list
-		    }
-                  else
-		    {
-		      LOCK(cs_vNodes);
-		      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-		      next.node->Release();
-		      next.node = NULL;
-		    }
+                  LOCK(cs_vNodes);
+                  LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                  next.node->Release();
+                  next.node = NULL;
 		}
               else
 		{
@@ -531,32 +522,25 @@ void CRequestManager::SendRequests()
 		    {
                     if (1)
                       {
-                      cs_objDownloader.unlock();
-                      LOCK(next.node->cs_vSend);
-  		      // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                      if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
-                        {
-                          next.node->mapAskFor.insert(std::make_pair(now, item.obj));
-                          item.outstandingReqs++;
-		          item.lastRequestTime = now;
-                        }
-                      cs_objDownloader.lock();
-		      }
-                    if (0)  // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
+                        cs_objDownloader.unlock();
+                        LOCK(next.node->cs_vSend);
+  		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
+                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                          {
+                            next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                            item.outstandingReqs++;
+		            item.lastRequestTime = now;
+                          }
+                        cs_objDownloader.lock();
+                      }
                       {
-                        next.requestCount += 1;
-                        next.desirability /= 2;  // Make this node less desirable to re-request.
-                        item.availableFrom.push_back(next);  // Add the node back onto the end of the list
+                        LOCK(cs_vNodes);
+                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                        next.node->Release();
+                        next.node = NULL;
 		      }
-                    else
-		      {
-			LOCK(cs_vNodes);
-			LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-			next.node->Release();
-			next.node = NULL;
-		      }
-  		    inFlight++;
-                    inFlightTxns << inFlight;
+                      inFlight++;
+                      inFlightTxns << inFlight;
 		    }
 		}
 	    }
