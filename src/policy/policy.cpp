@@ -154,14 +154,24 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
+<<<<<<< HEAD
 unsigned int nBytesPerSigOp = DEFAULT_BYTES_PER_SIGOP;
 
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost)
 {
     return (std::max(nWeight, nSigOpCost * nBytesPerSigOp) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+=======
+int64_t GetVirtualTransactionSize(int64_t nWeight)
+{
+    return (nWeight + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+>>>>>>> bitcoin/0.13
 }
 
 int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost)
 {
+<<<<<<< HEAD
     return GetVirtualTransactionSize(GetTransactionWeight(tx), nSigOpCost);
+=======
+    return GetVirtualTransactionSize(GetTransactionWeight(tx));
+>>>>>>> bitcoin/0.13
 }

@@ -3602,7 +3602,11 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // the block hash, so we couldn't mark the block as permanently
     // failed).
     if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+<<<<<<< HEAD
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+=======
+        return state.DoS(100, error("ContextualCheckBlock(): weight limit failed"), REJECT_INVALID, "bad-blk-weight");
+>>>>>>> bitcoin/0.13
     }
 
     return true;
