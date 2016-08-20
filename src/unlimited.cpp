@@ -57,6 +57,7 @@ std::string minerComment;
 CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
 CLeakyBucket sendShaper(DEFAULT_MAX_SEND_BURST, DEFAULT_AVE_SEND);
 boost::chrono::steady_clock CLeakyBucket::clock;
+bool IsTrafficShapingEnabled();
 
 // Variables for statistics tracking, must be before the "requester" singleton instantiation
 const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
@@ -875,6 +876,20 @@ UniValue setblockversion(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+bool IsTrafficShapingEnabled()
+{
+    int64_t max, avg;
+
+    sendShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX)
+        return true;
+
+    receiveShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX)
+        return true;
+
+    return false;
+}
 
 UniValue gettrafficshaping(const UniValue& params, bool fHelp)
 {

@@ -437,14 +437,16 @@ void CRequestManager::SendRequests()
 
 	      if (next.node != NULL )
 		{
-		  if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
+                  // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
+                  //     The chain must be almost syncd and traffic shaping must not be turned on
+		  if (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled())
 		    {
 		      LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		    }
 
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
-                  if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                  if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled()))
                     {
 		      RequestBlock(next.node, obj);
 	              item.outstandingReqs++;
@@ -487,10 +489,12 @@ void CRequestManager::SendRequests()
 	{
           if (!item.rateLimited)
 	    {
-	      if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
+                // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
+                //     The chain must be almost syncd and traffic shaping must not be turned on
+		if (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled())
 		{
 		  LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
-		  // Not reducing inFlight; its still outstanding; will be cleaned up when item is removed from map
+		  // Not reducing inFlight; it's still outstanding and will be cleaned up when item is removed from map
                   droppedTxns += 1;
 		}
 
@@ -525,7 +529,7 @@ void CRequestManager::SendRequests()
                         cs_objDownloader.unlock();
                         LOCK(next.node->cs_vSend);
   		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled()))
                           {
                             next.node->mapAskFor.insert(std::make_pair(now, item.obj));
                             item.outstandingReqs++;
