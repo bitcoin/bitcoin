@@ -201,6 +201,8 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes[1].invalidateblock(best_hash)
         self.nodes[2].invalidateblock(best_hash)
         self.nodes[3].invalidateblock(best_hash)
+        # Allow some time for the reorg to start
+        time.sleep(2)
         self.sync_all()
 
         balance4 = self.nodes[1].getaddressbalance(address2)

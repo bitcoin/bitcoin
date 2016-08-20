@@ -4960,10 +4960,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mapDarksendBroadcastTxes.count(inv.hash);
 
     case MSG_GOVERNANCE_OBJECT:
-        return governance.HaveVoteForHash(inv.hash);
+        return governance.HaveObjectForHash(inv.hash);
 
     case MSG_GOVERNANCE_OBJECT_VOTE:
-        return governance.HaveObjectForHash(inv.hash);
+        return governance.HaveVoteForHash(inv.hash);
     }
 
     // Don't know what it is, just say we already got one
@@ -5178,7 +5178,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                     bool topush = false;
                     {
-                        if(governance.HaveObjectForHash(inv.hash)) {
+                        if(governance.HaveVoteForHash(inv.hash)) {
                             ss.reserve(1000);
                             if(governance.SerializeVoteForHash(inv.hash, ss))  {
                                 topush = true;
