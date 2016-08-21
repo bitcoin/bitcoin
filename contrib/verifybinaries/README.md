@@ -12,3 +12,9 @@ Usage:
 ./verify.sh bitcoin-core-0.12.0
 ./verify.sh bitcoin-core-0.13.0-rc3
 ```
+
+If you do not want to keep the downloaded binaries, specify anything as the second parameter.
+
+```sh
+./verify.sh bitcoin-core-0.13.0 delete
+```
