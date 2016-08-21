@@ -915,16 +915,16 @@ UniValue gettrafficshaping(const UniValue& params, bool fHelp)
             HelpExampleCli("gettrafficshaping", "") + HelpExampleRpc("gettrafficshaping", ""));
 
     UniValue ret(UniValue::VOBJ);
-    int64_t max, ave;
-    sendShaper.get(&max, &ave);
-    if (ave != LONG_MAX) {
+    int64_t max, avg;
+    sendShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX) {
         ret.push_back(Pair("sendBurst", max / 1024));
-        ret.push_back(Pair("sendAve", ave / 1024));
+        ret.push_back(Pair("sendAve", avg / 1024));
     }
-    receiveShaper.get(&max, &ave);
-    if (ave != LONG_MAX) {
+    receiveShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX) {
         ret.push_back(Pair("recvBurst", max / 1024));
-        ret.push_back(Pair("recvAve", ave / 1024));
+        ret.push_back(Pair("recvAve", avg / 1024));
     }
     return ret;
 }
