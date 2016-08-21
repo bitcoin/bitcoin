@@ -10,4 +10,5 @@ Usage:
 ```sh
 ./verify.sh bitcoin-core-0.11.2
 ./verify.sh bitcoin-core-0.12.0
+./verify.sh bitcoin-core-0.13.0-rc3
 ```
