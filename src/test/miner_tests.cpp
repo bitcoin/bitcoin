@@ -368,44 +368,49 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     // subsidy changing
-    int nHeight = chainActive.Height();
-    // Create an actual 209999-long block chain (without valid blocks).
-    while (chainActive.Tip()->nHeight < 209999) {
-        CBlockIndex* prev = chainActive.Tip();
-        CBlockIndex* next = new CBlockIndex();
-        next->phashBlock = new uint256(GetRandHash());
-        pcoinsTip->SetBestBlock(next->GetBlockHash());
-        next->pprev = prev;
-        next->nHeight = prev->nHeight + 1;
-        next->BuildSkip();
-        chainActive.SetTip(next);
-    }
     {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
-        BOOST_CHECK(pblocktemplate);
-    }
-    // Extend to a 210000-long block chain.
-    while (chainActive.Tip()->nHeight < 210000) {
-        CBlockIndex* prev = chainActive.Tip();
-        CBlockIndex* next = new CBlockIndex();
-        next->phashBlock = new uint256(GetRandHash());
-        pcoinsTip->SetBestBlock(next->GetBlockHash());
-        next->pprev = prev;
-        next->nHeight = prev->nHeight + 1;
-        next->BuildSkip();
-        chainActive.SetTip(next);
-    }
-    {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
-        BOOST_CHECK(pblocktemplate);
-    }
-    // Delete the dummy blocks again.
-    while (chainActive.Tip()->nHeight > nHeight) {
-        CBlockIndex* del = chainActive.Tip();
-        chainActive.SetTip(del->pprev);
-        pcoinsTip->SetBestBlock(del->pprev->GetBlockHash());
-        delete del->phashBlock;
-        delete del;
+        CBlockIndex* reset_tip = chainActive.Tip();
+        std::vector<uint256> random_hashes;
+        std::vector<CBlockIndex> indexes;
+        indexes.resize(210000, CBlockIndex());
+        random_hashes.reserve(210000);
+        for (auto i = 0; i < 210000; ++i) 
+            random_hashes.push_back(uint256(GetRandHash()));
+        // Create an actual 209999-long block chain (without valid blocks).
+        auto index_ = 0;
+        while (chainActive.Tip()->nHeight < 209999) {
+            CBlockIndex* prev = chainActive.Tip();
+            CBlockIndex* next = &indexes[index_];
+            next->phashBlock = &random_hashes[index_];
+            pcoinsTip->SetBestBlock(next->GetBlockHash());
+            next->pprev = prev;
+            next->nHeight = prev->nHeight + 1;
+            next->BuildSkip();
+            chainActive.SetTip(next);
+            ++index_;
+        }
+        {
+            std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
+            BOOST_CHECK(pblocktemplate);
+        }
+        // Extend to a 210000-long block chain.
+        while (chainActive.Tip()->nHeight < 210000) {
+            CBlockIndex* prev = chainActive.Tip();
+            CBlockIndex* next = &indexes[index_];
+            next->phashBlock = &random_hashes[index_];
+            pcoinsTip->SetBestBlock(next->GetBlockHash());
+            next->pprev = prev;
+            next->nHeight = prev->nHeight + 1;
+            next->BuildSkip();
+            chainActive.SetTip(next);
+            ++index_;
+        }
+        {
+            std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
+            BOOST_CHECK(pblocktemplate);
+        }
+        chainActive.SetTip(reset_tip);
+        pcoinsTip->SetBestBlock(reset_tip->GetBlockHash());
     }
 
     // non-final txs in mempool
