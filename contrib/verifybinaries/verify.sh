@@ -108,11 +108,16 @@ if [ $? -eq 1 ]; then
    exit 1
 elif [ $? -gt 1 ]; then
    echo "Error executing 'diff'"
-   exit 2   
+   exit 2
 fi
 
-#everything matches! clean up the mess
-clean_up $FILES $SIGNATUREFILENAME $TMPFILE
+if [ -n "$2" ]; then
+   echo "Clean up the binaries"
+   clean_up $FILES $SIGNATUREFILENAME $TMPFILE
+else
+   echo "Keep the binaries in $WORKINGDIR"
+   clean_up $TMPFILE
+fi
 
 echo -e "Verified hashes of \n$FILES"
 
