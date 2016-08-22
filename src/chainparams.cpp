@@ -79,10 +79,11 @@ public:
         consensus.nInstantSendKeepLock = 24;
         consensus.nInstantSendReprocessBlocks = 15;
         consensus.nBudgetPaymentsStartBlock = 328008; // actual historical value
-        consensus.nSuperblockCycle = 576; // Superblocks can be issued daily
         consensus.nBudgetPaymentsCycleBlocks = 16616; // ~(60*24*30)/2.6, actual number of blocks per month is 200700 / 12 = 16725
         consensus.nBudgetPaymentsWindowBlocks = 100;
         consensus.nBudgetProposalEstablishingTime = 60*60*24;
+        consensus.nSuperblockStartBlock = 543210; // TODO, the block at which 12.1 goes live.
+        consensus.nSuperblockCycle = 576; // Superblocks can be issued daily
         consensus.nMasternodeMinimumConfirmations = 15;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -196,11 +197,12 @@ public:
         consensus.nMasternodePaymentsIncreasePeriod = 576;
         consensus.nInstantSendKeepLock = 6;
         consensus.nInstantSendReprocessBlocks = 4;
-        consensus.nBudgetPaymentsStartBlock = 78476;
-        consensus.nSuperblockCycle = 576;
+        consensus.nBudgetPaymentsStartBlock = 78476; // TODO
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 10;
         consensus.nBudgetProposalEstablishingTime = 60*20;
+        consensus.nSuperblockStartBlock = 54321; // TODO, the block at which 12.1 goes live.
+        consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nMasternodeMinimumConfirmations = 1;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
@@ -298,9 +300,10 @@ public:
         consensus.nInstantSendReprocessBlocks = 4;
         consensus.nBudgetPaymentsStartBlock = 1000;
         consensus.nBudgetPaymentsCycleBlocks = 50;
-        consensus.nSuperblockCycle = 576;
-        consensus.nBudgetPaymentsWindowBlocks = 100;
+        consensus.nBudgetPaymentsWindowBlocks = 10;
         consensus.nBudgetProposalEstablishingTime = 60*20;
+        consensus.nSuperblockStartBlock = 1500;
+        consensus.nSuperblockCycle = 10;
         consensus.nMasternodeMinimumConfirmations = 1;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;

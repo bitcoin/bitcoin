@@ -1739,7 +1739,7 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
         might be a good idea to change this to use prev bits
         but current height to avoid confusion.
 */
-CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams)
+CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
     double dDiff = (double)0x0000ffff / (double)(nPrevBits & 0x00ffffff);
 
@@ -1771,9 +1771,9 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
 
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget super-blocks)
-    if(nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) nSubsidy -= nSubsidy/10;
+    CAmount nSuperblockPart = (nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) ? nSubsidy/10 : 0;
 
-    return nSubsidy;
+    return fSuperblockPartOnly ? nSuperblockPart : nSubsidy - nSuperblockPart;
 }
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
@@ -2768,12 +2768,20 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
+    // DASH : MODIFYED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, chainparams.GetConsensus());
-    if (!IsBlockValueValid(block, blockReward))
-        return state.DoS(100,
-                         error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0].GetValueOut(), blockReward),
-                               REJECT_INVALID, "bad-cb-amount");
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward))
+        // TODO: handle error here more accurate - this could actually fail for different reasons
+        return state.DoS(100, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
+                                block.vtx[0].GetValueOut(), blockReward),
+                                REJECT_INVALID, "bad-cb-amount");
+
+    if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
+        mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
+        return state.DoS(100, error("ConnectBlock(DASH): couldn't find masternode or superblock payments"),
+                                REJECT_INVALID, "bad-cb-payee");
+    }
+    // END DASH
 
     if (!control.Wait())
         return state.DoS(100, false);
@@ -3731,34 +3739,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             }
         }
     } else {
-        LogPrintf("CheckBlock(DASH) : skipping transaction locking checks\n");
-    }
-
-    // DASH : CHECK MASTERNODE PAYMENTS OR SUPERBLOCKS
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev != NULL)
-    {
-        int nHeight = 0;
-        if(pindexPrev->GetBlockHash() == block.hashPrevBlock)
-        {
-            nHeight = pindexPrev->nHeight+1;
-        } else {
-            // IF WE CAN'T FIND A SPECIFIC MATCH
-            BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-            if (mi != mapBlockIndex.end() && (*mi).second)
-                nHeight = (*mi).second->nHeight+1;
-        }
-
-        if(nHeight != 0){
-            if(!IsBlockPayeeValid(block.vtx[0], nHeight))
-            {
-                mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                return state.DoS(100, error("CheckBlock() : Couldn't find masternode or superblock payments"));
-            }
-        } else {
-            LogPrintf("CheckBlock() : WARNING: Couldn't find previous block, skipping IsBlockPayeeValid(!)\n");
-        }
+        LogPrintf("CheckBlock(DASH): skipping transaction locking checks\n");
     }
 
     // END DASH

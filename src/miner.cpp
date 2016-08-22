@@ -274,10 +274,12 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 }
             }
         }
-        // Masternode and general budget payments
-        FillBlockPayee(txNew, nFees);
+        CAmount blockReward = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+        // Masternode and governace payments
+        FillBlockPayee(txNew, blockReward, nHeight);
 
         // Make payee
+        // TODO: does not make sense for superblocks and it is not enough anymore
         if(txNew.vout.size() > 1){
             pblock->payee = txNew.vout[1].scriptPubKey;
         }

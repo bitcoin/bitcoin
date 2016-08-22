@@ -299,7 +299,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 
 bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 {
-    if (!IsValidSuperblockHeight(nBlockHeight)) {
+    if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         return false;
     }
 
@@ -350,6 +350,10 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 
 bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pBlock, int nBlockHeight)
 {
+    if(!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
+        return false;
+    }
+
     AssertLockHeld(governance.cs);
     std::vector<CSuperblock_sptr> vecTriggers = triggerman.GetActiveTriggers();
     int nYesCount = 0;
@@ -392,17 +396,11 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pBlock, int nBlockH
 *   - Create the correct payment structure for a given superblock
 */
 
-void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, CAmount nFees, int nBlockHeight)
+void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, int nBlockHeight)
 {
     DBG( cout << "CSuperblockManager::CreateSuperblock Start" << endl; );
 
     LOCK(governance.cs);
-    AssertLockHeld(cs_main);
-
-    if(!chainActive.Tip()) {
-        DBG( cout << "CSuperblockManager::CreateSuperblock No active tip, returning" << endl; );
-        return;
-    }
 
     // GET THE BEST SUPERBLOCK FOR THIS BLOCK HEIGHT
 
@@ -419,6 +417,10 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, CAmount nF
 
     DBG( cout << "CSuperblockManager::CreateSuperblock Number payments: " << pBlock->CountPayments() << endl; );
 
+    // TODO: How many payments can we add before things blow up?
+    //       Consider at least following limits:
+    //          - max coinbase tx size
+    //          - max "budget" available
     for(int i = 0; i < pBlock->CountPayments(); i++)  {
         CGovernancePayment payment;
         DBG( cout << "CSuperblockManager::CreateSuperblock i = " << i << endl; );
@@ -449,14 +451,14 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, CAmount nF
     DBG( cout << "CSuperblockManager::CreateSuperblock End" << endl; );
 }
 
-bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight)
+bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     // GET BEST SUPERBLOCK, SHOULD MATCH
     LOCK(governance.cs);
 
-    CSuperblock_sptr pBlock;
-    if(CSuperblockManager::GetBestSuperblock(pBlock, nBlockHeight)) {
-        return pBlock->IsValid(txNew);
+    CSuperblock_sptr pSuperblock;
+    if(CSuperblockManager::GetBestSuperblock(pSuperblock, nBlockHeight)) {
+        return pSuperblock->IsValid(txNew, nBlockHeight, blockReward);
     }
 
     return false;
@@ -512,9 +514,38 @@ CSuperblock(uint256& nHash)
     DBG( cout << "CSuperblock Constructor End" << endl; );
 }
 
-void 
-CSuperblock::
-ParsePaymentSchedule(std::string& strPaymentAddresses, std::string& strPaymentAmounts)
+/**
+ *   Is Valid Superblock Height
+ *
+ *   - See if a block at this height can be a superblock
+ */
+
+bool CSuperblock::IsValidBlockHeight(int nBlockHeight)
+{
+    // SUPERBLOCKS CAN HAPPEN ONLY after hardfork and only ONCE PER CYCLE
+    return nBlockHeight >= Params().GetConsensus().nSuperblockStartBlock &&
+            ((nBlockHeight % Params().GetConsensus().nSuperblockCycle) == 0);
+}
+
+CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
+{
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+
+    if(!IsValidBlockHeight(nBlockHeight)) {
+        return 0;
+    }
+
+    // min subsidy for high diff networks and vice versa
+    int nBits = consensusParams.fPowAllowMinDifficultyBlocks ? UintToArith256(consensusParams.powLimit).GetCompact() : 1;
+    // some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
+    CAmount nSuperblockPartOfSubsidy = GetBlockSubsidy(nBits, nBlockHeight, consensusParams, true);
+    CAmount nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.nSuperblockCycle;
+    LogPrint("gobject", "CSuperblock::GetPaymentsLimit -- Valid superblock height %d, payments max %lld\n", nBlockHeight, nPaymentsLimit);
+
+    return nPaymentsLimit;
+}
+
+void CSuperblock::ParsePaymentSchedule(std::string& strPaymentAddresses, std::string& strPaymentAmounts)
 {
     // SPLIT UP ADDR/AMOUNT STRINGS AND PUT IN VECTORS
 
@@ -571,6 +602,27 @@ ParsePaymentSchedule(std::string& strPaymentAddresses, std::string& strPaymentAm
     }
 }
 
+bool CSuperblock::GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet)
+{
+    if((nPaymentIndex<0) || (nPaymentIndex >= (int)vecPayments.size())) {
+        return false;
+    }
+
+    paymentRet = vecPayments[nPaymentIndex];
+    return true;
+}
+
+CAmount CSuperblock::GetPaymentsTotalAmount()
+{
+    CAmount nPaymentsTotalAmount = 0;
+    int nPayments = CountPayments();
+
+    for(int i = 0; i < nPayments; i++) {
+        nPaymentsTotalAmount += vecPayments[i].nAmount;
+    }
+
+    return nPaymentsTotalAmount;
+}
 
 /**
 *   Is Transaction Valid
@@ -578,13 +630,17 @@ ParsePaymentSchedule(std::string& strPaymentAddresses, std::string& strPaymentAm
 *   - Does this transaction match the superblock?
 */
 
-bool CSuperblock::IsValid(const CTransaction& txNew)
+bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     // TODO : LOCK(cs);
     // No reason for a lock here now since this method only accesses data
     // internal to *this and since CSuperblock's are accessed only through
     // shared pointers there's no way our object can get deleted while this
     // code is running.
+    if(!IsValidBlockHeight(nBlockHeight)) {
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, incorrect block height\n");
+        return false;
+    }
 
     std::string strPayeesPossible = "";
 
@@ -598,18 +654,34 @@ bool CSuperblock::IsValid(const CTransaction& txNew)
     // superblock payments and the payments actually in the block, after
     // skipping any initial miner payments.
 
-    if(nMinerPayments<0)  {
+    if(nMinerPayments < 0) {
         // This means the block cannot have all the superblock payments
         // so it is not valid.
-        LogPrintf("CSuperblock::IsValid WARNING: Block invalid: Too few superblock payments");
+        // TODO: could that be that we just hit coinbase size limit?
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, too few superblock payments\n");
+        return false;
+    }
+
+    // payments should not exceed limit
+    CAmount nPaymentsTotalAmount = GetPaymentsTotalAmount();
+    CAmount nPaymentsLimit = GetPaymentsLimit(nBlockHeight);
+    if(nPaymentsTotalAmount > nPaymentsLimit) {
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, payments limit exceeded: payments %lld, limit %lld\n", nPaymentsTotalAmount, nPaymentsLimit);
+        return false;
+    }
+
+    // miner should not get more than he would usually get
+    CAmount nBlockValue = txNew.GetValueOut();
+    if(nBlockValue > blockReward + nPaymentsTotalAmount) {
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n", nBlockValue, blockReward + nPaymentsTotalAmount);
         return false;
     }
 
     for(int i = 0; i < nPayments; i++) {
         CGovernancePayment payment;
-        if(!GetPayment(i, payment))  {
+        if(!GetPayment(i, payment)) {
             // This shouldn't happen so log a warning
-            LogPrintf("CSuperblock::IsValid WARNING: Failed to find payment: %d of %d total payments", i, nPayments);
+            LogPrintf("CSuperblock::IsValid -- WARNING: Failed to find payment: %d of %d total payments\n", i, nPayments);
             continue;
         }
 
@@ -618,13 +690,13 @@ bool CSuperblock::IsValid(const CTransaction& txNew)
         bool fPaymentMatch = ((payment.script == txNew.vout[nVoutIndex].scriptPubKey) &&
                               (payment.nAmount == txNew.vout[nVoutIndex].nValue));
 
-        if(!fPaymentMatch)  {
+        if(!fPaymentMatch) {
             // MISMATCHED SUPERBLOCK OUTPUT!
 
             CTxDestination address1;
             ExtractDestination(payment.script, address1);
             CBitcoinAddress address2(address1);
-            LogPrintf("CSuperblock::IsValid WARNING: Block invalid: output n %d payment %d to %s\n", nVoutIndex, payment.nAmount, address2.ToString());
+            LogPrintf("CSuperblock::IsValid -- WARNING: Block invalid: output n %d payment %d to %s\n", nVoutIndex, payment.nAmount, address2.ToString());
 
             return false;
         }

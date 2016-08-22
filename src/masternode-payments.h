@@ -32,10 +32,11 @@ extern CMasternodePayments mnpayments;
 
 void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool IsReferenceNode(CTxIn& vin);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
+/// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
+bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward);
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+void FillBlockPayee(CMutableTransaction& txNew, CAmount blockReward, int nBlockHeight);
 std::string GetRequiredPaymentsString(int nBlockHeight);
-bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue);
-void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
 
 class CMasternodePayee
 {
@@ -248,7 +249,7 @@ public:
     int GetMinMasternodePaymentsProto();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);
-    void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
+    void FillBlockPayee(CMutableTransaction& txNew, CAmount blockReward, int nBlockHeight);
     std::string ToString() const;
 
     int GetOldestBlock();
