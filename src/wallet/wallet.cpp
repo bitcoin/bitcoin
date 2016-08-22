@@ -108,7 +108,7 @@ CPubKey CWallet::GenerateNewKey()
 
         // try to get the master key
         if (!GetKey(hdChain.masterKeyID, key))
-            throw std::runtime_error("CWallet::GenerateNewKey(): Master key not found");
+            throw std::runtime_error(std::string(__func__) + ": Master key not found");
 
         masterKey.SetMaster(key.begin(), key.size());
 
@@ -135,7 +135,7 @@ CPubKey CWallet::GenerateNewKey()
 
         // update the chain model in the database
         if (!CWalletDB(strWalletFile).WriteHDChain(hdChain))
-            throw std::runtime_error("CWallet::GenerateNewKey(): Writing HD chain model failed");
+            throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
     } else {
         secret.MakeNewKey(fCompressed);
     }
@@ -152,7 +152,7 @@ CPubKey CWallet::GenerateNewKey()
         nTimeFirstKey = nCreationTime;
 
     if (!AddKeyPubKey(secret, pubkey))
-        throw std::runtime_error("CWallet::GenerateNewKey(): AddKey failed");
+        throw std::runtime_error(std::string(__func__) + ": AddKey failed");
     return pubkey;
 }
 
@@ -1094,7 +1094,7 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
 {
     if (!MoneyRange(txout.nValue))
-        throw std::runtime_error("CWallet::GetCredit(): value out of range");
+        throw std::runtime_error(std::string(__func__) + ": value out of range");
     return ((IsMine(txout) & filter) ? txout.nValue : 0);
 }
 
@@ -1123,7 +1123,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
 CAmount CWallet::GetChange(const CTxOut& txout) const
 {
     if (!MoneyRange(txout.nValue))
-        throw std::runtime_error("CWallet::GetChange(): value out of range");
+        throw std::runtime_error(std::string(__func__) + ": value out of range");
     return (IsChange(txout) ? txout.nValue : 0);
 }
 
@@ -1147,7 +1147,7 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
     {
         nDebit += GetDebit(txin, filter);
         if (!MoneyRange(nDebit))
-            throw std::runtime_error("CWallet::GetDebit(): value out of range");
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
     return nDebit;
 }
@@ -1159,7 +1159,7 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) c
     {
         nCredit += GetCredit(txout, filter);
         if (!MoneyRange(nCredit))
-            throw std::runtime_error("CWallet::GetCredit(): value out of range");
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
     return nCredit;
 }
@@ -1171,7 +1171,7 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     {
         nChange += GetChange(txout);
         if (!MoneyRange(nChange))
-            throw std::runtime_error("CWallet::GetChange(): value out of range");
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
     return nChange;
 }
@@ -1200,7 +1200,7 @@ CPubKey CWallet::GenerateNewHDMasterKey()
 
         // write the key&metadata to the database
         if (!AddKeyPubKey(key, pubkey))
-            throw std::runtime_error(std::string(__func__)+": AddKeyPubKey failed");
+            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
     }
 
     return pubkey;
@@ -1227,7 +1227,7 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
 {
     LOCK(cs_wallet);
     if (!memonly && !CWalletDB(strWalletFile).WriteHDChain(chain))
-        throw runtime_error("AddHDChain(): writing chain failed");
+        throw runtime_error(std::string(__func__) + ": writing chain failed");
 
     hdChain = chain;
     return true;
@@ -2712,7 +2712,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             if (!setKeyPool.empty())
                 nEnd = *(--setKeyPool.end()) + 1;
             if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-                throw runtime_error("TopUpKeyPool(): writing generated key failed");
+                throw runtime_error(std::string(__func__) + ": writing generated key failed");
             setKeyPool.insert(nEnd);
             LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
         }
@@ -2739,9 +2739,9 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
         nIndex = *(setKeyPool.begin());
         setKeyPool.erase(setKeyPool.begin());
         if (!walletdb.ReadPool(nIndex, keypool))
-            throw runtime_error("ReserveKeyFromKeyPool(): read failed");
+            throw runtime_error(std::string(__func__) + ": read failed");
         if (!HaveKey(keypool.vchPubKey.GetID()))
-            throw runtime_error("ReserveKeyFromKeyPool(): unknown key in key pool");
+            throw runtime_error(std::string(__func__) + ": unknown key in key pool");
         assert(keypool.vchPubKey.IsValid());
         LogPrintf("keypool reserve %d\n", nIndex);
     }
@@ -2800,7 +2800,7 @@ int64_t CWallet::GetOldestKeyPoolTime()
     CWalletDB walletdb(strWalletFile);
     int64_t nIndex = *(setKeyPool.begin());
     if (!walletdb.ReadPool(nIndex, keypool))
-        throw runtime_error("GetOldestKeyPoolTime(): read oldest key in keypool failed");
+        throw runtime_error(std::string(__func__) + ": read oldest key in keypool failed");
     assert(keypool.vchPubKey.IsValid());
     return keypool.nTime;
 }
@@ -3027,11 +3027,11 @@ void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
     {
         CKeyPool keypool;
         if (!walletdb.ReadPool(id, keypool))
-            throw runtime_error("GetAllReserveKeyHashes(): read failed");
+            throw runtime_error(std::string(__func__) + ": read failed");
         assert(keypool.vchPubKey.IsValid());
         CKeyID keyID = keypool.vchPubKey.GetID();
         if (!HaveKey(keyID))
-            throw runtime_error("GetAllReserveKeyHashes(): unknown key in key pool");
+            throw runtime_error(std::string(__func__) + ": unknown key in key pool");
         setAddress.insert(keyID);
     }
 }
@@ -3331,7 +3331,7 @@ bool CWallet::InitLoadWallet()
             // generate a new master key
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
             if (!walletInstance->SetHDMasterKey(masterPubKey))
-                throw std::runtime_error("CWallet::GenerateNewKey(): Storing master key failed");
+                throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
         }
         CPubKey newDefaultKey;
         if (walletInstance->GetKeyFromPool(newDefaultKey)) {
