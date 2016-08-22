@@ -28,6 +28,10 @@ public:
     }
 
     explicit base_blob(const std::vector<unsigned char>& vch);
+    explicit base_blob(const char *_data)
+    {
+        memcpy(data, _data, WIDTH);
+    }
 
     bool IsNull() const
     {
@@ -113,6 +117,7 @@ public:
 class uint256 : public base_blob<256> {
 public:
     uint256() {}
+    uint256(const char *data) : base_blob<256>(data) {}
     uint256(const base_blob<256>& b) : base_blob<256>(b) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
 
