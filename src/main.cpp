@@ -6230,31 +6230,42 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	  uint256 hash;
 
 	  vRecv >> LIMITED_STRING(strMsg, CMessageHeader::COMMAND_SIZE) >> ccode >> LIMITED_STRING(strReason, MAX_REJECT_MESSAGE_LENGTH);
+	  ostringstream ss;
+	  ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
+
+          // BU: Check request manager reject codes
 	  if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
 	    {
 	      vRecv >> hash;
-	    }
-          if (strMsg == NetMsgType::BLOCK)
-	    {
-	      requester.Rejected(CInv(MSG_BLOCK,hash),pfrom,ccode);
-	    }
-	  else if (strMsg == NetMsgType::TX)
-	    {
-	      requester.Rejected(CInv(MSG_TX,hash),pfrom,ccode);
-	    }
-	  if (fDebug) {
-	    ostringstream ss;
-	    ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
+              ss << ": hash " << hash.ToString();
 
-	    if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
-	      {
-		ss << ": hash " << hash.ToString();
-	      }
-	    LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
-	  } 
+              // We need to see this reject message in either "req" or "net" debug mode
+	      LogPrint("req", "Reject %s\n", SanitizeString(ss.str()));
+	      LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
+
+              if (strMsg == NetMsgType::BLOCK)
+	        {
+	          requester.Rejected(CInv(MSG_BLOCK,hash), pfrom, ccode);
+	        }
+	      else if (strMsg == NetMsgType::TX)
+	        {
+	          requester.Rejected(CInv(MSG_TX,hash), pfrom, ccode);
+	        }
+            }
+	 // if (fDebug) {
+	    //ostringstream ss;
+	    //ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
+
+	    //if (strMsg == NetMsgType::BLOCK || strMsg == NetMsgType::TX)
+	    //  {
+            //    ss << ": hash " << hash.ToString();
+	    //  }
+	    // LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
+	 // } 
 	} catch (const std::ios_base::failure&) {
 	  // Avoid feedback loops by preventing reject messages from triggering a new reject message.
 	  LogPrint("net", "Unparseable reject message received\n");
+	  LogPrint("req", "Unparseable reject message received\n");
 	}
     }
 

@@ -199,8 +199,8 @@ void CRequestManager::Rejected(const CInv& obj, CNode* from, unsigned char reaso
       item = mapTxnInfo.find(obj.hash);
       if (item ==  mapTxnInfo.end()) 
 	{
-	  LogPrint("req", "ReqMgr: Unknown object rejected %s.\n",obj.ToString().c_str());
-	  return;  // item has already been removed
+	  LogPrint("req", "ReqMgr: Item already removed. Unknown txn rejected %s\n", obj.ToString().c_str());
+	  return;
 	}
       if (inFlight) inFlight--;
       if (item->second.outstandingReqs) item->second.outstandingReqs--;
@@ -212,13 +212,10 @@ void CRequestManager::Rejected(const CInv& obj, CNode* from, unsigned char reaso
       item = mapBlkInfo.find(obj.hash);
       if (item ==  mapBlkInfo.end()) 
 	{
-	  LogPrint("req", "ReqMgr: Unknown object rejected %s.\n", obj.ToString().c_str());
-	  return;  // item has already been removed
+	  LogPrint("req", "ReqMgr: Item already removed. Unknown block rejected %s\n", obj.ToString().c_str());
+	  return;
 	}
-
     }
-
-  LogPrint("req", "ReqMgr: Request rejected for %s.\n", item->second.obj.ToString().c_str());
 
   if (reason == REJECT_MALFORMED)
     {
