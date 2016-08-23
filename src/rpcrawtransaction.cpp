@@ -833,8 +833,10 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
                 throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
             }
         }
+#ifdef ENABLE_WALLET
         else  
             SyncWithWallets(tx, NULL);
+#endif
 
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
