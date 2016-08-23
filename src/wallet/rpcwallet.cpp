@@ -2411,28 +2411,25 @@ UniValue keepass(const UniValue& params, bool fHelp) {
 
     if (strCommand == "genkey")
     {
-        SecureString result;
+        SecureString sResult;
         // Generate RSA key
-        //std::string keePassKey = CKeePassIntegrator::generateKey();
-        //return keePassKey;
         SecureString sKey = CKeePassIntegrator::generateKeePassKey();
-        result = "Generated Key: ";
-        result += sKey;
-        return result.c_str();
+        sResult = "Generated Key: ";
+        sResult += sKey;
+        return sResult.c_str();
     }
     else if(strCommand == "init")
     {
         // Generate base64 encoded 256 bit RSA key and associate with KeePassHttp
-        SecureString result;
+        SecureString sResult;
         SecureString sKey;
-        std::string sId;
-        std::string sErrorMessage;
-        keePassInt.rpcAssociate(sId, sKey);
-        result = "Association successful. Id: ";
-        result += sId.c_str();
-        result += " - Key: ";
-        result += sKey.c_str();
-        return result.c_str();
+        std::string strId;
+        keePassInt.rpcAssociate(strId, sKey);
+        sResult = "Association successful. Id: ";
+        sResult += strId.c_str();
+        sResult += " - Key: ";
+        sResult += sKey.c_str();
+        return sResult.c_str();
     }
     else if(strCommand == "setpassphrase")
     {

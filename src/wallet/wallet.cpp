@@ -252,7 +252,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly
     }
 
     // Verify KeePassIntegration
-    if(strWalletPassphrase == "keepass" && GetBoolArg("-keepass", false)) {
+    if (strWalletPassphrase == "keepass" && GetBoolArg("-keepass", false)) {
         try {
             strWalletPassphraseFinal = keePassInt.retrievePassphrase();
         } catch (std::exception& e) {
@@ -270,7 +270,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly
         LOCK(cs_wallet);
         BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
         {
-            if(!crypter.SetKeyFromPassphrase(strWalletPassphraseFinal, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+            if (!crypter.SetKeyFromPassphrase(strWalletPassphraseFinal, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
                 return false;
             if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
                 continue; // try another master key
@@ -302,7 +302,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         try {
             strOldWalletPassphraseFinal = keePassInt.retrievePassphrase();
         } catch (std::exception& e) {
-            LogPrintf("CWallet::ChangeWalletPassphrase could not retrieve passphrase from KeePass: Error: %s\n", e.what());
+            LogPrintf("CWallet::ChangeWalletPassphrase -- could not retrieve passphrase from KeePass: Error: %s\n", e.what());
             return false;
         }
     } else {
@@ -346,11 +346,11 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
 
                 // Update KeePass if necessary
                 if(bUseKeePass) {
-                    LogPrintf("CWallet::ChangeWalletPassphrase - Updating KeePass with new passphrase");
+                    LogPrintf("CWallet::ChangeWalletPassphrase -- Updating KeePass with new passphrase");
                     try {
                         keePassInt.updatePassphrase(strNewWalletPassphrase);
                     } catch (std::exception& e) {
-                        LogPrintf("CWallet::ChangeWalletPassphrase - could not update passphrase in KeePass: Error: %s\n", e.what());
+                        LogPrintf("CWallet::ChangeWalletPassphrase -- could not update passphrase in KeePass: Error: %s\n", e.what());
                         return false;
                     }
                 }
@@ -653,11 +653,11 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // Update KeePass if necessary
         if(GetBoolArg("-keepass", false)) {
-            LogPrintf("CWallet::EncryptWallet - Updating KeePass with new passphrase");
+            LogPrintf("CWallet::EncryptWallet -- Updating KeePass with new passphrase");
             try {
                 keePassInt.updatePassphrase(strWalletPassphrase);
             } catch (std::exception& e) {
-                LogPrintf("CWallet::EncryptWallet - could not update passphrase in KeePass: Error: %s\n", e.what());
+                LogPrintf("CWallet::EncryptWallet -- could not update passphrase in KeePass: Error: %s\n", e.what());
             }
         }
 
