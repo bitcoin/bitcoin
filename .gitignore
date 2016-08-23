@@ -97,6 +97,19 @@ test_bitcoin.coverage/
 total.coverage/
 coverage_percent.txt
 
+#tags (see distclean-tags make target)
+TAGS
+ID
+GTAGS
+GRTAGS
+GSYMS
+GPATH
+tags
+cscope.out
+cscope.in.out
+cscope.po.out
+cscope.files
+
 #build tests
 linux-coverage-build
 linux-build
