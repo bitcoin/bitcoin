@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (C) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +22,9 @@
 #include <vector>
 
 #include "prevector.h"
+#include "uint256.h"
+
+#include <boost/variant.hpp>
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -144,7 +148,6 @@ inline float ser_uint32_to_float(uint32_t y)
     tmp.y = y;
     return tmp.x;
 }
-
 
 /////////////////////////////////////////////////////////////////
 //
@@ -374,6 +377,156 @@ I ReadVarInt(Stream& is)
 #define FLATDATA(obj) REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
 #define VARINT(obj) REF(WrapVarInt(REF(obj)))
 #define LIMITED_STRING(obj,n) REF(LimitedString< n >(REF(obj)))
+
+class CMFToken
+{
+public:
+    CMFToken() : tag(0), format(PositiveNumber) {}
+    CMFToken(uint32_t tag, const uint256& inData)
+        : tag(tag),
+        format(ByteArray)
+    {
+        std::vector<char> tmp;
+        tmp.resize(32);
+        std::copy(inData.begin(), inData.end(), tmp.begin());
+        data = tmp;
+    }
+    explicit CMFToken(uint32_t tag, bool in = true) : tag(tag), format(in ? BoolTrue : BoolFalse) {}
+    CMFToken(uint32_t tag, int32_t in) : tag(tag), format(in >= 0 ? PositiveNumber : NegativeNumber), data(in) {}
+    CMFToken(uint32_t tag, uint64_t in) : tag(tag), format(PositiveNumber), data(in) {}
+    CMFToken(uint32_t tag, std::string in) : tag(tag), format(String), data(in) {}
+    CMFToken(uint32_t tag, std::vector<char> in) : tag(tag), format(ByteArray), data(in) {}
+    typedef boost::variant<int32_t, bool, uint64_t, std::string, std::vector<char>, double> variant;
+    enum Format {
+        PositiveNumber = 0,
+        NegativeNumber,
+        String,
+        ByteArray,
+        BoolTrue,
+        BoolFalse,
+        Double
+    };
+    uint32_t tag;
+    Format format;
+    variant data;
+
+    int intData() const {
+        if (data.which() == 0)
+            return boost::get<int32_t>(data);
+        return boost::get<uint64_t>(data);
+    }
+    uint64_t longData() const {
+        if (data.which() == 0)
+            return boost::get<int32_t>(data);
+        return boost::get<uint64_t>(data);
+    }
+
+    std::vector<unsigned char> unsignedByteArray() const { // provided to be compatible with silly code that uses unsigned chars.
+        auto plainData = boost::get<std::vector<char> >(data);
+        std::vector<unsigned char> bytes; // using unsigned char is really bad practice :(
+        bytes.resize(plainData.size());
+        memcpy(&bytes[0], &plainData[0], plainData.size());
+        return bytes;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int type, int version)
+    {
+        tag = ser_readdata8(s);
+        format = static_cast<Format>(tag & 7);
+        tag = tag >> 3;
+        if (tag == 31)
+            tag = ReadVarInt<Stream, uint32_t>(s);
+
+        switch (format) {
+        case NegativeNumber:
+            data = ReadVarInt<Stream, int32_t>(s) * -1;
+            break;
+        case PositiveNumber: {
+            int64_t tmp = ReadVarInt<Stream, int64_t>(s);
+            if (tmp > std::numeric_limits<int32_t>::max())
+                data = static_cast<uint64_t>(tmp);
+            else
+                data = static_cast<int32_t>(tmp);
+            break;
+        }
+        case String: {
+            int32_t size = ReadVarInt<Stream,int32_t>(s);
+            std::string string;
+            string.resize(size);
+            if (size > 0)
+                s.read((char*)&string[0], size);
+            data = string;
+            break;
+        }
+        case ByteArray: {
+            int32_t size = ReadVarInt<Stream,int32_t>(s);
+            std::vector<char> bytes;
+            bytes.resize(size);
+            if (size > 0)
+                s.read((char*)&bytes[0], size);
+            data = bytes;
+            break;
+        }
+        case BoolTrue: data = true; break;
+        case BoolFalse: data = false; break;
+        case Double:
+            // TODO
+            break;
+        }
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s, int nType, int version=0) const
+    {
+        assert(format < 7);
+        if (tag > 31) {
+            ser_writedata8(s, (32 << 3) + format);
+            WriteVarInt<Stream, uint32_t>(s, tag);
+        } else {
+            ser_writedata8(s, (tag << 3) + format);
+        }
+        switch (format) {
+        case NegativeNumber:
+            WriteVarInt<Stream, int32_t>(s, -1 * boost::get<int32_t>(data));
+            break;
+        case PositiveNumber:
+            WriteVarInt<Stream, uint64_t>(s, data.which() == 0 ? boost::get<int32_t>(data) : boost::get<uint64_t>(data));
+            break;
+        case String: {
+            std::string string = boost::get<std::string>(data);
+            WriteVarInt<Stream, uint64_t>(s, string.size());
+            s.write((char*)&string[0], string.size());
+        }
+        case ByteArray: {
+            std::vector<char> bytes = boost::get<std::vector<char> >(data);
+            WriteVarInt<Stream, uint64_t>(s, bytes.size());
+            s.write(&bytes[0], bytes.size());
+            break;
+        }
+        case BoolTrue: // TODO
+        case BoolFalse: // TODO
+        case Double:
+            // TODO
+            break;
+        }
+    }
+};
+
+#define STORECMF(_1_) ::Serialize<Stream,CMFToken>(s, _1_, nType, nVersion)
+
+
+template<typename Stream>
+std::vector<CMFToken> UnserializeCMFs(Stream &s, uint32_t endTag, int nType, int nVersion)
+{
+    std::vector<CMFToken> answer;
+    do {
+        answer.push_back(CMFToken());
+        Unserialize<Stream,CMFToken>(s, answer[answer.size() -1], nType, nVersion);
+    } while (answer.back().tag != endTag);
+    return answer;
+}
+
 
 /** 
  * Wrapper for serializing arrays and POD.

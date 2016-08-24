@@ -1,4 +1,5 @@
 // Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (C) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -158,10 +159,27 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
-    for (size_t s = 0; s < block.vtx.size(); s++) {
+    const unsigned int size = block.vtx.size();
+    leaves.resize(size);
+    int txWithDetachableSigsCount = 0;
+    for (size_t s = 0; s < size; s++) {
         leaves[s] = block.vtx[s].GetHash();
+        if (block.vtx[s].nVersion == 4)
+            ++txWithDetachableSigsCount;
     }
+
+    /*
+     * v4 transactions leave their sigs out of the txid used above,
+     * so to make sure nobody can change sigs without invalidating the header
+     * we append the v4 transactions signature hash to the tree.
+     */
+    leaves.resize(size + txWithDetachableSigsCount);
+    unsigned int pos = size;
+    for (size_t s = 0; s < size; s++) {
+        if (block.vtx[s].nVersion == 4)
+            leaves[pos++] = block.vtx[s].CalculateSignaturesHash();
+    }
+    assert(pos == size + txWithDetachableSigsCount);
     return ComputeMerkleRoot(leaves, mutated);
 }
 

@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (C) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +11,8 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
+
+#include "../consensus/transactionv4.h"
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -195,6 +198,62 @@ public:
 
 struct CMutableTransaction;
 
+template<typename Stream, typename TxType>
+inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion, bool withSignatures = true) {
+    ser_writedata32(s, tx.nVersion);
+    nVersion = tx.nVersion;
+    if (nVersion == 4) {
+        for (auto in : tx.vin) {
+            CMFToken hash(Consensus::TxInPrevHash, in.prevout.hash);
+            STORECMF(hash);
+            if (in.prevout.n > 0) {
+                CMFToken index(Consensus::TxInPrevIndex, (uint64_t) in.prevout.n);
+                STORECMF(index);
+            }
+            // TODO check sequence to maybe store the BIP68 stuff.
+        }
+        for (auto out : tx.vout) {
+            CMFToken token(Consensus::TxOutValue, (uint64_t) out.nValue);
+            STORECMF(token);
+            std::vector<char> script(out.scriptPubKey.begin(), out.scriptPubKey.end());
+            token = CMFToken(Consensus::TxOutScript, script);
+            STORECMF(token);
+        }
+        if (withSignatures) {
+            for (auto in : tx.vin) {
+                CMFToken token(Consensus::TxInScript, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end()));
+                STORECMF(token);
+            }
+            CMFToken end(Consensus::TxEnd);
+            STORECMF(end);
+        }
+    } else {
+        CSerActionSerialize ser_action;
+        READWRITE(tx.vin);
+        READWRITE(tx.vout);
+        READWRITE(tx.nLockTime);
+    }
+}
+
+std::vector<char> loadTransaction(const std::vector<CMFToken>& tokens, std::vector<CTxIn> &inputs, std::vector<CTxOut> &outputs, int nVersion);
+
+template<typename Stream, typename TxType>
+inline std::vector<char> UnSerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion) {
+    *const_cast<int32_t*>(&tx.nVersion) = ser_readdata32(s);
+    nVersion = tx.nVersion;
+    if (nVersion == 4) {
+        return loadTransaction(UnserializeCMFs(s, Consensus::TxEnd, nType, nVersion),
+            *const_cast<std::vector<CTxIn>*>(&tx.vin),
+            *const_cast<std::vector<CTxOut>*>(&tx.vout), nVersion);
+    } else {
+        CSerActionUnserialize ser_action;
+        READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
+        READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
+        READWRITE(*const_cast<uint32_t*>(&tx.nLockTime));
+    }
+    return std::vector<char>();
+}
+
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
@@ -202,8 +261,9 @@ class CTransaction
 {
 private:
     /** Memory only. */
-    const uint256 hash;
-    void UpdateHash() const;
+    uint256 hash;
+    void UpdateHash();
+    std::vector<char> txData;
 
 public:
     // Default transaction version.
@@ -213,7 +273,7 @@ public:
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=2;
+    static const int32_t MAX_STANDARD_VERSION = 4;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -233,17 +293,27 @@ public:
 
     CTransaction& operator=(const CTransaction& tx);
 
-    ADD_SERIALIZE_METHODS;
+    size_t GetSerializeSize(int nType, int nVersion) const {
+        CSizeComputer s(nType, nVersion);
+        Serialize(s, nType, nVersion);
+        return s.size();
+    }
+    template<typename Stream>
+    void Serialize(Stream& s, int nType, int version) const {
+        if (!txData.empty()) {
+            s.write(&txData[0], txData.size());
+            for (auto in : vin)
+                STORECMF(CMFToken(Consensus::TxInScript, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end())));
+            STORECMF(CMFToken(Consensus::TxEnd));
+        } else {
+            SerializeTransaction(*this, s, nType, nVersion);
+        }
+    }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*const_cast<int32_t*>(&this->nVersion));
-        nVersion = this->nVersion;
-        READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
-        READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
-        READWRITE(*const_cast<uint32_t*>(&nLockTime));
-        if (ser_action.ForRead())
-            UpdateHash();
+    template<typename Stream>
+    void Unserialize(Stream& s, int nType, int version) {
+        txData = UnSerializeTransaction(*const_cast<CTransaction*>(this), s, nType, version);
+        UpdateHash();
     }
 
     bool IsNull() const {
@@ -253,6 +323,8 @@ public:
     const uint256& GetHash() const {
         return hash;
     }
+
+    uint256 CalculateSignaturesHash() const;
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
@@ -294,15 +366,19 @@ struct CMutableTransaction
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
 
-    ADD_SERIALIZE_METHODS;
+    size_t GetSerializeSize(int nType, int nVersion) const {
+        CSizeComputer s(nType, nVersion);
+        Serialize(s, nType, nVersion);
+        return s.size();
+    }
+    template<typename Stream>
+    void Serialize(Stream& s, int nType, int version) const {
+        SerializeTransaction(*this, s, nType, nVersion);
+    }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
+    template<typename Stream>
+    void Unserialize(Stream& s, int nType, int version) {
+        (void) UnSerializeTransaction(*this, s, nType, nVersion);
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the

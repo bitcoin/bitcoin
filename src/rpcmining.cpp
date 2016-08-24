@@ -539,7 +539,8 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
         entry.push_back(Pair("data", EncodeHexTx(tx)));
 
-        entry.push_back(Pair("hash", txHash.GetHex()));
+        entry.push_back(Pair("txid", txHash.GetHex()));
+        entry.push_back(Pair("hash", tx.CalculateSignaturesHash().GetHex()));
 
         UniValue deps(UniValue::VARR);
         BOOST_FOREACH (const CTxIn &in, tx.vin)

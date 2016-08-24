@@ -1122,6 +1122,8 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         }
     }
 
+    if (txTo.nVersion == 4)
+        return txTo.GetHash();
     // Wrapper to serialize only the necessary parts of the transaction being signed
     CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
 
