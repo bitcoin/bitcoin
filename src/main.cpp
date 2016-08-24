@@ -5721,9 +5721,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CInv inv(MSG_XTHINBLOCK, thinBlockTx.blockhash);
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
-            LogPrint("thin", "ThinblockTx received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
-            //LOCK(cs_main);
-            //Misbehaving(pfrom->GetId(), 20);
+            LogPrint("thin", "xblocktx received but it was either not requested or it was beaten by another block %s  peer=%d\n", inv.hash.ToString(), pfrom->id);
+            requester.Received(inv, pfrom, msgSize); // record the bytes received from the message
+            return true;
         }
 
         // Create the mapMissingTx from all the supplied tx's in the xthinblock
