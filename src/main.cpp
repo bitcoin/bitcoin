@@ -5599,10 +5599,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id, nSizeThinBlock);
 
         bool fAlreadyHave = false;
-        // An expedited block can arrive and beat the thin block response        
+        // An expedited block or re-requested xthin can arrive and beat the original thin block request/response       
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
-            LogPrint("thin", "Thinblock %s received but beaten by expedited from peer %s (%d)\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
-            fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted xpedited block yet
+            LogPrint("thin", "Thinblock %s from peer %s (%d) received but we already have it\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+            fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted block yet
             if (fAlreadyHave)
                 requester.Received(inv, pfrom, nSizeThinBlock); // record the bytes received from the thinblock even though we had it already
         }
