@@ -1705,8 +1705,8 @@ void ThreadOpenConnections()
             if (IsLimited(addr))
                 continue;
 
-            // only connect to full nodes
-            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
+            // only connect to full nodes during IBD
+            if ((addr.nServices & NODE_NETWORK) != NODE_NETWORK && IsInitialBlockDownload())
                 continue;
 
             // only consider very recently tried nodes after 30 failed attempts
