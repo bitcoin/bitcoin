@@ -135,7 +135,7 @@ static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>&
     // This behavior was reverted for 1.0.1k.
     if (vchDecrypted1 != vchDecrypted2 && vchDecrypted1.size() >= AES_BLOCK_SIZE && SSLeay() == 0x100010afL)
     {
-        for(CKeyingMaterial::iterator it = vchDecrypted1.end() - AES_BLOCK_SIZE; it != vchDecrypted1.end() - 1; it++)
+        for (CKeyingMaterial::iterator it = vchDecrypted1.end() - AES_BLOCK_SIZE; it != vchDecrypted1.end() - 1; ++it)
             *it = 0;
     }
 
