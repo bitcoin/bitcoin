@@ -120,6 +120,12 @@ boost::condition_variable messageHandlerCondition;
 static CNodeSignals g_signals;
 CNodeSignals& GetNodeSignals() { return g_signals; }
 
+static std::condition_variable net_interrupt_cond;
+static std::mutex cs_net_interrupt;
+static std::atomic<bool> net_interrupted(false);
+
+std::thread dns_address_seed_thread;
+
 void AddOneShot(const std::string& strDest)
 {
     LOCK(cs_vOneShots);
@@ -1537,8 +1543,11 @@ void ThreadDNSAddressSeed()
     // goal: only query DNS seeds if address need is acute
     if ((addrman.size() > 0) &&
         (!GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
-        MilliSleep(11 * 1000);
-
+        {
+            std::unique_lock<std::mutex> lock(cs_net_interrupt);
+            if(net_interrupt_cond.wait_for(lock, std::chrono::seconds(11), []()->bool {return net_interrupted; }))
+                return;
+        }
         LOCK(cs_vNodes);
         if (vNodes.size() >= 2) {
             LogPrintf("P2P peers available. Skipped DNS seeding.\n");
@@ -1552,6 +1561,8 @@ void ThreadDNSAddressSeed()
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
 
     BOOST_FOREACH(const CDNSSeedData &seed, vSeeds) {
+        if(net_interrupted)
+            return;
         if (HaveNameProxy()) {
             AddOneShot(seed.host);
         } else {
@@ -2101,6 +2112,7 @@ void static Discover(boost::thread_group& threadGroup)
 
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
+    net_interrupted = false;
     uiInterface.InitMessage(_("Loading addresses..."));
     // Load addresses from peers.dat
     int64_t nStart = GetTimeMillis();
@@ -2158,7 +2170,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
     else
-        threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "dnsseed", &ThreadDNSAddressSeed));
+        dns_address_seed_thread = std::thread(std::bind(&TraceThread<void (*)()>, "dnsseed", &ThreadDNSAddressSeed));
 
     // Map ports with UPnP
     MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
@@ -2179,6 +2191,12 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     scheduler.scheduleEvery(&DumpData, DUMP_ADDRESSES_INTERVAL);
 }
 
+void InterruptNode()
+{
+    net_interrupted = true;
+    net_interrupt_cond.notify_all();
+}
+
 bool StopNode()
 {
     LogPrintf("StopNode()\n");
@@ -2192,6 +2210,9 @@ bool StopNode()
         DumpData();
         fAddressesInitialized = false;
     }
+
+    if(dns_address_seed_thread.joinable())
+        dns_address_seed_thread.join();
 
     return true;
 }

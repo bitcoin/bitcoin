@@ -176,6 +176,7 @@ void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
     InterruptTorControl();
     InterruptMapPort();
     scheduler.interrupt(false);
+    InterruptNode();
     threadGroup.interrupt_all();
 }
 

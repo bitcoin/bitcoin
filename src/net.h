@@ -99,6 +99,8 @@ unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler);
 bool StopNode();
+void InterruptNode();
+
 void SocketSendData(CNode *pnode);
 
 struct CombinerAll
