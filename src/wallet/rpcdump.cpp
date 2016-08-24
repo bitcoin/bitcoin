@@ -257,6 +257,7 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
+    // 0.13.x: Silently accept up to 3 params, but ignore the third:
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
             "importprunedfunds\n"
@@ -264,7 +265,6 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
             "\nArguments:\n"
             "1. \"rawtransaction\" (string, required) A raw transaction in hex funding an already-existing address in wallet\n"
             "2. \"txoutproof\"     (string, required) The hex output from gettxoutproof that contains the transaction\n"
-            "3. \"label\"          (string, optional) An optional label\n"
         );
 
     CTransaction tx;
@@ -276,10 +276,6 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
     CDataStream ssMB(ParseHexV(params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION);
     CMerkleBlock merkleBlock;
     ssMB >> merkleBlock;
-
-    string strLabel = "";
-    if (params.size() == 3)
-        strLabel = params[2].get_str();
 
     //Search partial merkle tree in proof for our transaction and index in valid block
     vector<uint256> vMatch;
