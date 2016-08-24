@@ -59,7 +59,7 @@ public:
         READWRITE(vMissingTx);
     }
     CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
-    bool process(CNode* pfrom);
+    bool process(CNode* pfrom, int nSizeThinbBlock, std::string strCommand);
     bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state);
 };
 

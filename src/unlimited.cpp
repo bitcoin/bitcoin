@@ -292,14 +292,11 @@ void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
       // TODO:  Start headers-only mining now
 
       SendExpeditedBlock(thinBlock,hops+1, pfrom); // I should push the vRecv rather than reserialize
-      pfrom->nSizeThinBlock = nSizeThinBlock;
-      LOCK(cs_main);
-      thinBlock.process(pfrom);
+      thinBlock.process(pfrom, nSizeThinBlock, NetMsgType::XPEDITEDBLK);
     }
   else
     {
       LogPrint("thin", "Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType, pfrom->addrName.c_str(),pfrom->id, hops);
-
     }
 }
 
