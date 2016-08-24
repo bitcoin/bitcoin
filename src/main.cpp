@@ -4164,7 +4164,8 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
 
 void UnloadBlockIndex()
 {
-    LOCK(cs_main);
+    //LOCK(cs_main);
+    LOCK2(cs_main, cs_orphancache);
     setBlockIndexCandidates.clear();
     chainActive.SetTip(NULL);
     pindexBestInvalid = NULL;
@@ -4614,6 +4615,8 @@ std::string GetWarnings(const std::string& strFor)
 
 static bool AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    AssertLockHeld(cs_main);
+
     switch (inv.type)
     {
     case MSG_TX:
@@ -4628,7 +4631,7 @@ static bool AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                 hashRecentRejectsChainTip = chainActive.Tip()->GetBlockHash();
                 recentRejects->reset();
             }
-
+            LOCK(cs_orphancache);
             return recentRejects->contains(inv.hash) ||
                    mempool.exists(inv.hash) ||
                    mapOrphanTransactions.count(inv.hash) ||
@@ -5279,7 +5282,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->AddInventoryKnown(inv);
         requester.Received(inv, pfrom, msgSize);
 
-        LOCK(cs_main);
+        LOCK2(cs_main, cs_orphancache);
 
         bool fMissingInputs = false;
         CValidationState state;
@@ -5350,7 +5353,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 }
             }
             
-            LOCK(cs_orphancache);
             BOOST_FOREACH(uint256 hash, vEraseQueue)
                 EraseOrphanTx(hash);
         }
@@ -5602,6 +5604,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // An expedited block or re-requested xthin can arrive and beat the original thin block request/response       
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
             LogPrint("thin", "Thinblock %s from peer %s (%d) received but we already have it\n", inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
+            LOCK(cs_main);
             fAlreadyHave = AlreadyHave(inv); // I'll still continue processing if we don't have an accepted block yet
             if (fAlreadyHave)
                 requester.Received(inv, pfrom, nSizeThinBlock); // record the bytes received from the thinblock even though we had it already
@@ -6591,8 +6594,11 @@ bool SendMessages(CNode* pto)
                         if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto)) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             std::vector<uint256> vOrphanHashes;
-                            for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-                                vOrphanHashes.push_back((*mi).first);
+                            {
+                                LOCK(cs_orphancache);
+                                for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                                    vOrphanHashes.push_back((*mi).first);
+                            }
                             BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
@@ -6607,8 +6613,11 @@ bool SendMessages(CNode* pto)
                         if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto)) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             std::vector<uint256> vOrphanHashes;
-                            for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-                                vOrphanHashes.push_back((*mi).first);
+                            {
+                                LOCK(cs_orphancache);
+                                for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                                    vOrphanHashes.push_back((*mi).first);
+                            }
                             BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
