@@ -427,7 +427,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Opdrachytregelopties</translation>
+        <translation>&amp;Opdrachtregelopties</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>

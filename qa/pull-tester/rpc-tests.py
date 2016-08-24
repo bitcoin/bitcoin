@@ -109,12 +109,12 @@ testScripts = [
     'invalidtxrequest.py',
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
+    'bip68-sequence.py',
 ]
 testScriptsExt = [
     'bip9-softforks.py',
     'bip65-cltv.py',
     'bip65-cltv-p2p.py',
-    'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
