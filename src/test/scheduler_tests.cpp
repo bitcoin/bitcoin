@@ -84,16 +84,16 @@ BOOST_AUTO_TEST_CASE(manythreads)
     BOOST_CHECK(last > now);
 
     // As soon as these are created they will start running and servicing the queue
-    boost::thread_group microThreads;
+    std::vector<std::thread> microThreads;
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.emplace_back(&CScheduler::serviceQueue, &microTasks);
 
     MicroSleep(600);
     now = boost::chrono::system_clock::now();
 
     // More threads and more tasks:
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.emplace_back(&CScheduler::serviceQueue, &microTasks);
     for (int i = 0; i < 100; i++) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
         boost::chrono::system_clock::time_point tReschedule = now + boost::chrono::microseconds(500 + randomMsec(rng));
@@ -105,8 +105,10 @@ BOOST_AUTO_TEST_CASE(manythreads)
     }
 
     // Drain the task queue then exit threads
-    microTasks.stop(true);
-    microThreads.join_all(); // ... wait until all the threads are done
+    microTasks.interrupt(true);
+    microTasks.stop();
+    for(auto& thread : microThreads)
+        thread.join(); // ... wait until all the threads are done
 
     int counterSum = 0;
     for (int i = 0; i < 10; i++) {

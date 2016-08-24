@@ -19,8 +19,8 @@ class thread_group;
 void StartShutdown();
 bool ShutdownRequested();
 /** Interrupt threads */
-void Interrupt(boost::thread_group& threadGroup);
-void Shutdown();
+void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler);
+void Shutdown(CScheduler& scheduler);
 //!Initialize the logging infrastructure
 void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules

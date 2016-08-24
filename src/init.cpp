@@ -62,6 +62,8 @@
 #include "zmq/zmqnotificationinterface.h"
 #endif
 
+#include <thread>
+
 using namespace std;
 
 bool fFeeEstimatesInitialized = false;
@@ -163,8 +165,9 @@ public:
 static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
+static std::thread scheduler_thread;
 
-void Interrupt(boost::thread_group& threadGroup)
+void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     InterruptHTTPServer();
     InterruptHTTPRPC();
@@ -172,10 +175,11 @@ void Interrupt(boost::thread_group& threadGroup)
     InterruptREST();
     InterruptTorControl();
     InterruptMapPort();
+    scheduler.interrupt(false);
     threadGroup.interrupt_all();
 }
 
-void Shutdown()
+void Shutdown(CScheduler& scheduler)
 {
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
@@ -201,6 +205,10 @@ void Shutdown()
     StopNode();
     StopTorControl();
     StopMapPort();
+    scheduler.stop();
+    if(scheduler_thread.joinable())
+        scheduler_thread.join();
+
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -1078,7 +1086,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, &scheduler);
-    threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
+    scheduler_thread = std::thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
