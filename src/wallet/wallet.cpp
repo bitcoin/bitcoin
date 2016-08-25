@@ -467,6 +467,11 @@ bool CWallet::Verify()
     return true;
 }
 
+void CWallet::Interrupt()
+{
+    bitdb.Interrupt();
+}
+
 void CWallet::SyncMetaData(pair<TxSpends::iterator, TxSpends::iterator> range)
 {
     // We want all the wallet transactions in range to have the same metadata as

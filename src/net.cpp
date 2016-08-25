@@ -1232,7 +1232,7 @@ void ThreadSocketHandler()
 
         int nSelect = select(have_fds ? hSocketMax + 1 : 0,
                              &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-        boost::this_thread::interruption_point();
+        interruption_point(net_interrupted);
 
         if (nSelect == SOCKET_ERROR)
         {
@@ -1271,7 +1271,7 @@ void ThreadSocketHandler()
         }
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
-            boost::this_thread::interruption_point();
+            interruption_point(net_interrupted);
 
             //
             // Receive
@@ -1674,7 +1674,7 @@ void ThreadOpenConnections()
         MilliSleep(500);
 
         CSemaphoreGrant grant(*semOutbound);
-        boost::this_thread::interruption_point();
+        interruption_point(net_interrupted);
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
@@ -1868,7 +1868,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
     //
     // Initiate outbound network connection
     //
-    boost::this_thread::interruption_point();
+    interruption_point(net_interrupted);
     if (!pszDest) {
         if (IsLocal(addrConnect) ||
             FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
@@ -1878,7 +1878,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
         return false;
 
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
-    boost::this_thread::interruption_point();
+    interruption_point(net_interrupted);
 
     if (!pnode)
         return false;
@@ -1934,7 +1934,7 @@ void ThreadMessageHandler()
                     }
                 }
             }
-            boost::this_thread::interruption_point();
+            interruption_point(net_interrupted);
 
             // Send messages
             {
@@ -1942,7 +1942,7 @@ void ThreadMessageHandler()
                 if (lockSend)
                     GetNodeSignals().SendMessages(pnode);
             }
-            boost::this_thread::interruption_point();
+            interruption_point(net_interrupted);
         }
 
         {

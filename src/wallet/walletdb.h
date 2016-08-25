@@ -186,5 +186,6 @@ private:
 };
 
 void ThreadFlushWalletDB(const std::string& strFile);
+void InterruptFlushWalletDB();
 
 #endif // BITCOIN_WALLET_WALLETDB_H

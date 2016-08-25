@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include <boost/filesystem/path.hpp>
 
@@ -35,7 +36,7 @@ private:
     std::string strPath;
 
     void EnvShutdown();
-
+    std::atomic<bool> interrupt;
 public:
     mutable CCriticalSection cs_db;
     DbEnv *dbenv;
@@ -85,6 +86,7 @@ public:
             return NULL;
         return ptxn;
     }
+    void Interrupt();
 };
 
 extern CDBEnv bitdb;

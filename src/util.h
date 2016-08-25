@@ -195,6 +195,15 @@ int GetNumCores();
 
 void RenameThread(const char* name);
 
+class thread_interrupted
+{};
+
+inline void interruption_point(bool interrupt)
+{
+    if(interrupt)
+        throw thread_interrupted();
+}
+
 /**
  * .. and a wrapper that just calls func once
  */
@@ -212,6 +221,9 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     {
         LogPrintf("%s thread interrupt\n", name);
         throw;
+    }
+    catch (const thread_interrupted&) {
+        LogPrintf("%s thread interrupt\n", name);
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, name);

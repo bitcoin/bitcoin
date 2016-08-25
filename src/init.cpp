@@ -176,8 +176,17 @@ void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
     InterruptTorControl();
     InterruptMapPort();
     scheduler.interrupt(false);
+    if(pblocktree)
+       pblocktree->InterruptLoadBlockIndexGuts();
+    InterruptNetbase();
     InterruptNode();
     threadGroup.interrupt_all();
+#ifdef ENABLE_WALLET
+    if (pwalletMain) {
+        pwalletMain->Interrupt();
+        InterruptFlushWalletDB();
+    }
+#endif
 }
 
 void Shutdown(CScheduler& scheduler)

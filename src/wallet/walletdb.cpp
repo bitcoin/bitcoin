@@ -679,6 +679,8 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     catch (const boost::thread_interrupted&) {
         throw;
     }
+    catch (const thread_interrupted&) {
+    }
     catch (...) {
         result = DB_CORRUPT;
     }
@@ -778,6 +780,8 @@ DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vec
     catch (const boost::thread_interrupted&) {
         throw;
     }
+    catch (const thread_interrupted&) {
+    }
     catch (...) {
         result = DB_CORRUPT;
     }
@@ -844,8 +848,10 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
     return DB_LOAD_OK;
 }
 
+static std::atomic<bool> interrupt_flush_wallet;
 void ThreadFlushWalletDB(const string& strFile)
 {
+    interrupt_flush_wallet = false;
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("bitcoin-wallet");
 
@@ -885,7 +891,7 @@ void ThreadFlushWalletDB(const string& strFile)
 
                 if (nRefCount == 0)
                 {
-                    boost::this_thread::interruption_point();
+                    interruption_point(interrupt_flush_wallet);
                     map<string, int>::iterator _mi = bitdb.mapFileUseCount.find(strFile);
                     if (_mi != bitdb.mapFileUseCount.end())
                     {
@@ -904,6 +910,11 @@ void ThreadFlushWalletDB(const string& strFile)
             }
         }
     }
+}
+
+void InterruptFlushWalletDB()
+{
+    interrupt_flush_wallet = true;
 }
 
 //

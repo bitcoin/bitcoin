@@ -923,6 +923,8 @@ public:
     
     /* Set the current HD master key (will reset the chain child index counters) */
     bool SetHDMasterKey(const CPubKey& key);
+
+    void Interrupt();
 };
 
 /** A key allocated from the key pool. */

@@ -52,6 +52,7 @@ void CDBEnv::Reset()
     dbenv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
     fDbEnvInit = false;
     fMockDb = false;
+    interrupt = false;
 }
 
 CDBEnv::CDBEnv() : dbenv(NULL)
@@ -71,12 +72,17 @@ void CDBEnv::Close()
     EnvShutdown();
 }
 
+void CDBEnv::Interrupt()
+{
+    interrupt = true;
+}
+
 bool CDBEnv::Open(const boost::filesystem::path& pathIn)
 {
     if (fDbEnvInit)
         return true;
 
-    boost::this_thread::interruption_point();
+    interruption_point(interrupt);
 
     strPath = pathIn.string();
     boost::filesystem::path pathLogDir = pathIn / "database";
@@ -121,7 +127,7 @@ void CDBEnv::MakeMock()
     if (fDbEnvInit)
         throw runtime_error("CDBEnv::MakeMock: Already initialized");
 
-    boost::this_thread::interruption_point();
+    interruption_point(interrupt);
 
     LogPrint("db", "CDBEnv::MakeMock\n");
 
