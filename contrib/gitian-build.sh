@@ -166,6 +166,13 @@ then
     sudo ifconfig lxcbr0 up 10.0.2.2
 fi
 
+# Check for OSX SDK
+if [[ ! -e "gitian-builder/inputs/MacOSX10.11.sdk.tar.gz" && $osx == true ]]
+then
+    echo "Cannot build for OSX, SDK does not exist. Will build for other OSes"
+    osx=false
+fi
+
 # Get signer
 if [[ -n"$1" ]]
 then
