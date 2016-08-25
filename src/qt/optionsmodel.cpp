@@ -17,6 +17,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
+#include "intro.h" 
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -99,6 +100,9 @@ void OptionsModel::Init(bool resetSettings)
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
 
+    if (!settings.contains("strDataDir"))
+        settings.setValue("strDataDir", Intro::getDefaultDataDirectory());
+
     // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("bSpendZeroConfChange"))
@@ -151,8 +155,18 @@ void OptionsModel::Reset()
 {
     QSettings settings;
 
+    // Save the strDataDir setting
+    QString dataDir = Intro::getDefaultDataDirectory();
+    dataDir = settings.value("strDataDir", dataDir).toString();
+
     // Remove all entries from our QSettings object
     settings.clear();
+
+    // Set strDataDir
+    settings.setValue("strDataDir", dataDir);
+
+    // Set that this was reset
+    settings.setValue("fReset", true);
 
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())
