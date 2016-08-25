@@ -1067,7 +1067,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
+    if (!pfrom->fWhitelisted && !(pfrom->GetLocalServices() & NODE_BLOOM) &&
               (strCommand == NetMsgType::FILTERLOAD ||
                strCommand == NetMsgType::FILTERADD))
     {
