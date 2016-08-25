@@ -150,4 +150,26 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     BOOST_CHECK(addrman2.size() == 0);
 }
 
+BOOST_AUTO_TEST_CASE(cnode_simple_test)
+{
+    SOCKET hSocket = INVALID_SOCKET;
+
+    in_addr ipv4Addr;
+    ipv4Addr.s_addr = 0xa0b0c001;
+    
+    CAddress addr = CAddress(CService(ipv4Addr, 7777), NODE_NETWORK);
+    std::string pszDest = "";
+    bool fInboundIn = false;
+
+    // Test that fFeeler is false by default.
+    CNode* pnode1 = new CNode(hSocket, addr, pszDest, fInboundIn);
+    BOOST_CHECK(pnode1->fInbound == false);
+    BOOST_CHECK(pnode1->fFeeler == false);
+
+    fInboundIn = true;
+    CNode* pnode2 = new CNode(hSocket, addr, pszDest, fInboundIn);
+    BOOST_CHECK(pnode2->fInbound == true);
+    BOOST_CHECK(pnode2->fFeeler == false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
