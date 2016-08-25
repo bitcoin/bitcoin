@@ -701,8 +701,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins, unsigned int nBlockHeight)
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
         CAmount dummyValue;
-        double freshPriority = view.GetPriority(it->GetTx(), nBlockHeight, dummyValue);
-        double cachePriority = it->GetPriority(nBlockHeight);
+        double freshPriority = view.GetPriority(it->GetTx(), nBlockHeight + 1, dummyValue);
+        double cachePriority = it->GetPriority(nBlockHeight + 1);
         double priDiff = cachePriority > freshPriority ? cachePriority - freshPriority : freshPriority - cachePriority;
         // Verify that the difference between the on the fly calculation and a fresh calculation
         // is small enough to be a result of double imprecision.
