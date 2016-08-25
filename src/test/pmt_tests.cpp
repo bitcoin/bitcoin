@@ -122,7 +122,6 @@ BOOST_AUTO_TEST_CASE(pmt_malleability)
     std::vector<bool> vMatch = boost::assign::list_of(false)(false)(false)(false)(false)(false)(false)(false)(false)(true)(true)(false);
 
     CPartialMerkleTree tree(vTxid, vMatch);
-    std::vector<uint256> vTxid2;
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(tree.ExtractMatches(vTxid, vIndex).IsNull());
 }
