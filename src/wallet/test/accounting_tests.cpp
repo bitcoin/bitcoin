@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     pwalletMain->AddToWallet(wtx);
     vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);
     vpwtx[0]->nTimeReceived = (unsigned int)1333333335;
-    vpwtx[0]->nOrderPos = -1;
 
     ae.nTime = 1333333336;
     ae.strOtherAccount = "c";
@@ -70,7 +69,6 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     ae.nTime = 1333333330;
     ae.strOtherAccount = "d";
-    ae.nOrderPos = pwalletMain->IncOrderPosNext();
     pwalletMain->AddAccountingEntry(ae, walletdb);
 
     GetResults(walletdb, results);
@@ -103,7 +101,6 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     pwalletMain->AddToWallet(wtx);
     vpwtx.push_back(&pwalletMain->mapWallet[wtx.GetHash()]);
     vpwtx[2]->nTimeReceived = (unsigned int)1333333329;
-    vpwtx[2]->nOrderPos = -1;
 
     GetResults(walletdb, results);
 
@@ -120,7 +117,6 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     ae.nTime = 1333333334;
     ae.strOtherAccount = "e";
-    ae.nOrderPos = -1;
     pwalletMain->AddAccountingEntry(ae, walletdb);
 
     GetResults(walletdb, results);

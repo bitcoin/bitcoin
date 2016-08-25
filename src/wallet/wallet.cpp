@@ -2488,10 +2488,14 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
     return true;
 }
 
-bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB & pwalletdb)
+bool CWallet::AddAccountingEntry(CAccountingEntry& acentry, CWalletDB & walletdb)
 {
-    if (!pwalletdb.WriteAccountingEntry_Backend(acentry))
+    if (!walletdb.WriteAccountingEntry_Backend(acentry))
         return false;
+
+    if (acentry.nOrderPos == -1) {
+        acentry.nOrderPos = IncOrderPosNext(&walletdb);
+    }
 
     laccentries.push_back(acentry);
     CAccountingEntry & entry = laccentries.back();
