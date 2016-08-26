@@ -316,13 +316,13 @@ void RequestBlock(CNode* pfrom, CInv obj)
   // time the block arrives, the header chain leading up to it is already validated. Not
   // doing this will result in the received block being rejected as an orphan in case it is
   // not a direct successor.
+  if (IsChainNearlySyncd()) // only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
   {
     LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
   }
-  // Don't ask for the latest block, if our most recent block is really old (i.e. still doing initial sync?)
-  if (CanDirectFetch(chainParams.GetConsensus())) // Consider necessity given overall block pacer: && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) 
-    {
+
+  {
       // BUIP010 Xtreme Thinblocks: begin section
       CInv inv2(obj);
       CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -389,7 +389,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	  LogPrint("req", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
 	}
       // BUIP010 Xtreme Thinblocks: end section
-    }
+  }
 }
 
 
@@ -410,6 +410,15 @@ void CRequestManager::SendRequests()
 
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
       if (itemIter == mapBlkInfo.end()) break;
+
+      // Modify retry interval. If we're doing IBD we want to have a longer interval because those blocks take longer to download
+      if (IsChainNearlySyncd()) {
+         MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;
+      }
+      else
+      {
+        MIN_BLK_REQUEST_RETRY_INTERVAL = 30*1000*1000;
+      }
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
@@ -436,14 +445,14 @@ void CRequestManager::SendRequests()
 		{
                   // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
                   //     The chain must be almost syncd and traffic shaping must not be turned on
-		  if (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled())
+		  if (item.lastRequestTime && !IsTrafficShapingEnabled())
 		    {
 		      LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		    }
 
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
-                  if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled()))
+                  if (!item.lastRequestTime || (item.lastRequestTime && !IsTrafficShapingEnabled()))
                     {
 		      RequestBlock(next.node, obj);
 	              item.outstandingReqs++;

@@ -6634,10 +6634,13 @@ bool SendMessages(CNode* pto)
                     }
                 }
                 else {
-                    vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash())); 
-                    MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                    LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                                     pindex->nHeight, pto->id);
+                    //vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash())); 
+                    //MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
+                    //LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                    //                 pindex->nHeight, pto->id);
+		    requester.AskFor(CInv(MSG_BLOCK, pindex->GetBlockHash()), pto);
+                    LogPrint("req", "AskFor block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                                    pindex->nHeight, pto->id);
                 }
                 // BUIP010 Xtreme Thinblocks: end section
             }
