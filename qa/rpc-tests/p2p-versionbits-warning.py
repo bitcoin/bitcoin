@@ -74,7 +74,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, self.node_options))
 
         import re
-        self.vb_pattern = re.compile("^Warning.*versionbit")
+        self.vb_pattern = re.compile("^'?Warning.*versionbit")
 
     # Send numblocks blocks via peer with nVersionToUse set.
     def send_blocks_with_version(self, peer, numblocks, nVersionToUse):

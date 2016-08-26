@@ -11,8 +11,6 @@ forward all unrecognized arguments onto the individual test scripts, other
 than:
 
     - `-extended`: run the "extended" test suite in addition to the basic one.
-    - `-win`: signal that this is running in a Windows environment, and we
-      should run the tests.
     - `--coverage`: this generates a basic coverage report for the RPC
       interface.
 
@@ -60,6 +58,10 @@ PARALLEL_REGEX = re.compile('^-parallel=')
 
 print_help = False
 run_parallel = 4
+if EXEEXT == ".exe":
+    # Don't run tests in parallel on windows by default
+    # to avoid intermittent failures
+    run_parallel = 1
 
 for arg in sys.argv[1:]:
     if arg == "--help" or arg == "-h" or arg == "-?":
@@ -77,12 +79,6 @@ for arg in sys.argv[1:]:
 #Set env vars
 if "BITCOIND" not in os.environ:
     os.environ["BITCOIND"] = BUILDDIR + '/src/bitcoind' + EXEEXT
-
-if EXEEXT == ".exe" and "-win" not in opts:
-    # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-    # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
-    print("Win tests currently disabled by default.  Use -win option to enable")
-    sys.exit(0)
 
 if not (ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
     print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
@@ -176,7 +172,7 @@ def runtests():
     test_list = []
     if '-extended' in opts:
         test_list = testScripts + testScriptsExt
-    elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
+    elif len(opts) == 0:
         test_list = testScripts
     else:
         for t in testScripts + testScriptsExt:
