@@ -137,9 +137,10 @@ Build output expected:
 
 ### Verify other gitian builders signatures to your own. (Optional)
 
-Add other gitian builders keys to your gpg keyring
+Add other gitian builders keys to your gpg keyring, and/or refresh keys.
 
     gpg --import bitcoin/contrib/gitian-keys/*.pgp
+    gpg --refresh-keys
 
 Verify the signatures
 
