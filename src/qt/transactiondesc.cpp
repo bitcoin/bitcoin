@@ -142,13 +142,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             strHTML += "(" + tr("not accepted") + ")";
         strHTML += "<br>";
     }
-    else if (nNet > 0)
-    {
-        //
-        // Credit
-        //
-        strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet) + "<br>";
-    }
     else
     {
         isminetype fAllFromMe = ISMINE_SPENDABLE;
