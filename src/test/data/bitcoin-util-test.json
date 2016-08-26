@@ -1,24 +1,24 @@
 [
   { "exec": "./bitcoin-tx",
-    "args": ["-create"],
-    "output_cmp": "blanktx.hex",
-    "description": "Creates a blank transaction"
+    "args": ["-create", "nversion=1"],
+    "output_cmp": "blanktxv1.hex",
+    "description": "Creates a blank v1 transaction"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json","-create"],
-    "output_cmp": "blanktx.json",
+    "output_cmp": "blanktxv2.json",
     "description": "Creates a blank transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-"],
-    "input": "blanktx.hex",
-    "output_cmp": "blanktx.hex",
+    "input": "blanktxv2.hex",
+    "output_cmp": "blanktxv2.hex",
     "description": "Creates a blank transaction when nothing is piped into bitcoin-tx"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json","-"],
-    "input": "blanktx.hex",
-    "output_cmp": "blanktx.json",
+    "input": "blanktxv2.hex",
+    "output_cmp": "blanktxv2.json",
     "description": "Creates a blank transaction when nothing is piped into bitcoin-tx (output in json)"
   },
   { "exec": "./bitcoin-tx",
@@ -103,37 +103,48 @@
     "description": "Creates a new transaction with a single empty output script (output in json)"
   },
   { "exec": "./bitcoin-tx",
-    "args": ["01000000000100000000000000000000000000"],
+    "args": ["02000000000100000000000000000000000000"],
     "output_cmp": "txcreate2.hex",
     "description": "Parses a transation with no inputs and a single output script"
   },
   { "exec": "./bitcoin-tx",
-    "args": ["-json", "01000000000100000000000000000000000000"],
+    "args": ["-json", "02000000000100000000000000000000000000"],
     "output_cmp": "txcreate2.json",
     "description": "Parses a transation with no inputs and a single output script (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
-    ["-create",
+    ["-create", "nversion=1",
      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
      "sign=ALL",
      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
-    "output_cmp": "txcreatesign.hex",
-    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
+    "output_cmp": "txcreatesignv1.hex",
+    "description": "Creates a new v1 transaction with a single input and a single output, and then signs the transaction"
   },
   { "exec": "./bitcoin-tx",
     "args":
     ["-json",
-     "-create",
+     "-create", "nversion=1",
      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
      "sign=ALL",
      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
-    "output_cmp": "txcreatesign.json",
-    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction (output in json)"
+    "output_cmp": "txcreatesignv1.json",
+    "description": "Creates a new v1 transaction with a single input and a single output, and then signs the transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "output_cmp": "txcreatesignv2.hex",
+    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -163,12 +174,12 @@
   { "exec": "./bitcoin-tx",
     "args":
     ["-json",
-     "-create",
+     "-create", "nversion=1",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
     "output_cmp": "txcreatedata1.json",
-    "description": "Creates a new transaction with one input, one address output and one data output (output in json)"
+    "description": "Creates a new v1 transaction with one input, one address output and one data output (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
