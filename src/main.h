@@ -248,8 +248,6 @@ bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
-/** Check whether we are doing an initial block download (synchronizing from disk or network) */
-bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core.
  * strFor can have three values:
  * - "rpc": get critical warnings, which should put the client in safe mode if non-empty
