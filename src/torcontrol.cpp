@@ -29,6 +29,8 @@
 #include <event2/event.h>
 #include <event2/thread.h>
 
+#include <thread>
+
 /** Default control port */
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
 /** Tor cookie size (from control-spec.txt) */
@@ -663,7 +665,7 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 
 /****** Thread ********/
 struct event_base *base;
-boost::thread torControlThread;
+std::thread torControlThread;
 
 static void TorControlThread()
 {
@@ -672,7 +674,7 @@ static void TorControlThread()
     event_base_dispatch(base);
 }
 
-void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
+void StartTorControl()
 {
     assert(!base);
 #ifdef WIN32
@@ -686,7 +688,7 @@ void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
         return;
     }
 
-    torControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
 }
 
 void InterruptTorControl()
