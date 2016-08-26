@@ -7,6 +7,10 @@
 #include "rpc/protocol.h"
 #include "util.h"
 
+#ifdef ENABLE_WALLET
+#include "wallet/rpcjsonconversion.h"
+#endif
+
 #include <set>
 #include <stdint.h>
 
@@ -15,14 +19,9 @@
 
 using namespace std;
 
-class CRPCConvertParam
-{
-public:
-    std::string methodName; //!< method whose params want conversion
-    int paramIdx;           //!< 0-based idx of param to convert
-};
+#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
-static const CRPCConvertParam vRPCConvertParams[] =
+static const struct RPCConvertParam vRPCConvertParams[] =
 {
     { "stop", 0 },
     { "setmocktime", 0 },
@@ -33,46 +32,12 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "generatetoaddress", 2 },
     { "getnetworkhashps", 0 },
     { "getnetworkhashps", 1 },
-    { "sendtoaddress", 1 },
-    { "sendtoaddress", 4 },
-    { "settxfee", 0 },
-    { "getreceivedbyaddress", 1 },
-    { "getreceivedbyaccount", 1 },
-    { "listreceivedbyaddress", 0 },
-    { "listreceivedbyaddress", 1 },
-    { "listreceivedbyaddress", 2 },
-    { "listreceivedbyaccount", 0 },
-    { "listreceivedbyaccount", 1 },
-    { "listreceivedbyaccount", 2 },
-    { "getbalance", 1 },
-    { "getbalance", 2 },
     { "getblockhash", 0 },
-    { "move", 2 },
-    { "move", 3 },
-    { "sendfrom", 2 },
-    { "sendfrom", 3 },
-    { "listtransactions", 1 },
-    { "listtransactions", 2 },
-    { "listtransactions", 3 },
-    { "listaccounts", 0 },
-    { "listaccounts", 1 },
-    { "walletpassphrase", 1 },
     { "getblocktemplate", 0 },
-    { "listsinceblock", 1 },
-    { "listsinceblock", 2 },
-    { "sendmany", 1 },
-    { "sendmany", 2 },
-    { "sendmany", 4 },
-    { "addmultisigaddress", 0 },
-    { "addmultisigaddress", 1 },
     { "createmultisig", 0 },
     { "createmultisig", 1 },
-    { "listunspent", 0 },
-    { "listunspent", 1 },
-    { "listunspent", 2 },
     { "getblock", 1 },
     { "getblockheader", 1 },
-    { "gettransaction", 1 },
     { "getrawtransaction", 1 },
     { "createrawtransaction", 0 },
     { "createrawtransaction", 1 },
@@ -80,19 +45,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "signrawtransaction", 1 },
     { "signrawtransaction", 2 },
     { "sendrawtransaction", 1 },
-    { "fundrawtransaction", 1 },
     { "gettxout", 1 },
     { "gettxout", 2 },
     { "gettxoutproof", 0 },
-    { "lockunspent", 0 },
-    { "lockunspent", 1 },
-    { "importprivkey", 2 },
-    { "importaddress", 2 },
-    { "importaddress", 3 },
-    { "importpubkey", 2 },
     { "verifychain", 0 },
     { "verifychain", 1 },
-    { "keypoolrefill", 0 },
     { "getrawmempool", 0 },
     { "estimatefee", 0 },
     { "estimatepriority", 0 },
@@ -121,13 +78,16 @@ public:
 
 CRPCConvertTable::CRPCConvertTable()
 {
-    const unsigned int n_elem =
-        (sizeof(vRPCConvertParams) / sizeof(vRPCConvertParams[0]));
-
-    for (unsigned int i = 0; i < n_elem; i++) {
-        members.insert(std::make_pair(vRPCConvertParams[i].methodName,
+    for (unsigned int i = 0; i < ARRAYLEN(vRPCConvertParams); i++) {
+        members.insert(std::make_pair(std::string(vRPCConvertParams[i].methodName),
                                       vRPCConvertParams[i].paramIdx));
     }
+#ifdef ENABLE_WALLET
+    for (unsigned int i = 0; i < ARRAYLEN(walletRPCConversions); i++) {
+        members.insert(std::make_pair(std::string(walletRPCConversions[i].methodName),
+                                      walletRPCConversions[i].paramIdx));
+    }
+#endif
 }
 
 static CRPCConvertTable rpcCvtTable;
