@@ -66,16 +66,19 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
             BOOST_CHECK(ok);
         }
         nScriptCheckThreads = 3;
-        for (int i=0; i < nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
+        script_check_threads.reserve(nScriptCheckThreads-1);
+        for (int i=0; i<nScriptCheckThreads-1; i++)
+            script_check_threads.emplace_back(&ThreadScriptCheck);
         RegisterNodeSignals(GetNodeSignals());
 }
 
 TestingSetup::~TestingSetup()
 {
         UnregisterNodeSignals(GetNodeSignals());
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
+        InterruptThreadScriptCheck();
+        for(auto&& thread : script_check_threads)
+            thread.join();
+        script_check_threads.clear();
         UnloadBlockIndex();
         delete pcoinsTip;
         delete pcoinsdbview;

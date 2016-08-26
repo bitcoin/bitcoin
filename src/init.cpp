@@ -166,6 +166,7 @@ static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 static std::thread scheduler_thread;
+static std::vector<std::thread> script_check_threads;
 
 void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
@@ -178,6 +179,7 @@ void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
     scheduler.interrupt(false);
     if(pblocktree)
        pblocktree->InterruptLoadBlockIndexGuts();
+    InterruptThreadScriptCheck();
     InterruptNetbase();
     InterruptNode();
     threadGroup.interrupt_all();
@@ -218,6 +220,9 @@ void Shutdown(CScheduler& scheduler)
     scheduler.stop();
     if(scheduler_thread.joinable())
         scheduler_thread.join();
+    for(auto&& thread : script_check_threads)
+        thread.join();
+    script_check_threads.clear();
 
     UnregisterNodeSignals(GetNodeSignals());
 
@@ -1090,8 +1095,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
     if (nScriptCheckThreads) {
+        script_check_threads.reserve(nScriptCheckThreads-1);
         for (int i=0; i<nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
+            script_check_threads.emplace_back(&ThreadScriptCheck);
     }
 
     // Start the lightweight task scheduler thread

@@ -2243,6 +2243,11 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
+void InterruptThreadScriptCheck()
+{
+    scriptcheckqueue.Interrupt();
+};
+
 // Protected by cs_main
 VersionBitsCache versionbitscache;
 

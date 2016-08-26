@@ -13,6 +13,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include <thread>
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.
@@ -30,7 +31,7 @@ struct BasicTestingSetup {
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
     boost::filesystem::path pathTemp;
-    boost::thread_group threadGroup;
+    std::vector<std::thread> script_check_threads;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
