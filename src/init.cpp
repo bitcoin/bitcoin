@@ -167,6 +167,7 @@ static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 static std::thread scheduler_thread;
 static std::vector<std::thread> script_check_threads;
+static std::thread import_thread;
 #ifdef ENABLE_WALLET
 static std::thread flush_wallet_thread;
 #endif
@@ -230,6 +231,8 @@ void Shutdown(CScheduler& scheduler)
     if (flush_wallet_thread.joinable())
         flush_wallet_thread.join();
 #endif
+    if (import_thread.joinable())
+        import_thread.join();
 
     UnregisterNodeSignals(GetNodeSignals());
 
@@ -1511,7 +1514,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             vImportFiles.push_back(strFile);
     }
 
-    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
+    auto import_bind = std::bind(ThreadImport, vImportFiles);
+    import_thread = std::thread(&TraceThread<decltype(import_bind)>, "bitcoin-import", std::move(import_bind));
 
     // Wait for genesis block to be processed
     {
