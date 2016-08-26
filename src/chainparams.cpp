@@ -133,6 +133,7 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
+        fDisableMiningOnNonreleaseBranches = true;
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -224,6 +225,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
+        fDisableMiningOnNonreleaseBranches = false;
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -286,6 +288,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
+        fDisableMiningOnNonreleaseBranches = false;
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of

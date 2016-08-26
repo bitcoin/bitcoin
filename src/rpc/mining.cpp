@@ -161,6 +161,10 @@ UniValue generate(const UniValue& params, bool fHelp)
             + HelpExampleCli("generate", "11")
         );
 
+    const CChainParams& chainParams = Params();
+    if (!CLIENT_VERSION_IS_RELEASE && chainParams.DisableMiningOnNonreleaseBranches())
+        throw JSONRPCError(RPC_MINING_DISABLED, "Mining disabled");
+
     int nGenerate = params[0].get_int();
     uint64_t nMaxTries = 1000000;
     if (params.size() > 1) {
@@ -388,6 +392,10 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             + HelpExampleCli("getblocktemplate", "")
             + HelpExampleRpc("getblocktemplate", "")
          );
+
+    const CChainParams& chainParams = Params();
+    if (!CLIENT_VERSION_IS_RELEASE && chainParams.DisableMiningOnNonreleaseBranches())
+        throw JSONRPCError(RPC_MINING_DISABLED, "Mining disabled");
 
     LOCK(cs_main);
 
