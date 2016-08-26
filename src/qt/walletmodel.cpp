@@ -55,6 +55,11 @@ WalletModel::~WalletModel()
     unsubscribeFromCoreSignals();
 }
 
+CAmount WalletModel::getMinChange() const
+{
+    return wallet->GetMinChange();
+}
+
 CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
