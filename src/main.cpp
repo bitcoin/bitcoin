@@ -6407,7 +6407,7 @@ bool SendMessages(CNode* pto)
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
                    non-empty list of headers back as long as the peer
-                   is up-to-date.  With a non-empty response, we can initialise
+                   is up-to-date.  With a non-empty response, we can initialize
                    the peer's known best block.  This wouldn't be possible
                    if we requested starting at pindexBestHeader and
                    got back an empty response.  */
