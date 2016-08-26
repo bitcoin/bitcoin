@@ -422,15 +422,15 @@ private:
             TEST_log(ID, [](std::ostringstream& o) { o << "Saw master leave\n"; });
             jobs.reset_flags_for(ID, prev_total);
             cleanup.finished();
+            TEST_log(ID, [](std::ostringstream& o) { o << "Resetting nAvail and fAllOk\n"; });
+            nAvail.store(0);
+            fAllOk.store(true);
             if (ID == 1) {
                 // Reset master flags too
                 jobs.reset_flags_for(0, prev_total);
                 jobs.clear_check_memory();
                 cleanup.wait_all_finished();
                 cleanup.reset();
-                TEST_log(0, [](std::ostringstream& o) { o << "Resetting nAvail and fAllOk\n"; });
-                nAvail.store(0);
-                fAllOk.store(true);
                 work.reset();
             }
         }
