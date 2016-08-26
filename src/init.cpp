@@ -167,6 +167,9 @@ static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 static std::thread scheduler_thread;
 static std::vector<std::thread> script_check_threads;
+#ifdef ENABLE_WALLET
+static std::thread flush_wallet_thread;
+#endif
 
 void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
@@ -223,6 +226,10 @@ void Shutdown(CScheduler& scheduler)
     for(auto&& thread : script_check_threads)
         thread.join();
     script_check_threads.clear();
+#ifdef ENABLE_WALLET
+    if (flush_wallet_thread.joinable())
+        flush_wallet_thread.join();
+#endif
 
     UnregisterNodeSignals(GetNodeSignals());
 
@@ -1533,7 +1540,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         // Run a thread to flush wallet periodically
-        threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+        auto walletbind = std::bind(ThreadFlushWalletDB, std::ref(pwalletMain->strWalletFile));
+        flush_wallet_thread = std::thread(&TraceThread<decltype(walletbind)>, "flushwallet", std::move(walletbind));
     }
 #endif
 
