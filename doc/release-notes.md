@@ -41,6 +41,14 @@ report issues about Windows XP to the issue tracker.
 Notable changes
 ===============
 
+Low-level RPC changes
+----------------------
+
+- `importprunedfunds` only accepts two required arguments. Some versions accept
+  an optional third arg, which was always ignored. Make sure to never pass more
+  than two arguments.
+
+
 0.14.0 Change log
 =================
 
