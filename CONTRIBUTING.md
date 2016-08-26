@@ -198,3 +198,8 @@ Release Policy
 --------------
 
 The project leader is the release manager for each Bitcoin Core release.
+
+
+Code of Conduct
+--------------
+Please see CONDUCT.md.
