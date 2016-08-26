@@ -168,6 +168,7 @@ testScriptsExt = [
     'maxuploadtarget.py',
     'replace-by-fee.py',
     'p2p-feefilter.py',
+    'rewardhalving.py',
     'pruning.py', # leave pruning last as it takes a REALLY long time
 ]
 
