@@ -41,7 +41,15 @@ Notable changes
 Example item
 --------------
 
-0.13.0 Change log
+Low-level RPC changes
+---------------------
+
+- `importprunedfunds` only accepts two required arguments. Some versions accept
+  an optional third arg, which was always ignored. Make sure to never pass more
+  than two arguments.
+
+
+0.13.1 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
