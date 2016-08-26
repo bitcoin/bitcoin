@@ -40,6 +40,12 @@ public:
     bool NotifyTransaction(const CTransaction &transaction);
 };
 
+class CZMQPublishOwnedHashTransactionNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyTransaction(const CTransaction &transaction);
+};
+
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
