@@ -87,8 +87,28 @@ string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)
             return str;
         }
         if (0 <= opcode && opcode <= OP_PUSHDATA4) {
+            //! if vch can't be encoded correctly as a number, treat it as hex data.
             if (vch.size() <= static_cast<vector<unsigned char>::size_type>(4)) {
-                str += strprintf("%d", CScriptNum(vch, false).getint());
+                try {
+                    ///
+                    /// an invalid script like "0x01 {0x81,0x01,0x02,..0x10}"
+                    /// will pass the assignment below so we have to check for
+                    /// the validity of the push. (see CheckMinimalPush)
+                    ///
+                    int num = CScriptNum(vch, true).getint();
+                    if (!(opcode == 1 && (-1 <= num && num <= 16))) {
+                        str += strprintf("%d", num);
+                    } else {
+                        str += "[error]";
+                        return str;
+                    }
+                ///
+                /// any push of 0 to 4 bytes that is not a correctly encoded
+                /// number will be displayed as a push of the hex data itself
+                ///
+                } catch (const std::runtime_error& e) {
+                    str += HexStr(vch);
+                }
             } else {
                 // the IsUnspendable check makes sure not to try to decode OP_RETURN data that may match the format of a signature
                 if (fAttemptSighashDecode && !script.IsUnspendable()) {
