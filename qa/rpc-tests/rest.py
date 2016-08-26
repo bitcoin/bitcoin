@@ -11,8 +11,9 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from struct import *
+from io import BytesIO
+from codecs import encode
 import binascii
-import StringIO
 
 try:
     import http.client as httplib
@@ -38,7 +39,7 @@ def http_get_call(host, port, path, response_object = 0):
     if response_object:
         return conn.getresponse()
 
-    return conn.getresponse().read()
+    return conn.getresponse().read().decode('utf-8')
 
 #allows simple http post calls with a request body
 def http_post_call(host, port, path, requestdata = '', response_object = 0):
@@ -140,13 +141,13 @@ class RESTTest (BitcoinTestFramework):
         bb_hash = self.nodes[0].getbestblockhash()
 
         binaryRequest = b'\x01\x02'
-        binaryRequest += binascii.unhexlify(txid)
+        binaryRequest += hex_str_to_bytes(txid)
         binaryRequest += pack("i", n)
-        binaryRequest += binascii.unhexlify(vintx)
+        binaryRequest += hex_str_to_bytes(vintx)
         binaryRequest += pack("i", 0)
 
         bin_response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', binaryRequest)
-        output = StringIO.StringIO()
+        output = BytesIO()
         output.write(bin_response)
         output.seek(0)
         chainHeight = unpack("i", output.read(4))[0]
@@ -233,7 +234,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(response_hex.status, 200)
         assert_greater_than(int(response_hex.getheader('content-length')), 160)
         response_hex_str = response_hex.read()
-        assert_equal(response_str.encode("hex")[0:160], response_hex_str[0:160])
+        assert_equal(encode(response_str, "hex_codec")[0:160], response_hex_str[0:160])
 
         # compare with hex block header
         response_header_hex = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"hex", True)
@@ -241,7 +242,7 @@ class RESTTest (BitcoinTestFramework):
         assert_greater_than(int(response_header_hex.getheader('content-length')), 160)
         response_header_hex_str = response_header_hex.read()
         assert_equal(response_hex_str[0:160], response_header_hex_str[0:160])
-        assert_equal(response_header_str.encode("hex")[0:160], response_header_hex_str[0:160])
+        assert_equal(encode(response_header_str, "hex_codec")[0:160], response_header_hex_str[0:160])
 
         # check json format
         block_json_string = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+'json')
@@ -251,7 +252,7 @@ class RESTTest (BitcoinTestFramework):
         # compare with json block header
         response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
         assert_equal(response_header_json.status, 200)
-        response_header_json_str = response_header_json.read()
+        response_header_json_str = response_header_json.read().decode('utf-8')
         json_obj = json.loads(response_header_json_str, parse_float=Decimal)
         assert_equal(len(json_obj), 1) #ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash) #request/response hash should be the same
@@ -275,7 +276,7 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
         response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/5/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
         assert_equal(response_header_json.status, 200)
-        response_header_json_str = response_header_json.read()
+        response_header_json_str = response_header_json.read().decode('utf-8')
         json_obj = json.loads(response_header_json_str)
         assert_equal(len(json_obj), 5) #now we should have 5 header objects
 
@@ -289,7 +290,6 @@ class RESTTest (BitcoinTestFramework):
         hex_string = http_get_call(url.hostname, url.port, '/rest/tx/'+tx_hash+self.FORMAT_SEPARATOR+"hex", True)
         assert_equal(hex_string.status, 200)
         assert_greater_than(int(response.getheader('content-length')), 10)
-
 
 
         # check block tx details

@@ -1,0 +1,81 @@
+LIBLEVELDB_INT = leveldb/libleveldb.a
+LIBMEMENV_INT  = leveldb/libmemenv.a
+
+EXTRA_LIBRARIES += $(LIBLEVELDB_INT)
+EXTRA_LIBRARIES += $(LIBMEMENV_INT)
+
+LIBLEVELDB += $(LIBLEVELDB_INT)
+LIBMEMENV += $(LIBMEMENV_INT)
+
+LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
+LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
+
+LEVELDB_CPPFLAGS_INT =
+LEVELDB_CPPFLAGS_INT += -I$(srcdir)/leveldb
+LEVELDB_CPPFLAGS_INT += $(LEVELDB_TARGET_FLAGS)
+LEVELDB_CPPFLAGS_INT += $(LEVELDB_ATOMIC_CPPFLAGS)
+LEVELDB_CPPFLAGS_INT += -D__STDC_LIMIT_MACROS
+
+if TARGET_WINDOWS
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_WINDOWS -DWINVER=0x0500 -D__USE_MINGW_ANSI_STDIO=1
+else
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_POSIX
+endif
+
+LEVELDB_CXXFLAGS_INT =
+LEVELDB_CXXFLAGS_INT += $(LEVELDB_ATOMIC_CXXFLAGS)
+
+leveldb_libleveldb_a_CPPFLAGS = $(AM_CPPFLAGS) $(LEVELDB_CPPFLAGS_INT) $(LEVELDB_CPPFLAGS)
+leveldb_libleveldb_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(LEVELDB_CXXFLAGS_INT)
+
+leveldb_libleveldb_a_SOURCES=
+leveldb_libleveldb_a_SOURCES += leveldb/db/builder.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/c.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/dbformat.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/db_impl.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/db_iter.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/dumpfile.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/filename.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/log_reader.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/log_writer.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/memtable.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/repair.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/table_cache.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/version_edit.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/version_set.cc
+leveldb_libleveldb_a_SOURCES += leveldb/db/write_batch.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/block_builder.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/block.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/filter_block.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/format.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/iterator.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/merger.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/table_builder.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/table.cc
+leveldb_libleveldb_a_SOURCES += leveldb/table/two_level_iterator.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/arena.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/bloom.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/cache.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/coding.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/comparator.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/env.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_win.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/filter_policy.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/hash.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/histogram.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/logging.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/options.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/status.cc
+
+if TARGET_WINDOWS
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_win.cc
+leveldb_libleveldb_a_SOURCES += leveldb/port/port_win.cc
+else
+leveldb_libleveldb_a_SOURCES += leveldb/port/port_posix.cc
+endif
+
+leveldb_libmemenv_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
+leveldb_libmemenv_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
+leveldb_libmemenv_a_SOURCES =  leveldb/helpers/memenv/memenv.cc

@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from mininode import *
-from blockstore import BlockStore, TxStore
-from util import p2p_port
+from .mininode import *
+from .blockstore import BlockStore, TxStore
+from .util import p2p_port
 
 '''
 This is a tool for comparing two or more dashds to each other
@@ -27,25 +27,11 @@ generator that returns TestInstance objects.  See below for definition.
 
 global mininode_lock
 
-def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
-    attempt = 0
-    elapsed = 0
-
-    while attempt < attempts and elapsed < timeout:
-        with mininode_lock:
-            if predicate():
-                return True
-        attempt += 1
-        elapsed += 0.05
-        time.sleep(0.05)
-
-    return False
-
 class RejectResult(object):
     '''
     Outcome that expects rejection of a transaction or block.
     '''
-    def __init__(self, code, reason=''):
+    def __init__(self, code, reason=b''):
         self.code = code
         self.reason = reason
     def match(self, other):
@@ -111,9 +97,9 @@ class TestNode(NodeConnCB):
             raise AssertionError("Got pong for unknown ping [%s]" % repr(message))
 
     def on_reject(self, conn, message):
-        if message.message == 'tx':
+        if message.message == b'tx':
             self.tx_reject_map[message.data] = RejectResult(message.code, message.reason)
-        if message.message == 'block':
+        if message.message == b'block':
             self.block_reject_map[message.data] = RejectResult(message.code, message.reason)
 
     def send_inv(self, obj):

@@ -9,16 +9,10 @@ The following are some helpful notes on how to run Dash on your native platform.
 
 ### Unix
 
-You need the Qt4 run-time libraries to run Dash-Qt. On Debian or Ubuntu:
-
-	sudo apt-get install libqtgui4
-
 Unpack the files into a directory and run:
 
-- bin/32/dash-qt (GUI, 32-bit) or bin/32/dashd (headless, 32-bit)
-- bin/64/dash-qt (GUI, 64-bit) or bin/64/dashd (headless, 64-bit)
-
-
+- `bin/bitcoin-qt` (GUI) or
+- `bin/bitcoind` (headless)
 
 ### Windows
 

@@ -227,7 +227,7 @@ OP_CHECKMULTISIGVERIFY = CScriptOp(0xaf)
 # expansion
 OP_NOP1 = CScriptOp(0xb0)
 OP_CHECKLOCKTIMEVERIFY = CScriptOp(0xb1)
-OP_NOP3 = CScriptOp(0xb2)
+OP_CHECKSEQUENCEVERIFY = CScriptOp(0xb2)
 OP_NOP4 = CScriptOp(0xb3)
 OP_NOP5 = CScriptOp(0xb4)
 OP_NOP6 = CScriptOp(0xb5)
@@ -354,7 +354,7 @@ VALID_OPCODES = {
 
     OP_NOP1,
     OP_CHECKLOCKTIMEVERIFY,
-    OP_NOP3,
+    OP_CHECKSEQUENCEVERIFY,
     OP_NOP4,
     OP_NOP5,
     OP_NOP6,
@@ -473,7 +473,7 @@ OPCODE_NAMES.update({
     OP_CHECKMULTISIGVERIFY : 'OP_CHECKMULTISIGVERIFY',
     OP_NOP1 : 'OP_NOP1',
     OP_CHECKLOCKTIMEVERIFY : 'OP_CHECKLOCKTIMEVERIFY',
-    OP_NOP3 : 'OP_NOP3',
+    OP_CHECKSEQUENCEVERIFY : 'OP_CHECKSEQUENCEVERIFY',
     OP_NOP4 : 'OP_NOP4',
     OP_NOP5 : 'OP_NOP5',
     OP_NOP6 : 'OP_NOP6',
@@ -592,7 +592,7 @@ OPCODES_BY_NAME = {
     'OP_CHECKMULTISIGVERIFY' : OP_CHECKMULTISIGVERIFY,
     'OP_NOP1' : OP_NOP1,
     'OP_CHECKLOCKTIMEVERIFY' : OP_CHECKLOCKTIMEVERIFY,
-    'OP_NOP3' : OP_NOP3,
+    'OP_CHECKSEQUENCEVERIFY' : OP_CHECKSEQUENCEVERIFY,
     'OP_NOP4' : OP_NOP4,
     'OP_NOP5' : OP_NOP5,
     'OP_NOP6' : OP_NOP6,
@@ -629,7 +629,7 @@ class CScriptNum(object):
         neg = obj.value < 0
         absvalue = -obj.value if neg else obj.value
         while (absvalue):
-            r.append(chr(absvalue & 0xff))
+            r.append(absvalue & 0xff)
             absvalue >>= 8
         if r[-1] & 0x80:
             r.append(0x80 if neg else 0)
@@ -777,7 +777,7 @@ class CScript(bytes):
         # need to change
         def _repr(o):
             if isinstance(o, bytes):
-                return "x('%s')" % hexlify(o).decode('utf8')
+                return b"x('%s')" % hexlify(o).decode('ascii')
             else:
                 return repr(o)
 

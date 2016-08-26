@@ -533,9 +533,7 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    pathRet /= "Library/Application Support";
-    TryCreateDirectory(pathRet);
-    return pathRet / "DashCore";
+    return pathRet / "Library/Application Support/DashCore";
 #else
     // Unix
     return pathRet / ".dashcore";

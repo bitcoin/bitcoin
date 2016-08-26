@@ -10,8 +10,7 @@ from test_framework.mininode import ToHex, CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import *
-from binascii import unhexlify
-import cStringIO
+from io import BytesIO
 import time
 
 '''
@@ -119,7 +118,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(rawtx))
+        f = BytesIO(hex_str_to_bytes(rawtx))
         tx.deserialize(f)
         return tx
 
@@ -127,7 +126,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         rawtx = ToHex(unsignedtx)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(signresult['hex']))
+        f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
 
@@ -174,7 +173,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         tx = self.create_transaction(self.nodes[0], input, self.nodeaddress, Decimal("499.98"))
         tx.nVersion = txversion
         signtx = self.sign_transaction(self.nodes[0], tx)
-        signtx.vin[0].scriptSig = CScript([-1, OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+        signtx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
         return signtx
 
     def create_bip112txs(self, bip112inputs, varyOP_CSV, txversion, locktime_delta = 0):
@@ -197,9 +196,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
                         tx.nVersion = txversion
                         signtx = self.sign_transaction(self.nodes[0], tx)
                         if (varyOP_CSV):
-                            signtx.vin[0].scriptSig = CScript([relative_locktimes[b31][b25][b22][b18], OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+                            signtx.vin[0].scriptSig = CScript([relative_locktimes[b31][b25][b22][b18], OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
                         else:
-                            signtx.vin[0].scriptSig = CScript([base_relative_locktime, OP_NOP3, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
+                            signtx.vin[0].scriptSig = CScript([base_relative_locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(signtx.vin[0].scriptSig)))
                         b18txs.append(signtx)
                     b22txs.append(b18txs)
                 b25txs.append(b22txs)
