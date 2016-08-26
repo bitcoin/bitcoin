@@ -60,6 +60,22 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
     CAmount nNet = nCredit - nDebit;
 
+    isminetype fAllFromMe = ISMINE_SPENDABLE;
+    bool anyFromMe = false;
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        isminetype mine = wallet->IsMine(txin);
+        if(mine) anyFromMe = true;
+        if(fAllFromMe > mine) fAllFromMe = mine;
+    }
+
+    isminetype fAllToMe = ISMINE_SPENDABLE;
+    BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+    {
+        isminetype mine = wallet->IsMine(txout);
+        if(fAllToMe > mine) fAllToMe = mine;
+    }
+
     strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
     int nRequests = wtx.GetRequestCount();
     if (nRequests != -1)
@@ -127,7 +143,23 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     // Amount
     //
-    if (wtx.IsCoinBase() && nCredit == 0)
+    if (anyFromMe && !fAllFromMe)
+    {
+        //
+        // Multiparty
+        //
+        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+        {
+            if (wallet->IsMine(txin))
+                strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
+        }
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        {
+            if (wallet->IsMine(txout))
+                strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
+        }
+    }
+    else if (wtx.IsCoinBase() && nCredit == 0)
     {
         //
         // Coinbase
@@ -149,85 +181,68 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         //
         strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet) + "<br>";
     }
-    else
+    else if (fAllFromMe)
     {
-        isminetype fAllFromMe = ISMINE_SPENDABLE;
-        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-        {
-            isminetype mine = wallet->IsMine(txin);
-            if(fAllFromMe > mine) fAllFromMe = mine;
-        }
+        if(fAllFromMe & ISMINE_WATCH_ONLY)
+            strHTML += "<b>" + tr("From") + ":</b> " + tr("watch-only") + "<br>";
 
-        isminetype fAllToMe = ISMINE_SPENDABLE;
+        //
+        // Debit
+        //
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            isminetype mine = wallet->IsMine(txout);
-            if(fAllToMe > mine) fAllToMe = mine;
-        }
+            // Ignore change
+            isminetype toSelf = wallet->IsMine(txout);
+            if ((toSelf == ISMINE_SPENDABLE) && (fAllFromMe == ISMINE_SPENDABLE))
+                continue;
 
-        if (fAllFromMe)
-        {
-            if(fAllFromMe & ISMINE_WATCH_ONLY)
-                strHTML += "<b>" + tr("From") + ":</b> " + tr("watch-only") + "<br>";
-
-            //
-            // Debit
-            //
-            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+            if (!wtx.mapValue.count("to") || wtx.mapValue["to"].empty())
             {
-                // Ignore change
-                isminetype toSelf = wallet->IsMine(txout);
-                if ((toSelf == ISMINE_SPENDABLE) && (fAllFromMe == ISMINE_SPENDABLE))
-                    continue;
-
-                if (!wtx.mapValue.count("to") || wtx.mapValue["to"].empty())
+                // Offline transaction
+                CTxDestination address;
+                if (ExtractDestination(txout.scriptPubKey, address))
                 {
-                    // Offline transaction
-                    CTxDestination address;
-                    if (ExtractDestination(txout.scriptPubKey, address))
-                    {
-                        strHTML += "<b>" + tr("To") + ":</b> ";
-                        if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
-                            strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-                        strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
-                        if(toSelf == ISMINE_SPENDABLE)
-                            strHTML += " (own address)";
-                        else if(toSelf & ISMINE_WATCH_ONLY)
-                            strHTML += " (watch-only)";
-                        strHTML += "<br>";
-                    }
+                    strHTML += "<b>" + tr("To") + ":</b> ";
+                    if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
+                        strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
+                    strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
+                    if(toSelf == ISMINE_SPENDABLE)
+                        strHTML += " (own address)";
+                    else if(toSelf & ISMINE_WATCH_ONLY)
+                        strHTML += " (watch-only)";
+                    strHTML += "<br>";
                 }
-
-                strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
-                if(toSelf)
-                    strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + "<br>";
             }
 
-            if (fAllToMe)
-            {
-                // Payment to self
-                CAmount nChange = wtx.GetChange();
-                CAmount nValue = nCredit - nChange;
-                strHTML += "<b>" + tr("Total debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nValue) + "<br>";
-                strHTML += "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
-            }
-
-            CAmount nTxFee = nDebit - wtx.GetValueOut();
-            if (nTxFee > 0)
-                strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
+            strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
+            if(toSelf)
+                strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + "<br>";
         }
-        else
+
+        if (fAllToMe)
         {
-            //
-            // Mixed debit transaction
-            //
-            BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                if (wallet->IsMine(txin))
-                    strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
-            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                if (wallet->IsMine(txout))
-                    strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
+            // Payment to self
+            CAmount nChange = wtx.GetChange();
+            CAmount nValue = nCredit - nChange;
+            strHTML += "<b>" + tr("Total debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nValue) + "<br>";
+            strHTML += "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
         }
+
+        CAmount nTxFee = nDebit - wtx.GetValueOut();
+        if (nTxFee > 0)
+            strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
+    }
+    else
+    {
+        //
+        // can't break down payees
+        //
+        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+            if (wallet->IsMine(txin))
+                strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+            if (wallet->IsMine(txout))
+                strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
     }
 
     strHTML += "<b>" + tr("Net amount") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet, true) + "<br>";

@@ -42,7 +42,34 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    if (nNet > 0 || wtx.IsCoinBase())
+    bool involvesWatchAddress = false;
+    isminetype fAllFromMe = ISMINE_SPENDABLE;
+    bool anyFromMe = false;
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        isminetype mine = wallet->IsMine(txin);
+        if(mine) anyFromMe = true;
+        if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+        if(fAllFromMe > mine) fAllFromMe = mine;
+    }
+
+    isminetype fAllToMe = ISMINE_SPENDABLE;
+    BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+    {
+        isminetype mine = wallet->IsMine(txout);
+        if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+        if(fAllToMe > mine) fAllToMe = mine;
+    }
+
+    if (anyFromMe && !fAllFromMe)
+    {
+        //
+        // Multiparty
+        //
+        parts.append(TransactionRecord(hash, nTime, TransactionRecord::Multiparty, "", nNet, 0));
+        parts.last().involvesWatchAddress = involvesWatchAddress;
+    }
+    else if (nNet > 0 || wtx.IsCoinBase())
     {
         //
         // Credit
@@ -79,89 +106,69 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             }
         }
     }
+    else if (fAllFromMe && fAllToMe)
+    {
+        // Payment to self
+        CAmount nChange = wtx.GetChange();
+
+        parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
+                        -(nDebit - nChange), nCredit - nChange));
+        parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+    }
+    else if (fAllFromMe)
+    {
+        //
+        // Debit
+        //
+        CAmount nTxFee = nDebit - wtx.GetValueOut();
+
+        for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+        {
+            const CTxOut& txout = wtx.vout[nOut];
+            TransactionRecord sub(hash, nTime);
+            sub.idx = parts.size();
+            sub.involvesWatchAddress = involvesWatchAddress;
+
+            if(wallet->IsMine(txout))
+            {
+                // Ignore parts sent to self, as this is usually the change
+                // from a transaction sent back to our own address.
+                continue;
+            }
+
+            CTxDestination address;
+            if (ExtractDestination(txout.scriptPubKey, address))
+            {
+                // Sent to Bitcoin Address
+                sub.type = TransactionRecord::SendToAddress;
+                sub.address = CBitcoinAddress(address).ToString();
+            }
+            else
+            {
+                // Sent to IP, or other non-address transaction like OP_EVAL
+                sub.type = TransactionRecord::SendToOther;
+                sub.address = mapValue["to"];
+            }
+
+            CAmount nValue = txout.nValue;
+            /* Add fee to first output */
+            if (nTxFee > 0)
+            {
+                nValue += nTxFee;
+                nTxFee = 0;
+            }
+            sub.debit = -nValue;
+
+            parts.append(sub);
+        }
+    }
     else
     {
-        bool involvesWatchAddress = false;
-        isminetype fAllFromMe = ISMINE_SPENDABLE;
-        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-        {
-            isminetype mine = wallet->IsMine(txin);
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            if(fAllFromMe > mine) fAllFromMe = mine;
-        }
-
-        isminetype fAllToMe = ISMINE_SPENDABLE;
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-        {
-            isminetype mine = wallet->IsMine(txout);
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            if(fAllToMe > mine) fAllToMe = mine;
-        }
-
-        if (fAllFromMe && fAllToMe)
-        {
-            // Payment to self
-            CAmount nChange = wtx.GetChange();
-
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                            -(nDebit - nChange), nCredit - nChange));
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
-        }
-        else if (fAllFromMe)
-        {
-            //
-            // Debit
-            //
-            CAmount nTxFee = nDebit - wtx.GetValueOut();
-
-            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
-            {
-                const CTxOut& txout = wtx.vout[nOut];
-                TransactionRecord sub(hash, nTime);
-                sub.idx = parts.size();
-                sub.involvesWatchAddress = involvesWatchAddress;
-
-                if(wallet->IsMine(txout))
-                {
-                    // Ignore parts sent to self, as this is usually the change
-                    // from a transaction sent back to our own address.
-                    continue;
-                }
-
-                CTxDestination address;
-                if (ExtractDestination(txout.scriptPubKey, address))
-                {
-                    // Sent to Bitcoin Address
-                    sub.type = TransactionRecord::SendToAddress;
-                    sub.address = CBitcoinAddress(address).ToString();
-                }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
-                    sub.address = mapValue["to"];
-                }
-
-                CAmount nValue = txout.nValue;
-                /* Add fee to first output */
-                if (nTxFee > 0)
-                {
-                    nValue += nTxFee;
-                    nTxFee = 0;
-                }
-                sub.debit = -nValue;
-
-                parts.append(sub);
-            }
-        }
-        else
-        {
-            //
-            // Mixed debit transaction, can't break down payees
-            //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
-            parts.last().involvesWatchAddress = involvesWatchAddress;
-        }
+        //
+        // can't break down payees
+        //
+        parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+        parts.last().involvesWatchAddress = involvesWatchAddress;
     }
 
     return parts;
