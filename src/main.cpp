@@ -5446,10 +5446,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             pfrom->nLastTXTime = GetTime();
 
-            LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
+            LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u MiB, cache=%.1fMiB(%utx))\n",
                 pfrom->id,
                 tx.GetHash().ToString(),
-                mempool.size(), mempool.DynamicMemoryUsage() / 1000);
+                mempool.size(), mempool.DynamicMemoryUsage()  * (1.0 / (1<<20)),
+                pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
 
             // Recursively process any orphan transactions that depended on this one
             set<NodeId> setMisbehaving;
