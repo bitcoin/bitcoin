@@ -125,6 +125,10 @@ static std::mutex cs_net_interrupt;
 static std::atomic<bool> net_interrupted(false);
 
 std::thread dns_address_seed_thread;
+std::thread socket_handler_thread;
+std::thread open_added_connections_thread;
+std::thread open_connections_thread;
+std::thread message_handler_thread;
 
 void AddOneShot(const std::string& strDest)
 {
@@ -2059,7 +2063,7 @@ bool BindListenPort(const CService &addrBind, std::string& strError, bool fWhite
     return true;
 }
 
-void static Discover(boost::thread_group& threadGroup)
+void static Discover()
 {
     if (!fDiscover)
         return;
@@ -2110,7 +2114,7 @@ void static Discover(boost::thread_group& threadGroup)
 #endif
 }
 
-void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
+void StartNode(CScheduler& scheduler)
 {
     net_interrupted = false;
     uiInterface.InitMessage(_("Loading addresses..."));
@@ -2161,7 +2165,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices));
     }
 
-    Discover(threadGroup);
+    Discover();
 
     //
     // Start threads
@@ -2176,16 +2180,16 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
 
     // Send and receive from sockets, accept connections
-    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "net", &ThreadSocketHandler));
+    socket_handler_thread = std::thread(std::bind(&TraceThread<void (*)()>, "net", &ThreadSocketHandler));
 
     // Initiate outbound connections from -addnode
-    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "addcon", &ThreadOpenAddedConnections));
+    open_added_connections_thread = std::thread(std::bind(&TraceThread<void (*)()>, "addcon", &ThreadOpenAddedConnections));
 
     // Initiate outbound connections
-    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "opencon", &ThreadOpenConnections));
+    open_connections_thread = std::thread(std::bind(&TraceThread<void (*)()>, "opencon", &ThreadOpenConnections));
 
     // Process messages
-    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "msghand", &ThreadMessageHandler));
+    message_handler_thread = std::thread(std::bind(&TraceThread<void (*)()>, "msghand", &ThreadMessageHandler));
 
     // Dump network addresses
     scheduler.scheduleEvery(&DumpData, DUMP_ADDRESSES_INTERVAL);
@@ -2195,6 +2199,7 @@ void InterruptNode()
 {
     net_interrupted = true;
     net_interrupt_cond.notify_all();
+    messageHandlerCondition.notify_all();
 }
 
 bool StopNode()
@@ -2214,6 +2219,14 @@ bool StopNode()
     if(dns_address_seed_thread.joinable())
         dns_address_seed_thread.join();
 
+    if(socket_handler_thread.joinable())
+        socket_handler_thread.join();
+    if(open_added_connections_thread.joinable())
+        open_added_connections_thread.join();
+    if(open_connections_thread.joinable())
+        open_connections_thread.join();
+    if(message_handler_thread.joinable())
+        message_handler_thread.join();
     return true;
 }
 

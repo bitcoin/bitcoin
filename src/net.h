@@ -97,7 +97,7 @@ void InterruptMapPort();
 void StopMapPort();
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
-void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler);
+void StartNode(CScheduler& scheduler);
 bool StopNode();
 void InterruptNode();
 
