@@ -172,6 +172,10 @@ static std::thread import_thread;
 static std::thread flush_wallet_thread;
 #endif
 
+static bool fHaveGenesis = false;
+static boost::mutex cs_GenesisWait;
+static CConditionVariable condvar_GenesisWait;
+
 void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     InterruptHTTPServer();
@@ -193,6 +197,7 @@ void Interrupt(boost::thread_group& threadGroup, CScheduler& scheduler)
         InterruptFlushWalletDB();
     }
 #endif
+    condvar_GenesisWait.notify_all();
 }
 
 void Shutdown(CScheduler& scheduler)
@@ -546,10 +551,6 @@ static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex
     boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
     boost::thread t(runCommand, strCmd); // thread runs free
 }
-
-static bool fHaveGenesis = false;
-static boost::mutex cs_GenesisWait;
-static CConditionVariable condvar_GenesisWait;
 
 static void BlockNotifyGenesisWait(bool, const CBlockIndex *pBlockIndex)
 {
@@ -1520,8 +1521,13 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Wait for genesis block to be processed
     {
         boost::unique_lock<boost::mutex> lock(cs_GenesisWait);
-        while (!fHaveGenesis) {
+        while (!fHaveGenesis && !fRequestShutdown) {
             condvar_GenesisWait.wait(lock);
+            if (fRequestShutdown)
+            {
+                LogPrintf("Shutdown requested. Exiting.\n");
+                return false;
+            }
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
