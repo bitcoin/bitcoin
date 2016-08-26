@@ -271,6 +271,9 @@ enum ServiceFlags : uint64_t {
     // Dash Core nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70201 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
+    // NODE_XTHIN means the node supports Xtreme Thinblocks
+    // If this is turned off then the node will not service nor make xthin requests
+    NODE_XTHIN = (1 << 4),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
