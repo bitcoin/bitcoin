@@ -19,6 +19,11 @@ outgoing connections be anonymized, but more is possible.
 	-onion=ip:port  Set the proxy server to use for tor hidden services. You do not
 	                need to set this if it's the same as -proxy. You can use -noonion
 	                to explicitly disable access to hidden service.
+	                
+	-proxyrandomize	Randomize credentials for every proxy connection. This enables Tor
+			stream isolation. A separate Tor circuit will be built
+			for each connection to other Bitcoin nodes. It is enabled by default
+			unless this is set to 0.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run a hidden service (see next section), you'll need to enable
@@ -66,9 +71,18 @@ your bitcoind's P2P listen port (8333 by default).
 	                Note that both addresses of a dual-stack system may be easily
 	                linkable using traffic analysis.
 
+	-onlynet=X	Only connect to nodes in the network specified (ipv4, ipv6 or onion).
+			Setting this value to "onion" prevents incoming or outgoing 
+			connections to any address other than Tor hidden services.
+
+	-bind=X		Bind to given address and always listen on it. By default, Bitcoin
+			binds to all addresses (0.0.0.0). Binding to localhost (127.0.0.1)
+			instead prevents any incoming or outgoing connections not made
+			through a proxy.
+
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+	./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion
 
 (obviously, replace the Onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
@@ -86,7 +100,7 @@ and open port 8333 on your firewall (or use -upnp).
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./bitcoin -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+	./bitcoin -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover -listen -onlynet=onion -bind=127.0.0.1
 
 3. Automatically listen on Tor
 --------------------------------
