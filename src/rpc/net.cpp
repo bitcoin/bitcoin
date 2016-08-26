@@ -225,7 +225,7 @@ UniValue addnode(const UniValue& params, bool fHelp)
 
     LOCK(cs_vAddedNodes);
     vector<string>::iterator it = vAddedNodes.begin();
-    for(; it != vAddedNodes.end(); it++)
+    for (; it != vAddedNodes.end(); ++it)
         if (strNode == *it)
             break;
 
@@ -543,8 +543,7 @@ UniValue listbanned(const UniValue& params, bool fHelp)
     CNode::GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
-    for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
-    {
+    for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); ++it) {
         CBanEntry banEntry = (*it).second;
         UniValue rec(UniValue::VOBJ);
         rec.push_back(Pair("address", (*it).first.ToString()));

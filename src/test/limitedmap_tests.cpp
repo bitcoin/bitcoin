@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
         map.update(it, i + 2);
         BOOST_CHECK(map.find(i)->second == i + 2);
 
-        it++;
+        ++it;
     }
 
     // check that we've exhausted the iterator

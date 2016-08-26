@@ -131,7 +131,7 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindex)
         CZMQAbstractNotifier *notifier = *i;
         if (notifier->NotifyBlock(pindex))
         {
-            i++;
+            ++i;
         }
         else
         {
@@ -148,7 +148,7 @@ void CZMQNotificationInterface::SyncTransaction(const CTransaction& tx, const CB
         CZMQAbstractNotifier *notifier = *i;
         if (notifier->NotifyTransaction(tx))
         {
-            i++;
+            ++i;
         }
         else
         {

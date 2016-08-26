@@ -3138,7 +3138,7 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
         if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) {
             setBlockIndexCandidates.insert(it->second);
         }
-        it++;
+        ++it;
     }
 
     InvalidChainFound(pindex);
@@ -3165,7 +3165,7 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex) {
                 pindexBestInvalid = NULL;
             }
         }
-        it++;
+        ++it;
     }
 
     // Remove the invalidity flag from all ancestors too.
@@ -4021,8 +4021,7 @@ bool static LoadBlockIndexDB()
             setBlkDataFiles.insert(pindex->nFile);
         }
     }
-    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
-    {
+    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); ++it) {
         CDiskBlockPos pos(*it, 0);
         if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
             return false;
@@ -4197,7 +4196,7 @@ bool RewindBlockIndex(const CChainParams& params)
     // Reduce validity flag and have-data flags.
     // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
     // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
-    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++) {
+    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); ++it) {
         CBlockIndex* pindexIter = it->second;
 
         // Note: If we encounter an insufficiently validated block that
@@ -4462,7 +4461,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
 
     // Build forward-pointing map of the entire block tree.
     std::multimap<CBlockIndex*,CBlockIndex*> forward;
-    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++) {
+    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); ++it) {
         forward.insert(std::make_pair(it->second->pprev, it->second));
     }
 
@@ -4733,7 +4732,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
         const CInv &inv = *it;
         {
             boost::this_thread::interruption_point();
-            it++;
+            ++it;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
             {
@@ -6196,7 +6195,7 @@ bool ProcessMessages(CNode* pfrom)
             break;
 
         // at this point, any failure means we can delete the current message
-        it++;
+        ++it;
 
         // Scan for message start
         if (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), MESSAGE_START_SIZE) != 0) {
@@ -6619,7 +6618,7 @@ bool SendMessages(CNode* pto)
                 // Produce a vector with all candidates for sending
                 vector<std::set<uint256>::iterator> vInvTx;
                 vInvTx.reserve(pto->setInventoryTxToSend.size());
-                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
+                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); ++it) {
                     vInvTx.push_back(it);
                 }
                 CAmount filterrate = 0;
@@ -6800,7 +6799,7 @@ public:
     ~CMainCleanup() {
         // block headers
         BlockMap::iterator it1 = mapBlockIndex.begin();
-        for (; it1 != mapBlockIndex.end(); it1++)
+        for (; it1 != mapBlockIndex.end(); ++it1)
             delete (*it1).second;
         mapBlockIndex.clear();
 

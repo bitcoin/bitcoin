@@ -84,7 +84,7 @@ string FormatScriptFlags(unsigned int flags)
         if (flags & it->second) {
             ret += it->first + ",";
         }
-        it++;
+        ++it;
     }
     return ret.substr(0, ret.size() - 1);
 }

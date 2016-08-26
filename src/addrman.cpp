@@ -392,7 +392,7 @@ int CAddrMan::Check_()
     if (vRandom.size() != nTried + nNew)
         return -7;
 
-    for (std::map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+    for (std::map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); ++it) {
         int n = (*it).first;
         CAddrInfo& info = (*it).second;
         if (info.fInTried) {

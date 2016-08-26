@@ -807,7 +807,7 @@ DBErrors CWalletDB::ZapSelectTx(CWallet* pwallet, vector<uint256>& vTxHashIn, ve
     vector<uint256>::iterator it = vTxHashIn.begin();
     BOOST_FOREACH (uint256 hash, vTxHash) {
         while (it < vTxHashIn.end() && (*it) < hash) {
-            it++;
+            ++it;
         }
         if (it == vTxHashIn.end()) {
             break;
@@ -881,7 +881,7 @@ void ThreadFlushWalletDB(const string& strFile)
                 while (mi != bitdb.mapFileUseCount.end())
                 {
                     nRefCount += (*mi).second;
-                    mi++;
+                    ++mi;
                 }
 
                 if (nRefCount == 0)
