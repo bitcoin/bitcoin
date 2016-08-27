@@ -402,7 +402,7 @@ void CRequestManager::SendRequests()
   if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
 
   // Get Blocks
-  while ((sendBlkIter != mapBlkInfo.end()) && blockPacer.try_leak(1))
+  while (sendBlkIter != mapBlkInfo.end())
    {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendBlkIter;
