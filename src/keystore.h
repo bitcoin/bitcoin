@@ -28,6 +28,9 @@ public:
     virtual bool AddKeyPubKey(const CKey &key, const CPubKey &pubkey) =0;
     virtual bool AddKey(const CKey &key);
 
+    //! Remove a key from the store.
+    virtual bool RemoveKey(const CKeyID &address) = 0;
+
     //! Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
     virtual bool GetKey(const CKeyID &address, CKey& keyOut) const =0;
@@ -63,6 +66,15 @@ protected:
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    bool RemoveKey(const CKeyID &address)
+    {
+        bool result;
+        {
+            LOCK(cs_KeyStore);
+            result = (mapKeys.erase(address) > 0);
+        }
+        return result;
+    }
     bool HaveKey(const CKeyID &address) const
     {
         bool result;
