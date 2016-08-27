@@ -267,18 +267,18 @@ CNodeRequestData::CNodeRequestData(CNode* n)
 
   // Calculate how much we like this node:
 
-  if (node->ThinBlockCapable())  // Prefer thin block nodes over low latency ones
+  if (node->ThinBlockCapable() && IsChainNearlySyncd())  // Prefer thin block nodes over low latency ones when the chain is syncd
     {
       desirability += MaxLatency;
     }
-  
+
   // The bigger the latency (in microseconds), the less we want to request from this node
   int latency = node->txReqLatency.GetTotal().get_int();
-  if (latency==0) // data has never been requested from this node.  Should we encourage investigation into whether this node is fast, or stick with nodes that we do have data on?
+  if (latency == 0) // data has never been requested from this node.  Should we encourage investigation into whether this node is fast, or stick with nodes that we do have data on?
     {
       latency = 80*1000; // assign it a reasonably average latency (80ms) for sorting purposes
     }
-  if (latency>MaxLatency) latency=MaxLatency;
+  if (latency > MaxLatency) latency = MaxLatency;
   desirability -= latency;
 }
 
@@ -403,7 +403,7 @@ void CRequestManager::SendRequests()
 
   // Get Blocks
   while ((sendBlkIter != mapBlkInfo.end()) && blockPacer.try_leak(1))
-    {
+   {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendBlkIter;
       CUnknownObj& item = itemIter->second;
@@ -412,13 +412,10 @@ void CRequestManager::SendRequests()
       if (itemIter == mapBlkInfo.end()) break;
 
       // Modify retry interval. If we're doing IBD we want to have a longer interval because those blocks take longer to download
-      if (IsChainNearlySyncd()) {
-         MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;
-      }
+      if (IsChainNearlySyncd())
+          MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;
       else
-      {
-        MIN_BLK_REQUEST_RETRY_INTERVAL = 30*1000*1000;
-      }
+          MIN_BLK_REQUEST_RETRY_INTERVAL = 30*1000*1000;
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
@@ -433,10 +430,10 @@ void CRequestManager::SendRequests()
                   {
 		    if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
 		      {
-                      LOCK(cs_vNodes);
-                      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                      next.node->Release();
-                      next.node = NULL; // force the loop to get another node            
+                        LOCK(cs_vNodes);
+                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                        next.node->Release();
+                        next.node = NULL; // force the loop to get another node            
 		      }
 		  }
 	        }
@@ -452,7 +449,13 @@ void CRequestManager::SendRequests()
 
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
-                  if (!item.lastRequestTime || (item.lastRequestTime && !IsTrafficShapingEnabled()))
+                  // Request a block if the following conditions are met:
+                  //     1) block has never been requested
+                  //     2) block was previously requested and the chain is nearly syncd and traffic shaping is not on.
+                  //     3) block was previously requested and we are doing IBD - we must always re-request during IBD even when traffic shaping is on.
+                  if (!item.lastRequestTime || 
+                     (item.lastRequestTime && !IsTrafficShapingEnabled() && IsChainNearlySyncd()) || 
+                     (item.lastRequestTime && !IsChainNearlySyncd()))
                     {
 		      RequestBlock(next.node, obj);
 	              item.outstandingReqs++;

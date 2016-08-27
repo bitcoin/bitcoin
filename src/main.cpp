@@ -365,7 +365,41 @@ bool MarkBlockAsReceived(const uint256& hash) {
         int64_t getdataTime = itInFlight->second.second->nTime;
         int64_t now = GetTimeMicros();
         double nResponseTime = (double)(now - getdataTime) / 1000000.0;
+
+        // BU:  calculate avg block response time over last 20 blocks to be used for IBD tuning
+        static double avgResponseTime = 5; // start at a higher number so that we don't start jamming IBD when we restart a node sync
+        static uint8_t blockRange = 20;
+        if (avgResponseTime > 0)
+            avgResponseTime -= (avgResponseTime / blockRange);
+        avgResponseTime += nResponseTime / blockRange;
+        if (avgResponseTime < 0.2) {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = 32;
+            BLOCK_DOWNLOAD_WINDOW = 256;
+        }
+        else if (avgResponseTime < 0.5) {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+            BLOCK_DOWNLOAD_WINDOW = 128;
+        }
+        else if (avgResponseTime < 0.9) {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = 8;
+            BLOCK_DOWNLOAD_WINDOW = 64;
+        }
+        else if (avgResponseTime < 1.4) {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = 4;
+            BLOCK_DOWNLOAD_WINDOW = 32;
+        }
+        else if (avgResponseTime < 2.0) {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = 2;
+            BLOCK_DOWNLOAD_WINDOW = 16;
+        }
+        else  {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;
+            BLOCK_DOWNLOAD_WINDOW = 8;
+        }
         LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), nResponseTime);
+        LogPrint("thin", "Average block response time is %.2f seconds\n", avgResponseTime);
+        LogPrintf("BLOCK_DOWNLOAD_WINDOW is %d MAX_BLOCKS_IN_TRANSIT_PER_PEER is %d\n", BLOCK_DOWNLOAD_WINDOW, MAX_BLOCKS_IN_TRANSIT_PER_PEER);
+
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
