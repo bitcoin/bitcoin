@@ -4947,15 +4947,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
-            LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);
-            pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION));
-            pfrom->fDisconnect = true;
-            return false;
+            LogPrintf("peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
         }
 
-        if (pfrom->nVersion == 10300)
-            pfrom->nVersion = 300;
         if (!vRecv.empty())
             vRecv >> addrFrom >> nNonce;
         if (!vRecv.empty()) {
@@ -5077,23 +5071,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             State(pfrom->GetId())->fCurrentlyConnected = true;
         }
 
-        if (pfrom->nVersion >= SENDHEADERS_VERSION) {
-            // Tell our peer we prefer to receive headers rather than inv's
-            // We send this to non-NODE NETWORK peers as well, because even
-            // non-NODE NETWORK peers can announce blocks (such as pruning
-            // nodes)
-            pfrom->PushMessage(NetMsgType::SENDHEADERS);
-        }
-        if (pfrom->nVersion >= SHORT_IDS_BLOCKS_VERSION) {
-            // Tell our peer we are willing to provide version-1 cmpctblocks
-            // However, we do not request new block announcements using
-            // cmpctblock messages.
-            // We send this to non-NODE NETWORK peers as well, because
-            // they may wish to request compact blocks from us
-            bool fAnnounceUsingCMPCTBLOCK = false;
-            uint64_t nCMPCTBLOCKVersion = 1;
-            pfrom->PushMessage(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion);
-        }
+        // Tell our peer we prefer to receive headers rather than inv's
+        // We send this to non-NODE NETWORK peers as well, because even
+        // non-NODE NETWORK peers can announce blocks (such as pruning
+        // nodes)
+        pfrom->PushMessage(NetMsgType::SENDHEADERS);
+        // Tell our peer we are willing to provide version-1 cmpctblocks
+        // However, we do not request new block announcements using
+        // cmpctblock messages.
+        // We send this to non-NODE NETWORK peers as well, because
+        // they may wish to request compact blocks from us
+        bool fAnnounceUsingCMPCTBLOCK = false;
+        uint64_t nCMPCTBLOCKVersion = 1;
+        pfrom->PushMessage(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion);
     }
 
 
@@ -5102,8 +5092,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<CAddress> vAddr;
         vRecv >> vAddr;
 
-        // Don't want addr from older versions unless seeding
-        if (pfrom->nVersion < CADDR_TIME_VERSION && addrman.size() > 1000)
+        if (addrman.size() > 1000)
             return true;
         if (vAddr.size() > 1000)
         {
@@ -6317,7 +6306,7 @@ bool SendMessages(CNode* pto)
             // RPC ping request by user
             pingSend = true;
         }
-        if (pto->nPingNonceSent == 0 && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
+        if ((pto->nPingNonceSent == 0 || pto->nVersion < BIP0031_VERSION) && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
             // Ping automatically sent as a latency probe & keepalive.
             pingSend = true;
         }
@@ -6328,14 +6317,8 @@ bool SendMessages(CNode* pto)
             }
             pto->fPingQueued = false;
             pto->nPingUsecStart = GetTimeMicros();
-            if (pto->nVersion > BIP0031_VERSION) {
-                pto->nPingNonceSent = nonce;
-                pto->PushMessage(NetMsgType::PING, nonce);
-            } else {
-                // Peer is too old to support ping command with nonce, pong will never arrive.
-                pto->nPingNonceSent = 0;
-                pto->PushMessage(NetMsgType::PING);
-            }
+            pto->nPingNonceSent = nonce;
+            pto->PushMessage(NetMsgType::PING, nonce);
         }
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
