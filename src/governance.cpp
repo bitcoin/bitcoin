@@ -863,16 +863,25 @@ void CGovernanceObject::LoadData()
               << GetDataAsString()
               << endl; );
 
-    try
-    {
+    try  {
         UniValue obj = GetJSONObject();
         nObjectType = obj["type"].get_int();
     }
-    catch (int e)
-    {
+    catch(std::exception& e)  {
+        std::ostringstream ostr;
+        ostr << "CGovernanceObject::LoadData Error parsing JSON"
+             << ", e.what() = " << e.what();
+        DBG( cout << ostr.str() << endl; );
+        LogPrintf( ostr.str().c_str() );
         return;
     }
-
+    catch(...)  {
+        std::ostringstream ostr;
+        ostr << "CGovernanceObject::LoadData Unknown Error parsing JSON";
+        DBG( cout << ostr.str() << endl; );
+        LogPrintf( ostr.str().c_str() );
+        return;
+    }
 }
 
 /**

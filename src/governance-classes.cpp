@@ -505,11 +505,8 @@ CSuperblock(uint256& nHash)
     UniValue obj = pGovObj->GetJSONObject();
         
     // FIRST WE GET THE START EPOCH, THE DATE WHICH THE PAYMENT SHALL OCCUR
-    std::string strEpochStart = obj["event_block_height"].get_str();
-    if (!ParseInt32(strEpochStart, &nEpochStart))  {
-        throw runtime_error("CSuperblock: Parse error parsing event_block_height");
-    }
-    
+    nEpochStart = obj["event_block_height"].get_int();
+
     // NEXT WE GET THE PAYMENT INFORMATION AND RECONSTRUCT THE PAYMENT VECTOR
     std::string strAddresses = obj["payment_addresses"].get_str();
     std::string strAmounts = obj["payment_amounts"].get_str();
