@@ -167,10 +167,9 @@ AC_ARG_ENABLE([zmq],
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
-# Enable manpages
 AC_ARG_ENABLE(man,
-    [AS_HELP_STRING([--enable-man],
-                    [install man pages [default=yes]])],,
+    [AS_HELP_STRING([--disable-man],
+                    [do not install man pages (default is to install)])],,
     enable_man=yes)
 AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
 
