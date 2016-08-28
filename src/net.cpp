@@ -446,7 +446,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
             vNodes.push_back(pnode);
         }
 
-        pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
+        pnode->nServicesExpected = ServiceFlags(addrConnect.nServices);
         pnode->nTimeConnected = GetTime();
 
         return pnode;
