@@ -392,10 +392,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
         // Look for an existing connection
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
-        {
-            pnode->AddRef();
             return pnode;
-        }
     }
 
     /// debug print
@@ -423,7 +420,6 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
             CNode* pnode = FindNode((CService)addrConnect);
             if (pnode)
             {
-                pnode->AddRef();
                 {
                     LOCK(cs_vNodes);
                     if (pnode->addrName.empty()) {
@@ -438,8 +434,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
         addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
-        CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
-        pnode->AddRef();
+        CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false, true);
 
         {
             LOCK(cs_vNodes);
@@ -1078,7 +1073,6 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     CNode* pnode = new CNode(hSocket, addr, "", true);
-    pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
 
     LogPrint("net", "connection from %s accepted\n", addr.ToString());
@@ -1838,7 +1832,6 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
         return false;
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
-    pnode->fNetworkNode = true;
     if (fOneShot)
         pnode->fOneShot = true;
     if (fFeeler)
@@ -2467,7 +2460,7 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
 unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
 unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
 
-CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
+CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn, bool fNetworkNodeIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
     addr(addrIn),
     nKeyedNetGroup(CalculateKeyedNetGroup(addrIn)),
@@ -2492,7 +2485,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fClient = false; // set by version message
     fFeeler = false;
     fInbound = fInboundIn;
-    fNetworkNode = false;
+    fNetworkNode = fNetworkNodeIn;
     fSuccessfullyConnected = false;
     fDisconnect = false;
     nRefCount = 0;
@@ -2529,6 +2522,9 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
         LOCK(cs_nLastNodeId);
         id = nLastNodeId++;
     }
+
+    if(fNetworkNode || fInbound)
+        AddRef();
 
     if (fLogIPs)
         LogPrint("net", "Added connection to %s peer=%d\n", addrName, id);
