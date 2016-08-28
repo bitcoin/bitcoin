@@ -251,7 +251,7 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
     unsigned int blockIndex = nBlockHeight % unconfTxs.size();
     unconfTxs[blockIndex][bucketindex]++;
-    LogPrint("estimatefee", "adding to %s", dataTypeString);
+    LogPrint("estimatefee2", "adding to %s", dataTypeString);
     return bucketindex;
 }
 
@@ -380,7 +380,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     double curPri = entry.GetPriority(txHeight);
     mapMemPoolTxs[hash].blockHeight = txHeight;
 
-    LogPrint("estimatefee", "Blockpolicy mempool tx %s ", hash.ToString().substr(0,10));
+    LogPrint("estimatefee2", "Blockpolicy mempool tx %s ", hash.ToString().substr(0,10));
     // Record this as a priority estimate
     if (entry.GetFee() == 0 || isPriDataPoint(feeRate, curPri)) {
         mapMemPoolTxs[hash].stats = &priStats;
@@ -392,9 +392,9 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
         mapMemPoolTxs[hash].bucketIndex = feeStats.NewTx(txHeight, (double)feeRate.GetFeePerK());
     }
     else {
-        LogPrint("estimatefee", "not adding");
+        LogPrint("estimatefee2", "not adding");
     }
-    LogPrint("estimatefee", "\n");
+    LogPrint("estimatefee2", "\n");
 }
 
 void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry)
