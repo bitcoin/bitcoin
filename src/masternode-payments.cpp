@@ -295,7 +295,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         if(!pCurrentBlockIndex) return;
 
         // can't really verify it until masternode list is synced, reject it for now
-        if (masternodeSync.RequestedMasternodeAssets < MASTERNODE_SYNC_MNW) return;
+        if (masternodeSync.GetAssetID() < MASTERNODE_SYNC_MNW) return;
 
         if(mapMasternodePayeeVotes.count(winner.GetHash())) {
             LogPrint("mnpayments", "MNWINNER -- Already seen: hash=%s, nHeight=%d\n", winner.GetHash().ToString(), pCurrentBlockIndex->nHeight);
@@ -760,6 +760,7 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex)
     pCurrentBlockIndex = pindex;
     LogPrint("mnpayments", "pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
 
-    if(!fLiteMode && masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST)
-        ProcessBlock(pindex->nHeight+10);
+    if (!fLiteMode && masternodeSync.GetAssetID() > MASTERNODE_SYNC_LIST) {
+        ProcessBlock(pindex->nHeight + 10);
+    }
 }

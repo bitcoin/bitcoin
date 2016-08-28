@@ -2313,8 +2313,9 @@ void CDarksendPool::UpdatedBlockTip(const CBlockIndex *pindex)
     pCurrentBlockIndex = pindex;
     LogPrint("privatesend", "CDarksendPool::UpdatedBlockTip -- pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
 
-    if(!fLiteMode && masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST)
+    if(!fLiteMode && masternodeSync.GetAssetID() > MASTERNODE_SYNC_LIST) {
         NewBlock();
+    }
 }
 
 //TODO: Rename/move to core
@@ -2337,7 +2338,7 @@ void ThreadCheckDarkSendPool()
         MilliSleep(1000);
 
         // try to sync from all available nodes, one step at a time
-        masternodeSync.Process();
+        masternodeSync.ProcessTick();
 
         if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
 

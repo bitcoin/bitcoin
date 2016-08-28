@@ -1065,7 +1065,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
 
     // TO REPROCESS OBJECTS WE SHOULD BE SYNCED
 
-    if(!fLiteMode && masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST)
+    if(!fLiteMode && masternodeSync.GetAssetID() > MASTERNODE_SYNC_LIST)
         NewBlock();
 }
 

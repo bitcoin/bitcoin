@@ -320,9 +320,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-         (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
-          masternodeSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED)) {
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
+            (masternodeSync.GetAssetID() <= MASTERNODE_SYNC_LIST || masternodeSync.IsFailed())) {
+                throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
         }
 
         int successful = 0;
