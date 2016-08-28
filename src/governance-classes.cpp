@@ -396,7 +396,7 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pBlock, int nBlockH
 *   - Create the correct payment structure for a given superblock
 */
 
-void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, int nBlockHeight)
+void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet)
 {
     DBG( cout << "CSuperblockManager::CreateSuperblock Start" << endl; );
 
@@ -411,10 +411,12 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, int nBlock
         return;
     }
 
-    // CONFIGURE SUPERBLOCK OUTPUTS 
+    // make sure it's empty, just in case
+    voutSuperblockRet.clear();
+
+    // CONFIGURE SUPERBLOCK OUTPUTS
 
     // Superblock payments are appended to the end of the coinbase vout vector
-
     DBG( cout << "CSuperblockManager::CreateSuperblock Number payments: " << pBlock->CountPayments() << endl; );
 
     // TODO: How many payments can we add before things blow up?
@@ -428,7 +430,9 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNew, int nBlock
             DBG( cout << "CSuperblockManager::CreateSuperblock Payment found " << endl; );
             // SET COINBASE OUTPUT TO SUPERBLOCK SETTING
 
-            txNew.vout.push_back(CTxOut(payment.nAmount, payment.script));
+            CTxOut txout = CTxOut(payment.nAmount, payment.script);
+            txNewRet.vout.push_back(txout);
+            voutSuperblockRet.push_back(txout);
 
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
