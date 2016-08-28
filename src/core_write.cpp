@@ -87,6 +87,20 @@ string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)
             return str;
         }
         if (0 <= opcode && opcode <= OP_PUSHDATA4) {
+            ///
+            /// we find big push opcodes that are incorrectly applied to small data 
+            /// by creating a temporary script that pushes the data correctly, then
+            /// checking if our own push opcode matches the one in the temporary script
+            ///
+            if (OP_PUSHDATA1 <= opcode && opcode <= OP_PUSHDATA4) {
+                CScript pushvch = CScript() << vch;
+                if (!pushvch.Find(opcode)) {
+                    str += "[error]";
+                    pushvch.clear();
+                    return str;
+                    }
+                pushvch.clear();
+            }
             //! if vch can't be encoded correctly as a number, treat it as hex data.
             if (vch.size() <= static_cast<vector<unsigned char>::size_type>(4)) {
                 try {
