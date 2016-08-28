@@ -200,11 +200,11 @@ public:
         consensus.nMasternodePaymentsIncreasePeriod = 576;
         consensus.nInstantSendKeepLock = 6;
         consensus.nInstantSendReprocessBlocks = 4;
-        consensus.nBudgetPaymentsStartBlock = 78476; // TODO
+        consensus.nBudgetPaymentsStartBlock = 60000;
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 10;
         consensus.nBudgetProposalEstablishingTime = 60*20;
-        consensus.nSuperblockStartBlock = 54321; // TODO, the block at which 12.1 goes live.
+        consensus.nSuperblockStartBlock = 61000; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nGovernanceMinQuorum = 1;
         consensus.nMasternodeMinimumConfirmations = 1;
