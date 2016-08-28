@@ -19,6 +19,7 @@
 #include "rpcserver.h"
 #include "utilmoneystr.h"
 #include "governance-vote.h"
+#include "governance-classes.h"
 #include <boost/lexical_cast.hpp>
 
 #include <fstream>
@@ -601,4 +602,55 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + strError);
     }
+}
+
+UniValue getgovernanceinfo(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0) {
+        throw runtime_error(
+            "getgovernanceinfo\n"
+            "Returns an object containing governance parameters.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"governanceminquorum\": xxxxx,  (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
+            "  \"superblockcycle\": xxxxx,      (numeric) the number of blocks between superblocks\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getgovernanceinfo", "")
+            + HelpExampleRpc("getgovernanceinfo", "")
+            );
+    }
+
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum));
+    obj.push_back(Pair("superblockcycle", Params().GetConsensus().nSuperblockCycle));
+
+    return obj;
+}
+
+UniValue getsuperblockbudget(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1) {
+        throw runtime_error(
+            "getsuperblockbudget index\n"
+            "\nReturns the absolute minimum number of votes needed to trigger a governance action.\n"
+            "\nArguments:\n"
+            "1. index         (numeric, required) The block index\n"
+            "\nResult:\n"
+            "n    (numeric) The current minimum governance quorum\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getsuperblockbudget", "1000")
+            + HelpExampleRpc("getsuperblockbudget", "1000")
+        );
+    }
+
+    int nBlockHeight = params[0].get_int();
+    if (nBlockHeight < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+    }
+
+    CAmount nBudget = CSuperblock::GetPaymentsLimit(nBlockHeight);
+    std::string strBudget = FormatMoney(nBudget);
+
+    return strBudget;
 }
