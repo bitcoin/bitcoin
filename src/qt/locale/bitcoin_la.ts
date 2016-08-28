@@ -302,7 +302,7 @@
         <translation>Tabella instrumentorum "Tabs"</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Nucleus</translation>
     </message>
     <message>
@@ -461,7 +461,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Nucleus</translation>
     </message>
     <message>
@@ -484,7 +484,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Nucleus</translation>
     </message>
     <message>
@@ -1032,7 +1032,7 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Bitcoin Nucleus</translation>
     </message>
     <message>

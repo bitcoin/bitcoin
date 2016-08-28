@@ -58,12 +58,12 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>О Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>О Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -125,16 +125,16 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>version</source>
         <translation>версия</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>О Bitcoin Core</translation>
+        <source>About Bitcoin Unlimited</source>
+        <translation>О Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -148,8 +148,8 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Error</source>
@@ -220,8 +220,8 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     </context>
 <context>

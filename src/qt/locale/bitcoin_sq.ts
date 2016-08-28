@@ -246,11 +246,11 @@
         <translation>Shiriti i mjeteve</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Berthama Bitcoin</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
+        <source>&amp;About Bitcoin Unlimited</source>
         <translation>Rreth Berthames Bitkoin</translation>
     </message>
     <message>
@@ -385,7 +385,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Berthama Bitcoin</translation>
     </message>
     <message>
@@ -393,7 +393,7 @@
         <translation>versioni</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
+        <source>About Bitcoin Unlimited</source>
         <translation>Rreth Berthames Bitkoin</translation>
     </message>
     </context>
@@ -404,11 +404,11 @@
         <translation>Miresevini</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
+        <source>Welcome to Bitcoin Unlimited.</source>
         <translation>Miresevini ne Berthamen Bitcoin</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Berthama Bitcoin</translation>
     </message>
     <message>
@@ -624,7 +624,7 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Berthama Bitcoin</translation>
     </message>
     <message>

@@ -168,7 +168,7 @@
         <translation>Sigur doriţi să criptaţi portofelul dvs.?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Bitcoin Unlimited will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>Bitcoin se va închide acum pentru a termina procesul de criptare. Ţineţi minte că criptarea portofelului nu vă poate proteja în totalitate de furtul monedelor de către programe dăunătoare care vă infectează calculatorul.</translation>
     </message>
     <message>
@@ -306,8 +306,8 @@
         <translation>Deschide &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Clientul Bitcoin Core</translation>
+        <source>Bitcoin Unlimited client</source>
+        <translation>Clientul Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -358,8 +358,8 @@
         <translation>P&amp;rimeşte</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Arată informaţii despre Bitcoin Core</translation>
+        <source>Show information about Bitcoin Unlimited</source>
+        <translation>Arată informaţii despre Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -398,7 +398,7 @@
         <translation>Bara de unelte</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucleul Bitcoin</translation>
     </message>
     <message>
@@ -406,11 +406,11 @@
         <translation>Cereţi plăţi (generează coduri QR şi bitcoin-uri: URls)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
+        <source>&amp;About Bitcoin Unlimited</source>
         <translation>&amp;Despre Nucleul Bitcoin</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
+        <source>Modify configuration options for Bitcoin Unlimited</source>
         <translation>Modifică opţiunile de configurare pentru Bitcoin</translation>
     </message>
     <message>
@@ -430,8 +430,8 @@
         <translation>Opţiuni linie de &amp;comandă</translation>
     </message>
     <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Arată mesajul de ajutor Bitcoin Core pentru a obţine o listă cu opţiunile posibile de linii de comandă Bitcoin</translation>
+        <source>Show the Bitcoin Unlimited help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Arată mesajul de ajutor Bitcoin Unlimited pentru a obţine o listă cu opţiunile posibile de linii de comandă Bitcoin</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -855,7 +855,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucleul Bitcoin</translation>
     </message>
     <message>
@@ -867,7 +867,7 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
+        <source>About Bitcoin Unlimited</source>
         <translation>Despre Nucleul Bitcoin</translation>
     </message>
     <message>
@@ -918,15 +918,15 @@
         <translation>Bun venit</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
+        <source>Welcome to Bitcoin Unlimited.</source>
         <translation>Bine aţi venit la Nucleul Bitcoin.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Unlimited will store its data.</source>
         <translation>Dacă aceasta este prima dată cînd programul este lansat, puteţi alege unde Nucleul Bitcoin va stoca datele.</translation>
     </message>
     <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Bitcoin Unlimited will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation>Nucleul Bitcoin se va descărca şi va stoca o copie a lanţului blocului Bitcoin. Cel puţin %1GB de date vor fi stocate în acest dosar şi se va mări în timp. Portofelul va fi, de asemenea, stocat în acest dosar.</translation>
     </message>
     <message>
@@ -938,7 +938,7 @@
         <translation>Foloseşte un dosar de date personalizat:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucleul Bitcoin</translation>
     </message>
     <message>
@@ -1020,7 +1020,7 @@
         <translation>Minimizează fereastra în locul părăsirii programului în momentul închiderii ferestrei. Cînd acestă opţiune e activă, aplicaţia se va opri doar în momentul selectării comenzii 'Închide aplicaţia' din menu.</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Unlimited.</source>
         <translation>Limba interfeţei utilizatorului poate fi setată aici. Această setare va avea efect după repornirea Nucleului Bitcoin.</translation>
     </message>
     <message>
@@ -1048,11 +1048,11 @@
         <translation>Reţea</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Porneşte automat Bitcoin Core după logarea în sistem.</translation>
+        <source>Automatically start Bitcoin Unlimited after logging in to the system.</source>
+        <translation>Porneşte automat Bitcoin Unlimited după logarea în sistem.</translation>
     </message>
     <message>
-        <source>&amp;Start Bitcoin Core on system login</source>
+        <source>&amp;Start Bitcoin Unlimited on system login</source>
         <translation>Porneşte Nucleul Bitcoin la pornirea sistemului</translation>
     </message>
     <message>
@@ -1626,7 +1626,7 @@
         <translation>1 &amp;an</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin Core RPC console.</source>
+        <source>Welcome to the Bitcoin Unlimited RPC console.</source>
         <translation>Bun venit la consola Nucleului Bitcoin RPC.</translation>
     </message>
     <message>
@@ -2160,7 +2160,7 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Bitcoin Core is shutting down...</source>
+        <source>Bitcoin Unlimited is shutting down...</source>
         <translation>Nucleul Bitcoin se închide...</translation>
     </message>
     <message>
@@ -2302,11 +2302,11 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucleul Bitcoin</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
+        <source>The Bitcoin Unlimited developers</source>
         <translation>Dezvoltatorii Nucleului Bitcoin</translation>
     </message>
     <message>
@@ -2836,7 +2836,7 @@
         <translation>Aceasta este o versiune de test preliminară - vă asumaţi riscul folosind-o - nu folosiţi pentru minerit sau aplicaţiile comercianţilor</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
+        <source>Unable to bind to %s on this computer. Bitcoin Unlimited is probably already running.</source>
         <translation>Nu se poate lega la %s pe acest calculator. Nucleul Bitcoin probabil deja rulează.</translation>
     </message>
     <message>
@@ -2972,7 +2972,7 @@
         <translation>Permite conexiunile JSON-RPC din sursa specificată. Valid pentru &lt;ip&gt; sînt IP singulare (ex. 1.2.3.4), o reţea/mască-reţea (ex. 1.2.3.4/255.255.255.0) sau o reţea/CIDR (ex. 1.2.3.4/24). Această opţiune poate fi specificată de mai multe ori</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Unlimited is probably already running.</source>
         <translation>Nu se poate obţine blocarea folderului cu date %s. Nucleul Bitcoin probabil deja rulează.</translation>
     </message>
     <message>
@@ -3004,7 +3004,7 @@
         <translation>Conectare prin proxy SOCKS5</translation>
     </message>
     <message>
-        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <source>Copyright (C) 2009-%i The Bitcoin Unlimited Developers</source>
         <translation>Copyright (C) 2009-%i Dezvoltatorii Bitcoin</translation>
     </message>
     <message>
@@ -3016,7 +3016,7 @@
         <translation>Informaţie</translation>
     </message>
     <message>
-        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
+        <source>Initialization sanity check failed. Bitcoin Unlimited is shutting down.</source>
         <translation>Nu s-a reuşit iniţierea verificării sănătăţii. Nucleul Bitcoin se opreşte.</translation>
     </message>
     <message>
@@ -3096,7 +3096,7 @@
         <translation>Utilizator pentru conexiunile JSON-RPC</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
+        <source>Wallet needed to be rewritten: restart Bitcoin Unlimited to complete</source>
         <translation>Portofelul necesită rescrierea: reporniţi Nucleul Bitcoin pentru completare</translation>
     </message>
     <message>

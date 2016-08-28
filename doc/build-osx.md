@@ -81,7 +81,7 @@ You can ignore this section if you are building `bitcoind` for your own use.
 
 bitcoind/bitcoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
 
-If you are building `bitcoind` or `Bitcoin Core` for others, your build machine should be set up
+If you are building `bitcoind` or `Bitcoin Unlimited` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:

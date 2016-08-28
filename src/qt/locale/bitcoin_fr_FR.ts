@@ -161,8 +161,8 @@ Réessayez.</translation>
         <translation>Êtes-vous sûr de de vouloir crypter votre portefeuille ? </translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin Core fermera maintenant pour finir le processus de chiffrement. Rappelez-vous que crypter votre portefeuille ne protége pas totalement vos bitcoins d'être volé par un malware ayant infecté votre ordinateur. </translation>
+        <source>Bitcoin Unlimited will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin Unlimited fermera maintenant pour finir le processus de chiffrement. Rappelez-vous que crypter votre portefeuille ne protége pas totalement vos bitcoins d'être volé par un malware ayant infecté votre ordinateur. </translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -291,8 +291,8 @@ Réessayez.</translation>
         <translation>Ouvrir &amp;URI</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Client Bitcoin Core</translation>
+        <source>Bitcoin Unlimited client</source>
+        <translation>Client Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -343,8 +343,8 @@ Réessayez.</translation>
         <translation>&amp;Réception</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Montrer les informations à propos de Bitcoin Core</translation>
+        <source>Show information about Bitcoin Unlimited</source>
+        <translation>Montrer les informations à propos de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -379,20 +379,20 @@ Réessayez.</translation>
         <translation>Barre d'outils des onglets</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Demander des paiements (générer QR codes et bitcoin: URIs)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
+        <source>&amp;About Bitcoin Unlimited</source>
         <translation>&amp;À propos de Bitcoin</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Modifier les options de configuration de Bitcoin Core</translation>
+        <source>Modify configuration options for Bitcoin Unlimited</source>
+        <translation>Modifier les options de configuration de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -804,8 +804,8 @@ Réessayez.</translation>
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>version</source>
@@ -816,8 +816,8 @@ Réessayez.</translation>
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>À propos de Bitcoin Core</translation>
+        <source>About Bitcoin Unlimited</source>
+        <translation>À propos de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -847,8 +847,8 @@ Réessayez.</translation>
         <translation>Bienvenue </translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Bienvenue sur Bitcoin Core.</translation>
+        <source>Welcome to Bitcoin Unlimited.</source>
+        <translation>Bienvenue sur Bitcoin Unlimited.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -859,8 +859,8 @@ Réessayez.</translation>
         <translation>Utiliser votre propre répertoire</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -945,8 +945,8 @@ Réessayez.</translation>
         <translation>&amp;Réseau</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Démarrer automatiquement Bitcoin Core après s'être connecté au système. </translation>
+        <source>Automatically start Bitcoin Unlimited after logging in to the system.</source>
+        <translation>Démarrer automatiquement Bitcoin Unlimited après s'être connecté au système. </translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1879,12 +1879,12 @@ Réessayez.</translation>
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Les développeurs de Bitcoin Core</translation>
+        <source>The Bitcoin Unlimited developers</source>
+        <translation>Les développeurs de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>[testnet]</source>
