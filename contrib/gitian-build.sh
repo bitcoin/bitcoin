@@ -14,8 +14,8 @@ SIGNER=
 VERSION=
 commit=false
 url=https://github.com/bitcoin/bitcoin
-proc=4
-mem=4000
+proc=2
+mem=2000
 lxc=true
 osslTarUrl=http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
 osslPatchUrl=https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
@@ -41,7 +41,7 @@ Options:
 -s|--sign	Make signed binaries for Windows and Mac OSX
 -B|--buildsign	Build both signed and unsigned binaries
 -o|--os		Specify which Operating Systems the build is for. Default is lwx. l for linux, w for windows, x for osx
--j		Number of processes to use. Default 4
+-j		Number of processes to use. Default 2
 -m		Memory to allocate in MiB. Default 2000
 --kvm           Use KVM instead of LXC
 --setup         Setup the gitian building environment. Uses KVM. If you want to use lxc, use the --lxc option. Only works on Debian-based systems (Ubuntu, Debian)
