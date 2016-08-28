@@ -1110,35 +1110,50 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion)
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, CachedHashes* cache)
 {
+    CachedHashes empty;
+    if (cache == NULL) {
+        cache = &empty;
+    }
+
     if (sigversion == SIGVERSION_WITNESS_V0) {
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
 
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
-            CHashWriter ss(SER_GETHASH, 0);
-            for (unsigned int n = 0; n < txTo.vin.size(); n++) {
-                ss << txTo.vin[n].prevout;
+            if (cache->hashPrevouts == uint256()) {
+                CHashWriter ss(SER_GETHASH, 0);
+                for (unsigned int n = 0; n < txTo.vin.size(); n++) {
+                    ss << txTo.vin[n].prevout;
+                }
+                cache->hashPrevouts = ss.GetHash();
             }
-            hashPrevouts = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
+            hashPrevouts = cache->hashPrevouts;
         }
 
         if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            CHashWriter ss(SER_GETHASH, 0);
-            for (unsigned int n = 0; n < txTo.vin.size(); n++) {
-                ss << txTo.vin[n].nSequence;
+            if (cache->hashSequence == uint256()) {
+                CHashWriter ss(SER_GETHASH, 0);
+                for (unsigned int n = 0; n < txTo.vin.size(); n++) {
+                    ss << txTo.vin[n].nSequence;
+                }
+                cache->hashSequence = ss.GetHash();
             }
-            hashSequence = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
+            hashSequence = cache->hashSequence;
         }
 
+
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            CHashWriter ss(SER_GETHASH, 0);
-            for (unsigned int n = 0; n < txTo.vout.size(); n++) {
-                ss << txTo.vout[n];
+            if (cache->hashOutputs == uint256()) {
+                CHashWriter ss(SER_GETHASH, 0);
+                for (unsigned int n = 0; n < txTo.vout.size(); n++) {
+                    ss << txTo.vout[n];
+                }
+                cache->hashOutputs = ss.GetHash();
             }
-            hashOutputs = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
+            hashOutputs = cache->hashOutputs;
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
             ss << txTo.vout[nIn];
@@ -1209,7 +1224,7 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
+    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->cachedHashes);
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
