@@ -4927,10 +4927,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         uint64_t nServiceInt;
         vRecv >> pfrom->nVersion >> nServiceInt >> nTime >> addrMe;
         pfrom->nServices = ServiceFlags(nServiceInt);
-        if (!pfrom->fInbound)
-        {
-            addrman.SetServices(pfrom->addr, pfrom->nServices);
-        }
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
         if (!vRecv.empty())
@@ -4967,14 +4963,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                   pfrom->nStartingHeight, addrMe.ToString(), pfrom->id,
                   remoteAddr);
 
-        if (pfrom->nServicesExpected & ~pfrom->nServices)
+        if (!pfrom->fInbound)
         {
-            LogPrint("net", "peer=%d does not offer the expected services (%08x offered, %08x expected); disconnecting\n", pfrom->id, pfrom->nServices, pfrom->nServicesExpected);
-            pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_NONSTANDARD,
+            addrman.SetServices(pfrom->addr, pfrom->nServices);
+            if (nRelevantServices & ~pfrom->nServices) {
+                LogPrint("net", "peer=%d does not offer the relevant services (%08x offered, %08x expected, %08x relevant); disconnecting\n", pfrom->id, pfrom->nServices, pfrom->nServicesExpected, nRelevantServices);
+                pfrom->PushMessage(NetMsgType::REJECT, strCommand, REJECT_NONSTANDARD,
                                strprintf("Expected to offer services %08x", pfrom->nServicesExpected));
-            pfrom->fDisconnect = true;
-            return false;
+                pfrom->fDisconnect = true;
+                return false;
+            }
         }
+        if (pfrom->nServicesExpected & ~pfrom->nServices)
+            LogPrint("net", "peer=%d does not offer the expected services (%08x offered, %08x expected)\n", pfrom->id, pfrom->nServices, pfrom->nServicesExpected);
 
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
