@@ -362,7 +362,8 @@ void FinalizeNode(NodeId nodeid) {
     BOOST_FOREACH(const QueuedBlock& entry, state->vBlocksInFlight) {
         mapBlocksInFlight.erase(entry.hash);
     }
-    EraseOrphansFor(nodeid);
+    if (state->fShouldBan)
+        EraseOrphansFor(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
     nPeersWithValidatedDownloads -= (state->nBlocksInFlightValidHeaders != 0);
     assert(nPeersWithValidatedDownloads >= 0);
@@ -6387,7 +6388,6 @@ bool SendMessages(CNode* pto)
                     CNode::Ban(pto->addr, BanReasonNodeMisbehaving);
                 }
             }
-            state.fShouldBan = false;
         }
 
         BOOST_FOREACH(const CBlockReject& reject, state.rejects)
