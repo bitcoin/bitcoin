@@ -27,9 +27,9 @@ static void CCheckQueueSpeed(benchmark::State& state)
             for (size_t j = 0; j < 101; ++j) {
                 size_t r = 30;
                 total += r;
+                auto emplacer = control.get_emplacer();
                 for (size_t k = 0; k < r; ++k)
-                    control.emplace_back(FakeJobNoWork{});
-                control.Flush();
+                    emplacer(FakeJobNoWork{});
             }
         }
     }

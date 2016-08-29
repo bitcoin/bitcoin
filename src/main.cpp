@@ -1969,7 +1969,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 }
 }// namespace Consensus
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::function<bool (CScriptCheck &&)> emplacer)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::function<void (CScriptCheck &&)> emplacer)
 {
     if (!tx.IsCoinBase())
     {
@@ -1994,8 +1994,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 assert(coins);
 
                 // Verify signature
-                if (emplacer && emplacer(CScriptCheck(*coins, tx, i, flags, cacheStore)))
+                if (emplacer) {
+                    emplacer(CScriptCheck(*coins, tx, i, flags, cacheStore));
                     continue;
+                }
                 CScriptCheck check = CScriptCheck(*coins, tx, i, flags, cacheStore);
                 if (!check()) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
@@ -2456,10 +2458,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, [&](CScriptCheck&& c){return control.emplace_back(std::move(c)); }))
+
+            bool result = false;
+            if (control) {
+                // Must be this way to make sure destructor only gets called once.
+                auto emplacer = control.get_emplacer();
+                result = CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, std::ref(emplacer));
+            } else
+                result = CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults);
+            if (!result)
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                    tx.GetHash().ToString(), FormatStateMessage(state));
-            control.Flush();
+                        tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
         CTxUndo undoDummy;

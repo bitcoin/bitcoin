@@ -293,7 +293,6 @@ class CCheckQueue
 {
 public:
     typedef T JOB_TYPE;
-    typedef CCheckQueue<T, TFE, TLE> SELF;
     static const bool TEST_FUNCTIONS_ENABLE = TFE;
     static const bool TEST_LOGGING_ENABLE = TLE;
 
@@ -427,17 +426,23 @@ public:
         jobs.clear_check_memory();
     }
 
-    void emplace_back(JOB_TYPE&& t) {
-        jobs.emplace_back(std::move(t));
-    }
-    void Flush()
-    {
-        const size_t n = jobs.size();
-        nAvail.store(n);
-        TEST_log(0, [&, this](std::ostringstream& o) {
-            o << "Added " << n << " values. nAvail was " 
-            << nAvail.load() - n << " now is " << nAvail.load() << " \n";
-        });
+
+    struct emplacer {
+        CCheckQueue_Internals::job_array<JOB_TYPE>& j;
+        std::atomic<size_t>& nAvail;
+        emplacer(CCheckQueue_Internals::job_array<JOB_TYPE>& j_, std::atomic<size_t>& nAvail_) : j(j_), nAvail(nAvail_) {}
+        void operator()(JOB_TYPE && t)
+        {
+            j.emplace_back(std::move(t));
+        }
+        ~emplacer()
+        {
+            nAvail.store(j.size());
+        }
+
+    };
+    emplacer get_emplacer() {
+        return emplacer(jobs, nAvail);
     }
     ~CCheckQueue()
     {
@@ -551,16 +556,13 @@ public:
         return fRet;
     }
 
-    bool emplace_back(typename Q::JOB_TYPE && j)
+    typename Q::emplacer get_emplacer()
     {
-        if (pqueue)
-            pqueue->emplace_back(std::move(j));
-        return !!pqueue;
+        return pqueue->get_emplacer();
     }
-    void Flush()
-    {
-        if (pqueue)
-            pqueue->Flush();
+
+    operator bool() {
+        return (!!pqueue);
     }
 
     ~CCheckQueueControl()

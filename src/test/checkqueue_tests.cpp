@@ -181,9 +181,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 
     while (spawned != nScriptCheckThreads);
     for (auto y = 0; y < 1000; ++y) {
+        auto emplacer = fast_queue->get_emplacer();
         for (auto x = 0; x< 100; ++x) 
-            fast_queue->emplace_back(FakeJobNoWork{});
-        fast_queue->Flush();
+            emplacer(FakeJobNoWork{});
     }
     fast_queue->TEST_set_masterJoined(true);
 
@@ -217,11 +217,11 @@ void Correct_Queue_range(std::vector<size_t> range)
             CCheckQueueControl<Correct_Queue> control(small_queue.get());
             while (total) {
                 size_t r = GetRand(10);
+                auto emplacer = control.get_emplacer();
                 for (size_t k = 0; k < r && total; k++) {
                     total--;
-                    control.emplace_back(FakeJobCheckCompletion{});
+                    emplacer(FakeJobCheckCompletion{});
                 }
-                control.Flush();
             }
         }
         if (print_Correct_Queue) {
@@ -289,9 +289,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
         while (remaining) {
             size_t r = GetRand(10);
 
+            auto emplacer = control.get_emplacer();
             for (size_t k = 0; k < r && remaining; k++, remaining--)
-                control.emplace_back( FailingJob{remaining == 1});
-            control.Flush();
+                emplacer( FailingJob{remaining == 1});
         }
         bool success = control.Wait();
         if (success && i > 0) {
@@ -321,9 +321,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
         for (bool end_fails : {true, false}) {
             CCheckQueueControl<Failing_Queue> control(fail_queue.get());
             {
+                auto emplacer = control.get_emplacer();
                 for (size_t k = 0; k < 100; ++k)
-                    control.emplace_back(FailingJob {k == 99 && end_fails});
-                control.Flush();
+                    emplacer(FailingJob {k == 99 && end_fails});
             }
             result[end_fails ? 0 : 1] = control.Wait();
             fail_queue->TEST_dump_log();
@@ -362,9 +362,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueJob)
         CCheckQueueControl<Unique_Queue> control(queue.get());
         while (total) {
             size_t r = GetRand(10);
+            auto emplacer = control.get_emplacer();
             for (size_t k = 0; k < r && total; k++)
-                control.emplace_back( UniqueJob{--total});
-            control.Flush();
+                emplacer( UniqueJob{--total});
         }
     }
     bool r = true;
@@ -401,11 +401,11 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
             CCheckQueueControl<Memory_Queue> control(queue.get());
             while (total) {
                 size_t r = GetRand(10);
+                auto emplacer = control.get_emplacer();
                 for (size_t k = 0; k < r && total; k++) {
                     total--;
-                    control.emplace_back(MemoryJob{total == 0});
+                    emplacer(MemoryJob{total == 0});
                 }
-                control.Flush();
             }
         }
     }
@@ -435,8 +435,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
     std::thread t0([&](){
         CCheckQueueControl<FrozenCleanup_Queue> control(queue.get());
         {
-            control.emplace_back(FrozenCleanupJob{});
-            control.Flush();
+            control.get_emplacer()(FrozenCleanupJob{});
         }
         FrozenCleanupJob::frozen = true;
         BOOST_REQUIRE(control.Wait());
