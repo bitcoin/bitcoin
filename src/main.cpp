@@ -40,6 +40,7 @@
 
 #include <atomic>
 #include <sstream>
+#include <thread>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -1746,7 +1747,7 @@ static void AlertNotify(const std::string& strMessage)
     safeStatus = singleQuote+safeStatus+singleQuote;
     boost::replace_all(strCmd, "%s", safeStatus);
 
-    boost::thread t(runCommand, strCmd); // thread runs free
+    std::thread(runCommand, strCmd).detach(); // thread runs free
 }
 
 void CheckForkWarningConditions()

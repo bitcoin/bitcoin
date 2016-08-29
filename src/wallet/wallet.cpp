@@ -32,6 +32,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
+#include <thread>
+
 using namespace std;
 
 CWallet* pwalletMain = NULL;
@@ -859,7 +861,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     if ( !strCmd.empty())
     {
         boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        std::thread(runCommand, strCmd).detach(); // thread runs free
     }
 
     return true;

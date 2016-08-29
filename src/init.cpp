@@ -549,7 +549,7 @@ static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex
     std::string strCmd = GetArg("-blocknotify", "");
 
     boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
-    boost::thread t(runCommand, strCmd); // thread runs free
+    std::thread(runCommand, strCmd).detach(); // thread runs free
 }
 
 static void BlockNotifyGenesisWait(bool, const CBlockIndex *pBlockIndex)
