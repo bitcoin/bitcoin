@@ -319,9 +319,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
             }
         }
 
-        if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-            (masternodeSync.GetAssetID() <= MASTERNODE_SYNC_LIST || masternodeSync.IsFailed())) {
-                throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
+        if((strCommand == "start-missing" || strCommand == "start-disabled") && !masternodeSync.IsMasternodeListSynced()) {
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
         }
 
         int successful = 0;

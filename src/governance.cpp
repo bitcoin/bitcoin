@@ -281,6 +281,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
     else if (strCommand == NetMsgType::MNGOVERNANCEOBJECTVOTE)
     {
+        // Ignore such messages until masternode list is synced
+        if(!masternodeSync.IsMasternodeListSynced()) return;
+
         CGovernanceVote vote;
         vRecv >> vote;
         vote.fValid = true;
@@ -551,12 +554,11 @@ struct sortProposalsByVotes {
 
 void CGovernanceManager::NewBlock()
 {
+    // IF WE'RE NOT SYNCED, EXIT
+    if(!masternodeSync.IsSynced()) return;
+
     TRY_LOCK(cs, fBudgetNewBlock);
     if(!fBudgetNewBlock || !pCurrentBlockIndex) return;
-
-    // IF WE'RE NOT SYNCED, EXIT
-
-    if(!masternodeSync.IsSynced()) return;
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 
@@ -1074,7 +1076,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
 
     // TO REPROCESS OBJECTS WE SHOULD BE SYNCED
 
-    if(!fLiteMode && masternodeSync.GetAssetID() > MASTERNODE_SYNC_LIST)
+    if(!fLiteMode && masternodeSync.IsSynced())
         NewBlock();
 }
 

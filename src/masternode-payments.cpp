@@ -260,14 +260,16 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() {
 
 void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(!masternodeSync.IsBlockchainSynced()) return;
+    // Ignore any payments messages until masternode list is synced
+    if(!masternodeSync.IsMasternodeListSynced()) return;
 
-    if(fLiteMode) return; //disable all Darksend/Masternode related functionality
-
+    if(fLiteMode) return; // disable all Dash specific functionality
 
     if (strCommand == NetMsgType::MNWINNERSSYNC) { //Masternode Payments Request Sync
 
-        // ignore such request until we are fully synced
+        // Ignore such requests until we are fully synced.
+        // We could start processing this after masternode list is synced
+        // but this is a heavy one so it's better to finish sync first.
         if (!masternodeSync.IsSynced()) return;
 
         int nCountNeeded;
@@ -293,9 +295,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         if(pfrom->nVersion < MIN_MNW_PEER_PROTO_VERSION) return;
 
         if(!pCurrentBlockIndex) return;
-
-        // can't really verify it until masternode list is synced, reject it for now
-        if (masternodeSync.GetAssetID() < MASTERNODE_SYNC_MNW) return;
 
         if(mapMasternodePayeeVotes.count(winner.GetHash())) {
             LogPrint("mnpayments", "MNWINNER -- Already seen: hash=%s, nHeight=%d\n", winner.GetHash().ToString(), pCurrentBlockIndex->nHeight);
@@ -549,7 +548,10 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, int nValidationHeight, std:
     if(!pmn) {
         strError = strprintf("Unknown Masternode: prevout=%s", vinMasternode.prevout.ToStringShort());
         // Only ask if we are already synced and still have no idea about that Masternode
-        if (masternodeSync.IsSynced()) mnodeman.AskForMN(pnode, vinMasternode);
+        if(masternodeSync.IsSynced()) {
+            mnodeman.AskForMN(pnode, vinMasternode);
+        }
+
         return false;
     }
 
@@ -581,6 +583,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     // DETERMINE IF WE SHOULD BE VOTING FOR THE NEXT PAYEE
 
     if(!fMasterNode) return false;
+
+    // We have little chances to pick the right winner if we winners list is out of sync
+    // but we have no choice, so we'll try. However it doesn't make sense to even try to do so
+    // if we have not enough data about masternodes.
+    if(!masternodeSync.IsMasternodeListSynced()) return false;
     
     int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, MIN_MNW_PEER_PROTO_VERSION);
        
@@ -760,7 +767,7 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex)
     pCurrentBlockIndex = pindex;
     LogPrint("mnpayments", "pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
 
-    if (!fLiteMode && masternodeSync.GetAssetID() > MASTERNODE_SYNC_LIST) {
+    if (!fLiteMode && masternodeSync.IsMasternodeListSynced()) {
         ProcessBlock(pindex->nHeight + 10);
     }
 }

@@ -109,8 +109,10 @@ void CMasternodeSync::SwitchToNextAsset()
 {
     switch(nRequestedMasternodeAssets)
     {
+        case(MASTERNODE_SYNC_FAILED):
+            throw std::runtime_error("Can't switch to next asset from failed, should use Reset() first!");
+            break;
         case(MASTERNODE_SYNC_INITIAL):
-        case(MASTERNODE_SYNC_FAILED): // should never be used here actually, use Reset() instead
             ClearFulfilledRequest();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
@@ -159,9 +161,9 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
         int nCount;
         vRecv >> nItemID >> nCount;
 
-        if(nRequestedMasternodeAssets >= MASTERNODE_SYNC_FINISHED) return;
+        //do not care about stats if sync process finished or failed
+        if(IsSynced() || IsFailed()) return;
 
-        //this means we will receive no further communication
         switch(nItemID)
         {
             case(MASTERNODE_SYNC_LIST):
@@ -229,8 +231,9 @@ void CMasternodeSync::ProcessTick()
 
         //try syncing again
         if(IsFailed()) {
-            if(nTimeLastFailure + (1*60) < GetTime()) // 1 minute cooldown after failed sync
+            if(nTimeLastFailure + (1*60) < GetTime()) { // 1 minute cooldown after failed sync
                 Reset();
+            }
             return;
         }
     }
@@ -247,7 +250,9 @@ void CMasternodeSync::ProcessTick()
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
 
-    if(nRequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) SwitchToNextAsset();
+    if(nRequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) {
+        SwitchToNextAsset();
+    }
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
@@ -295,6 +300,9 @@ void CMasternodeSync::ProcessTick()
                     LogPrintf("CMasternodeSync::Process -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if (nRequestedMasternodeAttempt == 0) {
                         LogPrintf("CMasternodeSync::Process -- WARNING: failed to sync %s\n", GetAssetName());
+                        // there is no way we can continue without masternode list, fail here and try later
+                        Fail();
+                        return;
                     }
                     SwitchToNextAsset();
                     return;
@@ -333,6 +341,9 @@ void CMasternodeSync::ProcessTick()
                     LogPrintf("CMasternodeSync::Process -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if (nRequestedMasternodeAttempt == 0) {
                         LogPrintf("CMasternodeSync::Process -- WARNING: failed to sync %s\n", GetAssetName());
+                        // probably not a good idea to proceed without winner list
+                        Fail();
+                        return;
                     }
                     SwitchToNextAsset();
                     return;

@@ -47,7 +47,9 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
 {
     if(fLiteMode) return; // disable all Dash specific functionality
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTX)) return;
-    if(!masternodeSync.IsBlockchainSynced()) return;
+
+    // Ignore any InstantSend messages until masternode list is synced
+    if(!masternodeSync.IsMasternodeListSynced()) return;
 
     if (strCommand == NetMsgType::IX)
     {

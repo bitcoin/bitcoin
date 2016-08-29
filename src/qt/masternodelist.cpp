@@ -363,7 +363,7 @@ void MasternodeList::on_startAllButton_clicked()
 void MasternodeList::on_startMissingButton_clicked()
 {
 
-    if(masternodeSync.GetAssetID() <= MASTERNODE_SYNC_LIST || masternodeSync.IsFailed()) {
+    if(!masternodeSync.IsMasternodeListSynced()) {
         QMessageBox::critical(this, tr("Command is not available right now"),
             tr("You can't use this command until masternode list is synced"));
         return;

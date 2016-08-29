@@ -2313,7 +2313,7 @@ void CDarksendPool::UpdatedBlockTip(const CBlockIndex *pindex)
     pCurrentBlockIndex = pindex;
     LogPrint("privatesend", "CDarksendPool::UpdatedBlockTip -- pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
 
-    if(!fLiteMode && masternodeSync.GetAssetID() > MASTERNODE_SYNC_LIST) {
+    if(!fLiteMode && masternodeSync.IsMasternodeListSynced()) {
         NewBlock();
     }
 }

@@ -568,9 +568,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         } else {
             if(nDos > 0) Misbehaving(pfrom->GetId(), nDos);
         }
-    }
 
-    else if (strCommand == NetMsgType::MNPING) { //Masternode Ping
+    } else if (strCommand == NetMsgType::MNPING) { //Masternode Ping
+
+        // ignore masternode pings until masternode list is synced
+        if (!masternodeSync.IsMasternodeListSynced()) return;
+
         CMasternodePing mnp;
         vRecv >> mnp;
 
@@ -600,7 +603,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     } else if (strCommand == NetMsgType::DSEG) { //Get Masternode list or specific entry
 
-        // ignore such request until we are fully synced
+        // Ignore such requests until we are fully synced.
+        // We could start processing this after masternode list is synced
+        // but this is a heavy one so it's better to finish sync first.
         if (!masternodeSync.IsSynced()) return;
 
         CTxIn vin;
