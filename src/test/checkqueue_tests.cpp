@@ -45,12 +45,12 @@ public:
 
 struct FakeJob {
 };
-typedef CCheckQueue<FakeJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Standard_Queue;
+typedef CCheckQueue<FakeJob, true, false> Standard_Queue;
 typedef typename Standard_Queue::JOB_TYPE JT; // This is a "recursive template" hack
 
 BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_basic)
 {
-    CCheckQueue_Internals::PriorityWorkQueue<Standard_Queue> work(0, 16);
+    CCheckQueue_Internals::PriorityWorkQueue work(0, 16);
     auto m = 0;
     work.add(100);
     size_t x = 0;
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_basic)
 }
 BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_emits_all)
 {
-    CCheckQueue_Internals::PriorityWorkQueue<Standard_Queue> work(0, 16);
+    CCheckQueue_Internals::PriorityWorkQueue work(0, 16);
     auto m = 0;
     work.add(200);
     std::unordered_multiset<size_t> results;
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_emits_all)
 }
 BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_stealing)
 {
-    CCheckQueue_Internals::PriorityWorkQueue<Standard_Queue> work(0, 16);
+    CCheckQueue_Internals::PriorityWorkQueue work(0, 16);
     auto m = 0;
     work.add(160);
     std::unordered_multiset<size_t> results;
@@ -114,35 +114,37 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_PriorityWorkQueue_stealing)
     BOOST_REQUIRE(b2);
 }
 
-typedef CCheckQueue_Internals::job_array<Standard_Queue> J;
+typedef CCheckQueue_Internals::job_array<FakeJob> J;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_job_array)
 {
+    const size_t MAX_JOBS = 100000;
     auto jobs = std::shared_ptr<J>(new J());
+    jobs->init(MAX_JOBS, 1);
     std::atomic<size_t> m;
-    for (size_t i = 0; i < Standard_Queue::MAX_JOBS; ++i)
-        jobs->reset_flag(i);
+
+    jobs->reset_flags_for(0, MAX_JOBS);
+
     m = 0;
     std::thread t([&](std::atomic<size_t>& m) {
-        for (size_t i = 0; i < Standard_Queue::MAX_JOBS; ++i)
+        for (size_t i = 0; i < MAX_JOBS; ++i)
             m += jobs->reserve(i) ? 1 : 0;
     }, std::ref(m));
 
 
     std::thread t2([&](std::atomic<size_t>& m) {
-        for (size_t i = 0; i < Standard_Queue::MAX_JOBS; ++i)
+        for (size_t i = 0; i < MAX_JOBS; ++i)
             m += jobs->reserve(i) ? 1 : 0;
     }, std::ref(m));
     t.join();
     t2.join();
 
-    BOOST_REQUIRE(m == Standard_Queue::MAX_JOBS);
+    BOOST_REQUIRE(m == MAX_JOBS);
 }
 
-typedef CCheckQueue_Internals::barrier<Standard_Queue> B;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_round_barrier)
 {
     RAII_ThreadGroup threadGroup;
-    auto b = std::shared_ptr<B>(new B());
+    auto b = std::shared_ptr<CCheckQueue_Internals::barrier>(new CCheckQueue_Internals::barrier());
     b->init(nScriptCheckThreads);
     b->reset();
 
@@ -162,11 +164,11 @@ struct FakeJobNoWork {
     }
     void swap(FakeJobNoWork& x){};
 };
-typedef CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS, true, false> Consume_Queue;
+typedef CCheckQueue<FakeJobNoWork, true, false> Consume_Queue;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 {
     auto fast_queue = std::shared_ptr<Consume_Queue>(new Consume_Queue());
-    fast_queue->init(nScriptCheckThreads);
+    fast_queue->init(100000, nScriptCheckThreads);
     std::atomic<int> spawned{0};
     RAII_ThreadGroup threadGroup;
 
@@ -179,9 +181,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_consume)
 
     while (spawned != nScriptCheckThreads);
     for (auto y = 0; y < 1000; ++y) {
-        auto inserter = CCheckQueue_Internals::inserter<Consume_Queue>(fast_queue.get()); 
         for (auto x = 0; x< 100; ++x) 
-            new (inserter()) FakeJobNoWork{};
+            fast_queue->emplace_back(FakeJobNoWork{});
+        fast_queue->Flush();
     }
     fast_queue->TEST_set_masterJoined(true);
 
@@ -203,11 +205,11 @@ struct FakeJobCheckCompletion {
 };
 std::atomic<size_t> FakeJobCheckCompletion::n_calls{0};
 const bool print_Correct_Queue = false;
-typedef CCheckQueue<FakeJobCheckCompletion, (size_t)100000, MAX_SCRIPTCHECK_THREADS, true, print_Correct_Queue> Correct_Queue;
+typedef CCheckQueue<FakeJobCheckCompletion,  true, print_Correct_Queue> Correct_Queue;
 void Correct_Queue_range(std::vector<size_t> range)
 {
     auto small_queue = std::shared_ptr<Correct_Queue>(new Correct_Queue);
-    small_queue->init(nScriptCheckThreads);
+    small_queue->init(100000, nScriptCheckThreads);
     for (auto i : range) {
         size_t total = i;
         FakeJobCheckCompletion::n_calls = 0;
@@ -215,11 +217,11 @@ void Correct_Queue_range(std::vector<size_t> range)
             CCheckQueueControl<Correct_Queue> control(small_queue.get());
             while (total) {
                 size_t r = GetRand(10);
-                auto inserter = control.get_inserter();
                 for (size_t k = 0; k < r && total; k++) {
                     total--;
-                    new (inserter()) FakeJobCheckCompletion{};
+                    control.emplace_back(FakeJobCheckCompletion{});
                 }
+                control.Flush();
             }
         }
         if (print_Correct_Queue) {
@@ -274,28 +276,29 @@ struct FailingJob {
         std::swap(call_state, x.call_state);
     };
 };
-typedef CCheckQueue<FailingJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS, true, false> Failing_Queue;
+typedef CCheckQueue<FailingJob, true, false> Failing_Queue;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
     auto fail_queue = std::unique_ptr<Failing_Queue>(new Failing_Queue());
 
-    fail_queue->init(nScriptCheckThreads);
+    fail_queue->init(1000, nScriptCheckThreads);
 
     for (size_t i = 0; i < 1001; ++i) {
         CCheckQueueControl<Failing_Queue> control(fail_queue.get());
         size_t remaining = i;
         while (remaining) {
             size_t r = GetRand(10);
-            auto inserter = control.get_inserter();
+
             for (size_t k = 0; k < r && remaining; k++, remaining--)
-                new (inserter()) FailingJob{remaining == 1};
+                control.emplace_back( FailingJob{remaining == 1});
+            control.Flush();
         }
         bool success = control.Wait();
         if (success && i > 0) {
             size_t nChecked = 0;
-            auto jobs = fail_queue->TEST_introspect_jobs()->TEST_get_checks();
-            for (size_t x = 0; x < i; ++x)
-                if ((*jobs)[x].call_state)
+            std::vector<FailingJob>* jobs = fail_queue->TEST_introspect_jobs()->TEST_get_checks();
+            for (auto j : *jobs)
+                if (j.call_state)
                     nChecked++;
             fail_queue->TEST_dump_log();
             fail_queue->TEST_erase_log();
@@ -311,16 +314,16 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 {
     auto fail_queue = std::unique_ptr<Failing_Queue>(new Failing_Queue());
     std::array<FailingJob, 100> checks;
-    fail_queue->init(nScriptCheckThreads);
+    fail_queue->init(100, nScriptCheckThreads);
 
     for (auto times = 0; times < 10; ++times) {
         std::array<bool, 2> result;
         for (bool end_fails : {true, false}) {
             CCheckQueueControl<Failing_Queue> control(fail_queue.get());
             {
-                auto inserter = control.get_inserter();
                 for (size_t k = 0; k < 100; ++k)
-                    new (inserter()) FailingJob {k == 99 && end_fails};
+                    control.emplace_back(FailingJob {k == 99 && end_fails});
+                control.Flush();
             }
             result[end_fails ? 0 : 1] = control.Wait();
             fail_queue->TEST_dump_log();
@@ -347,11 +350,11 @@ struct UniqueJob {
 };
 std::mutex UniqueJob::m;
 std::unordered_multiset<size_t> UniqueJob::results;
-typedef CCheckQueue<UniqueJob, (size_t)100000, MAX_SCRIPTCHECK_THREADS, true, false> Unique_Queue;
+typedef CCheckQueue<UniqueJob,  true, false> Unique_Queue;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueJob)
 {
     auto queue = std::shared_ptr<Unique_Queue>(new Unique_Queue);
-    queue->init(nScriptCheckThreads);
+    queue->init(100000, nScriptCheckThreads);
 
     size_t COUNT = 100000;
     size_t total = COUNT;
@@ -359,9 +362,9 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueJob)
         CCheckQueueControl<Unique_Queue> control(queue.get());
         while (total) {
             size_t r = GetRand(10);
-            auto inserter = control.get_inserter();
             for (size_t k = 0; k < r && total; k++)
-                new (inserter()) UniqueJob{--total};
+                control.emplace_back( UniqueJob{--total});
+            control.Flush();
         }
     }
     bool r = true;
@@ -386,11 +389,11 @@ struct MemoryJob {
     };
     void swap(MemoryJob& x) { mb_memory.swap(x.mb_memory); };
 };
-typedef CCheckQueue<MemoryJob, (size_t)10000, MAX_SCRIPTCHECK_THREADS> Memory_Queue;
+typedef CCheckQueue<MemoryJob> Memory_Queue;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
 {
     auto queue = std::shared_ptr<Memory_Queue>(new Memory_Queue{});
-    queue->init(nScriptCheckThreads);
+    queue->init(10000, nScriptCheckThreads);
 
     for (size_t i = 9999; i < 9999; --i) {
         size_t total = i;
@@ -398,11 +401,11 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
             CCheckQueueControl<Memory_Queue> control(queue.get());
             while (total) {
                 size_t r = GetRand(10);
-                auto inserter = control.get_inserter();
                 for (size_t k = 0; k < r && total; k++) {
                     total--;
-                    new (inserter()) MemoryJob{total == 0};
+                    control.emplace_back(MemoryJob{total == 0});
                 }
+                control.Flush();
             }
         }
     }
@@ -424,16 +427,16 @@ struct FrozenCleanupJob {
 };
 
 std::atomic<bool> FrozenCleanupJob::frozen {false};
-typedef CCheckQueue<FrozenCleanupJob, (size_t)1000, MAX_SCRIPTCHECK_THREADS> FrozenCleanup_Queue;
+typedef CCheckQueue<FrozenCleanupJob> FrozenCleanup_Queue;
 BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
 {
     auto queue = std::shared_ptr<FrozenCleanup_Queue>(new FrozenCleanup_Queue{});
-    queue->init(nScriptCheckThreads);
+    queue->init(1000, nScriptCheckThreads);
     std::thread t0([&](){
         CCheckQueueControl<FrozenCleanup_Queue> control(queue.get());
         {
-            auto inserter = control.get_inserter();
-            new (inserter()) FrozenCleanupJob{};
+            control.emplace_back(FrozenCleanupJob{});
+            control.Flush();
         }
         FrozenCleanupJob::frozen = true;
         BOOST_REQUIRE(control.Wait());

@@ -28,7 +28,7 @@
 
 
 /** Forward Declaration on CCheckQueue. Note default no testing. */
-template <typename T, size_t J, size_t W, bool TFE = false, bool TLE = false>
+template <typename T, bool TFE = false, bool TLE = false>
 class CCheckQueue;
 /** Forward Declaration on CCheckQueueControl */
 template <typename Q>
@@ -39,67 +39,43 @@ class CCheckQueueControl;
  * of CCheckQueue, but is separate for easier testability and modularity */
 namespace CCheckQueue_Internals
 {
-template <typename Q>
-class inserter {
-    Q * const queue;
-    typename Q::JOB_TYPE * start;
-    typename Q::JOB_TYPE * free_index;
-    public:
-    inserter(Q * const queueIn) :
-       queue(queueIn),
-       start(queue ? queue->get_next_free_index() : nullptr),
-       free_index(start) {}
-    typename Q::JOB_TYPE * operator()(typename Q::JOB_TYPE * def)
-    {
-        return free_index ? free_index++ : def;
-    }
-    typename Q::JOB_TYPE * operator()()
-    {
-        return free_index++;
-    }
-    ~inserter()
-    {
-        if (queue)
-            queue->Flush(std::distance(start, free_index));
-    }
-};
 /** job_array holds the atomic flags and the job data for the queue
      * and provides methods to assist in accessing or adding jobs.
      */
-template <typename Q>
+template <typename T>
 class job_array
 {
     /** the raw check type */
-    std::array<typename Q::JOB_TYPE, Q::MAX_JOBS> checks;
+    std::vector<T> checks;
     /** atomic flags which are used to reserve a check from checks
              * C++11 standard guarantees that these are atomic on all platforms
              * */
-    std::array<std::atomic_flag, Q::MAX_JOBS> flags;
-    /** used as the insertion point into the array. */
-    typename Q::JOB_TYPE* next_free_index;
+    struct default_cleared_flag : std::atomic_flag {
+        default_cleared_flag () : std::atomic_flag() { clear(); };
+        default_cleared_flag (const default_cleared_flag & s) : std::atomic_flag() { clear(); };
+    };
+    std::vector<default_cleared_flag> flags;
     size_t RT_N_SCRIPTCHECK_THREADS;
 
 public:
-    job_array() :  next_free_index(checks.begin()), RT_N_SCRIPTCHECK_THREADS(0)
+    job_array() :  RT_N_SCRIPTCHECK_THREADS(0)
     {
-        for (size_t i = 0; i < Q::MAX_JOBS; ++i) 
-            checks[i] = typename Q::JOB_TYPE {};
-        for (auto& i : flags)
-            i.clear();
     }
 
-    void init(const size_t rt)
+    void init(const size_t MAX_JOBS, const size_t rt)
     {
         RT_N_SCRIPTCHECK_THREADS = rt;
+        checks.reserve(MAX_JOBS);
+        flags.resize(MAX_JOBS);
+    }
+    void emplace_back(T&& t)
+    {
+        checks.emplace_back(std::move(t));
     }
 
-    typename Q::JOB_TYPE* get_next_free_index()
+    size_t size()
     {
-        return next_free_index;
-    }
-    void Add(ptrdiff_t n) 
-    {
-        next_free_index += n;
+        return checks.size();
     }
     
     /** reserve tries to set a flag for an element 
@@ -109,50 +85,25 @@ public:
         return !flags[i].test_and_set();
     }
 
-    /** reset_flag resets a flag */
-    void reset_flag(const size_t i)
-    {
-        flags[i].clear();
-    }
-
     void reset_flags_for(const size_t ID, const size_t to) 
     {
         for (size_t i = ID; i < to; i += RT_N_SCRIPTCHECK_THREADS)
-            reset_flag(i);
+            flags[i].clear();
     }
     /** eval runs a check at specified index */
     bool eval(const size_t i)
     {
-        bool b = checks[i]();
-        typename Q::JOB_TYPE tmp {};
-        checks[i].swap(tmp);
-        return b;
+        return checks[i]();
     }
 
-    /** reset_jobs resets the insertion index only, so should only be run on master.
-             *
-             * The caller must ensure that forall i, checks[i] is destructed and flags[i] is
-             * reset.
-             *
-             * NOTE: This cleanup done "for free" elsewhere
-             *      - checksi] is destructed by master on swap
-             *      - flags[i] is reset by each thread while waiting to be cleared for duty
-             */
-    void reset_jobs()
-    {
-        next_free_index = checks.begin();
-    }
     void clear_check_memory()
     {
-        for (auto it = checks.begin(); it != next_free_index; ++it) {
-            typename Q::JOB_TYPE tmp {};
-            it->swap(tmp);
-        }
+        checks.clear();
     }
 
     decltype(&checks) TEST_get_checks()
     {
-        return Q::TEST_FUNCTIONS_ENABLE ? &checks : nullptr;
+        return  &checks;
     }
 };
 /* barrier is used to communicate that a thread has finished
@@ -162,10 +113,8 @@ public:
      * will not mark itself un-done so no need to read the atomic twice)
      */
 
-template <typename Q>
 class barrier
 {
-    std::array<std::atomic_bool, Q::MAX_WORKERS> state;
     size_t RT_N_SCRIPTCHECK_THREADS;
     std::atomic<size_t> count;
 
@@ -221,10 +170,9 @@ public:
      *       (check for more work when priority_empty)
      *
      */
-template <typename Q>
 class PriorityWorkQueue
 {
-    std::array<size_t, Q::MAX_WORKERS> n_done;
+    std::vector<size_t> n_done;
     /** The Worker's ID */
     const size_t id;
     /** The number of workers that bitcoind started with, eg, RunTime Number ScriptCheck Threads  */
@@ -237,8 +185,15 @@ class PriorityWorkQueue
 
 
 public:
-    PriorityWorkQueue(){};
-    PriorityWorkQueue(size_t id_, size_t RT_N_SCRIPTCHECK_THREADS_) : n_done(), id(id_), RT_N_SCRIPTCHECK_THREADS(RT_N_SCRIPTCHECK_THREADS_), total(0), id2_cache((id_ + 1) % RT_N_SCRIPTCHECK_THREADS){};
+    PriorityWorkQueue(size_t id_, size_t RT_N_SCRIPTCHECK_THREADS_) : n_done(), id(id_), RT_N_SCRIPTCHECK_THREADS(RT_N_SCRIPTCHECK_THREADS_), total(0), id2_cache((id_ + 1) % RT_N_SCRIPTCHECK_THREADS){
+        n_done.resize(RT_N_SCRIPTCHECK_THREADS);
+    };
+    void reset() {
+        for (auto& i : n_done)
+            i = 0;
+        total = 0;
+        id2_cache = (id +1) % RT_N_SCRIPTCHECK_THREADS;
+    }
     /** adds entries for execution [total, n)
              * Places entries in the proper bucket
              * Resets the next thread to help (id2_cache) if work was added
@@ -333,23 +288,22 @@ class atomic_condition {
  * @tparam W the maximum number of workers possible
  */
 
-template <typename T, size_t J, size_t W, bool TFE, bool TLE>
+template <typename T, bool TFE, bool TLE>
 class CCheckQueue
 {
 public:
     typedef T JOB_TYPE;
-    typedef CCheckQueue<T, J, W, TFE, TLE> SELF;
-    static const size_t MAX_JOBS = J;
-    static const size_t MAX_WORKERS = W;
+    typedef CCheckQueue<T, TFE, TLE> SELF;
     static const bool TEST_FUNCTIONS_ENABLE = TFE;
     static const bool TEST_LOGGING_ENABLE = TLE;
 
 private:
-    CCheckQueue_Internals::job_array<SELF> jobs;
-    CCheckQueue_Internals::barrier<SELF> work;
-    CCheckQueue_Internals::barrier<SELF> cleanup;
+    CCheckQueue_Internals::job_array<JOB_TYPE> jobs;
+    CCheckQueue_Internals::barrier work;
+    CCheckQueue_Internals::barrier cleanup;
     CCheckQueue_Internals::atomic_condition sleeper;
     size_t RT_N_SCRIPTCHECK_THREADS;
+    size_t MAX_JOBS;
     /** The number of checks put into the queue, done or not */
     std::atomic<size_t> nAvail;
     /** true if all checks were successful, false if any failure occurs */
@@ -362,12 +316,10 @@ private:
     std::mutex control_mtx;
     /** state only for testing */
     mutable std::atomic<size_t> test_log_seq;
-    mutable std::array<std::ostringstream, MAX_WORKERS> test_log;
+    mutable std::vector<std::unique_ptr<std::ostringstream>> test_log;
 
-    void consume(const size_t ID)
+    void consume(CCheckQueue_Internals::PriorityWorkQueue& work_queue)
     {
-        TEST_log(ID, [](std::ostringstream& o) {o << "In consume\n";});
-        CCheckQueue_Internals::PriorityWorkQueue<SELF> work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
         for (;;) {
             // Note: Must check masterJoined before nAvail, otherwise
             // {Thread A: nAvail.load();} {Thread B:nAvail++; masterJoined = true;} {Thread A: masterJoined.load()}
@@ -382,18 +334,17 @@ private:
                 }
             }
             else if (stealing && !got_data)
-                break;
-
+                return;
         } 
-            
-        TEST_log(ID, [&, this](std::ostringstream& o) {o << "Leaving consume. fAllOk was " << fAllOk.load() << "\n";});
     }
     /** Internal function that does bulk of the verification work. */
     bool Master() {
         const size_t ID = 0;
+        static CCheckQueue_Internals::PriorityWorkQueue work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
+        work_queue.reset();
         masterJoined.store(true);
         TEST_log(ID, [](std::ostringstream& o) { o << "Master just set masterJoined\n"; });
-        consume(ID);
+        consume(work_queue);
         work.finished();
         work.wait_all_finished();
         TEST_log(ID, [](std::ostringstream& o) { o << "(Master) saw all threads finished\n"; });
@@ -404,9 +355,11 @@ private:
     }
     void Loop(const size_t ID)
     {
+
+        CCheckQueue_Internals::PriorityWorkQueue work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
         while (sleeper.wait()) {
             TEST_log(ID, [](std::ostringstream& o) {o << "Round starting\n";});
-            consume(ID);
+            consume(work_queue);
             // Only spins here if !fAllOk, otherwise consume finished all
             while (!masterJoined.load())
                 ;
@@ -433,6 +386,7 @@ private:
                 cleanup.reset();
                 work.reset();
             }
+            work_queue.reset();
         }
         LogPrintf("CCheckQueue @%#010x Worker %q shutting down\n", this, ID);
     }
@@ -441,10 +395,6 @@ public:
     CCheckQueue() : jobs(), work(), cleanup(), sleeper(), RT_N_SCRIPTCHECK_THREADS(0),
     nAvail(0), fAllOk(true), masterJoined(false), test_log_seq(0) {}
 
-    void reset_jobs()
-    {
-        jobs.reset_jobs();
-    }
     //! Worker thread
     void Thread(size_t ID)
     {
@@ -455,7 +405,6 @@ public:
 
     void ControlLock() {
         control_mtx.lock();
-        reset_jobs();
         sleeper.wakeup();
         work.wait_reset();
     }
@@ -478,13 +427,13 @@ public:
         jobs.clear_check_memory();
     }
 
-    JOB_TYPE* get_next_free_index() {
-        return jobs.get_next_free_index();
+    void emplace_back(JOB_TYPE&& t) {
+        jobs.emplace_back(std::move(t));
     }
-    void Flush(std::ptrdiff_t n)
+    void Flush()
     {
-        nAvail.fetch_add(n);
-        jobs.Add(n);
+        const size_t n = jobs.size();
+        nAvail.store(n);
         TEST_log(0, [&, this](std::ostringstream& o) {
             o << "Added " << n << " values. nAvail was " 
             << nAvail.load() - n << " now is " << nAvail.load() << " \n";
@@ -495,13 +444,16 @@ public:
         quit();
     }
 
-    void init(const size_t RT_N_SCRIPTCHECK_THREADS_)
+    void init(const size_t MAX_JOBS_, const size_t RT_N_SCRIPTCHECK_THREADS_)
     {
         std::lock_guard<std::mutex> l(control_mtx);
+        MAX_JOBS = MAX_JOBS_;
         RT_N_SCRIPTCHECK_THREADS = RT_N_SCRIPTCHECK_THREADS_;
+        for (auto i = 0; i < RT_N_SCRIPTCHECK_THREADS && TEST_LOGGING_ENABLE; ++i)
+            test_log.push_back(std::unique_ptr<std::ostringstream>(new std::ostringstream()));
         work.init(RT_N_SCRIPTCHECK_THREADS);
         cleanup.init(RT_N_SCRIPTCHECK_THREADS-1);
-        jobs.init(RT_N_SCRIPTCHECK_THREADS);
+        jobs.init(MAX_JOBS, RT_N_SCRIPTCHECK_THREADS);
         sleeper.resurrect();
         for (size_t id = 1; id < RT_N_SCRIPTCHECK_THREADS; ++id) {
             std::thread t([=]() {Thread(id); });
@@ -513,8 +465,9 @@ public:
 
     void TEST_consume(const size_t ID)
     {
+        static CCheckQueue_Internals::PriorityWorkQueue work_queue(ID, RT_N_SCRIPTCHECK_THREADS);
         if (TEST_FUNCTIONS_ENABLE)
-            consume(ID);
+            consume(work_queue);
     }
 
     void TEST_set_masterJoined(const bool b)
@@ -541,8 +494,8 @@ public:
     void TEST_log(const size_t ID, Callable c) const
     {
         if (TEST_LOGGING_ENABLE) {
-            test_log[ID] << "[[" << test_log_seq++ <<"]] ";
-            c(test_log[ID]);
+            *test_log[ID] << "[[" << test_log_seq++ <<"]] ";
+            c(*test_log[ID]);
         }
     }
 
@@ -550,20 +503,21 @@ public:
     {
         if (TEST_FUNCTIONS_ENABLE) {
             LogPrintf("\n#####################\n## Round Beginning ##\n#####################");
-            for (auto i = 0; i < RT_N_SCRIPTCHECK_THREADS; ++i)
-                LogPrintf("\n------------------\n%s\n------------------\n\n", test_log[i].str());
+            for (auto& i : test_log)
+                LogPrintf("\n------------------\n%s\n------------------\n\n", i->str());
         }
     }
 
     void TEST_erase_log() const
     {
-        for (auto i = 0; i < MAX_WORKERS && TEST_FUNCTIONS_ENABLE; ++i) {
-            test_log[i].str("");
-            test_log[i].clear();
+        if (TEST_FUNCTIONS_ENABLE)
+        for (auto& i : test_log) {
+            i->str("");
+            i->clear();
         }
     }
 
-    CCheckQueue_Internals::job_array<SELF>* TEST_introspect_jobs()
+    CCheckQueue_Internals::job_array<JOB_TYPE>* TEST_introspect_jobs()
     {
         return TEST_FUNCTIONS_ENABLE ? &jobs : nullptr;
     }
@@ -597,8 +551,16 @@ public:
         return fRet;
     }
 
-    CCheckQueue_Internals::inserter<Q> get_inserter() {
-        return CCheckQueue_Internals::inserter<Q>(pqueue);
+    bool emplace_back(typename Q::JOB_TYPE && j)
+    {
+        if (pqueue)
+            pqueue->emplace_back(std::move(j));
+        return !!pqueue;
+    }
+    void Flush()
+    {
+        if (pqueue)
+            pqueue->Flush();
     }
 
     ~CCheckQueueControl()

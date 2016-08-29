@@ -17,9 +17,9 @@ static void CCheckQueueSpeed(benchmark::State& state)
         }
         void swap(FakeJobNoWork& x){};
     };
-    typedef CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS> T;
+    typedef CCheckQueue<FakeJobNoWork> T;
     auto fast_queue = std::unique_ptr<T>(new T());
-    fast_queue->init(std::max(2, GetNumCores()));
+    fast_queue->init(100000, std::max(2, GetNumCores()));
     while (state.KeepRunning()) {
         size_t total = 0;
         {
@@ -27,9 +27,9 @@ static void CCheckQueueSpeed(benchmark::State& state)
             for (size_t j = 0; j < 101; ++j) {
                 size_t r = 30;
                 total += r;
-                auto inserter = control.get_inserter();
                 for (size_t k = 0; k < r; ++k)
-                    new (inserter()) FakeJobNoWork{};
+                    control.emplace_back(FakeJobNoWork{});
+                control.Flush();
             }
         }
     }
