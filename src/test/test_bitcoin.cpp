@@ -24,7 +24,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/thread.hpp>
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -73,8 +72,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 TestingSetup::~TestingSetup()
 {
         UnregisterNodeSignals(GetNodeSignals());
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
         StopCCheckQueue();
         UnloadBlockIndex();
         delete pcoinsTip;
