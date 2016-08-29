@@ -149,11 +149,8 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
-        std::vector<CTxIn> vecTxIn;
-        CAmount nAmount;
-        CTransaction txCollateral;
-        std::vector<CTxOut> vecTxOut;
-        vRecv >> vecTxIn >> nAmount >> txCollateral >> vecTxOut;
+        CDarkSendEntry entry;
+        vRecv >> entry;
 
         //do we have enough users in the current session?
         if(nSessionUsers < GetMaxPoolTransactions()) {
@@ -164,7 +161,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
         }
 
         //do we have the same denominations as the current session?
-        if(!IsOutputsCompatibleWithSessionDenom(vecTxOut)) {
+        if(!IsOutputsCompatibleWithSessionDenom(entry.vecTxDSOut)) {
             LogPrintf("CDarksendPool::ProcessMessage -- DSVIN -- not compatible with existing transactions!\n");
             nErrorID = ERR_EXISTING_TX;
             pfrom->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, nErrorID);
@@ -179,7 +176,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
 
             CMutableTransaction tx;
 
-            BOOST_FOREACH(const CTxOut txout, vecTxOut) {
+            BOOST_FOREACH(const CTxOut txout, entry.vecTxDSOut) {
                 nValueOut += txout.nValue;
                 tx.vout.push_back(txout);
 
@@ -197,7 +194,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
                 }
             }
 
-            BOOST_FOREACH(const CTxIn txin, vecTxIn) {
+            BOOST_FOREACH(const CTxIn txin, entry.vecTxDSIn) {
                 tx.vin.push_back(txin);
 
                 LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSVIN -- txin=%s\n", txin.ToString());
@@ -248,7 +245,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             }
         }
 
-        if(AddEntry(vecTxIn, nAmount, txCollateral, vecTxOut, nErrorID)) {
+        if(AddEntry(entry, nErrorID)) {
             pfrom->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, GetState(), GetEntriesCount(), MASTERNODE_ACCEPTED, nErrorID);
             CheckPool();
 
@@ -686,8 +683,8 @@ void CDarksendPool::ChargeFees()
 
     if(nState == POOL_STATE_SIGNING) {
         // who didn't sign?
-        BOOST_FOREACH(const CDarkSendEntry entry, vecEntries) {
-            BOOST_FOREACH(const CTxDSIn txdsin, entry.vecTxDSIn) {
+        BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
+            BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
                 if(!txdsin.fHasSig && r > nTarget) {
                     LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't sign). charging fees.\n");
 
@@ -941,40 +938,40 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral)
 //
 // Add a clients transaction to the pool
 //
-bool CDarksendPool::AddEntry(const std::vector<CTxIn>& vecTxInNew, const CAmount nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& vecTxOutNew, int& nErrorID)
+bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, int& nErrorIDRet)
 {
     if(!fMasterNode) return false;
 
-    BOOST_FOREACH(CTxIn txin, vecTxInNew) {
-        if(txin.prevout.IsNull() || nAmount < 0) {
+    BOOST_FOREACH(CTxIn txin, entryNew.vecTxDSIn) {
+        if(txin.prevout.IsNull()) {
             LogPrint("privatesend", "CDarksendPool::AddEntry -- input not valid!\n");
-            nErrorID = ERR_INVALID_INPUT;
+            nErrorIDRet = ERR_INVALID_INPUT;
             nSessionUsers--;
             return false;
         }
     }
 
-    if(!IsCollateralValid(txCollateral)) {
+    if(!IsCollateralValid(entryNew.txCollateral)) {
         LogPrint("privatesend", "CDarksendPool::AddEntry -- collateral not valid!\n");
-        nErrorID = ERR_INVALID_COLLATERAL;
+        nErrorIDRet = ERR_INVALID_COLLATERAL;
         nSessionUsers--;
         return false;
     }
 
     if(GetEntriesCount() >= GetMaxPoolTransactions()) {
         LogPrint("privatesend", "CDarksendPool::AddEntry -- entries is full!\n");
-        nErrorID = ERR_ENTRIES_FULL;
+        nErrorIDRet = ERR_ENTRIES_FULL;
         nSessionUsers--;
         return false;
     }
 
-    BOOST_FOREACH(CTxIn txin, vecTxInNew) {
+    BOOST_FOREACH(CTxIn txin, entryNew.vecTxDSIn) {
         LogPrint("privatesend", "looking for txin -- %s\n", txin.ToString());
         BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
             BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
                 if((CTxIn)txdsin == txin) {
                     LogPrint("privatesend", "CDarksendPool::AddEntry -- found in txin\n");
-                    nErrorID = ERR_ALREADY_HAVE;
+                    nErrorIDRet = ERR_ALREADY_HAVE;
                     nSessionUsers--;
                     return false;
                 }
@@ -982,12 +979,10 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& vecTxInNew, const CAmount
         }
     }
 
-    CDarkSendEntry entry;
-    entry.Add(vecTxInNew, nAmount, txCollateral, vecTxOutNew);
-    vecEntries.push_back(entry);
+    vecEntries.push_back(entryNew);
 
-    LogPrint("privatesend", "CDarksendPool::AddEntry -- adding entry %s\n", vecTxInNew[0].ToString());
-    nErrorID = MSG_ENTRIES_ADDED;
+    LogPrint("privatesend", "CDarksendPool::AddEntry -- adding entry\n");
+    nErrorIDRet = MSG_ENTRIES_ADDED;
 
     return true;
 }
@@ -1116,11 +1111,10 @@ void CDarksendPool::SendDarksendDenominate(const std::vector<CTxIn>& vecTxIn, co
     }
 
     // store our entry for later use
-    CDarkSendEntry entry;
-    entry.Add(vecTxIn, nAmount, txMyCollateral, vecTxOut);
+    CDarkSendEntry entry(vecTxIn, vecTxOut, txMyCollateral);
     vecEntries.push_back(entry);
 
-    RelayIn(vecEntries[0].vecTxDSIn, vecEntries[0].nAmount, txMyCollateral, vecEntries[0].vecTxDSOut);
+    RelayIn(entry);
     CheckPool();
 }
 
@@ -1875,13 +1869,13 @@ bool CDarksendPool::CreateDenominated(const CompactTallyItem& tallyItem)
     return true;
 }
 
-bool CDarksendPool::IsOutputsCompatibleWithSessionDenom(const std::vector<CTxOut>& vecTxOut)
+bool CDarksendPool::IsOutputsCompatibleWithSessionDenom(const std::vector<CTxDSOut>& vecTxDSOut)
 {
-    if(GetDenominations(vecTxOut) == 0) return false;
+    if(GetDenominations(vecTxDSOut) == 0) return false;
 
     BOOST_FOREACH(const CDarkSendEntry entry, vecEntries) {
-        LogPrintf("CDarksendPool::IsOutputsCompatibleWithSessionDenom -- vecTxOut denom %d, entry.vecTxDSOut denom %d\n", GetDenominations(vecTxOut), GetDenominations(entry.vecTxDSOut));
-        if(GetDenominations(vecTxOut) != GetDenominations(entry.vecTxDSOut)) return false;
+        LogPrintf("CDarksendPool::IsOutputsCompatibleWithSessionDenom -- vecTxDSOut denom %d, entry.vecTxDSOut denom %d\n", GetDenominations(vecTxDSOut), GetDenominations(entry.vecTxDSOut));
+        if(GetDenominations(vecTxDSOut) != GetDenominations(entry.vecTxDSOut)) return false;
     }
 
     return true;
@@ -2127,25 +2121,6 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, const std::vector<unsigned c
     return true;
 }
 
-bool CDarkSendEntry::Add(const std::vector<CTxIn> vecTxIn, CAmount nAmount, const CTransaction txCollateral, const std::vector<CTxOut> vecTxOut)
-{
-    if(isSet) return false;
-
-    BOOST_FOREACH(const CTxIn& txin, vecTxIn)
-        vecTxDSIn.push_back(txin);
-
-    BOOST_FOREACH(const CTxOut& txout, vecTxOut)
-        vecTxDSOut.push_back(txout);
-
-    this->nAmount = nAmount;
-    this->txCollateral = txCollateral;
-
-    isSet = true;
-    nTimeAdded = GetTime();
-
-    return true;
-}
-
 bool CDarkSendEntry::AddScriptSig(const CTxIn& txin)
 {
     BOOST_FOREACH(CTxDSIn& txdsin, vecTxDSIn) {
@@ -2257,23 +2232,14 @@ void CDarksendPool::RelayFinalTransaction(const CTransaction& txFinal)
         pnode->PushMessage(NetMsgType::DSFINALTX, nSessionID, txFinal);
 }
 
-void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vecTxDSIn, const CAmount& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vecTxDSOut)
+void CDarksendPool::RelayIn(const CDarkSendEntry& entry)
 {
     if(!pSubmittedToMasternode) return;
-
-    std::vector<CTxIn> vecTxIn;
-    std::vector<CTxOut> vecTxOut;
-
-    BOOST_FOREACH(CTxDSIn in, vecTxDSIn)
-        vecTxIn.push_back(in);
-
-    BOOST_FOREACH(CTxDSOut out, vecTxDSOut)
-        vecTxOut.push_back(out);
 
     CNode* pnode = FindNode(pSubmittedToMasternode->addr);
     if(pnode != NULL) {
         LogPrintf("CDarksendPool::RelayIn -- found master, relaying message to %s\n", pnode->addr.ToString());
-        pnode->PushMessage(NetMsgType::DSVIN, vecTxIn, nAmount, txCollateral, vecTxOut);
+        pnode->PushMessage(NetMsgType::DSVIN, entry);
     }
 }
 

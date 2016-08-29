@@ -79,6 +79,12 @@ public:
         fHasSig(false),
         nSentTimes(0)
         {}
+
+    CTxDSIn() :
+        CTxIn(),
+        fHasSig(false),
+        nSentTimes(0)
+        {}
 };
 
 /** Holds an mixing output
@@ -92,6 +98,11 @@ public:
         CTxOut(out),
         nSentTimes(0)
         {}
+
+    CTxDSOut() :
+        CTxOut(),
+        nSentTimes(0)
+        {}
 };
 
 // A clients transaction in the mixing pool
@@ -101,19 +112,37 @@ public:
     std::vector<CTxDSIn> vecTxDSIn;
     std::vector<CTxDSOut> vecTxDSOut;
     CTransaction txCollateral;
-    CAmount nAmount;
+    CAmount nAmount; // depreciated since 12.1, it's used for backwards compatibility only and can be removed with future protocol bump
     int64_t nTimeAdded; // time in UTC milliseconds
-    bool isSet;
 
     CDarkSendEntry() :
+        vecTxDSIn(std::vector<CTxDSIn>()),
+        vecTxDSOut(std::vector<CTxDSOut>()),
         txCollateral(CTransaction()),
         nAmount(0),
-        nTimeAdded(0),
-        isSet(false)
+        nTimeAdded(0)
         {}
 
-    /// Add entries to use for mixing
-    bool Add(const std::vector<CTxIn> vecTxIn, CAmount nAmount, const CTransaction txCollateral, const std::vector<CTxOut> vecTxOut);
+    CDarkSendEntry(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
+        txCollateral(txCollateral),
+        nAmount(0),
+        nTimeAdded(GetTime())
+    {
+        BOOST_FOREACH(CTxIn txin, vecTxIn)
+            vecTxDSIn.push_back(txin);
+        BOOST_FOREACH(CTxOut txout, vecTxOut)
+            vecTxDSOut.push_back(txout);
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vecTxDSIn);
+        READWRITE(nAmount);
+        READWRITE(txCollateral);
+        READWRITE(vecTxDSOut);
+    }
 
     bool AddScriptSig(const CTxIn& txin);
 
@@ -301,7 +330,7 @@ private:
     CMutableTransaction finalMutableTransaction; // the finalized transaction ready for signing
 
     /// Add a clients entry to the pool
-    bool AddEntry(const std::vector<CTxIn>& vecTxInNew, const CAmount nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& vecTxOutNew, int& nErrorID);
+    bool AddEntry(const CDarkSendEntry& entryNew, int& nErrorIDRet);
     /// Add signature to a txin
     bool AddScriptSig(const CTxIn& txin);
 
@@ -326,7 +355,7 @@ private:
     int GetMaxPoolTransactions() { return Params().PoolMaxTransactions(); }
 
     /// Are these outputs compatible with other client in the pool?
-    bool IsOutputsCompatibleWithSessionDenom(const std::vector<CTxOut>& vecTxOut);
+    bool IsOutputsCompatibleWithSessionDenom(const std::vector<CTxDSOut>& vecTxDSOut);
     /// Is this nDenom compatible with other client in the pool?
     bool IsDenomCompatibleWithSession(int nDenom, CTransaction txCollateral, int &nErrorID);
 
@@ -364,7 +393,7 @@ private:
     void RelayFinalTransaction(const CTransaction& txFinal);
     void RelaySignaturesAnon(std::vector<CTxIn>& vin);
     void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
-    void RelayIn(const std::vector<CTxDSIn>& vin, const CAmount& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
+    void RelayIn(const CDarkSendEntry& entry);
     void RelayStatus(int nErrorID=MSG_NOERR);
     void RelayCompletedTransaction(bool fError, int nErrorID);
 
