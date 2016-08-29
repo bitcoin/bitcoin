@@ -207,6 +207,12 @@ public:
 
     /// Is this queue expired?
     bool IsExpired() { return GetTime() - nTime > DARKSEND_QUEUE_TIMEOUT; }
+
+    std::string ToString()
+    {
+        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, masternode=%s",
+                        nDenom, nTime, fReady ? "true" : "false", vin.prevout.ToStringShort());
+    }
 };
 
 /** Helper class to store mixing transaction (tx) information.

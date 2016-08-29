@@ -108,7 +108,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             }
 
             if(nState == POOL_STATE_QUEUE) {
-                LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSQUEUE -- PrivateSend queue is ready on masternode %s\n", addr.ToString());
+                LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), addr.ToString());
                 PrepareDenominate();
             }
         } else {
@@ -126,7 +126,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             pmn->nLastDsq = mnodeman.nDsqCount;
             pmn->allowFreeTx = true;
 
-            LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSQUEUE -- new PrivateSend queue object from masternode %s\n", addr.ToString());
+            LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), addr.ToString());
             vecDarksendQueue.push_back(dsq);
             dsq.Relay();
             dsq.nTime = GetTime();
@@ -745,14 +745,12 @@ void CDarksendPool::ChargeRandomFees()
 void CDarksendPool::CheckTimeout()
 {
     // check mixing queue objects for timeouts
-    int c = 0;
     std::vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
     while(it != vecDarksendQueue.end()) {
         if((*it).IsExpired()) {
-            LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Removing expired queue entry: %d\n", c);
+            LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Removing expired queue (%s)\n", (*it).ToString());
             it = vecDarksendQueue.erase(it);
         } else ++it;
-        c++;
     }
 
     if(!fEnablePrivateSend && !fMasterNode) return;
@@ -779,7 +777,7 @@ void CDarksendPool::CheckTimeout()
     if(!fMasterNode) nLagTime = 10000; //if we're the client, give the server a few extra seconds before resetting.
 
     if(nState == POOL_STATE_ACCEPTING_ENTRIES || nState == POOL_STATE_QUEUE) {
-        c = 0;
+        int c = 0;
 
         // check for a timeout and reset if needed
         std::vector<CDarkSendEntry>::iterator it2 = vecEntries.begin();
@@ -834,6 +832,7 @@ void CDarksendPool::CheckForCompleteQueue()
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
         CDarksendQueue dsq(nSessionDenom, activeMasternode.vin, GetTime(), true);
+        LogPrint("privatesend", "CDarksendPool::CheckForCompleteQueue -- queue is ready, signing and relaying (%s)\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay();
     }
@@ -1536,6 +1535,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             }
             if(fUsed) continue;
 
+            LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating -- found valid queue: %s\n", dsq.ToString());
+
             std::vector<CTxIn> vecTxInTmp;
             std::vector<COutput> vCoinsTmp;
             // Try to match their denominations if possible
@@ -1904,6 +1905,7 @@ bool CDarksendPool::IsDenomCompatibleWithSession(int nDenom, CTransaction txColl
         if(!fUnitTest) {
             //broadcast that I'm accepting entries, only if it's the first entry through
             CDarksendQueue dsq(nDenom, activeMasternode.vin, GetTime(), false);
+            LogPrint("privatesend", "CDarksendPool::IsDenomCompatibleWithSession -- signing and relaying new queue: %s\n", dsq.ToString());
             dsq.Sign();
             dsq.Relay();
         }
@@ -2145,7 +2147,7 @@ bool CDarksendQueue::Sign()
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
 
     if(!darkSendSigner.SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
-        LogPrintf("CDarksendQueue::Sign -- SignMessage() failed\n");
+        LogPrintf("CDarksendQueue::Sign -- SignMessage() failed, %s\n", ToString());
         return false;
     }
 
@@ -2161,7 +2163,7 @@ bool CDarksendQueue::CheckSignature()
     std::string strError = "";
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
-        LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature, vin=%s, error: %s\n", vin.ToString(), strError);
+        LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature: %s; error: %s\n", ToString(), strError);
         return false;
     }
 
