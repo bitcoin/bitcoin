@@ -2231,7 +2231,7 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-static CCheckQueue<CScriptCheck, MAX_SCRIPTCHECKS, MAX_SCRIPTCHECK_THREADS> scriptcheckqueue;
+static CCheckQueue<CScriptCheck> scriptcheckqueue;
 void StopCCheckQueue() {
     LogPrintf("Shutting down CCheckQueue\n");
     scriptcheckqueue.quit();
