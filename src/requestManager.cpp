@@ -22,6 +22,10 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
 #include <inttypes.h>
 
 
@@ -77,13 +81,13 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
 
   if (item.obj.type == MSG_TX)
     {
-    if (sendIter == itemIt) ++sendIter;
-    mapTxnInfo.erase(itemIt);
+      if (sendIter == itemIt) ++sendIter;
+      mapTxnInfo.erase(itemIt);
     }
   else
     {
-    if (sendBlkIter == itemIt) ++sendBlkIter;    
-    mapBlkInfo.erase(itemIt);
+      if (sendBlkIter == itemIt) ++sendBlkIter;    
+      mapBlkInfo.erase(itemIt);
     }
 }
 
@@ -106,10 +110,6 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 	  pendingTxns+=1;
 	  // all other fields are zeroed on creation
 	}
-      else  // existing
-	{
-	}
-
       data.priority = max(priority,data.priority);
       // Got the data, now add the node as a source
       data.AddSource(from);
@@ -132,7 +132,6 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
   else
     {
       assert(!"TBD");
-      // from->firstBlock += 1;
     }
 
 }
@@ -318,7 +317,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
   // not a direct successor.
   if (IsChainNearlySyncd()) // only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
   {
-    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
+    LogPrint("thin", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
   }
 
@@ -386,7 +385,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	  vToFetch.push_back(inv2);
 	  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
 	  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
-	  LogPrint("req", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
 	}
       // BUIP010 Xtreme Thinblocks: end section
   }
@@ -428,7 +427,12 @@ void CRequestManager::SendRequests()
                 item.availableFrom.pop_front();
                 if (next.node != NULL)
                   {
-		    if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
+                    // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable.
+                    // We only check pingtime during IBD because we don't want to lock vNodes too often and when the chain is syncd, waiting
+                    // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can really slow down the process.
+                    //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking ping times we can include
+                    //   this filtering in all our requests for blocks and transactions.
+		    if (next.node->fDisconnect || (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node)))
 		      {
                         LOCK(cs_vNodes);
                         LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
@@ -563,3 +567,33 @@ void CRequestManager::SendRequests()
 
   cs_objDownloader.unlock();
 }
+
+bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
+{
+    // Calculate average ping time of all nodes
+    uint16_t nValidNodes = 0;
+    std::vector<uint64_t> vPingTimes;
+    LOCK(cs_vNodes);
+    BOOST_FOREACH (CNode* pnode, vNodes) {
+        if (!pnode->fDisconnect && pnode->nPingUsecTime > 0) {
+            nValidNodes++;
+            vPingTimes.push_back(pnode->nPingUsecTime);
+        }
+    }
+    if (nValidNodes == 1) return true;
+
+    // Calculate Standard Deviation and Mean of Ping Time
+    using namespace boost::accumulators;
+    accumulator_set<double, stats<tag::variance> > acc;
+    acc = for_each(vPingTimes.begin(), vPingTimes.end(), acc);
+    double nMean = mean(acc);
+    double sDeviation = sqrt(variance(acc));
+
+    // If node ping time is greater than the average plus 2 times the standard deviation, or
+    // the pong has not been received, then do not request from this node.
+    if ((pfrom->nPingUsecTime > (int64_t)(nMean + (2 * sDeviation))) || (pfrom->nPingUsecTime == 0)) {
+        return false;
+    }
+    return true;
+}
+
