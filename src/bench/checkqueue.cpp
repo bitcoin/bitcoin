@@ -19,7 +19,7 @@ static void CCheckQueueSpeed(benchmark::State& state)
     };
     typedef CCheckQueue<FakeJobNoWork, (size_t)100000, MAX_SCRIPTCHECK_THREADS> T;
     auto fast_queue = std::unique_ptr<T>(new T());
-    fast_queue->init(GetNumCores());
+    fast_queue->init(std::max(2, GetNumCores()));
     while (state.KeepRunning()) {
         size_t total = 0;
         {
