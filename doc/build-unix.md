@@ -293,9 +293,10 @@ These steps can be performed on, for example, an Ubuntu VM. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
 
-First install the toolchain:
+Make sure you install the build requirements mentioned above.
+Then, install the toolchain and curl:
 
-    sudo apt-get install g++-arm-linux-gnueabihf
+    sudo apt-get install g++-arm-linux-gnueabihf curl
 
 To build executables for ARM:
 
