@@ -89,7 +89,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
         }
 
         // triggered but invalid? that's weird
-        if(sporkManager.IsSporkActive(SPORK_9_MASTERNODE_SUPERBLOCK_ENFORCEMENT)) {
+        if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
             LogPrintf("IsBlockValueValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, block.vtx[0].ToString());
             // should NOT allow invalid superblocks, when superblock enforcement is enabled
             return false;
@@ -155,7 +155,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
             return true;
         }
 
-        if(sporkManager.IsSporkActive(SPORK_9_MASTERNODE_SUPERBLOCK_ENFORCEMENT)) {
+        if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
             LogPrintf("IsBlockPayeeValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, txNew.ToString());
             // should NOT allow such superblocks, when superblock enforcement is enabled
             return false;
@@ -187,7 +187,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
-    if(sporkManager.IsSporkActive(SPORK_9_MASTERNODE_SUPERBLOCK_ENFORCEMENT) &&
+    if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED) &&
         CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             LogPrint("gobject", "FillBlockPayments -- triggered superblock creation at height %d\n", nBlockHeight);
             CSuperblockManager::CreateSuperblock(txNew, nBlockHeight, voutSuperblockRet);
