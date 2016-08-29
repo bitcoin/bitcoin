@@ -1631,6 +1631,122 @@
     "SIG_HIGH_S",
     "P2PK with high S"
 ],
+
+["Testing LOW_S with special R and S values using CHECKSIG NOT"],
+[
+    "0x29 0x3026022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002010101",
+    "0 CHECKSIG NOT",
+    "LOW_S,DERSIG",
+    "OK",
+    "The lowest valid S value"
+],
+[
+    "0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a001",
+    "0 CHECKSIG NOT",
+    "LOW_S,DERSIG",
+    "OK",
+    "The highest valid S value"
+],
+[
+    "0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a101",
+    "0 CHECKSIG NOT",
+    "LOW_S,DERSIG",
+    "SIG_HIGH_S",
+    "The lowest invalid S value"
+],
+[
+    "0x49 0x3046022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414001",
+    "0 CHECKSIG NOT",
+    "LOW_S,DERSIG",
+    "SIG_HIGH_S",
+    "The highest invalid S value"
+],
+[
+    "0x49 0x3046022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414101",
+    "0 CHECKSIG NOT",
+    "LOW_S,DERSIG",
+    "OK",
+    "LOW_S rule does not apply to out-of-range S value"
+],
+[
+    "0x49 0x3046022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414001",
+    "0 CHECKSIG NOT",
+    "LOW_S,DERSIG",
+    "OK",
+    "LOW_S rule does not apply if R is out-of-range"
+],
+[
+    "0 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a001 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a101",
+    "2 0 0 2 CHECKMULTISIG NOT",
+    "LOW_S,DERSIG",
+    "SIG_HIGH_S",
+    "The top signature is detected as HIGH_S"
+],
+[
+    "0 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a101 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a001",
+    "2 0 0 2 CHECKMULTISIG NOT",
+    "LOW_S,DERSIG",
+    "OK",
+    "The top signature fails so the other signature is not detected as HIGH_S"
+],
+["Repeating tests without LOW_S flag"],
+[
+    "0x29 0x3026022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002010101",
+    "0 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "The lowest valid S value"
+],
+[
+    "0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a001",
+    "0 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "The highest valid S value"
+],
+[
+    "0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a101",
+    "0 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "The lowest invalid S value (not fail without LOW_S flag)"
+],
+[
+    "0x49 0x3046022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414001",
+    "0 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "The highest invalid S value (not fail without LOW_S flag)"
+],
+[
+    "0x49 0x3046022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414101",
+    "0 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "Out-of-range S value is valid with or without LOW_S flag"
+],
+[
+    "0x49 0x3046022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414001",
+    "0 CHECKSIG NOT",
+    "DERSIG",
+    "OK",
+    "If R is out-of-range, high S value is valid with or without LOW_S flag"
+],
+[
+    "0 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a001 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a101",
+    "2 0 0 2 CHECKMULTISIG NOT",
+    "DERSIG",
+    "OK",
+    "The top signature has high S (not fail without LOW_S flag)"
+],
+[
+    "0 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a101 0x48 0x3045022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414002207fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a001",
+    "2 0 0 2 CHECKMULTISIG NOT",
+    "DERSIG",
+    "OK",
+    "The top signature fails so the other signature is not processed anyway"
+],
+
 [
     "0x47 0x3044022057292e2d4dfe775becdd0a9e6547997c728cdf35390f6a017da56d654d374e4902206b643be2fc53763b4e284845bfea2c597d2dc7759941dce937636c9d341b71ed01",
     "0x41 0x0679be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG",
