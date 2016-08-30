@@ -45,6 +45,9 @@ Scripts and notes for Mac builds.
 ### [RPM](/contrib/rpm) ###
 RPM spec file for building bitcoin-core on RPM based distributions
 
+### [Gitian-build](/contrib/gitian-build.sh) ###
+Script for running full gitian builds.
+
 Test and Verify Tools 
 ---------------------
 
