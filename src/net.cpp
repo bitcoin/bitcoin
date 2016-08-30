@@ -114,7 +114,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
-boost::condition_variable messageHandlerCondition;
+std::condition_variable messageHandlerCondition;
 
 // Signals for message handling
 static CNodeSignals g_signals;
@@ -1910,8 +1910,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSem
 
 void ThreadMessageHandler()
 {
-    boost::mutex condition_mutex;
-    boost::unique_lock<boost::mutex> lock(condition_mutex);
+    std::mutex condition_mutex;
+    std::unique_lock<std::mutex> lock(condition_mutex);
 
     while (true)
     {
@@ -1966,7 +1966,7 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
+            messageHandlerCondition.wait_for(lock, std::chrono::milliseconds(100), []()->bool {return net_interrupted; });
     }
 }
 
