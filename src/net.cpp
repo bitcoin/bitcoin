@@ -1115,7 +1115,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
-    while (true)
+    while (!net_interrupted)
     {
         //
         // Disconnect nodes
@@ -1246,7 +1246,8 @@ void ThreadSocketHandler()
 
         int nSelect = select(have_fds ? hSocketMax + 1 : 0,
                              &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-        interruption_point(net_interrupted);
+        if(net_interrupted)
+            break;
 
         if (nSelect == SOCKET_ERROR)
         {
@@ -1285,7 +1286,8 @@ void ThreadSocketHandler()
         }
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
-            interruption_point(net_interrupted);
+            if(net_interrupted)
+                break;
 
             //
             // Receive
@@ -1688,7 +1690,8 @@ void ThreadOpenConnections()
         InterruptibleSleep(500);
 
         CSemaphoreGrant grant(*semOutbound);
-        interruption_point(net_interrupted);
+        if(net_interrupted)
+            break;
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
         if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
@@ -1913,7 +1916,7 @@ void ThreadMessageHandler()
     std::mutex condition_mutex;
     std::unique_lock<std::mutex> lock(condition_mutex);
 
-    while (true)
+    while (!net_interrupted)
     {
         std::vector<CNode*> vNodesCopy;
         {
@@ -1948,7 +1951,8 @@ void ThreadMessageHandler()
                     }
                 }
             }
-            interruption_point(net_interrupted);
+            if(net_interrupted)
+                break;
 
             // Send messages
             {
@@ -1956,7 +1960,8 @@ void ThreadMessageHandler()
                 if (lockSend)
                     GetNodeSignals().SendMessages(pnode);
             }
-            interruption_point(net_interrupted);
+            if(net_interrupted)
+                break;
         }
 
         {
