@@ -41,8 +41,8 @@ Run all possible tests with
 
     qa/pull-tester/rpc-tests.py -extended
 
-By default, tests will be run in parallel if you want to specify how many
-tests should be run in parallel, append `-parallel=n` (default n=4).
+By default, tests will be run in parallel. To specify how many jobs to run,
+append `-parallel=n` (default n=4).
 
 If you want to create a basic coverage report for the rpc test suite, append `--coverage`.
 
