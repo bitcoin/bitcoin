@@ -792,13 +792,15 @@ UniValue verifychain(const UniValue& params, bool fHelp)
 {
     int nCheckLevel = GetArg("-checklevel", DEFAULT_CHECKLEVEL);
     int nCheckDepth = GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
-    if (fHelp || params.size() > 2)
+    int nCheckMaxTx = GetArg("-checkmaxtx", DEFAULT_CHECKMAXTX);
+    if (fHelp || params.size() > 3)
         throw runtime_error(
-            "verifychain ( checklevel numblocks )\n"
+            "verifychain ( checklevel numblocks maxnumtxs )\n"
             "\nVerifies blockchain database.\n"
             "\nArguments:\n"
             "1. checklevel   (numeric, optional, 0-4, default=" + strprintf("%d", nCheckLevel) + ") How thorough the block verification is.\n"
             "2. numblocks    (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
+            "3. maxnumtxs    (numeric, optional, default=" + strprintf("%d", nCheckMaxTx) + ", 0=unlimited) The maximal number of transactions to check.\n"
             "\nResult:\n"
             "true|false       (boolean) Verified or not\n"
             "\nExamples:\n"
@@ -812,8 +814,9 @@ UniValue verifychain(const UniValue& params, bool fHelp)
         nCheckLevel = params[0].get_int();
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
-
-    return CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth);
+    if (params.size() > 2)
+        nCheckMaxTx = params[2].get_int();
+    return CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth, nCheckMaxTx);
 }
 
 /** Implementation of IsSuperMajority with better feedback */

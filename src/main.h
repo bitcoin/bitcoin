@@ -191,8 +191,11 @@ extern uint64_t nPruneTarget;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of chainActive.Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 
-static const signed int DEFAULT_CHECKBLOCKS = MIN_BLOCKS_TO_KEEP;
+static const signed int DEFAULT_CHECKBLOCKS = MIN_BLOCKS_TO_KEEP / 2;
 static const unsigned int DEFAULT_CHECKLEVEL = 3;
+
+static const signed int MIN_BLOCK_TO_RESPECT_WITH_MAX_TX_CHECK = 6;
+static const unsigned int DEFAULT_CHECKMAXTX = 100000;
 
 // Require that user allocate at least 550MB for block & undo files (blk???.dat and rev???.dat)
 // At 1MB per block, 288 blocks = 288MB.
@@ -493,7 +496,7 @@ class CVerifyDB {
 public:
     CVerifyDB();
     ~CVerifyDB();
-    bool VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth);
+    bool VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth, int nTxCheckLimit);
 };
 
 /** Find the last common block between the parameter chain and a locator. */
