@@ -7,10 +7,9 @@
 
 #include <map>
 #include <string>
+#include <limits>
+#include <functional>
 
-#include <boost/function.hpp>
-#include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/stringize.hpp>
 
 // Simple micro-benchmarking framework; API mostly matches a subset of the Google Benchmark
 // framework (see https://github.com/google/benchmark)
@@ -53,7 +52,7 @@ namespace benchmark {
         bool KeepRunning();
     };
 
-    typedef boost::function<void(State&)> BenchFunction;
+    typedef std::function<void(State&)> BenchFunction;
 
     class BenchRunner
     {
@@ -67,7 +66,6 @@ namespace benchmark {
 }
 
 // BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo);
-#define BENCHMARK(n) \
-    benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
+#define BENCHMARK(n) benchmark::BenchRunner bench_ ## __LINE__ ## n(#n, n);
 
 #endif // BITCOIN_BENCH_BENCH_H
