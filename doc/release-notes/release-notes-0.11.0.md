@@ -25,7 +25,7 @@ Downgrade warning
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Unlimited or other software:
+backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -86,7 +86,7 @@ related to the blockchain in the bitcoin system: the raw blocks as received over
 the network (blk???.dat), the undo data (rev???.dat), the block index and the 
 UTXO set (both LevelDB databases). The databases are built from the raw data.
 
-Block pruning allows Bitcoin Unlimited to delete the raw block and undo data once 
+Block pruning allows Bitcoin Core to delete the raw block and undo data once 
 it's been validated and used to build the databases. At that point, the raw data 
 is used only to relay blocks to other nodes, to handle reorganizations, to look 
 up old transactions (if -txindex is enabled or via the RPC/REST interfaces), or 
@@ -95,7 +95,7 @@ all blocks in the blockchain.
 
 The user specifies how much space to allot for block & undo files. The minimum 
 allowed is 550MB. Note that this is in addition to whatever is required for the 
-block index and UTXO databases. The minimum was chosen so that Bitcoin Unlimited will 
+block index and UTXO databases. The minimum was chosen so that Bitcoin Core will 
 be able to maintain at least 288 blocks on disk (two days worth of blocks at 10 
 minutes per block). In rare instances it is possible that the amount of space 
 used will exceed the pruning target in order to keep the required last 288 

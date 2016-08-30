@@ -25,7 +25,7 @@ Downgrade warning
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Unlimited or other software:
+backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -82,7 +82,7 @@ permitted. Even BIP62 did not propose applying this rule to
 old version transactions, but conforming implementations have become
 much more common since BIP62 was initially written.
 
-Bitcoin Unlimited has produced compatible signatures since a28fb70e in
+Bitcoin Core has produced compatible signatures since a28fb70e in
 September 2013, but this didn't make it into a release until 0.9
 in March 2014; Bitcoinj has done so for a similar span of time.
 Bitcoinjs and electrum have been more recently updated.

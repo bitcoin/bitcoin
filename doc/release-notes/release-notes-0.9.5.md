@@ -24,7 +24,7 @@ Notable changes
 Mining and relay policy enhancements
 ------------------------------------
 
-Bitcoin Unlimited's block templates are now for version 3 blocks only, and any mining
+Bitcoin Core's block templates are now for version 3 blocks only, and any mining
 software relying on its `getblocktemplate` must be updated in parallel to use
 libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
 If you are solo mining, this will affect you the moment you upgrade Bitcoin

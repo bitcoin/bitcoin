@@ -3,7 +3,7 @@
 Using Bitcoin Unlimited for Mining
 ==================================
 
-Bitcoin Unlimited is based on the Satoshi codebase, so it is a drop in replacement for your mining pool software.  Simply configure your pool to point to the Bitcoin Unlimited daemon, in the exact same manner you would for the Bitcoin Unlimited daemon.
+Bitcoin Unlimited is based on the Satoshi codebase, so it is a drop in replacement for your mining pool software.  Simply configure your pool to point to the Bitcoin Unlimited daemon, in the exact same manner you would for the Bitcoin Core daemon.
 
 But Bitcoin Unlimited has specific features to facilitate mining.
 
@@ -28,7 +28,7 @@ bitcoin-cli getminercomment
 Setting your maximum mined block
 --------------------------------
 
-By default, the maximum block that Bitcoin Unlimited will mine is 1MB (compatible with Bitcoin Unlimited).
+By default, the maximum block that Bitcoin Unlimited will mine is 1MB (compatible with Bitcoin Core).
 You may want to increase this block size if the bitcoin network as a whole is willing to mine larger blocks, or you may want to decrease this size if you feel that the demands on the network is exceeding capacity.
 
 To change the largest block that Bitcoin Unlimited will generate, run:
