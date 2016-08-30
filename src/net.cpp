@@ -130,6 +130,16 @@ std::thread open_added_connections_thread;
 std::thread open_connections_thread;
 std::thread message_handler_thread;
 
+static void InterruptibleSleep(uint64_t n)
+{
+    bool ret = false;
+    {
+        std::unique_lock<std::mutex> lock(cs_net_interrupt);
+        ret = net_interrupt_cond.wait_for(lock, std::chrono::milliseconds(n), []()->bool{return net_interrupted; });
+    }
+    interruption_point(ret);
+};
+
 void AddOneShot(const std::string& strDest)
 {
     LOCK(cs_vOneShots);
@@ -1249,7 +1259,7 @@ void ThreadSocketHandler()
             }
             FD_ZERO(&fdsetSend);
             FD_ZERO(&fdsetError);
-            MilliSleep(timeout.tv_usec/1000);
+            InterruptibleSleep(timeout.tv_usec/1000);
         }
 
         //
@@ -1659,10 +1669,10 @@ void ThreadOpenConnections()
                 OpenNetworkConnection(addr, false, NULL, strAddr.c_str());
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
-                    MilliSleep(500);
+                    InterruptibleSleep(500);
                 }
             }
-            MilliSleep(500);
+            InterruptibleSleep(500);
         }
     }
 
@@ -1675,7 +1685,7 @@ void ThreadOpenConnections()
     {
         ProcessOneShot();
 
-        MilliSleep(500);
+        InterruptibleSleep(500);
 
         CSemaphoreGrant grant(*semOutbound);
         interruption_point(net_interrupted);
@@ -1858,11 +1868,11 @@ void ThreadOpenAddedConnections()
                 // OpenNetworkConnection can detect existing connections to that IP/port.
                 CService service(LookupNumeric(info.strAddedNode.c_str(), Params().GetDefaultPort()));
                 OpenNetworkConnection(CAddress(service, NODE_NONE), false, &grant, info.strAddedNode.c_str(), false);
-                MilliSleep(500);
+                InterruptibleSleep(500);
             }
         }
 
-        MilliSleep(120000); // Retry every 2 minutes
+        InterruptibleSleep(120000); // Retry every 2 minutes
     }
 }
 
