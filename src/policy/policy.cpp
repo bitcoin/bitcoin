@@ -279,7 +279,6 @@ void CDefaultPolicy::InitFromArgs(const std::map<std::string, std::string>& mapA
         minRelayFee = CFeeRate(nAmountFee);
     else
         throw std::runtime_error(strprintf(_("Invalid amount for %s=<amount>: %d"), "-minrelaytxfee", nAmountFee));
-    minRelayTxFee = minRelayFee; // TODO unify global minRelayTxFee
 }
 
 /** Factory and init help */
