@@ -59,11 +59,11 @@ Also, the first time you run a 0.8.x release on a 0.9 wallet it will rescan
 the blockchain for missing spent coins, which will take a long time (tens
 of minutes on a typical machine).
 
-Rebranding to Bitcoin Unlimited
+Rebranding to Bitcoin Core
 ---------------------------
 
 To reduce confusion between Bitcoin-the-network and Bitcoin-the-software we
-have renamed the reference client to Bitcoin Unlimited.
+have renamed the reference client to Bitcoin Core.
 
 
 OP_RETURN and data in the block chain
@@ -295,7 +295,7 @@ GUI:
 - Add Coin Control Features
 - Improve receive coins workflow: make the 'Receive' tab into a form to request
   payments, and move historical address list functionality to File menu.
-- Rebrand to `Bitcoin Unlimited`
+- Rebrand to `Bitcoin Core`
 - Move initialization/shutdown to a thread. This prevents "Not responding"
   messages during startup. Also show a window during shutdown.
 - Don't regenerate autostart link on every client startup
