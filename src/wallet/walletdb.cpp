@@ -20,6 +20,9 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
+#include <mutex>
+#include <condition_variable>
+
 using namespace std;
 
 static uint64_t nAccountingEntryNumber = 0;
@@ -849,6 +852,8 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
 }
 
 static std::atomic<bool> interrupt_flush_wallet;
+static std::condition_variable cond_flush_wallet;
+static std::mutex cs_flush_wallet;
 void ThreadFlushWalletDB(const string& strFile)
 {
     interrupt_flush_wallet = false;
@@ -865,9 +870,15 @@ void ThreadFlushWalletDB(const string& strFile)
     unsigned int nLastSeen = nWalletDBUpdated;
     unsigned int nLastFlushed = nWalletDBUpdated;
     int64_t nLastWalletUpdate = GetTime();
-    while (true)
+    while (!interrupt_flush_wallet)
     {
-        MilliSleep(500);
+        bool ret;
+        {
+            std::unique_lock<std::mutex> lock(cs_flush_wallet);
+            ret = cond_flush_wallet.wait_for(lock, std::chrono::milliseconds(500), []()->bool{return interrupt_flush_wallet; });
+        }
+        if(ret)
+            break;
 
         if (nLastSeen != nWalletDBUpdated)
         {
@@ -891,7 +902,8 @@ void ThreadFlushWalletDB(const string& strFile)
 
                 if (nRefCount == 0)
                 {
-                    interruption_point(interrupt_flush_wallet);
+                    if(interrupt_flush_wallet)
+                        break;
                     map<string, int>::iterator _mi = bitdb.mapFileUseCount.find(strFile);
                     if (_mi != bitdb.mapFileUseCount.end())
                     {
@@ -915,6 +927,7 @@ void ThreadFlushWalletDB(const string& strFile)
 void InterruptFlushWalletDB()
 {
     interrupt_flush_wallet = true;
+    cond_flush_wallet.notify_all();
 }
 
 //
