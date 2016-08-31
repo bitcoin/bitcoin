@@ -257,7 +257,8 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
     std::lock_guard<std::mutex> l(m);
     auto s = first_failure.str();
     if (s.size() != 0)
-        BOOST_TEST_ERROR(s);
+        BOOST_CHECK_MESSAGE(false, s);
+    
 }
 
 BOOST_AUTO_TEST_SUITE_END()
