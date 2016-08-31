@@ -22,7 +22,6 @@ packages:
 - "libz-dev"
 - "libbz2-dev"
 - "python-dev"
-- "python-pip"
 - "fonts-tuffy"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
@@ -31,10 +30,6 @@ remotes:
 files:
 - "MacOSX10.9.sdk.tar.gz"
 script: |
-  # FIXME: We should probably install these in some other (cachable) way, but the depends system doesn't appear to make native packages available to Core's build system itself?
-  pip install --user mac_alias ds_store
-  export PATH="$HOME/.local/bin:$PATH"
-
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-apple-darwin11"
   CONFIGFLAGS="--enable-reduce-exports GENISOIMAGE=$WRAP_DIR/genisoimage"
