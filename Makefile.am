@@ -3,6 +3,7 @@ SUBDIRS = src
 .PHONY: deploy FORCE
 
 GZIP_ENV="-9n"
+export PYTHONPATH
 
 if BUILD_BITCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
