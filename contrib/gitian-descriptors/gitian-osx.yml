@@ -5,7 +5,8 @@ suites:
 - "trusty"
 architectures:
 - "amd64"
-packages: 
+packages:
+- "ca-certificates"
 - "curl"
 - "g++"
 - "git-core"
@@ -22,12 +23,10 @@ packages:
 - "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
+- "python"
 - "python-dev"
 - "python-setuptools"
 - "fonts-tuffy"
-- "ca-certificates"
-- "python"
-reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/HOdlcoin/HOdlcoin.git"
   "dir": "hodlcoin"
