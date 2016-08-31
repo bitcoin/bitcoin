@@ -632,9 +632,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def test_compactblocks_not_at_tip(self, node, test_node):
         # Test that requesting old compactblocks doesn't work.
-        MAX_CMPCTBLOCK_DEPTH = 6
+        MAX_CMPCTBLOCK_DEPTH = 5
         new_blocks = []
-        for i in range(MAX_CMPCTBLOCK_DEPTH):
+        for i in range(MAX_CMPCTBLOCK_DEPTH + 1):
             test_node.clear_block_announcement()
             new_blocks.append(node.generate(1)[0])
             wait_until(test_node.received_block_announcement, timeout=30)
