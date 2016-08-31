@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet" clip-path="url(#clipPath)">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000pt" height="640pt" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet" clip-path="url(#clipPath)">
 	<!-- kate: space-indent off;
 	Copyright (c) 2011-2013 The Bitcoin Core developers
 	Distributed under the MIT software license, see the accompanying
@@ -23,11 +23,12 @@
 			<stop offset="100%" style="stop-color:rgb(150,150,150);stop-opacity:1" />
 		</linearGradient>
 		<clipPath id="clipPath">
-			<rect x="0" y="0" width="1000" height="640" />
+			<rect x="0" y="0" width="100%" height="100%" />
 		</clipPath>
 	</defs>
 	<rect width="1000" height="640" style="fill:url(#gradient);stroke-width:0" />
-	<image overflow="hidden" width="1000" height="640" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAC8UAAAvJCAYAAACy3CU1AAAACXBIWXMAAC4jAAAuIwF4pT92AAAA
+	<g transform="translate(0,0) scale(1)">
+		<image overflow="hidden" width="1000" height="640" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAC8UAAAvJCAYAAACy3CU1AAAACXBIWXMAAC4jAAAuIwF4pT92AAAA
 GXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAjEV5JREFUeNrs3cuT3Vh+J/ZzANxH
 vkgmWVVdJbU0bU24LYcjbC0sb0fLWXqj2Uqr+R+805/h8MraezPezU6elR1hh0bhCGs0jgn3qKM1
 /a4Hmcyb9wI4xsHrIslkqVpqVmcmP58KFH557sEBLjIX4OU3fwwBAAAAAAAAAAAAAAAAAAAAAAAA
@@ -40349,12 +40350,13 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA
 4/r/Aaux3j6mxDc+AAAAAElFTkSuQmCC" transform="matrix(1.2 0 0 1.2 320 -100)">
-	</image>
-	<path fill="#FFFFFF" fill-opacity="0.5" stroke="#000000" stroke-width="2" stroke-miterlimit="10" d="M81.96,142
-	H911.96 c 10,0 10,10 10,10
-	V482.00 c 0,10 -10,10 -10,10 
-	H081.96 c -10,0 -10,-10 -10,-10
-	V152.00 c 0,-10 10,-10, 10,-10z"/>
+		</image>
+		<path fill="#FFFFFF" fill-opacity="0.5" stroke="#000000" stroke-width="2" stroke-miterlimit="10" d="M81.96,142
+		H911.96 c 10,0 10,10 10,10
+		V482.00 c 0,10 -10,10 -10,10 
+		H081.96 c -10,0 -10,-10 -10,-10
+		V152.00 c 0,-10 10,-10, 10,-10z"/>
+	</g>
 	<g transform="translate(500,0) scale(0.9, 1)">
 		<text x="0" y="114">PACKAGE_NAME</text>
 	</g>
