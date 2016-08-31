@@ -3773,7 +3773,6 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
       }
 
     LogPrint("thin", "Processing new block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom ? pfrom->addrName.c_str():"myself",pfrom ? pfrom->id: 0);
-    if (!IsInitialBlockDownload()) SendExpeditedBlock(*pblock,pfrom);
     
     {
         LOCK(cs_main);
@@ -5895,7 +5894,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         pfrom->AddInventoryKnown(inv);
         
-        if (IsChainNearlySyncd()) SendExpeditedBlock(block); // BU send the received block out right away
+        if (IsChainNearlySyncd()) SendExpeditedBlock(block, pfrom); // BU send the received block out right away
         requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
