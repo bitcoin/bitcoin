@@ -24,7 +24,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/thread.hpp>
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -47,7 +46,7 @@ BasicTestingSetup::~BasicTestingSetup()
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
-    const CChainParams& chainparams = Params();
+        const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
         RegisterAllCoreRPCCommands(tableRPC);
@@ -66,16 +65,14 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
             BOOST_CHECK(ok);
         }
         nScriptCheckThreads = 3;
-        for (int i=0; i < nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
+        SetupCCheckQueue(nScriptCheckThreads);
         RegisterNodeSignals(GetNodeSignals());
 }
 
 TestingSetup::~TestingSetup()
 {
         UnregisterNodeSignals(GetNodeSignals());
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
+        StopCCheckQueue();
         UnloadBlockIndex();
         delete pcoinsTip;
         delete pcoinsdbview;

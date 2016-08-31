@@ -1973,15 +1973,13 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 }
 }// namespace Consensus
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::function<void (CScriptCheck &&)> emplacer)
 {
     if (!tx.IsCoinBase())
     {
         if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
             return false;
 
-        if (pvChecks)
-            pvChecks->reserve(tx.vin.size());
 
         // The first loop above does all the inexpensive checks.
         // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
@@ -2000,11 +1998,12 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 assert(coins);
 
                 // Verify signature
-                CScriptCheck check(*coins, tx, i, flags, cacheStore);
-                if (pvChecks) {
-                    pvChecks->push_back(CScriptCheck());
-                    check.swap(pvChecks->back());
-                } else if (!check()) {
+                if (emplacer) {
+                    emplacer(CScriptCheck(*coins, tx, i, flags, cacheStore));
+                    continue;
+                }
+                CScriptCheck check = CScriptCheck(*coins, tx, i, flags, cacheStore);
+                if (!check()) {
                     if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                         // Check whether the failure was caused by a
                         // non-mandatory script verification check, such as
@@ -2027,6 +2026,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
+
         }
     }
 
@@ -2235,12 +2235,14 @@ void static FlushBlockFile(bool fFinalize = false)
 
 bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigned int nAddSize);
 
-static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-
-void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
-    scriptcheckqueue.Thread();
-}
+static CCheckQueue<CScriptCheck> scriptcheckqueue;
+void StopCCheckQueue() {
+    LogPrintf("Shutting down CCheckQueue\n");
+    scriptcheckqueue.quit();
+};
+void SetupCCheckQueue(size_t RT_N_SCRIPTCHECK_THREADS) {
+    scriptcheckqueue.init(MAX_SCRIPTCHECKS, RT_N_SCRIPTCHECK_THREADS);
+};
 
 // Protected by cs_main
 VersionBitsCache versionbitscache;
@@ -2398,7 +2400,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CBlockUndo blockundo;
 
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
+    CCheckQueueControl<decltype(scriptcheckqueue)> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : nullptr);
 
     std::vector<uint256> vOrphanErase;
     std::vector<int> prevheights;
@@ -2459,12 +2461,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         {
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
-            std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+
+            bool result = false;
+            if (control) {
+                // Must be this way to make sure destructor only gets called once.
+                auto emplacer = control.get_emplacer();
+                result = CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, std::ref(emplacer));
+            } else
+                result = CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults);
+            if (!result)
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                    tx.GetHash().ToString(), FormatStateMessage(state));
-            control.Add(vChecks);
+                        tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
         CTxUndo undoDummy;

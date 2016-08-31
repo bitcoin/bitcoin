@@ -12,7 +12,6 @@
 #include "txmempool.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.
@@ -30,7 +29,6 @@ struct BasicTestingSetup {
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
     boost::filesystem::path pathTemp;
-    boost::thread_group threadGroup;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();

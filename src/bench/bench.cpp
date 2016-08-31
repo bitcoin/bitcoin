@@ -6,16 +6,15 @@
 
 #include <iostream>
 #include <iomanip>
-#include <sys/time.h>
 
+#include <chrono>
 using namespace benchmark;
 
 std::map<std::string, BenchFunction> BenchRunner::benchmarks;
 
 static double gettimedouble(void) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_usec * 0.000001 + tv.tv_sec;
+    std::chrono::duration<double> result {std::chrono::system_clock::now().time_since_epoch()};
+    return result.count();
 }
 
 BenchRunner::BenchRunner(std::string name, BenchFunction func)
