@@ -143,6 +143,7 @@ testScripts = [
     'importprunedfunds.py',
     'signmessages.py',
     'p2p-compactblocks.py',
+    'nulldummy.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
