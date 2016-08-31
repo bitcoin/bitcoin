@@ -1497,6 +1497,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl(threadGroup, scheduler);
 
+    SetNodeStartHeight(chainActive.Height());
     StartNode(threadGroup, scheduler);
 
     // ********************************************************* Step 12: finished

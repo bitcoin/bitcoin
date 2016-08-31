@@ -113,6 +113,8 @@ CCriticalSection cs_nLastNodeId;
 static CSemaphore *semOutbound = NULL;
 boost::condition_variable messageHandlerCondition;
 
+static std::atomic<int> nNodeStartHeight(0);
+
 // Signals for message handling
 static CNodeSignals g_signals;
 CNodeSignals& GetNodeSignals() { return g_signals; }
@@ -189,6 +191,11 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer)
     ret.nTime = GetAdjustedTime();
     return ret;
 }
+
+void SetNodeStartHeight(int nHeight)
+{
+    nNodeStartHeight.store(nHeight, std::memory_order_relaxed);
+};
 
 int GetnScore(const CService& addr)
 {
@@ -438,7 +445,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
         addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
-        CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
+        CNode* pnode = new CNode(nNodeStartHeight.load(std::memory_order_relaxed), hSocket, addrConnect, pszDest ? pszDest : "", false);
         pnode->AddRef();
 
         {
@@ -496,18 +503,16 @@ void CNode::CloseSocketDisconnect()
 
 void CNode::PushVersion()
 {
-    int nBestHeight = GetNodeSignals().GetHeight().get_value_or(0);
-
     int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService(), addr.nServices));
     CAddress addrMe = GetLocalAddress(&addr);
     GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     if (fLogIPs)
-        LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
+        LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nOurStartHeight, addrMe.ToString(), addrYou.ToString(), id);
     else
-        LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
+        LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nOurStartHeight, addrMe.ToString(), id);
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, strSubVersion, nBestHeight, ::fRelayTxes);
+                nLocalHostNonce, strSubVersion, nOurStartHeight, ::fRelayTxes);
 }
 
 
@@ -1077,7 +1082,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         }
     }
 
-    CNode* pnode = new CNode(hSocket, addr, "", true);
+    CNode* pnode = new CNode(nNodeStartHeight.load(std::memory_order_relaxed), hSocket, addr, "", true);
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
 
@@ -2111,7 +2116,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (pnodeLocalHost == NULL) {
         CNetAddr local;
         LookupHost("127.0.0.1", local, false);
-        pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices));
+        pnodeLocalHost = new CNode(nNodeStartHeight.load(std::memory_order_relaxed), INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices));
     }
 
     Discover(threadGroup);
@@ -2467,12 +2472,13 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
 unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
 unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
 
-CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
+CNode::CNode(int nOurStartHeightIn, SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
     addr(addrIn),
     nKeyedNetGroup(CalculateKeyedNetGroup(addrIn)),
     addrKnown(5000, 0.001),
-    filterInventoryKnown(50000, 0.000001)
+    filterInventoryKnown(50000, 0.000001),
+    nOurStartHeight(nOurStartHeightIn)
 {
     nServices = NODE_NONE;
     nServicesExpected = NODE_NONE;
