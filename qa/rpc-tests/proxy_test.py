@@ -1,7 +1,8 @@
-#!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 import socket
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
@@ -55,7 +56,7 @@ class ProxyTest(BitcoinTestFramework):
             self.conf3.unauth = True
             self.conf3.auth = True
         else:
-            print "Warning: testing without local IPv6 support"
+            print("Warning: testing without local IPv6 support")
 
         self.serv1 = Socks5Server(self.conf1)
         self.serv1.start()
