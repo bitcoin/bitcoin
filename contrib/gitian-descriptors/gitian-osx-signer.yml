@@ -5,7 +5,6 @@ suites:
 architectures:
 - "amd64"
 packages:
-- "libc6:i386"
 - "faketime"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
