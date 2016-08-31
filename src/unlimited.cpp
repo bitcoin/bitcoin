@@ -1419,7 +1419,7 @@ void ConnectToThinBlockNodes()
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
 {
-  if (IsThinBlocksEnabled() && pfrom->ThinBlockCapable() && (pfrom->nVersion >= EXPEDITED_VERSION))
+  if (pfrom->nVersion >= EXPEDITED_VERSION)
     {
       BOOST_FOREACH(string& strAddr, mapMultiArgs["-expeditedblock"]) 
         {
@@ -1441,12 +1441,26 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
           else
               strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
 
-	  if(strAddr == strListeningPeerIP) {
-              LogPrint("blk", "Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
-              pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t) EXPEDITED_BLOCKS));
-              xpeditedBlkUp.push_back(pfrom);
-              return true;
-          }
+	  if(strAddr == strListeningPeerIP)
+            {
+              if (!IsThinBlocksEnabled())
+                {
+                  LogPrintf("You do not have Thinblocks enabled.  You can not request expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+                  return false;
+                }
+              else if (!pfrom->ThinBlockCapable())
+                {
+                  LogPrintf("Thinblocks is not enabled on remote peer.  You can not request expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+                  return false;
+                }
+              else
+                {
+                  LogPrintf("Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+                  pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t) EXPEDITED_BLOCKS));
+                  xpeditedBlkUp.push_back(pfrom);
+                  return true;
+                }
+            }
         }
     }
   return false;
