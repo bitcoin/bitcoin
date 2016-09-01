@@ -135,7 +135,7 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *platformStyle, QWidget
     ui->treeWidget->setColumnWidth(COLUMN_AMOUNT, 100);
     ui->treeWidget->setColumnWidth(COLUMN_LABEL, 170);
     ui->treeWidget->setColumnWidth(COLUMN_ADDRESS, 190);
-    ui->treeWidget->setColumnWidth(COLUMN_DARKSEND_ROUNDS, 88);
+    ui->treeWidget->setColumnWidth(COLUMN_PRIVATESEND_ROUNDS, 88);
     ui->treeWidget->setColumnWidth(COLUMN_DATE, 80);
     ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 100);
     ui->treeWidget->setColumnWidth(COLUMN_PRIORITY, 100);
@@ -449,11 +449,11 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
             coinControl->Select(outpt);
             CTxIn vin(outpt);
             int rounds = pwalletMain->GetInputPrivateSendRounds(vin);
-            if(coinControl->useDarkSend && rounds < nPrivateSendRounds) {
+            if(coinControl->fUsePrivateSend && rounds < nPrivateSendRounds) {
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>PrivateSend will be disabled.</b><br><br>If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);
-                coinControl->useDarkSend = false;
+                coinControl->fUsePrivateSend = false;
             }
         }
 
@@ -623,8 +623,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (!CoinControlDialog::fSubtractFeeFromAmount)
                 nChange -= nPayFee;
 
-            // DS Fee = overpay
-            if(coinControl->useDarkSend && nChange > 0)
+            // PrivateSend Fee = overpay
+            if(coinControl->fUsePrivateSend && nChange > 0)
             {
                 nPayFee += nChange;
                 nChange = 0;
@@ -841,12 +841,12 @@ void CoinControlDialog::updateView()
             itemOutput->setText(COLUMN_DATE_INT64, strPad(QString::number(out.tx->GetTxTime()), 20, " "));
 
 
-            // ds+ rounds
+            // PrivateSend rounds
             CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
             int rounds = pwalletMain->GetInputPrivateSendRounds(vin);
 
-            if(rounds >= 0 || fDebug) itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString::number(rounds), 11, " "));
-            else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString(tr("n/a")), 11, " "));
+            if (rounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString::number(rounds), 11, " "));
+            else itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString(tr("n/a")), 11, " "));
 
 
             // confirmations

@@ -370,7 +370,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Received with");
     case TransactionRecord::RecvFromOther:
         return tr("Received from");
-    case TransactionRecord::RecvWithDarksend:
+    case TransactionRecord::RecvWithPrivateSend:
         return tr("Received via PrivateSend");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
@@ -380,15 +380,15 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::Generated:
         return tr("Mined");
 
-    case TransactionRecord::DarksendDenominate:
+    case TransactionRecord::PrivateSendDenominate:
         return tr("PrivateSend Denominate");
-    case TransactionRecord::DarksendCollateralPayment:
+    case TransactionRecord::PrivateSendCollateralPayment:
         return tr("PrivateSend Collateral Payment");
-    case TransactionRecord::DarksendMakeCollaterals:
+    case TransactionRecord::PrivateSendMakeCollaterals:
         return tr("PrivateSend Make Collateral Inputs");
-    case TransactionRecord::DarksendCreateDenominations:
+    case TransactionRecord::PrivateSendCreateDenominations:
         return tr("PrivateSend Create Denominations");
-    case TransactionRecord::Darksent:
+    case TransactionRecord::PrivateSend:
         return tr("PrivateSend");
 
     default:
@@ -403,7 +403,7 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     {
     case TransactionRecord::Generated:
         return QIcon(":/icons/" + theme + "/tx_mined");
-    case TransactionRecord::RecvWithDarksend:
+    case TransactionRecord::RecvWithPrivateSend:
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
         return QIcon(":/icons/" + theme + "/tx_input");
@@ -428,10 +428,10 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address) + watchAddress;
     case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::RecvWithDarksend:
+    case TransactionRecord::RecvWithPrivateSend:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
-    case TransactionRecord::Darksent:
+    case TransactionRecord::PrivateSend:
         return lookupAddress(wtx->address, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->address) + watchAddress;
@@ -449,18 +449,18 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
-    case TransactionRecord::Darksent:
-    case TransactionRecord::RecvWithDarksend:
+    case TransactionRecord::PrivateSend:
+    case TransactionRecord::RecvWithPrivateSend:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
     case TransactionRecord::SendToSelf:
-    case TransactionRecord::DarksendCreateDenominations:
-    case TransactionRecord::DarksendDenominate:
-    case TransactionRecord::DarksendMakeCollaterals:
-    case TransactionRecord::DarksendCollateralPayment:
+    case TransactionRecord::PrivateSendCreateDenominations:
+    case TransactionRecord::PrivateSendDenominate:
+    case TransactionRecord::PrivateSendMakeCollaterals:
+    case TransactionRecord::PrivateSendCollateralPayment:
         return COLOR_BAREADDRESS;
     default:
         break;

@@ -113,7 +113,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         }
 
         if(fAllFromMeDenom && fAllToMeDenom && nFromMe * nToMe) {
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::DarksendDenominate, "", -nDebit, nCredit));
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::PrivateSendDenominate, "", -nDebit, nCredit));
             parts.last().involvesWatchAddress = false;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe && fAllToMe)
@@ -129,7 +129,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
             if(mapValue["DS"] == "1")
             {
-                sub.type = TransactionRecord::Darksent;
+                sub.type = TransactionRecord::PrivateSend;
                 CTxDestination address;
                 if (ExtractDestination(wtx.vout[0].scriptPubKey, address))
                 {
@@ -149,9 +149,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     const CTxOut& txout = wtx.vout[nOut];
                     sub.idx = parts.size();
 
-                    if(wallet->IsCollateralAmount(txout.nValue)) sub.type = TransactionRecord::DarksendMakeCollaterals;
-                    if(wallet->IsDenominatedAmount(txout.nValue)) sub.type = TransactionRecord::DarksendCreateDenominations;
-                    if(nDebit - wtx.GetValueOut() == DARKSEND_COLLATERAL) sub.type = TransactionRecord::DarksendCollateralPayment;
+                    if(wallet->IsCollateralAmount(txout.nValue)) sub.type = TransactionRecord::PrivateSendMakeCollaterals;
+                    if(wallet->IsDenominatedAmount(txout.nValue)) sub.type = TransactionRecord::PrivateSendCreateDenominations;
+                    if(nDebit - wtx.GetValueOut() == PRIVATESEND_COLLATERAL) sub.type = TransactionRecord::PrivateSendCollateralPayment;
                 }
             }
 
@@ -199,7 +199,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
                 if(mapValue["DS"] == "1")
                 {
-                    sub.type = TransactionRecord::Darksent;
+                    sub.type = TransactionRecord::PrivateSend;
                 }
 
                 CAmount nValue = txout.nValue;

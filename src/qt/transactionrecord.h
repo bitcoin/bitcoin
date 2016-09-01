@@ -80,12 +80,12 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        RecvWithDarksend,
-        DarksendDenominate,
-        DarksendCollateralPayment,
-        DarksendMakeCollaterals,
-        DarksendCreateDenominations,
-        Darksent
+        RecvWithPrivateSend,
+        PrivateSendDenominate,
+        PrivateSendCollateralPayment,
+        PrivateSendMakeCollaterals,
+        PrivateSendCreateDenominations,
+        PrivateSend
     };
 
     /** Number of confirmation recommended for accepting a transaction */

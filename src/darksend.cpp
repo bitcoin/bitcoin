@@ -209,7 +209,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
                 }
             }
 
-            if(nValueIn > DARKSEND_POOL_MAX) {
+            if(nValueIn > PRIVATESEND_POOL_MAX) {
                 LogPrintf("CDarksendPool::ProcessMessage -- DSVIN -- more than PrivateSend pool max! nValueIn: %lld, tx=%s", nValueIn, tx.ToString());
                 nErrorID = ERR_MAXIMUM;
                 pfrom->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, nErrorID);
@@ -598,8 +598,8 @@ void CDarksendPool::CheckFinalTransaction()
 //
 // Charge clients a fee if they're abusive
 //
-// Why bother? Darksend uses collateral to ensure abuse to the process is kept to a minimum.
-// The submission and signing stages in Darksend are completely separate. In the cases where
+// Why bother? PrivateSend uses collateral to ensure abuse to the process is kept to a minimum.
+// The submission and signing stages are completely separate. In the cases where
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a hault.
 //
@@ -795,12 +795,12 @@ void CDarksendPool::CheckTimeout()
             c++;
         }
 
-        if(GetTimeMillis() - nLastTimeChanged >= DARKSEND_QUEUE_TIMEOUT*1000 + nLagTime) {
+        if(GetTimeMillis() - nLastTimeChanged >= PRIVATESEND_QUEUE_TIMEOUT*1000 + nLagTime) {
             UnlockCoins();
             SetNull();
         }
-    } else if(GetTimeMillis() - nLastTimeChanged >= DARKSEND_QUEUE_TIMEOUT*1000 + nLagTime) {
-        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session timed out (%ds) -- resetting\n", DARKSEND_QUEUE_TIMEOUT);
+    } else if (GetTimeMillis() - nLastTimeChanged >= PRIVATESEND_QUEUE_TIMEOUT*1000 + nLagTime) {
+        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session timed out (%ds) -- resetting\n", PRIVATESEND_QUEUE_TIMEOUT);
         UnlockCoins();
         SetNull();
 
@@ -808,8 +808,8 @@ void CDarksendPool::CheckTimeout()
         strLastMessage = _("Session timed out.");
     }
 
-    if(nState == POOL_STATE_SIGNING && GetTimeMillis() - nLastTimeChanged >= DARKSEND_SIGNING_TIMEOUT*1000 + nLagTime) {
-        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session timed out (%ds) -- restting\n", DARKSEND_SIGNING_TIMEOUT);
+    if(nState == POOL_STATE_SIGNING && GetTimeMillis() - nLastTimeChanged >= PRIVATESEND_SIGNING_TIMEOUT*1000 + nLagTime) {
+        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session timed out (%ds) -- restting\n", PRIVATESEND_SIGNING_TIMEOUT);
         ChargeFees();
         UnlockCoins();
         SetNull();
@@ -913,8 +913,8 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral)
         return false;
     }
 
-    //collateral transactions are required to pay out DARKSEND_COLLATERAL as a fee to the miners
-    if(nValueIn - nValueOut < DARKSEND_COLLATERAL) {
+    //collateral transactions are required to pay out PRIVATESEND_COLLATERAL as a fee to the miners
+    if(nValueIn - nValueOut < PRIVATESEND_COLLATERAL) {
         LogPrint("privatesend", "CDarksendPool::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s", nValueOut - nValueIn, txCollateral.ToString());
         return false;
     }
@@ -1396,9 +1396,10 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 
     CAmount nLowestDenom = vecPrivateSendDenominations.back();
     // if there are no confirmed DS collateral inputs yet
-    if(!pwalletMain->HasCollateralInputs())
+    if(!pwalletMain->HasCollateralInputs()) {
         // should have some additional amount for them
-        nLowestDenom += DARKSEND_COLLATERAL*4;
+        nLowestDenom += PRIVATESEND_COLLATERAL*4;
+    }
 
     CAmount nBalanceNeedsAnonymized = pwalletMain->GetNeedsToBeAnonymizedBalance(nLowestDenom);
 
@@ -1689,7 +1690,7 @@ bool CDarksendPool::MakeCollateralAmounts(const CompactTallyItem& tallyItem)
     assert(reservekeyCollateral.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
     scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
 
-    vecSend.push_back((CRecipient){scriptCollateral, DARKSEND_COLLATERAL*4, false});
+    vecSend.push_back((CRecipient){scriptCollateral, PRIVATESEND_COLLATERAL*4, false});
 
     // try to use non-denominated and not mn-like funds first, select them explicitly
     CCoinControl coinControl;
@@ -1754,7 +1755,7 @@ bool CDarksendPool::CreateDenominated(const CompactTallyItem& tallyItem)
 {
     std::vector<CRecipient> vecSend;
     CAmount nValueLeft = tallyItem.nAmount;
-    nValueLeft -= DARKSEND_COLLATERAL; // leave some room for fees
+    nValueLeft -= PRIVATESEND_COLLATERAL; // leave some room for fees
 
     LogPrintf("CreateDenominated0 nValueLeft: %f\n", (float)nValueLeft/COIN);
     // make our collateral address
@@ -1768,8 +1769,8 @@ bool CDarksendPool::CreateDenominated(const CompactTallyItem& tallyItem)
     // ****** Add collateral outputs ************ /
 
     if(!pwalletMain->HasCollateralInputs()) {
-        vecSend.push_back((CRecipient){scriptCollateral, DARKSEND_COLLATERAL*4, false});
-        nValueLeft -= DARKSEND_COLLATERAL*4;
+        vecSend.push_back((CRecipient){scriptCollateral, PRIVATESEND_COLLATERAL*4, false});
+        nValueLeft -= PRIVATESEND_COLLATERAL*4;
     }
 
     // ****** Add denoms ************ /
@@ -2299,7 +2300,7 @@ void ThreadCheckDarkSendPool()
     RenameThread("dash-privatesend");
 
     unsigned int nTick = 0;
-    unsigned int nDoAutoNextRun = nTick + DARKSEND_AUTO_TIMEOUT_MIN;
+    unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
 
     while (true)
     {
@@ -2330,7 +2331,7 @@ void ThreadCheckDarkSendPool()
             if(nDoAutoNextRun == nTick) {
                 if(darkSendPool.GetState() == POOL_STATE_IDLE)
                     darkSendPool.DoAutomaticDenominating();
-                nDoAutoNextRun = nTick + DARKSEND_AUTO_TIMEOUT_MIN + insecure_rand()%(DARKSEND_AUTO_TIMEOUT_MAX - DARKSEND_AUTO_TIMEOUT_MIN);
+                nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + insecure_rand()%(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
             }
         }
     }

@@ -30,16 +30,16 @@ static const int MASTERNODE_REJECTED                = 0;
 static const int MASTERNODE_RESET                   = -1;
 
 // timeouts
-static const int DARKSEND_AUTO_TIMEOUT_MIN          = 5;
-static const int DARKSEND_AUTO_TIMEOUT_MAX          = 15;
-static const int DARKSEND_QUEUE_TIMEOUT             = 30;
-static const int DARKSEND_SIGNING_TIMEOUT           = 15;
+static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 5;
+static const int PRIVATESEND_AUTO_TIMEOUT_MAX       = 15;
+static const int PRIVATESEND_QUEUE_TIMEOUT          = 30;
+static const int PRIVATESEND_SIGNING_TIMEOUT        = 15;
 
 //! minimum peer version accepted by DarksendPool
 static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70201;
 
-static const CAmount DARKSEND_COLLATERAL            = 0.01 * COIN;
-static const CAmount DARKSEND_POOL_MAX              = 999.99 * COIN;
+static const CAmount PRIVATESEND_COLLATERAL         = 0.01 * COIN;
+static const CAmount PRIVATESEND_POOL_MAX           = 999.99 * COIN;
 static const int DENOMS_COUNT_MAX                   = 100;
 
 static const int DEFAULT_PRIVATESEND_ROUNDS         = 2;
@@ -146,7 +146,7 @@ public:
 
     bool AddScriptSig(const CTxIn& txin);
 
-    bool IsExpired() { return GetTime() - nTimeAdded > DARKSEND_QUEUE_TIMEOUT; }
+    bool IsExpired() { return GetTime() - nTimeAdded > PRIVATESEND_QUEUE_TIMEOUT; }
 };
 
 
@@ -206,7 +206,7 @@ public:
     bool Relay();
 
     /// Is this queue expired?
-    bool IsExpired() { return GetTime() - nTime > DARKSEND_QUEUE_TIMEOUT; }
+    bool IsExpired() { return GetTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT; }
 
     std::string ToString()
     {

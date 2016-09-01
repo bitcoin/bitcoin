@@ -69,23 +69,23 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *pa
     if (!settings.contains("bUseInstantX"))
         settings.setValue("bUseInstantX", false);
 
-    bool useDarkSend = settings.value("bUseDarkSend").toBool();
+    bool fUsePrivateSend = settings.value("bUseDarkSend").toBool();
     bool useInstantX = settings.value("bUseInstantX").toBool();
     if(fLiteMode) {
-        ui->checkUseDarksend->setChecked(false);
-        ui->checkUseDarksend->setVisible(false);
+        ui->checkUsePrivateSend->setChecked(false);
+        ui->checkUsePrivateSend->setVisible(false);
         ui->checkInstantX->setVisible(false);
-        CoinControlDialog::coinControl->useDarkSend = false;
+        CoinControlDialog::coinControl->fUsePrivateSend = false;
         CoinControlDialog::coinControl->useInstantX = false;
     }
     else{
-        ui->checkUseDarksend->setChecked(useDarkSend);
+        ui->checkUsePrivateSend->setChecked(fUsePrivateSend);
         ui->checkInstantX->setChecked(useInstantX);
-        CoinControlDialog::coinControl->useDarkSend = useDarkSend;
+        CoinControlDialog::coinControl->fUsePrivateSend = fUsePrivateSend;
         CoinControlDialog::coinControl->useInstantX = useInstantX;
     }
 
-    connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
+    connect(ui->checkUsePrivateSend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantX()));
 
     // Coin Control: clipboard actions
@@ -255,7 +255,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     QString strFee = "";
     recipients[0].inputType = ONLY_DENOMINATED;
 
-    if(ui->checkUseDarksend->isChecked()) {
+    if(ui->checkUsePrivateSend->isChecked()) {
         recipients[0].inputType = ONLY_DENOMINATED;
         strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
         QString strNearestAmount(
@@ -577,8 +577,8 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
     {
 	    uint64_t bal = 0;
         QSettings settings;
-        settings.setValue("bUseDarkSend", ui->checkUseDarksend->isChecked());
-	    if(ui->checkUseDarksend->isChecked()) {
+        settings.setValue("bUseDarkSend", ui->checkUsePrivateSend->isChecked());
+	    if(ui->checkUsePrivateSend->isChecked()) {
 		    bal = anonymizedBalance;
 	    } else {
 		    bal = balance;
@@ -592,7 +592,7 @@ void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl->useDarkSend = ui->checkUseDarksend->isChecked();
+    CoinControlDialog::coinControl->fUsePrivateSend = ui->checkUsePrivateSend->isChecked();
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -934,7 +934,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
         }
     }
 
-    ui->checkUseDarksend->setChecked(CoinControlDialog::coinControl->useDarkSend);
+    ui->checkUsePrivateSend->setChecked(CoinControlDialog::coinControl->fUsePrivateSend);
 
     if (CoinControlDialog::coinControl->HasSelected())
     {

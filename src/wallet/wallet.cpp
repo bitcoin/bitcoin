@@ -2008,7 +2008,7 @@ CAmount CWallet::GetNeedsToBeAnonymizedBalance(CAmount nMinBalance) const
     if(nNeedsToAnonymizeBalance > nAnonymizableBalance) nNeedsToAnonymizeBalance = nAnonymizableBalance;
 
     // we should never exceed the pool max
-    if(nNeedsToAnonymizeBalance > DARKSEND_POOL_MAX) nNeedsToAnonymizeBalance = DARKSEND_POOL_MAX;
+    if (nNeedsToAnonymizeBalance > PRIVATESEND_POOL_MAX) nNeedsToAnonymizeBalance = PRIVATESEND_POOL_MAX;
 
     return nNeedsToAnonymizeBalance;
 }
@@ -2855,7 +2855,7 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 
 bool CWallet::IsCollateralAmount(CAmount nInputAmount) const
 {
-    return  nInputAmount != 0 && nInputAmount % DARKSEND_COLLATERAL == 0 && nInputAmount < DARKSEND_COLLATERAL * 5 && nInputAmount > DARKSEND_COLLATERAL;
+    return  nInputAmount != 0 && nInputAmount % PRIVATESEND_COLLATERAL == 0 && nInputAmount < PRIVATESEND_COLLATERAL * 5 && nInputAmount > PRIVATESEND_COLLATERAL;
 }
 
 bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
@@ -2889,9 +2889,9 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
     BOOST_FOREACH(CTxIn v, vCoinsCollateral)
         txCollateral.vin.push_back(v);
 
-    if(nValueIn2 - DARKSEND_COLLATERAL - nFeeRet > 0) {
+    if(nValueIn2 - PRIVATESEND_COLLATERAL - nFeeRet > 0) {
         //pay collateral charge in fees
-        CTxOut vout3 = CTxOut(nValueIn2 - DARKSEND_COLLATERAL, scriptChange);
+        CTxOut vout3 = CTxOut(nValueIn2 - PRIVATESEND_COLLATERAL, scriptChange);
         txCollateral.vout.push_back(vout3);
     }
 
@@ -3438,7 +3438,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         if minRounds >= 0 it means only denominated inputs are going in and coming out
     */
     if(minRounds >= 0){
-        if (!SelectCoinsByDenominations(darkSendPool.nSessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, vCoins2, nValueIn, minRounds, maxRounds))
+        if (!SelectCoinsByDenominations(darkSendPool.nSessionDenom, 0.1*COIN, PRIVATESEND_POOL_MAX, vCoins, vCoins2, nValueIn, minRounds, maxRounds))
             return _("Error: Can't select current denominated inputs");
     }
 

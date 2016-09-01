@@ -1316,7 +1316,7 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QCheckBox" name="checkUseDarksend">
+        <widget class="QCheckBox" name="checkUsePrivateSend">
          <property name="minimumSize">
           <size>
            <width>95</width>

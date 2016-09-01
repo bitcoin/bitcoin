@@ -12,7 +12,7 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
-    bool useDarkSend;
+    bool fUsePrivateSend;
     bool useInstantX;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
@@ -33,7 +33,7 @@ public:
         fAllowWatchOnly = false;
         setSelected.clear();
         useInstantX = false;
-        useDarkSend = true;
+        fUsePrivateSend = true;
         nMinimumTotalFee = 0;
     }
 
