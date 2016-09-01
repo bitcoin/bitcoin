@@ -179,14 +179,14 @@ class RESTTest (BitcoinTestFramework):
         #do some invalid requests
         json_request = '{"checkmempool'
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'json', json_request, True)
-        assert_equal(response.status, 500) #must be a 500 because we send a invalid json request
+        assert_equal(response.status, 400) #must be a 400 because we send a invalid json request
 
         json_request = '{"checkmempool'
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', json_request, True)
-        assert_equal(response.status, 500) #must be a 500 because we send a invalid bin request
+        assert_equal(response.status, 400) #must be a 400 because we send a invalid bin request
 
         response = http_post_call(url.hostname, url.port, '/rest/getutxos/checkmempool'+self.FORMAT_SEPARATOR+'bin', '', True)
-        assert_equal(response.status, 500) #must be a 500 because we send a invalid bin request
+        assert_equal(response.status, 400) #must be a 400 because we send a invalid bin request
 
         #test limits
         json_request = '/checkmempool/'
@@ -194,14 +194,14 @@ class RESTTest (BitcoinTestFramework):
             json_request += txid+'-'+str(n)+'/'
         json_request = json_request.rstrip("/")
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
-        assert_equal(response.status, 500) #must be a 500 because we exceeding the limits
+        assert_equal(response.status, 400) #must be a 400 because we exceeding the limits
 
         json_request = '/checkmempool/'
         for x in range(0, 15):
             json_request += txid+'-'+str(n)+'/'
         json_request = json_request.rstrip("/")
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
-        assert_equal(response.status, 200) #must be a 500 because we exceeding the limits
+        assert_equal(response.status, 200) #must be a 200 because we are within the limits
 
         self.nodes[0].generate(1) #generate block to not affect upcoming tests
         self.sync_all()
