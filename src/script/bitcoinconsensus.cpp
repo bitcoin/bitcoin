@@ -161,6 +161,28 @@ void bitcoinconsensus_destroy_consensus_parameters(void* consensusParams)
     delete ((Consensus::Params*)consensusParams);
 }
 
+void* bitcoinconsensus_create_blockindex_interface(GetAncestorFn _GetAncestorFn, GetHashFn _GetHashFn, GetHeightFn _GetHeightFn, GetVersionFn _GetVersionFn, GetTimeFn _GetTimeFn, GetBitsFn _GetBitsFn, GetPrevFn _GetPrevFn, GetMedianTimeFn _GetMedianTimeFn, IndexDeallocatorFn _IndexDeallocatorFn)
+{
+    BlockIndexInterface* iBlockIndex = new BlockIndexInterface();
+
+    iBlockIndex->GetAncestor = _GetAncestorFn;
+    iBlockIndex->GetHash = _GetHashFn;
+    iBlockIndex->GetHeight = _GetHeightFn;
+    iBlockIndex->GetVersion = _GetVersionFn;
+    iBlockIndex->GetTime = _GetTimeFn;
+    iBlockIndex->GetBits = _GetBitsFn;
+    iBlockIndex->GetPrev = _GetPrevFn;
+    iBlockIndex->GetMedianTime = _GetMedianTimeFn;
+    iBlockIndex->DeleteIndex = _IndexDeallocatorFn;
+
+    return iBlockIndex;
+}
+
+void bitcoinconsensus_destroy_blockindex_interface(void* iBlockIndex)
+{
+    delete ((BlockIndexInterface*)iBlockIndex);
+}
+
 int bitcoinconsensus_verify_header(const unsigned char* header, unsigned int headerLen, const void* consensusParams, const void* indexObject, const void* iBlockIndex, int64_t nAdjustedTime, bitcoinconsensus_error* err)
 {
     try {
