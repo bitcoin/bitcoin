@@ -3730,7 +3730,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // DASH : CHECK TRANSACTIONS FOR INSTANT SEND
 
-    if(sporkManager.IsSporkActive(SPORK_3_INSTANTX_BLOCK_FILTERING)){
+    if(sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 // LOOK FOR TRANSACTION LOCK IN OUR MAP OF INPUTS

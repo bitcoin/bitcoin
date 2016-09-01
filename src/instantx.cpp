@@ -46,7 +46,7 @@ CCriticalSection cs_instantsend;
 void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; // disable all Dash specific functionality
-    if(!sporkManager.IsSporkActive(SPORK_2_INSTANTX)) return;
+    if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
 
     // Ignore any InstantSend messages until masternode list is synced
     if(!masternodeSync.IsMasternodeListSynced()) return;
@@ -194,7 +194,7 @@ bool IsInstantSendTxValid(const CTransaction& txCollateral)
         }
     }
 
-    if(nValueOut > sporkManager.GetSporkValue(SPORK_5_MAX_VALUE)*COIN) {
+    if(nValueOut > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
         LogPrint("instantsend", "IsInstantSendTxValid -- Transaction value too high: nValueOut=%d, txCollateral=%s", nValueOut, txCollateral.ToString());
         return false;
     }
@@ -523,7 +523,7 @@ bool IsLockedInstandSendTransaction(uint256 txHash)
 int GetTransactionLockSignatures(uint256 txHash)
 {
     if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
-    if(!sporkManager.IsSporkActive(SPORK_2_INSTANTX)) return -3;
+    if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return -3;
     if(!fEnableInstantSend) return -1;
 
     std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.find(txHash);
