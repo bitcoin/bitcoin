@@ -21,7 +21,8 @@ Using `addnode` is the recommended way of connecting and can be made by a simple
 
 	addnode=<ip:port>
 
-You can have multiple addnode entries up to a maximum of 8 connections, so you might have a config file looking as follows:
+You can have multiple addnode entries up to a maximum of 8 connections (or the number specified via maxoutconnections parameter), so you 
+might have a config file looking as follows:
 
 	addnode=10.233.34.33:8333
 	addnode=11.222.34.55:10500
