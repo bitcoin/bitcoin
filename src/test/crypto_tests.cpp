@@ -133,13 +133,13 @@ void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
-        int size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
-        if (size != 0)
+        int _size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
+        if (_size != 0)
         {
-            subout.resize(size);
+            subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
-            size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
-            subdecrypted.resize(size);
+            _size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
+            subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));
         }
@@ -174,13 +174,13 @@ void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
-        int size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
-        if (size != 0)
+        int _size = enc.Encrypt(&sub[0], sub.size(), &subout[0]);
+        if (_size != 0)
         {
-            subout.resize(size);
+            subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
-            size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
-            subdecrypted.resize(size);
+            _size = dec.Decrypt(&subout[0], subout.size(), &subdecrypted[0]);
+            subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));
         }
