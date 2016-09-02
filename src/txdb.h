@@ -101,7 +101,7 @@ public:
 private:
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
         CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    boost::scoped_ptr<CDBIterator> pcursor;
+    std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
     friend class CCoinsViewDB;

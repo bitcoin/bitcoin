@@ -184,7 +184,7 @@ std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 
 bool CDBWrapper::IsEmpty()
 {
-    boost::scoped_ptr<CDBIterator> it(NewIterator());
+    std::unique_ptr<CDBIterator> it(NewIterator());
     it->SeekToFirst();
     return !(it->Valid());
 }

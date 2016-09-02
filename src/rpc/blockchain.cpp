@@ -769,7 +769,7 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
 //! Calculate statistics about the unspent transaction output set
 static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
 {
-    boost::scoped_ptr<CCoinsViewCursor> pcursor(view->Cursor());
+    std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = pcursor->GetBestBlock();
