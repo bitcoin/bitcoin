@@ -323,10 +323,10 @@ public:
         return *this;
     }
 
-    TestBuilder& Add(const CScript& script)
+    TestBuilder& Add(const CScript& _script)
     {
         DoPush();
-        spendTx.vin[0].scriptSig += script;
+        spendTx.vin[0].scriptSig += _script;
         return *this;
     }
 
@@ -343,8 +343,8 @@ public:
         return *this;
     }
 
-    TestBuilder& Push(const CScript& script) {
-         DoPush(std::vector<unsigned char>(script.begin(), script.end()));
+    TestBuilder& Push(const CScript& _script) {
+         DoPush(std::vector<unsigned char>(_script.begin(), _script.end()));
         return *this;
     }
 

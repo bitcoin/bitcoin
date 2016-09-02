@@ -88,9 +88,9 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    CPubKey(const std::vector<unsigned char>& vch)
+    CPubKey(const std::vector<unsigned char>& _vch)
     {
-        Set(vch.begin(), vch.end());
+        Set(_vch.begin(), _vch.end());
     }
 
     //! Simple read-only vector-like interface to the pubkey data.
