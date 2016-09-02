@@ -13,7 +13,7 @@ class CCoinControl
 public:
     CTxDestination destChange;
     bool fUsePrivateSend;
-    bool useInstantX;
+    bool fUseInstantSend;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
@@ -32,7 +32,7 @@ public:
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
-        useInstantX = false;
+        fUseInstantSend = false;
         fUsePrivateSend = true;
         nMinimumTotalFee = 0;
     }

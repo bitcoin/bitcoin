@@ -1227,7 +1227,7 @@ padding-top:20px;
 padding-bottom:18px;
 }
 
-QDialog#SendCoinsDialog .QCheckBox#checkInstantX { /* InstantX Checkbox */
+QDialog#SendCoinsDialog .QCheckBox#checkUseInstantSend { /* InstantSend Checkbox */
 color:#555555;
 font-weight:bold;
 background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5, stop:0 rgba(248, 246, 246, 128), stop: 1 rgba(0, 0, 0, 0));

@@ -371,7 +371,7 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 
-static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUseIX=false, bool fUseDS=false)
+static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUseInstantSend=false, bool fUsePrivateSend=false)
 {
     CAmount curBalance = pwalletMain->GetBalance();
 
@@ -394,12 +394,12 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet,
-                                         strError, NULL, true, fUseDS ? ONLY_DENOMINATED : ALL_COINS, fUseIX)) {
+                                         strError, NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, fUseIX ? NetMsgType::IX : NetMsgType::TX))
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, fUseInstantSend ? NetMsgType::IX : NetMsgType::TX))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 }
 
@@ -456,16 +456,16 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
     if (params.size() > 4)
         fSubtractFeeFromAmount = params[4].get_bool();
 
-    bool fUseIX = false;
-    bool fUseDS = false;
+    bool fUseInstantSend = false;
+    bool fUsePrivateSend = false;
     if (params.size() > 5)
-        fUseIX = params[5].get_bool();
+        fUseInstantSend = params[5].get_bool();
     if (params.size() > 6)
-        fUseDS = params[6].get_bool();
+        fUsePrivateSend = params[6].get_bool();
 
     EnsureWalletIsUnlocked();
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseIX, fUseDS);
+    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseInstantSend, fUsePrivateSend);
 
     return wtx.GetHash().GetHex();
 }
@@ -1112,18 +1112,18 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     string strFailReason;
-    bool fUseIX = false;
-    bool fUseDS = false;
+    bool fUseInstantSend = false;
+    bool fUsePrivateSend = false;
     if (params.size() > 5)
-        fUseIX = params[5].get_bool();
+        fUseInstantSend = params[5].get_bool();
     if (params.size() > 6)
-        fUseDS = params[6].get_bool();
+        fUsePrivateSend = params[6].get_bool();
 
     bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                                   NULL, true, fUseDS ? ONLY_DENOMINATED : ALL_COINS, fUseIX);
+                                                   NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
-    if (!pwalletMain->CommitTransaction(wtx, keyChange, fUseIX ? NetMsgType::IX : NetMsgType::TX))
+    if (!pwalletMain->CommitTransaction(wtx, keyChange, fUseInstantSend ? NetMsgType::IX : NetMsgType::TX))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
     return wtx.GetHash().GetHex();

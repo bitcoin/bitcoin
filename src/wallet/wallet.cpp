@@ -2105,7 +2105,7 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
     return nTotal;
 }
 
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType coin_type, bool useIX) const
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue, AvailableCoinsType coin_type, bool fUseInstantSend) const
 {
     vCoins.clear();
 
@@ -2127,7 +2127,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 
             int nDepth = pcoin->GetDepthInMainChain(false);
             // do not use IX for inputs that have less then 6 blockchain confirmations
-            if (useIX && nDepth < 6)
+            if (fUseInstantSend && nDepth < 6)
                 continue;
 
             // We should not consider coins which aren't at least in our mempool
@@ -2362,12 +2362,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     return true;
 }
 
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool fUseInstantSend) const
 {
     // Note: this function should never be used for "always free" tx types like dstx
 
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, false, coin_type, useIX);
+    AvailableCoins(vCoins, true, coinControl, false, coin_type, fUseInstantSend);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
@@ -2910,17 +2910,17 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
     return true;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool useIX)
+bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool fUseInstantSend)
 {
     CWalletTx wtx;
-    if(GetBudgetSystemCollateralTX(wtx, hash, useIX)){
+    if(GetBudgetSystemCollateralTX(wtx, hash, fUseInstantSend)){
         tx = (CTransaction)wtx;
         return true;
     }
     return false;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useIX)
+bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool fUseInstantSend)
 {
     // make our change address
     CReserveKey reservekey(pwalletMain);
@@ -2935,7 +2935,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useI
     vecSend.push_back((CRecipient){scriptChange, GOVERNANCE_FEE_TX, false});
 
     CCoinControl *coinControl=NULL;
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS, useIX);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS, fUseInstantSend);
     if(!success){
         LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail);
         return false;
@@ -2962,9 +2962,9 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<CAmount>& vecAm
 }
 
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType coin_type, bool useIX)
+                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType coin_type, bool fUseInstantSend)
 {
-    CAmount nFeePay = useIX ? INSTANTSEND_MIN_FEE : 0;
+    CAmount nFeePay = fUseInstantSend ? INSTANTSEND_MIN_FEE : 0;
 
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;
@@ -3012,7 +3012,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     // nLockTime that preclude a fix later.
 
     // FIXME: "compatibility mode" for 12.0 IX, make it "txNew.nLockTime = chainActive.Height();" again in 12.2
-    txNew.nLockTime = useIX ? 0 : chainActive.Height();
+    txNew.nLockTime = fUseInstantSend ? 0 : chainActive.Height();
 
     // Secondly occasionally randomly pick a nLockTime even further back, so
     // that transactions that are delayed after signing for whatever reason,
@@ -3078,7 +3078,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
 
-                if (!SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl, coin_type, useIX))
+                if (!SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl, coin_type, fUseInstantSend))
                 {
                     if(coin_type == ALL_COINS) {
                         strFailReason = _("Insufficient funds.");
@@ -3091,7 +3091,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
                     }
 
-                    if(useIX){
+                    if(fUseInstantSend){
                         strFailReason += " " + _("InstantSend requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.");
                     }
 

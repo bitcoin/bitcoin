@@ -51,7 +51,7 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
     // Ignore any InstantSend messages until masternode list is synced
     if(!masternodeSync.IsMasternodeListSynced()) return;
 
-    if (strCommand == NetMsgType::IX)
+    if (strCommand == NetMsgType::IX) // InstantSend Transaction Lock Request
     {
         //LogPrintf("ProcessMessageInstantSend\n");
         CDataStream vMsg(vRecv);
@@ -70,7 +70,7 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
         if(!IsInstantSendTxValid(tx)) return;
 
         BOOST_FOREACH(const CTxOut o, tx.vout) {
-            // IX supports normal scripts and unspendable scripts (used in DS collateral and Budget collateral).
+            // InstandSend supports normal scripts and unspendable scripts (used in PrivateSend collateral and Governance collateral).
             // TODO: Look into other script types that are normal and can be included
             if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()) {
                 LogPrintf("ProcessMessageInstantSend -- Invalid Script %s", tx.ToString());
@@ -127,7 +127,7 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
             return;
         }
     }
-    else if (strCommand == NetMsgType::IXLOCKVOTE) //InstantX Lock Consensus Votes
+    else if (strCommand == NetMsgType::IXLOCKVOTE) // InstantSend Transaction Lock Consensus Votes
     {
         CConsensusVote vote;
         vRecv >> vote;

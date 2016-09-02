@@ -1332,7 +1332,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkInstantX">
+        <widget class="QCheckBox" name="checkUseInstantSend">
          <property name="enabled">
           <bool>true</bool>
          </property>
