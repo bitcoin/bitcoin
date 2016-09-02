@@ -109,7 +109,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
 
             if(nState == POOL_STATE_QUEUE) {
                 LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), addr.ToString());
-                PrepareDenominate();
+                SubmitDenominate();
             }
         } else {
             BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue)
@@ -1038,16 +1038,16 @@ bool CDarksendPool::IsSignaturesComplete()
 // Execute a mixing denomination via a Masternode.
 // This is only ran from clients
 //
-void CDarksendPool::SendDarksendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, CAmount nAmount)
+bool CDarksendPool::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut)
 {
     if(fMasterNode) {
-        LogPrintf("CDarksendPool::SendDarksendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
-        return;
+        LogPrintf("CDarksendPool::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
+        return false;
     }
 
     if(txMyCollateral == CMutableTransaction()) {
-        LogPrintf ("CDarksendPool:SendDarksendDenominate -- PrivateSend collateral not set");
-        return;
+        LogPrintf("CDarksendPool:SendDenominate -- PrivateSend collateral not set\n");
+        return false;
     }
 
     // lock the funds we're going to use
@@ -1063,24 +1063,24 @@ void CDarksendPool::SendDarksendDenominate(const std::vector<CTxIn>& vecTxIn, co
 
     // we should already be connected to a Masternode
     if(!fSessionFoundMasternode) {
-        LogPrintf("CDarksendPool::SendDarksendDenominate -- No Masternode has been selected yet.\n");
+        LogPrintf("CDarksendPool::SendDenominate -- No Masternode has been selected yet.\n");
         UnlockCoins();
         SetNull();
-        return;
+        return false;
     }
 
     if(!CheckDiskSpace()) {
         UnlockCoins();
         SetNull();
         fEnablePrivateSend = false;
-        LogPrintf("CDarksendPool::SendDarksendDenominate -- Not enough disk space, disabling PrivateSend.\n");
-        return;
+        LogPrintf("CDarksendPool::SendDenominate -- Not enough disk space, disabling PrivateSend.\n");
+        return false;
     }
 
     SetState(POOL_STATE_ACCEPTING_ENTRIES);
     strLastMessage = "";
 
-    LogPrintf("CDarksendPool::SendDarksendDenominate -- Added transaction to pool.\n");
+    LogPrintf("CDarksendPool::SendDenominate -- Added transaction to pool.\n");
 
     //check it against the memory pool to make sure it's valid
     {
@@ -1088,24 +1088,24 @@ void CDarksendPool::SendDarksendDenominate(const std::vector<CTxIn>& vecTxIn, co
         CMutableTransaction tx;
 
         BOOST_FOREACH(const CTxIn& txin, vecTxIn) {
-            LogPrint("privatesend", "CDarksendPool::SendDarksendDenominate -- txin=%s\n", txin.ToString());
+            LogPrint("privatesend", "CDarksendPool::SendDenominate -- txin=%s\n", txin.ToString());
             tx.vin.push_back(txin);
         }
 
         BOOST_FOREACH(const CTxOut& txout, vecTxOut) {
-            LogPrint("privatesend", "CDarksendPool::SendDarksendDenominate -- txout=%s\n", txout.ToString());
+            LogPrint("privatesend", "CDarksendPool::SendDenominate -- txout=%s\n", txout.ToString());
             tx.vout.push_back(txout);
         }
 
-        LogPrintf("CDarksendPool::SendDarksendDenominate -- Submitting partial tx %s", tx.ToString());
+        LogPrintf("CDarksendPool::SendDenominate -- Submitting partial tx %s", tx.ToString());
 
         mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
         TRY_LOCK(cs_main, lockMain);
         if(!lockMain || !AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, true, true)) {
-            LogPrintf("CDarksendPool::SendDarksendDenominate -- AcceptToMemoryPool() failed! tx=%s", tx.ToString());
+            LogPrintf("CDarksendPool::SendDenominate -- AcceptToMemoryPool() failed! tx=%s", tx.ToString());
             UnlockCoins();
             SetNull();
-            return;
+            return false;
         }
     }
 
@@ -1115,6 +1115,8 @@ void CDarksendPool::SendDarksendDenominate(const std::vector<CTxIn>& vecTxIn, co
 
     RelayIn(entry);
     CheckPool();
+
+    return true;
 }
 
 // Incoming message from Masternode updating the progress of mixing
@@ -1624,33 +1626,159 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     return false;
 }
 
-bool CDarksendPool::PrepareDenominate()
+bool CDarksendPool::SubmitDenominate()
 {
     std::string strError;
+    std::vector<CTxIn> vecTxInRet;
+    std::vector<CTxOut> vecTxOutRet;
 
     // Submit transaction to the pool if we get here
     // Try to use only inputs with the same number of rounds starting from lowest number of rounds possible
     for(int i = 0; i < nPrivateSendRounds; i++) {
-        strError = pwalletMain->PrepareDarksendDenominate(i, i+1);
-        if(strError == "") {
-            LogPrintf("CDarksendPool::PrepareDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-            return true;
+        if(PrepareDenominate(i, i+1, strError, vecTxInRet, vecTxOutRet)) {
+            LogPrintf("CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
+            return SendDenominate(vecTxInRet, vecTxOutRet);
         }
-        LogPrintf("CDarksendPool::PrepareDenominate -- Running PrivateSend denominate for %d rounds. Return '%s'\n", i, strError);
+        LogPrintf("CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
-    strError = pwalletMain->PrepareDarksendDenominate(0, nPrivateSendRounds);
-    if(strError == "") {
-        LogPrintf("CDarksendPool::PrepareDenominate -- Running PrivateSend denominate for all rounds, success\n");
-        return true;
+    if(PrepareDenominate(0, nPrivateSendRounds, strError, vecTxInRet, vecTxOutRet)) {
+        LogPrintf("CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for all rounds, success\n");
+        return SendDenominate(vecTxInRet, vecTxOutRet);
     }
-    LogPrintf("CDarksendPool::PrepareDenominate -- Running PrivateSend denominate for all rounds. Return '%s'\n", strError);
 
     // Should never actually get here but just in case
+    LogPrintf("CDarksendPool::SubmitDenominate -- Running PrivateSend denominate for all rounds, error: %s\n", strError);
     strAutoDenomResult = strError;
-    LogPrintf("CDarksendPool::PrepareDenominate -- Error running denominate, %s\n", strError);
     return false;
+}
+
+bool CDarksendPool::PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxIn>& vecTxInRet, std::vector<CTxOut>& vecTxOutRet)
+{
+    if (pwalletMain->IsLocked()) {
+        strErrorRet = "Wallet locked, unable to create transaction!";
+        return false;
+    }
+
+    if (GetState() != POOL_STATE_ERROR && GetState() != POOL_STATE_SUCCESS && GetEntriesCount() > 0) {
+        strErrorRet = "You already have pending entries in the PrivateSend pool";
+        return false;
+    }
+
+    // make sure returning vectors are empty before filling them up
+    vecTxInRet.clear();
+    vecTxOutRet.clear();
+
+    // ** find the coins we'll use
+    std::vector<CTxIn> vecTxIn;
+    std::vector<COutput> vCoins;
+    CAmount nValueIn = 0;
+    CReserveKey reservekey(pwalletMain);
+
+    /*
+        Select the coins we'll use
+
+        if nMinRounds >= 0 it means only denominated inputs are going in and coming out
+    */
+    bool fSelected = pwalletMain->SelectCoinsByDenominations(nSessionDenom, 0.1*COIN, PRIVATESEND_POOL_MAX, vecTxIn, vCoins, nValueIn, nMinRounds, nMaxRounds);
+    if (nMinRounds >= 0 && !fSelected) {
+        strErrorRet = "Can't select current denominated inputs";
+        return false;
+    }
+
+    LogPrintf("CDarksendPool::PrepareDenominate -- max value: %f\n", (double)nValueIn/COIN);
+
+    {
+        LOCK(pwalletMain->cs_wallet);
+        BOOST_FOREACH(CTxIn txin, vecTxIn) {
+            pwalletMain->LockCoin(txin.prevout);
+        }
+    }
+
+    CAmount nValueLeft = nValueIn;
+
+    /*
+        TODO: Front load with needed denominations (e.g. .1, 1 )
+    */
+
+    // Make outputs by looping through denominations: try to add every needed denomination, repeat up to 5-10 times.
+    // This way we can be pretty sure that it should have at least one of each needed denomination.
+    // NOTE: No need to randomize order of inputs because they were
+    // initially shuffled in CWallet::SelectCoinsByDenominations already.
+    int nStep = 0;
+    int nStepsMax = 5 + GetRandInt(5);
+    while(nStep < nStepsMax) {
+
+        BOOST_FOREACH(CAmount nValueDenom, vecPrivateSendDenominations) {
+            // only use the ones that are approved
+            if (!((nSessionDenom & (1 << 0)) && nValueDenom == 100*COIN +100000) &&
+                !((nSessionDenom & (1 << 1)) && nValueDenom ==  10*COIN + 10000) &&
+                !((nSessionDenom & (1 << 2)) && nValueDenom ==   1*COIN +  1000) &&
+                !((nSessionDenom & (1 << 3)) && nValueDenom ==  .1*COIN +   100))
+                { continue; }
+
+            // try to add it
+            if (nValueLeft - nValueDenom >= 0) {
+                // Note: this relies on a fact that both vectors MUST have same size
+                std::vector<CTxIn>::iterator it = vecTxIn.begin();
+                std::vector<COutput>::iterator it2 = vCoins.begin();
+                while (it2 != vCoins.end()) {
+                    // we have matching inputs
+                    if ((*it2).tx->vout[(*it2).i].nValue == nValueDenom) {
+                        // add new input in resulting vector
+                        vecTxInRet.push_back(*it);
+                        // remove corresponting items from initial vectors
+                        vecTxIn.erase(it);
+                        vCoins.erase(it2);
+
+                        CScript scriptChange;
+                        CPubKey vchPubKey;
+                        // use a unique change address
+                        assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+                        scriptChange = GetScriptForDestination(vchPubKey.GetID());
+                        reservekey.KeepKey();
+
+                        // add new output
+                        CTxOut txout(nValueDenom, scriptChange);
+                        vecTxOutRet.push_back(txout);
+
+                        // subtract denomination amount
+                        nValueLeft -= nValueDenom;
+
+                        break;
+                    }
+                    ++it;
+                    ++it2;
+                }
+            }
+        }
+
+        nStep++;
+
+        if(nValueLeft == 0) break;
+    }
+
+    {
+        // unlock unused coins
+        LOCK(pwalletMain->cs_wallet);
+        BOOST_FOREACH(CTxIn txin, vecTxIn) {
+            pwalletMain->UnlockCoin(txin.prevout);
+        }
+    }
+
+    if (GetDenominations(vecTxOutRet) != nSessionDenom) {
+        // unlock used coins on failure
+        LOCK(pwalletMain->cs_wallet);
+        BOOST_FOREACH(CTxIn txin, vecTxInRet) {
+            pwalletMain->UnlockCoin(txin.prevout);
+        }
+        strErrorRet = "Can't make current denominated outputs";
+        return false;
+    }
+
+    // We also do not care about full amount as long as we have right denominations
+    return true;
 }
 
 // Create collaterals by looping through inputs grouped by addresses

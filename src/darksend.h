@@ -381,11 +381,17 @@ private:
     /// Create denominations
     bool CreateDenominated();
     bool CreateDenominated(const CompactTallyItem& tallyItem);
+
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem);
 
-    bool PrepareDenominate();
+    /// As a client, submit part of a future mixing transaction to a Masternode to start the process
+    bool SubmitDenominate();
+    /// step 1: prepare denominated inputs and outputs
+    bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxIn>& vecTxInRet, std::vector<CTxOut>& vecTxOutRet);
+    /// step 2: send denominated inputs and outputs prepared in step 1
+    bool SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut);
 
     /// Get Masternode updates about the progress of mixing
     bool UpdatePoolStateOnClient(int nStateNew, int nEntriesCountNew, int nAcceptedEntriesCountNew, int &nErrorID, int nSessionIDNew=0);
@@ -464,8 +470,6 @@ public:
     /// Do we have enough users to take entries?
     bool IsSessionReady(){ return nSessionUsers >= GetMaxPoolTransactions(); }
 
-    /// As a client, send a transaction to a Masternode to start the denomination process
-    void SendDarksendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, CAmount nAmount);
 
     /// Process a new block
     void NewBlock();
