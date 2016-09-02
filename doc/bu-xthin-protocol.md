@@ -13,7 +13,7 @@ In order to scale the Bitcoin network, a faster less bandwidth intensive method 
 thinblock strategy is designed to speed up the relay of blocks by using the transactions that already exist in the requester's 
 memory pool as a way to rebuild the block, rather than download it in its entirety. 
 
-Differing from other thinblock strategies, “Xtreme Thinblocks” uses simple bloom filtering and a new class of transactions to 
+Differing from other thinblock strategies, "Xtreme Thinblocks" uses simple bloom filtering and a new class of transactions to
 ensure that almost all block requests only require a single round trip, which is essential for good performance on a system 
 where transaction rates are steadily climbing and only a synchronous network layer exists. In addition, Xtreme Thinblocks 
 uses a 64 bit transaction hash which further reduces thinblock size; in doing so a typical 1MB block can be reduced to a 10KB 
@@ -26,7 +26,7 @@ to 25KB thinblock.
 
 For various reasons memory pools are not in perfect sync which makes it difficult to reconstruct blocks in a fast and reliable 
 manner and with a single round trip. Creating a bloom filter at the time of sending the getdata request is an easy and fast way 
-around that problem which allows the remote node to know with high certainty what transactions are missing in the requester’s 
+around that problem which allows the remote node to know with high certainty what transactions are missing in the requester's
 memory pool and which need to be sent back in order to re-assemble the block.
 
 The reference implementation works in the following way:
@@ -60,11 +60,11 @@ will still be serviced.
 - The coinbase transaction will always be included in the thinblock.
 
 - During startup when the memory pool has few transactions in it, or when a block is very small and has only 1 or 2 transactions a 
-thinblock may end up being larger than the regular block. In that case it is recommmended that a regular block be returned to the 
+thinblock may end up being larger than the regular block. In that case it is recommended that a regular block be returned to the
 requestor instead of a thinblock. This typically happens when a new block is mined just seconds after the previous one.
 
 - Bloom Size Decay algorithm: A useful phenomena occurs as the memory pools grow and get closer in sync; the bloom filter can be allowed 
-to become less sparse. That means more false positives but because the memory pool has been “warmed up” there is now a very low likelihood 
+to become less sparse. That means more false positives but because the memory pool has been "warmed up" there is now a very low likelihood
 of missing a transaction. This bears out in practice and a simple linear decay algorithm was developed which alters both the number of 
 elements and the false positive rate. However, not knowing how far out of sync our pools are in practice means we can not calculate the 
 with certainty the probability of a false positive and a memory pool miss which will result in a re-requested transaction, so we need to 
@@ -80,7 +80,7 @@ to just those that are most likely to be mined in the next block.
 
 - A 64 bit transaction hash is used instead of the full 256 bit hash to further reduce thinblock size while still preventing hash collisions 
 in the memory pool.  This is done using the GET_XTHIN p2p netmessage.  If the block can not be constructed with the transactions in the mempool
-then a GET_XBLOCKTX netmessage will be requested and will contain a list of the missing transaction hashes to be retreieved.  The returning
+then a GET_XBLOCKTX netmessage will be requested and will contain a list of the missing transaction hashes to be retrieved.  The returning
 XBLOCKTX message will contain a list of the transactions requested.
 
 - In the event of a 64 bit hash collision the receiving peer will re-request a normal THINBLOCK with the full 256 bit transaction hashes.
@@ -135,7 +135,7 @@ appended to the GET_XTHIN message, as in the case of teh MSG_XTHINBLOCK inventor
 
 They are as follows:
 
-MSG_THINBlOCK == 4  and MSG_XTHINBLOCK == 5
+MSG_THINBLOCK == 4  and MSG_XTHINBLOCK == 5
 
 
 
@@ -251,7 +251,7 @@ Order and logic of P2P message requests
 - `NODE B:`  receives GET_XTHIN and loads the attached bloom filter and creates an XTHINBLOCK which is sent back to NODE A
          (Before sending, the xthinblock **must** be checked to see if a hash collision is within the block since the
           receiving node may not be able to re-construct the block if such a collision exists, causing an addition re-request and possibly
-          be flagged as node misbehavior. Therefore, if a collision is detected then immediately send preferrably a THINBLOCK, but 
+          be flagged as node misbehavior. Therefore, if a collision is detected then immediately send preferably a THINBLOCK, but
           at minimum a full BLOCK)
 
 - `NODE A:`  receives an XTHINBLOCK with 64 bit txn hashes
@@ -273,7 +273,7 @@ Order and logic of P2P message requests
 The Importance of the Orphan Cache
 ----------------------------------
 
-Orphans are transactions which arrive before their parent transaction arrives.  As such they are not eligeable to be accepted into the memory pool
+Orphans are transactions which arrive before their parent transaction arrives.  As such they are not eligible to be accepted into the memory pool
 and are cached separately in a temporary Orphan Cache.  Once the parent arrives the orphaned transactions can then be moved from the orphan cache
 to the main transaction memory pool.  It was found that the orphan cache can play an important role in the "thinness" of an xthinblock.  The 
 current behavior of the orphan caching is broken.  The cache is too small and evictions happen too frequently to be of any use.  Therefore, two 
@@ -300,7 +300,7 @@ sending the `GET_XTHIN` message request we create a bloom filter by first gettin
 transaction hashes in the Orphan Cache and then add them to our filter one by one.  The process is very fast and takes just a few milliseconds even
 for a large memory pool.  Once the bloom filter is created, it is appended to the `GET_XTHIN` message before being sent.
 
-Once the receving node receives the `GET_XTHIN` message is removes the filter and stores it in memory as part of the CNode data structure.
+Once the receiving node receives the `GET_XTHIN` message is removes the filter and stores it in memory as part of the CNode data structure.
 
         CBloomFilter* pThinBlockFilter;
 
@@ -324,11 +324,11 @@ created.
 
 - The bloom filter decay algorithm is simplified and works better with the larger memory pools we would expect when/if block sizes are allowed to
 increase.  What we do here is simply increase the false positive rate, gradually, and exponentially, over a 72 hour period.  This is much simpler
-and more intutive and easier to modify and tune in the future.
+and more intuitive and easier to modify and tune in the future.
 
 - The list of transactions that goes into making the bloom filter is selected from the group of transactions in the memory pool that are most likely
 to be mined.  We select those transactions in a fashion that is not too rigid and leaves room for error such that the bloom filter transactions tend
 to be 2 or 3 times more transactions than will be in the block however they will be much less than in a mempool that has been over run. So if you had
 15000 transactions in your mempool, perhaps only 5000 will be selected to be entered into the bloom filter, resulting in a much smaller filter.  Also
 as the number of transactions in the mempool continues to rise, the number of transactions selected for the filter will generally not rise, making
-this approach `memory pool size independant`.
+this approach `memory pool size independent`.

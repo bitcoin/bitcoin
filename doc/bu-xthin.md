@@ -21,7 +21,7 @@ Using `addnode` is the recommended way of connecting and can be made by a simple
 
 	addnode=<ip:port>
 
-You can have muliple addnode entries up to a maximum of 8 connections, so you might have a config file looking as follows:
+You can have multiple addnode entries up to a maximum of 8 connections, so you might have a config file looking as follows:
 
 	addnode=10.233.34.33:8333
 	addnode=11.222.34.55:10500
@@ -29,10 +29,10 @@ You can have muliple addnode entries up to a maximum of 8 connections, so you mi
 	addnode=45.33.233.45:8333
 
 When you use `addnode` your peer upon receiving a new block announcement by an INV message will begin a 10 second timer.  If an INV
-message is not received within that 10 seconds from an XTHIN capabable node then a request for a full block will be sent out. If it
+message is not received within that 10 seconds from an XTHIN capable node then a request for a full block will be sent out. If it
 does receive an INV within the 10 second period then an XTHIN block will be requested.  This process is used as a way to bring a
 full block into the BU XTHIN capable network of nodes such that once a peer does get a full block it will then very quickly propagate
-a XTHIN to every other peer in the XTHIN capable network.  In such a way we avoid potentially splitting the newtwork while at
+a XTHIN to every other peer in the XTHIN capable network.  In such a way we avoid potentially splitting the network while at
 the same time maximizing our use of XTHIN technology.
 
 
@@ -40,14 +40,14 @@ the same time maximizing our use of XTHIN technology.
 --------------------------------
 
 the `connect-thinblock` feature is mainly used for the purpose of testing, however in some cases it can be useful for very bandwidth 
-constrained nodes that *always* want every downloaded block to be an XTHIN.  In such a case you would substitute the addednode entry 
+constrained nodes that *always* want every downloaded block to be an XTHIN.  In such a case you would substitute the addnode entry
 above with a connect-thinblockentry.  As with addnode you can have up to 8 `connect-thinblock` entries and your entry would be as 
 follows:
 
 	connect-thinblock=<ip:port>
 
 One thing to keep in mind is that with `connect-thinblock`, if the nodes that you are connecting to are down or can not service you then 
-you have the possiblity of not receiving any new blocks until those nodes come back on line.  Therefore use `connect-thinblock` with 
+you have the possibility of not receiving any new blocks until those nodes come back on line.  Therefore use `connect-thinblock` with
 caution and always use the full 8 connections if you are unsure whether the peers will be online or not.
 
 
