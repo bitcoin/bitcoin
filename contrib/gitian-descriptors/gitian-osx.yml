@@ -1,24 +1,32 @@
 ---
-name: "hodlcoin-osx-1.0"
+name: "hodlcoin-osx-2.0"
 enable_cache: true
 suites:
-- "precise"
+- "trusty"
 architectures:
 - "amd64"
-packages: 
+packages:
+- "ca-certificates"
+- "curl"
 - "g++"
 - "git-core"
 - "pkg-config"
-- "autoconf2.13"
+- "autoconf"
+- "librsvg2-bin"
+- "libtiff-tools"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
 - "cmake"
+- "imagemagick"
 - "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
-reference_datetime: "2015-06-01 00:00:00"
+- "python"
+- "python-dev"
+- "python-setuptools"
+- "fonts-tuffy"
 remotes:
 - "url": "https://github.com/HOdlcoin/HOdlcoin.git"
   "dir": "hodlcoin"
@@ -27,7 +35,7 @@ files:
 script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-apple-darwin11"
-  CONFIGFLAGS="--enable-reduce-exports GENISOIMAGE=$WRAP_DIR/genisoimage"
+  CONFIGFLAGS="--enable-reduce-exports --disable-gui-tests GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
@@ -45,28 +53,35 @@ script: |
 
   export ZERO_AR_DATE=1
 
-  # Create global faketime wrappers
+  function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
+  }
 
-  # Create per-host faketime wrappers
+  function create_per-host_faketime_wrappers {
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
+  }
+
   export PATH=${WRAP_DIR}:${PATH}
+
+  # Faketime for depends so intermediate results are comparable
+  create_global_faketime_wrappers "2000-01-01 12:00:00"
+  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
 
   cd hodlcoin
   BASEPREFIX=`pwd`/depends
@@ -78,6 +93,10 @@ script: |
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
   done
+
+  # Faketime for binaries
+  create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
@@ -107,8 +126,11 @@ script: |
     make ${MAKEOPTS}
     make install-strip
 
+    make osx_volname
     make deploydir
+    OSX_VOLNAME="$(cat osx_volname)"
     mkdir -p unsigned-app-${i}
+    cp osx_volname unsigned-app-${i}/
     cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
     cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
     cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
@@ -120,7 +142,7 @@ script: |
     popd
 
     make deploy
-    ${WRAP_DIR}/dmg dmg HOdlcoin-Qt.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+    ${WRAP_DIR}/dmg dmg "${OSX_VOLNAME}.dmg" ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
 
     cd installed
     find . -name "lib*.la" -delete

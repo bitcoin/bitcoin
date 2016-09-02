@@ -1,23 +1,23 @@
 ---
-name: "hodlcoin-linux-1.0"
+name: "hodlcoin-linux-2.0"
 enable_cache: true
 suites:
-- "precise"
+- "trusty"
 architectures:
 - "amd64"
-packages: 
+packages:
+- "curl"
 - "g++-multilib"
 - "git-core"
 - "pkg-config"
-- "autoconf2.13"
+- "autoconf"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
 - "binutils-gold"
-- "libstdc++6-4.6-pic"
 - "ca-certificates"
-reference_datetime: "2015-06-01 00:00:00"
+- "python"
 remotes:
 - "url": "https://github.com/HOdlcoin/HOdlcoin.git"
   "dir": "hodlcoin"
@@ -25,7 +25,7 @@ files: []
 script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="i686-pc-linux-gnu x86_64-unknown-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-gui-tests LDFLAGS=-static-libstdc++"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
 
@@ -41,28 +41,35 @@ script: |
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
   fi
 
-  # Create global faketime wrappers
+  function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
+  }
 
-  # Create per-host faketime wrappers
+  function create_per-host_faketime_wrappers {
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
+  }
+
   export PATH=${WRAP_DIR}:${PATH}
+
+  # Faketime for depends so intermediate results are comparable
+  create_global_faketime_wrappers "2000-01-01 12:00:00"
+  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
 
   cd hodlcoin
   BASEPREFIX=`pwd`/depends
@@ -71,13 +78,9 @@ script: |
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
   done
 
-  # Ubuntu precise hack: Not an issue in later versions.
-  # Precise's libstdc++.a is non-pic. There's an optional libstdc++6-4.6-pic
-  #   package which provides libstdc++_pic.a, but the linker can't find it.
-  # Symlink it to a path that will be included in our link-line so that the
-  # linker picks it up before the default libstdc++.a.
-  # This is only necessary for 64bit.
-  ln -s /usr/lib/gcc/x86_64-linux-gnu/4.6/libstdc++_pic.a ${BASEPREFIX}/x86_64-unknown-linux-gnu/lib/libstdc++.a
+  # Faketime for binaries
+  create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
