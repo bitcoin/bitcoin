@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
     CBlock block(BuildBlockTestCase());
 
     pool.addUnchecked(block.vtx[2].GetHash(), entry.FromTx(block.vtx[2]));
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
 
     // Do a simple ShortTxIDs RT
     {
@@ -73,32 +73,32 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
-        BOOST_CHECK( partialBlock.IsTxAvailable(0));
-        BOOST_CHECK(!partialBlock.IsTxAvailable(1));
-        BOOST_CHECK( partialBlock.IsTxAvailable(2));
+        FAST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
+        FAST_CHECK( partialBlock.IsTxAvailable(0));
+        FAST_CHECK(!partialBlock.IsTxAvailable(1));
+        FAST_CHECK( partialBlock.IsTxAvailable(2));
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
         std::list<CTransaction> removed;
         pool.removeRecursive(block.vtx[2], removed);
-        BOOST_CHECK_EQUAL(removed.size(), 1);
+        FAST_CHECK_EQUAL(removed.size(), 1);
 
         CBlock block2;
         std::vector<CTransaction> vtx_missing;
-        BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_INVALID); // No transactions
+        FAST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_INVALID); // No transactions
 
         vtx_missing.push_back(block.vtx[2]); // Wrong transaction
         partialBlock.FillBlock(block2, vtx_missing); // Current implementation doesn't check txn here, but don't require that
         bool mutated;
-        BOOST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
+        FAST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
 
         vtx_missing[0] = block.vtx[1];
         CBlock block3;
-        BOOST_CHECK(partialBlock.FillBlock(block3, vtx_missing) == READ_STATUS_OK);
-        BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
-        BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
-        BOOST_CHECK(!mutated);
+        FAST_CHECK(partialBlock.FillBlock(block3, vtx_missing) == READ_STATUS_OK);
+        FAST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
+        FAST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
+        FAST_CHECK(!mutated);
     }
 }
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
     CBlock block(BuildBlockTestCase());
 
     pool.addUnchecked(block.vtx[2].GetHash(), entry.FromTx(block.vtx[2]));
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
 
     // Test with pre-forwarding tx 1, but not coinbase
     {
@@ -171,32 +171,32 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
-        BOOST_CHECK(!partialBlock.IsTxAvailable(0));
-        BOOST_CHECK( partialBlock.IsTxAvailable(1));
-        BOOST_CHECK( partialBlock.IsTxAvailable(2));
+        FAST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
+        FAST_CHECK(!partialBlock.IsTxAvailable(0));
+        FAST_CHECK( partialBlock.IsTxAvailable(1));
+        FAST_CHECK( partialBlock.IsTxAvailable(2));
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
         CBlock block2;
         std::vector<CTransaction> vtx_missing;
-        BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_INVALID); // No transactions
+        FAST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_INVALID); // No transactions
 
         vtx_missing.push_back(block.vtx[1]); // Wrong transaction
         partialBlock.FillBlock(block2, vtx_missing); // Current implementation doesn't check txn here, but don't require that
         bool mutated;
-        BOOST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
+        FAST_CHECK(block.hashMerkleRoot != BlockMerkleRoot(block2, &mutated));
 
         vtx_missing[0] = block.vtx[0];
         CBlock block3;
-        BOOST_CHECK(partialBlock.FillBlock(block3, vtx_missing) == READ_STATUS_OK);
-        BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
-        BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
-        BOOST_CHECK(!mutated);
+        FAST_CHECK(partialBlock.FillBlock(block3, vtx_missing) == READ_STATUS_OK);
+        FAST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
+        FAST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
+        FAST_CHECK(!mutated);
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
     }
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
 }
 
 BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
     CBlock block(BuildBlockTestCase());
 
     pool.addUnchecked(block.vtx[1].GetHash(), entry.FromTx(block.vtx[1]));
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
 
     // Test with pre-forwarding coinbase + tx 2 with tx 1 in mempool
     {
@@ -224,24 +224,24 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
-        BOOST_CHECK( partialBlock.IsTxAvailable(0));
-        BOOST_CHECK( partialBlock.IsTxAvailable(1));
-        BOOST_CHECK( partialBlock.IsTxAvailable(2));
+        FAST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
+        FAST_CHECK( partialBlock.IsTxAvailable(0));
+        FAST_CHECK( partialBlock.IsTxAvailable(1));
+        FAST_CHECK( partialBlock.IsTxAvailable(2));
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
         CBlock block2;
         std::vector<CTransaction> vtx_missing;
-        BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
-        BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
+        FAST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
+        FAST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
         bool mutated;
-        BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
-        BOOST_CHECK(!mutated);
+        FAST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
+        FAST_CHECK(!mutated);
 
-        BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
+        FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
     }
-    BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
+    FAST_CHECK_EQUAL(pool.mapTx.find(block.vtx[1].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 0);
 }
 
 BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
@@ -276,16 +276,16 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
-        BOOST_CHECK(partialBlock.IsTxAvailable(0));
+        FAST_CHECK(partialBlock.InitData(shortIDs2) == READ_STATUS_OK);
+        FAST_CHECK(partialBlock.IsTxAvailable(0));
 
         CBlock block2;
         std::vector<CTransaction> vtx_missing;
-        BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
-        BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
+        FAST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
+        FAST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
         bool mutated;
-        BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
-        BOOST_CHECK(!mutated);
+        FAST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
+        FAST_CHECK(!mutated);
     }
 }
 
@@ -304,12 +304,12 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestSerializationTest) {
     BlockTransactionsRequest req2;
     stream >> req2;
 
-    BOOST_CHECK_EQUAL(req1.blockhash.ToString(), req2.blockhash.ToString());
-    BOOST_CHECK_EQUAL(req1.indexes.size(), req2.indexes.size());
-    BOOST_CHECK_EQUAL(req1.indexes[0], req2.indexes[0]);
-    BOOST_CHECK_EQUAL(req1.indexes[1], req2.indexes[1]);
-    BOOST_CHECK_EQUAL(req1.indexes[2], req2.indexes[2]);
-    BOOST_CHECK_EQUAL(req1.indexes[3], req2.indexes[3]);
+    FAST_CHECK_EQUAL(req1.blockhash.ToString(), req2.blockhash.ToString());
+    FAST_CHECK_EQUAL(req1.indexes.size(), req2.indexes.size());
+    FAST_CHECK_EQUAL(req1.indexes[0], req2.indexes[0]);
+    FAST_CHECK_EQUAL(req1.indexes[1], req2.indexes[1]);
+    FAST_CHECK_EQUAL(req1.indexes[2], req2.indexes[2]);
+    FAST_CHECK_EQUAL(req1.indexes[3], req2.indexes[3]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

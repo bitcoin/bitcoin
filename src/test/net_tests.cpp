@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     bool exceptionThrown = false;
     CAddrMan addrman1;
 
-    BOOST_CHECK(addrman1.size() == 0);
+    FAST_CHECK(addrman1.size() == 0);
     try {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> FLATDATA(pchMsgTmp);
@@ -105,17 +105,17 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
         exceptionThrown = true;
     }
 
-    BOOST_CHECK(addrman1.size() == 3);
-    BOOST_CHECK(exceptionThrown == false);
+    FAST_CHECK(addrman1.size() == 3);
+    FAST_CHECK(exceptionThrown == false);
 
     // Test that CAddrDB::Read creates an addrman with the correct number of addrs.
     CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
 
     CAddrMan addrman2;
     CAddrDB adb;
-    BOOST_CHECK(addrman2.size() == 0);
+    FAST_CHECK(addrman2.size() == 0);
     adb.Read(addrman2, ssPeers2);
-    BOOST_CHECK(addrman2.size() == 3);
+    FAST_CHECK(addrman2.size() == 3);
 }
 
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CDataStream ssPeers1 = AddrmanToStream(addrmanCorrupted);
     bool exceptionThrown = false;
     CAddrMan addrman1;
-    BOOST_CHECK(addrman1.size() == 0);
+    FAST_CHECK(addrman1.size() == 0);
     try {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> FLATDATA(pchMsgTmp);
@@ -137,17 +137,17 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
         exceptionThrown = true;
     }
     // Even through de-serialization failed addrman is not left in a clean state.
-    BOOST_CHECK(addrman1.size() == 1);
-    BOOST_CHECK(exceptionThrown);
+    FAST_CHECK(addrman1.size() == 1);
+    FAST_CHECK(exceptionThrown);
 
     // Test that CAddrDB::Read leaves addrman in a clean state if de-serialization fails.
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2;
     CAddrDB adb;
-    BOOST_CHECK(addrman2.size() == 0);
+    FAST_CHECK(addrman2.size() == 0);
     adb.Read(addrman2, ssPeers2);
-    BOOST_CHECK(addrman2.size() == 0);
+    FAST_CHECK(addrman2.size() == 0);
 }
 
 BOOST_AUTO_TEST_CASE(cnode_simple_test)
@@ -163,13 +163,13 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
 
     // Test that fFeeler is false by default.
     CNode* pnode1 = new CNode(hSocket, addr, pszDest, fInboundIn);
-    BOOST_CHECK(pnode1->fInbound == false);
-    BOOST_CHECK(pnode1->fFeeler == false);
+    FAST_CHECK(pnode1->fInbound == false);
+    FAST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
     CNode* pnode2 = new CNode(hSocket, addr, pszDest, fInboundIn);
-    BOOST_CHECK(pnode2->fInbound == true);
-    BOOST_CHECK(pnode2->fFeeler == false);
+    FAST_CHECK(pnode2->fInbound == true);
+    FAST_CHECK(pnode2->fFeeler == false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

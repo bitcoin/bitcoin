@@ -33,7 +33,7 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
     BOOST_FOREACH(const CKey &key, keys)
     {
         vector<unsigned char> vchSig;
-        BOOST_CHECK(key.Sign(hash, vchSig));
+        FAST_CHECK(key.Sign(hash, vchSig));
         vchSig.push_back((unsigned char)SIGHASH_ALL);
         result << vchSig;
     }
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     keys.assign(1,key[0]);
     keys.push_back(key[1]);
     s = sign_multisig(a_and_b, keys, txTo[0], 0);
-    BOOST_CHECK(VerifyScript(s, a_and_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount), &err));
+    FAST_CHECK(VerifyScript(s, a_and_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[0], 0, amount), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     for (int i = 0; i < 4; i++)
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     }
     s.clear();
     s << OP_0 << OP_1;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount), &err));
+    FAST_CHECK(!VerifyScript(s, a_or_b, NULL, flags, MutableTransactionSignatureChecker(&txTo[1], 0, amount), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
 
 
@@ -150,19 +150,19 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 
     CScript a_and_b;
     a_and_b << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK(::IsStandard(a_and_b, whichType));
+    FAST_CHECK(::IsStandard(a_and_b, whichType));
 
     CScript a_or_b;
     a_or_b  << OP_1 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK(::IsStandard(a_or_b, whichType));
+    FAST_CHECK(::IsStandard(a_or_b, whichType));
 
     CScript escrow;
     escrow << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << ToByteVector(key[2].GetPubKey()) << OP_3 << OP_CHECKMULTISIG;
-    BOOST_CHECK(::IsStandard(escrow, whichType));
+    FAST_CHECK(::IsStandard(escrow, whichType));
 
     CScript one_of_four;
     one_of_four << OP_1 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << ToByteVector(key[2].GetPubKey()) << ToByteVector(key[3].GetPubKey()) << OP_4 << OP_CHECKMULTISIG;
-    BOOST_CHECK(!::IsStandard(one_of_four, whichType));
+    FAST_CHECK(!::IsStandard(one_of_four, whichType));
 
     CScript malformed[6];
     malformed[0] << OP_3 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
     malformed[5] << OP_1 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey());
 
     for (int i = 0; i < 6; i++)
-        BOOST_CHECK(!::IsStandard(malformed[i], whichType));
+        FAST_CHECK(!::IsStandard(malformed[i], whichType));
 }
 
 BOOST_AUTO_TEST_CASE(multisig_Solver1)
@@ -204,64 +204,64 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         txnouttype whichType;
         CScript s;
         s << ToByteVector(key[0].GetPubKey()) << OP_CHECKSIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK(solutions.size() == 1);
+        FAST_CHECK(Solver(s, whichType, solutions));
+        FAST_CHECK(solutions.size() == 1);
         CTxDestination addr;
-        BOOST_CHECK(ExtractDestination(s, addr));
-        BOOST_CHECK(addr == keyaddr[0]);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
+        FAST_CHECK(ExtractDestination(s, addr));
+        FAST_CHECK(addr == keyaddr[0]);
+        FAST_CHECK(IsMine(keystore, s));
+        FAST_CHECK(!IsMine(emptykeystore, s));
     }
     {
         vector<valtype> solutions;
         txnouttype whichType;
         CScript s;
         s << OP_DUP << OP_HASH160 << ToByteVector(key[0].GetPubKey().GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK(solutions.size() == 1);
+        FAST_CHECK(Solver(s, whichType, solutions));
+        FAST_CHECK(solutions.size() == 1);
         CTxDestination addr;
-        BOOST_CHECK(ExtractDestination(s, addr));
-        BOOST_CHECK(addr == keyaddr[0]);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
+        FAST_CHECK(ExtractDestination(s, addr));
+        FAST_CHECK(addr == keyaddr[0]);
+        FAST_CHECK(IsMine(keystore, s));
+        FAST_CHECK(!IsMine(emptykeystore, s));
     }
     {
         vector<valtype> solutions;
         txnouttype whichType;
         CScript s;
         s << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK_EQUAL(solutions.size(), 4U);
+        FAST_CHECK(Solver(s, whichType, solutions));
+        FAST_CHECK_EQUAL(solutions.size(), 4U);
         CTxDestination addr;
-        BOOST_CHECK(!ExtractDestination(s, addr));
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
+        FAST_CHECK(!ExtractDestination(s, addr));
+        FAST_CHECK(IsMine(keystore, s));
+        FAST_CHECK(!IsMine(emptykeystore, s));
+        FAST_CHECK(!IsMine(partialkeystore, s));
     }
     {
         vector<valtype> solutions;
         txnouttype whichType;
         CScript s;
         s << OP_1 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK_EQUAL(solutions.size(), 4U);
+        FAST_CHECK(Solver(s, whichType, solutions));
+        FAST_CHECK_EQUAL(solutions.size(), 4U);
         vector<CTxDestination> addrs;
         int nRequired;
-        BOOST_CHECK(ExtractDestinations(s, whichType, addrs, nRequired));
-        BOOST_CHECK(addrs[0] == keyaddr[0]);
-        BOOST_CHECK(addrs[1] == keyaddr[1]);
-        BOOST_CHECK(nRequired == 1);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
+        FAST_CHECK(ExtractDestinations(s, whichType, addrs, nRequired));
+        FAST_CHECK(addrs[0] == keyaddr[0]);
+        FAST_CHECK(addrs[1] == keyaddr[1]);
+        FAST_CHECK(nRequired == 1);
+        FAST_CHECK(IsMine(keystore, s));
+        FAST_CHECK(!IsMine(emptykeystore, s));
+        FAST_CHECK(!IsMine(partialkeystore, s));
     }
     {
         vector<valtype> solutions;
         txnouttype whichType;
         CScript s;
         s << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << ToByteVector(key[2].GetPubKey()) << OP_3 << OP_CHECKMULTISIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK(solutions.size() == 5);
+        FAST_CHECK(Solver(s, whichType, solutions));
+        FAST_CHECK(solutions.size() == 5);
     }
 }
 

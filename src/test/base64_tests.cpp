@@ -16,9 +16,9 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
     for (unsigned int i=0; i<sizeof(vstrIn)/sizeof(vstrIn[0]); i++)
     {
         std::string strEnc = EncodeBase64(vstrIn[i]);
-        BOOST_CHECK(strEnc == vstrOut[i]);
+        FAST_CHECK(strEnc == vstrOut[i]);
         std::string strDec = DecodeBase64(strEnc);
-        BOOST_CHECK(strDec == vstrIn[i]);
+        FAST_CHECK(strDec == vstrIn[i]);
     }
 }
 

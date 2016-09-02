@@ -14,6 +14,13 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
+#define FAST_CHECK(x) if (!(x)) { BOOST_CHECK_MESSAGE(false, #x); }
+#define FAST_CHECK_EQUAL(x, y) if ((x)!=(y)) { BOOST_CHECK_MESSAGE(false, "(" #x ") != (" #y ")"); }
+#define FAST_CHECK_THROW(expr, ex) try { expr; BOOST_CHECK_MESSAGE(false, "( " #expr " ) did not throw ( " #ex " )"); } catch( ex ) { }
+#define FAST_CHECK_NO_THROW(expr) try { expr;  } catch( ... ) {BOOST_CHECK_MESSAGE(false, "( " #expr " ) threw exception"); }
+#define FAST_CHECK_EXCEPTION(expr, ex, pred) try { expr; BOOST_CHECK_MESSAGE(false, "( " #expr " ) did not throw ( " #ex " )"); } catch( ex& a ) { if (!pred(a)) BOOST_CHECK_MESSAGE(false, "( " #expr " ) did not throw ( " #ex " ) under ( " #pred " )" ); }
+#define FAST_CHECK_EQUAL_COLLECTIONS(l, r, l1, r1) BOOST_CHECK_EQUAL_COLLECTIONS(l, r, l1, r1) 
+
 /** Basic testing setup.
  * This just configures logging and chain parameters.
  */

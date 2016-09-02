@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
     boost::chrono::system_clock::time_point now = start;
     boost::chrono::system_clock::time_point first, last;
     size_t nTasks = microTasks.getQueueInfo(first, last);
-    BOOST_CHECK(nTasks == 0);
+    FAST_CHECK(nTasks == 0);
 
     for (int i = 0; i < 100; i++) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(manythreads)
         microTasks.schedule(f, t);
     }
     nTasks = microTasks.getQueueInfo(first, last);
-    BOOST_CHECK(nTasks == 100);
-    BOOST_CHECK(first < last);
-    BOOST_CHECK(last > now);
+    FAST_CHECK(nTasks == 100);
+    FAST_CHECK(first < last);
+    FAST_CHECK(last > now);
 
     // As soon as these are created they will start running and servicing the queue
     boost::thread_group microThreads;
@@ -110,10 +110,10 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     int counterSum = 0;
     for (int i = 0; i < 10; i++) {
-        BOOST_CHECK(counter[i] != 0);
+        FAST_CHECK(counter[i] != 0);
         counterSum += counter[i];
     }
-    BOOST_CHECK_EQUAL(counterSum, 200);
+    FAST_CHECK_EQUAL(counterSum, 200);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

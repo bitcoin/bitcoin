@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
         }
         std::cout << "\n";
         #endif
-        BOOST_CHECK(sh == sho);
+        FAST_CHECK(sh == sho);
     }
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "]\n";
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
 
           CValidationState state;
           BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
-          BOOST_CHECK(state.IsValid());
+          FAST_CHECK(state.IsValid());
 
           std::vector<unsigned char> raw = ParseHex(raw_script);
           scriptCode.insert(scriptCode.end(), raw.begin(), raw.end());

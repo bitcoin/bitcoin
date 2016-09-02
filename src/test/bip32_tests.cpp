@@ -91,7 +91,7 @@ void RunTest(const TestVector &test) {
 
         // Test private key
         CBitcoinExtKey b58key; b58key.SetKey(key);
-        BOOST_CHECK(b58key.ToString() == derive.prv);
+        FAST_CHECK(b58key.ToString() == derive.prv);
 
         CBitcoinExtKey b58keyDecodeCheck(derive.prv);
         CExtKey checkKey = b58keyDecodeCheck.GetKey();
@@ -99,7 +99,7 @@ void RunTest(const TestVector &test) {
 
         // Test public key
         CBitcoinExtPubKey b58pubkey; b58pubkey.SetKey(pubkey);
-        BOOST_CHECK(b58pubkey.ToString() == derive.pub);
+        FAST_CHECK(b58pubkey.ToString() == derive.pub);
 
         CBitcoinExtPubKey b58PubkeyDecodeCheck(derive.pub);
         CExtPubKey checkPubKey = b58PubkeyDecodeCheck.GetKey();
@@ -107,32 +107,32 @@ void RunTest(const TestVector &test) {
 
         // Derive new keys
         CExtKey keyNew;
-        BOOST_CHECK(key.Derive(keyNew, derive.nChild));
+        FAST_CHECK(key.Derive(keyNew, derive.nChild));
         CExtPubKey pubkeyNew = keyNew.Neuter();
         if (!(derive.nChild & 0x80000000)) {
             // Compare with public derivation
             CExtPubKey pubkeyNew2;
-            BOOST_CHECK(pubkey.Derive(pubkeyNew2, derive.nChild));
-            BOOST_CHECK(pubkeyNew == pubkeyNew2);
+            FAST_CHECK(pubkey.Derive(pubkeyNew2, derive.nChild));
+            FAST_CHECK(pubkeyNew == pubkeyNew2);
         }
         key = keyNew;
         pubkey = pubkeyNew;
 
         CDataStream ssPub(SER_DISK, CLIENT_VERSION);
         ssPub << pubkeyNew;
-        BOOST_CHECK(ssPub.size() == 75);
+        FAST_CHECK(ssPub.size() == 75);
 
         CDataStream ssPriv(SER_DISK, CLIENT_VERSION);
         ssPriv << keyNew;
-        BOOST_CHECK(ssPriv.size() == 75);
+        FAST_CHECK(ssPriv.size() == 75);
 
         CExtPubKey pubCheck;
         CExtKey privCheck;
         ssPub >> pubCheck;
         ssPriv >> privCheck;
 
-        BOOST_CHECK(pubCheck == pubkeyNew);
-        BOOST_CHECK(privCheck == keyNew);
+        FAST_CHECK(pubCheck == pubkeyNew);
+        FAST_CHECK(privCheck == keyNew);
     }
 }
 

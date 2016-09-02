@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(merkle_test)
             // Compute the root of the block before mutating it.
             bool unmutatedMutated = false;
             uint256 unmutatedRoot = BlockMerkleRoot(block, &unmutatedMutated);
-            BOOST_CHECK(unmutatedMutated == false);
+            FAST_CHECK(unmutatedMutated == false);
             // Optionally mutate by duplicating the last transactions, resulting in the same merkle root.
             block.vtx.resize(ntx3);
             for (int j = 0; j < duplicate1; j++) {
@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(merkle_test)
             // Compute the merkle root using the new mechanism.
             bool newMutated = false;
             uint256 newRoot = BlockMerkleRoot(block, &newMutated);
-            BOOST_CHECK(oldRoot == newRoot);
-            BOOST_CHECK(newRoot == unmutatedRoot);
-            BOOST_CHECK((newRoot == uint256()) == (ntx == 0));
-            BOOST_CHECK(oldMutated == newMutated);
-            BOOST_CHECK(newMutated == !!mutate);
+            FAST_CHECK(oldRoot == newRoot);
+            FAST_CHECK(newRoot == unmutatedRoot);
+            FAST_CHECK((newRoot == uint256()) == (ntx == 0));
+            FAST_CHECK(oldMutated == newMutated);
+            FAST_CHECK(newMutated == !!mutate);
             // If no mutation was done (once for every ntx value), try up to 16 branches.
             if (mutate == 0) {
                 for (int loop = 0; loop < std::min(ntx, 16); loop++) {
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(merkle_test)
                     }
                     std::vector<uint256> newBranch = BlockMerkleBranch(block, mtx);
                     std::vector<uint256> oldBranch = BlockGetMerkleBranch(block, merkleTree, mtx);
-                    BOOST_CHECK(oldBranch == newBranch);
-                    BOOST_CHECK(ComputeMerkleRootFromBranch(block.vtx[mtx].GetHash(), newBranch, mtx) == oldRoot);
+                    FAST_CHECK(oldBranch == newBranch);
+                    FAST_CHECK(ComputeMerkleRootFromBranch(block.vtx[mtx].GetHash(), newBranch, mtx) == oldRoot);
                 }
             }
         }

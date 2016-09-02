@@ -18,15 +18,15 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
     CAmount nInitialSubsidy = 50 * COIN;
 
     CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
+    FAST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
     for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
         int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
+        FAST_CHECK(nSubsidy <= nInitialSubsidy);
+        FAST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
         nPreviousSubsidy = nSubsidy;
     }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
+    FAST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
 }
 
 static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
@@ -49,11 +49,11 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     CAmount nSum = 0;
     for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
+        FAST_CHECK(nSubsidy <= 50 * COIN);
         nSum += nSubsidy * 1000;
-        BOOST_CHECK(MoneyRange(nSum));
+        FAST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, 2099999997690000ULL);
+    FAST_CHECK_EQUAL(nSum, 2099999997690000ULL);
 }
 
 bool ReturnFalse() { return false; }
@@ -62,14 +62,14 @@ bool ReturnTrue() { return true; }
 BOOST_AUTO_TEST_CASE(test_combiner_all)
 {
     boost::signals2::signal<bool (), CombinerAll> Test;
-    BOOST_CHECK(Test());
+    FAST_CHECK(Test());
     Test.connect(&ReturnFalse);
-    BOOST_CHECK(!Test());
+    FAST_CHECK(!Test());
     Test.connect(&ReturnTrue);
-    BOOST_CHECK(!Test());
+    FAST_CHECK(!Test());
     Test.disconnect(&ReturnFalse);
-    BOOST_CHECK(Test());
+    FAST_CHECK(Test());
     Test.disconnect(&ReturnTrue);
-    BOOST_CHECK(Test());
+    FAST_CHECK(Test());
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     
     key += '\x00','\x00';
     ds.Xor(key);
-    BOOST_CHECK_EQUAL(
+    FAST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()), 
             std::string(ds.begin(), ds.end()));
 
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
     key += '\xff';
     ds.Xor(key);
-    BOOST_CHECK_EQUAL(
+    FAST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()), 
             std::string(ds.begin(), ds.end())); 
     
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     key += '\xff','\x0f';
 
     ds.Xor(key);
-    BOOST_CHECK_EQUAL(
+    FAST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()), 
             std::string(ds.begin(), ds.end()));  
 }         

@@ -31,20 +31,20 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
 {
     // Test CScript::GetSigOpCount()
     CScript s1;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 0U);
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 0U);
+    FAST_CHECK_EQUAL(s1.GetSigOpCount(false), 0U);
+    FAST_CHECK_EQUAL(s1.GetSigOpCount(true), 0U);
 
     uint160 dummy;
     s1 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 2U);
+    FAST_CHECK_EQUAL(s1.GetSigOpCount(true), 2U);
     s1 << OP_IF << OP_CHECKSIG << OP_ENDIF;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 3U);
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 21U);
+    FAST_CHECK_EQUAL(s1.GetSigOpCount(true), 3U);
+    FAST_CHECK_EQUAL(s1.GetSigOpCount(false), 21U);
 
     CScript p2sh = GetScriptForDestination(CScriptID(s1));
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
+    FAST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
 
     std::vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
@@ -54,15 +54,15 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
         keys.push_back(k.GetPubKey());
     }
     CScript s2 = GetScriptForMultisig(1, keys);
-    BOOST_CHECK_EQUAL(s2.GetSigOpCount(true), 3U);
-    BOOST_CHECK_EQUAL(s2.GetSigOpCount(false), 20U);
+    FAST_CHECK_EQUAL(s2.GetSigOpCount(true), 3U);
+    FAST_CHECK_EQUAL(s2.GetSigOpCount(false), 20U);
 
     p2sh = GetScriptForDestination(CScriptID(s2));
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(true), 0U);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(false), 0U);
+    FAST_CHECK_EQUAL(p2sh.GetSigOpCount(true), 0U);
+    FAST_CHECK_EQUAL(p2sh.GetSigOpCount(false), 0U);
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
+    FAST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
 }
 
 /**
@@ -74,7 +74,7 @@ ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTransaction
     ScriptError error;
     CTransaction inputi(input);
     bool ret = VerifyScript(inputi.vin[0].scriptSig, output.vout[0].scriptPubKey, inputi.wit.vtxinwit.size() > 0 ? &inputi.wit.vtxinwit[0].scriptWitness : NULL, flags, TransactionSignatureChecker(&inputi, 0, output.vout[0].nValue), &error);
-    BOOST_CHECK((ret == true) == (error == SCRIPT_ERR_OK));
+    FAST_CHECK((ret == true) == (error == SCRIPT_ERR_OK));
 
     return error;
 }

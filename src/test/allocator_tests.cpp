@@ -62,17 +62,17 @@ BOOST_AUTO_TEST_CASE(test_LockedPageManagerBase)
     }
     /* one very large object, straddling pages */
     lpm.LockRange(reinterpret_cast<void*>(test_page_size*600+1), test_page_size*500);
-    BOOST_CHECK(last_lock_addr == reinterpret_cast<void*>(test_page_size*(600+500)));
+    FAST_CHECK(last_lock_addr == reinterpret_cast<void*>(test_page_size*(600+500)));
     /* one very large object, page aligned */
     lpm.LockRange(reinterpret_cast<void*>(test_page_size*1200), test_page_size*500-1);
-    BOOST_CHECK(last_lock_addr == reinterpret_cast<void*>(test_page_size*(1200+500-1)));
+    FAST_CHECK(last_lock_addr == reinterpret_cast<void*>(test_page_size*(1200+500-1)));
 
-    BOOST_CHECK(lpm.GetLockedPageCount() == (
+    FAST_CHECK(lpm.GetLockedPageCount() == (
         (1000*33+test_page_size-1)/test_page_size + // small objects
         101 + 100 +  // page-sized objects
         501 + 500)); // large objects
-    BOOST_CHECK((last_lock_len & (test_page_size-1)) == 0); // always lock entire pages
-    BOOST_CHECK(last_unlock_len == 0); // nothing unlocked yet
+    FAST_CHECK((last_lock_len & (test_page_size-1)) == 0); // always lock entire pages
+    FAST_CHECK(last_unlock_len == 0); // nothing unlocked yet
 
     /* And unlock again */
     addr = 0;
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_LockedPageManagerBase)
     lpm.UnlockRange(reinterpret_cast<void*>(test_page_size*1200), test_page_size*500-1);
 
     /* Check that everything is released */
-    BOOST_CHECK(lpm.GetLockedPageCount() == 0);
+    FAST_CHECK(lpm.GetLockedPageCount() == 0);
 
     /* A few and unlocks of size zero (should have no effect) */
     addr = 0;
@@ -106,15 +106,15 @@ BOOST_AUTO_TEST_CASE(test_LockedPageManagerBase)
         lpm.LockRange(reinterpret_cast<void*>(addr), 0);
         addr += 1;
     }
-    BOOST_CHECK(lpm.GetLockedPageCount() == 0);
+    FAST_CHECK(lpm.GetLockedPageCount() == 0);
     addr = 0;
     for(int i=0; i<1000; ++i)
     {
         lpm.UnlockRange(reinterpret_cast<void*>(addr), 0);
         addr += 1;
     }
-    BOOST_CHECK(lpm.GetLockedPageCount() == 0);
-    BOOST_CHECK((last_unlock_len & (test_page_size-1)) == 0); // always unlock entire pages
+    FAST_CHECK(lpm.GetLockedPageCount() == 0);
+    FAST_CHECK((last_unlock_len & (test_page_size-1)) == 0); // always unlock entire pages
 }
 
 BOOST_AUTO_TEST_SUITE_END()
