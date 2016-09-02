@@ -1035,7 +1035,26 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    int nMaxInbound = nMaxConnections - nMaxOutConnections - mapMultiArgs["-addnode"].size();
+    //NOTE: BU added separate tracking of outbound nodes added via the "-addnode" option.  This means that you actually
+    //      may end up with up to 2 * nMaxOutConnections outbound connections due to the separate semaphores.
+    //
+    //1. Limit the number of possible "-addnode" outbounds to not exceed nMaxOutConnections
+    //   Otherwise we waste inbound connection slots on outbound addnodes that are blocked waiting on the semaphore.
+    //2. BUT, if less than nMaxOutConnections in vAddedNodes, open up any of the unreserved
+    //   "-addnode" connection slots to the inbound pool to prevent holding presently unneeded outbound connection slots.
+    int nMaxAddNodeOutbound = nMaxOutConnections;
+    {
+        LOCK(cs_vAddedNodes);
+        nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
+    }
+    int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
+    //REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't tracked
+    //         b. This also doesn't take into account whether or not the tracked vAddedNodes are valid or connected
+    //         c. There is also an edge case where if less than nMaxOutConnections entries exist in vAddedNodes
+    //            and there are already "maxconnections", between inbound and outbound nodes, the user can still use
+    //            RPC "addnode <node> add" to successfully start additional outbound connections
+    //         Points a. and c. can allow users to exceed "maxconnections"
+    //         Point b. can cause us to waste slots holding them for invalid addnode entries that will never connect.
 
     if (hSocket != INVALID_SOCKET)
         if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
@@ -1612,6 +1631,9 @@ void static ProcessOneShot()
     }
     CAddress addr;
     CSemaphoreGrant grant(*semOutbound, true);
+    //Seeding nodes track against the original outbound semaphore.
+    //Uses try-wait methodology because if a grant is given, there are outbound
+    //slots to fill, and if the grant isn't given, there's no seeding to do.
     if (grant) {
         if (!OpenNetworkConnection(addr, &grant, strDest.c_str(), true))
             AddOneShot(strDest);
@@ -1630,6 +1652,8 @@ void ThreadOpenConnections()
             BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-connect"])
             {
                 CAddress addr;
+                //NOTE: Because the only nodes we are connecting to here are the ones the user put in their
+                //      bitcoin.conf/commandline args as "-connect", we don't use the semaphore to limit outbound connections
                 OpenNetworkConnection(addr, NULL, strAddr.c_str());
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
@@ -1642,6 +1666,9 @@ void ThreadOpenConnections()
            ConnectToThinBlockNodes();
            // BUIP010 Xtreme Thinblocks: end section
         }
+
+        //NOTE: If we are in this block, then no seeding should occur as both "-connect" and
+        //      "-connect-thinblock" are intended as "only make outbound connections to the configured nodes".
     }
 
     // Initiate network connections
@@ -1716,6 +1743,7 @@ void ThreadOpenConnections()
         }
 
         if (addrConnect.IsValid())
+            //Seeded outbound connections track against the original semaphore
             OpenNetworkConnection(addrConnect, &grant);
     }
 }
@@ -1727,16 +1755,16 @@ void ThreadOpenAddedConnections()
     //     to be possible, when it should not be.
     MilliSleep(15000);
 
-    {
-        LOCK(cs_vAddedNodes);
-        vAddedNodes = mapMultiArgs["-addnode"];
-    }
-
     // BU: we need our own separate semaphore for -addnodes otherwise we won't be able to reconnect
     //     after a remote node restarts, becuase all the outgoing connection slots will already be filled.
     if (semOutboundAddNode == NULL) {
-        int maxAddNodeConnections = std::min((int)mapMultiArgs["-addnode"].size(), nMaxOutConnections);
-        semOutboundAddNode = new CSemaphore(maxAddNodeConnections);
+        //NOTE: Because the number of "-addnode" values can be changed via RPC calls to "addnode add|remove"
+        //      we should always set the semaphore to have a count of nMaxOutConnections, otherwise
+        //      the user's configuration could unintentionally limit the number of "-addnode" connections
+        //      that can be made through RPC.  In the worst case, if no "-addnode" options were configured,
+        //      this would break the RPC addnode functionality as the semaphore would have an initial count
+        //      condition of 0 and grants would never succeed.
+        semOutboundAddNode = new CSemaphore(nMaxOutConnections);
     }
 
     if (HaveNameProxy()) {
@@ -1748,7 +1776,10 @@ void ThreadOpenAddedConnections()
                     lAddresses.push_back(strAddNode);
             }
             BOOST_FOREACH(const std::string& strAddNode, lAddresses) {
-  	        CAddress addr;
+  	            CAddress addr;
+                // BU: always allow us to add a node manually. Whenever we use -addnode the maximum InBound connections are reduced by
+                //     the same number.  Here we use our own semaphore to ensure we have the outbound slots we need and can reconnect to 
+                //     nodes that have restarted.
                 CSemaphoreGrant grant(*semOutboundAddNode);
                 OpenNetworkConnection(addr, &grant, strAddNode.c_str());
                 MilliSleep(500);
@@ -2086,6 +2117,16 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
+    //We need to initialize vAddedNodes here.  It is now used in AcceptConnection to limit the number of inbound
+    //connections based on the configured "addnode" options from bitcoin.conf/command line, however the old
+    //initialization location in ThreadOpenAddedConnections was both started after ThreadSocketHandler, which
+    //calls AcceptConnection, and has an explicit 15 second delay to the start of ThreadOpenAddedConnections
+    //which allows any nodes actively trying to connect to this node during startup to exceed the inbound connection limit
+    {
+        LOCK(cs_vAddedNodes);
+        vAddedNodes = mapMultiArgs["-addnode"];
+    }
+
     if (pnodeLocalHost == NULL)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
 
@@ -2164,6 +2205,9 @@ CNetCleanup::~CNetCleanup()
         vhListenSocket.clear();
         delete semOutbound;
         semOutbound = NULL;
+        //BU: clean up the "-addnode" semaphore
+        delete semOutboundAddNode;
+        semOutboundAddNode = NULL;
         delete pnodeLocalHost;
         pnodeLocalHost = NULL;
 
