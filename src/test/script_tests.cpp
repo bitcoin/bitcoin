@@ -908,22 +908,22 @@ BOOST_AUTO_TEST_CASE(script_PushData)
 
     ScriptError err;
     vector<vector<unsigned char> > directStack;
-    BOOST_CHECK(EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
+    FAST_CHECK(EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     vector<vector<unsigned char> > pushdata1Stack;
-    BOOST_CHECK(EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
-    BOOST_CHECK(pushdata1Stack == directStack);
+    FAST_CHECK(EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
+    FAST_CHECK(pushdata1Stack == directStack);
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     vector<vector<unsigned char> > pushdata2Stack;
-    BOOST_CHECK(EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
-    BOOST_CHECK(pushdata2Stack == directStack);
+    FAST_CHECK(EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
+    FAST_CHECK(pushdata2Stack == directStack);
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     vector<vector<unsigned char> > pushdata4Stack;
-    BOOST_CHECK(EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
-    BOOST_CHECK(pushdata4Stack == directStack);
+    FAST_CHECK(EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SIGVERSION_BASE, &err));
+    FAST_CHECK(pushdata4Stack == directStack);
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
 
@@ -945,7 +945,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     BOOST_FOREACH(const CKey &key, keys)
     {
         vector<unsigned char> vchSig;
-        BOOST_CHECK(key.Sign(hash, vchSig));
+        FAST_CHECK(key.Sign(hash, vchSig));
         vchSig.push_back((unsigned char)SIGHASH_ALL);
         result << vchSig;
     }
@@ -974,18 +974,18 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CMutableTransaction txTo12 = BuildSpendingTransaction(CScript(), CScriptWitness(), txFrom12);
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
+    FAST_CHECK(VerifyScript(goodsig1, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
     txTo12.vout[0].nValue = 2;
-    BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 
     CScript goodsig2 = sign_multisig(scriptPubKey12, key2, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
+    FAST_CHECK(VerifyScript(goodsig2, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     CScript badsig1 = sign_multisig(scriptPubKey12, key3, txTo12);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig1, scriptPubKey12, NULL, flags, MutableTransactionSignatureChecker(&txTo12, 0, txFrom12.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 }
 
@@ -1007,54 +1007,54 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     std::vector<CKey> keys;
     keys.push_back(key1); keys.push_back(key2);
     CScript goodsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(VerifyScript(goodsig1, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key3);
     CScript goodsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(VerifyScript(goodsig2, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key3);
     CScript goodsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig3, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(VerifyScript(goodsig3, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key2); // Can't re-use sig
     CScript badsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig1, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key1); // sigs must be in correct order
     CScript badsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig2, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig2, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key3); keys.push_back(key2); // sigs must be in correct order
     CScript badsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig3, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig3, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key4); keys.push_back(key2); // sigs must match pubkeys
     CScript badsig4 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig4, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig4, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key4); // sigs must match pubkeys
     CScript badsig5 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig5, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig5, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
 
     keys.clear(); // Must have signatures
     CScript badsig6 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
+    FAST_CHECK(!VerifyScript(badsig6, scriptPubKey23, NULL, flags, MutableTransactionSignatureChecker(&txTo23, 0, txFrom23.vout[0].nValue), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
 }
 
@@ -1081,19 +1081,19 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
 
     SignatureData empty;
     SignatureData combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), empty, empty);
-    BOOST_CHECK(combined.scriptSig.empty());
+    FAST_CHECK(combined.scriptSig.empty());
 
     // Single signature case:
     SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL); // changes scriptSig
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSig), empty);
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), empty, SignatureData(scriptSig));
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
     CScript scriptSigCopy = scriptSig;
     // Signing again will give a different, valid signature:
     SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSigCopy), SignatureData(scriptSig));
-    BOOST_CHECK(combined.scriptSig == scriptSigCopy || combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSigCopy || combined.scriptSig == scriptSig);
 
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << ToByteVector(keys[0].GetPubKey()) << OP_CHECKSIG;
@@ -1101,41 +1101,41 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     scriptPubKey = GetScriptForDestination(CScriptID(pkSingle));
     SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSig), empty);
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), empty, SignatureData(scriptSig));
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
     scriptSigCopy = scriptSig;
     SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSigCopy), SignatureData(scriptSig));
-    BOOST_CHECK(combined.scriptSig == scriptSigCopy || combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSigCopy || combined.scriptSig == scriptSig);
     // dummy scriptSigCopy with placeholder, should always choose non-placeholder:
     scriptSigCopy = CScript() << OP_0 << std::vector<unsigned char>(pkSingle.begin(), pkSingle.end());
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSigCopy), SignatureData(scriptSig));
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSig), SignatureData(scriptSigCopy));
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
 
     // Hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
     keystore.AddCScript(scriptPubKey);
     SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSig), empty);
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), empty, SignatureData(scriptSig));
-    BOOST_CHECK(combined.scriptSig == scriptSig);
+    FAST_CHECK(combined.scriptSig == scriptSig);
 
     // A couple of partially-signed versions:
     vector<unsigned char> sig1;
     uint256 hash1 = SignatureHash(scriptPubKey, txTo, 0, SIGHASH_ALL, 0, SIGVERSION_BASE);
-    BOOST_CHECK(keys[0].Sign(hash1, sig1));
+    FAST_CHECK(keys[0].Sign(hash1, sig1));
     sig1.push_back(SIGHASH_ALL);
     vector<unsigned char> sig2;
     uint256 hash2 = SignatureHash(scriptPubKey, txTo, 0, SIGHASH_NONE, 0, SIGVERSION_BASE);
-    BOOST_CHECK(keys[1].Sign(hash2, sig2));
+    FAST_CHECK(keys[1].Sign(hash2, sig2));
     sig2.push_back(SIGHASH_NONE);
     vector<unsigned char> sig3;
     uint256 hash3 = SignatureHash(scriptPubKey, txTo, 0, SIGHASH_SINGLE, 0, SIGVERSION_BASE);
-    BOOST_CHECK(keys[2].Sign(hash3, sig3));
+    FAST_CHECK(keys[2].Sign(hash3, sig3));
     sig3.push_back(SIGHASH_SINGLE);
 
     // Not fussy about order (or even existence) of placeholders or signatures:
@@ -1151,21 +1151,21 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript complete23 = CScript() << OP_0 << sig2 << sig3;
 
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial1a), SignatureData(partial1b));
-    BOOST_CHECK(combined.scriptSig == partial1a);
+    FAST_CHECK(combined.scriptSig == partial1a);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial1a), SignatureData(partial2a));
-    BOOST_CHECK(combined.scriptSig == complete12);
+    FAST_CHECK(combined.scriptSig == complete12);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial2a), SignatureData(partial1a));
-    BOOST_CHECK(combined.scriptSig == complete12);
+    FAST_CHECK(combined.scriptSig == complete12);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial1b), SignatureData(partial2b));
-    BOOST_CHECK(combined.scriptSig == complete12);
+    FAST_CHECK(combined.scriptSig == complete12);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial3b), SignatureData(partial1b));
-    BOOST_CHECK(combined.scriptSig == complete13);
+    FAST_CHECK(combined.scriptSig == complete13);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial2a), SignatureData(partial3a));
-    BOOST_CHECK(combined.scriptSig == complete23);
+    FAST_CHECK(combined.scriptSig == complete23);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial3b), SignatureData(partial2b));
-    BOOST_CHECK(combined.scriptSig == complete23);
+    FAST_CHECK(combined.scriptSig == complete23);
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(partial3b), SignatureData(partial3a));
-    BOOST_CHECK(combined.scriptSig == partial3c);
+    FAST_CHECK(combined.scriptSig == partial3c);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_push)
@@ -1197,37 +1197,37 @@ BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
     // not be consensus critical as the P2SH evaluation would fail first due to
     // the invalid push. Still, it doesn't hurt to test it explicitly.
     static const unsigned char direct[] = { 1 };
-    BOOST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
+    FAST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
 }
 
 BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
 {
-    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2, true));
-    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY, true));
-    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2));
-    BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY));
+    FAST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2, true));
+    FAST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY, true));
+    FAST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2));
+    FAST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_CHECKLOCKTIMEVERIFY));
 
     string derSig("304502207fa7a6d1e0ee81132a269ad84e68d695483745cde8b541e3bf630749894e342a022100c1f7ab20e13e22fb95281a870f3dcf38d782e53023ee313d741ad0cfbc0c5090");
     string pubKey("03b0da749730dc9b4b1f4a14d6902877a92541f5368778853d9c4a0cb7802dcfb2");
     vector<unsigned char> vchPubKey = ToByteVector(ParseHex(pubKey));
 
-    BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[ALL] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[NONE] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[SINGLE] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[ALL|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[NONE|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey, true));
-    BOOST_CHECK_EQUAL(derSig + "[SINGLE|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "[ALL] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "[NONE] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "[SINGLE] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "[ALL|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "[NONE|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey, true));
+    FAST_CHECK_EQUAL(derSig + "[SINGLE|ANYONECANPAY] " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey, true));
 
-    BOOST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "01 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "02 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "03 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "81 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "82 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
-    BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "00 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "00")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "80 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "80")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "01 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "01")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "02 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "02")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "03 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "03")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "81 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "82 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
+    FAST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
 }
 
 static CScript
@@ -1248,103 +1248,103 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     s = CScript() << OP_1 << OP_2;
     d = CScript(); // delete nothing should be a no-op
     expect = s;
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    FAST_CHECK(s == expect);
 
     s = CScript() << OP_1 << OP_2 << OP_3;
     d = CScript() << OP_2;
     expect = CScript() << OP_1 << OP_3;
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 
     s = CScript() << OP_3 << OP_1 << OP_3 << OP_3 << OP_4 << OP_3;
     d = CScript() << OP_3;
     expect = CScript() << OP_1 << OP_4;
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 4);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 4);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("0302ff03"); // PUSH 0x02ff03 onto stack
     d = ScriptFromHex("0302ff03");
     expect = CScript();
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("0302ff030302ff03"); // PUSH 0x2ff03 PUSH 0x2ff03
     d = ScriptFromHex("0302ff03");
     expect = CScript();
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 2);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 2);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("0302ff030302ff03");
     d = ScriptFromHex("02");
     expect = s; // FindAndDelete matches entire opcodes
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("0302ff030302ff03");
     d = ScriptFromHex("ff");
     expect = s;
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    FAST_CHECK(s == expect);
 
     // This is an odd edge case: strip of the push-three-bytes
     // prefix, leaving 02ff03 which is push-two-bytes:
     s = ScriptFromHex("0302ff030302ff03");
     d = ScriptFromHex("03");
     expect = CScript() << ParseHex("ff03") << ParseHex("ff03");
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 2);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 2);
+    FAST_CHECK(s == expect);
 
     // Byte sequence that spans multiple opcodes:
     s = ScriptFromHex("02feed5169"); // PUSH(0xfeed) OP_1 OP_VERIFY
     d = ScriptFromHex("feed51");
     expect = s;
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0); // doesn't match 'inside' opcodes
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 0); // doesn't match 'inside' opcodes
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("02feed5169"); // PUSH(0xfeed) OP_1 OP_VERIFY
     d = ScriptFromHex("02feed51");
     expect = ScriptFromHex("69");
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("516902feed5169");
     d = ScriptFromHex("feed51");
     expect = s;
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("516902feed5169");
     d = ScriptFromHex("02feed51");
     expect = ScriptFromHex("516969");
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 
     s = CScript() << OP_0 << OP_0 << OP_1 << OP_1;
     d = CScript() << OP_0 << OP_1;
     expect = CScript() << OP_0 << OP_1; // FindAndDelete is single-pass
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 
     s = CScript() << OP_0 << OP_0 << OP_1 << OP_0 << OP_1 << OP_1;
     d = CScript() << OP_0 << OP_1;
     expect = CScript() << OP_0 << OP_1; // FindAndDelete is single-pass
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 2);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 2);
+    FAST_CHECK(s == expect);
 
     // Another weird edge case:
     // End with invalid push (not enough data)...
     s = ScriptFromHex("0003feed");
     d = ScriptFromHex("03feed"); // ... can remove the invalid push
     expect = ScriptFromHex("00");
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 
     s = ScriptFromHex("0003feed");
     d = ScriptFromHex("00");
     expect = ScriptFromHex("03feed");
-    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
-    BOOST_CHECK(s == expect);
+    FAST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    FAST_CHECK(s == expect);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

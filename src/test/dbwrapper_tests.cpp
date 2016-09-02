@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         uint256 res;
 
         // Ensure that we're doing real obfuscation when obfuscate=true
-        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
+        FAST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
 
-        BOOST_CHECK(dbw.Write(key, in));
-        BOOST_CHECK(dbw.Read(key, res));
-        BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
+        FAST_CHECK(dbw.Write(key, in));
+        FAST_CHECK(dbw.Read(key, res));
+        FAST_CHECK_EQUAL(res.ToString(), in.ToString());
     }
 }
 
@@ -75,13 +75,13 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 
         dbw.WriteBatch(batch);
 
-        BOOST_CHECK(dbw.Read(key, res));
-        BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
-        BOOST_CHECK(dbw.Read(key2, res));
-        BOOST_CHECK_EQUAL(res.ToString(), in2.ToString());
+        FAST_CHECK(dbw.Read(key, res));
+        FAST_CHECK_EQUAL(res.ToString(), in.ToString());
+        FAST_CHECK(dbw.Read(key2, res));
+        FAST_CHECK_EQUAL(res.ToString(), in2.ToString());
 
         // key3 never should've been written
-        BOOST_CHECK(dbw.Read(key3, res) == false);
+        FAST_CHECK(dbw.Read(key3, res) == false);
     }
 }
 
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         // The two keys are intentionally chosen for ordering
         char key = 'j';
         uint256 in = GetRandHash();
-        BOOST_CHECK(dbw.Write(key, in));
+        FAST_CHECK(dbw.Write(key, in));
         char key2 = 'k';
         uint256 in2 = GetRandHash();
-        BOOST_CHECK(dbw.Write(key2, in2));
+        FAST_CHECK(dbw.Write(key2, in2));
 
         std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
 
@@ -111,18 +111,18 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 
         it->GetKey(key_res);
         it->GetValue(val_res);
-        BOOST_CHECK_EQUAL(key_res, key);
-        BOOST_CHECK_EQUAL(val_res.ToString(), in.ToString());
+        FAST_CHECK_EQUAL(key_res, key);
+        FAST_CHECK_EQUAL(val_res.ToString(), in.ToString());
 
         it->Next();
 
         it->GetKey(key_res);
         it->GetValue(val_res);
-        BOOST_CHECK_EQUAL(key_res, key2);
-        BOOST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
+        FAST_CHECK_EQUAL(key_res, key2);
+        FAST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
 
         it->Next();
-        BOOST_CHECK_EQUAL(it->Valid(), false);
+        FAST_CHECK_EQUAL(it->Valid(), false);
     }
 }
 
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     uint256 in = GetRandHash();
     uint256 res;
 
-    BOOST_CHECK(dbw->Write(key, in));
-    BOOST_CHECK(dbw->Read(key, res));
-    BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
+    FAST_CHECK(dbw->Write(key, in));
+    FAST_CHECK(dbw->Read(key, res));
+    FAST_CHECK_EQUAL(res.ToString(), in.ToString());
 
     // Call the destructor to free leveldb LOCK
     delete dbw;
@@ -152,19 +152,19 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     // Check that the key/val we wrote with unobfuscated wrapper exists and 
     // is readable.
     uint256 res2;
-    BOOST_CHECK(odbw.Read(key, res2));
-    BOOST_CHECK_EQUAL(res2.ToString(), in.ToString());
+    FAST_CHECK(odbw.Read(key, res2));
+    FAST_CHECK_EQUAL(res2.ToString(), in.ToString());
 
-    BOOST_CHECK(!odbw.IsEmpty()); // There should be existing data
-    BOOST_CHECK(is_null_key(dbwrapper_private::GetObfuscateKey(odbw))); // The key should be an empty string
+    FAST_CHECK(!odbw.IsEmpty()); // There should be existing data
+    FAST_CHECK(is_null_key(dbwrapper_private::GetObfuscateKey(odbw))); // The key should be an empty string
 
     uint256 in2 = GetRandHash();
     uint256 res3;
  
     // Check that we can write successfully
-    BOOST_CHECK(odbw.Write(key, in2));
-    BOOST_CHECK(odbw.Read(key, res3));
-    BOOST_CHECK_EQUAL(res3.ToString(), in2.ToString());
+    FAST_CHECK(odbw.Write(key, in2));
+    FAST_CHECK(odbw.Read(key, res3));
+    FAST_CHECK_EQUAL(res3.ToString(), in2.ToString());
 }
                         
 // Ensure that we start obfuscating during a reindex.
@@ -180,9 +180,9 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     uint256 in = GetRandHash();
     uint256 res;
 
-    BOOST_CHECK(dbw->Write(key, in));
-    BOOST_CHECK(dbw->Read(key, res));
-    BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
+    FAST_CHECK(dbw->Write(key, in));
+    FAST_CHECK(dbw->Read(key, res));
+    FAST_CHECK_EQUAL(res.ToString(), in.ToString());
 
     // Call the destructor to free leveldb LOCK
     delete dbw;
@@ -192,16 +192,16 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
 
     // Check that the key/val we wrote with unobfuscated wrapper doesn't exist
     uint256 res2;
-    BOOST_CHECK(!odbw.Read(key, res2));
-    BOOST_CHECK(!is_null_key(dbwrapper_private::GetObfuscateKey(odbw)));
+    FAST_CHECK(!odbw.Read(key, res2));
+    FAST_CHECK(!is_null_key(dbwrapper_private::GetObfuscateKey(odbw)));
 
     uint256 in2 = GetRandHash();
     uint256 res3;
  
     // Check that we can write successfully
-    BOOST_CHECK(odbw.Write(key, in2));
-    BOOST_CHECK(odbw.Read(key, res3));
-    BOOST_CHECK_EQUAL(res3.ToString(), in2.ToString());
+    FAST_CHECK(odbw.Write(key, in2));
+    FAST_CHECK(odbw.Read(key, res3));
+    FAST_CHECK_EQUAL(res3.ToString(), in2.ToString());
 }
 
 BOOST_AUTO_TEST_CASE(iterator_ordering)
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
     for (int x=0x00; x<256; ++x) {
         uint8_t key = x;
         uint32_t value = x*x;
-        BOOST_CHECK(dbw.Write(key, value));
+        FAST_CHECK(dbw.Write(key, value));
     }
 
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
@@ -225,16 +225,16 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
         for (int x=seek_start; x<256; ++x) {
             uint8_t key;
             uint32_t value;
-            BOOST_CHECK(it->Valid());
+            FAST_CHECK(it->Valid());
             if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
                 break;
-            BOOST_CHECK(it->GetKey(key));
-            BOOST_CHECK(it->GetValue(value));
-            BOOST_CHECK_EQUAL(key, x);
-            BOOST_CHECK_EQUAL(value, x*x);
+            FAST_CHECK(it->GetKey(key));
+            FAST_CHECK(it->GetValue(value));
+            FAST_CHECK_EQUAL(key, x);
+            FAST_CHECK_EQUAL(value, x*x);
             it->Next();
         }
-        BOOST_CHECK(!it->Valid());
+        FAST_CHECK(!it->Valid());
     }
 }
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
             for (int z = 0; z < y; z++)
                 key += key;
             uint32_t value = x*x;
-            BOOST_CHECK(dbw.Write(key, value));
+            FAST_CHECK(dbw.Write(key, value));
         }
     }
 
@@ -308,17 +308,17 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
                     exp_key += exp_key;
                 StringContentsSerializer key;
                 uint32_t value;
-                BOOST_CHECK(it->Valid());
+                FAST_CHECK(it->Valid());
                 if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
                     break;
-                BOOST_CHECK(it->GetKey(key));
-                BOOST_CHECK(it->GetValue(value));
-                BOOST_CHECK_EQUAL(key.str, exp_key);
-                BOOST_CHECK_EQUAL(value, x*x);
+                FAST_CHECK(it->GetKey(key));
+                FAST_CHECK(it->GetValue(value));
+                FAST_CHECK_EQUAL(key.str, exp_key);
+                FAST_CHECK_EQUAL(value, x*x);
                 it->Next();
             }
         }
-        BOOST_CHECK(!it->Valid());
+        FAST_CHECK(!it->Valid());
     }
 }
 

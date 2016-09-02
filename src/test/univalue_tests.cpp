@@ -19,150 +19,150 @@ BOOST_FIXTURE_TEST_SUITE(univalue_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(univalue_constructor)
 {
     UniValue v1;
-    BOOST_CHECK(v1.isNull());
+    FAST_CHECK(v1.isNull());
 
     UniValue v2(UniValue::VSTR);
-    BOOST_CHECK(v2.isStr());
+    FAST_CHECK(v2.isStr());
 
     UniValue v3(UniValue::VSTR, "foo");
-    BOOST_CHECK(v3.isStr());
-    BOOST_CHECK_EQUAL(v3.getValStr(), "foo");
+    FAST_CHECK(v3.isStr());
+    FAST_CHECK_EQUAL(v3.getValStr(), "foo");
 
     UniValue numTest;
-    BOOST_CHECK(numTest.setNumStr("82"));
-    BOOST_CHECK(numTest.isNum());
-    BOOST_CHECK_EQUAL(numTest.getValStr(), "82");
+    FAST_CHECK(numTest.setNumStr("82"));
+    FAST_CHECK(numTest.isNum());
+    FAST_CHECK_EQUAL(numTest.getValStr(), "82");
 
     uint64_t vu64 = 82;
     UniValue v4(vu64);
-    BOOST_CHECK(v4.isNum());
-    BOOST_CHECK_EQUAL(v4.getValStr(), "82");
+    FAST_CHECK(v4.isNum());
+    FAST_CHECK_EQUAL(v4.getValStr(), "82");
 
     int64_t vi64 = -82;
     UniValue v5(vi64);
-    BOOST_CHECK(v5.isNum());
-    BOOST_CHECK_EQUAL(v5.getValStr(), "-82");
+    FAST_CHECK(v5.isNum());
+    FAST_CHECK_EQUAL(v5.getValStr(), "-82");
 
     int vi = -688;
     UniValue v6(vi);
-    BOOST_CHECK(v6.isNum());
-    BOOST_CHECK_EQUAL(v6.getValStr(), "-688");
+    FAST_CHECK(v6.isNum());
+    FAST_CHECK_EQUAL(v6.getValStr(), "-688");
 
     double vd = -7.21;
     UniValue v7(vd);
-    BOOST_CHECK(v7.isNum());
-    BOOST_CHECK_EQUAL(v7.getValStr(), "-7.21");
+    FAST_CHECK(v7.isNum());
+    FAST_CHECK_EQUAL(v7.getValStr(), "-7.21");
 
     string vs("yawn");
     UniValue v8(vs);
-    BOOST_CHECK(v8.isStr());
-    BOOST_CHECK_EQUAL(v8.getValStr(), "yawn");
+    FAST_CHECK(v8.isStr());
+    FAST_CHECK_EQUAL(v8.getValStr(), "yawn");
 
     const char *vcs = "zappa";
     UniValue v9(vcs);
-    BOOST_CHECK(v9.isStr());
-    BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
+    FAST_CHECK(v9.isStr());
+    FAST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
 BOOST_AUTO_TEST_CASE(univalue_typecheck)
 {
     UniValue v1;
-    BOOST_CHECK(v1.setNumStr("1"));
-    BOOST_CHECK(v1.isNum());
-    BOOST_CHECK_THROW(v1.get_bool(), runtime_error);
+    FAST_CHECK(v1.setNumStr("1"));
+    FAST_CHECK(v1.isNum());
+    FAST_CHECK_THROW(v1.get_bool(), runtime_error);
 
     UniValue v2;
-    BOOST_CHECK(v2.setBool(true));
-    BOOST_CHECK_EQUAL(v2.get_bool(), true);
-    BOOST_CHECK_THROW(v2.get_int(), runtime_error);
+    FAST_CHECK(v2.setBool(true));
+    FAST_CHECK_EQUAL(v2.get_bool(), true);
+    FAST_CHECK_THROW(v2.get_int(), runtime_error);
 
     UniValue v3;
-    BOOST_CHECK(v3.setNumStr("32482348723847471234"));
-    BOOST_CHECK_THROW(v3.get_int64(), runtime_error);
-    BOOST_CHECK(v3.setNumStr("1000"));
-    BOOST_CHECK_EQUAL(v3.get_int64(), 1000);
+    FAST_CHECK(v3.setNumStr("32482348723847471234"));
+    FAST_CHECK_THROW(v3.get_int64(), runtime_error);
+    FAST_CHECK(v3.setNumStr("1000"));
+    FAST_CHECK_EQUAL(v3.get_int64(), 1000);
 
     UniValue v4;
-    BOOST_CHECK(v4.setNumStr("2147483648"));
-    BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648);
-    BOOST_CHECK_THROW(v4.get_int(), runtime_error);
-    BOOST_CHECK(v4.setNumStr("1000"));
-    BOOST_CHECK_EQUAL(v4.get_int(), 1000);
-    BOOST_CHECK_THROW(v4.get_str(), runtime_error);
-    BOOST_CHECK_EQUAL(v4.get_real(), 1000);
-    BOOST_CHECK_THROW(v4.get_array(), runtime_error);
-    BOOST_CHECK_THROW(v4.getKeys(), runtime_error);
-    BOOST_CHECK_THROW(v4.getValues(), runtime_error);
-    BOOST_CHECK_THROW(v4.get_obj(), runtime_error);
+    FAST_CHECK(v4.setNumStr("2147483648"));
+    FAST_CHECK_EQUAL(v4.get_int64(), 2147483648);
+    FAST_CHECK_THROW(v4.get_int(), runtime_error);
+    FAST_CHECK(v4.setNumStr("1000"));
+    FAST_CHECK_EQUAL(v4.get_int(), 1000);
+    FAST_CHECK_THROW(v4.get_str(), runtime_error);
+    FAST_CHECK_EQUAL(v4.get_real(), 1000);
+    FAST_CHECK_THROW(v4.get_array(), runtime_error);
+    FAST_CHECK_THROW(v4.getKeys(), runtime_error);
+    FAST_CHECK_THROW(v4.getValues(), runtime_error);
+    FAST_CHECK_THROW(v4.get_obj(), runtime_error);
 
     UniValue v5;
-    BOOST_CHECK(v5.read("[true, 10]"));
-    BOOST_CHECK_NO_THROW(v5.get_array());
+    FAST_CHECK(v5.read("[true, 10]"));
+    FAST_CHECK_NO_THROW(v5.get_array());
     std::vector<UniValue> vals = v5.getValues();
-    BOOST_CHECK_THROW(vals[0].get_int(), runtime_error);
-    BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
+    FAST_CHECK_THROW(vals[0].get_int(), runtime_error);
+    FAST_CHECK_EQUAL(vals[0].get_bool(), true);
 
-    BOOST_CHECK_EQUAL(vals[1].get_int(), 10);
-    BOOST_CHECK_THROW(vals[1].get_bool(), runtime_error);
+    FAST_CHECK_EQUAL(vals[1].get_int(), 10);
+    FAST_CHECK_THROW(vals[1].get_bool(), runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(univalue_set)
 {
     UniValue v(UniValue::VSTR, "foo");
     v.clear();
-    BOOST_CHECK(v.isNull());
-    BOOST_CHECK_EQUAL(v.getValStr(), "");
+    FAST_CHECK(v.isNull());
+    FAST_CHECK_EQUAL(v.getValStr(), "");
 
-    BOOST_CHECK(v.setObject());
-    BOOST_CHECK(v.isObject());
-    BOOST_CHECK_EQUAL(v.size(), 0);
-    BOOST_CHECK_EQUAL(v.getType(), UniValue::VOBJ);
-    BOOST_CHECK(v.empty());
+    FAST_CHECK(v.setObject());
+    FAST_CHECK(v.isObject());
+    FAST_CHECK_EQUAL(v.size(), 0);
+    FAST_CHECK_EQUAL(v.getType(), UniValue::VOBJ);
+    FAST_CHECK(v.empty());
 
-    BOOST_CHECK(v.setArray());
-    BOOST_CHECK(v.isArray());
-    BOOST_CHECK_EQUAL(v.size(), 0);
+    FAST_CHECK(v.setArray());
+    FAST_CHECK(v.isArray());
+    FAST_CHECK_EQUAL(v.size(), 0);
 
-    BOOST_CHECK(v.setStr("zum"));
-    BOOST_CHECK(v.isStr());
-    BOOST_CHECK_EQUAL(v.getValStr(), "zum");
+    FAST_CHECK(v.setStr("zum"));
+    FAST_CHECK(v.isStr());
+    FAST_CHECK_EQUAL(v.getValStr(), "zum");
 
-    BOOST_CHECK(v.setFloat(-1.01));
-    BOOST_CHECK(v.isNum());
-    BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
+    FAST_CHECK(v.setFloat(-1.01));
+    FAST_CHECK(v.isNum());
+    FAST_CHECK_EQUAL(v.getValStr(), "-1.01");
 
-    BOOST_CHECK(v.setInt((int)1023));
-    BOOST_CHECK(v.isNum());
-    BOOST_CHECK_EQUAL(v.getValStr(), "1023");
+    FAST_CHECK(v.setInt((int)1023));
+    FAST_CHECK(v.isNum());
+    FAST_CHECK_EQUAL(v.getValStr(), "1023");
 
-    BOOST_CHECK(v.setInt((int64_t)-1023LL));
-    BOOST_CHECK(v.isNum());
-    BOOST_CHECK_EQUAL(v.getValStr(), "-1023");
+    FAST_CHECK(v.setInt((int64_t)-1023LL));
+    FAST_CHECK(v.isNum());
+    FAST_CHECK_EQUAL(v.getValStr(), "-1023");
 
-    BOOST_CHECK(v.setInt((uint64_t)1023ULL));
-    BOOST_CHECK(v.isNum());
-    BOOST_CHECK_EQUAL(v.getValStr(), "1023");
+    FAST_CHECK(v.setInt((uint64_t)1023ULL));
+    FAST_CHECK(v.isNum());
+    FAST_CHECK_EQUAL(v.getValStr(), "1023");
 
-    BOOST_CHECK(v.setNumStr("-688"));
-    BOOST_CHECK(v.isNum());
-    BOOST_CHECK_EQUAL(v.getValStr(), "-688");
+    FAST_CHECK(v.setNumStr("-688"));
+    FAST_CHECK(v.isNum());
+    FAST_CHECK_EQUAL(v.getValStr(), "-688");
 
-    BOOST_CHECK(v.setBool(false));
-    BOOST_CHECK_EQUAL(v.isBool(), true);
-    BOOST_CHECK_EQUAL(v.isTrue(), false);
-    BOOST_CHECK_EQUAL(v.isFalse(), true);
-    BOOST_CHECK_EQUAL(v.getBool(), false);
+    FAST_CHECK(v.setBool(false));
+    FAST_CHECK_EQUAL(v.isBool(), true);
+    FAST_CHECK_EQUAL(v.isTrue(), false);
+    FAST_CHECK_EQUAL(v.isFalse(), true);
+    FAST_CHECK_EQUAL(v.getBool(), false);
 
-    BOOST_CHECK(v.setBool(true));
-    BOOST_CHECK_EQUAL(v.isBool(), true);
-    BOOST_CHECK_EQUAL(v.isTrue(), true);
-    BOOST_CHECK_EQUAL(v.isFalse(), false);
-    BOOST_CHECK_EQUAL(v.getBool(), true);
+    FAST_CHECK(v.setBool(true));
+    FAST_CHECK_EQUAL(v.isBool(), true);
+    FAST_CHECK_EQUAL(v.isTrue(), true);
+    FAST_CHECK_EQUAL(v.isFalse(), false);
+    FAST_CHECK_EQUAL(v.getBool(), true);
 
-    BOOST_CHECK(!v.setNumStr("zombocom"));
+    FAST_CHECK(!v.setNumStr("zombocom"));
 
-    BOOST_CHECK(v.setNull());
-    BOOST_CHECK(v.isNull());
+    FAST_CHECK(v.setNull());
+    FAST_CHECK(v.isNull());
 }
 
 BOOST_AUTO_TEST_CASE(univalue_array)
@@ -170,13 +170,13 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     UniValue arr(UniValue::VARR);
 
     UniValue v((int64_t)1023LL);
-    BOOST_CHECK(arr.push_back(v));
+    FAST_CHECK(arr.push_back(v));
 
     string vStr("zippy");
-    BOOST_CHECK(arr.push_back(vStr));
+    FAST_CHECK(arr.push_back(vStr));
 
     const char *s = "pippy";
-    BOOST_CHECK(arr.push_back(s));
+    FAST_CHECK(arr.push_back(s));
 
     vector<UniValue> vec;
     v.setStr("boing");
@@ -185,22 +185,22 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     v.setStr("going");
     vec.push_back(v);
 
-    BOOST_CHECK(arr.push_backV(vec));
+    FAST_CHECK(arr.push_backV(vec));
 
-    BOOST_CHECK_EQUAL(arr.empty(), false);
-    BOOST_CHECK_EQUAL(arr.size(), 5);
+    FAST_CHECK_EQUAL(arr.empty(), false);
+    FAST_CHECK_EQUAL(arr.size(), 5);
 
-    BOOST_CHECK_EQUAL(arr[0].getValStr(), "1023");
-    BOOST_CHECK_EQUAL(arr[1].getValStr(), "zippy");
-    BOOST_CHECK_EQUAL(arr[2].getValStr(), "pippy");
-    BOOST_CHECK_EQUAL(arr[3].getValStr(), "boing");
-    BOOST_CHECK_EQUAL(arr[4].getValStr(), "going");
+    FAST_CHECK_EQUAL(arr[0].getValStr(), "1023");
+    FAST_CHECK_EQUAL(arr[1].getValStr(), "zippy");
+    FAST_CHECK_EQUAL(arr[2].getValStr(), "pippy");
+    FAST_CHECK_EQUAL(arr[3].getValStr(), "boing");
+    FAST_CHECK_EQUAL(arr[4].getValStr(), "going");
 
-    BOOST_CHECK_EQUAL(arr[999].getValStr(), "");
+    FAST_CHECK_EQUAL(arr[999].getValStr(), "");
 
     arr.clear();
-    BOOST_CHECK(arr.empty());
-    BOOST_CHECK_EQUAL(arr.size(), 0);
+    FAST_CHECK(arr.empty());
+    FAST_CHECK_EQUAL(arr.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(univalue_object)
@@ -211,60 +211,60 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 
     strKey = "age";
     v.setInt(100);
-    BOOST_CHECK(obj.pushKV(strKey, v));
+    FAST_CHECK(obj.pushKV(strKey, v));
 
     strKey = "first";
     strVal = "John";
-    BOOST_CHECK(obj.pushKV(strKey, strVal));
+    FAST_CHECK(obj.pushKV(strKey, strVal));
 
     strKey = "last";
     const char *cVal = "Smith";
-    BOOST_CHECK(obj.pushKV(strKey, cVal));
+    FAST_CHECK(obj.pushKV(strKey, cVal));
 
     strKey = "distance";
-    BOOST_CHECK(obj.pushKV(strKey, (int64_t) 25));
+    FAST_CHECK(obj.pushKV(strKey, (int64_t) 25));
 
     strKey = "time";
-    BOOST_CHECK(obj.pushKV(strKey, (uint64_t) 3600));
+    FAST_CHECK(obj.pushKV(strKey, (uint64_t) 3600));
 
     strKey = "calories";
-    BOOST_CHECK(obj.pushKV(strKey, (int) 12));
+    FAST_CHECK(obj.pushKV(strKey, (int) 12));
 
     strKey = "temperature";
-    BOOST_CHECK(obj.pushKV(strKey, (double) 90.012));
+    FAST_CHECK(obj.pushKV(strKey, (double) 90.012));
 
     UniValue obj2(UniValue::VOBJ);
-    BOOST_CHECK(obj2.pushKV("cat1", 9000));
-    BOOST_CHECK(obj2.pushKV("cat2", 12345));
+    FAST_CHECK(obj2.pushKV("cat1", 9000));
+    FAST_CHECK(obj2.pushKV("cat2", 12345));
 
-    BOOST_CHECK(obj.pushKVs(obj2));
+    FAST_CHECK(obj.pushKVs(obj2));
 
-    BOOST_CHECK_EQUAL(obj.empty(), false);
-    BOOST_CHECK_EQUAL(obj.size(), 9);
+    FAST_CHECK_EQUAL(obj.empty(), false);
+    FAST_CHECK_EQUAL(obj.size(), 9);
 
-    BOOST_CHECK_EQUAL(obj["age"].getValStr(), "100");
-    BOOST_CHECK_EQUAL(obj["first"].getValStr(), "John");
-    BOOST_CHECK_EQUAL(obj["last"].getValStr(), "Smith");
-    BOOST_CHECK_EQUAL(obj["distance"].getValStr(), "25");
-    BOOST_CHECK_EQUAL(obj["time"].getValStr(), "3600");
-    BOOST_CHECK_EQUAL(obj["calories"].getValStr(), "12");
-    BOOST_CHECK_EQUAL(obj["temperature"].getValStr(), "90.012");
-    BOOST_CHECK_EQUAL(obj["cat1"].getValStr(), "9000");
-    BOOST_CHECK_EQUAL(obj["cat2"].getValStr(), "12345");
+    FAST_CHECK_EQUAL(obj["age"].getValStr(), "100");
+    FAST_CHECK_EQUAL(obj["first"].getValStr(), "John");
+    FAST_CHECK_EQUAL(obj["last"].getValStr(), "Smith");
+    FAST_CHECK_EQUAL(obj["distance"].getValStr(), "25");
+    FAST_CHECK_EQUAL(obj["time"].getValStr(), "3600");
+    FAST_CHECK_EQUAL(obj["calories"].getValStr(), "12");
+    FAST_CHECK_EQUAL(obj["temperature"].getValStr(), "90.012");
+    FAST_CHECK_EQUAL(obj["cat1"].getValStr(), "9000");
+    FAST_CHECK_EQUAL(obj["cat2"].getValStr(), "12345");
 
-    BOOST_CHECK_EQUAL(obj["nyuknyuknyuk"].getValStr(), "");
+    FAST_CHECK_EQUAL(obj["nyuknyuknyuk"].getValStr(), "");
 
-    BOOST_CHECK(obj.exists("age"));
-    BOOST_CHECK(obj.exists("first"));
-    BOOST_CHECK(obj.exists("last"));
-    BOOST_CHECK(obj.exists("distance"));
-    BOOST_CHECK(obj.exists("time"));
-    BOOST_CHECK(obj.exists("calories"));
-    BOOST_CHECK(obj.exists("temperature"));
-    BOOST_CHECK(obj.exists("cat1"));
-    BOOST_CHECK(obj.exists("cat2"));
+    FAST_CHECK(obj.exists("age"));
+    FAST_CHECK(obj.exists("first"));
+    FAST_CHECK(obj.exists("last"));
+    FAST_CHECK(obj.exists("distance"));
+    FAST_CHECK(obj.exists("time"));
+    FAST_CHECK(obj.exists("calories"));
+    FAST_CHECK(obj.exists("temperature"));
+    FAST_CHECK(obj.exists("cat1"));
+    FAST_CHECK(obj.exists("cat2"));
 
-    BOOST_CHECK(!obj.exists("nyuknyuknyuk"));
+    FAST_CHECK(!obj.exists("nyuknyuknyuk"));
 
     map<string, UniValue::VType> objTypes;
     objTypes["age"] = UniValue::VNUM;
@@ -276,14 +276,14 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     objTypes["temperature"] = UniValue::VNUM;
     objTypes["cat1"] = UniValue::VNUM;
     objTypes["cat2"] = UniValue::VNUM;
-    BOOST_CHECK(obj.checkObject(objTypes));
+    FAST_CHECK(obj.checkObject(objTypes));
 
     objTypes["cat2"] = UniValue::VSTR;
-    BOOST_CHECK(!obj.checkObject(objTypes));
+    FAST_CHECK(!obj.checkObject(objTypes));
 
     obj.clear();
-    BOOST_CHECK(obj.empty());
-    BOOST_CHECK_EQUAL(obj.size(), 0);
+    FAST_CHECK(obj.empty());
+    FAST_CHECK_EQUAL(obj.size(), 0);
 }
 
 static const char *json1 =
@@ -292,44 +292,44 @@ static const char *json1 =
 BOOST_AUTO_TEST_CASE(univalue_readwrite)
 {
     UniValue v;
-    BOOST_CHECK(v.read(json1));
+    FAST_CHECK(v.read(json1));
 
     string strJson1(json1);
-    BOOST_CHECK(v.read(strJson1));
+    FAST_CHECK(v.read(strJson1));
 
-    BOOST_CHECK(v.isArray());
-    BOOST_CHECK_EQUAL(v.size(), 2);
+    FAST_CHECK(v.isArray());
+    FAST_CHECK_EQUAL(v.size(), 2);
 
-    BOOST_CHECK_EQUAL(v[0].getValStr(), "1.10000000");
+    FAST_CHECK_EQUAL(v[0].getValStr(), "1.10000000");
 
     UniValue obj = v[1];
-    BOOST_CHECK(obj.isObject());
-    BOOST_CHECK_EQUAL(obj.size(), 3);
+    FAST_CHECK(obj.isObject());
+    FAST_CHECK_EQUAL(obj.size(), 3);
 
-    BOOST_CHECK(obj["key1"].isStr());
+    FAST_CHECK(obj["key1"].isStr());
     std::string correctValue("str");
     correctValue.push_back('\0');
-    BOOST_CHECK_EQUAL(obj["key1"].getValStr(), correctValue);
-    BOOST_CHECK(obj["key2"].isNum());
-    BOOST_CHECK_EQUAL(obj["key2"].getValStr(), "800");
-    BOOST_CHECK(obj["key3"].isObject());
+    FAST_CHECK_EQUAL(obj["key1"].getValStr(), correctValue);
+    FAST_CHECK(obj["key2"].isNum());
+    FAST_CHECK_EQUAL(obj["key2"].getValStr(), "800");
+    FAST_CHECK(obj["key3"].isObject());
 
-    BOOST_CHECK_EQUAL(strJson1, v.write());
+    FAST_CHECK_EQUAL(strJson1, v.write());
 
     /* Check for (correctly reporting) a parsing error if the initial
        JSON construct is followed by more stuff.  Note that whitespace
        is, of course, exempt.  */
 
-    BOOST_CHECK(v.read("  {}\n  "));
-    BOOST_CHECK(v.isObject());
-    BOOST_CHECK(v.read("  []\n  "));
-    BOOST_CHECK(v.isArray());
+    FAST_CHECK(v.read("  {}\n  "));
+    FAST_CHECK(v.isObject());
+    FAST_CHECK(v.read("  []\n  "));
+    FAST_CHECK(v.isArray());
 
-    BOOST_CHECK(!v.read("@{}"));
-    BOOST_CHECK(!v.read("{} garbage"));
-    BOOST_CHECK(!v.read("[]{}"));
-    BOOST_CHECK(!v.read("{}[]"));
-    BOOST_CHECK(!v.read("{} 42"));
+    FAST_CHECK(!v.read("@{}"));
+    FAST_CHECK(!v.read("{} garbage"));
+    FAST_CHECK(!v.read("[]{}"));
+    FAST_CHECK(!v.read("{}[]"));
+    FAST_CHECK(!v.read("{} 42"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

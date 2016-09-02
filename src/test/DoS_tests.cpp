@@ -50,19 +50,19 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     dummyNode1.nVersion = 1;
     Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     SendMessages(&dummyNode1);
-    BOOST_CHECK(CNode::IsBanned(addr1));
-    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
+    FAST_CHECK(CNode::IsBanned(addr1));
+    FAST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002), NODE_NONE);
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
     dummyNode2.nVersion = 1;
     Misbehaving(dummyNode2.GetId(), 50);
     SendMessages(&dummyNode2);
-    BOOST_CHECK(!CNode::IsBanned(addr2)); // 2 not banned yet...
-    BOOST_CHECK(CNode::IsBanned(addr1));  // ... but 1 still should be
+    FAST_CHECK(!CNode::IsBanned(addr2)); // 2 not banned yet...
+    FAST_CHECK(CNode::IsBanned(addr1));  // ... but 1 still should be
     Misbehaving(dummyNode2.GetId(), 50);
     SendMessages(&dummyNode2);
-    BOOST_CHECK(CNode::IsBanned(addr2));
+    FAST_CHECK(CNode::IsBanned(addr2));
 }
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
@@ -74,13 +74,13 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     dummyNode1.nVersion = 1;
     Misbehaving(dummyNode1.GetId(), 100);
     SendMessages(&dummyNode1);
-    BOOST_CHECK(!CNode::IsBanned(addr1));
+    FAST_CHECK(!CNode::IsBanned(addr1));
     Misbehaving(dummyNode1.GetId(), 10);
     SendMessages(&dummyNode1);
-    BOOST_CHECK(!CNode::IsBanned(addr1));
+    FAST_CHECK(!CNode::IsBanned(addr1));
     Misbehaving(dummyNode1.GetId(), 1);
     SendMessages(&dummyNode1);
-    BOOST_CHECK(CNode::IsBanned(addr1));
+    FAST_CHECK(CNode::IsBanned(addr1));
     mapArgs.erase("-banscore");
 }
 
@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
     Misbehaving(dummyNode.GetId(), 100);
     SendMessages(&dummyNode);
-    BOOST_CHECK(CNode::IsBanned(addr));
+    FAST_CHECK(CNode::IsBanned(addr));
 
     SetMockTime(nStartTime+60*60);
-    BOOST_CHECK(CNode::IsBanned(addr));
+    FAST_CHECK(CNode::IsBanned(addr));
 
     SetMockTime(nStartTime+60*60*24+1);
-    BOOST_CHECK(!CNode::IsBanned(addr));
+    FAST_CHECK(!CNode::IsBanned(addr));
 }
 
 CTransaction RandomOrphan()
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!AddOrphanTx(tx, i));
+        FAST_CHECK(!AddOrphanTx(tx, i));
     }
 
     // Test EraseOrphansFor:
@@ -182,17 +182,17 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     {
         size_t sizeBefore = mapOrphanTransactions.size();
         EraseOrphansFor(i);
-        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
+        FAST_CHECK(mapOrphanTransactions.size() < sizeBefore);
     }
 
     // Test LimitOrphanTxSize() function:
     LimitOrphanTxSize(40);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
+    FAST_CHECK(mapOrphanTransactions.size() <= 40);
     LimitOrphanTxSize(10);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
+    FAST_CHECK(mapOrphanTransactions.size() <= 10);
     LimitOrphanTxSize(0);
-    BOOST_CHECK(mapOrphanTransactions.empty());
-    BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
+    FAST_CHECK(mapOrphanTransactions.empty());
+    FAST_CHECK(mapOrphanTransactionsByPrev.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
