@@ -256,14 +256,13 @@ UniValue disconnectnode(const UniValue& params, bool fHelp)
 
 UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getaddednodeinfo dummy ( \"node\" )\n"
+            "getaddednodeinfo ( \"node\" )\n"
             "\nReturns information about the given added node, or all added nodes\n"
             "(note that onetry addnodes are not listed here)\n"
             "\nArguments:\n"
-            "1. dummy      (boolean, required) Kept for historical purposes but ignored\n"
-            "2. \"node\"   (string, optional) If provided, return information about this specific node, otherwise all nodes are returned.\n"
+            "1. \"node\"   (string, optional) If provided, return information about this specific node, otherwise all nodes are returned.\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -289,10 +288,10 @@ UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
 
     std::vector<AddedNodeInfo> vInfo = g_connman->GetAddedNodeInfo();
 
-    if (params.size() == 2) {
+    if (params.size() == 1) {
         bool found = false;
         for (const AddedNodeInfo& info : vInfo) {
-            if (info.strAddedNode == params[1].get_str()) {
+            if (info.strAddedNode == params[0].get_str()) {
                 vInfo.assign(1, info);
                 found = true;
                 break;
