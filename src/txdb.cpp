@@ -137,7 +137,7 @@ void CCoinsViewDBCursor::Next()
 
 int64_t CCoinsViewDB::CountCoins() const
 {
-    boost::scoped_ptr<CCoinsViewCursor> pcursor(Cursor());
+    std::unique_ptr<CCoinsViewCursor> pcursor(Cursor());
 
     int64_t i = 0;
     while (pcursor->Valid()) {
