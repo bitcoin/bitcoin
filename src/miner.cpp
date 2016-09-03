@@ -170,7 +170,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 if(winningNode){
                     pblock->payee.SetDestination(winningNode->pubkey.GetID());
                 } else {
-                    LogPrintf("CreateNewBlock: Failed to detect throne to pay\n");
+                    return error("CreateNewBlock: Failed to detect throne to pay\n");
                     hasPayment = false;
                 }
             }
