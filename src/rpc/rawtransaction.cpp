@@ -122,6 +122,63 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     }
 }
 
+void CoinsByScriptToJSON(const CCoinsByScript& coinsByScript, int nMinDepth, UniValue& vObjects, std::vector<std::pair<int, unsigned int>>& vSort, bool fIncludeHex)
+{
+    BOOST_FOREACH(const COutPoint &outpoint, coinsByScript.setCoins)
+    {
+        CCoins coins;
+        if (nMinDepth == 0)
+        {
+            LOCK(mempool.cs);
+            CCoinsViewMemPool view(pcoinsTip, mempool);
+            if (!view.GetCoins(outpoint.hash, coins))
+                continue;
+            mempool.pruneSpent(outpoint.hash, coins); // TODO: this should be done by the CCoinsViewMemPool
+        }
+        else if (!pcoinsTip->GetCoins(outpoint.hash, coins))
+            continue;
+
+        if (outpoint.n < coins.vout.size() && !coins.vout[outpoint.n].IsNull() && !coins.vout[outpoint.n].scriptPubKey.IsUnspendable())
+        {
+            // should not happen
+            if ((unsigned int)coins.nHeight != MEMPOOL_HEIGHT && (!chainActive[coins.nHeight] || !chainActive[coins.nHeight]->phashBlock))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal Error: !chainActive[coins.nHeight]");
+
+            BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
+            CBlockIndex *pindex = it->second;
+
+            int nConfirmations = 0;
+            if ((unsigned int)coins.nHeight != MEMPOOL_HEIGHT)
+                nConfirmations = pindex->nHeight - coins.nHeight + 1;
+            if (nConfirmations < nMinDepth)
+                continue;
+
+            UniValue oScriptPubKey(UniValue::VOBJ);
+            ScriptPubKeyToJSON(coins.vout[outpoint.n].scriptPubKey, oScriptPubKey, fIncludeHex);
+
+            UniValue o(UniValue::VOBJ);
+            o.push_back(Pair("confirmations", nConfirmations));
+            o.push_back(Pair("txid", outpoint.hash.GetHex()));
+            o.push_back(Pair("vout", (int)outpoint.n));
+            o.push_back(Pair("value", ValueFromAmount(coins.vout[outpoint.n].nValue)));
+            o.push_back(Pair("scriptPubKey", oScriptPubKey));
+            o.push_back(Pair("version", coins.nVersion));
+            o.push_back(Pair("coinbase", coins.fCoinBase));
+            o.push_back(Pair("bestblockhash", pindex->GetBlockHash().GetHex()));
+            o.push_back(Pair("bestblockheight", pindex->nHeight));
+            o.push_back(Pair("bestblocktime", pindex->GetBlockTime()));
+            if ((unsigned int)coins.nHeight != MEMPOOL_HEIGHT)
+            {
+                o.push_back(Pair("blockhash", chainActive[coins.nHeight]->GetBlockHash().GetHex()));
+                o.push_back(Pair("blockheight", coins.nHeight));
+                o.push_back(Pair("blocktime", chainActive[coins.nHeight]->GetBlockTime()));
+            }
+            vObjects.push_back(o);
+            vSort.push_back(std::make_pair(coins.nHeight, (unsigned int)vObjects.size() - 1));
+        }
+    }
+}
+
 UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)

@@ -96,7 +96,7 @@ bool CCoinsViewByScriptDB::BatchWrite(CCoinsViewByScript* pcoinsViewByScriptIn, 
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
-    LogPrint("coindb", "Committing %u coin address indexes to coin database...\n", (unsigned int)count);
+    LogPrint(BCLog::COINDB, "Committing %u coin address indexes to coin database...\n", (unsigned int)count);
     return db.WriteBatch(batch);
 }
 
