@@ -7,6 +7,7 @@
 
 #include "coins.h"
 #include "txdb.h"
+#include "coinsbyscript.h"
 
 struct CCoinsStats
 {
@@ -23,6 +24,6 @@ struct CCoinsStats
     CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nAddresses(0), nAddressesOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
 };
 
-bool GetUTXOStats(CCoinsView *view, CCoinsViewDB *viewdb, CCoinsStats &stats);
+bool GetUTXOStats(CCoinsView *view, CCoinsViewByScriptDB *viewbyscriptdb, CCoinsStats &stats);
 
 #endif // BITCOIN_COINSTATS_H

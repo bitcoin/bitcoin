@@ -71,25 +71,16 @@ struct CDiskTxPos : public CDiskBlockPos
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView
 {
-private:
-    CCoinsViewByScript* pcoinsViewByScript;
 protected:
     CDBWrapper db;
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool GetCoinsByHashOfScript(const uint160 &hash, CCoinsByScript &coins) const;
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
-    bool WriteFlag(const std::string &name, bool fValue);
-    bool ReadFlag(const std::string &name, bool &fValue);
-    int64_t GetPrefixCount(char prefix) const;
-    bool DeleteAllCoinsByScript();   // removes txoutsbyaddressindex
-    bool GenerateAllCoinsByScript(); // creates txoutsbyaddressindex
-    void SetCoinsViewByScript(CCoinsViewByScript* pcoinsViewByScriptIn);
-    CDBIterator *RawCursor() const;
+    int64_t CountCoins() const;
     CCoinsViewCursor *Cursor() const;
 };
 

@@ -28,19 +28,10 @@ static const char DB_LAST_BLOCK = 'l';
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true)
 {
-    pcoinsViewByScript = NULL;
-}
-
-void CCoinsViewDB::SetCoinsViewByScript(CCoinsViewByScript* pcoinsViewByScriptIn) {
-    pcoinsViewByScript = pcoinsViewByScriptIn;
 }
 
 bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) const {
     return db.Read(std::make_pair(DB_COINS, txid), coins);
-}
-
-bool CCoinsViewDB::GetCoinsByHashOfScript(const uint160 &hash, CCoinsByScript &coins) const {
-    return db.Read(make_pair('d', hash), coins);
 }
 
 bool CCoinsViewDB::HaveCoins(const uint256 &txid) const {
@@ -70,35 +61,11 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
         CCoinsMap::iterator itOld = it++;
         mapCoins.erase(itOld);
     }
-    if (pcoinsViewByScript) // only if -txoutsbyaddressindex
-    {
-        for (CCoinsMapByScript::iterator it = pcoinsViewByScript->cacheCoinsByScript.begin(); it != pcoinsViewByScript->cacheCoinsByScript.end();) {
-            if (it->second.IsEmpty())
-                batch.Erase(make_pair('d', it->first));
-            else
-                batch.Write(make_pair('d', it->first), it->second);
-            CCoinsMapByScript::iterator itOld = it++;
-            pcoinsViewByScript->cacheCoinsByScript.erase(itOld);
-        }
-        pcoinsViewByScript->cacheCoinsByScript.clear();
-    }
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
     LogPrint(BCLog::COINDB, "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return db.WriteBatch(batch);
-}
-
-bool CCoinsViewDB::WriteFlag(const std::string &name, bool fValue) {
-    return db.Write(std::make_pair('F', name), fValue ? '1' : '0');
-}
-
-bool CCoinsViewDB::ReadFlag(const std::string &name, bool &fValue) {
-    char ch;
-    if (!db.Read(std::make_pair('F', name), ch))
-        return false;
-    fValue = ch == '1';
-    return true;
 }
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
@@ -122,11 +89,6 @@ bool CBlockTreeDB::ReadReindexing(bool &fReindexing) {
 
 bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read(DB_LAST_BLOCK, nFile);
-}
-
-CDBIterator *CCoinsViewDB::RawCursor() const
-{
-    return const_cast<CDBWrapper*>(&db)->NewIterator();
 }
 
 CCoinsViewCursor *CCoinsViewDB::Cursor() const
@@ -173,18 +135,14 @@ void CCoinsViewDBCursor::Next()
         keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
 }
 
-int64_t CCoinsViewDB::GetPrefixCount(char prefix) const
+int64_t CCoinsViewDB::CountCoins() const
 {
-    boost::scoped_ptr<CDBIterator> pcursor(RawCursor());
-    pcursor->Seek(prefix);
+    boost::scoped_ptr<CCoinsViewCursor> pcursor(Cursor());
 
     int64_t i = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
-            char key;
-            if (!pcursor->GetKey(key) || key != prefix)
-                break;
             i++;
             pcursor->Next();
         } catch (std::exception &e) {
@@ -192,128 +150,6 @@ int64_t CCoinsViewDB::GetPrefixCount(char prefix) const
         }
     }
     return i;
-}
-
-bool CCoinsViewDB::DeleteAllCoinsByScript()
-{
-    boost::scoped_ptr<CDBIterator> pcursor(RawCursor());
-    pcursor->Seek('d');
-
-    std::vector<uint160> v;
-    int64_t i = 0;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-            std::pair<char, uint160> key;
-            if (!pcursor->GetKey(key) || key.first != 'd')
-                break;
-            v.push_back(key.second);
-            if (v.size() >= 10000)
-            {
-                i += v.size();
-                CDBBatch batch(db);
-                BOOST_FOREACH(const uint160& hash, v)
-                    batch.Erase(make_pair('d', hash)); // delete
-                db.WriteBatch(batch);
-                v.clear();
-            }
-
-            pcursor->Next();
-        } catch (std::exception &e) {
-            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        }
-    }
-    if (!v.empty())
-    {
-        i += v.size();
-        CDBBatch batch(db);
-        BOOST_FOREACH(const uint160& hash, v)
-            batch.Erase(make_pair('d', hash)); // delete
-        db.WriteBatch(batch);
-    }
-    if (i > 0)
-        LogPrintf("Address index with %d addresses successfully deleted.\n", i);
-
-    return true;
-}
-
-bool CCoinsViewDB::GenerateAllCoinsByScript()
-{
-    LogPrintf("Building address index for -txoutsbyaddressindex. Be patient...\n");
-    int64_t nTxCount = GetPrefixCount('c');
-
-    boost::scoped_ptr<CDBIterator> pcursor(RawCursor());
-    pcursor->Seek('c');
-
-    CCoinsMapByScript mapCoinsByScript;
-    int64_t i = 0;
-    int64_t progress = 0;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-            if (progress % 1000 == 0 && nTxCount > 0)
-                uiInterface.ShowProgress(_("Building address index..."), (int)(((double)progress / (double)nTxCount) * (double)100));
-            progress++;
-
-            std::pair<char, uint256> key;
-            CCoins coins;
-            if (!pcursor->GetKey(key) || key.first != 'c')
-                break;
-            uint256 txhash = key.second;
-            if (!pcursor->GetValue(coins))
-                break;
-
-            for (unsigned int j = 0; j < coins.vout.size(); j++)
-            {
-                if (coins.vout[j].IsNull() || coins.vout[j].scriptPubKey.IsUnspendable())
-                    continue;
-
-                const uint160 key = CCoinsViewByScript::getKey(coins.vout[j].scriptPubKey);
-                if (!mapCoinsByScript.count(key))
-                {
-                    CCoinsByScript coinsByScript;
-                    GetCoinsByHashOfScript(key, coinsByScript);
-                    mapCoinsByScript.insert(make_pair(key, coinsByScript));
-                }
-                mapCoinsByScript[key].setCoins.insert(COutPoint(txhash, (uint32_t)j));
-                i++;
-            }
-
-            if (mapCoinsByScript.size() >= 10000)
-            {
-                CDBBatch batch(db);
-                for (CCoinsMapByScript::iterator it = mapCoinsByScript.begin(); it != mapCoinsByScript.end();) {
-                    if (it->second.IsEmpty())
-                        batch.Erase(make_pair('d', it->first));
-                    else
-                        batch.Write(make_pair('d', it->first), it->second);
-                    CCoinsMapByScript::iterator itOld = it++;
-                    mapCoinsByScript.erase(itOld);
-                }
-                db.WriteBatch(batch);
-                mapCoinsByScript.clear();
-            }
-
-            pcursor->Next();
-        } catch (std::exception &e) {
-            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        }
-    }
-    if (!mapCoinsByScript.empty())
-    {
-       CDBBatch batch(db);
-       for (CCoinsMapByScript::iterator it = mapCoinsByScript.begin(); it != mapCoinsByScript.end();) {
-           if (it->second.IsEmpty())
-               batch.Erase(make_pair('d', it->first));
-           else
-               batch.Write(make_pair('d', it->first), it->second);
-           CCoinsMapByScript::iterator itOld = it++;
-           mapCoinsByScript.erase(itOld);
-       }
-       db.WriteBatch(batch);
-    }
-    LogPrintf("Address index with %d outputs successfully built.\n", i);
-    return true;
 }
 
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {

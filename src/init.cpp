@@ -163,6 +163,7 @@ public:
     // Writes do not need similar protection, as failure to write is handled by the caller.
 };
 
+static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
@@ -235,6 +236,8 @@ void Shutdown()
         pcoinsdbview = NULL;
         delete pcoinsByScript;
         pcoinsByScript = NULL;
+        delete pcoinsByScriptDB;
+        pcoinsByScriptDB = NULL;
         delete pblocktree;
         pblocktree = NULL;
     }
@@ -1441,6 +1444,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
+                pcoinsByScriptDB = new CCoinsViewByScriptDB(nCoinDBCache, false, false);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
@@ -1489,7 +1493,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 }
 
                 // Check -txoutsbyaddressindex
-                pcoinsdbview->ReadFlag("txoutsbyaddressindex", fTxOutsByAddressIndex);
+                pcoinsByScriptDB->ReadFlag("txoutsbyaddressindex", fTxOutsByAddressIndex);
                 if (IsArgSet("-txoutsbyaddressindex"))
                 {
                     if (GetBoolArg("-txoutsbyaddressindex", false))
@@ -1497,18 +1501,18 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         // build index
                         if (!fTxOutsByAddressIndex)
                         {
-                            if (!pcoinsdbview->DeleteAllCoinsByScript())
+                            if (!pcoinsByScriptDB->DeleteAllCoinsByScript())
                             {
                                 strLoadError = _("Error deleting txoutsbyaddressindex");
                                 break;
                             }
-                            if (!pcoinsdbview->GenerateAllCoinsByScript())
+                            if (!pcoinsByScriptDB->GenerateAllCoinsByScript(pcoinsdbview))
                             {
                                 strLoadError = _("Error building txoutsbyaddressindex");
                                 break;
                             }
                             CCoinsStats stats;
-                            if (!GetUTXOStats(pcoinsTip, pcoinsdbview, stats))
+                            if (!GetUTXOStats(pcoinsTip, pcoinsByScriptDB, stats))
                             {
                                 strLoadError = _("Error GetUTXOStats for txoutsbyaddressindex");
                                 break;
@@ -1518,7 +1522,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                                 strLoadError = _("Error compare stats for txoutsbyaddressindex");
                                 break;
                             }
-                            pcoinsdbview->WriteFlag("txoutsbyaddressindex", true);
+                            pcoinsByScriptDB->WriteFlag("txoutsbyaddressindex", true);
                             fTxOutsByAddressIndex = true;
                         }
                     }
@@ -1527,8 +1531,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         if (fTxOutsByAddressIndex)
                         {
                             // remove index
-                            pcoinsdbview->DeleteAllCoinsByScript();
-                            pcoinsdbview->WriteFlag("txoutsbyaddressindex", false);
+                            pcoinsByScriptDB->DeleteAllCoinsByScript();
+                            pcoinsByScriptDB->WriteFlag("txoutsbyaddressindex", false);
                             fTxOutsByAddressIndex = false;
                         }
                     }
@@ -1538,10 +1542,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 // Init -txoutsbyaddressindex
                 if (fTxOutsByAddressIndex)
-                {
-                    pcoinsByScript = new CCoinsViewByScript(pcoinsdbview);
-                    pcoinsdbview->SetCoinsViewByScript(pcoinsByScript);
-                }
+                    pcoinsByScript = new CCoinsViewByScript(pcoinsByScriptDB);
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin developers
+// Copyright (c) 2014-2016 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,11 +6,13 @@
 #define BITCOIN_COINSBYSCRIPT_H
 
 #include "coins.h"
+#include "dbwrapper.h"
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
 
 class CCoinsViewDB;
+class CCoinsViewByScriptDB;
 class CScript;
 
 class CCoinsByScript
@@ -43,11 +45,13 @@ typedef std::map<uint160, CCoinsByScript> CCoinsMapByScript; // uint160 = hash o
 class CCoinsViewByScript
 {
 private:
-    CCoinsViewDB *base;
+    CCoinsViewByScriptDB *base;
+
+    mutable uint256 hashBlock;
 
 public:
-    CCoinsMapByScript cacheCoinsByScript; // accessed also from CCoinsViewDB in txdb.cpp
-    CCoinsViewByScript(CCoinsViewDB* baseIn);
+    CCoinsMapByScript cacheCoinsByScript; // accessed also from CCoinsViewByScriptDB
+    CCoinsViewByScript(CCoinsViewByScriptDB* baseIn);
 
     bool GetCoinsByScript(const CScript &script, CCoinsByScript &coins);
 
@@ -56,8 +60,58 @@ public:
 
     static uint160 getKey(const CScript &script); // we use the hash of the script as key in the database
 
+    void SetBestBlock(const uint256 &hashBlock);
+    uint256 GetBestBlock() const;
+
+    /**
+     * Push the modifications applied to this cache to its base.
+     * Failure to call this method before destruction will cause the changes to be forgotten.
+     * If false is returned, the state of this cache (and its backing view) will be undefined.
+     */
+    bool Flush();
+
 private:
     CCoinsMapByScript::iterator FetchCoinsByScript(const CScript &script, bool fRequireExisting);
+};
+
+/** Cursor for iterating over a CCoinsViewByScriptDB */
+class CCoinsViewByScriptDBCursor 
+{
+public:
+    ~CCoinsViewByScriptDBCursor() {}
+
+    bool GetKey(uint160 &key) const;
+    bool GetValue(CCoinsByScript &coins) const;
+    unsigned int GetValueSize() const;
+
+    bool Valid() const;
+    void Next();
+
+private:
+    CCoinsViewByScriptDBCursor(CDBIterator* pcursorIn):
+        pcursor(pcursorIn) {}
+    uint256 hashBlock;
+    boost::scoped_ptr<CDBIterator> pcursor;
+    std::pair<char, uint160> keyTmp;
+
+    friend class CCoinsViewByScriptDB;
+};
+
+/** coinsbyscript database (coinsbyscript/) */
+class CCoinsViewByScriptDB 
+{
+protected:
+    CDBWrapper db;
+public:
+    CCoinsViewByScriptDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+
+    bool GetCoinsByHashOfScript(const uint160 &hash, CCoinsByScript &coins) const;
+    bool BatchWrite(CCoinsViewByScript* pcoinsViewByScriptIn, const uint256 &hashBlock);
+    bool WriteFlag(const std::string &name, bool fValue);
+    bool ReadFlag(const std::string &name, bool &fValue);
+    bool DeleteAllCoinsByScript();   // removes txoutsbyaddressindex
+    bool GenerateAllCoinsByScript(CCoinsViewDB* coinsIn); // creates txoutsbyaddressindex
+    CCoinsViewByScriptDBCursor *Cursor() const;
 };
 
 #endif // BITCOIN_COINSBYSCRIPT_H
