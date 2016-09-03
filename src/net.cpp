@@ -1153,10 +1153,11 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         mapInboundConnectionTracker[ipAddress].nLastConnectionTime = GetTime();
 
         LogPrint("evict", "Number of Connection attempts is %f for %s\n", nConnections, addr.ToString());
-        if (nConnections > 4) {
+        if (nConnections > 4 && !whitelisted) {
             int nHoursToBan = 4;
             CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);
             LogPrintf("Banning %s for %d hours: Too many connection attempts - connection dropped\n", addr.ToString(), nHoursToBan);
+            CloseSocket(hSocket);
             return;
         }
     }
