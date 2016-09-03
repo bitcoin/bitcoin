@@ -91,7 +91,7 @@ private:
     CCoinsViewByScriptDBCursor(CDBIterator* pcursorIn):
         pcursor(pcursorIn) {}
     uint256 hashBlock;
-    boost::scoped_ptr<CDBIterator> pcursor;
+    std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, uint160> keyTmp;
 
     friend class CCoinsViewByScriptDB;

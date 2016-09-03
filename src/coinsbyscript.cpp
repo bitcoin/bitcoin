@@ -162,7 +162,7 @@ void CCoinsViewByScriptDBCursor::Next()
 
 bool CCoinsViewByScriptDB::DeleteAllCoinsByScript()
 {
-    boost::scoped_ptr<CCoinsViewByScriptDBCursor> pcursor(Cursor());
+    std::unique_ptr<CCoinsViewByScriptDBCursor> pcursor(Cursor());
 
     std::vector<uint160> v;
     int64_t i = 0;
@@ -207,7 +207,7 @@ bool CCoinsViewByScriptDB::GenerateAllCoinsByScript(CCoinsViewDB* coinsIn)
     LogPrintf("Building address index for -txoutsbyaddressindex. Be patient...\n");
     int64_t nTxCount = coinsIn->CountCoins();
 
-    boost::scoped_ptr<CCoinsViewCursor> pcursor(coinsIn->Cursor());
+    std::unique_ptr<CCoinsViewCursor> pcursor(coinsIn->Cursor());
 
     CCoinsMapByScript mapCoinsByScript;
     int64_t i = 0;
