@@ -12,7 +12,7 @@
 using namespace std;
 
 //! Calculate statistics about the unspent transaction output set
-bool GetUTXOStats(CCoinsView *view, CCoinsViewDB *viewdb, CCoinsStats &stats)
+bool GetUTXOStats(CCoinsView *view, CCoinsViewByScriptDB *viewbyscriptdb, CCoinsStats &stats)
 {
     boost::scoped_ptr<CCoinsViewCursor> pcursor(view->Cursor());
 
@@ -50,13 +50,12 @@ bool GetUTXOStats(CCoinsView *view, CCoinsViewDB *viewdb, CCoinsStats &stats)
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
 
-    boost::scoped_ptr<CDBIterator> pcursordb(viewdb->RawCursor());
-    pcursordb->Seek('d');
+    boost::scoped_ptr<CCoinsViewByScriptDBCursor> pcursordb(viewbyscriptdb->Cursor());
     while (pcursordb->Valid()) {
         boost::this_thread::interruption_point();
-        std::pair<char, uint160> key;
+        uint160 hash;
         CCoinsByScript coinsByScript;
-        if (pcursordb->GetKey(key) && key.first == 'd' && pcursordb->GetValue(coinsByScript)) {
+        if (pcursordb->GetKey(hash) && pcursordb->GetValue(coinsByScript)) {
             stats.nAddresses++;
             stats.nAddressesOutputs += coinsByScript.setCoins.size();
         } else {

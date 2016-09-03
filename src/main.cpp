@@ -669,7 +669,7 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 }
 
 CCoinsViewCache *pcoinsTip = NULL;
-CCoinsViewDB *pcoinsdbview = NULL;
+CCoinsViewByScriptDB *pcoinsByScriptDB = NULL;
 CCoinsViewByScript *pcoinsByScript = NULL;
 CBlockTreeDB *pblocktree = NULL;
 
@@ -2641,6 +2641,10 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
         // Flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
             return AbortNode(state, "Failed to write to coin database");
+        if (fTxOutsByAddressIndex) {
+            if (!pcoinsByScript->Flush())
+                return AbortNode(state, "Failed to write to coin database");
+        }
         nLastFlush = nNow;
     }
     if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
@@ -2717,6 +2721,8 @@ void static UpdateAddressIndex(const CBlock& block, CBlockUndo& blockundo, bool 
             i--;
         }
     }
+
+    pcoinsByScript->SetBestBlock(block.GetHash());
 }
 
 /** Update chainActive and related internal data structures. */
