@@ -30,97 +30,18 @@ std::map<uint256, int64_t> mapAskedForGovernanceObject;
 
 int nSubmittedFinalBudget;
 
-bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int& nConf, CAmount minFee)
-{
-
-    CTransaction txCollateral;
-    uint256 nBlockHash;
-
-    // RETRIEVE TRANSACTION IN QUESTION  
-
-    if(!GetTransaction(nTxCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
-        strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
-        LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
-        return false;
-    }
-
-    if(txCollateral.vout.size() < 1) {
-        strError = strprintf("tx vout size less than 1 | %d", txCollateral.vout.size());
-        LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
-        return false;
-    }
-
-    // LOOK FOR SPECIALIZED GOVERNANCE SCRIPT (PROOF OF BURN)
-
-    CScript findScript;
-    findScript << OP_RETURN << ToByteVector(nExpectedHash);
-
-    DBG( cout << "IsCollateralValid txCollateral.vout.size() = " << txCollateral.vout.size() << endl; );
-
-    DBG( cout << "IsCollateralValid: findScript = " << ScriptToAsmStr( findScript, false ) << endl; );
-
-
-    bool foundOpReturn = false;
-    BOOST_FOREACH(const CTxOut o, txCollateral.vout){
-        DBG( cout << "IsCollateralValid txout : " << o.ToString() 
-             << ", o.nValue = " << o.nValue
-             << ", o.scriptPubKey = " << ScriptToAsmStr( o.scriptPubKey, false )
-             << endl; );
-        if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
-            strError = strprintf("Invalid Script %s", txCollateral.ToString());
-            LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
-            return false;
-        }
-        if(o.scriptPubKey == findScript && o.nValue >= minFee) {
-            DBG( cout << "IsCollateralValid foundOpReturn = true" << endl; );
-            foundOpReturn = true;
-        }
-        else  {
-            DBG( cout << "IsCollateralValid No match, continuing" << endl; );
-        }
-
-    }
-    // 12.1 - todo: resolved
-    /*
-        Governance object is not valid - 4f4c4c9bf19d28ddcf819a71002adde9a517570778ec7fe1f9b819f7c3e02711 - Couldn't find opReturn 4f4c4c9bf19d28ddcf819a71002adde9a517570778ec7fe1f9b819f7c3e02711 in CTransaction(hash=8a5eb3c478, ver=1, vin.size=1, vout.size=2, nLockTime=48761)
-        CTxIn(COutPoint(455cd6da9357b267bcbae23b905ef9207b5ceced4436f9f0abfadf87a0a783ce, 1), scriptSig=4730440220538eb8c02ce268, nSequence=4294967294)
-        CTxOut(nValue=0.10000000, scriptPubKey=6a200e607ecda9227d293a261ffd87)
-        CTxOut(nValue=9.07485900, scriptPubKey=76a914d57173b7da84724a4569671e)
-    */
-
-    if(!foundOpReturn){
-        strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral.ToString());
-        LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
-        return false;
-    }
-
-    // GET CONFIRMATIONS FOR TRANSACTION
-
-    LOCK(cs_main);
-    int nConfirmationsIn = GetIXConfirmations(nTxCollateralHash);
-    if (nBlockHash != uint256()) {
-        BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex)) {
-                nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
-            }
-        }
-    }
-
-    nConf = nConfirmationsIn;
-
-    //if we're syncing we won't have instantX information, so accept 1 confirmation 
-    if(nConfirmationsIn >= GOVERNANCE_FEE_CONFIRMATIONS){
-        strError = "valid";
-    } else {
-        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
-        LogPrintf ("CGovernanceObject::IsCollateralValid - %s - %d confirmations\n", strError, nConfirmationsIn);
-        return false;
-    }
-    
-    return true;
-}
+CGovernanceManager::CGovernanceManager()
+    : mapCollateral(),
+      pCurrentBlockIndex(NULL),
+      nTimeLastDiff(0),
+      nCachedBlockHeight(0),
+      mapObjects(),
+      mapSeenGovernanceObjects(),
+      mapSeenVotes(),
+      mapOrphanVotes(),
+      mapLastMasternodeTrigger(),
+      cs()
+{}
 
 // Accessors for thread-safe access to maps
 bool CGovernanceManager::HaveObjectForHash(uint256 nHash)  {
@@ -242,8 +163,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         // IS THE COLLATERAL TRANSACTION ASSOCIATED WITH THIS GOVERNANCE OBJECT MATURE/VALID?
 
         std::string strError = "";
-        int nConf = 0;
-        if(!IsCollateralValid(govobj.nCollateralHash, govobj.GetHash(), strError, nConf, GOVERNANCE_FEE_TX)){
+        if(!govobj.IsCollateralValid(strError)) {
             LogPrintf("Governance object collateral tx is not valid - %s - %s\n", govobj.nCollateralHash.ToString(), strError);
             return;
         }
@@ -380,8 +300,8 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
               << ", nObjectType = " << govobj.nObjectType
               << endl; );
 
-    if(govobj.nObjectType == GOVERNANCE_OBJECT_TRIGGER)
-    {
+    if(govobj.nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
+        mapLastMasternodeTrigger[govobj.pubkeyMasternode.GetHash()] = nCachedBlockHeight;
         DBG( cout << "CGovernanceManager::AddGovernanceObject Before AddNewTrigger" << endl; );
         triggerman.AddNewTrigger(govobj.GetHash());
         DBG( cout << "CGovernanceManager::AddGovernanceObject After AddNewTrigger" << endl; );
@@ -704,6 +624,22 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
     return true;
 }
 
+bool CGovernanceManager::MasternodeRateCheck(const CPubKey& pubkey)
+{
+    LOCK(cs);
+    count_m_it it  = mapLastMasternodeTrigger.find(pubkey.GetHash());
+    if(it == mapLastMasternodeTrigger.end())  {
+        return true;
+    }
+    // Allow 1 trigger per mn per cycle, with a small fudge factor
+    int mindiff = Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockCycle / 10;
+    if((nCachedBlockHeight - it->second) > mindiff)  {
+        return true;
+    }
+    return false;
+}
+
+
 CGovernanceObject::CGovernanceObject()
 {
     // MAIN OBJECT DATA
@@ -769,6 +705,9 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
     nObjectType = other.nObjectType;
     fUnparsable = true;
 
+    vinMasternode = other.vinMasternode;
+    vchSig = other.vchSig;
+
     // caching
     fCachedFunding = other.fCachedFunding;
     fCachedValid = other.fCachedValid;
@@ -776,6 +715,50 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
     fCachedEndorsed = other.fCachedEndorsed;
     fDirtyCache = other.fDirtyCache;
     fExpired = other.fExpired;
+}
+
+void CGovernanceObject::SetMasternodeInfo(const CTxIn& vin, const CPubKey& pubkey)
+{
+    vinMasternode = vin;
+    pubkeyMasternode = pubkey;
+}
+
+bool CGovernanceObject::Sign(CKey& keyMasternode)
+{
+    LOCK(cs);
+    CPubKey pubKeyCollateralAddress;
+    CKey keyCollateralAddress;
+
+    std::string strError;
+    uint256 nHash = GetHash();
+    std::string strMessage = nHash.ToString();
+
+    if(!darkSendSigner.SignMessage(strMessage, vchSig, keyMasternode)) {
+        LogPrintf("CGovernanceObject::Sign -- SignMessage() failed\n");
+        return false;
+    }
+
+    if(!darkSendSigner.VerifyMessage(pubkeyMasternode, vchSig, strMessage, strError)) {
+        LogPrintf("CGovernanceObject::Sign -- VerifyMessage() failed, error: %s\n", strError);
+        return false;
+    }
+
+    return true;
+}
+
+bool CGovernanceObject::CheckSignature()
+{
+    LOCK(cs);
+    std::string strError;
+    uint256 nHash = GetHash();
+    std::string strMessage = nHash.ToString();
+
+    if(!darkSendSigner.VerifyMessage(pubkeyMasternode, vchSig, strMessage, strError)) {
+        LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
+        return false;
+    }
+
+    return true;
 }
 
 int CGovernanceObject::GetObjectType()
@@ -982,16 +965,40 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
 
     // IF ABSOLUTE NO COUNT (NO-YES VALID VOTES) IS MORE THAN 10% OF THE NETWORK MASTERNODES, OBJ IS INVALID
 
-    if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) > mnodeman.CountEnabled(MSG_GOVERNANCE_PEER_PROTO_VERSION)/10){
-         strError = "Automated removal";
-         return false;
+    if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) > mnodeman.CountEnabled(MSG_GOVERNANCE_PEER_PROTO_VERSION)/10) {
+        strError = "Automated removal";
+        return false;
     }
 
     // CHECK COLLATERAL IF REQUIRED (HIGH CPU USAGE)
 
-    if(fCheckCollateral){
-        int nConf = 0;
-        if(!IsCollateralValid(nCollateralHash, GetHash(), strError, nConf, GOVERNANCE_FEE_TX)){
+    if(fCheckCollateral) {
+        if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
+            CMasternode mn;
+            if(mnodeman.Get(pubkeyMasternode, mn)) {
+                strError = "Masternode not found";
+                return false;
+            }
+            if(!mn.IsEnabled()) {
+                strError = "Masternode not enabled";
+                return false;
+            }
+
+            // Check that we have a valid MN signature
+            if(!CheckSignature()) {
+                strError = "Invalid masternode signature";
+                return false;
+            }
+
+            if(!governance.MasternodeRateCheck(pubkeyMasternode)) {
+                strError = "Masternode attempting to create too many objects";
+                return false;
+            }
+
+            return true;
+        }
+
+        if(!IsCollateralValid(strError)) {
             // strError set in IsCollateralValid
             if(strError == "") strError = "Collateral is invalid";
             return false;
@@ -1011,6 +1018,122 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
     //     return false;
     // }
 
+    return true;
+}
+
+CAmount CGovernanceObject::GetMinCollateralFee()
+{
+    CAmount nMinFee = 0;
+    // Only 1 type has a fee for the moment but switch statement allows for future object types
+    switch(nObjectType)  {
+    case GOVERNANCE_OBJECT_PROPOSAL:
+        nMinFee = GOVERNANCE_PROPOSAL_FEE_TX;
+        break;
+    case GOVERNANCE_OBJECT_TRIGGER:
+        nMinFee = 0;
+        break;
+    default:
+      {
+        std::ostringstream ostr;
+        ostr << "CGovernanceObject::GetMinCollateralFee ERROR: Unknown governance object type: " << nObjectType;
+        throw std::runtime_error(ostr.str());
+      }
+    }
+    return nMinFee;
+}
+
+bool CGovernanceObject::IsCollateralValid(std::string& strError)
+{
+    CAmount nMinFee = 0;
+    try  {
+        nMinFee = GetMinCollateralFee();
+    }
+    catch(std::exception& e)  {
+        strError = e.what();
+        LogPrintf("CGovernanceObject::IsCollateralValid ERROR An exception occurred - %s\n", e.what());
+        return false;
+    }
+    
+    uint256 nExpectedHash = GetHash();
+
+    CTransaction txCollateral;
+    uint256 nBlockHash;
+
+    // RETRIEVE TRANSACTION IN QUESTION  
+
+    if(!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
+        strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
+        LogPrintf("CGovernanceObject::IsCollateralValid - %s\n", strError);
+        return false;
+    }
+
+    if(txCollateral.vout.size() < 1) {
+        strError = strprintf("tx vout size less than 1 | %d", txCollateral.vout.size());
+        LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
+        return false;
+    }
+
+    // LOOK FOR SPECIALIZED GOVERNANCE SCRIPT (PROOF OF BURN)
+
+    CScript findScript;
+    findScript << OP_RETURN << ToByteVector(nExpectedHash);
+
+    DBG( cout << "IsCollateralValid txCollateral.vout.size() = " << txCollateral.vout.size() << endl; );
+
+    DBG( cout << "IsCollateralValid: findScript = " << ScriptToAsmStr( findScript, false ) << endl; );
+
+    DBG( cout << "IsCollateralValid: nMinFee = " << nMinFee << endl; );
+
+
+    bool foundOpReturn = false;
+    BOOST_FOREACH(const CTxOut o, txCollateral.vout) {
+        DBG( cout << "IsCollateralValid txout : " << o.ToString() 
+             << ", o.nValue = " << o.nValue
+             << ", o.scriptPubKey = " << ScriptToAsmStr( o.scriptPubKey, false )
+             << endl; );
+        if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
+            strError = strprintf("Invalid Script %s", txCollateral.ToString());
+            LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
+            return false;
+        }
+        if(o.scriptPubKey == findScript && o.nValue >= nMinFee) {
+            DBG( cout << "IsCollateralValid foundOpReturn = true" << endl; );
+            foundOpReturn = true;
+        }
+        else  {
+            DBG( cout << "IsCollateralValid No match, continuing" << endl; );
+        }
+
+    }
+
+    if(!foundOpReturn){
+        strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral.ToString());
+        LogPrintf ("CGovernanceObject::IsCollateralValid - %s\n", strError);
+        return false;
+    }
+
+    // GET CONFIRMATIONS FOR TRANSACTION
+
+    LOCK(cs_main);
+    int nConfirmationsIn = GetIXConfirmations(nCollateralHash);
+    if (nBlockHash != uint256()) {
+        BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
+        if (mi != mapBlockIndex.end() && (*mi).second) {
+            CBlockIndex* pindex = (*mi).second;
+            if (chainActive.Contains(pindex)) {
+                nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
+            }
+        }
+    }
+
+    if(nConfirmationsIn >= GOVERNANCE_FEE_CONFIRMATIONS) {
+        strError = "valid";
+    } else {
+        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
+        LogPrintf ("CGovernanceObject::IsCollateralValid - %s - %d confirmations\n", strError, nConfirmationsIn);
+        return false;
+    }
+    
     return true;
 }
 

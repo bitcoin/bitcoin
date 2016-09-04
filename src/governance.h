@@ -38,8 +38,9 @@ class CGovernanceObject;
 class CGovernanceVote;
 class CNode;
 
-static const CAmount GOVERNANCE_FEE_TX = (0.1*COIN);
-static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 1; //todo 12.1 -- easy testing
+static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (0.33*COIN);
+
+static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
 extern std::map<uint256, int64_t> mapAskedForGovernanceObject;
@@ -52,8 +53,6 @@ static const int SEEN_OBJECT_ERROR_IMMATURE = 2;
 static const int SEEN_OBJECT_EXECUTED = 3; //used for triggers
 static const int SEEN_OBJECT_UNKNOWN = 4; // the default
 
-//Check the collateral transaction for the budget proposal/finalized budget
-extern bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int& nConf, CAmount minFee);
 
 
 //
@@ -112,18 +111,13 @@ private:
     vote_m_t mapVotesByHash;
     vote_m_t mapVotesByType;
 
+    count_m_t mapLastMasternodeTrigger;
+
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
     
-    CGovernanceManager()
-        : mapCollateral(),
-          pCurrentBlockIndex(NULL),
-          nTimeLastDiff(0),
-          nCachedBlockHeight(0),
-          mapObjects(),
-          cs()
-    {}
+    CGovernanceManager();
 
     void ClearSeen() {
         LOCK(cs);
@@ -173,6 +167,7 @@ public:
         mapOrphanVotes.clear();
         mapVotesByType.clear();
         mapVotesByHash.clear();
+        mapLastMasternodeTrigger.clear();
     }
     
     std::string ToString() const;
@@ -188,6 +183,7 @@ public:
         READWRITE(mapObjects);
         READWRITE(mapVotesByHash);
         READWRITE(mapVotesByType);
+        READWRITE(mapLastMasternodeTrigger);
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
@@ -210,6 +206,8 @@ public:
     void AddSeenGovernanceObject(uint256 nHash, int status);
 
     void AddSeenVote(uint256 nHash, int status);
+
+    bool MasternodeRateCheck(const CPubKey& pubkey);
 
 };
 
@@ -237,6 +235,11 @@ public:
     bool fCachedLocalValidity; // is valid by blockchain 
     std::string strLocalValidityError;
 
+    // Masternode info for signed objects
+    CTxIn vinMasternode;
+    CPubKey pubkeyMasternode;
+    std::vector<unsigned char> vchSig;
+
     // VARIOUS FLAGS FOR OBJECT / SET VIA MASTERNODE VOTING
 
     bool fCachedFunding; // true == minimum network support has been reached for this object to be funded (doesn't mean it will for sure though)
@@ -252,14 +255,26 @@ public:
     CGovernanceObject(const CGovernanceObject& other);
     void swap(CGovernanceObject& first, CGovernanceObject& second); // nothrow
 
+    // Signature related functions
+
+    void SetMasternodeInfo(const CTxIn& vin, const CPubKey& pubkey);
+    bool Sign(CKey& keyMasternode);
+    bool CheckSignature();
+
     // CORE OBJECT FUNCTIONS
 
     bool IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral);
+
+    /// Check the collateral transaction for the budget proposal/finalized budget
+    bool IsCollateralValid(std::string& strError);
+
     void UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex);
     void UpdateSentinelVariables(const CBlockIndex *pCurrentBlockIndex);
     int GetObjectType();
     int GetObjectSubtype();
     std::string GetName() {return strName; }
+
+    CAmount GetMinCollateralFee();
 
     UniValue GetJSONObject();
 
@@ -298,9 +313,13 @@ public:
         READWRITE(nCollateralHash);
         READWRITE(strData);
         READWRITE(nObjectType);
+        READWRITE(vinMasternode);
+        READWRITE(pubkeyMasternode);
+        READWRITE(vchSig);
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
+
 };
 
 

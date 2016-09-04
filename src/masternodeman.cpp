@@ -293,6 +293,18 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
     return NULL;
 }
 
+bool CMasternodeMan::Get(const CPubKey& pubKeyMasternode, CMasternode& masternode)
+{
+    // Theses mutexes are recursive so double locking by the same thread is safe.
+    LOCK(cs);
+    CMasternode* pMN = Find(pubKeyMasternode);
+    if(!pMN)  {
+        return false;
+    }
+    masternode = *pMN;
+    return true;
+}
+
 // 
 // Deterministically select the oldest/best masternode to pay on the network
 //

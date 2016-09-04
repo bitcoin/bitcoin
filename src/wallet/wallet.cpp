@@ -2910,17 +2910,17 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
     return true;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool fUseInstantSend)
+bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, CAmount amount, bool fUseInstantSend)
 {
     CWalletTx wtx;
-    if(GetBudgetSystemCollateralTX(wtx, hash, fUseInstantSend)){
+    if(GetBudgetSystemCollateralTX(wtx, hash, amount, fUseInstantSend)){
         tx = (CTransaction)wtx;
         return true;
     }
     return false;
 }
 
-bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool fUseInstantSend)
+bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount amount, bool fUseInstantSend)
 {
     // make our change address
     CReserveKey reservekey(pwalletMain);
@@ -2932,7 +2932,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool fUse
     int nChangePosRet = -1;
     std::string strFail = "";
     vector< CRecipient > vecSend;
-    vecSend.push_back((CRecipient){scriptChange, GOVERNANCE_FEE_TX, false});
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl *coinControl=NULL;
     bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS, fUseInstantSend);
