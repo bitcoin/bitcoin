@@ -41,12 +41,12 @@ public:
 
 private:
     QMenu *contextMenu;
-    int64_t nTimeFilterUpdate;
+    int64_t nTimeFilterUpdated;
     bool fFilterUpdated;
 
 public Q_SLOTS:
-    void updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn);
-    void updateMyNodeList(bool reset = false);
+    void updateMyMasternodeInfo(QString strAlias, QString strAddr, CMasternode *pmn);
+    void updateMyNodeList(bool fForce = false);
     void updateNodeList();
 
 Q_SIGNALS:
@@ -61,7 +61,7 @@ private:
 
 private Q_SLOTS:
     void showContextMenu(const QPoint &);
-    void on_filterLineEdit_textChanged(const QString &filterString);
+    void on_filterLineEdit_textChanged(const QString &strFilterIn);
     void on_startButton_clicked();
     void on_startAllButton_clicked();
     void on_startMissingButton_clicked();
