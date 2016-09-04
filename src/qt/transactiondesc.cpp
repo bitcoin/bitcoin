@@ -34,54 +34,35 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
     else
     {
-        int signatures = GetTransactionLockSignatures(wtx.GetHash());
-        QString strUsingIX = "";
-        if(signatures >= 0){
+        int nDepth = wtx.GetDepthInMainChain();
+        if (nDepth < 0) return tr("conflicted");
 
-            if(signatures >= INSTANTSEND_SIGNATURES_REQUIRED){
-                int nDepth = wtx.GetDepthInMainChain();
-                if (nDepth < 0)
-                    return tr("conflicted");
-                else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                    return tr("%1/offline (verified via InstantSend)").arg(nDepth);
-                else if (nDepth < 6)
-                    return tr("%1/confirmed (verified via InstantSend)").arg(nDepth);
-                else
-                    return tr("%1 confirmations (verified via InstantSend)").arg(nDepth);
-            } else {
-                if(!IsTransactionLockTimedOut(wtx.GetHash())){
-                    int nDepth = wtx.GetDepthInMainChain();
-                    if (nDepth < 0)
-                        return tr("conflicted");
-                    else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                        return tr("%1/offline (InstantSend verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
-                    else if (nDepth < 6)
-                        return tr("%1/confirmed (InstantSend verification in progress - %2 of %3 signatures )").arg(nDepth).arg(signatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
-                    else
-                        return tr("%1 confirmations (InstantSend verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
-                } else {
-                    int nDepth = wtx.GetDepthInMainChain();
-                    if (nDepth < 0)
-                        return tr("conflicted");
-                    else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                        return tr("%1/offline (InstantSend verification failed)").arg(nDepth);
-                    else if (nDepth < 6)
-                        return tr("%1/confirmed (InstantSend verification failed)").arg(nDepth);
-                    else
-                        return tr("%1 confirmations").arg(nDepth);
-                }
-            }
+        QString strTxStatus;
+        bool fOffline = (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60) && (wtx.GetRequestCount() == 0);
+        int nSignatures = GetTransactionLockSignatures(wtx.GetHash());
+
+        if (fOffline) {
+            strTxStatus = tr("%1/offline").arg(nDepth);
+        } else if (nDepth < 6) {
+            strTxStatus = tr("%1/unconfirmed").arg(nDepth);
         } else {
-            int nDepth = wtx.GetDepthInMainChain();
-            if (nDepth < 0)
-                return tr("conflicted");
-            else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-                return tr("%1/offline").arg(nDepth);
-            else if (nDepth < 6)
-                return tr("%1/unconfirmed").arg(nDepth);
-            else
-                return tr("%1 confirmations").arg(nDepth);
+            strTxStatus = tr("%1 confirmations").arg(nDepth);
         }
+
+        if(nSignatures < 0) return strTxStatus; // regular tx
+
+        // InstantSend
+        strTxStatus += " (";
+        if(nSignatures >= INSTANTSEND_SIGNATURES_REQUIRED) {
+            strTxStatus += tr("verified via InstantSend");
+        } else if(!IsTransactionLockTimedOut(wtx.GetHash())) {
+            strTxStatus += tr("InstantSend verification in progress - %1 of %2 signatures").arg(nSignatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
+        } else {
+            strTxStatus += tr("InstantSend verification failed");
+        }
+        strTxStatus += ")";
+
+        return strTxStatus;
     }
 }
 
