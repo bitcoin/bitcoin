@@ -3294,7 +3294,29 @@ bool CConnman::InitBinds(const Options& options)
         inaddr_any.s_addr = htonl(INADDR_ANY);
         const CService ipv4_any{inaddr_any, GetListenPort()}; // 0.0.0.0
         if (!Bind(ipv4_any, BF_REPORT_ERROR, NetPermissionFlags::None)) {
-            return false;
+            int defaultPort = Params().GetDefaultPort();
+            // If listening failed and another port than the standard port was specified,
+            // ask if the user wants to connect via the standard port for the network instead
+            if (GetListenPort() != defaultPort) {
+                bool fRet = uiInterface.ThreadSafeQuestion(
+                    strprintf(_("Do you want to use the standard network port for %s (port %s) instead?"), CLIENT_NAME, defaultPort),
+                    strprintf(_("Listen on port %s failed."), GetListenPort()).translated,
+                    "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::MODAL | CClientUIInterface::BTN_OK | CClientUIInterface::BTN_ABORT);
+
+                if (fRet) {
+                    // FIXME: Unbind IPv6 on the other port
+
+                    gArgs.ForceSetArg("-port", defaultPort);
+                    // Attempt to use standard port
+                    struct in6_addr inaddr6_any = IN6ADDR_ANY_INIT;
+                    Bind(CService(inaddr6_any, defaultPort), BF_NONE, NetPermissionFlags::None);
+                    struct in_addr inaddr_any;
+                    inaddr_any.s_addr = INADDR_ANY;
+                    if (!Bind(CService(inaddr_any, defaultPort), BF_REPORT_ERROR, NetPermissionFlags::None)) {
+                        return false;
+                    }
+                }
+            }
         }
     }
     return true;
