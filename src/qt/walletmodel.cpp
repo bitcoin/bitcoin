@@ -89,17 +89,17 @@ bool WalletModel::haveWatchOnly() const
 
 CAmount WalletModel::getWatchBalance() const
 {
-    return wallet->GetWatchOnlyBalance();
+    return wallet->GetBalance(ISMINE_WATCH_ONLY);
 }
 
 CAmount WalletModel::getWatchUnconfirmedBalance() const
 {
-    return wallet->GetUnconfirmedWatchOnlyBalance();
+    return wallet->GetUnconfirmedBalance(ISMINE_WATCH_ONLY);
 }
 
 CAmount WalletModel::getWatchImmatureBalance() const
 {
-    return wallet->GetImmatureWatchOnlyBalance();
+    return wallet->GetImmatureBalance(ISMINE_WATCH_ONLY);
 }
 
 void WalletModel::updateStatus()

@@ -375,10 +375,8 @@ public:
     //! filter decides which addresses will count towards the debit
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
-    CAmount GetImmatureCredit(bool fUseCache=true) const;
-    CAmount GetAvailableCredit(bool fUseCache=true) const;
-    CAmount GetImmatureWatchOnlyCredit(const bool& fUseCache=true) const;
-    CAmount GetAvailableWatchOnlyCredit(const bool& fUseCache=true) const;
+    CAmount GetImmatureCredit(const isminefilter& filter = ISMINE_SPENDABLE, bool fUseCache=true) const;
+    CAmount GetAvailableCredit(const isminefilter& filter = ISMINE_SPENDABLE, bool fUseCache=true) const;
     CAmount GetChange() const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
@@ -750,12 +748,9 @@ public:
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime);
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime);
-    CAmount GetBalance() const;
-    CAmount GetUnconfirmedBalance() const;
-    CAmount GetImmatureBalance() const;
-    CAmount GetWatchOnlyBalance() const;
-    CAmount GetUnconfirmedWatchOnlyBalance() const;
-    CAmount GetImmatureWatchOnlyBalance() const;
+    CAmount GetBalance(const isminefilter& filter = ISMINE_SPENDABLE) const;
+    CAmount GetUnconfirmedBalance(const isminefilter& filter = ISMINE_SPENDABLE) const;
+    CAmount GetImmatureBalance(const isminefilter& filter = ISMINE_SPENDABLE) const;
 
     /**
      * Insert additional inputs into the transaction by
