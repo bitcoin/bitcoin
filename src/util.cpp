@@ -398,6 +398,24 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
     return fDefault;
 }
 
+void SetArg(const std::string& strArg, const std::string& strValue)
+{
+    mapArgs[strArg] = strValue;
+}
+
+void SetArg(const std::string& strArg, int64_t nValue)
+{
+    mapArgs[strArg] = i64tostr(nValue);
+}
+
+void SetBoolArg(const std::string& strArg, bool fValue)
+{
+    if (fValue)
+        SetArg(strArg, std::string("1"));
+    else
+        SetArg(strArg, std::string("0"));
+}
+
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     if (mapArgs.count(strArg))
