@@ -155,8 +155,9 @@ void CBudgetManager::SubmitFinalBudget()
 
     //create fee tx
     CTransaction tx;
-    
-    if(!mapCollateral.count(tempBudget.GetHash())){
+    uint256 txidCollateral;
+
+    if(!mapCollateralTxids.count(tempBudget.GetHash())){
         CWalletTx wtx;
         if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), false)){
             LogPrintf("CBudgetManager::SubmitFinalBudget - Can't make collateral transaction\n");
@@ -167,28 +168,45 @@ void CBudgetManager::SubmitFinalBudget()
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
         pwalletMain->CommitTransaction(wtx, reservekey, "ix");
-
-        mapCollateral.insert(make_pair(tempBudget.GetHash(), (CTransaction)wtx));
         tx = (CTransaction)wtx;
+        txidCollateral = tx.GetHash();
+        mapCollateralTxids.insert(make_pair(tempBudget.GetHash(), txidCollateral));
     } else {
-        tx = mapCollateral[tempBudget.GetHash()];
+        txidCollateral = mapCollateralTxids[tempBudget.GetHash()];
     }
 
-    CTxIn in(COutPoint(tx.GetHash(), 0));
-    int conf = GetInputAgeIX(tx.GetHash(), in);
+    int conf = GetIXConfirmations(tx.GetHash());
+    CTransaction txCollateral;
+    uint256 nBlockHash;
+
+    if(!GetTransaction(txidCollateral, txCollateral, nBlockHash, true)) {
+        LogPrintf ("CBudgetManager::SubmitFinalBudget - Can't find collateral tx %s", txidCollateral.ToString());
+        return;
+    }
+
+    if (nBlockHash != uint256(0)) {
+        BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
+        if (mi != mapBlockIndex.end() && (*mi).second) {
+            CBlockIndex* pindex = (*mi).second;
+            if (chainActive.Contains(pindex)) {
+                conf += chainActive.Height() - pindex->nHeight + 1;
+            }
+        }
+    }
+
     /*
         Wait will we have 1 extra confirmation, otherwise some clients might reject this feeTX
         -- This function is tied to NewBlock, so we will propagate this budget while the block is also propagating
     */
     if(conf < BUDGET_FEE_CONFIRMATIONS+1){
-        LogPrintf ("CBudgetManager::SubmitFinalBudget - Collateral requires at least %d confirmations - %s - %d confirmations\n", BUDGET_FEE_CONFIRMATIONS, tx.GetHash().ToString(), conf);
+        LogPrintf ("CBudgetManager::SubmitFinalBudget - Collateral requires at least %d confirmations - %s - %d confirmations\n", BUDGET_FEE_CONFIRMATIONS+1, txidCollateral.ToString(), conf);
         return;
     }
 
     nSubmittedFinalBudget = nBlockStart;
 
     //create the proposal incase we're the first to make it
-    CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, tx.GetHash());
+    CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, txidCollateral);
 
     std::string strError = "";
     if(!finalizedBudgetBroadcast.IsValid(strError)){
