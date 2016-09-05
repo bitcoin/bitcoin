@@ -491,26 +491,27 @@ void OverviewPage::privateSendStatus()
             ui->labelPrivateSendEnabled->setToolTip(strWarn);
             LogPrintf("OverviewPage::privateSendStatus -- Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
             QMessageBox::warning(this, tr("PrivateSend"), strWarn, QMessageBox::Ok, QMessageBox::Ok);
-        } else
+        } else {
             LogPrintf("OverviewPage::privateSendStatus -- Very low number of keys left since last automatic backup, skipping warning and trying to create new backup...\n");
+        }
 
-        std::string warningString;
-        std::string errorString;
-        if(!AutoBackupWallet(pwalletMain, "", warningString, errorString)) {
-            if (!warningString.empty()) {
+        std::string strBackupWarning;
+        std::string strBackupError;
+        if(!AutoBackupWallet(pwalletMain, "", strBackupWarning, strBackupError)) {
+            if (!strBackupWarning.empty()) {
                 // It's still more or less safe to continue but warn user anyway
-                LogPrintf("OverviewPage::privateSendStatus - WARNING! Something went wrong on automatic backup: %s\n", warningString);
+                LogPrintf("OverviewPage::privateSendStatus -- WARNING! Something went wrong on automatic backup: %s\n", strBackupWarning);
 
                 QMessageBox::warning(this, tr("PrivateSend"),
-                    tr("WARNING! Something went wrong on automatic backup") + ":<br><br>" + warningString.c_str(),
+                    tr("WARNING! Something went wrong on automatic backup") + ":<br><br>" + strBackupWarning.c_str(),
                     QMessageBox::Ok, QMessageBox::Ok);
             }
-            if (!errorString.empty()) {
+            if (!strBackupError.empty()) {
                 // Things are really broken, warn user and stop mixing immediately
-                LogPrintf("OverviewPage::privateSendStatus - ERROR! Failed to create automatic backup: %s\n", errorString);
+                LogPrintf("OverviewPage::privateSendStatus -- ERROR! Failed to create automatic backup: %s\n", strBackupError);
 
                 QMessageBox::warning(this, tr("PrivateSend"),
-                    tr("ERROR! Failed to create automatic backup") + ":<br><br>" + errorString.c_str() + "<br>" +
+                    tr("ERROR! Failed to create automatic backup") + ":<br><br>" + strBackupError.c_str() + "<br>" +
                     tr("Mixing is disabled, please close your wallet and fix the issue!"),
                     QMessageBox::Ok, QMessageBox::Ok);
             }
@@ -550,7 +551,7 @@ void OverviewPage::privateSendStatus()
     QString s = tr("Last PrivateSend message:\n") + strStatus;
 
     if(s != ui->labelPrivateSendLastMessage->text())
-        LogPrintf("OverviewPage::privateSendStatus - Last PrivateSend message: %s\n", strStatus.toStdString());
+        LogPrintf("OverviewPage::privateSendStatus -- Last PrivateSend message: %s\n", strStatus.toStdString());
 
     ui->labelPrivateSendLastMessage->setText(s);
 
@@ -607,7 +608,7 @@ void OverviewPage::togglePrivateSend(){
                 QMessageBox::warning(this, tr("PrivateSend"),
                     tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
-                LogPrint("privatesend", "OverviewPage::togglePrivateSend - Wallet is locked and user declined to unlock. Disabling PrivateSend.\n");
+                LogPrint("privatesend", "OverviewPage::togglePrivateSend -- Wallet is locked and user declined to unlock. Disabling PrivateSend.\n");
                 return;
             }
         }

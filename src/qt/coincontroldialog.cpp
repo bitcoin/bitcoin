@@ -447,9 +447,9 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
             item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         else {
             coinControl->Select(outpt);
-            CTxIn vin(outpt);
-            int rounds = pwalletMain->GetInputPrivateSendRounds(vin);
-            if(coinControl->fUsePrivateSend && rounds < nPrivateSendRounds) {
+            CTxIn txin = CTxIn(outpt);
+            int nRounds = pwalletMain->GetInputPrivateSendRounds(txin);
+            if (coinControl->fUsePrivateSend && nRounds < nPrivateSendRounds) {
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>PrivateSend will be disabled.</b><br><br>If you still want to use PrivateSend, please deselect all non-nonymized inputs first and then check PrivateSend checkbox again."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -842,10 +842,10 @@ void CoinControlDialog::updateView()
 
 
             // PrivateSend rounds
-            CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
-            int rounds = pwalletMain->GetInputPrivateSendRounds(vin);
+            CTxIn txin = CTxIn(out.tx->GetHash(), out.i);
+            int nRounds = pwalletMain->GetInputPrivateSendRounds(txin);
 
-            if (rounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString::number(rounds), 11, " "));
+            if (nRounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString::number(nRounds), 11, " "));
             else itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString(tr("n/a")), 11, " "));
 
 

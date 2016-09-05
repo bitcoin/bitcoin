@@ -253,6 +253,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ShowMasternodesTab:
+            return settings.value("fShowMasternodesTab");
         case ShowAdvancedPSUI:
             return fShowAdvancedPSUI;
         case LowKeysWarning:
@@ -261,8 +263,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nPrivateSendRounds");
         case PrivateSendAmount:
             return settings.value("nPrivateSendAmount");
-        case ShowMasternodesTab:
-            return settings.value("fShowMasternodesTab");
         case PrivateSendMultiSession:
             return settings.value("fPrivateSendMultiSession");
 #endif
@@ -271,9 +271,9 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
         case Digits:
-            return settings.value("digits");            
+            return settings.value("digits");
         case Theme:
-            return settings.value("theme");            
+            return settings.value("theme");
         case Language:
             return settings.value("language");
         case CoinControlFeatures:
@@ -387,6 +387,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case ShowMasternodesTab:
+            if (settings.value("fShowMasternodesTab") != value) {
+                settings.setValue("fShowMasternodesTab", value);
+                setRestartRequired(true);
+            }
+            break;
         case ShowAdvancedPSUI:
             fShowAdvancedPSUI = value.toBool();
             settings.setValue("fShowAdvancedPSUI", fShowAdvancedPSUI);
@@ -409,12 +415,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 nPrivateSendAmount = value.toInt();
                 settings.setValue("nPrivateSendAmount", nPrivateSendAmount);
                 Q_EMIT privateSentAmountChanged();
-            }
-            break;
-        case ShowMasternodesTab:
-            if (settings.value("fShowMasternodesTab") != value) {
-                settings.setValue("fShowMasternodesTab", value);
-                setRestartRequired(true);
             }
             break;
         case PrivateSendMultiSession:

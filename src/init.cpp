@@ -551,7 +551,7 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     AppendParamsHelpMessages(strUsage, showDebug);
-    strUsage += HelpMessageOpt("-litemode=<n>", strprintf(_("Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Budgeting) (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-litemode=<n>", strprintf(_("Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
 
     strUsage += HelpMessageGroup(_("Masternode options:"));
     strUsage += HelpMessageOpt("-masternode=<n>", strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0));
@@ -1232,32 +1232,32 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 5: Backup wallet and verify wallet database integrity
 #ifdef ENABLE_WALLET
     if (!fDisableWallet) {
-        std::string warningString;
-        std::string errorString;
+        std::string strWarning;
+        std::string strError;
 
         nWalletBackups = GetArg("-createwalletbackups", 10);
         nWalletBackups = std::max(0, std::min(10, nWalletBackups));
 
-        if(!AutoBackupWallet(NULL, strWalletFile, warningString, errorString)) {
-            if (!warningString.empty())
-                InitWarning(warningString);
-            if (!errorString.empty())
-                return InitError(errorString);
+        if(!AutoBackupWallet(NULL, strWalletFile, strWarning, strError)) {
+            if (!strWarning.empty())
+                InitWarning(strWarning);
+            if (!strError.empty())
+                return InitError(strError);
         }
 
         LogPrintf("Using wallet %s\n", strWalletFile);
         uiInterface.InitMessage(_("Verifying wallet..."));
 
         // reset warning string
-        warningString = "";
+        strWarning = "";
 
-        if (!CWallet::Verify(strWalletFile, warningString, errorString))
+        if (!CWallet::Verify(strWalletFile, strWarning, strError))
             return false;
 
-        if (!warningString.empty())
-            InitWarning(warningString);
-        if (!errorString.empty())
-            return InitError(errorString);
+        if (!strWarning.empty())
+            InitWarning(strWarning);
+        if (!strError.empty())
+            return InitError(strError);
 
 
     // Initialize KeePass Integration
@@ -1652,13 +1652,13 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             pwalletMain->SetBestChain(chainActive.GetLocator());
 
             // Try to create wallet backup right after new wallet was created
-            std::string warningString;
-            std::string errorString;
-            if(!AutoBackupWallet(pwalletMain, "", warningString, errorString)) {
-                if (!warningString.empty())
-                    InitWarning(warningString);
-                if (!errorString.empty())
-                    return InitError(errorString);
+            std::string strBackupWarning;
+            std::string strBackupError;
+            if(!AutoBackupWallet(pwalletMain, "", strBackupWarning, strBackupError)) {
+                if (!strBackupWarning.empty())
+                    InitWarning(strBackupWarning);
+                if (!strBackupError.empty())
+                    return InitError(strBackupError);
             }
 
         }

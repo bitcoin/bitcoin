@@ -940,7 +940,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-int GetInputAge(CTxIn& vin)
+int GetInputAge(CTxIn& txin)
 {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
@@ -949,20 +949,20 @@ int GetInputAge(CTxIn& vin)
         CCoinsViewMemPool viewMempool(pcoinsTip, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
-        const CCoins* coins = view.AccessCoins(vin.prevout.hash);
+        const CCoins* coins = view.AccessCoins(txin.prevout.hash);
 
-        if (coins){
+        if (coins) {
             if(coins->nHeight < 0) return 0;
-            return (chainActive.Tip()->nHeight+1) - coins->nHeight;
+            return (chainActive.Tip()->nHeight + 1) - coins->nHeight;
         }
         else
             return -1;
     }
 }
 
-int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
+int GetInputAgeIX(uint256 nTXHash, CTxIn& txin)
 {
-    int nResult = GetInputAge(vin);
+    int nResult = GetInputAge(txin);
     if(nResult < 0) return -1;
 
     if (nResult < 6 && IsLockedInstandSendTransaction(nTXHash))

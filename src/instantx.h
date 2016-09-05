@@ -43,7 +43,7 @@ extern std::map<COutPoint, uint256> mapLockedInputs;
 
 int64_t CreateNewLock(CTransaction tx);
 
-bool IsInstantSendTxValid(const CTransaction& txCollateral);
+bool IsInstantSendTxValid(const CTransaction& txCandidate);
 
 void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 

@@ -46,11 +46,11 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
+        ShowMasternodesTab,     // bool
         ShowAdvancedPSUI,       // bool
         LowKeysWarning,         // bool
         PrivateSendRounds,      // int
         PrivateSendAmount,      // int
-        ShowMasternodesTab,     // bool
         PrivateSendMultiSession,// bool
         Listen,                 // bool
         OptionIDRowCount,

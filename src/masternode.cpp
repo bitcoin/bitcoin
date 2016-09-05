@@ -162,7 +162,7 @@ void CMasternode::Check(bool forceCheck)
         activeState = MASTERNODE_REMOVE;
 
         // RESCAN AFFECTED VOTES
-        FlagGovernanceItemsAsDirty(); 
+        FlagGovernanceItemsAsDirty();
         return;
     }
 
@@ -182,9 +182,9 @@ void CMasternode::Check(bool forceCheck)
     if(!unitTest){
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(999.99*COIN, mnodeman.dummyScriptPubkey);
+        CTxOut txout = CTxOut(999.99*COIN, mnodeman.dummyScriptPubkey);
         tx.vin.push_back(vin);
-        tx.vout.push_back(vout);
+        tx.vout.push_back(txout);
 
         {
             TRY_LOCK(cs_main, lockMain);
@@ -193,7 +193,6 @@ void CMasternode::Check(bool forceCheck)
             if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)){
                 activeState = MASTERNODE_VIN_SPENT;
                 return;
-
             }
         }
     }
@@ -322,7 +321,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     nLastScanningErrorBlockHeight = mn.nLastScanningErrorBlockHeight;
 }
 
-bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorMessage, CMasternodeBroadcast &mnb, bool fOffline)
+bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
 {
     CTxIn txin;
     CPubKey pubKeyCollateral;
@@ -332,59 +331,59 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
 
     //need correct blocks to send ping
     if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
-        strErrorMessage = "Sync in progress. Must wait until sync is complete to start Masternode";
-        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        strErrorRet = "Sync in progress. Must wait until sync is complete to start Masternode";
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
         return false;
     }
 
     if(!darkSendSigner.GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew)) {
-        strErrorMessage = strprintf("Invalid masternode key %s", strKeyMasternode);
-        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        strErrorRet = strprintf("Invalid masternode key %s", strKeyMasternode);
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
         return false;
     }
 
     if(!pwalletMain->GetMasternodeVinAndKeys(txin, pubKeyCollateral, keyCollateral, strTxHash, strOutputIndex)) {
-        strErrorMessage = strprintf("Could not allocate txin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
-        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+        strErrorRet = strprintf("Could not allocate txin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
         return false;
     }
 
     CService service = CService(strService);
-    uint16_t mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
+    int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
     if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if(service.GetPort() != mainnetDefaultPort) {
-            strErrorMessage = strprintf("Invalid port %u for masternode %s, only %u is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
-            LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+            strErrorRet = strprintf("Invalid port %u for masternode %s, only %d is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
+            LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
             return false;
         }
-    } else if(service.GetPort() == mainnetDefaultPort) {
-        strErrorMessage = strprintf("Invalid port %u for masternode %s, %u is the only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
-        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+    } else if (service.GetPort() == mainnetDefaultPort) {
+        strErrorRet = strprintf("Invalid port %u for masternode %s, %d is the only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
         return false;
     }
 
-    return Create(txin, CService(strService), keyCollateral, pubKeyCollateral, keyMasternodeNew, pubKeyMasternodeNew, strErrorMessage, mnb);
+    return Create(txin, CService(strService), keyCollateral, pubKeyCollateral, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
 }
 
-bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorMessage, CMasternodeBroadcast &mnb)
+bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateral, CPubKey pubKeyCollateral, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
     CMasternodePing mnp(txin);
     if(!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew)) {
-        strErrorMessage = strprintf("Failed to sign ping: %s", txin.ToString());
-        LogPrintf("CMasternodeBroadcast::Create --  %s\n", strErrorMessage);
-        mnb = CMasternodeBroadcast();
+        strErrorRet = strprintf("Failed to sign ping: %s", txin.ToString());
+        LogPrintf("CMasternodeBroadcast::Create --  %s\n", strErrorRet);
+        mnbRet = CMasternodeBroadcast();
         return false;
     }
 
-    mnb = CMasternodeBroadcast(service, txin, pubKeyCollateral, pubKeyMasternodeNew, PROTOCOL_VERSION);
-    mnb.lastPing = mnp;
-    if(!mnb.Sign(keyCollateral)) {
-        strErrorMessage = strprintf("Failed to sign broadcast: %s", txin.ToString());
-        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
-        mnb = CMasternodeBroadcast();
+    mnbRet = CMasternodeBroadcast(service, txin, pubKeyCollateral, pubKeyMasternodeNew, PROTOCOL_VERSION);
+    mnbRet.lastPing = mnp;
+    if(!mnbRet.Sign(keyCollateral)) {
+        strErrorRet = strprintf("Failed to sign broadcast: %s", txin.ToString());
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
+        mnbRet = CMasternodeBroadcast();
         return false;
     }
 
@@ -402,8 +401,9 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     }
 
     // incorrect ping or its sigTime
-    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true))
+    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true)) {
         return false;
+    }
 
     if(protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
         LogPrintf("CMasternodeBroadcast::CheckAndUpdate - ignoring outdated Masternode %s protocol version %d\n", vin.ToString(), protocolVersion);
@@ -470,7 +470,9 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         if(pmn->UpdateFromNewBroadcast((*this))){
             pmn->Check();
             // normally masternode should be in pre-enabled status after update, if not - do not relay
-            if(pmn->IsPreEnabled()) Relay();
+            if(pmn->IsPreEnabled()) {
+                Relay();
+            }
         }
         masternodeSync.AddedMasternodeList(GetHash());
     }
@@ -486,8 +488,9 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
         return true;
 
     // incorrect ping or its sigTime
-    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true))
+    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true)) {
         return false;
+    }
 
     // search existing Masternode list
     CMasternode* pmn = mnodeman.Find(vin);
@@ -496,11 +499,11 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
         // nothing to do here if we already know about this masternode and it's (pre)enabled
         if(pmn->IsEnabled() || pmn->IsPreEnabled()) return true;
         // if it's not (pre)enabled, remove old MN first and continue
-        else mnodeman.Remove(pmn->vin);
+        mnodeman.Remove(pmn->vin);
     }
 
-    if(GetInputAge(vin) < Params().GetConsensus().nMasternodeMinimumConfirmations){
-        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Input must have at least %d confirmations\n", Params().GetConsensus().nMasternodeMinimumConfirmations);
+    if(GetInputAge(vin) < Params().GetConsensus().nMasternodeMinimumConfirmations) {
+        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd -- Input must have at least %d confirmations\n", Params().GetConsensus().nMasternodeMinimumConfirmations);
         // maybe we miss few blocks, let this mnb to be checked again later
         mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
         masternodeSync.mapSeenSyncMNB.erase(GetHash());
@@ -508,10 +511,10 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
     }
 
     CValidationState state;
-    CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(999.99*COIN, mnodeman.dummyScriptPubkey);
-    tx.vin.push_back(vin);
-    tx.vout.push_back(vout);
+    CMutableTransaction dummyTx = CMutableTransaction();
+    CTxOut dummyTxOut = CTxOut(999.99*COIN, mnodeman.dummyScriptPubkey);
+    dummyTx.vin.push_back(vin);
+    dummyTx.vout.push_back(dummyTxOut);
 
     {
         TRY_LOCK(cs_main, lockMain);
@@ -522,15 +525,15 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
             return false;
         }
 
-        if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)) {
+        if(!AcceptToMemoryPool(mempool, state, CTransaction(dummyTx), false, NULL, false, true, true)) {
             //set nDos
-            LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Failed to accepted Masternode entry tx to mempool - %s", tx.ToString());
+            LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd -- Failed to accepted Masternode entry to mempool: dummyTx=%s", dummyTx.ToString());
             state.IsInvalid(nDos);
             return false;
         }
     }
 
-    LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Accepted Masternode entry to mempool (dry-run mode)\n");
+    LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd -- Accepted Masternode entry to mempool (dry-run mode)\n");
 
 
     // make sure the vout that was signed is related to the transaction that spawned the Masternode
@@ -549,8 +552,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
     {
         LOCK(cs_main);
         BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second)
-        {
+        if (mi != mapBlockIndex.end() && (*mi).second) {
             CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
             CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
             if(pConfIndex->GetBlockTime() > sigTime)
@@ -566,7 +568,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
     if(fMasterNode && pubkey2 == activeMasternode.pubKeyMasternode) {
         if(protocolVersion == PROTOCOL_VERSION) {
             // ... and PROTOCOL_VERSION, then we've been remotely activated ...
-            activeMasternode.EnableHotColdMasterNode(vin, addr);
+            activeMasternode.EnableRemoteMasterNode(vin, addr);
         } else {
             // ... otherwise we need to reactivate our node, don not add it to the list and do not relay
             // but also do not ban the node we get this message from
@@ -580,9 +582,13 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
     mnodeman.Add(mn);
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
-    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) isLocal = false;
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+        isLocal = false;
+    }
 
-    if(!isLocal) Relay();
+    if(!isLocal) {
+        Relay();
+    }
 
     return true;
 }

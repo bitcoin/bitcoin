@@ -27,7 +27,7 @@ private:
     mutable CCriticalSection cs;
 
     /// Ping Masternode
-    bool SendMasternodePing(std::string& strErrorMessage);
+    bool SendMasternodePing(std::string& strErrorRet);
 
 public:
     // Initialized by init.cpp
@@ -51,7 +51,7 @@ public:
     std::string GetStatus();
 
     /// Enable cold wallet mode (run a Masternode with no funds)
-    bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
+    bool EnableRemoteMasterNode(CTxIn& vinNew, CService& serviceNew);
 };
 
 #endif

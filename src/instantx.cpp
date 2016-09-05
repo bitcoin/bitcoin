@@ -167,12 +167,12 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
     }
 }
 
-bool IsInstantSendTxValid(const CTransaction& txCollateral)
+bool IsInstantSendTxValid(const CTransaction& txCandidate)
 {
-    if(txCollateral.vout.size() < 1) return false;
+    if(txCandidate.vout.size() < 1) return false;
 
-    if(!CheckFinalTx(txCollateral)) {
-        LogPrint("instantsend", "IsInstantSendTxValid -- Transaction is not final: txCollateral=%s", txCollateral.ToString());
+    if(!CheckFinalTx(txCandidate)) {
+        LogPrint("instantsend", "IsInstantSendTxValid -- Transaction is not final: txCandidate=%s", txCandidate.ToString());
         return false;
     }
 
@@ -180,10 +180,11 @@ bool IsInstantSendTxValid(const CTransaction& txCollateral)
     int64_t nValueOut = 0;
     bool missingTx = false;
 
-    BOOST_FOREACH(const CTxOut txout, txCollateral.vout)
+    BOOST_FOREACH(const CTxOut txout, txCandidate.vout) {
         nValueOut += txout.nValue;
+    }
 
-    BOOST_FOREACH(const CTxIn txin, txCollateral.vin) {
+    BOOST_FOREACH(const CTxIn txin, txCandidate.vin) {
         CTransaction tx2;
         uint256 hash;
         if(GetTransaction(txin.prevout.hash, tx2, Params().GetConsensus(), hash, true)) {
@@ -195,12 +196,12 @@ bool IsInstantSendTxValid(const CTransaction& txCollateral)
     }
 
     if(nValueOut > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE)*COIN) {
-        LogPrint("instantsend", "IsInstantSendTxValid -- Transaction value too high: nValueOut=%d, txCollateral=%s", nValueOut, txCollateral.ToString());
+        LogPrint("instantsend", "IsInstantSendTxValid -- Transaction value too high: nValueOut=%d, txCandidate=%s", nValueOut, txCandidate.ToString());
         return false;
     }
 
     if(missingTx) {
-        LogPrint("instantsend", "IsInstantSendTxValid -- Unknown inputs in IX transaction: txCollateral=%s", txCollateral.ToString());
+        LogPrint("instantsend", "IsInstantSendTxValid -- Unknown inputs in IX transaction: txCandidate=%s", txCandidate.ToString());
         /*
             This happens sometimes for an unknown reason, so we'll return that it's a valid transaction.
             If someone submits an invalid transaction it will be rejected by the network anyway and this isn't
@@ -209,8 +210,8 @@ bool IsInstantSendTxValid(const CTransaction& txCollateral)
         return true;
     }
 
-    if(nValueIn-nValueOut < INSTANTSEND_MIN_FEE) {
-        LogPrint("instantsend", "IsInstantSendTxValid -- did not include enough fees in transaction: fees=%d, txCollateral=%s", nValueOut-nValueIn, txCollateral.ToString());
+    if(nValueIn - nValueOut < INSTANTSEND_MIN_FEE) {
+        LogPrint("instantsend", "IsInstantSendTxValid -- did not include enough fees in transaction: fees=%d, txCandidate=%s", nValueOut - nValueIn, txCandidate.ToString());
         return false;
     }
 
@@ -522,9 +523,9 @@ bool IsLockedInstandSendTransaction(uint256 txHash)
 
 int GetTransactionLockSignatures(uint256 txHash)
 {
+    if(!fEnableInstantSend) return -1;
     if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
     if(!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return -3;
-    if(!fEnableInstantSend) return -1;
 
     std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.find(txHash);
     if(it != mapTxLocks.end()) return it->second.CountVotes();

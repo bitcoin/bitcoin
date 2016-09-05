@@ -16,7 +16,7 @@ CActiveMasternode activeMasternode;
 // Bootup the Masternode, look for a 1000DASH input and register on the network
 void CActiveMasternode::ManageState()
 {
-    std::string strErrorMessage;
+    std::string strError;
 
     if(!fMasterNode) return;
 
@@ -37,7 +37,7 @@ void CActiveMasternode::ManageState()
         if(pmn != NULL) {
             pmn->Check();
             if((pmn->IsEnabled() || pmn->IsPreEnabled()) && pmn->protocolVersion == PROTOCOL_VERSION)
-                    EnableHotColdMasterNode(pmn->vin, pmn->addr);
+                EnableRemoteMasterNode(pmn->vin, pmn->addr);
         }
     }
 
@@ -108,8 +108,8 @@ void CActiveMasternode::ManageState()
             pwalletMain->LockCoin(vin.prevout);
 
             CMasternodeBroadcast mnb;
-            if(!CMasternodeBroadcast::Create(vin, service, keyCollateral, pubKeyCollateral, keyMasternode, pubKeyMasternode, strErrorMessage, mnb)) {
-                strNotCapableReason = "Error on CMasternodeBroadcast::Create -- " + strErrorMessage;
+            if(!CMasternodeBroadcast::Create(vin, service, keyCollateral, pubKeyCollateral, keyMasternode, pubKeyMasternode, strError, mnb)) {
+                strNotCapableReason = "Error on CMasternodeBroadcast::Create -- " + strError;
                 LogPrintf("CActiveMasternode::ManageState -- %s\n", strNotCapableReason);
                 return;
             }
@@ -134,8 +134,8 @@ void CActiveMasternode::ManageState()
     }
 
     //send to all peers
-    if(!SendMasternodePing(strErrorMessage)) {
-        LogPrintf("CActiveMasternode::ManageState -- Error on SendMasternodePing(): %s\n", strErrorMessage);
+    if(!SendMasternodePing(strError)) {
+        LogPrintf("CActiveMasternode::ManageState -- Error on SendMasternodePing(): %s\n", strError);
     }
 }
 
@@ -151,16 +151,16 @@ std::string CActiveMasternode::GetStatus()
     }
 }
 
-bool CActiveMasternode::SendMasternodePing(std::string& strErrorMessage)
+bool CActiveMasternode::SendMasternodePing(std::string& strErrorRet)
 {
     if(nState != ACTIVE_MASTERNODE_STARTED) {
-        strErrorMessage = "Masternode is not in a running status";
+        strErrorRet = "Masternode is not in a running status";
         return false;
     }
 
     CMasternodePing mnp(vin);
     if(!mnp.Sign(keyMasternode, pubKeyMasternode)) {
-        strErrorMessage = "Couldn't sign Masternode Ping";
+        strErrorRet = "Couldn't sign Masternode Ping";
         return false;
     }
 
@@ -168,7 +168,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& strErrorMessage)
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn != NULL) {
         if(pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS, mnp.sigTime)) {
-            strErrorMessage = "Too early to send Masternode Ping";
+            strErrorRet = "Too early to send Masternode Ping";
             return false;
         }
 
@@ -187,23 +187,23 @@ bool CActiveMasternode::SendMasternodePing(std::string& strErrorMessage)
         return true;
     } else {
         // Seems like we are trying to send a ping while the Masternode is not registered in the network
-        strErrorMessage = "PrivateSend Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin.ToString();
+        strErrorRet = "PrivateSend Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin.ToString();
         nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
-        strNotCapableReason = strErrorMessage;
+        strNotCapableReason = strErrorRet;
         return false;
     }
 }
 
 // when starting a Masternode, this can enable to run as a hot wallet with no funds
-bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
+bool CActiveMasternode::EnableRemoteMasterNode(CTxIn& vinNew, CService& serviceNew)
 {
     if(!fMasterNode) return false;
 
     nState = ACTIVE_MASTERNODE_STARTED;
 
     //The values below are needed for signing mnping messages going forward
-    vin = newVin;
-    service = newService;
+    vin = vinNew;
+    service = serviceNew;
 
     LogPrintf("CActiveMasternode::EnableHotColdMasterNode -- Enabled! You may shut down the cold daemon.\n");
 

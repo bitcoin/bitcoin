@@ -1607,8 +1607,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             std::vector<CAmount> vecAmounts;
             pwalletMain->ConvertList(vecTxIn, vecAmounts);
             // try to get a single random denom out of vecAmounts
-            while(nSessionDenom == 0)
+            while(nSessionDenom == 0) {
                 nSessionDenom = GetDenominationsByAmounts(vecAmounts);
+            }
 
             pnode->PushMessage(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected, sending DSACCEPT, nSessionDenom: %d\n", nSessionDenom);
