@@ -22,8 +22,6 @@ std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
-int nSubmittedFinalBudget;
-
 int GetBudgetPaymentCycleBlocks(){
     // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
     if(Params().NetworkID() == CBaseChainParams::MAIN) return 16616;
@@ -122,12 +120,19 @@ void CBudgetManager::CheckOrphanVotes()
 
 void CBudgetManager::SubmitFinalBudget()
 {
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return;
+    static int nSubmittedHeight = 0; // height at which final budget was submitted last time
+    int nCurrentHeight;
 
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    if(nSubmittedFinalBudget >= nBlockStart) return;
-    if(nBlockStart - pindexPrev->nHeight > 576*2) return; //submit final budget 2 days before payment
+    {
+        TRY_LOCK(cs_main, locked);
+        if(!locked) return;
+        if(!chainActive.Tip()) return;
+        nCurrentHeight = chainActive.Height();
+    }
+
+    int nBlockStart = nCurrentHeight - nCurrentHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    if(nSubmittedHeight >= nBlockStart) return;
+    if(nBlockStart - nCurrentHeight > 576*2) return; // allow submitting final budget only when 2 days left before payments
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
     std::string strBudgetName = "main";
@@ -149,7 +154,7 @@ void CBudgetManager::SubmitFinalBudget()
     CFinalizedBudgetBroadcast tempBudget(strBudgetName, nBlockStart, vecTxBudgetPayments, 0);
     if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
         LogPrintf("CBudgetManager::SubmitFinalBudget - Budget already exists - %s\n", tempBudget.GetHash().ToString());    
-        nSubmittedFinalBudget = pindexPrev->nHeight;
+        nSubmittedHeight = nCurrentHeight;
         return; //already exists
     }
 
@@ -203,8 +208,6 @@ void CBudgetManager::SubmitFinalBudget()
         return;
     }
 
-    nSubmittedFinalBudget = nBlockStart;
-
     //create the proposal incase we're the first to make it
     CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, txidCollateral);
 
@@ -218,6 +221,8 @@ void CBudgetManager::SubmitFinalBudget()
     mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
     finalizedBudgetBroadcast.Relay();
     budget.AddFinalizedBudget(finalizedBudgetBroadcast);
+    nSubmittedHeight = nCurrentHeight;
+    LogPrintf("CBudgetManager::SubmitFinalBudget - Done! %s\n", finalizedBudgetBroadcast.GetHash().ToString());
 }
 
 //
