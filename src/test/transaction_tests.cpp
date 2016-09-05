@@ -470,12 +470,14 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
 
     // check all inputs concurrently, with the cache
     PrecomputedTransactionData txdata(tx);
-    boost::thread_group threadGroup;
+    std::vector<std::thread> threadGroup;
     CCheckQueue<CScriptCheck> scriptcheckqueue(128);
     CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 
-    for (int i=0; i<20; i++)
-        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
+    int script_threads = 20;
+    threadGroup.reserve(script_threads);
+    for (int i=0; i<script_threads; i++)
+        threadGroup.emplace_back(&CCheckQueue<CScriptCheck>::Thread, &scriptcheckqueue);
 
     CCoins coins;
     coins.nVersion = 1;
@@ -497,9 +499,9 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
 
     bool controlCheck = control.Wait();
     assert(controlCheck);
-
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
+    scriptcheckqueue.Interrupt();
+    for(auto&& thread : threadGroup)
+        thread.join();
 }
 
 BOOST_AUTO_TEST_CASE(test_witness)

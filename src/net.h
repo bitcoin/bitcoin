@@ -33,10 +33,6 @@ class CAddrMan;
 class CScheduler;
 class CNode;
 
-namespace boost {
-    class thread_group;
-} // namespace boost
-
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
@@ -93,10 +89,14 @@ CNode* FindNode(const CService& ip);
 CNode* FindNode(const NodeId id); //TODO: Remove this
 bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
 void MapPort(bool fUseUPnP);
+void InterruptMapPort();
+void StopMapPort();
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
-void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler);
+void StartNode(CScheduler& scheduler);
 bool StopNode();
+void InterruptNode();
+
 void SocketSendData(CNode *pnode);
 
 struct CombinerAll

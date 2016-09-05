@@ -40,6 +40,7 @@
 
 #include <atomic>
 #include <sstream>
+#include <thread>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -1746,7 +1747,7 @@ static void AlertNotify(const std::string& strMessage)
     safeStatus = singleQuote+safeStatus+singleQuote;
     boost::replace_all(strCmd, "%s", safeStatus);
 
-    boost::thread t(runCommand, strCmd); // thread runs free
+    std::thread(runCommand, strCmd).detach(); // thread runs free
 }
 
 void CheckForkWarningConditions()
@@ -2242,6 +2243,11 @@ void ThreadScriptCheck() {
     RenameThread("bitcoin-scriptch");
     scriptcheckqueue.Thread();
 }
+
+void InterruptThreadScriptCheck()
+{
+    scriptcheckqueue.Interrupt();
+};
 
 // Protected by cs_main
 VersionBitsCache versionbitscache;
@@ -3020,9 +3026,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     CBlockIndex *pindexMostWork = NULL;
     CBlockIndex *pindexNewTip = NULL;
     do {
-        boost::this_thread::interruption_point();
-        if (ShutdownRequested())
-            break;
+        interruption_point(ShutdownRequested());
 
         const CBlockIndex *pindexFork;
         std::list<CTransaction> txConflicted;
@@ -3963,7 +3967,7 @@ bool static LoadBlockIndexDB()
     if (!pblocktree->LoadBlockIndexGuts(InsertBlockIndex))
         return false;
 
-    boost::this_thread::interruption_point();
+    interruption_point(ShutdownRequested());
 
     // Calculate nChainWork
     vector<pair<int, CBlockIndex*> > vSortedByHeight;
@@ -4099,7 +4103,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     LogPrintf("[0%%]...");
     for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
     {
-        boost::this_thread::interruption_point();
+        interruption_point(ShutdownRequested());
         int percentageDone = std::max(1, std::min(99, (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
         if (reportDone < percentageDone/10) {
             // report every 10% step
@@ -4153,7 +4157,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     if (nCheckLevel >= 4) {
         CBlockIndex *pindex = pindexState;
         while (pindex != chainActive.Tip()) {
-            boost::this_thread::interruption_point();
+            interruption_point(ShutdownRequested());
             uiInterface.ShowProgress(_("Verifying blocks..."), std::max(1, std::min(99, 100 - (int)(((double)(chainActive.Height() - pindex->nHeight)) / (double)nCheckDepth * 50))));
             pindex = chainActive.Next(pindex);
             CBlock block;
@@ -4349,7 +4353,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
         CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SERIALIZED_SIZE, MAX_BLOCK_SERIALIZED_SIZE+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
-            boost::this_thread::interruption_point();
+            interruption_point(ShutdownRequested());
 
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
@@ -4740,7 +4744,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
         const CInv &inv = *it;
         {
-            boost::this_thread::interruption_point();
+            interruption_point(ShutdownRequested());
             it++;
 
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
@@ -5122,7 +5126,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         int64_t nSince = nNow - 10 * 60;
         BOOST_FOREACH(CAddress& addr, vAddr)
         {
-            boost::this_thread::interruption_point();
+            interruption_point(ShutdownRequested());
 
             if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
                 continue;
@@ -5212,7 +5216,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             CInv &inv = vInv[nInv];
 
-            boost::this_thread::interruption_point();
+            interruption_point(ShutdownRequested());
 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
@@ -6241,7 +6245,7 @@ bool ProcessMessages(CNode* pfrom)
         try
         {
             fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams);
-            boost::this_thread::interruption_point();
+            interruption_point(ShutdownRequested());
         }
         catch (const std::ios_base::failure& e)
         {
@@ -6268,6 +6272,8 @@ bool ProcessMessages(CNode* pfrom)
         }
         catch (const boost::thread_interrupted&) {
             throw;
+        }
+        catch (const thread_interrupted&) {
         }
         catch (const std::exception& e) {
             PrintExceptionContinue(&e, "ProcessMessages()");

@@ -643,7 +643,8 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
     ss << stats.hashBlock;
     CAmount nTotalAmount = 0;
     while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
+        if(!IsRPCRunning())
+            return error("%s: rpc server shutdown", __func__);
         uint256 key;
         CCoins coins;
         if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {

@@ -658,6 +658,8 @@ static int CommandLineRawTx(int argc, char* argv[])
     catch (const boost::thread_interrupted&) {
         throw;
     }
+    catch (const thread_interrupted&) {
+    }
     catch (const std::exception& e) {
         strPrint = string("error: ") + e.what();
         nRet = EXIT_FAILURE;

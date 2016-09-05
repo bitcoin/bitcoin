@@ -32,6 +32,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
+#include <thread>
+
 using namespace std;
 
 CWallet* pwalletMain = NULL;
@@ -467,6 +469,11 @@ bool CWallet::Verify()
     return true;
 }
 
+void CWallet::Interrupt()
+{
+    bitdb.Interrupt();
+}
+
 void CWallet::SyncMetaData(pair<TxSpends::iterator, TxSpends::iterator> range)
 {
     // We want all the wallet transactions in range to have the same metadata as
@@ -854,7 +861,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     if ( !strCmd.empty())
     {
         boost::replace_all(strCmd, "%s", wtxIn.GetHash().GetHex());
-        boost::thread t(runCommand, strCmd); // thread runs free
+        std::thread(runCommand, strCmd).detach(); // thread runs free
     }
 
     return true;
