@@ -284,6 +284,7 @@ void BitcoinCore::shutdown()
     try
     {
         qDebug() << __func__ << ": Running Shutdown in thread";
+        StartShutdown();
         Interrupt(threadGroup);
         threadGroup.join_all();
         Shutdown();

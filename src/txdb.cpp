@@ -15,8 +15,6 @@
 
 #include <stdint.h>
 
-#include <boost/thread.hpp>
-
 using namespace std;
 
 static const char DB_COINS = 'c';
@@ -132,6 +130,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
         }
         pcursor->Next();
     }
+  
     {
         LOCK(cs_main);
         stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;

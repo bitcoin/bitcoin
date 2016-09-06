@@ -69,6 +69,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
             if n >= len(addrs): n=0
             if count > amt:
                 break
+          self.sync_all()
           logging.info("mine blocks")
           node.generate(1)  # mine all the created transactions
           logging.info("sync all blocks and mempools")
@@ -227,6 +228,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           n.generate(10)
           self.sync_blocks()
         
+        print ("sync all")
         self.sync_all()
         # verify mempool is cleaned up on all nodes
         mbefore = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
@@ -269,9 +271,11 @@ class ExcessiveBlockTest (BitcoinTestFramework):
               if n >= len(addrs): n=0
               if count > 50:  # We don't need any more
                 break
+            self.sync_all()
             logging.info("mine blocks")
             self.nodes[0].generate(5)  # mine all the created transactions
             logging.info("sync all blocks and mempools")
+            self.sync_all()
 
             wallet = self.nodes[0].listunspent()
             wallet.sort(key=lambda x: x["amount"],reverse=True)
@@ -463,6 +467,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       
         logging.info("Test daily excessive reset")
         self.nodes[0].generate(6*24)  # Now generate a day's worth of small blocks which should re-enable the node's reluctance to accept a large block
+        self.sync_all()
         self.nodes[0].generate(5) # plus the accept depths
         self.sync_all()
         self.repeatTx(20,self.nodes[0],addr)
@@ -534,10 +539,13 @@ class ExcessiveBlockTest (BitcoinTestFramework):
               ntxs += 1
             except JSONRPCException: # could be spent all the txouts
               pass
-          logging.debug("%d transactions" % ntxs)
-          time.sleep(1)
+          logging.info("%d transactions" % ntxs)
+          time.sleep(1) #allow txns a chance to propagate
           self.nodes[random.randint(0,3)].generate(1)
-          time.sleep(1)
+          logging.info("mined a block")
+          #TODO:  rather than sleeping we should really be putting a check in here 
+          #       based on what the random excessive seletions were from above
+          time.sleep(5) #allow block a chance to propagate
 
 
 if __name__ == '__main__':

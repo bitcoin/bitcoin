@@ -16,6 +16,7 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
+#include "parallel.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
@@ -469,10 +470,24 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     // Inform about the new block
     GetMainSignals().BlockFound(pblock->GetHash());
 
-    // Process this block the same as if we had received it from another node
-    CValidationState state;
-    if (!ProcessNewBlock(state, chainparams, NULL, pblock, true, NULL))
-        return error("BitcoinMiner: ProcessNewBlock, block not accepted");
+
+    {
+        // We take a cs_main lock here even though it will also be aquired in ProcessNewBlock.  We want
+        // to make sure we give priority to our own blocks.  This is in order to prevent any other Parallel 
+        // Blocks to validate when we've just mined one of our own blocks.
+        LOCK(cs_main);
+
+        // In we are mining our own block or not running in parallel for any reason 
+        // we must terminate any block validation threads that are currently running,
+        // Unless they have more work than our own block.
+        // TODO: we need a better way to determine if a reorg is in progress.
+        PV.StopAllValidationThreads(pblock->GetBlockHeader().nBits);
+
+        // Process this block the same as if we had received it from another node
+        CValidationState state;
+        if (!ProcessNewBlock(state, chainparams, NULL, pblock, true, NULL, false))
+            return error("BitcoinMiner: ProcessNewBlock, block not accepted");
+    }
 
     return true;
 }

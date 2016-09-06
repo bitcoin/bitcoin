@@ -17,6 +17,7 @@
 #include "tinyformat.h"
 #include "txmempool.h"
 #include "unlimited.h"
+#include "parallel.h"
 #include "utilstrencodings.h"
 #include "util.h"
 #include "validationinterface.h"
@@ -417,8 +418,8 @@ void CRequestManager::SendRequests()
       txReqRetryInterval *= (12*2);  // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2 minutes (default val of MIN_TX is 5 sec)
     }
 
-  // Get Blocks
-  while (sendBlkIter != mapBlkInfo.end())
+  // Get Blocks if we are not in the middle of a re-org
+  while (sendBlkIter != mapBlkInfo.end() && !PV.IsReorgInProgress())
    {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendBlkIter;
@@ -428,7 +429,7 @@ void CRequestManager::SendRequests()
       if (itemIter == mapBlkInfo.end()) break;
 
       if (now-item.lastRequestTime > blkReqRetryInterval)  // if never requested then lastRequestTime==0 so this will always be true
-	{
+        {
           if (!item.availableFrom.empty())
 	    {
 	      CNodeRequestData next;

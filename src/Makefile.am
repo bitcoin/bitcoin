@@ -104,6 +104,7 @@ BITCOIN_CORE_H = \
   leakybucket.h \
   netbase.h \
   noui.h \
+  parallel.h \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
@@ -179,6 +180,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  parallel.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \

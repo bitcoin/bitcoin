@@ -20,6 +20,7 @@
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
+#include "parallel.h"
 #include "rpc/server.h"
 #include "thinblock.h"
 #include "timedata.h"
@@ -97,6 +98,10 @@ CCriticalSection cs_mapInboundConnectionTracker;
 CCriticalSection cs_vOneShots;
 
 CCriticalSection cs_statMap;
+
+//semaphore for parallel validation threads
+CCriticalSection cs_semPV;
+CSemaphore *semPV;
 
 deque<string> vOneShots;
 std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
@@ -202,6 +207,10 @@ CTweak<uint64_t> checkScriptDays("blockchain.checkScriptDays","The number of day
 
 CRequestManager requester;  // after the maps nodes and tweaks
 
+// Parallel Validation Variables
+CParallelValidation PV;  // Singleton class
+CAllScriptCheckQueues allScriptCheckQueues; // Singleton class
+
 CStatHistory<unsigned int> txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t > recvAmt; 
@@ -215,3 +224,5 @@ CThinBlockData thindata; // Singleton class
 std::vector<CNode*> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us
 std::vector<CNode*> xpeditedBlkUp; //(256,(CNode*)NULL);  // Who we requested expedited blocks from
 std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);  
+
+
