@@ -26,57 +26,70 @@ class prevector_tester {
     pretype pre_vector_alt;
 
     typedef typename pretype::size_type Size;
+    bool passed = true;
+    uint32_t insecure_rand_Rz_cache;
+    uint32_t insecure_rand_Rw_cache;
 
+
+    template <typename A, typename B>
+        void local_check_equal(A a, B b)
+        {
+            local_check(a == b);
+        }
+    void local_check(bool b) 
+    {
+        passed &= b;
+    }
     void test() {
         const pretype& const_pre_vector = pre_vector;
-        BOOST_CHECK_EQUAL(real_vector.size(), pre_vector.size());
-        BOOST_CHECK_EQUAL(real_vector.empty(), pre_vector.empty());
+        local_check_equal(real_vector.size(), pre_vector.size());
+        local_check_equal(real_vector.empty(), pre_vector.empty());
         for (Size s = 0; s < real_vector.size(); s++) {
-             BOOST_CHECK(real_vector[s] == pre_vector[s]);
-             BOOST_CHECK(&(pre_vector[s]) == &(pre_vector.begin()[s]));
-             BOOST_CHECK(&(pre_vector[s]) == &*(pre_vector.begin() + s));
-             BOOST_CHECK(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
+             local_check(real_vector[s] == pre_vector[s]);
+             local_check(&(pre_vector[s]) == &(pre_vector.begin()[s]));
+             local_check(&(pre_vector[s]) == &*(pre_vector.begin() + s));
+             local_check(&(pre_vector[s]) == &*((pre_vector.end() + s) - real_vector.size()));
         }
-        // BOOST_CHECK(realtype(pre_vector) == real_vector);
-        BOOST_CHECK(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
-        BOOST_CHECK(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
+        // local_check(realtype(pre_vector) == real_vector);
+        local_check(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
+        local_check(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
         size_t pos = 0;
         BOOST_FOREACH(const T& v, pre_vector) {
-             BOOST_CHECK(v == real_vector[pos++]);
+             local_check(v == real_vector[pos++]);
         }
         BOOST_REVERSE_FOREACH(const T& v, pre_vector) {
-             BOOST_CHECK(v == real_vector[--pos]);
+             local_check(v == real_vector[--pos]);
         }
         BOOST_FOREACH(const T& v, const_pre_vector) {
-             BOOST_CHECK(v == real_vector[pos++]);
+             local_check(v == real_vector[pos++]);
         }
         BOOST_REVERSE_FOREACH(const T& v, const_pre_vector) {
-             BOOST_CHECK(v == real_vector[--pos]);
+             local_check(v == real_vector[--pos]);
         }
         CDataStream ss1(SER_DISK, 0);
         CDataStream ss2(SER_DISK, 0);
         ss1 << real_vector;
         ss2 << pre_vector;
-        BOOST_CHECK_EQUAL(ss1.size(), ss2.size());
+        local_check_equal(ss1.size(), ss2.size());
         for (Size s = 0; s < ss1.size(); s++) {
-            BOOST_CHECK_EQUAL(ss1[s], ss2[s]);
+            local_check_equal(ss1[s], ss2[s]);
         }
     }
 
 public:
     void resize(Size s) {
         real_vector.resize(s);
-        BOOST_CHECK_EQUAL(real_vector.size(), s);
+        local_check_equal(real_vector.size(), s);
         pre_vector.resize(s);
-        BOOST_CHECK_EQUAL(pre_vector.size(), s);
+        local_check_equal(pre_vector.size(), s);
         test();
     }
 
     void reserve(Size s) {
         real_vector.reserve(s);
-        BOOST_CHECK(real_vector.capacity() >= s);
+        local_check(real_vector.capacity() >= s);
         pre_vector.reserve(s);
-        BOOST_CHECK(pre_vector.capacity() >= s);
+        local_check(pre_vector.capacity() >= s);
         test();
     }
 
@@ -156,6 +169,17 @@ public:
         real_vector.swap(real_vector_alt);
         pre_vector.swap(pre_vector_alt);
         test();
+    }
+    ~prevector_tester() {
+        BOOST_CHECK_MESSAGE(passed, "insecure_rand_Rz: " 
+                << insecure_rand_Rz_cache 
+                << ", insecure_rand_Rw: "
+                << insecure_rand_Rw_cache);
+    }
+    prevector_tester() {
+        seed_insecure_rand();
+        insecure_rand_Rz_cache = insecure_rand_Rz;
+        insecure_rand_Rw_cache = insecure_rand_Rw;
     }
 };
 
