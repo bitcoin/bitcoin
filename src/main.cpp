@@ -4792,7 +4792,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         LOCK(pfrom->cs_filter);
                         if (pfrom->pfilter)
                         {
+                            int64_t nStart = GetTimeMillis();
                             CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+
+                            // collect statistics of block filter interaction
+                            pfrom->FilterStatsProcessBlock(block, GetTimeMillis()-nStart);
+
                             pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
@@ -6073,6 +6078,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             delete pfrom->pfilter;
             pfrom->pfilter = new CBloomFilter(filter);
             pfrom->pfilter->UpdateEmptyFull();
+            pfrom->FilterStatsCountFilterLoad();
         }
         pfrom->fRelayTxes = true;
     }
@@ -6600,7 +6606,7 @@ bool SendMessages(CNode* pto)
                 }
 
                 LOCK(pto->cs_filter);
-
+                int64_t nStart = GetTimeMillis();
                 for (const auto& txinfo : vtxinfo) {
                     const uint256& hash = txinfo.tx->GetHash();
                     CInv inv(MSG_TX, hash);
@@ -6617,6 +6623,10 @@ bool SendMessages(CNode* pto)
                     if (vInv.size() == MAX_INV_SZ) {
                         pto->PushMessage(NetMsgType::INV, vInv);
                         vInv.clear();
+                    }
+                    if (pto->pfilter) {
+                        // collect statistics of mempool filter interaction
+                        CNode::FilterStatsProcessMempoolPoll(vtxinfo.size(), GetTimeMillis() - nStart);
                     }
                 }
                 pto->timeLastMempoolReq = GetTime();

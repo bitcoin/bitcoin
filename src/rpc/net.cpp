@@ -573,6 +573,80 @@ UniValue clearbanned(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue getfilterstats(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+                            "getfilterstats\n"
+                            "\nReturns information about the bloom filter usage\n"
+                            "\nResult:\n"
+                            "{\n"
+                            "  \"time_in_cycle\": n,    (numeric) Total time in current cycle\n"
+                            "  \"timeframe\": n,        (numeric) Length of the measuring timeframe in seconds\n"
+                            "  \"mempool\":\n"
+                            "  {\n"
+                            "    \"mempool_filter_count\": n,              (numeric) Amount of processed mempool filterings\n"
+                            "    \"mempool_filter_amountoftxes\": n,       (numeric) Amounf of transaction filtered\n"
+                            "    \"mempool_filter_timeconsumption\": n,    (numeric) Amount of milliseconds consumed for the filtering\n"
+                            "  }\n"
+                            "  \"blocks\":\n"
+                            "  {\n"
+                            "    \"filteredblocks_count\": n,              (numeric) Amount of blocks filtered\n"
+                            "    \"filteredblocks_amountofbytes\": n,      (numeric) Amounf of total bytes of all filtered blocks\n"
+                            "    \"filteredblocks_timeconsumption\": n,    (numeric) Amount of milliseconds consumed for filtering the blocks\n"
+                            "  }\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("getfilterstats", "")
+                            + HelpExampleRpc("getfilterstats", "")
+                            );
+
+    UniValue obj(UniValue::VOBJ);
+
+    //copy stats object
+    NodeFilterStats stats = CNode::FilterStatsGetGlobalStats();
+
+    // per timeframe
+    UniValue cycle(UniValue::VOBJ);
+    cycle.push_back(Pair("time_in_timeframe", CNode::FilterStatsGetTimeInCycle()));
+    cycle.push_back(Pair("timeframe", CNode::FilterStatsGetTimeframe()));
+    cycle.push_back(Pair("nodestotal_connected", CNode::FilterStatsGetValue(stats.nTotalNodesConnected)));
+    cycle.push_back(Pair("nodestotal_loadfilter", CNode::FilterStatsGetValue(stats.nTotalNodesRequestedFiltering)));
+
+    UniValue blockStats(UniValue::VOBJ);
+    blockStats.push_back(Pair("filteredblocks_count", CNode::FilterStatsGetValue(stats.nFilterBlockCountInCycle)));
+    blockStats.push_back(Pair("filteredblocks_amountofbytes", CNode::FilterStatsGetValue(stats.nFilterBlockDataCountInCycle)));
+    blockStats.push_back(Pair("filteredblocks_timeconsumption", CNode::FilterStatsGetValue(stats.nFilterBlockTimeCountInCycle)));
+    cycle.push_back(Pair("blocks", blockStats));
+
+    UniValue mempoolStats(UniValue::VOBJ);
+    mempoolStats.push_back(Pair("mempool_filter_count", CNode::FilterStatsGetValue(stats.nFilterMempoolCountInCycle)));
+    mempoolStats.push_back(Pair("mempool_filter_amountoftxes", CNode::FilterStatsGetValue(stats.nFilterMempoolDataCountInCycle)));
+    mempoolStats.push_back(Pair("mempool_filter_timeconsumption", CNode::FilterStatsGetValue(stats.nFilterMempoolTimeCountInCycle)));
+    cycle.push_back(Pair("mempool", mempoolStats));
+    obj.push_back(Pair("current_timeframe", cycle));
+
+    // total
+    UniValue total(UniValue::VOBJ);
+    total.push_back(Pair("nodestotal_connected", CNode::FilterStatsGetValue(stats.nTotalNodesConnected, true)));
+    total.push_back(Pair("nodestotal_loadfilter", CNode::FilterStatsGetValue(stats.nTotalNodesRequestedFiltering, true)));
+
+    UniValue blockStatsTotal(UniValue::VOBJ);
+    blockStatsTotal.push_back(Pair("filteredblocks_count", CNode::FilterStatsGetValue(stats.nFilterBlockCountInCycle, true)));
+    blockStatsTotal.push_back(Pair("filteredblocks_amountofbytes", CNode::FilterStatsGetValue(stats.nFilterBlockDataCountInCycle, true)));
+    blockStatsTotal.push_back(Pair("filteredblocks_timeconsumption", CNode::FilterStatsGetValue(stats.nFilterBlockTimeCountInCycle, true)));
+    total.push_back(Pair("blocks", blockStatsTotal));
+
+    UniValue mempoolStatsTotal(UniValue::VOBJ);
+    mempoolStatsTotal.push_back(Pair("mempool_filter_count", CNode::FilterStatsGetValue(stats.nFilterMempoolCountInCycle, true)));
+    mempoolStatsTotal.push_back(Pair("mempool_filter_amountoftxes", CNode::FilterStatsGetValue(stats.nFilterMempoolDataCountInCycle, true)));
+    mempoolStatsTotal.push_back(Pair("mempool_filter_timeconsumption", CNode::FilterStatsGetValue(stats.nFilterMempoolTimeCountInCycle, true)));
+    total.push_back(Pair("mempool", mempoolStatsTotal));
+    obj.push_back(Pair("total", total));
+    
+    return obj;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -587,6 +661,7 @@ static const CRPCCommand commands[] =
     { "network",            "setban",                 &setban,                 true  },
     { "network",            "listbanned",             &listbanned,             true  },
     { "network",            "clearbanned",            &clearbanned,            true  },
+    { "network",            "getfilterstats",         &getfilterstats,         true  },
 };
 
 void RegisterNetRPCCommands(CRPCTable &t)

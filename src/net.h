@@ -11,6 +11,7 @@
 #include "compat.h"
 #include "limitedmap.h"
 #include "netaddress.h"
+#include "primitives/block.h"
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"
@@ -315,6 +316,20 @@ public:
     }
 };
 
+typedef std::pair<uint64_t, uint64_t> filterDataset;
+
+struct NodeFilterStats
+{
+    filterDataset nTotalNodesConnected;
+    filterDataset nTotalNodesRequestedFiltering;
+    filterDataset nFilterBlockCountInCycle;
+    filterDataset nFilterBlockDataCountInCycle;
+    filterDataset nFilterBlockTimeCountInCycle;
+    filterDataset nFilterMempoolCountInCycle;
+    filterDataset nFilterMempoolDataCountInCycle;
+    filterDataset nFilterMempoolTimeCountInCycle;
+};
+
 typedef std::map<CSubNet, CBanEntry> banmap_t;
 
 /** Information about a peer */
@@ -461,6 +476,13 @@ private:
     static uint64_t nMaxOutboundCycleStartTime;
     static uint64_t nMaxOutboundLimit;
     static uint64_t nMaxOutboundTimeframe;
+
+    // filter stats
+    static CCriticalSection cs_globalFilterStats;
+    static uint64_t nTimeFilterStatsStart;
+    static uint64_t nTimeframeFilter;
+    static NodeFilterStats globalFilterStats;
+    static void FilterStatsCheckTimeframe();
 
     CNode(const CNode&);
     void operator=(const CNode&);
@@ -812,6 +834,31 @@ public:
     //!response the time in second left in the current max outbound cycle
     // in case of no limit, it will always response 0
     static uint64_t GetMaxOutboundTimeLeftInCycle();
+
+    //!response the elapsed time in the measurement timeframe
+    static uint64_t FilterStatsGetTimeInCycle();
+
+    //!response the size of the measurement timeframe
+    static uint64_t FilterStatsGetTimeframe();
+
+    //!Collects statistics over the process of filtering a block
+    static void FilterStatsProcessBlock(const CBlock &block, int64_t processTime);
+
+    //!Collects statistics over the process of filtering the mempool content
+    static void FilterStatsProcessMempoolPoll(uint64_t amountOfTransactions, int64_t processTime);
+
+    //!Collects statistics of how many nodes have been connected to us
+    static void FilterStatsCountNewNodeConnected();
+
+    //!Collects statistics of how many nodes have been set a filter
+    static void FilterStatsCountFilterLoad();
+
+    //!Copy the filter stats struct
+    static const NodeFilterStats FilterStatsGetGlobalStats();
+
+    //!Get the current timeframe value of a dataset
+    //   if total == true, the total amount since startup will be reported
+    static uint64_t FilterStatsGetValue(const filterDataset datapair, bool total = false);
 };
 
 
