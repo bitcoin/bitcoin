@@ -15,6 +15,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "parallel.h"
 #include "pow.h"
 #include "rpc/server.h"
 #include "txmempool.h"
@@ -179,8 +180,21 @@ UniValue generate(const UniValue& params, bool fHelp)
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
+
+
+        // We take a cs_main lock here even though it will also be aquired in ProcessNewBlock.  We want
+        // to make sure we give priority to our own blocks.  This is in order to prevent any other Parallel 
+        // Blocks to validate when we've just mined one of our own blocks.
+        LOCK(cs_main);
+
+        // In we are mining our own block or not running in parallel for any reason 
+        // we must terminate any block validation threads that are currently running,
+        // Unless they have more work than our own block.
+        // TODO: we need a better way to determine if a reorg is in progress.
+        PV.StopAllValidationThreads(pblock->GetBlockHeader().nBits);
+
         CValidationState state;
-        if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL))
+        if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -748,7 +762,20 @@ UniValue submitblock(const UniValue& params, bool fHelp)
     submitblock_StateCatcher sc(block.GetHash());
     LogPrint("rpc", "Received block %s via RPC.\n", block.GetHash().ToString());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL);
+
+
+    // We take a cs_main lock here even though it will also be aquired in ProcessNewBlock.  We want
+    // to make sure we give priority to our own blocks.  This is in order to prevent any other Parallel 
+    // Blocks to validate when we've just mined one of our own blocks.
+    LOCK(cs_main);
+
+    // In we are mining our own block or not running in parallel for any reason 
+    // we must terminate any block validation threads that are currently running,
+    // Unless they have more work than our own block.
+    // TODO: we need a better way to determine if a reorg is in progress.
+    PV.StopAllValidationThreads(block.GetBlockHeader().nBits);
+
+    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL, false);
     UnregisterValidationInterface(&sc);
     if (fBlockPresent)
     {

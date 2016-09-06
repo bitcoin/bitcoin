@@ -119,6 +119,9 @@ extern CSemaphore *semOutbound;
 extern CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
+// BU Parallel validation
+extern CSemaphore *semPV; // semaphore for parallel validation threads
+
 // BU  Connection Slot mitigation - used to determine how many connection attempts over time
 extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
 extern CCriticalSection cs_mapInboundConnectionTracker;
@@ -744,7 +747,7 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
                     vRecvMsg.pop_back();
                     LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strCommand);
                 }
-            }
+           }
             // BU: end
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
@@ -904,14 +907,12 @@ private:
     CNode *_pnode;
 };
 
-#if 0  // Not currently used
+#if 0 // Not currenly used
 static bool ReverseCompareNodeMinPingTime(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nMinPingUsecTime > b->nMinPingUsecTime;
 }
-#endif
 
-#if 0 // BU: Not currenly used
 static bool ReverseCompareNodeTimeConnected(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nTimeConnected > b->nTimeConnected;
@@ -2331,6 +2332,10 @@ void NetCleanup()
         semOutboundAddNode = NULL;
         if (pnodeLocalHost) delete pnodeLocalHost;
         pnodeLocalHost = NULL;
+
+        //BU: clean up the parallel validation semaphore
+        if (semPV) delete semPV;
+        semPV = NULL;
 
 #ifdef WIN32
         // Shutdown Windows Sockets

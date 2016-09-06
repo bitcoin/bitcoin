@@ -11,11 +11,16 @@
 #include "net.h"
 #include "stat.h"
 #include "thinblock.h"
+#include "chain.h"
+#include "coins.h"
 #include "consensus/validation.h"
 #include "consensus/params.h"
 #include "requestManager.h"
+#include "script/script_error.h"
+#include "checkqueue.h"
 #include <univalue.h>
 #include <vector>
+#include <boost/thread.hpp>
 
 enum {
     TYPICAL_BLOCK_SIZE = 200000,   // used for initial buffer size
@@ -142,15 +147,28 @@ extern CLeakyBucket sendShaper;
 // Test to determine if traffic shaping is enabled
 extern bool IsTrafficShapingEnabled();
 
+// BUIP010 Xtreme Thinblocks: begin
+
+// Xpress Validation: begin
+// Transactions that have already been accepted into the memory pool do not need to be
+// re-verified and can avoid having to do a second and expensive CheckInputs() when 
+// processing a new block.  (Protected by cs_xval)
+extern std::set<uint256> setPreVerifiedTxHash;
+
+// Orphans that are added to the thinblock must be verifed since they have never been
+// accepted into the memory pool.  (Protected by cs_xval)
+extern std::set<uint256> setUnVerifiedOrphanTxHash;
+
+extern CCriticalSection cs_xval;
+// Xpress Validation: end
+
 extern bool fIsChainNearlySyncd;
+extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
 extern CCriticalSection cs_ischainnearlysyncd;
 
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
-extern bool fIsChainNearlySyncd;
-extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
-extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
 
 extern bool CheckAndRequestExpeditedBlocks(CNode* pfrom);  // Checks to see if the node is configured in bitcoin.conf to be an expedited block source and if so, request them.
 extern void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops, const CNode* skip=NULL);
@@ -196,7 +214,7 @@ extern CTweak<uint64_t> blockSigopsPerMb;
 extern CTweak<uint64_t> coinbaseReserve;
 extern CTweak<uint64_t> blockMiningSigopsPerMb;
 
-// Protocol changes:
+// Protocol Changes:
 
 enum {
   EXPEDITED_STOP   = 1,
@@ -205,9 +223,15 @@ enum {
 };
 
 enum {
-  EXPEDITED_MSG_HEADER   = 1,
-  EXPEDITED_MSG_XTHIN    = 2,
+  EXPEDITED_MSG_HDR   = 1,
+  EXPEDITED_MSG_XTHIN = 2,
 };
+
+
+/**  Parallel Block Validation - begin **/
+
+extern CCriticalSection cs_blockvalidationthread;
+void InterruptBlockValidationThreads();
 
 
 #endif

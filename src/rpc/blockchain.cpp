@@ -140,7 +140,6 @@ UniValue getblockcount(const UniValue& params, bool fHelp)
             + HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
         );
-
     LOCK(cs_main);
     return chainActive.Height();
 }

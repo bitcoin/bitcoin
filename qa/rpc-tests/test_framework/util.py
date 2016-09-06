@@ -603,6 +603,10 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
     finally:
       decimal.getcontext().prec = decContext
 
+def assert_not_equal(thing1, thing2):
+    if thing1 == thing2:
+        raise AssertionError("%s != %s"%(str(thing1),str(thing2)))
+
 def assert_equal(thing1, thing2):
     if thing1 != thing2:
         raise AssertionError("%s != %s"%(str(thing1),str(thing2)))

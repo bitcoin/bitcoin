@@ -280,6 +280,7 @@ class TestManager(object):
                     else:
 		    # pdb.set_trace()
                         return False
+
             return True
 
     # Either check that the mempools all agree with each other, or that

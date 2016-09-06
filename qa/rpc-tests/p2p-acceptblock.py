@@ -223,7 +223,7 @@ class AcceptBlockTest(BitcoinTestFramework):
                 else:
                     headers_message.headers.append(CBlockHeader(next_block))
                 tips[j] = next_block
-
+                test_node.sync_with_ping()
         time.sleep(2)
         for x in all_blocks:
             try:
@@ -278,8 +278,15 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # 7. Send the missing block for the third time (now it is requested)
         test_node.send_message(msg_block(blocks_h2f[0]))
-
         test_node.sync_with_ping()
+
+        # Wait for the reorg to complete. It can be slower on some systems.
+        while self.nodes[0].getblockcount() != 290:
+            time.sleep(1)
+            j = j + 1
+            if (j > 60):
+                break
+
         assert_equal(self.nodes[0].getblockcount(), 290)
         print("Successfully reorged to longer chain from non-whitelisted peer")
 

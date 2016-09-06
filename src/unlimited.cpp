@@ -12,6 +12,7 @@
 #include "leakybucket.h"
 #include "main.h"
 #include "net.h"
+#include "parallel.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
 #include "rpc/server.h"
@@ -99,14 +100,12 @@ std::string SubverValidator(const std::string& value,std::string* item,bool vali
   return std::string();
 }
 
-
 #define NUM_XPEDITED_STORE 10
 uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];  // Just save the last few expedited sent blocks so we don't resend (uint256 zeros on construction)
 int xpeditedBlkSendPos=0;
 
 // Push all transactions in the mempool to another node
 void UnlimitedPushTxns(CNode* dest);
-
 
 int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime)
 {
@@ -394,6 +393,7 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-maxexpeditedblockrecipients=<n>", _("The maximum number of nodes this node will forward expedited blocks to"));
     strUsage += HelpMessageOpt("-maxexpeditedtxrecipients=<n>", _("The maximum number of nodes this node will forward expedited transactions to"));
     strUsage += HelpMessageOpt("-maxoutconnections=<n>", strprintf(_("Initiate at most <n> connections to peers (default: %u).  If this number is higher than --maxconnections, it will be reduced to --maxconnections."), DEFAULT_MAX_OUTBOUND_CONNECTIONS));
+    strUsage += HelpMessageOpt("-parallel=<n>",  strprintf(_("Turn Parallel Block Validation on or off (off: 0, on: 1, default: %d)"), 1));
     return strUsage;
 }
 
@@ -1105,77 +1105,6 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
     uint64_t nSizeFilter = ::GetSerializeSize(*pfrom->pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION);
     LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
     thindata.UpdateInBoundBloomFilter(nSizeFilter);
-}
-
-void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)
-{
-    int64_t startTime = GetTimeMicros();
-    CValidationState state;
-    uint64_t nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
-
-    // Process all blocks from whitelisted peers, even if not requested,
-    // unless we're still syncing with the network.
-    // Such an unrequested block may still be processed, subject to the
-    // conditions in AcceptBlock().
-    bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
-    const CChainParams& chainparams = Params();
-    pfrom->firstBlock += 1;
-    ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL);
-    int nDoS;
-    if (state.IsInvalid(nDoS)) {
-        LogPrintf("Invalid block due to %s\n", state.GetRejectReason().c_str());
-        if (!strCommand.empty())
-	  {
-          pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                           state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-          if (nDoS > 0) {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), nDoS);
-          }
-	}
-    }
-    else {
-        LargestBlockSeen(nSizeBlock); // update largest block seen
-
-        double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
-        if (strCommand != NetMsgType::BLOCK) {
-            LogPrint("thin", "Processed ThinBlock %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
-            thindata.UpdateValidationTime(nValidationTime);
-        }
-        else
-            LogPrint("thin", "Processed Regular Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
-    }
-
-    // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
-    // Therefore we have to remove the thinblock in flight if it exists and we also need to check that 
-    // the block didn't arrive from some other peer.  This code ALSO cleans up the thin block that
-    // was passed to us (&block), so do not use it after this.
-    {
-        int nTotalThinBlocksInFlight = 0;
-        {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
-                    pnode->mapThinBlocksInFlight.erase(inv.hash); 
-                    pnode->thinBlockWaitingForTxns = -1;
-                    pnode->thinBlock.SetNull();
-                }
-                if (pnode->mapThinBlocksInFlight.size() > 0)
-                    nTotalThinBlocksInFlight++;
-            }
-        }
-
-        // When we no longer have any thinblocks in flight then clear the set
-        // just to make sure we don't somehow get growth over time.
-        LOCK(cs_xval);
-        if (nTotalThinBlocksInFlight == 0) {
-            setPreVerifiedTxHash.clear();
-            setUnVerifiedOrphanTxHash.clear();
-        }
-    }
-
-    // Clear the thinblock timer used for preferential download
-    thindata.ClearThinBlockTimer(inv.hash);
 }
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
