@@ -36,7 +36,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
-         strCommand != "vote" && strCommand != "get" && strCommand != "list" && strCommand != "diff" && strCommand != "deserialize"))
+         strCommand != "vote" && strCommand != "get" && strCommand != "getvotes" && strCommand != "list" && strCommand != "diff" && strCommand != "deserialize"))
         throw runtime_error(
                 "gobject \"command\"...\n"
                 "Manage governance objects\n"
@@ -44,6 +44,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 "  prepare            - Prepare govobj by signing and creating tx\n"
                 "  submit             - Submit govobj to network\n"
                 "  get                - Get govobj hash(es) by govobj name\n"
+                "  getvotes           - Get votes for a govobj hash\n"
                 "  list               - List all govobjs\n"
                 "  diff               - List differences since last diff\n"
                 "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
@@ -245,7 +246,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             return "Can't find masternode by pubkey";
         }
 
-        CGovernanceVote vote(pmn->vin, hash, nVoteOutcome, nVoteSignal);
+        CGovernanceVote vote(pmn->vin, hash, nVoteSignal, nVoteOutcome);
         if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)){
             failed++;
             statusObj.push_back(Pair("result", "failed"));
@@ -352,7 +353,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             // CREATE NEW GOVERNANCE OBJECT VOTE WITH OUTCOME/SIGNAL
 
-            CGovernanceVote vote(pmn->vin, hash, nVoteOutcome, nVoteSignal);
+            CGovernanceVote vote(pmn->vin, hash, nVoteSignal, nVoteOutcome);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -526,7 +527,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
     {
         if (params.size() != 3)
             throw runtime_error(
-                "Correct usage is 'gobject getvotes <governance-hash> <vote-outcome>'"
+                "Correct usage is 'gobject getvotes <governance-hash> <vote-signal>'"
                 );
 
         // COLLECT PARAMETERS FROM USER
@@ -603,7 +604,7 @@ UniValue voteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
     }
 
-    CGovernanceVote vote(vin, hashGovObj, nVoteOutcome, VOTE_SIGNAL_NONE);
+    CGovernanceVote vote(vin, hashGovObj, VOTE_SIGNAL_NONE, nVoteOutcome);
     vote.nTime = nTime;
     vote.vchSig = vchSig;
 
