@@ -4789,16 +4789,16 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
                     else if (inv.type == MSG_FILTERED_BLOCK)
                     {
-                        bool send = false;
+                        bool sendMerkleBlock = false;
                         CMerkleBlock merkleBlock;
                         {
                             LOCK(pfrom->cs_filter);
                             if (pfrom->pfilter) {
-                                send = true;
+                                sendMerkleBlock = true;
                                 merkleBlock = CMerkleBlock(block, *pfrom->pfilter);
                             }
                         }
-                        if (send) {
+                        if (sendMerkleBlock) {
                             pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
