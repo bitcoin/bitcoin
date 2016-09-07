@@ -589,6 +589,9 @@ void SendCoinsDialog::updateGlobalFeeVariables()
     {
         nTxConfirmTarget = defaultConfirmTarget - ui->sliderSmartFee->value();
         payTxFee = CFeeRate(0);
+
+        // set nMinimumTotalFee to 0 to not accidentally pay a custom fee
+        CoinControlDialog::coinControl->nMinimumTotalFee = 0;
     }
     else
     {
@@ -781,7 +784,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
         ui->radioCustomAtLeast->setVisible(true);
 
         // only enable the feature if inputs are selected
-        ui->radioCustomAtLeast->setEnabled(CoinControlDialog::coinControl->HasSelected());
+        ui->radioCustomAtLeast->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked() &&CoinControlDialog::coinControl->HasSelected());
     }
     else
     {
