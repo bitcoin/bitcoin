@@ -82,6 +82,8 @@ BITCOIN_TESTS =\
   test/thinblock_tests.cpp \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
+  test/transaction_utils.cpp \
+  test/transaction_utils.h \
   test/txvalidationcache_tests.cpp \
   test/versionbits_tests.cpp \
   test/uint256_tests.cpp \

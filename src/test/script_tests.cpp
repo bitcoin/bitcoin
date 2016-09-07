@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +15,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
+#include <policy/policy.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include "script/bitcoinconsensus.h"
@@ -27,6 +29,7 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <base58.h>
 #include <univalue.h>
 
 using namespace std;
@@ -1011,6 +1014,34 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
     BOOST_CHECK_EQUAL(derSig + "81 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
     BOOST_CHECK_EQUAL(derSig + "82 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
     BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
+}
+
+BOOST_AUTO_TEST_CASE(transactionV4)
+{
+    CBasicKeyStore keystore;
+    CKey key;
+    key.MakeNewKey(true);
+    keystore.AddKey(key);
+    CPubKey pubKey = key.GetPubKey();
+    CBitcoinAddress address(pubKey.GetID());
+    BOOST_CHECK(address.IsValid());
+
+    CMutableTransaction from;
+    from.nVersion = 4;
+    from.vout.resize(1);
+    from.vout[0].scriptPubKey = GetScriptForDestination(address.Get());
+    from.vout[0].nValue = 10000;
+    CMutableTransaction to;
+    to.nVersion = 4;
+    to.vin.resize(1);
+    to.vin[0].prevout = COutPoint(from.GetHash(), 0);
+    bool ok = SignSignature(keystore, from, to, 0);
+    BOOST_CHECK(ok);
+
+    CTransaction txTo(to);
+    TransactionSignatureChecker dummy(&txTo, 0);
+    ok = VerifyScript(to.vin[0].scriptSig, from.vout[0].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, dummy, 0);
+    BOOST_CHECK(ok);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

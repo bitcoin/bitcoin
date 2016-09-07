@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +17,7 @@
 #include "script/script.h"
 #include "script/script_error.h"
 #include "utilstrencodings.h"
+#include "transaction_utils.h"
 
 #include <map>
 #include <string>
@@ -402,6 +404,78 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
     BOOST_CHECK(!IsStandardTx(t, reason));
+}
+
+BOOST_AUTO_TEST_CASE(test_version4)
+{
+    // 10 random transactions, make sure that save/load works.
+    for (int i = 0; i < 10; ++i) {
+        CMutableTransaction tx1;
+        TxUtils::RandomTransaction(tx1, true);
+        tx1.nVersion = 4;
+        CDataStream ds1(0, 0);
+        tx1.Serialize(ds1, 0, 0);
+        std::vector<char> tx1Data(ds1.begin(), ds1.end());
+        CTransaction tx2(tx1);
+        CDataStream ds2(0, 0);
+        tx2.Serialize(ds2, 0, 0);
+        std::vector<char> tx2Data(ds2.begin(), ds2.end());
+        BOOST_CHECK_EQUAL(tx1Data.size(), tx2Data.size());
+        BOOST_CHECK(tx1Data == tx2Data);
+        BOOST_CHECK(tx1.GetHash() == tx2.GetHash());
+
+        CMutableTransaction tx3;
+        {
+            CDataStream ssData(tx1Data, SER_NETWORK, PROTOCOL_VERSION);
+            ssData >> tx3;
+        }
+        BOOST_CHECK_EQUAL(tx1.vin.size(), tx3.vin.size());
+        BOOST_CHECK(tx1.vin.front().prevout == tx3.vin.front().prevout);
+        BOOST_CHECK(tx1.vout.size() == tx3.vout.size());
+        BOOST_CHECK(tx1.vout.front().nValue == tx3.vout.front().nValue);
+        BOOST_CHECK(tx1.vout.front().scriptPubKey == tx3.vout.front().scriptPubKey);
+        BOOST_CHECK(tx1.vout == tx3.vout);
+        BOOST_CHECK(tx1.nVersion == tx3.nVersion);
+        BOOST_CHECK(tx1.GetHash() == tx3.GetHash());
+
+        CTransaction tx4;
+        {
+            CDataStream ssData(tx1Data, SER_NETWORK, PROTOCOL_VERSION);
+            ssData >> tx4;
+        }
+        BOOST_CHECK(tx1.GetHash() == tx4.GetHash());
+
+        BOOST_CHECK_EQUAL(tx1.vin.size(), tx2.vin.size());
+        BOOST_CHECK_EQUAL(tx1.vin.size(), tx3.vin.size());
+        BOOST_CHECK_EQUAL(tx1.vin.size(), tx4.vin.size());
+        for (unsigned int i = 0; i < tx1.vin.size(); i++) {
+            BOOST_CHECK(tx1.vin.at(i).scriptSig == tx2.vin.at(i).scriptSig);
+            BOOST_CHECK(tx1.vin.at(i).scriptSig == tx3.vin.at(i).scriptSig);
+            BOOST_CHECK(tx1.vin.at(i).scriptSig == tx4.vin.at(i).scriptSig);
+        }
+    }
+
+    // load an existing transaction to check some properties.
+    // This one is not made with the Bitcoin serializer, just to make sure we have more
+    // than one compatible implementation.
+    CTransaction tx;
+    {
+        CDataStream stream(ParseHex("040000000b2032a4ef9efb5a6f788bf821932de35c5adedc249676c124abb6ed"
+            "2bddcc1c468c1001331976a9145af71addf3a43598f30b4cee4b79048f4b481c"
+            "d288ac2881a008236a47304402204a649df5b3d8016e5404f0f0295a2b6dbb7a"
+            "40575af7f9b4c5ee0786f1550d1502205111ecf5008a09eae9af6887eceaaa72"
+            "dd08facf7220019c151b6329125adc7d01210281698728b9e9062d11b83b4eda"
+            "a8191b284e8cc79e9e9b14f6f5bb3a6395f1c704"), 0, 0);
+        stream >> tx;
+    }
+
+    BOOST_CHECK_EQUAL(tx.vin.size(), 1);
+    BOOST_CHECK_EQUAL(tx.vin.front().prevout.n, 1);
+    BOOST_CHECK(tx.vin.front().prevout.hash == uint256(ParseHex("32a4ef9efb5a6f788bf821932de35c5adedc249676c124abb6ed2bddcc1c468c")));
+    BOOST_CHECK_EQUAL(tx.vin.front().scriptSig.size(), 106);
+    BOOST_CHECK_EQUAL(tx.vout.size(), 1);
+    BOOST_CHECK_EQUAL(tx.vout.front().nValue, 37000);
+    BOOST_CHECK_EQUAL(tx.vout.front().scriptPubKey.size(), 25);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
