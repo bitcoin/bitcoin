@@ -17,6 +17,13 @@
 
 using namespace std;
 
+//! minimum peer version that can receive and send masternode payment messages,
+//  vote for masternode winner and be elected as a winner
+// V1 - Last protocol version before update
+// V2 - Newest protocol version
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70103;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70201;
+
 extern CCriticalSection cs_vecPayments;
 extern CCriticalSection cs_mapMasternodeBlocks;
 extern CCriticalSection cs_mapMasternodePayeeVotes;

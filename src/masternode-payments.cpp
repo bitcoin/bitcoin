@@ -292,7 +292,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         CMasternodePaymentWinner winner;
         vRecv >> winner;
 
-        if(pfrom->nVersion < MIN_MNW_PEER_PROTO_VERSION) return;
+        if(pfrom->nVersion < GetMinMasternodePaymentsProto()) return;
 
         if(!pCurrentBlockIndex) return;
 
@@ -555,12 +555,21 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, int nValidationHeight, std:
         return false;
     }
 
-    if(pmn->protocolVersion < MIN_MNW_PEER_PROTO_VERSION) {
-        strError = strprintf("Masternode protocol is too old: protocolVersion=%d, MIN_MNW_PEER_PROTO_VERSION=%d", pmn->protocolVersion, MIN_MNW_PEER_PROTO_VERSION);
+    int nMinRequiredProtocol;
+    if(nBlockHeight > nValidationHeight) {
+        // new winners must comply SPORK_10_MASTERNODE_PAY_UPDATED_NODES rules
+        nMinRequiredProtocol = mnpayments.GetMinMasternodePaymentsProto();
+    } else {
+        // allow non-updated masternodes for old blocks
+        nMinRequiredProtocol = MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+    }
+
+    if(pmn->protocolVersion < nMinRequiredProtocol) {
+        strError = strprintf("Masternode protocol is too old: nProtocolVersion=%d, nMinRequiredProtocol=%d", pmn->protocolVersion, nMinRequiredProtocol);
         return false;
     }
 
-    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 101, MIN_MNW_PEER_PROTO_VERSION);
+    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 101, nMinRequiredProtocol);
 
     if(nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
         // It's common to have masternodes mistakenly think they are in the top 10
@@ -588,20 +597,18 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     // but we have no choice, so we'll try. However it doesn't make sense to even try to do so
     // if we have not enough data about masternodes.
     if(!masternodeSync.IsMasternodeListSynced()) return false;
-    
-    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, MIN_MNW_PEER_PROTO_VERSION);
-       
-    if(n == -1)       
-    {     
-        LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Unknown Masternode\n");       
-        return false;     
-    }     
 
-    if(n > MNPAYMENTS_SIGNATURES_TOTAL)       
-    {     
-        LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, n);        
-        return false;     
-    }      
+    int nRank = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, GetMinMasternodePaymentsProto());
+
+    if (nRank == -1) {
+        LogPrint("mnpayments", "CMasternodePayments::ProcessBlock -- Unknown Masternode\n");
+        return false;
+    }
+
+    if (nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
+        LogPrint("mnpayments", "CMasternodePayments::ProcessBlock -- Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, nRank);
+        return false;
+    }
 
 
     // LOCATE THE NEXT MASTERNODE WHICH SHOULD BE PAID
