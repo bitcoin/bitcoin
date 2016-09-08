@@ -93,7 +93,7 @@ CNode* FindNode(const CService& ip);
 CNode* FindNode(const NodeId id); //TODO: Remove this
 bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
 void MapPort(bool fUseUPnP);
-unsigned short GetListenPort();
+uint16_t GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler);
 bool StopNode();
@@ -181,7 +181,7 @@ extern std::string strSubVersion;
 
 struct LocalServiceInfo {
     int nScore;
-    int nPort;
+    uint16_t nPort;
 };
 
 extern CCriticalSection cs_mapLocalHost;

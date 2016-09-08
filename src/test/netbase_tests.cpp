@@ -67,28 +67,55 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
 bool static TestSplitHost(string test, string host, int port)
 {
     string hostOut;
-    int portOut = -1;
-    SplitHostPort(test, portOut, hostOut);
-    return hostOut == host && port == portOut;
+    uint16_t portOut = 0;
+    bool fResult = SplitHostPort(test, portOut, hostOut);
+    return fResult && hostOut == host && port == portOut;
 }
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
 {
-    BOOST_CHECK(TestSplitHost("www.bitcoin.org", "www.bitcoin.org", -1));
-    BOOST_CHECK(TestSplitHost("[www.bitcoin.org]", "www.bitcoin.org", -1));
+    BOOST_CHECK(TestSplitHost("www.bitcoin.org", "www.bitcoin.org", 0));
+    BOOST_CHECK(TestSplitHost("[www.bitcoin.org]", "www.bitcoin.org", 0));
     BOOST_CHECK(TestSplitHost("www.bitcoin.org:80", "www.bitcoin.org", 80));
     BOOST_CHECK(TestSplitHost("[www.bitcoin.org]:80", "www.bitcoin.org", 80));
-    BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", -1));
+    BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", 0));
     BOOST_CHECK(TestSplitHost("127.0.0.1:8333", "127.0.0.1", 8333));
-    BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", -1));
+    BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", 0));
     BOOST_CHECK(TestSplitHost("[127.0.0.1]:8333", "127.0.0.1", 8333));
-    BOOST_CHECK(TestSplitHost("::ffff:127.0.0.1", "::ffff:127.0.0.1", -1));
+    BOOST_CHECK(TestSplitHost("::ffff:127.0.0.1", "::ffff:127.0.0.1", 0));
     BOOST_CHECK(TestSplitHost("[::ffff:127.0.0.1]:8333", "::ffff:127.0.0.1", 8333));
     BOOST_CHECK(TestSplitHost("[::]:8333", "::", 8333));
-    BOOST_CHECK(TestSplitHost("::8333", "::8333", -1));
+    BOOST_CHECK(TestSplitHost("::8333", "::8333", 0));
     BOOST_CHECK(TestSplitHost(":8333", "", 8333));
     BOOST_CHECK(TestSplitHost("[]:8333", "", 8333));
-    BOOST_CHECK(TestSplitHost("", "", -1));
+    BOOST_CHECK(TestSplitHost("", "", 0));
+    // should fail if provided port is 0
+    BOOST_CHECK(!TestSplitHost("www.bitcoin.org:0", "www.bitcoin.org", 0));
+    BOOST_CHECK(!TestSplitHost("[www.bitcoin.org]:0", "www.bitcoin.org", 0));
+    BOOST_CHECK(!TestSplitHost("127.0.0.1:0", "127.0.0.1", 0));
+    BOOST_CHECK(!TestSplitHost("[127.0.0.1]:0", "127.0.0.1", 0));
+    BOOST_CHECK(!TestSplitHost("[::ffff:127.0.0.1]:0", "::ffff:127.0.0.1", 0));
+    BOOST_CHECK(!TestSplitHost("[::]:0", "::", 0));
+    BOOST_CHECK(!TestSplitHost(":0", "", 0));
+    BOOST_CHECK(!TestSplitHost("[]:0", "", 0));
+    // should fail if provided port is negative
+    BOOST_CHECK(!TestSplitHost("www.bitcoin.org:-80", "www.bitcoin.org", -80));
+    BOOST_CHECK(!TestSplitHost("[www.bitcoin.org]:-80", "www.bitcoin.org", -80));
+    BOOST_CHECK(!TestSplitHost("127.0.0.1:-8333", "127.0.0.1", -8333));
+    BOOST_CHECK(!TestSplitHost("[127.0.0.1]:-8333", "127.0.0.1", -8333));
+    BOOST_CHECK(!TestSplitHost("[::ffff:127.0.0.1]:-8333", "::ffff:127.0.0.1", -8333));
+    BOOST_CHECK(!TestSplitHost("[::]:-8333", "::", -8333));
+    BOOST_CHECK(!TestSplitHost(":-8333", "", -8333));
+    BOOST_CHECK(!TestSplitHost("[]:-8333", "", -8333));
+    // should fail if provided port is above upper bound
+    BOOST_CHECK(!TestSplitHost("www.bitcoin.org:65536", "www.bitcoin.org", 65536));
+    BOOST_CHECK(!TestSplitHost("[www.bitcoin.org]:65536", "www.bitcoin.org", 65536));
+    BOOST_CHECK(!TestSplitHost("127.0.0.1:65536", "127.0.0.1", 65536));
+    BOOST_CHECK(!TestSplitHost("[127.0.0.1]:65536", "127.0.0.1", 65536));
+    BOOST_CHECK(!TestSplitHost("[::ffff:127.0.0.1]:65536", "::ffff:127.0.0.1", 65536));
+    BOOST_CHECK(!TestSplitHost("[::]:65536", "::", 65536));
+    BOOST_CHECK(!TestSplitHost(":65536", "", 65536));
+    BOOST_CHECK(!TestSplitHost("[]:65536", "", 65536));
 }
 
 bool static TestParse(string src, string canon)

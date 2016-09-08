@@ -63,23 +63,33 @@ std::string GetNetworkName(enum Network net) {
     }
 }
 
-void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
+bool IsValidPort(int64_t port)
+{
+    return port > 0 && port < 0x10000;
+}
+
+bool SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut) {
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
     bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
     bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
+    bool fResult = true;
     if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
         int32_t n;
-        if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
+        if (ParseInt32(in.substr(colon + 1), &n) && IsValidPort(n)) {
             in = in.substr(0, colon);
             portOut = n;
+        } else {
+            fResult = false;
         }
     }
     if (in.size()>0 && in[0] == '[' && in[in.size()-1] == ']')
         hostOut = in.substr(1, in.size()-2);
     else
         hostOut = in;
+
+    return fResult;
 }
 
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
@@ -203,13 +213,13 @@ bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup)
     return true;
 }
 
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
 {
     if (pszName[0] == 0)
         return false;
-    int port = portDefault;
+    uint16_t port = portDefault;
     std::string hostname = "";
-    SplitHostPort(std::string(pszName), port, hostname);
+    if(!SplitHostPort(std::string(pszName), port, hostname)) return false;
 
     std::vector<CNetAddr> vIP;
     bool fRet = LookupIntern(hostname.c_str(), vIP, nMaxSolutions, fAllowLookup);
@@ -221,7 +231,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
     return true;
 }
 
-bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup)
+bool Lookup(const char *pszName, CService& addr, uint16_t portDefault, bool fAllowLookup)
 {
     std::vector<CService> vService;
     bool fRet = Lookup(pszName, vService, portDefault, fAllowLookup, 1);
@@ -231,7 +241,7 @@ bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLoo
     return true;
 }
 
-CService LookupNumeric(const char *pszName, int portDefault)
+CService LookupNumeric(const char *pszName, uint16_t portDefault)
 {
     CService addr;
     // "1.2:345" will fail to resolve the ip, but will still set the port.
@@ -320,7 +330,7 @@ std::string Socks5ErrorString(int err)
 }
 
 /** Connect using SOCKS5 (as described in RFC1928) */
-static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
+static bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
     LogPrint("net", "SOCKS5 connecting %s\n", strDest);
     if (strDest.size() > 255) {
@@ -346,7 +356,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     char pchRet1[2];
     if (!InterruptibleRecv(pchRet1, 2, SOCKS5_RECV_TIMEOUT, hSocket)) {
         CloseSocket(hSocket);
-        LogPrintf("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
+        LogPrintf("Socks5() connect to %s:%u failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
         return false;
     }
     if (pchRet1[0] != 0x05) {
@@ -410,7 +420,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     if (pchRet2[1] != 0x00) {
         // Failures to connect to a peer that are not proxy errors
         CloseSocket(hSocket);
-        LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
+        LogPrintf("Socks5() connect to %s:%u failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
         return false;
     }
     if (pchRet2[2] != 0x00) {
@@ -584,7 +594,7 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-static bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
+static bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, uint16_t port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
 {
     SOCKET hSocket = INVALID_SOCKET;
     // first connect to proxy server
@@ -598,10 +608,10 @@ static bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDe
         ProxyCredentials random_auth;
         random_auth.username = strprintf("%i", insecure_rand());
         random_auth.password = strprintf("%i", insecure_rand());
-        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket))
+        if (!Socks5(strDest, port, &random_auth, hSocket))
             return false;
     } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket))
+        if (!Socks5(strDest, port, 0, hSocket))
             return false;
     }
 
@@ -621,15 +631,15 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout, b
         return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
 }
 
-bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed)
+bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, uint16_t portDefault, int nTimeout, bool *outProxyConnectionFailed)
 {
     std::string strDest;
-    int port = portDefault;
+    uint16_t port = portDefault;
 
     if (outProxyConnectionFailed)
         *outProxyConnectionFailed = false;
 
-    SplitHostPort(std::string(pszDest), port, strDest);
+    if(!SplitHostPort(std::string(pszDest), port, strDest)) return false;
 
     proxyType proxy;
     GetNameProxy(proxy);

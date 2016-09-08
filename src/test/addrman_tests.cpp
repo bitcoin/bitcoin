@@ -63,14 +63,14 @@ static CNetAddr ResolveIP(std::string ip)
     return ResolveIP(ip.c_str());
 }
 
-static CService ResolveService(const char* ip, int port = 0)
+static CService ResolveService(const char* ip, uint16_t port = 0)
 {
     CService serv;
     BOOST_CHECK_MESSAGE(Lookup(ip, serv, port, false), strprintf("failed to resolve: %s:%i", ip, port));
     return serv;
 }
 
-static CService ResolveService(std::string ip, int port = 0)
+static CService ResolveService(std::string ip, uint16_t port = 0)
 {
     return ResolveService(ip.c_str(), port);
 }

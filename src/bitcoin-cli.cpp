@@ -148,7 +148,11 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 UniValue CallRPC(const string& strMethod, const UniValue& params)
 {
     std::string host = GetArg("-rpcconnect", DEFAULT_RPCCONNECT);
-    int port = GetArg("-rpcport", BaseParams().RPCPort());
+
+    int64_t portTmp = GetArg("-rpcport", BaseParams().RPCPort());
+    if(portTmp <= 0 || portTmp >= 0x10000)
+        throw runtime_error(strprintf("-rpcport %d is incorrect", portTmp));
+    uint16_t port = (uint16_t)portTmp;
 
     // Create event base
     struct event_base *base = event_base_new(); // TODO RAII
