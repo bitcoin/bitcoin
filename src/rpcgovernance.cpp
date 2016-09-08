@@ -633,6 +633,8 @@ UniValue getgovernanceinfo(const UniValue& params, bool fHelp)
             "  \"governanceminquorum\": xxxxx,  (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
             "  \"proposalfee\": xxx.xx,         (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
             "  \"superblockcycle\": xxxxx,      (numeric) the number of blocks between superblocks\n"
+            "  \"lastsuperblock\": xxxxx,       (numeric) the block number of the last superblock\n"
+            "  \"nextsuperblock\": xxxxx,       (numeric) the block number of the next superblock\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getgovernanceinfo", "")
@@ -640,10 +642,34 @@ UniValue getgovernanceinfo(const UniValue& params, bool fHelp)
             );
     }
 
+    // Compute last/next superblock
+    int nLastSuperblock, nNextSuperblock;
+
+    // Get current block height
+    int nBlockHeight = (int)chainActive.Height();
+
+    // Get chain parameters
+    int nSuperblockStartBlock = Params().GetConsensus().nSuperblockStartBlock;
+    int nSuperblockCycle = Params().GetConsensus().nSuperblockCycle;
+
+    // Get first superblock
+    int nFirstSuperblockOffset = (nSuperblockCycle - nSuperblockStartBlock % nSuperblockCycle) % nSuperblockCycle;
+    int nFirstSuperblock = nSuperblockStartBlock + nFirstSuperblockOffset;
+
+    if(nBlockHeight < nFirstSuperblock){
+        nLastSuperblock = 0;
+        nNextSuperblock = nFirstSuperblock;
+    } else {
+        nLastSuperblock = nBlockHeight - nBlockHeight % nSuperblockCycle;
+        nNextSuperblock = nLastSuperblock + nSuperblockCycle;
+    }
+
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum));
     obj.push_back(Pair("proposalfee", ValueFromAmount(GOVERNANCE_PROPOSAL_FEE_TX)));
     obj.push_back(Pair("superblockcycle", Params().GetConsensus().nSuperblockCycle));
+    obj.push_back(Pair("lastsuperblock", nLastSuperblock));
+    obj.push_back(Pair("nextsuperblock", nNextSuperblock));
 
     return obj;
 }
