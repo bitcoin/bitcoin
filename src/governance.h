@@ -31,8 +31,6 @@ static const int GOVERNANCE_OBJECT_UNKNOWN = 0;
 static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
 
-extern CCriticalSection cs_budget;
-
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
@@ -144,7 +142,7 @@ public:
     std::vector<CGovernanceVote*> GetMatchingVotes(const uint256& nParentHash);
     std::vector<CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime);
 
-    int CountMatchingVotes(CGovernanceObject& govobj, int nVoteSignalIn, int nVoteOutcomeIn);
+    int CountMatchingVotes(CGovernanceObject& govobj, vote_signal_enum_t nVoteSignalIn, vote_outcome_enum_t nVoteOutcomeIn);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddGovernanceObject (CGovernanceObject& govobj);
@@ -283,17 +281,14 @@ public:
 
     // GET VOTE COUNT FOR SIGNAL
 
-    int GetAbsoluteYesCount(int nVoteSignalIn);
-    int GetAbsoluteNoCount(int nVoteSignalIn);
-    int GetYesCount(int nVoteSignalIn);
-    int GetNoCount(int nVoteSignalIn);
-    int GetAbstainCount(int nVoteSignalIn);
+    int GetAbsoluteYesCount(vote_signal_enum_t eVoteSignalIn);
+    int GetAbsoluteNoCount(vote_signal_enum_t eVoteSignalIn);
+    int GetYesCount(vote_signal_enum_t eVoteSignalIn);
+    int GetNoCount(vote_signal_enum_t eVoteSignalIn);
+    int GetAbstainCount(vote_signal_enum_t eVoteSignalIn);
 
     // FUNCTIONS FOR DEALING WITH DATA STRING 
 
-    void LoadData();
-    bool SetData(std::string& strError, std::string strDataIn);
-    bool GetData(UniValue& objResult);
     std::string GetDataAsHex();
     std::string GetDataAsString();
 
@@ -319,6 +314,13 @@ public:
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
+
+private:
+    // FUNCTIONS FOR DEALING WITH DATA STRING 
+
+    void LoadData();
+    bool SetData(std::string& strError, std::string strDataIn);
+    void GetData(UniValue& objResult);
 
 };
 

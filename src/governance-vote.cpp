@@ -19,7 +19,7 @@
 
 
 
-std::string CGovernanceVoting::ConvertOutcomeToString(int nOutcome)
+std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     switch(nOutcome)
     {
@@ -35,108 +35,203 @@ std::string CGovernanceVoting::ConvertOutcomeToString(int nOutcome)
     return "error";
 }
 
-std::string CGovernanceVoting::ConvertSignalToString(int nSignal)
+std::string CGovernanceVoting::ConvertSignalToString(vote_signal_enum_t nSignal)
 {
+    string strReturn = "NONE";
     switch(nSignal)
     {
         case VOTE_SIGNAL_NONE:
-            return "NONE"; break;
+            strReturn = "NONE";
+            break;
         case VOTE_SIGNAL_FUNDING:
-            return "FUNDING"; break;
+            strReturn = "FUNDING";
+            break;
         case VOTE_SIGNAL_VALID:
-            return "VALID"; break;
+            strReturn = "VALID";
+            break;
         case VOTE_SIGNAL_DELETE:
-            return "DELETE"; break;
+            strReturn = "DELETE";
+            break;
         case VOTE_SIGNAL_ENDORSED:
-            return "ENDORSED"; break;
+            strReturn = "ENDORSED";
+            break;
         case VOTE_SIGNAL_NOOP1:
-            return "NOOP1"; break;
+            strReturn = "NOOP1";
+            break;
         case VOTE_SIGNAL_NOOP2:
-            return "NOOP2"; break;
+            strReturn = "NOOP2";
+            break;
         case VOTE_SIGNAL_NOOP3:
-            return "NOOP3"; break;
+            strReturn = "NOOP3";
+            break;
         case VOTE_SIGNAL_NOOP4:
-            return "NOOP4"; break;
+            strReturn = "NOOP4";
+            break;
         case VOTE_SIGNAL_NOOP5:
-            return "NOOP5"; break;
+            strReturn = "NOOP5";
+            break;
         case VOTE_SIGNAL_NOOP6:
-            return "NOOP6"; break;
+            strReturn = "NOOP6";
+            break;
         case VOTE_SIGNAL_NOOP7:
-            return "NOOP7"; break;
+            strReturn = "NOOP7";
+            break;
         case VOTE_SIGNAL_NOOP8:
-            return "NOOP8"; break;
+            strReturn = "NOOP8";
+            break;
         case VOTE_SIGNAL_NOOP9:
-            return "NOOP9"; break;
+            strReturn = "NOOP9";
+            break;
         case VOTE_SIGNAL_NOOP10:
-            return "NOOP10"; break;
+            strReturn = "NOOP10";
+            break;
         case VOTE_SIGNAL_NOOP11:
-            return "NOOP11"; break;
-        case VOTE_SIGNAL_CUSTOM_START:
-            return "CUSTOM_START"; break;
-        case VOTE_SIGNAL_CUSTOM_END:
-            return "CUSTOM_END"; break;
+            strReturn = "NOOP11";
+            break;
+        case VOTE_SIGNAL_CUSTOM1:
+            strReturn = "CUSTOM1";
+            break;
+        case VOTE_SIGNAL_CUSTOM2:
+            strReturn = "CUSTOM2";
+            break;
+        case VOTE_SIGNAL_CUSTOM3:
+            strReturn = "CUSTOM3";
+            break;
+        case VOTE_SIGNAL_CUSTOM4:
+            strReturn = "CUSTOM4";
+            break;
+        case VOTE_SIGNAL_CUSTOM5:
+            strReturn = "CUSTOM5";
+            break;
+        case VOTE_SIGNAL_CUSTOM6:
+            strReturn = "CUSTOM6";
+            break;
+        case VOTE_SIGNAL_CUSTOM7:
+            strReturn = "CUSTOM7";
+            break;
+        case VOTE_SIGNAL_CUSTOM8:
+            strReturn = "CUSTOM8";
+            break;
+        case VOTE_SIGNAL_CUSTOM9:
+            strReturn = "CUSTOM9";
+            break;
+        case VOTE_SIGNAL_CUSTOM10:
+            strReturn = "CUSTOM10";
+            break;
+        case VOTE_SIGNAL_CUSTOM11:
+            strReturn = "CUSTOM11";
+            break;
+        case VOTE_SIGNAL_CUSTOM12:
+            strReturn = "CUSTOM12";
+            break;
+        case VOTE_SIGNAL_CUSTOM13:
+            strReturn = "CUSTOM13";
+            break;
+        case VOTE_SIGNAL_CUSTOM14:
+            strReturn = "CUSTOM14";
+            break;
+        case VOTE_SIGNAL_CUSTOM15:
+            strReturn = "CUSTOM15";
+            break;
+        case VOTE_SIGNAL_CUSTOM16:
+            strReturn = "CUSTOM16";
+            break;
+        case VOTE_SIGNAL_CUSTOM17:
+            strReturn = "CUSTOM17";
+            break;
+        case VOTE_SIGNAL_CUSTOM18:
+            strReturn = "CUSTOM18";
+            break;
+        case VOTE_SIGNAL_CUSTOM19:
+            strReturn = "CUSTOM19";
+            break;
+        case VOTE_SIGNAL_CUSTOM20:
+            strReturn = "CUSTOM20";
+            break;
     }
 
-    return "error";
+    return strReturn;
 }
 
 
-int CGovernanceVoting::ConvertVoteOutcome(std::string strVoteOutcome)
+vote_outcome_enum_t CGovernanceVoting::ConvertVoteOutcome(std::string strVoteOutcome)
 {
-    int nVote = -1;
-    if(strVoteOutcome == "yes") nVote = VOTE_OUTCOME_YES;
-    if(strVoteOutcome == "no") nVote = VOTE_OUTCOME_NO;
-    if(strVoteOutcome == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
-    if(strVoteOutcome == "none") nVote = VOTE_OUTCOME_NONE;
-    return nVote;
+    vote_outcome_enum_t eVote = VOTE_OUTCOME_NONE;
+    if(strVoteOutcome == "yes") {
+        eVote = VOTE_OUTCOME_YES;
+    }
+    else if(strVoteOutcome == "no") {
+        eVote = VOTE_OUTCOME_NO;
+    }
+    else if(strVoteOutcome == "abstain") {
+        eVote = VOTE_OUTCOME_ABSTAIN;
+    }
+    return eVote;
 }
 
-int CGovernanceVoting::ConvertVoteSignal(std::string strVoteSignal)
+vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(std::string strVoteSignal)
 {
-    if(strVoteSignal == "none") return VOTE_SIGNAL_NONE;         // 0
-    if(strVoteSignal == "funding") return VOTE_SIGNAL_FUNDING;   // 1
-    if(strVoteSignal == "valid") return VOTE_SIGNAL_VALID;       // 2
-    if(strVoteSignal == "delete") return VOTE_SIGNAL_DELETE;     // 3
-    if(strVoteSignal == "endorsed") return VOTE_SIGNAL_ENDORSED; // 4
+    vote_signal_enum_t eSignal = VOTE_SIGNAL_NONE;
+    if(strVoteSignal == "funding") {
+        eSignal = VOTE_SIGNAL_FUNDING;
+    }
+    else if(strVoteSignal == "valid") {
+        eSignal = VOTE_SIGNAL_VALID;
+    }
+    if(strVoteSignal == "delete") {
+        eSignal = VOTE_SIGNAL_DELETE;
+    }
+    if(strVoteSignal == "endorsed") {
+        eSignal = VOTE_SIGNAL_ENDORSED;
+    }
+
+    if(eSignal != VOTE_SIGNAL_NONE)  {
+        return eSignal;
+    }
 
     // ID FIVE THROUGH CUSTOM_START ARE TO BE USED BY GOVERNANCE ENGINE / TRIGGER SYSTEM
 
     // convert custom sentinel outcomes to integer and store
     try {
         int  i = boost::lexical_cast<int>(strVoteSignal);
-        if(i < VOTE_SIGNAL_CUSTOM_START || i > VOTE_SIGNAL_CUSTOM_END) return -1;
-        return i;
+        if(i < VOTE_SIGNAL_CUSTOM1 || i > VOTE_SIGNAL_CUSTOM20) {
+            eSignal = VOTE_SIGNAL_NONE;
+        }
+        else  {
+            eSignal = vote_signal_enum_t(i);
+        }
     }
     catch(std::exception const & e)
     {
-         cout<<"error : " << e.what() <<endl;
+        ostringstream ostr;
+        ostr << "CGovernanceVote::ConvertVoteSignal: error : " << e.what() << endl;
+        LogPrintf(ostr.str().c_str());
     }
 
-    return -1;
+    return eSignal;
 }
 
 CGovernanceVote::CGovernanceVote()
-{
-    vinMasternode = CTxIn();
-    nParentHash = uint256();
-    nVoteSignal = VOTE_SIGNAL_NONE;
-    nVoteOutcome = VOTE_OUTCOME_NONE;
-    nTime = 0;
-    fValid = true;
-    fSynced = false;
-    vchSig.clear();
-}
+    : fValid(true),
+      fSynced(false),
+      nVoteSignal(int(VOTE_SIGNAL_NONE)),
+      vinMasternode(),
+      nParentHash(),
+      nVoteOutcome(int(VOTE_OUTCOME_NONE)),
+      nTime(0),
+      vchSig()
+{}
 
-CGovernanceVote::CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, int nVoteSignalIn, int nVoteOutcomeIn)
-{
-    vinMasternode = vinMasternodeIn;
-    nParentHash = nParentHashIn;
-    nVoteSignal = nVoteSignalIn;
-    nVoteOutcome = nVoteOutcomeIn;
-    nTime = GetAdjustedTime();
-    fValid = true;
-    fSynced = false;
-}
+CGovernanceVote::CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
+    : fValid(true),
+      fSynced(false),
+      nVoteSignal(eVoteSignalIn),
+      vinMasternode(vinMasternodeIn),
+      nParentHash(nParentHashIn),
+      nVoteOutcome(eVoteOutcomeIn),
+      nTime(GetAdjustedTime()),
+      vchSig()
+{}
 
 void CGovernanceVote::Relay()
 {

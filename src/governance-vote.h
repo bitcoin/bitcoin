@@ -19,31 +19,54 @@ using namespace std;
 
 class CGovernanceVote;
 
-#define VOTE_OUTCOME_NONE     0
-#define VOTE_OUTCOME_YES      1
-#define VOTE_OUTCOME_NO       2
-#define VOTE_OUTCOME_ABSTAIN  3
 // INTENTION OF MASTERNODES REGARDING ITEM
+enum vote_outcome_enum_t  {
+    VOTE_OUTCOME_NONE      = 0,
+    VOTE_OUTCOME_YES       = 1,
+    VOTE_OUTCOME_NO        = 2,
+    VOTE_OUTCOME_ABSTAIN   = 3
+};
 
-#define VOTE_SIGNAL_NONE                0 // SIGNAL VARIOUS THINGS TO HAPPEN:
-#define VOTE_SIGNAL_FUNDING             1 //   -- fund this object for it's stated amount
-#define VOTE_SIGNAL_VALID               2 //   -- this object checks out in sentinel engine
-#define VOTE_SIGNAL_DELETE              3 //   -- this object should be deleted from memory entirely
-#define VOTE_SIGNAL_ENDORSED            4 //   -- officially endorsed by the network somehow (delegation)
-#define VOTE_SIGNAL_NOOP1               5 // FOR FURTHER EXPANSION
-#define VOTE_SIGNAL_NOOP2               6 // 
-#define VOTE_SIGNAL_NOOP3               7 // 
-#define VOTE_SIGNAL_NOOP4               8 // 
-#define VOTE_SIGNAL_NOOP5               9 // 
-#define VOTE_SIGNAL_NOOP6               10 // 
-#define VOTE_SIGNAL_NOOP7               11 // 
-#define VOTE_SIGNAL_NOOP8               12 // 
-#define VOTE_SIGNAL_NOOP9               13 // 
-#define VOTE_SIGNAL_NOOP10              14 // 
-#define VOTE_SIGNAL_NOOP11              15 // 
-#define VOTE_SIGNAL_CUSTOM_START        16 // SENTINEL CUSTOM ACTIONS 
-#define VOTE_SIGNAL_CUSTOM_END          35 //        16-35
 
+// SIGNAL VARIOUS THINGS TO HAPPEN:
+enum vote_signal_enum_t  {
+    VOTE_SIGNAL_NONE       = 0,
+    VOTE_SIGNAL_FUNDING    = 1, //   -- fund this object for it's stated amount
+    VOTE_SIGNAL_VALID      = 2, //   -- this object checks out in sentinel engine
+    VOTE_SIGNAL_DELETE     = 3, //   -- this object should be deleted from memory entirely
+    VOTE_SIGNAL_ENDORSED   = 4, //   -- officially endorsed by the network somehow (delegation)
+    VOTE_SIGNAL_NOOP1      = 5, // FOR FURTHER EXPANSION
+    VOTE_SIGNAL_NOOP2      = 6,
+    VOTE_SIGNAL_NOOP3      = 7,
+    VOTE_SIGNAL_NOOP4      = 8,
+    VOTE_SIGNAL_NOOP5      = 9,
+    VOTE_SIGNAL_NOOP6      = 10,
+    VOTE_SIGNAL_NOOP7      = 11,
+    VOTE_SIGNAL_NOOP8      = 12,
+    VOTE_SIGNAL_NOOP9      = 13,
+    VOTE_SIGNAL_NOOP10     = 14,
+    VOTE_SIGNAL_NOOP11     = 15,
+    VOTE_SIGNAL_CUSTOM1    = 16,  // SENTINEL CUSTOM ACTIONS 
+    VOTE_SIGNAL_CUSTOM2    = 17,  //        16-35
+    VOTE_SIGNAL_CUSTOM3    = 18,
+    VOTE_SIGNAL_CUSTOM4    = 19,
+    VOTE_SIGNAL_CUSTOM5    = 20,
+    VOTE_SIGNAL_CUSTOM6    = 21,
+    VOTE_SIGNAL_CUSTOM7    = 22,
+    VOTE_SIGNAL_CUSTOM8    = 23,
+    VOTE_SIGNAL_CUSTOM9    = 24,
+    VOTE_SIGNAL_CUSTOM10   = 25,
+    VOTE_SIGNAL_CUSTOM11   = 26,
+    VOTE_SIGNAL_CUSTOM12   = 27,
+    VOTE_SIGNAL_CUSTOM13   = 28,
+    VOTE_SIGNAL_CUSTOM14   = 29,
+    VOTE_SIGNAL_CUSTOM15   = 30,
+    VOTE_SIGNAL_CUSTOM16   = 31,
+    VOTE_SIGNAL_CUSTOM17   = 32,
+    VOTE_SIGNAL_CUSTOM18   = 33,
+    VOTE_SIGNAL_CUSTOM19   = 34,
+    VOTE_SIGNAL_CUSTOM20   = 35
+};
 
 /**
 * Governance Voting
@@ -54,10 +77,10 @@ class CGovernanceVote;
 class CGovernanceVoting
 {
 public:
-    static int ConvertVoteOutcome(std::string strVoteOutcome);
-    static int ConvertVoteSignal(std::string strVoteSignal);
-    static std::string ConvertOutcomeToString(int nOutcome);
-    static std::string ConvertSignalToString(int nSignal);
+    static vote_outcome_enum_t ConvertVoteOutcome(std::string strVoteOutcome);
+    static vote_signal_enum_t ConvertVoteSignal(std::string strVoteSignal);
+    static std::string ConvertOutcomeToString(vote_outcome_enum_t nOutcome);
+    static std::string ConvertSignalToString(vote_signal_enum_t nSignal);
 };
 
 //
@@ -66,7 +89,7 @@ public:
 
 class CGovernanceVote
 {
-public:
+private:
     bool fValid; //if the vote is currently valid / counted
     bool fSynced; //if we've sent this to our peers
     int nVoteSignal; // see VOTE_ACTIONS above
@@ -76,21 +99,35 @@ public:
     int64_t nTime;
     std::vector<unsigned char> vchSig;
 
+public:
     CGovernanceVote();
-    CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, int nVoteSignalIn, int nVoteOutcomeIn);
+    CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
+
+    bool IsValid() const { return fValid; }
+
+    bool IsSynced() const { return fSynced; }
+
+    int64_t GetTimestamp() const { return nTime; }
+
+    vote_signal_enum_t GetSignal()  { return vote_signal_enum_t(nVoteSignal); }
+
+    vote_outcome_enum_t GetOutcome()  { return vote_outcome_enum_t(nVoteOutcome); }
+
+    const uint256& GetParentHash() const { return nParentHash; }
+
+    void SetTime(int64_t nTimeIn) { nTime = nTimeIn; }
+
+    void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool IsValid(bool fSignatureCheck);
     void Relay();
 
     std::string GetVoteString() {
-        std::string ret = "ERROR";
-        if(nVoteOutcome == VOTE_OUTCOME_NONE)         ret = "NONE";
-        else if(nVoteOutcome == VOTE_OUTCOME_ABSTAIN) ret = "ABSTAIN";
-        else if(nVoteOutcome == VOTE_OUTCOME_YES)     ret = "YES";
-        else if(nVoteOutcome == VOTE_OUTCOME_NO)      ret = "NO";
-        return ret;
+        return CGovernanceVoting::ConvertOutcomeToString(GetOutcome());
     }
+
+    CTxIn& GetVinMasternode() { return vinMasternode; }
 
     /**
     *   GetHash()
@@ -111,7 +148,7 @@ public:
 
     std::string ToString()
     {
-        std::string strRet = CGovernanceVoting::ConvertOutcomeToString(nVoteOutcome) + ":" + CGovernanceVoting::ConvertSignalToString(nVoteSignal);
+        std::string strRet = CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) + ":" + CGovernanceVoting::ConvertSignalToString(GetSignal());
         return strRet;
     }
 
@@ -141,10 +178,6 @@ public:
         //  -- no outcome 
         //  -- timeless
         return ss.GetHash();
-    }
-
-    uint256 GetParentHash() const {
-        return nParentHash;
     }
 
     ADD_SERIALIZE_METHODS;

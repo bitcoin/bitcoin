@@ -43,7 +43,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 "\nAvailable commands:\n"
                 "  prepare            - Prepare govobj by signing and creating tx\n"
                 "  submit             - Submit govobj to network\n"
-                "  get                - Get govobj hash(es) by govobj name\n"
+                "  get                - Get govobj by hash\n"
                 "  getvotes           - Get votes for a govobj hash\n"
                 "  list               - List all govobjs\n"
                 "  diff               - List differences since last diff\n"
@@ -217,13 +217,17 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strVoteAction = params[2].get_str();
         std::string strVoteOutcome = params[3].get_str();
         
-        int nVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteAction);
-        if(nVoteSignal == VOTE_SIGNAL_NONE || nVoteSignal == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please use one of the following: 'yes', 'no' or 'abstain'");
+        vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteAction);
+        if(eVoteSignal == VOTE_SIGNAL_NONE) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                               "Invalid vote signal. Please using one of the following: "
+                               "(funding|valid|delete|endorsed) OR `custom sentinel code` "); 
+        }
 
-        int nVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-        if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteOutcome == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+        vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
+        if(eVoteOutcome == VOTE_OUTCOME_NONE) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
+        }
 
         int success = 0;
         int failed = 0;
@@ -246,7 +250,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             return "Can't find masternode by pubkey";
         }
 
-        CGovernanceVote vote(pmn->vin, hash, nVoteSignal, nVoteOutcome);
+        CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
         if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)){
             failed++;
             statusObj.push_back(Pair("result", "failed"));
@@ -294,13 +298,17 @@ UniValue gobject(const UniValue& params, bool fHelp)
        
         // CONVERT NAMED SIGNAL/ACTION AND CONVERT
 
-        int nVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteAction);
-        if(nVoteSignal == VOTE_SIGNAL_NONE || nVoteSignal == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please use one of the following: 'yes', 'no' or 'abstain'");
+        vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteAction);
+        if(eVoteSignal == VOTE_SIGNAL_NONE) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                               "Invalid vote signal. Please using one of the following: "
+                               "(funding|valid|delete|endorsed) OR `custom sentinel code` "); 
+        }
 
-        int nVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-        if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteOutcome == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+        vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
+        if(eVoteOutcome == VOTE_OUTCOME_NONE) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
+        }
 
         // EXECUTE VOTE FOR EACH MASTERNODE, COUNT SUCCESSES VS FAILURES
 
@@ -353,7 +361,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             // CREATE NEW GOVERNANCE OBJECT VOTE WITH OUTCOME/SIGNAL
 
-            CGovernanceVote vote(pmn->vin, hash, nVoteSignal, nVoteOutcome);
+            CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -525,29 +533,24 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // GETVOTES FOR SPECIFIC GOVERNANCE OBJECT
     if(strCommand == "getvotes")
     {
-        if (params.size() != 3)
+        if (params.size() != 2)
             throw runtime_error(
-                "Correct usage is 'gobject getvotes <governance-hash> <vote-signal>'"
+                "Correct usage is 'gobject getvotes <governance-hash>'"
                 );
 
         // COLLECT PARAMETERS FROM USER
-
+        
         uint256 hash = ParseHashV(params[1], "Governance hash");
-        std::string strVoteSignal = params[2].get_str();
-        int nVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
-        if(nVoteSignal == -1)
-        {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal, invalid name. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
-        }
-
+        
         // FIND OBJECT USER IS LOOKING FOR
-
+        
         LOCK(governance.cs);
 
         CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
 
-        if(pGovObj == NULL)
+        if(pGovObj == NULL) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
+        }
 
         // REPORT RESULTS TO USER
 
@@ -556,8 +559,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // GET MATCHING VOTES BY HASH, THEN SHOW USERS VOTE INFORMATION 
 
         std::vector<CGovernanceVote*> vecVotes = governance.GetMatchingVotes(hash);
-        BOOST_FOREACH(CGovernanceVote* pVote, vecVotes)
+        BOOST_FOREACH(CGovernanceVote* pVote, vecVotes) {
             bResult.push_back(Pair(pVote->GetHash().ToString(),  pVote->ToString()));
+        }
 
         return bResult;
     }
@@ -569,7 +573,7 @@ UniValue voteraw(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
-                "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-outcome> [yes|no|abstain] <time> <vote-sig>\n"
+                "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
                 );
 
@@ -578,25 +582,29 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     CTxIn vin = CTxIn(hashMnTx, nMnTxIndex);
 
     uint256 hashGovObj = ParseHashV(params[2], "Governance hash");
-    std::string strVoteOutcome = params[3].get_str();
-    std::string strVoteSignal = params[4].get_str();
+    std::string strVoteSignal = params[3].get_str();
+    std::string strVoteOutcome = params[4].get_str();
 
-    int nVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
-    if(nVoteSignal == VOTE_OUTCOME_NONE || nVoteSignal == -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please use one of the following: 'yes', 'no' or 'abstain'");
+    vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
+    if(eVoteSignal == VOTE_SIGNAL_NONE)  {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                           "Invalid vote signal. Please using one of the following: "
+                           "(funding|valid|delete|endorsed) OR `custom sentinel code` "); 
+    }
 
-    int nVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
-    if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteOutcome == -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+    vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
+    if(eVoteOutcome == VOTE_OUTCOME_NONE) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
+    }
 
-
-    int64_t nTime = params[4].get_int64();
-    std::string strSig = params[5].get_str();
+    int64_t nTime = params[5].get_int64();
+    std::string strSig = params[6].get_str();
     bool fInvalid = false;
     vector<unsigned char> vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
 
-    if (fInvalid)
+    if (fInvalid) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+    }
 
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
@@ -604,9 +612,9 @@ UniValue voteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
     }
 
-    CGovernanceVote vote(vin, hashGovObj, VOTE_SIGNAL_NONE, nVoteOutcome);
-    vote.nTime = nTime;
-    vote.vchSig = vchSig;
+    CGovernanceVote vote(vin, hashGovObj, eVoteSignal, eVoteOutcome);
+    vote.SetTime(nTime);
+    vote.SetSignature(vchSig);
 
     if(!vote.IsValid(true)){
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");

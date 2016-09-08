@@ -24,7 +24,6 @@ class CNode;
 class CBudgetVote;
 
 CGovernanceManager governance;
-CCriticalSection cs_budget;
 
 std::map<uint256, int64_t> mapAskedForGovernanceObject;
 
@@ -110,7 +109,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     // END REMOVE
     //
 
-    LOCK(cs_budget);
+    LOCK(governance.cs);
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
     if (strCommand == NetMsgType::MNGOVERNANCESYNC)
@@ -206,7 +205,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         CGovernanceVote vote;
         vRecv >> vote;
-        vote.fValid = true;
+        //vote.fValid = true;
 
         // IF WE'VE SEEN THIS OBJECT THEN SKIP
 
@@ -217,10 +216,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         // FIND THE MASTERNODE OF THE VOTER
 
-        CMasternode* pmn = mnodeman.Find(vote.vinMasternode);
+        CMasternode* pmn = mnodeman.Find(vote.GetVinMasternode());
         if(pmn == NULL) {
-            LogPrint("gobject", "gobject - unknown masternode - vin: %s\n", vote.vinMasternode.ToString());
-            mnodeman.AskForMN(pfrom, vote.vinMasternode);
+            LogPrint("gobject", "gobject - unknown masternode - vin: %s\n", vote.GetVinMasternode().ToString());
+            mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
             return;
         }
 
@@ -230,7 +229,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             LogPrintf("gobject - signature invalid\n");
             if(masternodeSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
             // it could just be a non-synced masternode
-            mnodeman.AskForMN(pfrom, vote.vinMasternode);
+            mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
             mapSeenVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_ERROR_INVALID));
             return;
         } else {
@@ -538,9 +537,9 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
 void CGovernanceManager::SyncParentObjectByVote(CNode* pfrom, const CGovernanceVote& vote)
 {
-    if(!mapAskedForGovernanceObject.count(vote.nParentHash)){
-        pfrom->PushMessage(NetMsgType::MNGOVERNANCESYNC, vote.nParentHash);
-        mapAskedForGovernanceObject[vote.nParentHash] = GetTime();
+    if(!mapAskedForGovernanceObject.count(vote.GetParentHash())){
+        pfrom->PushMessage(NetMsgType::MNGOVERNANCESYNC, vote.GetParentHash());
+        mapAskedForGovernanceObject[vote.GetParentHash()] = GetTime();
     }
 }
 
@@ -552,7 +551,7 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
     uint256 votehash;
     {
         LOCK(cs);
-        if(!mapObjects.count(vote.nParentHash))  {
+        if(!mapObjects.count(vote.GetParentHash()))  {
                 if(pfrom)  {
                     // only ask for missing items after our syncing process is complete -- 
                     //   otherwise we'll think a full sync succeeded when they return a result
@@ -560,15 +559,15 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
                     
                     // ADD THE VOTE AS AN ORPHAN, TO BE USED UPON RECEIVAL OF THE PARENT OBJECT
                     
-                    LogPrintf("CGovernanceManager::AddOrUpdateVote - Unknown object %d, asking for source\n", vote.nParentHash.ToString());
-                    mapOrphanVotes[vote.nParentHash] = vote;
+                    LogPrintf("CGovernanceManager::AddOrUpdateVote - Unknown object %d, asking for source\n", vote.GetParentHash().ToString());
+                    mapOrphanVotes[vote.GetParentHash()] = vote;
                     
                     // ASK FOR THIS VOTES PARENT SPECIFICALLY FROM THIS USER (THEY SHOULD HAVE IT, NO?)
 
-                    if(!mapAskedForGovernanceObject.count(vote.nParentHash)){
+                    if(!mapAskedForGovernanceObject.count(vote.GetParentHash())){
                         syncparent = true;
-                        votehash = vote.nParentHash;
-                        mapAskedForGovernanceObject[vote.nParentHash] = GetTime();
+                        votehash = vote.GetParentHash();
+                        mapAskedForGovernanceObject[vote.GetParentHash()] = GetTime();
                     }
                 }
 
@@ -591,14 +590,15 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
 
     // LOOK FOR PREVIOUS VOTES BY THIS SPECIFIC MASTERNODE FOR THIS SPECIFIC SIGNAL
 
-    if(mapVotesByType.count(nTypeHash)) {
-        if(mapVotesByType[nTypeHash].nTime > vote.nTime){
+    vote_m_it it = mapVotesByType.find(nTypeHash);
+    if(it != mapVotesByType.end()) {
+        if(it->second.GetTimestamp() > vote.GetTimestamp()) {
             strError = strprintf("new vote older than existing vote - %s", nTypeHash.ToString());
             LogPrint("gobject", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
             return false;
         }
-        if(vote.nTime - mapVotesByType[nTypeHash].nTime < GOVERNANCE_UPDATE_MIN){
-            strError = strprintf("time between votes is too soon - %s - %lli", nTypeHash.ToString(), vote.nTime - mapVotesByType[nTypeHash].nTime);
+        if(vote.GetTimestamp() - it->second.GetTimestamp() < GOVERNANCE_UPDATE_MIN) {
+            strError = strprintf("time between votes is too soon - %s - %lli", nTypeHash.ToString(), vote.GetTimestamp() - it->second.GetTimestamp());
             LogPrint("gobject", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
             return false;
         }
@@ -806,18 +806,12 @@ UniValue CGovernanceObject::GetJSONObject()
     }
 
     UniValue objResult(UniValue::VOBJ);
-    if(!GetData(objResult)) {
-        return obj;
-    }
+    GetData(objResult);
 
-    try  {
-        std::vector<UniValue> arr1 = objResult.getValues();
-        std::vector<UniValue> arr2 = arr1.at( 0 ).getValues();
-        obj = arr2.at( 1 );
-    }
-    catch(...)  {
-        obj = UniValue(UniValue::VOBJ);
-    }
+    std::vector<UniValue> arr1 = objResult.getValues();
+    std::vector<UniValue> arr2 = arr1.at( 0 ).getValues();
+    obj = arr2.at( 1 );
+
     return obj;
 }
 
@@ -838,17 +832,15 @@ void CGovernanceObject::LoadData()
         return;
     }
 
-    // ATTEMPT TO LOAD JSON STRING FROM STRDATA
-    UniValue objResult(UniValue::VOBJ);
-    if(!GetData(objResult)) {
-        fUnparsable = true;
-    }
-
-    DBG( cout << "CGovernanceObject::LoadData strData = "
-              << GetDataAsString()
-              << endl; );
-
     try  {
+        // ATTEMPT TO LOAD JSON STRING FROM STRDATA
+        UniValue objResult(UniValue::VOBJ);
+        GetData(objResult);
+        
+        DBG( cout << "CGovernanceObject::LoadData strData = "
+             << GetDataAsString()
+             << endl; );
+        
         UniValue obj = GetJSONObject();
         nObjectType = obj["type"].get_int();
     }
@@ -901,23 +893,12 @@ bool CGovernanceObject::SetData(std::string& strError, std::string strDataIn)
 *    
 */
 
-bool CGovernanceObject::GetData(UniValue& objResult)
+void CGovernanceObject::GetData(UniValue& objResult)
 {
-    // NOTE : IS THIS SAFE? 
-
-    try
-    {
-        UniValue o(UniValue::VOBJ);
-        std::string s = GetDataAsString();
-        o.read(s);
-        objResult = o;
-    }
-    catch (int e)
-    {
-        return false;
-    }
-
-    return true;
+    UniValue o(UniValue::VOBJ);
+    std::string s = GetDataAsString();
+    o.read(s);
+    objResult = o;
 }
 
 /**
@@ -1141,29 +1122,29 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError)
 *   Get specific vote counts for each outcome (funding, validity, etc)
 */
 
-int CGovernanceObject::GetAbsoluteYesCount(int nVoteSignalIn)
+int CGovernanceObject::GetAbsoluteYesCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetAbsoluteNoCount(int nVoteSignalIn)
+int CGovernanceObject::GetAbsoluteNoCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_NO) - governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_YES);
+    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_NO) - governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_YES);
 }
 
-int CGovernanceObject::GetYesCount(int nVoteSignalIn)
+int CGovernanceObject::GetYesCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_YES);
+    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_YES);
 }
 
-int CGovernanceObject::GetNoCount(int nVoteSignalIn)
+int CGovernanceObject::GetNoCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetAbstainCount(int nVoteSignalIn)
+int CGovernanceObject::GetAbstainCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
+    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
 }
 
 void CGovernanceObject::Relay()
@@ -1203,7 +1184,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
         NewBlock();
 }
 
-int CGovernanceManager::CountMatchingVotes(CGovernanceObject& govobj, int nVoteSignalIn, int nVoteOutcomeIn)
+int CGovernanceManager::CountMatchingVotes(CGovernanceObject& govobj, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
 {
     /*
     *   
@@ -1214,15 +1195,15 @@ int CGovernanceManager::CountMatchingVotes(CGovernanceObject& govobj, int nVoteS
     LOCK(cs);
     int nCount = 0;
 
-    std::map<uint256, CGovernanceVote>::iterator it2 = mapVotesByHash.begin();
-    while(it2 != mapVotesByHash.end()){
-        if((*it2).second.fValid && (*it2).second.nVoteSignal == nVoteSignalIn && (*it2).second.GetParentHash() == govobj.GetHash())
-        {
-            nCount += ((*it2).second.nVoteOutcome == nVoteOutcomeIn ? 1 : 0);
-            ++it2;
-        } else {
-            ++it2;
+    std::map<uint256, CGovernanceVote>::iterator it = mapVotesByHash.begin();
+    while(it != mapVotesByHash.end())  {
+        if(it->second.IsValid() &&
+           it->second.GetSignal() == eVoteSignalIn &&
+           it->second.GetOutcome() == eVoteOutcomeIn &&
+           it->second.GetParentHash() == govobj.GetHash()) {
+            ++nCount;
         }
+        ++it;
     }
 
     return nCount;
