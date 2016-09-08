@@ -94,6 +94,13 @@ enum
     // Making v1-v16 witness program non-standard
     //
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM = (1U << 12),
+
+    // Discourage use of too big P2WSH script or stack
+    //
+    // This implements a policy limit for P2WSH, with witnessScript <= 3600 bytes,
+    // witness stack item size <= 80 bytes, and witness stack items <= 100
+    // Never be a mandatory flag
+    SCRIPT_VERIFY_DISCOURAGE_BIG_P2WSH = (1U << 15),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
