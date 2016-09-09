@@ -97,7 +97,7 @@ static bool multiUserAuthorized(std::string strUserPass)
         //Search for multi-user login/pass "rpcauth" from config
         std::vector<std::string> vFields;
         boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
-        if (vFields.size() != 3) {
+        if (vFields.size() < 3 || vFields.size() > 4) {
             //Incorrect formatting in config file
             continue;
         }
