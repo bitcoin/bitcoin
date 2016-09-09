@@ -554,6 +554,7 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
         m_wallet_selector->setVisible(true);
         m_wallet_selector->setVisible(true);
     }
+    rpcConsole->addWallet(name, walletModel);
     return walletFrame->addWallet(name, walletModel);
 }
 
