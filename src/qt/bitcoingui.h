@@ -36,6 +36,7 @@ class ProposalList;
 
 QT_BEGIN_NAMESPACE
 class QAction;
+class QComboBox;
 class QProgressBar;
 class QProgressDialog;
 QT_END_NAMESPACE
@@ -65,7 +66,6 @@ public:
         functionality.
     */
     bool addWallet(const QString& name, WalletModel *walletModel);
-    bool setCurrentWallet(const QString& name);
     void removeAllWallets();
 #endif // ENABLE_WALLET
     bool enableWallet;
@@ -122,6 +122,9 @@ private:
     QAction *showHelpMessageAction;
     QAction *showPrivateSendHelpAction;
     QAction *proposalAction;
+
+    QLabel *m_wallet_selector_label;
+    QComboBox *m_wallet_selector;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -185,6 +188,9 @@ public Q_SLOTS:
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = nullptr);
 
 #ifdef ENABLE_WALLET
+    bool setCurrentWallet(const QString& name);
+
+private:
     /** Set the encryption status as shown in the UI.
        @param[in] status            current encryption status
        @see WalletModel::EncryptionStatus

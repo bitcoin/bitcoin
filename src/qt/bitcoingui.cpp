@@ -40,6 +40,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
@@ -544,6 +545,22 @@ void BitcoinGUI::createToolBars()
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
+#ifdef ENABLE_WALLET
+        QWidget *spacer = new QWidget();
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        toolbar->addWidget(spacer);
+
+        m_wallet_selector_label = new QLabel();
+        m_wallet_selector_label->setText(tr("Wallet:") + " ");
+        toolbar->addWidget(m_wallet_selector_label);
+        m_wallet_selector_label->setVisible(false);
+        m_wallet_selector = new QComboBox();
+        toolbar->addWidget(m_wallet_selector);
+        m_wallet_selector->setVisible(false);
+        m_wallet_selector_label->setBuddy(m_wallet_selector);
+
+        connect(m_wallet_selector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
+#endif
     }
 }
 
@@ -617,6 +634,11 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
     if(!walletFrame)
         return false;
     setWalletActionsEnabled(true);
+    m_wallet_selector->addItem(name);
+    if (m_wallet_selector->count() == 2) {
+        m_wallet_selector->setVisible(true);
+        m_wallet_selector->setVisible(true);
+    }
     return walletFrame->addWallet(name, walletModel);
 }
 
