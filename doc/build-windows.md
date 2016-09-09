@@ -45,5 +45,9 @@ On Ubuntu 15.10 and above, if your build fails because the cross-compiler does n
 
 And select the posix version of the compiler.
 
+You may also need to disable "hardening" of compiled binaries if your bitcoin-qt.exe does not start properly by adding the --disable-hardening option when calling the configure script:
+
+    ./configure --disable-hardening --prefix=`pwd`/depends/x86_64-w64-mingw32
+
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
