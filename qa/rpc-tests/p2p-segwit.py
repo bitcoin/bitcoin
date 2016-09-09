@@ -964,8 +964,24 @@ class SegWitTest(BitcoinTestFramework):
 
         tx3 = CTransaction()
         tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), b""))
-        tx3.vout.append(CTxOut(tx2.vout[0].nValue-1000, CScript([OP_TRUE])))
         tx3.wit.vtxinwit.append(CTxInWitness())
+
+        # Add too-large for IsStandard witness and check that it does not enter reject filter
+        p2sh_program = CScript([OP_TRUE])
+        p2sh_pubkey = hash160(p2sh_program)
+        witness_program2 = CScript([b'a'*400000])
+        tx3.vout.append(CTxOut(tx2.vout[0].nValue-1000, CScript([OP_HASH160, p2sh_pubkey, OP_EQUAL])))
+        tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program2]
+        tx3.rehash()
+
+        # Node will not be blinded to the transaction
+        self.std_node.announce_tx_and_wait_for_getdata(tx3)
+        self.std_node.test_transaction_acceptance(tx3, True, False, b'tx-size')
+        self.std_node.announce_tx_and_wait_for_getdata(tx3)
+        self.std_node.test_transaction_acceptance(tx3, True, False, b'tx-size')
+
+        # Remove witness stuffing, instead add extra witness push on stack
+        tx3.vout[0] = CTxOut(tx2.vout[0].nValue-1000, CScript([OP_TRUE]))
         tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)]), witness_program ]
         tx3.rehash()
 

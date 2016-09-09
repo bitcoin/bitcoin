@@ -1501,9 +1501,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
             // need to turn both off, and compare against just turning off CLEANSTACK
             // to see if the failure is specifically due to witness validation.
-            if (CheckInputs(tx, state, view, true, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, txdata) &&
+            if (tx.wit.IsNull() && CheckInputs(tx, state, view, true, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, txdata) &&
                 !CheckInputs(tx, state, view, true, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, txdata)) {
-                // Only the witness is wrong, so the transaction itself may be fine.
+                // Only the witness is missing, so the transaction itself may be fine.
                 state.SetCorruptionPossible();
             }
             return false;
@@ -5493,7 +5493,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     else if (!fMissingInputs2)
                     {
                         int nDos = 0;
-                        if (stateDummy.IsInvalid(nDos) && nDos > 0 && (!state.CorruptionPossible() || State(fromPeer)->fHaveWitness))
+                        if (stateDummy.IsInvalid(nDos) && nDos > 0)
                         {
                             // Punish peer that gave us an invalid orphan tx
                             Misbehaving(fromPeer, nDos);
@@ -5504,7 +5504,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // Probably non-standard or insufficient fee/priority
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanHash.ToString());
                         vEraseQueue.push_back(orphanHash);
-                        if (!stateDummy.CorruptionPossible()) {
+                        if (orphanTx.wit.IsNull() && !stateDummy.CorruptionPossible()) {
+                            // Do not use rejection cache for witness transactions or
+                            // witness-stripped transactions, as they can have been malleated.
+                            // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
                             assert(recentRejects);
                             recentRejects->insert(orphanHash);
                         }
@@ -5542,7 +5545,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 LogPrint("mempool", "not keeping orphan with rejected parents %s\n",tx.GetHash().ToString());
             }
         } else {
-            if (!state.CorruptionPossible()) {
+            if (tx.wit.IsNull() && !state.CorruptionPossible()) {
+                // Do not use rejection cache for witness transactions or
+                // witness-stripped transactions, as they can have been malleated.
+                // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
                 assert(recentRejects);
                 recentRejects->insert(tx.GetHash());
             }
@@ -5574,9 +5580,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (state.GetRejectCode() < REJECT_INTERNAL) // Never send AcceptToMemoryPool's internal codes over P2P
                 pfrom->PushMessage(NetMsgType::REJECT, strCommand, (unsigned char)state.GetRejectCode(),
                                    state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-            if (nDoS > 0 && (!state.CorruptionPossible() || State(pfrom->id)->fHaveWitness)) {
-                // When a non-witness-supporting peer gives us a transaction that would
-                // be accepted if witness validation was off, we can't blame them for it.
+            if (nDoS > 0) {
                 Misbehaving(pfrom->GetId(), nDoS);
             }
         }
