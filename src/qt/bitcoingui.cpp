@@ -37,6 +37,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
@@ -460,6 +461,23 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
         overviewAction->setChecked(true);
+
+#ifdef ENABLE_WALLET
+        QWidget *spacer = new QWidget();
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        toolbar->addWidget(spacer);
+
+        WalletSelectorLabel = new QLabel();
+        WalletSelectorLabel->setText(tr("Wallet:") + " ");
+        toolbar->addWidget(WalletSelectorLabel);
+        WalletSelectorLabel->setVisible(false);
+        WalletSelector = new QComboBox();
+        toolbar->addWidget(WalletSelector);
+        WalletSelector->setVisible(false);
+        WalletSelectorLabel->setBuddy(WalletSelector);
+
+        connect(WalletSelector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
+#endif
     }
 }
 
@@ -531,6 +549,11 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
     if(!walletFrame)
         return false;
     setWalletActionsEnabled(true);
+    WalletSelector->addItem(name);
+    if (WalletSelector->count() == 2) {
+        WalletSelectorLabel->setVisible(true);
+        WalletSelector->setVisible(true);
+    }
     return walletFrame->addWallet(name, walletModel);
 }
 
