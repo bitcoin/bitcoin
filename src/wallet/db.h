@@ -93,13 +93,13 @@ class CWalletDBWrapper
     friend class CDB;
 public:
     /** Create dummy DB handle */
-    CWalletDBWrapper(): env(nullptr)
+    CWalletDBWrapper() : nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(nullptr)
     {
     }
 
     /** Create DB handle to real database */
-    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in):
-        env(env_in), strFile(strFile_in)
+    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in) :
+        nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(env_in), strFile(strFile_in)
     {
     }
 
@@ -120,13 +120,16 @@ public:
     void Flush(bool shutdown);
 
     void IncrementUpdateCounter();
-    unsigned int GetUpdateCounter();
+
+    std::atomic<unsigned int> nUpdateCounter;
+    unsigned int nLastSeen;
+    unsigned int nLastFlushed;
+    int64_t nLastWalletUpdate;
 
 private:
     /** BerkeleyDB specific */
     CDBEnv *env;
     std::string strFile;
-    std::atomic<unsigned int> nUpdateCounter;
 
     /** Return whether this database handle is a dummy for testing.
      * Only to be used at a low level, application should ideally not care
