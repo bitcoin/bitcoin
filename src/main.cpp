@@ -3964,7 +3964,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->fDisconnect = true;
             return false;
         }
-
+        if (nHeight > 1030000 && pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+        {
+            // disconnect from peers older than this proto version
+            LogPrintf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
+            pfrom->PushMessage("reject", strCommand, REJECT_OBSOLETE,
+                               strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION));
+            pfrom->fDisconnect = true;
+            return false;
+        }
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
         if (!vRecv.empty())
