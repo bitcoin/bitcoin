@@ -44,6 +44,9 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
 
+    ui->networkPort->setValidator(new QIntValidator(1024, 65535, this));
+    connect(ui->networkPort, SIGNAL(textChanged(const QString&)), this, SLOT(checkLineEdit()));
+
     /* Network elements init */
 #ifndef USE_UPNP
     ui->mapPortUpnp->setEnabled(false);
@@ -165,6 +168,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* Wallet */
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Network */
+    connect(ui->networkPort, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
@@ -185,6 +189,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
 
     /* Network */
+    mapper->addMapping(ui->networkPort, OptionsModel::NetworkPort);
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
     mapper->addMapping(ui->allowIncoming, OptionsModel::Listen);
 
@@ -207,6 +212,16 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
+}
+
+void OptionsDialog::checkLineEdit()
+{
+    QLineEdit * const lineedit = qobject_cast<QLineEdit*>(QObject::sender());
+    if (lineedit->hasAcceptableInput()) {
+        lineedit->setStyleSheet("");
+    } else {
+        lineedit->setStyleSheet("color: red;");
+    }
 }
 
 void OptionsDialog::setOkButtonState(bool fState)
@@ -234,6 +249,24 @@ void OptionsDialog::on_resetButton_clicked()
 
 void OptionsDialog::on_okButton_clicked()
 {
+    for (int i = 0; i < ui->tabWidget->count(); ++i) {
+        QWidget * const tab = ui->tabWidget->widget(i);
+        Q_FOREACH(QObject* o, tab->children()) {
+            QLineEdit * const lineedit = qobject_cast<QLineEdit*>(o);
+            if (lineedit && !lineedit->hasAcceptableInput()) {
+                int row = mapper->mappedSection(lineedit);
+                if (model->data(model->index(row, 0), Qt::EditRole) == lineedit->text()) {
+                    // Allow unchanged fields through
+                    continue;
+                }
+                ui->tabWidget->setCurrentWidget(tab);
+                lineedit->setFocus(Qt::OtherFocusReason);
+                lineedit->selectAll();
+                QMessageBox::critical(this, tr("Invalid setting"), tr("The value entered is invalid."));
+                return;
+            }
+        }
+    }
     mapper->submit();
     accept();
     updateDefaultProxyNets();
