@@ -185,6 +185,7 @@ private:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 };
 
+void FlushWalletDB(const std::string& strFile);
 void ThreadFlushWalletDB(const std::string& strFile);
 
 #endif // BITCOIN_WALLET_WALLETDB_H
