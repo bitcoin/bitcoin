@@ -956,7 +956,7 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
     if(fCheckCollateral) {
         if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
             CMasternode mn;
-            if(mnodeman.Get(pubkeyMasternode, mn)) {
+            if(!mnodeman.Get(pubkeyMasternode, mn)) {
                 strError = "Masternode not found";
                 return false;
             }

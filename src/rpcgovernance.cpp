@@ -186,9 +186,14 @@ UniValue gobject(const UniValue& params, bool fHelp)
              << endl; );
 
         // Attempt to sign triggers if we are a MN
-        if((govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) && mnFound) {
-            govobj.SetMasternodeInfo(mn.vin, activeMasternode.pubKeyMasternode);
-            govobj.Sign(activeMasternode.keyMasternode);
+        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+            if(mnFound) {
+                govobj.SetMasternodeInfo(mn.vin, activeMasternode.pubKeyMasternode);
+                govobj.Sign(activeMasternode.keyMasternode);
+            }
+            else {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Only valid masternodes can submit this type of object");
+            }
         }
 
         std::string strError = "";
