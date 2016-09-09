@@ -2787,7 +2787,7 @@ static int64_t nTimePostConnect = 0;
  * Connect a new block to chainActive. pblock is either NULL or a pointer to a CBlock
  * corresponding to pindexNew, to bypass loading it again from disk.
  */
-bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock, std::list<CTransaction> &txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int> > &txChanged)
+bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock, std::list<CTransaction> &txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int>> &txChanged)
 {
     assert(pindexNew->pprev == chainActive.Tip());
     // Read block from disk.
@@ -2829,7 +2829,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     UpdateTip(pindexNew, chainparams);
 
     for(unsigned int i=0; i < pblock->vtx.size(); i++)
-        txChanged.push_back(std::make_tuple(pblock->vtx[i], pindexNew, i));
+        txChanged.emplace_back(pblock->vtx[i], pindexNew, i);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint("bench", "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
@@ -2911,7 +2911,7 @@ static void PruneBlockIndexCandidates() {
  * Try to make some progress towards making pindexMostWork the active block.
  * pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
  */
-static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock, bool& fInvalidFound, std::list<CTransaction>& txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int> >& txChanged)
+static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock, bool& fInvalidFound, std::list<CTransaction>& txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int>>& txChanged)
 {
     AssertLockHeld(cs_main);
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -3013,14 +3013,17 @@ static void NotifyHeaderTip() {
 bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, const CBlock *pblock, CConnman* connman) {
     CBlockIndex *pindexMostWork = NULL;
     CBlockIndex *pindexNewTip = NULL;
+    std::vector<std::tuple<CTransaction,CBlockIndex*,int>> txChanged;
+    if (pblock)
+        txChanged.reserve(pblock->vtx.size());
     do {
+        txChanged.clear();
         boost::this_thread::interruption_point();
         if (ShutdownRequested())
             break;
 
         const CBlockIndex *pindexFork;
         std::list<CTransaction> txConflicted;
-        std::vector<std::tuple<CTransaction,CBlockIndex*,int> > txChanged;
         bool fInitialDownload;
         int nNewHeight;
         {
