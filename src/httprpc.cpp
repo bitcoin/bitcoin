@@ -258,7 +258,7 @@ static bool InitRPCAuthentication()
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields;
             boost::split(fields, rpcauth, boost::is_any_of(":$"));
-            if (fields.size() == 3) {
+            if (fields.size() >= 3 && fields.size() <= 4) {
                 g_rpcauth.push_back(fields);
             } else {
                 LogPrintf("Invalid -rpcauth argument.\n");
@@ -275,7 +275,7 @@ static bool InitRPCAuthentication()
             while (std::getline(file, rpcauth)) {
                 std::vector<std::string> fields;
                 boost::split(fields, rpcauth, boost::is_any_of(":$"));
-                if (fields.size() == 3) g_rpcauth.push_back(fields);
+                if (fields.size() >= 3 && fields.size() <= 4) g_rpcauth.push_back(fields);
             }
         }
     }
