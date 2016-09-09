@@ -760,24 +760,23 @@ void MaybeCompactWalletDB()
         return;
     }
 
-    CWalletDBWrapper& dbh = pwalletMain->GetDBHandle();
+    for (CWalletRef pwallet : vpwallets) {
+        CWalletDBWrapper& dbh = pwallet->GetDBHandle();
 
-    static unsigned int nLastSeen = dbh.GetUpdateCounter();
-    static unsigned int nLastFlushed = dbh.GetUpdateCounter();
-    static int64_t nLastWalletUpdate = GetTime();
+        unsigned int nUpdateCounter = dbh.nUpdateCounter;
 
-    if (nLastSeen != dbh.GetUpdateCounter())
-    {
-        nLastSeen = dbh.GetUpdateCounter();
-        nLastWalletUpdate = GetTime();
-    }
+        if (dbh.nLastSeen != nUpdateCounter) {
+            dbh.nLastSeen = nUpdateCounter;
+            dbh.nLastWalletUpdate = GetTime();
+        }
 
-    if (nLastFlushed != dbh.GetUpdateCounter() && GetTime() - nLastWalletUpdate >= 2)
-    {
-        if (CDB::PeriodicFlush(dbh)) {
-            nLastFlushed = dbh.GetUpdateCounter();
+        if (dbh.nLastFlushed != nUpdateCounter && GetTime() - dbh.nLastWalletUpdate >= 2) {
+            if (CDB::PeriodicFlush(dbh)) {
+                dbh.nLastFlushed = nUpdateCounter;
+            }
         }
     }
+
     fOneThread = false;
 }
 
