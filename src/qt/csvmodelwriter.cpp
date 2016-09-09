@@ -8,15 +8,15 @@
 #include <QFile>
 #include <QTextStream>
 
-CSVModelWriter::CSVModelWriter(const QString &filename, QObject *parent) :
+CSVModelWriter::CSVModelWriter(const QString &_filename, QObject *parent) :
     QObject(parent),
-    filename(filename), model(0)
+    filename(_filename), model(0)
 {
 }
 
-void CSVModelWriter::setModel(const QAbstractItemModel *model)
+void CSVModelWriter::setModel(const QAbstractItemModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 }
 
 void CSVModelWriter::addColumn(const QString &title, int column, int role)
