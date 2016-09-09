@@ -3930,19 +3930,21 @@ bool CWallet::InitLoadWallet()
         return true;
     }
 
-    std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
+    SoftSetArg("-wallet", DEFAULT_WALLET_DAT);
 
-    if (boost::filesystem::path(walletFile).filename() != walletFile) {
-        return InitError(_("-wallet parameter must only specify a filename (not a path)"));
-    } else if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
-        return InitError(_("Invalid characters in -wallet filename"));
-    }
+    for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
+        if (boost::filesystem::path(walletFile).filename() != walletFile) {
+            return InitError(_("-wallet parameter must only specify a filename (not a path)"));
+        } else if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
+            return InitError(_("Invalid characters in -wallet filename"));
+        }
 
-    CWallet * const pwallet = CreateWalletFromFile(walletFile);
-    if (!pwallet) {
-        return false;
+        CWallet * const pwallet = CreateWalletFromFile(walletFile);
+        if (!pwallet) {
+            return false;
+        }
+        vpwallets.push_back(pwallet);
     }
-    vpwallets.push_back(pwallet);
 
     return true;
 }
