@@ -291,17 +291,17 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
     }
 }
 
-QString getEntryData(QAbstractItemView *view, int column, int role)
+QVariant getEntryData(QAbstractItemView *view, int column, int role)
 {
     if(!view || !view->selectionModel())
-        return QString();
+        return QVariant();
     QModelIndexList selection = view->selectionModel()->selectedRows(column);
 
     if(!selection.isEmpty()) {
         // Return first item
-        return (selection.at(0).data(role).toString());
+        return (selection.at(0).data(role));
     }
-    return QString();
+    return QVariant();
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,

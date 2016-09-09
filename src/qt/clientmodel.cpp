@@ -50,16 +50,18 @@ ClientModel::~ClientModel()
 
 int ClientModel::getNumConnections(unsigned int flags) const
 {
-    LOCK(cs_vNodes);
-    if (flags == CONNECTIONS_ALL) // Shortcut if we want total
-        return vNodes.size();
+    CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
 
-    int nNum = 0;
-    BOOST_FOREACH(const CNode* pnode, vNodes)
-        if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT))
-            nNum++;
+    if(flags == CONNECTIONS_IN)
+        connections = CConnman::CONNECTIONS_IN;
+    else if (flags == CONNECTIONS_OUT)
+        connections = CConnman::CONNECTIONS_OUT;
+    else if (flags == CONNECTIONS_ALL)
+        connections = CConnman::CONNECTIONS_ALL;
 
-    return nNum;
+    if(g_connman)
+         return g_connman->GetNodeCount(connections);
+    return 0;
 }
 
 int ClientModel::getNumBlocks() const
@@ -70,12 +72,16 @@ int ClientModel::getNumBlocks() const
 
 quint64 ClientModel::getTotalBytesRecv() const
 {
-    return CNode::GetTotalBytesRecv();
+    if(!g_connman)
+        return 0;
+    return g_connman->GetTotalBytesRecv();
 }
 
 quint64 ClientModel::getTotalBytesSent() const
 {
-    return CNode::GetTotalBytesSent();
+    if(!g_connman)
+        return 0;
+    return g_connman->GetTotalBytesSent();
 }
 
 QDateTime ClientModel::getLastBlockDate() const
