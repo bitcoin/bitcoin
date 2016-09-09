@@ -1389,3 +1389,10 @@ void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj)
     if (warnings.empty()) return;
     obj.pushKV("warnings", BilingualStringsToUniValue(warnings));
 }
+
+bool GetWalletRestrictionFromJSONRPCRequest(const JSONRPCRequest& request, std::string& out_wallet_allowed)
+{
+    if (request.m_wallet_restriction.empty()) return false;
+    out_wallet_allowed = request.m_wallet_restriction;
+    return true;
+}
