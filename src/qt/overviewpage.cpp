@@ -25,9 +25,9 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(const PlatformStyle *platformStyle):
+    TxViewDelegate(const PlatformStyle *_platformStyle):
         QAbstractItemDelegate(), unit(BitcoinUnits::BTC),
-        platformStyle(platformStyle)
+        platformStyle(_platformStyle)
     {
 
     }

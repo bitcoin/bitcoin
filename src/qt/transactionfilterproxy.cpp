@@ -66,9 +66,9 @@ void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
+void TransactionFilterProxy::setAddressPrefix(const QString &_addrPrefix)
 {
-    this->addrPrefix = addrPrefix;
+    this->addrPrefix = _addrPrefix;
     invalidateFilter();
 }
 
@@ -95,9 +95,9 @@ void TransactionFilterProxy::setLimit(int limit)
     this->limitRows = limit;
 }
 
-void TransactionFilterProxy::setShowInactive(bool showInactive)
+void TransactionFilterProxy::setShowInactive(bool _showInactive)
 {
-    this->showInactive = showInactive;
+    this->showInactive = _showInactive;
     invalidateFilter();
 }
 

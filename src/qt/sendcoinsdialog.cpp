@@ -30,25 +30,25 @@
 
 #define SEND_CONFIRM_DELAY   3
 
-SendCoinsDialog::SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent) :
+SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     clientModel(0),
     model(0),
     fNewRecipientAllowed(true),
     fFeeMinimized(true),
-    platformStyle(platformStyle)
+    platformStyle(_platformStyle)
 {
     ui->setupUi(this);
 
-    if (!platformStyle->getImagesOnButtons()) {
+    if (!_platformStyle->getImagesOnButtons()) {
         ui->addButton->setIcon(QIcon());
         ui->clearButton->setIcon(QIcon());
         ui->sendButton->setIcon(QIcon());
     } else {
-        ui->addButton->setIcon(platformStyle->SingleColorIcon(":/icons/add"));
-        ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-        ui->sendButton->setIcon(platformStyle->SingleColorIcon(":/icons/send"));
+        ui->addButton->setIcon(_platformStyle->SingleColorIcon(":/icons/add"));
+        ui->clearButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
+        ui->sendButton->setIcon(_platformStyle->SingleColorIcon(":/icons/send"));
     }
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
@@ -116,40 +116,40 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *pa
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
 }
 
-void SendCoinsDialog::setClientModel(ClientModel *clientModel)
+void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
 {
-    this->clientModel = clientModel;
+    this->clientModel = _clientModel;
 
-    if (clientModel) {
-        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(updateSmartFeeLabel()));
+    if (_clientModel) {
+        connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(updateSmartFeeLabel()));
     }
 }
 
-void SendCoinsDialog::setModel(WalletModel *model)
+void SendCoinsDialog::setModel(WalletModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 
-    if(model && model->getOptionsModel())
+    if(_model && _model->getOptionsModel())
     {
         for(int i = 0; i < ui->entries->count(); ++i)
         {
             SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
             if(entry)
             {
-                entry->setModel(model);
+                entry->setModel(_model);
             }
         }
 
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
-                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        setBalance(_model->getBalance(), _model->getUnconfirmedBalance(), _model->getImmatureBalance(),
+                   _model->getWatchBalance(), _model->getWatchUnconfirmedBalance(), _model->getWatchImmatureBalance());
+        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
         // Coin Control
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
-        ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
+        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
+        ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         coinControlUpdateLabels();
 
         // fee section
@@ -826,9 +826,9 @@ void SendCoinsDialog::coinControlUpdateLabels()
     }
 }
 
-SendConfirmationDialog::SendConfirmationDialog(const QString &title, const QString &text, int secDelay,
+SendConfirmationDialog::SendConfirmationDialog(const QString &title, const QString &text, int _secDelay,
     QWidget *parent) :
-    QMessageBox(QMessageBox::Question, title, text, QMessageBox::Yes | QMessageBox::Cancel, parent), secDelay(secDelay)
+    QMessageBox(QMessageBox::Question, title, text, QMessageBox::Yes | QMessageBox::Cancel, parent), secDelay(_secDelay)
 {
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);

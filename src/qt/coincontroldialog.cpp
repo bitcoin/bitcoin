@@ -35,11 +35,11 @@ QList<CAmount> CoinControlDialog::payAmounts;
 CCoinControl* CoinControlDialog::coinControl = new CCoinControl();
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
-CoinControlDialog::CoinControlDialog(const PlatformStyle *platformStyle, QWidget *parent) :
+CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CoinControlDialog),
     model(0),
-    platformStyle(platformStyle)
+    platformStyle(_platformStyle)
 {
     ui->setupUi(this);
 
@@ -152,15 +152,15 @@ CoinControlDialog::~CoinControlDialog()
     delete ui;
 }
 
-void CoinControlDialog::setModel(WalletModel *model)
+void CoinControlDialog::setModel(WalletModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 
-    if(model && model->getOptionsModel() && model->getAddressTableModel())
+    if(_model && _model->getOptionsModel() && _model->getAddressTableModel())
     {
         updateView();
         updateLabelLocked();
-        CoinControlDialog::updateLabels(model, this);
+        CoinControlDialog::updateLabels(_model, this);
     }
 }
 

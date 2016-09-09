@@ -7,8 +7,8 @@
 #include "policy/policy.h"
 #include "wallet/wallet.h"
 
-WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &recipients) :
-    recipients(recipients),
+WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
+    recipients(_recipients),
     walletTransaction(0),
     keyChange(0),
     fee(0)
