@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet/wallet.h"
-#include "wallet/walletdb.h"
 
 #include "wallet/test/wallet_test_fixture.h"
 
@@ -17,7 +16,7 @@ extern CWallet* pwalletMain;
 BOOST_FIXTURE_TEST_SUITE(accounting_tests, WalletTestingSetup)
 
 static void
-GetResults(CWalletDB& walletdb, std::map<CAmount, CAccountingEntry>& results)
+GetResults(std::map<CAmount, CAccountingEntry>& results)
 {
     std::list<CAccountingEntry> aes;
 
@@ -32,7 +31,6 @@ GetResults(CWalletDB& walletdb, std::map<CAmount, CAccountingEntry>& results)
 
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
-    CWalletDB walletdb(pwalletMain->strWalletFile);
     std::vector<CWalletTx*> vpwtx;
     CWalletTx wtx;
     CAccountingEntry ae;
@@ -57,7 +55,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.strOtherAccount = "c";
     pwalletMain->AddAccountingEntry(ae);
 
-    GetResults(walletdb, results);
+    GetResults(results);
 
     BOOST_CHECK(pwalletMain->nOrderPosNext == 3);
     BOOST_CHECK(2 == results.size());
@@ -73,7 +71,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.nOrderPos = pwalletMain->IncOrderPosNext();
     pwalletMain->AddAccountingEntry(ae);
 
-    GetResults(walletdb, results);
+    GetResults(results);
 
     BOOST_CHECK(results.size() == 3);
     BOOST_CHECK(pwalletMain->nOrderPosNext == 4);
@@ -105,7 +103,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     vpwtx[2]->nTimeReceived = (unsigned int)1333333329;
     vpwtx[2]->nOrderPos = -1;
 
-    GetResults(walletdb, results);
+    GetResults(results);
 
     BOOST_CHECK(results.size() == 3);
     BOOST_CHECK(pwalletMain->nOrderPosNext == 6);
@@ -123,7 +121,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     ae.nOrderPos = -1;
     pwalletMain->AddAccountingEntry(ae);
 
-    GetResults(walletdb, results);
+    GetResults(results);
 
     BOOST_CHECK(results.size() == 4);
     BOOST_CHECK(pwalletMain->nOrderPosNext == 7);
