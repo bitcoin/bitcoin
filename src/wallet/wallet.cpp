@@ -649,6 +649,12 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     return true;
 }
 
+DBErrors CWallet::ReorderTransactions()
+{
+    CWalletDB walletdb(strWalletFile);
+    return walletdb.ReorderTransactions(this);
+}
+
 int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
 {
     AssertLockHeld(cs_wallet); // nOrderPosNext
