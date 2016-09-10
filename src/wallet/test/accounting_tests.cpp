@@ -22,7 +22,7 @@ GetResults(CWalletDB& walletdb, std::map<CAmount, CAccountingEntry>& results)
     std::list<CAccountingEntry> aes;
 
     results.clear();
-    BOOST_CHECK(walletdb.ReorderTransactions(pwalletMain) == DB_LOAD_OK);
+    BOOST_CHECK(pwalletMain->ReorderTransactions() == DB_LOAD_OK);
     pwalletMain->ListAccountCreditDebit("", aes);
     BOOST_FOREACH(CAccountingEntry& ae, aes)
     {
