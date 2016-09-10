@@ -5315,7 +5315,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->AddInventoryKnown(inv);
         requester.Received(inv, pfrom, msgSize);
 
-        LOCK2(cs_main, cs_orphancache);
+        LOCK(cs_main);
 
         bool fMissingInputs = false;
         CValidationState state;
@@ -5336,6 +5336,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
+            LOCK(cs_orphancache);
             set<NodeId> setMisbehaving;
             for (unsigned int i = 0; i < vWorkQueue.size(); i++)
             {
@@ -5391,6 +5392,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
         else if (fMissingInputs)
         {
+            LOCK(cs_orphancache);
             AddOrphanTx(tx, pfrom->GetId());
 
             // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
