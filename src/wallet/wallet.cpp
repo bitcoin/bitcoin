@@ -683,7 +683,7 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
     debit.nTime = nNow;
     debit.strOtherAccount = strTo;
     debit.strComment = strComment;
-    AddAccountingEntry(debit, walletdb);
+    AddAccountingEntry(debit, &walletdb);
 
     // Credit
     CAccountingEntry credit;
@@ -693,7 +693,7 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
     credit.nTime = nNow;
     credit.strOtherAccount = strFrom;
     credit.strComment = strComment;
-    AddAccountingEntry(credit, walletdb);
+    AddAccountingEntry(credit, &walletdb);
 
     if (!walletdb.TxnCommit())
         return false;
@@ -2512,9 +2512,16 @@ void CWallet::ListAccountCreditDebit(const std::string& strAccount, std::list<CA
     return walletdb.ListAccountCreditDebit(strAccount, entries);
 }
 
-bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB & pwalletdb)
+bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry)
 {
-    if (!pwalletdb.WriteAccountingEntry_Backend(acentry))
+    CWalletDB walletdb(strWalletFile);
+
+    return AddAccountingEntry(acentry, &walletdb);
+}
+
+bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB *pwalletdb)
+{
+    if (!pwalletdb->WriteAccountingEntry_Backend(acentry))
         return false;
 
     laccentries.push_back(acentry);
