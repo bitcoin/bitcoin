@@ -512,9 +512,10 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     if (params.size() >= 1) strMode = params[0].get_str();
     if (params.size() == 2) strFilter = params[1].get_str();
 
-    if (fHelp ||
-            (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank" && strMode != "addr"
-                && strMode != "protocol" && strMode != "full" && strMode != "lastpaid"))
+    if (fHelp || (
+                strMode != "activeseconds" && strMode != "addr" && strMode != "full" &&
+                strMode != "lastseen" && strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
+                strMode != "protocol" && strMode != "pubkey" && strMode != "rank" && strMode != "status"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -527,10 +528,11 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
                 "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
                 "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
-                "  full           - Print info in format 'status protocol pubkey IP lastseen activeseconds lastpaid'\n"
+                "  full           - Print info in format 'status protocol pubkey IP lastseen activeseconds lastpaidtime'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
-                "  lastpaid       - The last time a node was paid on the network\n"
+                "  lastpaidblock  - Print the last block height a node was paid on the network\n"
+                "  lastpaidtime   - Print the last time a node was paid on the network\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
                 "  pubkey         - Print public key associated with a masternode (can be additionally filtered,\n"
                 "                   partial match)\n"
@@ -538,6 +540,15 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR\n"
                 "                   (can be additionally filtered, partial match)\n"
                 );
+    }
+
+    if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
+        CBlockIndex* pindex;
+        {
+            LOCK(cs_main);
+            pindex = chainActive.Tip();
+        }
+        mnodeman.UpdateLastPaid(pindex);
     }
 
     UniValue obj(UniValue::VOBJ);
@@ -571,7 +582,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                                mn.addr.ToString() << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
-                               (int64_t)mn.GetLastPaid();
+                               (int64_t)mn.GetLastPaidTime();
                 std::string output = stringStream.str();
                 stringStream << " " << strVin;
                 if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
@@ -580,10 +591,12 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
             } else if (strMode == "lastseen") {
                 if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       (int64_t)mn.lastPing.sigTime));
-            } else if (strMode == "lastpaid"){
-                if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
-                    strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,      (int64_t)mn.GetLastPaid()));
+            } else if (strMode == "lastpaidblock") {
+                if (strFilter !="" && strVin.find(strFilter) == std::string::npos) continue;
+                obj.push_back(Pair(strVin, mn.GetLastPaidBlock()));
+            } else if (strMode == "lastpaidtime") {
+                if (strFilter !="" && strVin.find(strFilter) == std::string::npos) continue;
+                obj.push_back(Pair(strVin, mn.GetLastPaidTime()));
             } else if (strMode == "protocol") {
                 if(strFilter !="" && strFilter != strprintf("%d", mn.protocolVersion) &&
                     strVin.find(strFilter) == string::npos) continue;

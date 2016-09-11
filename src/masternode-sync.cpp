@@ -352,7 +352,7 @@ void CMasternodeSync::ProcessTick()
                 // check for data
                 // if mnpayments already has enough blocks and votes, switch to the next asset
                 // try to fetch data from at least two peers though
-                if(nRequestedMasternodeAttempt > 1 && mnpayments.IsEnoughData(nMnCount)) {
+                if(nRequestedMasternodeAttempt > 1 && mnpayments.IsEnoughData(mnpayments.GetStorageLimit())) {
                     LogPrintf("CMasternodeSync::Process -- nTick %d nRequestedMasternodeAssets %d -- found enough data\n", nTick, nRequestedMasternodeAssets);
                     SwitchToNextAsset();
                     return;
@@ -365,7 +365,7 @@ void CMasternodeSync::ProcessTick()
                 if(pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 nRequestedMasternodeAttempt++;
 
-                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
+                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, mnpayments.GetStorageLimit()); //sync payees
 
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need

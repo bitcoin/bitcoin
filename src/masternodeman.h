@@ -134,6 +134,7 @@ public:
     /// Perform complete check and only then update list and maps
     bool CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos);
 
+    void UpdateLastPaid(const CBlockIndex *pindex);
 };
 
 #endif

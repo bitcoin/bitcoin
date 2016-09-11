@@ -302,7 +302,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
             return;
         }
 
-        int nFirstBlock = pCurrentBlockIndex->nHeight - mnodeman.CountEnabled()*1.25;
+        int nFirstBlock = pCurrentBlockIndex->nHeight - GetStorageLimit();
         if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > pCurrentBlockIndex->nHeight+20) {
             LogPrint("mnpayments", "MNWINNER -- winner out of range: nFirstBlock=%d, nBlockHeight=%d, nHeight=%d\n", nFirstBlock, winner.nBlockHeight, pCurrentBlockIndex->nHeight);
             return;
@@ -693,8 +693,8 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
 
     if(!pCurrentBlockIndex) return;
 
-    int nCount = (mnodeman.CountEnabled()*1.25);
-    if(nCountNeeded > nCount) nCountNeeded = nCount;
+    int nLimit = GetStorageLimit();
+    if(nCountNeeded > nLimit) nCountNeeded = nLimit;
 
     int nInvCount = 0;
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
@@ -769,6 +769,11 @@ bool CMasternodePayments::IsEnoughData(int nMnCount) {
     return false;
 }
 
+int CMasternodePayments::GetStorageLimit()
+{
+    return std::max(int(mnodeman.size() * nStorageCoeff), nMinBlocksToStore);
+}
+
 void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     pCurrentBlockIndex = pindex;
@@ -777,4 +782,6 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex)
     if (!fLiteMode && masternodeSync.IsMasternodeListSynced()) {
         ProcessBlock(pindex->nHeight + 10);
     }
+    // normal wallet does not need to update this every block, doing update on rpc call should be enough
+    if(fMasterNode) mnodeman.UpdateLastPaid(pindex);
 }

@@ -272,6 +272,7 @@ public:
     }
 
     bool IsEnoughData(int nMnCount);
+    int GetStorageLimit();
 
     ADD_SERIALIZE_METHODS;
 
