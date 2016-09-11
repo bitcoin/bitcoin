@@ -50,18 +50,6 @@ private:
     // How many times we failed
     int nCountFailures;
 
-    // Sum of all data counts
-    int nSumMasternodeList;
-    int nSumMasternodeWinner;
-    int nSumBudgetItemProp;
-    int nSumBudgetItemFin;
-
-    // Number of peers that reported data counts
-    int nCountMasternodeList;
-    int nCountMasternodeWinner;
-    int nCountBudgetItemProp;
-    int nCountBudgetItemFin;
-
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
@@ -69,14 +57,10 @@ private:
     void ClearFulfilledRequest();
 
 public:
-    std::map<uint256, int> mapSeenSyncMNB;
-    std::map<uint256, int> mapSeenSyncMNW;
-    std::map<uint256, int> mapSeenSyncBudget;
-
     CMasternodeSync() { Reset(); }
 
-    void AddedMasternodeList(uint256 hash);
-    void AddedMasternodeWinner(uint256 hash);
+    void AddedMasternodeList() { nTimeLastMasternodeList = GetTime(); }
+    void AddedMasternodeWinner() { nTimeLastMasternodeWinner = GetTime(); }
     void AddedBudgetItem(uint256 hash);
 
     bool IsFailed() { return nRequestedMasternodeAssets == MASTERNODE_SYNC_FAILED; }

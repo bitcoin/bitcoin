@@ -114,7 +114,6 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
             map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
             while(it3 != mapSeenMasternodeBroadcast.end()){
                 if((*it3).second.vin == (*it).vin){
-                    masternodeSync.mapSeenSyncMNB.erase((*it3).first);
                     mapSeenMasternodeBroadcast.erase(it3++);
                 } else {
                     ++it3;
@@ -172,7 +171,6 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
     while(it3 != mapSeenMasternodeBroadcast.end()){
         if((*it3).second.lastPing.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
             LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing expired Masternode broadcast %s\n", (*it3).second.GetHash().ToString());
-            masternodeSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
             mapSeenMasternodeBroadcast.erase(it3++);
         } else {
             ++it3;
@@ -729,7 +727,7 @@ int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
 void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
     mapSeenMasternodePing.insert(make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
-    masternodeSync.AddedMasternodeList(mnb.GetHash());
+    masternodeSync.AddedMasternodeList();
 
     LogPrintf("CMasternodeMan::UpdateMasternodeList() - addr: %s\n    vin: %s\n", mnb.addr.ToString(), mnb.vin.ToString());
 
@@ -748,7 +746,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
 
     if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
-        masternodeSync.AddedMasternodeList(mnb.GetHash());
+        masternodeSync.AddedMasternodeList();
         return true;
     }
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
@@ -763,7 +761,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     // make sure it's still unspent
     //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
     if(mnb.CheckInputsAndAdd(nDos)) {
-        masternodeSync.AddedMasternodeList(mnb.GetHash());
+        masternodeSync.AddedMasternodeList();
     } else {
         LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Rejected Masternode entry %s\n", mnb.addr.ToString());
         return false;

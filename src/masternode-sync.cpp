@@ -55,39 +55,6 @@ void CMasternodeSync::Reset()
     nTimeLastBudgetItem = GetTime();
     nTimeLastFailure = 0;
     nCountFailures = 0;
-    nSumMasternodeList = 0;
-    nSumMasternodeWinner = 0;
-    nSumBudgetItemProp = 0;
-    nSumBudgetItemFin = 0;
-    nCountMasternodeList = 0;
-    nCountMasternodeWinner = 0;
-    nCountBudgetItemProp = 0;
-    nCountBudgetItemFin = 0;
-    mapSeenSyncMNB.clear();
-    mapSeenSyncMNW.clear();
-    mapSeenSyncBudget.clear();
-}
-
-void CMasternodeSync::AddedMasternodeList(uint256 hash)
-{
-    if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
-        nTimeLastMasternodeList = GetTime();
-        mapSeenSyncMNB[hash]++;
-    } else {
-        nTimeLastMasternodeList = GetTime();
-        mapSeenSyncMNB.insert(std::make_pair(hash, 1));
-    }
-}
-
-void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
-{
-    if(mnpayments.mapMasternodePayeeVotes.count(hash)) {
-        nTimeLastMasternodeWinner = GetTime();
-        mapSeenSyncMNW[hash]++;
-    } else {
-        nTimeLastMasternodeWinner = GetTime();
-        mapSeenSyncMNW.insert(std::make_pair(hash, 1));
-    }
 }
 
 std::string CMasternodeSync::GetAssetName()
@@ -157,38 +124,15 @@ std::string CMasternodeSync::GetSyncStatus()
 void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
-        int nItemID;
-        int nCount;
-        vRecv >> nItemID >> nCount;
 
         //do not care about stats if sync process finished or failed
         if(IsSynced() || IsFailed()) return;
 
-        switch(nItemID)
-        {
-            case(MASTERNODE_SYNC_LIST):
-                if(nItemID != nRequestedMasternodeAssets) return;
-                nSumMasternodeList += nCount;
-                nCountMasternodeList++;
-                break;
-            case(MASTERNODE_SYNC_MNW):
-                if(nItemID != nRequestedMasternodeAssets) return;
-                nSumMasternodeWinner += nCount;
-                nCountMasternodeWinner++;
-                break;
-            case(MASTERNODE_SYNC_GOVOBJ):
-                if(nRequestedMasternodeAssets != MASTERNODE_SYNC_GOVERNANCE) return;
-                nSumBudgetItemProp += nCount;
-                nCountBudgetItemProp++;
-                break;
-            case(MASTERNODE_SYNC_GOVERNANCE_FIN):
-                if(nRequestedMasternodeAssets != MASTERNODE_SYNC_GOVERNANCE) return;
-                nSumBudgetItemFin += nCount;
-                nCountBudgetItemFin++;
-                break;
-        }
+        int nItemID;
+        int nCount;
+        vRecv >> nItemID >> nCount;
 
-        LogPrintf("CMasternodeSync::ProcessMessage -- SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d\n", nItemID, nCount);
+        LogPrintf("CMasternodeSync::ProcessMessage -- SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, pfrom->id);
     }
 }
 
