@@ -241,15 +241,12 @@ bool CWallet::LoadWatchOnly(const CScript &dest)
     return CCryptoKeyStore::AddWatchOnly(dest);
 }
 
-bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly)
+bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnly)
 {
     SecureString strWalletPassphraseFinal;
 
-    if (!IsLocked())
-    {
-        fWalletUnlockAnonymizeOnly = anonymizeOnly;
+    if (!IsLocked()) // was already fully unlocked, not only for mixing
         return true;
-    }
 
     // Verify KeePassIntegration
     if (strWalletPassphrase == "keepass" && GetBoolArg("-keepass", false)) {
@@ -274,9 +271,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly
                 return false;
             if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
                 continue; // try another master key
-            if (CCryptoKeyStore::Unlock(vMasterKey))
-            {
-                fWalletUnlockAnonymizeOnly = anonymizeOnly;
+            if (CCryptoKeyStore::Unlock(vMasterKey, fForMixingOnly)) {
                 if(nWalletBackups == -2) {
                     TopUpKeyPool();
                     LogPrintf("Keypool replenished, re-initializing automatic backups.\n");
@@ -291,7 +286,7 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly
 
 bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
-    bool fWasLocked = IsLocked();
+    bool fWasLocked = IsLocked(true);
     bool bUseKeePass = false;
 
     SecureString strOldWalletPassphraseFinal;
@@ -3488,7 +3483,7 @@ bool CWallet::NewKeyPool()
         fEnablePrivateSend = false;
         nKeysLeftSinceAutoBackup = 0;
 
-        if (IsLocked())
+        if (IsLocked(true))
             return false;
 
         int64_t nKeys = max(GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t)0);
@@ -3508,7 +3503,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     {
         LOCK(cs_wallet);
 
-        if (IsLocked())
+        if (IsLocked(true))
             return false;
 
         CWalletDB walletdb(strWalletFile);
@@ -3544,7 +3539,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
     {
         LOCK(cs_wallet);
 
-        if (!IsLocked())
+        if (!IsLocked(true))
             TopUpKeyPool();
 
         // Get the oldest key
@@ -3595,7 +3590,7 @@ bool CWallet::GetKeyFromPool(CPubKey& result)
         ReserveKeyFromKeyPool(nIndex, keypool);
         if (nIndex == -1)
         {
-            if (IsLocked()) return false;
+            if (IsLocked(true)) return false;
             result = GenerateNewKey();
             return true;
         }

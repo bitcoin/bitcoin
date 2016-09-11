@@ -1292,7 +1292,7 @@ void CDarksendPool::CompletedTransaction(bool fError, int nErrorID)
 bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnablePrivateSend || fMasterNode || !pCurrentBlockIndex) return false;
-    if(!pwalletMain || pwalletMain->IsLocked()) return false;
+    if(!pwalletMain || pwalletMain->IsLocked(true)) return false;
     if(nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
 
     switch(nWalletBackups) {
@@ -1371,7 +1371,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    if(!fDryRun && pwalletMain->IsLocked()) {
+    if(!fDryRun && pwalletMain->IsLocked(true)) {
         strAutoDenomResult = _("Wallet is locked.");
         return false;
     }
@@ -1657,7 +1657,7 @@ bool CDarksendPool::SubmitDenominate()
 
 bool CDarksendPool::PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxIn>& vecTxInRet, std::vector<CTxOut>& vecTxOutRet)
 {
-    if (pwalletMain->IsLocked()) {
+    if (pwalletMain->IsLocked(true)) {
         strErrorRet = "Wallet locked, unable to create transaction!";
         return false;
     }

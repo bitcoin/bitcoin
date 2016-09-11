@@ -603,7 +603,6 @@ public:
         nLastResend = 0;
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
-        fWalletUnlockAnonymizeOnly = false;
         fAnonymizableTallyCached = false;
         fAnonymizableTallyCachedNonDenom = false;
         vecAnonymizableTallyCached.clear();
@@ -671,8 +670,6 @@ public:
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
-    bool fWalletUnlockAnonymizeOnly;
-
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
     void UnlockCoin(COutPoint& output);
@@ -715,7 +712,7 @@ public:
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
 
-    bool Unlock(const SecureString& strWalletPassphrase, bool anonimizeOnly = false);
+    bool Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnly = false);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 

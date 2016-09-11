@@ -33,8 +33,8 @@ UniValue privatesend(const UniValue& params, bool fHelp)
             "  status      - Print mixing status\n"
             + HelpRequiringPassphrase());
 
-    if(params[0].get_str() == "start"){
-        if (pwalletMain->IsLocked())
+    if(params[0].get_str() == "start") {
+        if (pwalletMain->IsLocked(true))
             throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
         if(fMasterNode)

@@ -950,7 +950,7 @@ bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& 
             // Update nKeysLeftSinceAutoBackup using current pool size
             wallet->nKeysLeftSinceAutoBackup = wallet->GetKeyPoolSize();
             LogPrintf("nKeysLeftSinceAutoBackup: %d\n", wallet->nKeysLeftSinceAutoBackup);
-            if(wallet->IsLocked()) {
+            if(wallet->IsLocked(true)) {
                 strBackupWarning = _("Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.");
                 LogPrintf("%s\n", strBackupWarning);
                 nWalletBackups = -2;

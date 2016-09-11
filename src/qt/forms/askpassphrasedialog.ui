@@ -109,7 +109,7 @@
       </widget>
      </item>
      <item row="4" column="0">
-      <widget class="QCheckBox" name="anonymizationCheckBox">
+      <widget class="QCheckBox" name="mixingOnlyCheckBox">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -117,7 +117,7 @@
         <string>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</string>
        </property>
        <property name="text">
-        <string>For anonymization only</string>
+        <string>Only for mixing via PrivateSend</string>
        </property>
        <property name="visible">
         <bool>false</bool>
