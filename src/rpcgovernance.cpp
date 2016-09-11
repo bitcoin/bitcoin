@@ -35,7 +35,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
+        (strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
          strCommand != "vote" && strCommand != "get" && strCommand != "getvotes" && strCommand != "list" && strCommand != "diff" && strCommand != "deserialize"))
         throw runtime_error(
                 "gobject \"command\"...\n"
@@ -47,6 +47,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 "  getvotes           - Get votes for a govobj hash\n"
                 "  list               - List all govobjs\n"
                 "  diff               - List differences since last diff\n"
+                "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n"
                 "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
                 "  vote-alias         - Vote on a governance object by masternode alias\n"
                 );
@@ -276,6 +277,100 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         resultsObj.push_back(Pair("dash.conf", statusObj));
+
+        UniValue returnObj(UniValue::VOBJ);
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("detail", resultsObj));
+
+        return returnObj;
+    }
+
+    if(strCommand == "vote-many")
+    {
+        if(params.size() != 4)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-many <governance-hash> [funding|valid|delete] [yes|no|abstain]'");
+
+        uint256 hash;
+        std::string strVote;
+
+        hash = ParseHashV(params[1], "Object hash");
+        std::string strVoteAction = params[2].get_str();
+        std::string strVoteOutcome = params[3].get_str();
+
+
+        vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteAction);
+        if(eVoteSignal == VOTE_SIGNAL_NONE) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "Invalid vote signal. Please using one of the following: "
+                               "(funding|valid|delete|endorsed) OR `custom sentinel code` ");
+        }
+
+        vote_outcome_enum_t eVoteOutcome = CGovernanceVoting::ConvertVoteOutcome(strVoteOutcome);
+        if(eVoteOutcome == VOTE_OUTCOME_NONE) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
+        }
+
+        int success = 0;
+        int failed = 0;
+
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
+
+        UniValue resultsObj(UniValue::VOBJ);
+
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+            std::string errorMessage;
+            std::vector<unsigned char> vchMasterNodeSignature;
+            std::string strMasterNodeSignMessage;
+
+            CPubKey pubKeyCollateralAddress;
+            CKey keyCollateralAddress;
+            CPubKey pubKeyMasternode;
+            CKey keyMasternode;
+
+            UniValue statusObj(UniValue::VOBJ);
+
+            if(!darkSendSigner.GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
+            }
+
+            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
+            if(pmn == NULL)
+            {
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
+            }
+
+            CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
+            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Failure to sign."));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
+            }
+
+            std::string strError = "";
+            if(governance.AddOrUpdateVote(vote, NULL, strError)) {
+                governance.AddSeenVote(vote.GetHash(), SEEN_OBJECT_IS_VALID);
+                vote.Relay();
+                success++;
+                statusObj.push_back(Pair("result", "success"));
+            } else {
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", strError.c_str()));
+            }
+
+            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+        }
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
