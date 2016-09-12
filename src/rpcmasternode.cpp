@@ -19,6 +19,8 @@
 #include <iomanip>
 #include <univalue.h>
 
+void EnsureWalletIsUnlocked();
+
 UniValue privatesend(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -221,25 +223,12 @@ UniValue masternode(const UniValue& params, bool fHelp)
         if(!fMasterNode)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "You must set masternode=1 in the configuration");
 
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
-        }
+        LOCK(pwalletMain->cs_wallet);
+        EnsureWalletIsUnlocked();
 
         if(activeMasternode.nState != ACTIVE_MASTERNODE_STARTED){
             activeMasternode.nState = ACTIVE_MASTERNODE_INITIAL; // TODO: consider better way
             activeMasternode.ManageState();
-            pwalletMain->Lock();
         }
 
         return activeMasternode.GetStatus();
@@ -253,20 +242,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         std::string alias = params[1].get_str();
 
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
 
-            if (params.size() == 3){
-                strWalletPass = params[2].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
+        LOCK(pwalletMain->cs_wallet);
+        EnsureWalletIsUnlocked();
 
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
-        }
 
         bool found = false;
 
@@ -297,27 +276,14 @@ UniValue masternode(const UniValue& params, bool fHelp)
             statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
         }
 
-        pwalletMain->Lock();
         return statusObj;
 
     }
 
     if (strCommand == "start-many" || strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
-        }
+        LOCK(pwalletMain->cs_wallet);
+        EnsureWalletIsUnlocked();
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") && !masternodeSync.IsMasternodeListSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
@@ -355,7 +321,6 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
-        pwalletMain->Lock();
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", successful, failed, successful + failed)));
@@ -653,20 +618,9 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
         std::string alias = params[1].get_str();
 
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
 
-            if (params.size() == 3){
-                strWalletPass = params[2].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
-        }
+        LOCK(pwalletMain->cs_wallet);
+        EnsureWalletIsUnlocked();
 
         bool found = false;
 
@@ -701,7 +655,6 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
             statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
         }
 
-        pwalletMain->Lock();
         return statusObj;
 
     }
@@ -712,20 +665,8 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         if (fImporting || fReindex)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
 
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-            }
-        }
+        LOCK(pwalletMain->cs_wallet);
+        EnsureWalletIsUnlocked();
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
@@ -758,7 +699,6 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
-        pwalletMain->Lock();
 
         CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
         ssVecMnb << vecMnb;
