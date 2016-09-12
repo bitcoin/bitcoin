@@ -432,43 +432,41 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
-    CAmount masternodePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
+    CAmount nMasternodePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
 
     //require at least MNPAYMENTS_SIGNATURES_REQUIRED signatures
 
-    BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
-        if(payee.nVotes >= nMaxSignatures && payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED)
+    BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
+        if (payee.nVotes >= nMaxSignatures) {
             nMaxSignatures = payee.nVotes;
+        }
+    }
 
     // if we don't have at least MNPAYMENTS_SIGNATURES_REQUIRED signatures on a payee, approve whichever is the longest chain
     if(nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
-    BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
-    {
-        bool found = false;
-        BOOST_FOREACH(CTxOut out, txNew.vout){
-            if(payee.scriptPubKey == out.scriptPubKey && masternodePayment == out.nValue){
-                found = true;
+    BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
+        if (payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+            BOOST_FOREACH(CTxOut txout, txNew.vout) {
+                if (payee.scriptPubKey == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
+                    LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
+                    return true;
+                }
             }
-        }
-
-        if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED){
-            if(found) return true;
 
             CTxDestination address1;
             ExtractDestination(payee.scriptPubKey, address1);
             CBitcoinAddress address2(address1);
 
-            if(strPayeesPossible == ""){
-                strPayeesPossible += address2.ToString();
+            if(strPayeesPossible == "") {
+                strPayeesPossible = address2.ToString();
             } else {
                 strPayeesPossible += "," + address2.ToString();
             }
         }
     }
 
-
-    LogPrintf("CMasternodePayments::IsTransactionValid - Missing required payment - %s %d\n", strPayeesPossible, masternodePayment);
+    LogPrintf("CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s', amount: %f DASH\n", strPayeesPossible, (float)nMasternodePayment/COIN);
     return false;
 }
 
