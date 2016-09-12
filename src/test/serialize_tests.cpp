@@ -10,10 +10,53 @@
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
-
 using namespace std;
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
+
+class CSerializeMethodsTestSingle
+{
+protected:
+    int intval;
+    bool boolval;
+    std::string stringval;
+    const char* charstrval;
+    CTransaction txval;
+public:
+    CSerializeMethodsTestSingle() = default;
+    CSerializeMethodsTestSingle(int intvalin, bool boolvalin, std::string stringvalin, const char* charstrvalin, CTransaction txvalin) : intval(intvalin), boolval(boolvalin), stringval(std::move(stringvalin)), charstrval(charstrvalin), txval(txvalin){}
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(intval);
+        READWRITE(boolval);
+        READWRITE(stringval);
+        READWRITE(FLATDATA(charstrval));
+        READWRITE(txval);
+    }
+
+    bool operator==(const CSerializeMethodsTestSingle& rhs)
+    {
+        return  intval == rhs.intval && \
+                boolval == rhs.boolval && \
+                stringval == rhs.stringval && \
+                strcmp(charstrval, rhs.charstrval) == 0 && \
+                txval == rhs.txval;
+    }
+};
+
+class CSerializeMethodsTestMany : public CSerializeMethodsTestSingle
+{
+public:
+    using CSerializeMethodsTestSingle::CSerializeMethodsTestSingle;
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITEMANY(intval, boolval, stringval, FLATDATA(charstrval), txval);
+    }
+};
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
@@ -295,6 +338,32 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     CSerializeData d;
     ss.GetAndClear(d);
     BOOST_CHECK_EQUAL(ss.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(class_methods)
+{
+    int intval(100);
+    bool boolval(true);
+    std::string stringval("testing");
+    const char* charstrval("testing charstr");
+    CMutableTransaction txval;
+    CSerializeMethodsTestSingle methodtest1(intval, boolval, stringval, charstrval, txval);
+    CSerializeMethodsTestMany methodtest2(intval, boolval, stringval, charstrval, txval);
+    CSerializeMethodsTestSingle methodtest3;
+    CSerializeMethodsTestMany methodtest4;
+    CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+    BOOST_CHECK(methodtest1 == methodtest2);
+    ss << methodtest1;
+    ss >> methodtest4;
+    ss << methodtest2;
+    ss >> methodtest3;
+    BOOST_CHECK(methodtest1 == methodtest2);
+    BOOST_CHECK(methodtest2 == methodtest3);
+    BOOST_CHECK(methodtest3 == methodtest4);
+
+    CDataStream ss2(SER_DISK, PROTOCOL_VERSION, intval, boolval, stringval, FLATDATA(charstrval), txval);
+    ss2 >> methodtest3;
+    BOOST_CHECK(methodtest3 == methodtest4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
