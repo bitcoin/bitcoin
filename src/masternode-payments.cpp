@@ -19,7 +19,7 @@
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;
 
-CCriticalSection cs_vecPayments;
+CCriticalSection cs_vecPayees;
 CCriticalSection cs_mapMasternodeBlocks;
 CCriticalSection cs_mapMasternodePayeeVotes;
 
@@ -420,14 +420,62 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
         }
     }
 
-    mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee, 1);
+    mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn);
 
     return true;
 }
 
+void CMasternodeBlockPayees::AddPayee(CMasternodePaymentWinner winner)
+{
+    LOCK(cs_vecPayees);
+
+    BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
+        if (payee.scriptPubKey == winner.payee) {
+            payee.nVotes++;
+            return;
+        }
+    }
+    CMasternodePayee payeeNew(winner.payee, 1);
+    vecPayees.push_back(payeeNew);
+}
+
+bool CMasternodeBlockPayees::GetPayee(CScript& payeeRet)
+{
+    LOCK(cs_vecPayees);
+
+    if(!vecPayees.size()) {
+        LogPrint("mnpayments", "CMasternodeBlockPayees::GetPayee -- ERROR: couldn't find any payee\n");
+        return false;
+    }
+
+    int nVotes = -1;
+    BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
+        if (payee.nVotes > nVotes) {
+            payeeRet = payee.scriptPubKey;
+            nVotes = payee.nVotes;
+        }
+    }
+
+    return (nVotes > -1);
+}
+
+bool CMasternodeBlockPayees::HasPayeeWithVotes(CScript payeeIn, int nVotesReq)
+{
+    LOCK(cs_vecPayees);
+
+    BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
+        if (payee.nVotes >= nVotesReq && payee.scriptPubKey == payeeIn) {
+            return true;
+        }
+    }
+
+    LogPrint("mnpayments", "CMasternodeBlockPayees::HasPayeeWithVotes -- ERROR: couldn't find any payee with %d+ votes\n", nVotesReq);
+    return false;
+}
+
 bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 {
-    LOCK(cs_vecPayments);
+    LOCK(cs_vecPayees);
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
@@ -472,24 +520,24 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 
 std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
 {
-    LOCK(cs_vecPayments);
+    LOCK(cs_vecPayees);
 
-    std::string ret = "Unknown";
+    std::string strRequiredPayments = "Unknown";
 
-    BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
+    BOOST_FOREACH(CMasternodePayee& payee, vecPayees)
     {
         CTxDestination address1;
         ExtractDestination(payee.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
 
-        if(ret != "Unknown"){
-            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+        if (strRequiredPayments != "Unknown") {
+            strRequiredPayments += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         } else {
-            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+            strRequiredPayments = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         }
     }
 
-    return ret;
+    return strRequiredPayments;
 }
 
 std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight)
