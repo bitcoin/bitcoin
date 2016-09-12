@@ -410,11 +410,16 @@ void CRequestManager::SendRequests()
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
       if (itemIter == mapBlkInfo.end()) break;
 
-      // Modify retry interval. If we're doing IBD we want to have a longer interval because those blocks take longer to download
-      if (IsChainNearlySyncd())
+      // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because 
+      // those blocks and txns can take much longer to download.
+      if (IsChainNearlySyncd() && !IsTrafficShapingEnabled()) {
           MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;
-      else
+          MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;
+      }
+      else {
           MIN_BLK_REQUEST_RETRY_INTERVAL = 30*1000*1000;
+          MIN_TX_REQUEST_RETRY_INTERVAL = 30*1000*1000;
+      }
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
@@ -444,27 +449,19 @@ void CRequestManager::SendRequests()
 
 	      if (next.node != NULL )
 		{
-                  // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
-                  //     The chain must be almost syncd and traffic shaping must not be turned on
-		  if (item.lastRequestTime && !IsTrafficShapingEnabled())
+                  // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request
+		  if (item.lastRequestTime)
 		    {
 		      LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		    }
 
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
-                  // Request a block if the following conditions are met:
-                  //     1) block has never been requested
-                  //     2) block was previously requested and the chain is nearly syncd and traffic shaping is not on.
-                  //     3) block was previously requested and we are doing IBD - we must always re-request during IBD even when traffic shaping is on.
-                  if (!item.lastRequestTime || 
-                     (item.lastRequestTime && !IsTrafficShapingEnabled() && IsChainNearlySyncd()) || 
-                     (item.lastRequestTime && !IsChainNearlySyncd()))
-                    {
-		      RequestBlock(next.node, obj);
-	              item.outstandingReqs++;
-		      item.lastRequestTime = now;
-                    }
+
+                  RequestBlock(next.node, obj);
+                  item.outstandingReqs++;
+                  item.lastRequestTime = now;
+
 		  cs_objDownloader.lock();
 
                   LOCK(cs_vNodes);
@@ -503,8 +500,8 @@ void CRequestManager::SendRequests()
           if (!item.rateLimited)
 	    {
                 // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
-                //     The chain must be almost syncd and traffic shaping must not be turned on
-		if (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled())
+                //     The chain must be almost syncd 
+		if (item.lastRequestTime && IsChainNearlySyncd())
 		{
 		  LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		  // Not reducing inFlight; it's still outstanding and will be cleaned up when item is removed from map
@@ -542,7 +539,7 @@ void CRequestManager::SendRequests()
                         cs_objDownloader.unlock();
                         LOCK(next.node->cs_vSend);
   		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd() && !IsTrafficShapingEnabled()))
+                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
                           {
                             next.node->mapAskFor.insert(std::make_pair(now, item.obj));
                             item.outstandingReqs++;
