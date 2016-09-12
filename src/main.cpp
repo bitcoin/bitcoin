@@ -4791,9 +4791,13 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
             {
                 bool send = false;
+                bool fRecent = false;
+                int nHeight = 0;
                 BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-                if (mi != mapBlockIndex.end())
-                {
+                if (mi != mapBlockIndex.end()) {
+                    nHeight = mi->second->nHeight;
+                    if (nHeight > chainActive.Height()-3)
+                        fRecent=true;
                     if (chainActive.Contains(mi->second)) {
                         send = true;
                     } else {
@@ -4829,12 +4833,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     CBlock block;
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
                         assert(!"cannot load block from disk");
+                    else
+                        if (fRecent)
+                            LogPrint("block", "recv getdata %s (%d). sending. peer=%d\n", inv.ToString(), nHeight, pfrom->id);
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, block);
                     else if (inv.type == MSG_WITNESS_BLOCK)
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
-                    else if (inv.type == MSG_FILTERED_BLOCK)
-                    {
+                    else if (inv.type == MSG_FILTERED_BLOCK) {
                         bool sendMerkleBlock = false;
                         CMerkleBlock merkleBlock;
                         {
@@ -5392,7 +5398,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         assert(ReadBlockFromDisk(block, it->second, chainparams.GetConsensus()));
 
         BlockTransactions resp(req);
-        for (size_t i = 0; i < req.indexes.size(); i++) {
+        size_t i;
+        for (i = 0; i < req.indexes.size(); i++) {
             if (req.indexes[i] >= block.vtx.size()) {
                 Misbehaving(pfrom->GetId(), 100);
                 LogPrintf("Peer %d sent us a getblocktxn with out-of-bounds tx indices", pfrom->id);
@@ -5400,6 +5407,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
             resp.txn[i] = block.vtx[req.indexes[i]];
         }
+        LogPrint("block", "recv getblocktxn %s (%d). send blocktxn (%d indexes) peer=%d\n", req.blockhash.ToString(), it->second->nHeight, i, pfrom->id);
         pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCKTXN, resp);
     }
 
