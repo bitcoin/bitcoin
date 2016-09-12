@@ -245,6 +245,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strMasterNodeSignMessage;
 
         UniValue statusObj(UniValue::VOBJ);
+        UniValue returnObj(UniValue::VOBJ);
 
         CMasternode* pmn = mnodeman.Find(activeMasternode.pubKeyMasternode);
         if(pmn == NULL)
@@ -253,7 +254,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
             resultsObj.push_back(Pair("dash.conf", statusObj));
-            return "Can't find masternode by pubkey";
+
+            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+            returnObj.push_back(Pair("detail", resultsObj));
+            return returnObj;
         }
 
         CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
@@ -262,7 +266,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
             resultsObj.push_back(Pair("dash.conf", statusObj));
-            return "Failure to sign.";
+            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+            returnObj.push_back(Pair("detail", resultsObj));
+            return returnObj;
         }
 
         std::string strError = "";
@@ -273,12 +279,12 @@ UniValue gobject(const UniValue& params, bool fHelp)
             statusObj.push_back(Pair("result", "success"));
         } else {
             failed++;
-            statusObj.push_back(Pair("result", strError.c_str()));
+            statusObj.push_back(Pair("result", "failed"));
+            statusObj.push_back(Pair("errorMessage", strError.c_str()));
         }
 
         resultsObj.push_back(Pair("dash.conf", statusObj));
 
-        UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
@@ -480,7 +486,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 statusObj.push_back(Pair("result", "success"));
             } else {
                 failed++;
-                statusObj.push_back(Pair("result", strError.c_str()));
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", strError.c_str()));
             }
 
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
