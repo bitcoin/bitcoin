@@ -574,6 +574,7 @@ public:
     std::string strSubVer, cleanSubVer;
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
+    unsigned int nBlockSize; // Used by ProcessNewBlock() for debug message.
     bool fOneShot;
     bool fClient;
     bool fInbound;

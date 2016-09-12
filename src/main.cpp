@@ -3667,7 +3667,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 }
 
 /** Store block on disk. If dbp is non-NULL, the file is known to already reside on disk */
-static bool AcceptBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock)
+static int AcceptBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock)
 {
     if (fNewBlock) *fNewBlock = false;
     AssertLockHeld(cs_main);
@@ -3710,10 +3710,11 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     }
 
     int nHeight = pindex->nHeight;
+    unsigned int nBlockSize = 0;
 
     // Write block to history file
     try {
-        unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
+        nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
         CDiskBlockPos blockPos;
         if (dbp != NULL)
             blockPos = *dbp;
@@ -3731,7 +3732,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     if (fCheckForPruning)
         FlushStateToDisk(state, FLUSH_STATE_NONE); // we just allocated more disk space for block files
 
-    return true;
+    return nBlockSize;
 }
 
 bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, CNode* pfrom, const CBlock* pblock, bool fForceProcessing, const CDiskBlockPos* dbp, CConnman* connman)
@@ -3744,14 +3745,22 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, C
         // Store to disk
         CBlockIndex *pindex = NULL;
         bool fNewBlock = false;
-        bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp, &fNewBlock);
+        unsigned int ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp, &fNewBlock);
+        unsigned int nSize = pfrom->nBlockSize;
+        if (!nSize) nSize = ret;
+        if (pfrom) {
+            if (pindex)
+                LogPrint("block", "%s block %s (%d) size=%d peer=%d\n", pfrom->nBlockSize ? "recv" : "made", pblock->GetHash().ToString(), pindex->nHeight, nSize, pfrom->id);
+            else
+                LogPrint("block", "%s block %s size=%d peer=%d\n", pfrom->nBlockSize ? "recv" : "made", pblock->GetHash().ToString(), nSize, pfrom->id);
+            if (ret > 1 && nSize && ret != nSize)
+                LogPrint("block", "block size received (%d) differs from serialized block size (%d) peer=%d\n", pfrom->nBlockSize, ret, pfrom->id);
+        }
         if (pfrom) {
             if (pindex) {
-                LogPrint("block", "recv block %s (%d) peer=%d\n", pblock->GetHash().ToString(), pindex->nHeight, pfrom->id);
                 mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
                 if (fNewBlock) pfrom->nLastBlockTime = GetTime();
-            } else
-                LogPrint("block", "recv block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->id);
+            }
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret)
@@ -5965,6 +5974,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;
+        pfrom->nBlockSize = vRecv.size(); // Used by ProcessNewBlock() debug
         vRecv >> block;
 
         CValidationState state;
@@ -5974,6 +5984,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // conditions in AcceptBlock().
         bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
         ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL, &connman);
+        pfrom->nBlockSize = 0; // Reset back to zero
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             assert (state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
