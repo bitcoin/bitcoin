@@ -57,6 +57,7 @@ std::string minerComment;
 CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
 CLeakyBucket sendShaper(DEFAULT_MAX_SEND_BURST, DEFAULT_AVE_SEND);
 boost::chrono::steady_clock CLeakyBucket::clock;
+bool IsTrafficShapingEnabled();
 
 // Variables for statistics tracking, must be before the "requester" singleton instantiation
 const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
@@ -291,14 +292,11 @@ void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
       // TODO:  Start headers-only mining now
 
       SendExpeditedBlock(thinBlock,hops+1, pfrom); // I should push the vRecv rather than reserialize
-      pfrom->nSizeThinBlock = nSizeThinBlock;
-      LOCK(cs_main);
-      thinBlock.process(pfrom);
+      thinBlock.process(pfrom, nSizeThinBlock, NetMsgType::XPEDITEDBLK);
     }
   else
     {
       LogPrint("thin", "Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType, pfrom->addrName.c_str(),pfrom->id, hops);
-
     }
 }
 
@@ -875,6 +873,20 @@ UniValue setblockversion(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+bool IsTrafficShapingEnabled()
+{
+    int64_t max, avg;
+
+    sendShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX)
+        return true;
+
+    receiveShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX)
+        return true;
+
+    return false;
+}
 
 UniValue gettrafficshaping(const UniValue& params, bool fHelp)
 {
@@ -900,16 +912,16 @@ UniValue gettrafficshaping(const UniValue& params, bool fHelp)
             HelpExampleCli("gettrafficshaping", "") + HelpExampleRpc("gettrafficshaping", ""));
 
     UniValue ret(UniValue::VOBJ);
-    int64_t max, ave;
-    sendShaper.get(&max, &ave);
-    if (ave != LONG_MAX) {
+    int64_t max, avg;
+    sendShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX) {
         ret.push_back(Pair("sendBurst", max / 1024));
-        ret.push_back(Pair("sendAve", ave / 1024));
+        ret.push_back(Pair("sendAve", avg / 1024));
     }
-    receiveShaper.get(&max, &ave);
-    if (ave != LONG_MAX) {
+    receiveShaper.get(&max, &avg);
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX) {
         ret.push_back(Pair("recvBurst", max / 1024));
-        ret.push_back(Pair("recvAve", ave / 1024));
+        ret.push_back(Pair("recvAve", avg / 1024));
     }
     return ret;
 }
@@ -1409,7 +1421,7 @@ void ConnectToThinBlockNodes()
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
 {
-  if (IsThinBlocksEnabled() && pfrom->ThinBlockCapable() && (pfrom->nVersion >= EXPEDITED_VERSION))
+  if (pfrom->nVersion >= EXPEDITED_VERSION)
     {
       BOOST_FOREACH(string& strAddr, mapMultiArgs["-expeditedblock"]) 
         {
@@ -1431,12 +1443,26 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
           else
               strListeningPeerIP = strPeerIP.substr(0, pos2) + ':' + boost::lexical_cast<std::string>(pfrom->addrFromPort);
 
-	  if(strAddr == strListeningPeerIP) {
-              LogPrint("blk", "Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
-              pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t) EXPEDITED_BLOCKS));
-              xpeditedBlkUp.push_back(pfrom);
-              return true;
-          }
+	  if(strAddr == strListeningPeerIP)
+            {
+              if (!IsThinBlocksEnabled())
+                {
+                  LogPrintf("You do not have Thinblocks enabled.  You can not request expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+                  return false;
+                }
+              else if (!pfrom->ThinBlockCapable())
+                {
+                  LogPrintf("Thinblocks is not enabled on remote peer.  You can not request expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+                  return false;
+                }
+              else
+                {
+                  LogPrintf("Requesting expedited blocks from peer %s (%d).\n", strListeningPeerIP, pfrom->id);
+                  pfrom->PushMessage(NetMsgType::XPEDITEDREQUEST, ((uint64_t) EXPEDITED_BLOCKS));
+                  xpeditedBlkUp.push_back(pfrom);
+                  return true;
+                }
+            }
         }
     }
   return false;

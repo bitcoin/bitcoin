@@ -22,9 +22,17 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
 #include <inttypes.h>
 
+
+
 using namespace std;
+
+extern CCriticalSection cs_orphancache; // from main.h
 
 // Request management
 CRequestManager requester;
@@ -65,7 +73,7 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
       if (node)
         {
 	  i->clear();
-          LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n",item.obj.ToString(), node->GetId(), node->GetRefCount());
+          LogPrint("req", "ReqMgr: %s removed ref to %d count %d.\n", item.obj.ToString(), node->GetId(), node->GetRefCount());
           node->Release();     
 	}
     }
@@ -73,20 +81,20 @@ void CRequestManager::cleanup(OdMap::iterator& itemIt)
 
   if (item.obj.type == MSG_TX)
     {
-    if (sendIter == itemIt) ++sendIter;
-    mapTxnInfo.erase(itemIt);
+      if (sendIter == itemIt) ++sendIter;
+      mapTxnInfo.erase(itemIt);
     }
   else
     {
-    if (sendBlkIter == itemIt) ++sendBlkIter;    
-    mapBlkInfo.erase(itemIt);
+      if (sendBlkIter == itemIt) ++sendBlkIter;    
+      mapBlkInfo.erase(itemIt);
     }
 }
 
 // Get this object from somewhere, asynchronously.
 void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 {
-  //LogPrint("req", "ReqMgr: Ask for %s.\n",obj.ToString().c_str());
+  //LogPrint("req", "ReqMgr: Ask for %s.\n", obj.ToString().c_str());
 
   LOCK(cs_objDownloader);
   if (obj.type == MSG_TX)
@@ -102,15 +110,11 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 	  pendingTxns+=1;
 	  // all other fields are zeroed on creation
 	}
-      else  // existing
-	{
-	}
-
       data.priority = max(priority,data.priority);
       // Got the data, now add the node as a source
       data.AddSource(from);
     }
-  else if ((obj.type == MSG_BLOCK)||(obj.type == MSG_THINBLOCK)||(obj.type == MSG_XTHINBLOCK))
+  else if ((obj.type == MSG_BLOCK) || (obj.type == MSG_THINBLOCK) || (obj.type == MSG_XTHINBLOCK))
     {
       uint256 temp = obj.hash;
       OdMap::value_type v(temp,CUnknownObj());
@@ -123,12 +127,11 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 	}
       data.priority = max(priority,data.priority);
       data.AddSource(from);
-      LogPrint("blk", "%s available at %s\n",obj.ToString().c_str(),from->addrName.c_str());
+      LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
     }
   else
     {
       assert(!"TBD");
-      // from->firstBlock += 1;
     }
 
 }
@@ -153,17 +156,17 @@ void CRequestManager::Received(const CInv& obj, CNode* from, int bytes)
     {
       OdMap::iterator item = mapTxnInfo.find(obj.hash);
       if (item ==  mapTxnInfo.end()) return;  // item has already been removed
-      LogPrint("req", "ReqMgr: TX received for %s.\n",item->second.obj.ToString().c_str());
+      LogPrint("req", "ReqMgr: TX received for %s.\n", item->second.obj.ToString().c_str());
       from->txReqLatency << (now - item->second.lastRequestTime);  // keep track of response latency of this node
       // will be decremented in the item cleanup: if (inFlight) inFlight--;
       cleanup(item); // remove the item
       receivedTxns += 1;
     }
-  else if ((obj.type == MSG_BLOCK)||(obj.type == MSG_THINBLOCK)||(obj.type == MSG_XTHINBLOCK))
+  else if ((obj.type == MSG_BLOCK) || (obj.type == MSG_THINBLOCK) || (obj.type == MSG_XTHINBLOCK))
     {
       OdMap::iterator item = mapBlkInfo.find(obj.hash);
       if (item ==  mapBlkInfo.end()) return;  // item has already been removed
-      LogPrint("blk", "%s removed from request queue (received from %s (%d)).\n",item->second.obj.ToString().c_str(),from->addrName.c_str(), from->id);
+      LogPrint("blk", "%s removed from request queue (received from %s (%d)).\n", item->second.obj.ToString().c_str(),from->addrName.c_str(), from->id);
       //from->blkReqLatency << (now - item->second.lastRequestTime);  // keep track of response latency of this node
       cleanup(item); // remove the item
       //receivedTxns += 1;
@@ -180,7 +183,7 @@ void CRequestManager::AlreadyReceived(const CInv& obj)
     item = mapBlkInfo.find(obj.hash);
     if (item ==  mapBlkInfo.end()) return;  // Not in any map
     }
-  LogPrint("req", "ReqMgr: Already received %s.  Removing request.\n",item->second.obj.ToString().c_str());
+  LogPrint("req", "ReqMgr: Already received %s.  Removing request.\n", item->second.obj.ToString().c_str());
   // will be decremented in the item cleanup: if (inFlight) inFlight--;
   cleanup(item); // remove the item
 }
@@ -195,26 +198,23 @@ void CRequestManager::Rejected(const CInv& obj, CNode* from, unsigned char reaso
       item = mapTxnInfo.find(obj.hash);
       if (item ==  mapTxnInfo.end()) 
 	{
-	  LogPrint("req", "ReqMgr: Unknown object rejected %s.\n",obj.ToString().c_str());
-	  return;  // item has already been removed
+	  LogPrint("req", "ReqMgr: Item already removed. Unknown txn rejected %s\n", obj.ToString().c_str());
+	  return;
 	}
       if (inFlight) inFlight--;
       if (item->second.outstandingReqs) item->second.outstandingReqs--;
 
       rejectedTxns += 1;
     }
-  else if ((obj.type == MSG_BLOCK)||(obj.type == MSG_THINBLOCK)||(obj.type == MSG_XTHINBLOCK))
+  else if ((obj.type == MSG_BLOCK) || (obj.type == MSG_THINBLOCK) || (obj.type == MSG_XTHINBLOCK))
     {
       item = mapBlkInfo.find(obj.hash);
       if (item ==  mapBlkInfo.end()) 
 	{
-	  LogPrint("req", "ReqMgr: Unknown object rejected %s.\n",obj.ToString().c_str());
-	  return;  // item has already been removed
+	  LogPrint("req", "ReqMgr: Item already removed. Unknown block rejected %s\n", obj.ToString().c_str());
+	  return;
 	}
-
     }
-
-  LogPrint("req", "ReqMgr: Request rejected for %s.\n",item->second.obj.ToString().c_str());
 
   if (reason == REJECT_MALFORMED)
     {
@@ -266,18 +266,18 @@ CNodeRequestData::CNodeRequestData(CNode* n)
 
   // Calculate how much we like this node:
 
-  if (node->ThinBlockCapable())  // Prefer thin block nodes over low latency ones
+  if (node->ThinBlockCapable() && IsChainNearlySyncd())  // Prefer thin block nodes over low latency ones when the chain is syncd
     {
       desirability += MaxLatency;
     }
-  
+
   // The bigger the latency (in microseconds), the less we want to request from this node
   int latency = node->txReqLatency.GetTotal().get_int();
-  if (latency==0) // data has never been requested from this node.  Should we encourage investigation into whether this node is fast, or stick with nodes that we do have data on?
+  if (latency == 0) // data has never been requested from this node.  Should we encourage investigation into whether this node is fast, or stick with nodes that we do have data on?
     {
       latency = 80*1000; // assign it a reasonably average latency (80ms) for sorting purposes
     }
-  if (latency>MaxLatency) latency=MaxLatency;
+  if (latency > MaxLatency) latency = MaxLatency;
   desirability -= latency;
 }
 
@@ -285,7 +285,7 @@ void CUnknownObj::AddSource(CNode* from)
 {
   if (std::find_if(availableFrom.begin(), availableFrom.end(), IsCNodeRequestDataThisNode(from)) == availableFrom.end())  // node is not in the request list
     {
-      LogPrint("req", "%s added ref to node %d.  Current count %d.\n",obj.ToString(), from->GetId(), from->GetRefCount());
+      LogPrint("req", "%s added ref to node %d.  Current count %d.\n", obj.ToString(), from->GetId(), from->GetRefCount());
       {
         LOCK(cs_vNodes);  // This lock is needed to ensure that AddRef happens atomically
         from->AddRef();
@@ -315,13 +315,13 @@ void RequestBlock(CNode* pfrom, CInv obj)
   // time the block arrives, the header chain leading up to it is already validated. Not
   // doing this will result in the received block being rejected as an orphan in case it is
   // not a direct successor.
+  if (IsChainNearlySyncd()) // only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
   {
     LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
   }
-  // Don't ask for the latest block, if our most recent block is really old (i.e. still doing initial sync?)
-  if (CanDirectFetch(chainParams.GetConsensus())) // Consider necessity given overall block pacer: && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) 
-    {
+
+  {
       // BUIP010 Xtreme Thinblocks: begin section
       CInv inv2(obj);
       CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -336,8 +336,11 @@ void RequestBlock(CNode* pfrom, CInv obj)
 		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
 		  inv2.type = MSG_XTHINBLOCK;
 		  std::vector<uint256> vOrphanHashes;
-		  for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-		    vOrphanHashes.push_back((*mi).first);
+                  {
+                    LOCK(cs_orphancache);
+                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                        vOrphanHashes.push_back((*mi).first);
+                  }
 		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
 		  ss << inv2;
 		  ss << filterMemPool;
@@ -350,17 +353,20 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	    {
 	      // Try to download a thinblock if possible otherwise just download a regular block
 	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) { // We can only send one thinblock per peer at a time
-		pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
-		inv2.type = MSG_XTHINBLOCK;
-		std::vector<uint256> vOrphanHashes;
-		for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
-		  vOrphanHashes.push_back((*mi).first);
-		BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
-		ss << inv2;
-		ss << filterMemPool;
-		pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-		LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
-	      }
+		  pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
+		  inv2.type = MSG_XTHINBLOCK;
+		  std::vector<uint256> vOrphanHashes;
+                  {
+                    LOCK(cs_orphancache);
+                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                        vOrphanHashes.push_back((*mi).first);
+                  }
+		  BuildSeededBloomFilter(filterMemPool, vOrphanHashes,inv2.hash);
+		  ss << inv2;
+		  ss << filterMemPool;
+		  pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
+		  LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	        }
 	      else 
 		{
 		  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
@@ -379,10 +385,10 @@ void RequestBlock(CNode* pfrom, CInv obj)
 	  vToFetch.push_back(inv2);
 	  pfrom->PushMessage(NetMsgType::GETDATA, vToFetch);
 	  MarkBlockAsInFlight(pfrom->GetId(), obj.hash, chainParams.GetConsensus());
-	  LogPrint("req", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+	  LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
 	}
       // BUIP010 Xtreme Thinblocks: end section
-    }
+  }
 }
 
 
@@ -394,67 +400,74 @@ void CRequestManager::SendRequests()
   cs_objDownloader.lock();
   if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
 
-  while ((sendBlkIter != mapBlkInfo.end())&&(blockPacer.try_leak(1)))
-    {
+  // Get Blocks
+  while (sendBlkIter != mapBlkInfo.end())
+   {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendBlkIter;
       CUnknownObj& item = itemIter->second;
 
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
+      if (itemIter == mapBlkInfo.end()) break;
 
-      //if (itemIter == mapBlkInfo.end()) break;  // double check
+      // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because 
+      // those blocks and txns can take much longer to download.
+      if (IsChainNearlySyncd() && !IsTrafficShapingEnabled()) {
+          MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;
+          MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;
+      }
+      else {
+          MIN_BLK_REQUEST_RETRY_INTERVAL = 30*1000*1000;
+          MIN_TX_REQUEST_RETRY_INTERVAL = 30*1000*1000;
+      }
 
       if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
 	{
           if (!item.availableFrom.empty())
 	    {
 	      CNodeRequestData next;
-              while ((!item.availableFrom.empty())&&(next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+              while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
                 {
   	        next = item.availableFrom.front();  // Grab the next location where we can find this object.
                 item.availableFrom.pop_front();
                 if (next.node != NULL)
                   {
-		    if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
+                    // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable.
+                    // We only check pingtime during IBD because we don't want to lock vNodes too often and when the chain is syncd, waiting
+                    // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can really slow down the process.
+                    //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking ping times we can include
+                    //   this filtering in all our requests for blocks and transactions.
+		    if (next.node->fDisconnect || (!IsChainNearlySyncd() && !IsNodePingAcceptable(next.node)))
 		      {
-                      LOCK(cs_vNodes);
-                      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-                      next.node->Release();
-                      next.node = NULL; // force the loop to get another node            
+                        LOCK(cs_vNodes);
+                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                        next.node->Release();
+                        next.node = NULL; // force the loop to get another node            
 		      }
 		  }
 	        }
 
 	      if (next.node != NULL )
 		{
-		  if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
+                  // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request
+		  if (item.lastRequestTime)
 		    {
-		      LogPrint("req", "Block request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
+		      LogPrint("req", "Block request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		    }
 
 		  CInv obj = item.obj;
 		  cs_objDownloader.unlock();
-                  if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
-                    {
-		      RequestBlock(next.node, obj);
-	              item.outstandingReqs++;
-		      item.lastRequestTime = now;
-                    }
+
+                  RequestBlock(next.node, obj);
+                  item.outstandingReqs++;
+                  item.lastRequestTime = now;
+
 		  cs_objDownloader.lock();
 
-                  if (0) // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
-		    {
-                      next.requestCount += 1;
-                      next.desirability /= 2;  // Make this node less desirable to re-request.
-                      item.availableFrom.push_back(next);  // Add the node back onto the end of the list
-		    }
-                  else
-		    {
-		      LOCK(cs_vNodes);
-		      LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-		      next.node->Release();
-		      next.node = NULL;
-		    }
+                  LOCK(cs_vNodes);
+                  LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                  next.node->Release();
+                  next.node = NULL;
 		}
               else
 		{
@@ -471,10 +484,9 @@ void CRequestManager::SendRequests()
 	}    
     }
   
- 
+  // Get Transactions
   if (sendIter == mapTxnInfo.end()) sendIter = mapTxnInfo.begin();
-  // while (((lastPass + MIN_REQUEST_RETRY_INTERVAL < now)||(inFlight < maxInFlight + droppedTxns()))&&(sendIter != mapTxnInfo.end()))
-  while ((sendIter != mapTxnInfo.end()) && (requestPacer.try_leak(1)))
+  while ((sendIter != mapTxnInfo.end()) && requestPacer.try_leak(1))
     {
       now = GetTimeMicros();
       OdMap::iterator itemIter = sendIter;
@@ -487,10 +499,12 @@ void CRequestManager::SendRequests()
 	{
           if (!item.rateLimited)
 	    {
-	      if (item.lastRequestTime && IsChainNearlySyncd())  // if this is positive, we've requested at least once
+                // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
+                //     The chain must be almost syncd 
+		if (item.lastRequestTime && IsChainNearlySyncd())
 		{
-		  LogPrint("req", "Request timeout for %s.  Retrying\n",item.obj.ToString().c_str());
-		  // Not reducing inFlight; its still outstanding; will be cleaned up when item is removed from map
+		  LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
+		  // Not reducing inFlight; it's still outstanding and will be cleaned up when item is removed from map
                   droppedTxns += 1;
 		}
 
@@ -502,7 +516,7 @@ void CRequestManager::SendRequests()
               else  // Ok request this item.
 	        {
 		  CNodeRequestData next;
-		  while ((!item.availableFrom.empty())&&(next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
+		  while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
                     {
 		    next = item.availableFrom.front();  // Grab the next location where we can find this object.
 		    item.availableFrom.pop_front();
@@ -511,7 +525,7 @@ void CRequestManager::SendRequests()
 			if (next.node->fDisconnect)  // Node was disconnected so we can't request from it
 			  {
 			    LOCK(cs_vNodes);
-			    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+			    LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
 			    next.node->Release();
 			    next.node = NULL; // force the loop to get another node            
 			  }
@@ -522,39 +536,61 @@ void CRequestManager::SendRequests()
 		    {
                     if (1)
                       {
-                      cs_objDownloader.unlock();
-                      LOCK(next.node->cs_vSend);
-  		      // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                      if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
-                        {
-                          next.node->mapAskFor.insert(std::make_pair(now, item.obj));
-                          item.outstandingReqs++;
-		          item.lastRequestTime = now;
-                        }
-                      cs_objDownloader.lock();
-		      }
-                    if (0)  // SAME NODE RETRY DISABLED: Won't help in a TCP connection anyway: 
+                        cs_objDownloader.unlock();
+                        LOCK(next.node->cs_vSend);
+  		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
+                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                          {
+                            next.node->mapAskFor.insert(std::make_pair(now, item.obj));
+                            item.outstandingReqs++;
+		            item.lastRequestTime = now;
+                          }
+                        cs_objDownloader.lock();
+                      }
                       {
-                        next.requestCount += 1;
-                        next.desirability /= 2;  // Make this node less desirable to re-request.
-                        item.availableFrom.push_back(next);  // Add the node back onto the end of the list
+                        LOCK(cs_vNodes);
+                        LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
+                        next.node->Release();
+                        next.node = NULL;
 		      }
-                    else
-		      {
-			LOCK(cs_vNodes);
-			LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n",item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
-			next.node->Release();
-			next.node = NULL;
-		      }
-  		    inFlight++;
-                    inFlightTxns << inFlight;
+                      inFlight++;
+                      inFlightTxns << inFlight;
 		    }
 		}
 	    }
 	}
 
     }
-  //lastPass = now;
 
   cs_objDownloader.unlock();
 }
+
+bool CRequestManager::IsNodePingAcceptable(CNode* pfrom)
+{
+    // Calculate average ping time of all nodes
+    uint16_t nValidNodes = 0;
+    std::vector<uint64_t> vPingTimes;
+    LOCK(cs_vNodes);
+    BOOST_FOREACH (CNode* pnode, vNodes) {
+        if (!pnode->fDisconnect && pnode->nPingUsecTime > 0) {
+            nValidNodes++;
+            vPingTimes.push_back(pnode->nPingUsecTime);
+        }
+    }
+    if (nValidNodes == 1) return true;
+
+    // Calculate Standard Deviation and Mean of Ping Time
+    using namespace boost::accumulators;
+    accumulator_set<double, stats<tag::variance> > acc;
+    acc = for_each(vPingTimes.begin(), vPingTimes.end(), acc);
+    double nMean = mean(acc);
+    double sDeviation = sqrt(variance(acc));
+
+    // If node ping time is greater than the average plus 2 times the standard deviation, or
+    // the pong has not been received, then do not request from this node.
+    if ((pfrom->nPingUsecTime > (int64_t)(nMean + (2 * sDeviation))) || (pfrom->nPingUsecTime == 0)) {
+        return false;
+    }
+    return true;
+}
+

@@ -123,6 +123,9 @@ UniValue expedited(const UniValue& params, bool fHelp);
 extern CLeakyBucket receiveShaper;
 extern CLeakyBucket sendShaper;
 
+// Test to determine if traffic shaping is enabled
+extern bool IsTrafficShapingEnabled();
+
 // BUIP010 Xtreme Thinblocks: begin
 
 // Xpress Validation: begin
