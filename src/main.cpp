@@ -5401,8 +5401,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         size_t i;
         for (i = 0; i < req.indexes.size(); i++) {
             if (req.indexes[i] >= block.vtx.size()) {
-                Misbehaving(pfrom->GetId(), 100);
                 LogPrintf("Peer %d sent us a getblocktxn with out-of-bounds tx indices", pfrom->id);
+                Misbehaving(pfrom->GetId(), 100);
                 return true;
             }
             resp.txn[i] = block.vtx[req.indexes[i]];
@@ -5543,9 +5543,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         if (stateDummy.IsInvalid(nDos) && nDos > 0)
                         {
                             // Punish peer that gave us an invalid orphan tx
+                            LogPrint("mempool2", "   invalid orphan tx %s\n", orphanHash.ToString());
                             Misbehaving(fromPeer, nDos);
                             setMisbehaving.insert(fromPeer);
-                            LogPrint("mempool2", "   invalid orphan tx %s\n", orphanHash.ToString());
                         }
                         // Has inputs but not accepted to mempool
                         // Probably non-standard or insufficient fee/priority
@@ -5657,9 +5657,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (!AcceptBlockHeader(cmpctblock.header, state, chainparams, &pindex)) {
             int nDoS;
             if (state.IsInvalid(nDoS)) {
+                LogPrintf("recv cmpctblock. INVALID HEADER peer=%d\n", pfrom->id);
                 if (nDoS > 0)
                     Misbehaving(pfrom->GetId(), nDoS);
-                LogPrintf("recv cmpctblock. INVALID HEADER peer=%d\n", pfrom->id);
                 return true;
             }
         }
@@ -5714,8 +5714,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 ReadStatus status = partialBlock.InitData(cmpctblock);
                 if (status == READ_STATUS_INVALID) {
                     MarkBlockAsReceived(pindex->GetBlockHash()); // Reset in-flight state in case of whitelist
-                    Misbehaving(pfrom->GetId(), 100);
                     LogPrintf("Peer %d sent us invalid compact block\n", pfrom->id);
+                    Misbehaving(pfrom->GetId(), 100);
                     return true;
                 } else if (status == READ_STATUS_FAILED) {
                     // Duplicate txindexes, the block is now in-flight, so just request it
@@ -5787,8 +5787,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         ReadStatus status = partialBlock.FillBlock(block, resp.txn);
         if (status == READ_STATUS_INVALID) {
             MarkBlockAsReceived(resp.blockhash); // Reset in-flight state in case of whitelist
-            Misbehaving(pfrom->GetId(), 100);
             LogPrint("block", "recv blocktxn. INVALID. peer=%d\n", pfrom->id);
+            Misbehaving(pfrom->GetId(), 100);
             return true;
         } else if (status == READ_STATUS_FAILED) {
             // Might have collided, fall back to getdata now :(
