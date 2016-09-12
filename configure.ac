@@ -413,7 +413,7 @@ if test x"$use_endomorphism" = x"yes"; then
   AC_DEFINE(USE_ENDOMORPHISM, 1, [Define this symbol to use endomorphism optimization])
 fi
 
-if test x"$use_ecmult_static_precomputation" = x"yes"; then
+if test x"$set_precomp" = x"yes"; then
   AC_DEFINE(USE_ECMULT_STATIC_PRECOMPUTATION, 1, [Define this symbol to use a statically generated ecmult table])
 fi
 
@@ -474,7 +474,7 @@ AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
-AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$use_ecmult_static_precomputation" = x"yes"])
+AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$set_precomp" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORR], [test x"$enable_module_schnorr" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
