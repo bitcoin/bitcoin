@@ -317,7 +317,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
   // not a direct successor.
   if (IsChainNearlySyncd()) // only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
   {
-    LogPrint("thin", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
+    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
   }
 
