@@ -19,15 +19,14 @@
 #include "init.h"
 #include "governance.h"
 
-using namespace std;
-
-#define TRIGGER_UNKNOWN             -1
-#define TRIGGER_SUPERBLOCK          1000
 
 class CSuperblock;
 class CGovernanceTrigger;
 class CGovernanceTriggerManager;
 class CSuperblockManager;
+
+static const int TRIGGER_UNKNOWN            = -1;
+static const int TRIGGER_SUPERBLOCK         = 1000;
 
 typedef boost::shared_ptr<CSuperblock> CSuperblock_sptr;
 
@@ -44,35 +43,24 @@ std::vector<std::string> SplitBy(std::string strCommand, std::string strDelimit)
 *   - After triggers are activated and executed, they can be removed
 */
 
-CAmount ParsePaymentAmount(const std::string& strAmount);
-
 class CGovernanceTriggerManager
 {
     friend class CSuperblockManager;
     friend class CGovernanceManager;
 
-public: // Typedefs
+private:
     typedef std::map<uint256, CSuperblock_sptr> trigger_m_t;
-
     typedef trigger_m_t::iterator trigger_m_it;
-
     typedef trigger_m_t::const_iterator trigger_m_cit;
 
-private:
     trigger_m_t mapTrigger;
 
-public:
-    CGovernanceTriggerManager()
-        : mapTrigger()
-    {}
-
-private:
     std::vector<CSuperblock_sptr> GetActiveTriggers();
-
     bool AddNewTrigger(uint256 nHash);
-
     void CleanAndRemove();
 
+public:
+    CGovernanceTriggerManager() : mapTrigger() {}
 };
 
 /**
@@ -84,7 +72,7 @@ private:
 class CSuperblockManager
 {
 private:
-    static bool GetBestSuperblock(CSuperblock_sptr& pBlock, int nBlockHeight);
+    static bool GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
 public:
 
@@ -103,26 +91,16 @@ public:
 
 class CGovernancePayment
 {
+private:
+    bool fValid;
+
 public:
     CScript script;
     CAmount nAmount;
-    bool fValid; 
 
     CGovernancePayment()
     {
         SetNull();
-    }
-
-    void SetNull()
-    {
-        script = CScript();
-        nAmount = 0;
-        fValid = false;
-    }
-
-    bool IsValid()
-    {
-        return fValid;
     }
 
     CGovernancePayment(CBitcoinAddress addrIn, CAmount nAmountIn)
@@ -136,6 +114,15 @@ public:
             SetNull(); //set fValid to false
         }
     }
+
+    void SetNull()
+    {
+        script = CScript();
+        nAmount = 0;
+        fValid = false;
+    }
+
+    bool IsValid() { return fValid; }
 };
 
 
@@ -143,25 +130,21 @@ public:
 *   Trigger : Superblock
 *
 *   - Create payments on the network
+*
+*   object structure:
+*   {
+*       "governance_object_id" : last_id,
+*       "type" : govtypes.trigger,
+*       "subtype" : "superblock",
+*       "superblock_name" : superblock_name,
+*       "start_epoch" : start_epoch,
+*       "payment_addresses" : "addr1|addr2|addr3",
+*       "payment_amounts"   : "amount1|amount2|amount3"
+*   }
 */
 
 class CSuperblock : public CGovernanceObject
 {
-
-    /*
-
-        object structure: 
-        {
-            "governance_object_id" : last_id,
-            "type" : govtypes.trigger,
-            "subtype" : "superblock",
-            "superblock_name" : superblock_name,
-            "start_epoch" : start_epoch,
-            "payment_addresses" : "addr1|addr2|addr3",
-            "payment_amounts"   : "amount1|amount2|amount3"
-        }
-    */
-
 private:
     uint256 nGovObjHash;
 

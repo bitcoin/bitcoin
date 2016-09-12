@@ -1,7 +1,7 @@
 // Copyright (c) 2014-2016 The Dash Core developers
-
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef GOVERANCE_H
 #define GOVERANCE_H
 
@@ -25,24 +25,18 @@
 #include <stdio.h>
 #include <string.h>
 
-using namespace std;
+class CGovernanceManager;
+class CGovernanceObject;
+class CGovernanceVote;
 
 static const int GOVERNANCE_OBJECT_UNKNOWN = 0;
 static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
 
-class CGovernanceManager;
-class CGovernanceObject;
-class CGovernanceVote;
-class CNode;
-
 static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (0.33*COIN);
 
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
-
-extern std::map<uint256, int64_t> mapAskedForGovernanceObject;
-extern CGovernanceManager governance;
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
 static const int SEEN_OBJECT_IS_VALID = 0;
@@ -51,7 +45,8 @@ static const int SEEN_OBJECT_ERROR_IMMATURE = 2;
 static const int SEEN_OBJECT_EXECUTED = 3; //used for triggers
 static const int SEEN_OBJECT_UNKNOWN = 4; // the default
 
-
+extern std::map<uint256, int64_t> mapAskedForGovernanceObject;
+extern CGovernanceManager governance;
 
 //
 // Governance Manager : Contains all proposals for the budget
@@ -99,7 +94,6 @@ private:
     // keep track of the scanning errors
     object_m_t mapObjects;
 
-    // note: move to private for better encapsulation 
     count_m_t mapSeenGovernanceObjects;
     count_m_t mapSeenVotes;
     vote_m_t mapOrphanVotes;
@@ -114,10 +108,11 @@ private:
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
-    
+
     CGovernanceManager();
 
-    void ClearSeen() {
+    void ClearSeen()
+    {
         LOCK(cs);
         mapSeenGovernanceObjects.clear();
         mapSeenVotes.clear();
@@ -127,8 +122,6 @@ public:
     {
         return mapSeenGovernanceObjects.size() + mapSeenVotes.size();
     }
-
-    int sizeProposals() {return (int)mapObjects.size();}
 
     void Sync(CNode* node, uint256 nProp);
     void SyncParentObjectByVote(CNode* pfrom, const CGovernanceVote& vote);
@@ -155,7 +148,8 @@ public:
 
     void CheckOrphanVotes();
 
-    void Clear(){
+    void Clear()
+    {
         LOCK(cs);
 
         LogPrint("gobject", "Governance object manager was cleared\n");
@@ -167,7 +161,7 @@ public:
         mapVotesByHash.clear();
         mapLastMasternodeTrigger.clear();
     }
-    
+
     std::string ToString() const;
 
     ADD_SERIALIZE_METHODS;
@@ -185,8 +179,8 @@ public:
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-    int64_t GetLastDiffTime() {return nTimeLastDiff;}
-    void UpdateLastDiffTime(int64_t nTimeIn) {nTimeLastDiff=nTimeIn;}
+    int64_t GetLastDiffTime() { return nTimeLastDiff; }
+    void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 
     int GetCachedBlockHeight() { return nCachedBlockHeight; }
 
@@ -194,8 +188,6 @@ public:
     bool HaveObjectForHash(uint256 nHash);
 
     bool HaveVoteForHash(uint256 nHash);
-
-    // int GetVoteCountByHash(uint256 nHash);
 
     bool SerializeObjectForHash(uint256 nHash, CDataStream& ss);
 
@@ -224,13 +216,13 @@ public:
 
     uint256 nHashParent; //parent object, 0 is root
     int nRevision; //object revision in the system
-    std::string strName; //org name, username, prop name, etc. 
+    std::string strName; //org name, username, prop name, etc.
     int64_t nTime; //time this object was created
     uint256 nCollateralHash; //fee-tx
     std::string strData; // Data field - can be used for anything
     int nObjectType;
 
-    bool fCachedLocalValidity; // is valid by blockchain 
+    bool fCachedLocalValidity; // is valid by blockchain
     std::string strLocalValidityError;
 
     // Masternode info for signed objects
@@ -287,7 +279,7 @@ public:
     int GetNoCount(vote_signal_enum_t eVoteSignalIn);
     int GetAbstainCount(vote_signal_enum_t eVoteSignalIn);
 
-    // FUNCTIONS FOR DEALING WITH DATA STRING 
+    // FUNCTIONS FOR DEALING WITH DATA STRING
 
     std::string GetDataAsHex();
     std::string GetDataAsString();
@@ -316,7 +308,7 @@ public:
     }
 
 private:
-    // FUNCTIONS FOR DEALING WITH DATA STRING 
+    // FUNCTIONS FOR DEALING WITH DATA STRING
 
     void LoadData();
     bool SetData(std::string& strError, std::string strDataIn);

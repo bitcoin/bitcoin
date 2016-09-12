@@ -193,7 +193,7 @@ vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(std::string strVoteSigna
 
     // convert custom sentinel outcomes to integer and store
     try {
-        int  i = boost::lexical_cast<int>(strVoteSignal);
+        int i = boost::lexical_cast<int>(strVoteSignal);
         if(i < VOTE_SIGNAL_CUSTOM1 || i > VOTE_SIGNAL_CUSTOM20) {
             eSignal = VOTE_SIGNAL_NONE;
         }
@@ -203,8 +203,8 @@ vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(std::string strVoteSigna
     }
     catch(std::exception const & e)
     {
-        ostringstream ostr;
-        ostr << "CGovernanceVote::ConvertVoteSignal: error : " << e.what() << endl;
+        std::ostringstream ostr;
+        ostr << "CGovernanceVote::ConvertVoteSignal: error : " << e.what() << std::endl;
         LogPrintf(ostr.str().c_str());
     }
 
@@ -265,28 +265,28 @@ bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 bool CGovernanceVote::IsValid(bool fSignatureCheck)
 {
     if(nTime > GetTime() + (60*60)){
-        LogPrint("gobject", "CGovernanceVote::IsValid() - vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
+        LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
         return false;
     }
 
     // support up to 50 actions (implemented in sentinel)
     if(nVoteSignal > 50)
     {
-        LogPrint("gobject", "CGovernanceVote::IsValid() - Client attempted to vote on invalid action(%d) - %s\n", nVoteSignal, GetHash().ToString());
+        LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
 
     // 0=none, 1=yes, 2=no, 3=abstain. Beyond that reject votes
     if(nVoteOutcome > 3)
     {
-        LogPrint("gobject", "CGovernanceVote::IsValid() - Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
-        return false;   
+        LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
+        return false;
     }
 
     CMasternode* pmn = mnodeman.Find(vinMasternode);
     if(pmn == NULL)
     {
-        LogPrint("gobject", "CGovernanceVote::IsValid() - Unknown Masternode - %s\n", vinMasternode.ToString());
+        LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", vinMasternode.prevout.ToStringShort());
         return false;
     }
 

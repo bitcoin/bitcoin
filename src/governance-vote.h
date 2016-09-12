@@ -46,7 +46,7 @@ enum vote_signal_enum_t  {
     VOTE_SIGNAL_NOOP9      = 13,
     VOTE_SIGNAL_NOOP10     = 14,
     VOTE_SIGNAL_NOOP11     = 15,
-    VOTE_SIGNAL_CUSTOM1    = 16,  // SENTINEL CUSTOM ACTIONS 
+    VOTE_SIGNAL_CUSTOM1    = 16,  // SENTINEL CUSTOM ACTIONS
     VOTE_SIGNAL_CUSTOM2    = 17,  //        16-35
     VOTE_SIGNAL_CUSTOM3    = 18,
     VOTE_SIGNAL_CUSTOM4    = 19,
@@ -157,25 +157,25 @@ public:
     *
     *   GET HASH WITH DETERMINISTIC VALUE OF MASTERNODE-VIN/PARENT-HASH/VOTE-SIGNAL
     *
-    *   This hash collides with previous masternode votes when they update their votes on governance objects. 
-    *   With 12.1 there's various types of votes (funding, valid, delete, etc), so this is the deterministic hash 
+    *   This hash collides with previous masternode votes when they update their votes on governance objects.
+    *   With 12.1 there's various types of votes (funding, valid, delete, etc), so this is the deterministic hash
     *   that will collide with the previous vote and allow the system to update.
-    *   
+    *
     *   --
     *
     *   We do not include an outcome, because that can change when a masternode updates their vote from yes to no
-    *   on funding a specific project for example. 
+    *   on funding a specific project for example.
     *   We do not include a time because it will be updated each time the vote is updated, changing the hash
     */
     uint256 GetTypeHash() const
-    {       
+    {
         // CALCULATE HOW TO STORE VOTE IN governance.mapVotes
 
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vinMasternode;
         ss << nParentHash;
         ss << nVoteSignal;
-        //  -- no outcome 
+        //  -- no outcome
         //  -- timeless
         return ss.GetHash();
     }
@@ -195,7 +195,7 @@ public:
 };
 
 
-/** 
+/**
 * 12.1.1 - CGovernanceVoteManager
 * -------------------------------
 *
@@ -206,7 +206,7 @@ public:
         - load serialized files from filesystem if needed
         - calc answer
         - return result
-    
+
     CacheUnused():
         - Cache votes if lastused > 12h/24/48/etc
 
