@@ -3743,9 +3743,13 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, C
         CBlockIndex *pindex = NULL;
         bool fNewBlock = false;
         bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp, &fNewBlock);
-        if (pindex && pfrom) {
-            mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
-            if (fNewBlock) pfrom->nLastBlockTime = GetTime();
+        if (pfrom) {
+            if (pindex) {
+                LogPrint("block", "recv block %s (%d) peer=%d\n", pblock->GetHash().ToString(), pindex->nHeight, pfrom->id);
+                mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
+                if (fNewBlock) pfrom->nLastBlockTime = GetTime();
+            } else
+                LogPrint("block", "recv block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->id);
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret)
@@ -5938,8 +5942,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CBlock block;
         vRecv >> block;
-
-        LogPrint("block", "recv %s peer=%d\n", block.GetHash().ToString(), pfrom->id);
 
         CValidationState state;
         // Process all blocks from whitelisted peers, even if not requested,
