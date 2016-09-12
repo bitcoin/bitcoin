@@ -205,18 +205,23 @@ void CMasternode::Check(bool forceCheck)
 
 int CMasternode::GetCollateralAge()
 {
-    if (chainActive.Height() < 0) return -1;
+    int nHeight;
+    {
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain || !chainActive.Tip()) return -1;
+        nHeight = chainActive.Height();
+    }
 
     if (nCacheCollateralBlock == 0) {
         int nInputAge = GetInputAge(vin);
         if(nInputAge > 0) {
-            nCacheCollateralBlock = chainActive.Height() - nInputAge;
+            nCacheCollateralBlock = nHeight - nInputAge;
         } else {
             return nInputAge;
         }
     }
 
-    return chainActive.Height() - nCacheCollateralBlock;
+    return nHeight - nCacheCollateralBlock;
 }
 
 void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
