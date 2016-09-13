@@ -639,3 +639,46 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     file.close();
     return NullUniValue;
 }
+
+UniValue importpreimage(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+    
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "importpreimage \"data\"\n"
+            "\nImports a preimage for use in HTLC transactions. Only remains in memory.\n"
+            "\nArguments:\n"
+            "1. \"data\"    (string, required) The preimage of a SHA256 or RIPEMD160 hash\n"
+            "\nExamples:\n"
+            + HelpExampleCli("importpreimage", "\"mylittlesecret\"")
+            + HelpExampleRpc("importpreimage", "\"mylittlesecret\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    vector<unsigned char> preimage = ParseHexV(params[0], "preimage");
+    
+    // SHA256
+    {
+        std::vector<unsigned char> vch(32);
+        CSHA256 hash;
+        hash.Write(begin_ptr(preimage), preimage.size());
+        hash.Finalize(begin_ptr(vch));
+
+        pwalletMain->AddPreimage(vch, preimage);
+    }
+
+    // RIPEMD160
+    {
+        std::vector<unsigned char> vch(20);
+        CRIPEMD160 hash;
+        hash.Write(begin_ptr(preimage), preimage.size());
+        hash.Finalize(begin_ptr(vch));
+
+        pwalletMain->AddPreimage(vch, preimage);
+    }
+
+    return NullUniValue;
+}

@@ -26,6 +26,7 @@ const char* GetTxnOutputType(txnouttype t)
     switch (t)
     {
     case TX_NONSTANDARD: return "nonstandard";
+    case TX_HTLC: return "htlc";
     case TX_PUBKEY: return "pubkey";
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
@@ -54,6 +55,26 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // HTLC where sender requests preimage of a hash
+        {
+            const opcodetype accepted_hashers[] = {OP_SHA256, OP_RIPEMD160};
+            const opcodetype accepted_timeout_ops[] = {OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY};
+
+            BOOST_FOREACH(opcodetype hasher, accepted_hashers) {
+                BOOST_FOREACH(opcodetype timeout_op, accepted_timeout_ops) {
+                    mTemplates.insert(make_pair(TX_HTLC, CScript()
+                        << hasher << OP_ANYDATA << OP_EQUAL
+                        << OP_IF
+                        <<     OP_PUBKEY
+                        << OP_ELSE
+                        <<     OP_ANYDATA << timeout_op << OP_DROP << OP_PUBKEY
+                        << OP_ENDIF
+                        << OP_CHECKSIG
+                    ));
+                }
+            }
+        }
     }
 
     vSolutionsRet.clear();
@@ -143,7 +164,14 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 // to other if/else statements
             }
 
-            if (opcode2 == OP_PUBKEY)
+            if (opcode2 == OP_ANYDATA)
+            {
+                if (vch1.empty()
+                    && opcode1 != OP_0 && opcode1 < OP_1 && opcode1 > OP_16)
+                    break;
+                vSolutionsRet.push_back(vch1);
+            }
+            else if (opcode2 == OP_PUBKEY)
             {
                 if (vch1.size() < 33 || vch1.size() > 65)
                     break;
@@ -237,6 +265,25 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
         if (addressRet.empty())
             return false;
     }
+    else if (typeRet == TX_HTLC)
+    {
+        // Seller
+        {
+            CPubKey pubKey(vSolutions[1]);
+            if (pubKey.IsValid()) {
+                CTxDestination address = pubKey.GetID();
+                addressRet.push_back(address);
+            }
+        }
+        // Refund
+        {
+            CPubKey pubKey(vSolutions[3]);
+            if (pubKey.IsValid()) {
+                CTxDestination address = pubKey.GetID();
+                addressRet.push_back(address);
+            }
+        }
+    }
     else
     {
         nRequiredRet = 1;
@@ -298,6 +345,33 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     BOOST_FOREACH(const CPubKey& key, keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+    return script;
+}
+
+CScript GetScriptForHTLC(const CPubKey& seller,
+                         const CPubKey& refund,
+                         const std::vector<unsigned char> image,
+                         uint32_t timeout,
+                         opcodetype hasher_type,
+                         opcodetype timeout_type)
+{
+    CScript script;
+
+    script << hasher_type << image << OP_EQUAL;
+    script << OP_IF << ToByteVector(seller);
+    script << OP_ELSE;
+
+    // TODO: Why isn't CScriptNum doing this for us?
+    if (timeout <= 16) {
+        script << CScript::EncodeOP_N(timeout);
+    } else {
+        script << CScriptNum(timeout);
+    }
+
+    script << timeout_type << OP_DROP << ToByteVector(refund);
+    script << OP_ENDIF;
+    script << OP_CHECKSIG;
+
     return script;
 }
 

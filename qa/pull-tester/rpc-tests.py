@@ -156,6 +156,7 @@ testScriptsExt = [
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
     'getblocktemplate_proposals.py',
+    'htlc.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'forknotify.py',
