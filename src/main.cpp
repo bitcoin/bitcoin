@@ -6520,6 +6520,8 @@ bool SendMessages(CNode* pto, CConnman& connman)
             CBlockIndex *pBestIndex = NULL; // last header queued for delivery
             ProcessBlockAvailability(pto->id); // ensure pindexBestKnownBlock is up-to-date
 
+            int nHeightStart = 0;
+            int nHeightEnd = 0;
             if (!fRevertToInv) {
                 bool fFoundStartingHeader = false;
                 // Try to find first header that our peer doesn't have, and
@@ -6553,6 +6555,8 @@ bool SendMessages(CNode* pto, CConnman& connman)
                     if (fFoundStartingHeader) {
                         // add this to the headers message
                         vHeaders.push_back(pindex->GetBlockHeader());
+                        if (!nHeightStart || pindex->nHeight < nHeightStart) nHeightStart = pindex->nHeight;
+                        if (pindex->nHeight > nHeightEnd) nHeightEnd = pindex->nHeight;
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == NULL || PeerHasHeader(&state, pindex->pprev)) {
@@ -6560,6 +6564,8 @@ bool SendMessages(CNode* pto, CConnman& connman)
                         // Start sending headers.
                         fFoundStartingHeader = true;
                         vHeaders.push_back(pindex->GetBlockHeader());
+                        if (!nHeightStart || pindex->nHeight < nHeightStart) nHeightStart = pindex->nHeight;
+                        if (pindex->nHeight > nHeightEnd) nHeightEnd = pindex->nHeight;
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
@@ -6582,13 +6588,11 @@ bool SendMessages(CNode* pto, CConnman& connman)
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (state.fPreferHeaders) {
                     if (vHeaders.size() > 1) {
-                        LogPrint("block", "send %u headers(%s to %s) peer=%d\n",
-                                vHeaders.size(),
-                                vHeaders.front().GetHash().ToString(),
-                                vHeaders.back().GetHash().ToString(), pto->id);
+                        LogPrint("block", "send %u headers (%d to %d) peer=%d\n",
+                                vHeaders.size(), nHeightStart, nHeightEnd, pto->id);
                     } else {
-                        LogPrint("block", "send header %s peer=%d\n",
-                                vHeaders.front().GetHash().ToString(), pto->id);
+                        LogPrint("block", "send header %s (%d) peer=%d\n",
+                                vHeaders.front().GetHash().ToString(), nHeightEnd, pto->id);
                     }
                     pto->PushMessage(NetMsgType::HEADERS, vHeaders);
                     state.pindexBestHeaderSent = pBestIndex;
