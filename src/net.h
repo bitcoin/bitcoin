@@ -136,6 +136,36 @@ public:
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
+    template <typename... Args>
+    void PushMessageWithVersionAndFlag(CNode* pnode, int nVersion, int flag, const std::string& sCommand, Args&&... args)
+    {
+        auto msg(BeginMessage(pnode, nVersion, flag, sCommand));
+        ::SerializeMany(msg, msg.nType, msg.nVersion, std::forward<Args>(args)...);
+        EndMessage(msg);
+        PushMessage(pnode, msg, sCommand);
+    }
+
+    template <typename... Args>
+    void PushMessageWithFlag(CNode* pnode, int flag, const std::string& sCommand, Args&&... args)
+    {
+        PushMessageWithVersionAndFlag(pnode, 0, flag, sCommand, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    void PushMessageWithVersion(CNode* pnode, int nVersion, const std::string& sCommand, Args&&... args)
+    {
+        PushMessageWithVersionAndFlag(pnode, nVersion, 0, sCommand, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    void PushMessage(CNode* pnode, const std::string& sCommand, Args&&... args)
+    {
+        PushMessageWithVersionAndFlag(pnode, 0, 0, sCommand, std::forward<Args>(args)...);
+    }
+
+    void PushVersion(CNode* pnode, int64_t nTime);
+
+
     template<typename Callable>
     bool ForEachNodeContinueIf(Callable&& func)
     {
@@ -345,6 +375,10 @@ private:
 
     unsigned int GetReceiveFloodSize() const;
 
+    CDataStream BeginMessage(CNode* node, int nVersion, int flags, const std::string& sCommand);
+    void PushMessage(CNode* pnode, CDataStream& strm, const std::string& sCommand);
+    void EndMessage(CDataStream& strm);
+
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
@@ -553,6 +587,7 @@ public:
 /** Information about a peer */
 class CNode
 {
+    friend class CConnman;
 public:
     // socket
     ServiceFlags nServices;
@@ -681,6 +716,7 @@ private:
     // Services offered to this peer
     const ServiceFlags nLocalServices;
     const int nMyStartingHeight;
+    int nSendVersion;
 public:
 
     NodeId GetId() const {
@@ -715,6 +751,25 @@ public:
         nRecvVersion = nVersionIn;
         BOOST_FOREACH(CNetMessage &msg, vRecvMsg)
             msg.SetVersion(nVersionIn);
+    }
+    void SetSendVersion(int nVersionIn)
+    {
+        // Send version may only be changed in the version message, and
+        // only one version message is allowed per session. We can therefore
+        // treat this value as const and even atomic as long as it's only used
+        // once the handshake is complete. Any attempt to set this twice is an
+        // error.
+        assert(nSendVersion == 0);
+        nSendVersion = nVersionIn;
+    }
+
+    int GetSendVersion() const
+    {
+        // The send version should always be explicitly set to
+        // INIT_PROTO_VERSION rather than using this value until the handshake
+        // is complete. See PushMessageWithVersion().
+        assert(nSendVersion != 0);
+        return nSendVersion;
     }
 
     CNode* AddRef()
@@ -786,9 +841,6 @@ public:
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
     void EndMessage(const char* pszCommand) UNLOCK_FUNCTION(cs_vSend);
-
-    void PushVersion();
-
 
     void PushMessage(const char* pszCommand)
     {
