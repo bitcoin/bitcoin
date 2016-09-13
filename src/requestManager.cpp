@@ -110,6 +110,8 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
 	  pendingTxns+=1;
 	  // all other fields are zeroed on creation
 	}
+      // else the txn already existed so nothing to do
+
       data.priority = max(priority,data.priority);
       // Got the data, now add the node as a source
       data.AddSource(from);
@@ -122,9 +124,8 @@ void CRequestManager::AskFor(const CInv& obj, CNode* from, int priority)
       OdMap::iterator& item = result.first;
       CUnknownObj& data = item->second;
       data.obj = obj;
-      if (result.second)  // inserted
-	{
-	}
+      // if (result.second)  // means this was inserted rather than already existed
+      // { } nothing to do
       data.priority = max(priority,data.priority);
       data.AddSource(from);
       LogPrint("blk", "%s available at %s\n", obj.ToString().c_str(), from->addrName.c_str());
@@ -400,6 +401,16 @@ void CRequestManager::SendRequests()
   cs_objDownloader.lock();
   if (sendBlkIter == mapBlkInfo.end()) sendBlkIter = mapBlkInfo.begin();
 
+  // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because 
+  // those blocks and txns can take much longer to download.
+  unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
+  unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
+  if (!IsChainNearlySyncd() || IsTrafficShapingEnabled()) 
+    {
+      blkReqRetryInterval *= 6;
+      txReqRetryInterval *= (12*2);  // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2 minutes (default val of MIN_TX is 5 sec)
+    }
+
   // Get Blocks
   while (sendBlkIter != mapBlkInfo.end())
    {
@@ -410,18 +421,7 @@ void CRequestManager::SendRequests()
       ++sendBlkIter;  // move it forward up here in case we need to erase the item we are working with.
       if (itemIter == mapBlkInfo.end()) break;
 
-      // Modify retry interval. If we're doing IBD or if Traffic Shaping is ON we want to have a longer interval because 
-      // those blocks and txns can take much longer to download.
-      if (IsChainNearlySyncd() && !IsTrafficShapingEnabled()) {
-          MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;
-          MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;
-      }
-      else {
-          MIN_BLK_REQUEST_RETRY_INTERVAL = 30*1000*1000;
-          MIN_TX_REQUEST_RETRY_INTERVAL = 30*1000*1000;
-      }
-
-      if (now-item.lastRequestTime > MIN_BLK_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
+      if (now-item.lastRequestTime > blkReqRetryInterval)  // if never requested then lastRequestTime==0 so this will always be true
 	{
           if (!item.availableFrom.empty())
 	    {
@@ -432,7 +432,7 @@ void CRequestManager::SendRequests()
                 item.availableFrom.pop_front();
                 if (next.node != NULL)
                   {
-                    // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable.
+                    // Do not request from this node if it was disconnected or the node pingtime is far beyond acceptable during initial block download.
                     // We only check pingtime during IBD because we don't want to lock vNodes too often and when the chain is syncd, waiting
                     // just 5 seconds for a timeout is not an issue, however waiting for a slow node during IBD can really slow down the process.
                     //   TODO: Eventually when we move away from vNodes or have a different mechanism for tracking ping times we can include
@@ -464,6 +464,12 @@ void CRequestManager::SendRequests()
 
 		  cs_objDownloader.lock();
 
+                  // If you wanted to remember that this node has this data, you could push it back onto the end of the availableFrom list like this:
+                  // next.requestCount += 1;
+		  // next.desirability /= 2;  // Make this node less desirable to re-request.
+		  // item.availableFrom.push_back(next);  // Add the node back onto the end of the list
+
+                  // Instead we'll forget about it -- the node is already popped of of the available list so now we'll release our reference.
                   LOCK(cs_vNodes);
                   LogPrint("req", "ReqMgr: %s removed ref to %d count %d (disconnect).\n", item.obj.ToString(), next.node->GetId(), next.node->GetRefCount());
                   next.node->Release();
@@ -495,25 +501,24 @@ void CRequestManager::SendRequests()
       ++sendIter;  // move it forward up here in case we need to erase the item we are working with.
       if (itemIter == mapTxnInfo.end()) break;
 
-      if (now-item.lastRequestTime > MIN_TX_REQUEST_RETRY_INTERVAL)  // if never requested then lastRequestTime==0 so this will always be true
+      if (now-item.lastRequestTime > txReqRetryInterval)  // if never requested then lastRequestTime==0 so this will always be true
 	{
           if (!item.rateLimited)
 	    {
-                // If item.lastRequestTime is true then we've requested at least once and we'll try a re-request if the following conditions are met:
-                //     The chain must be almost syncd 
-		if (item.lastRequestTime && IsChainNearlySyncd())
+                // If item.lastRequestTime is true then we've requested at least once, so this is a rerequest -> a txn request was dropped.
+		if (item.lastRequestTime)
 		{
 		  LogPrint("req", "Request timeout for %s.  Retrying\n", item.obj.ToString().c_str());
 		  // Not reducing inFlight; it's still outstanding and will be cleaned up when item is removed from map
-                  droppedTxns += 1;
+                  droppedTxns += 1;  // note we can never be sure its really dropped verses just delayed for a long time so this is not authoritative.
 		}
 
               if (item.availableFrom.empty())
 		{
 		  // TODO: tell someone about this issue, look in a random node, or something.
-		  cleanup(itemIter);
+		  cleanup(itemIter);  // right now we give up requesting it if we have no other sources...
 		}
-              else  // Ok request this item.
+              else  // Ok, we have at least on source so request this item.
 	        {
 		  CNodeRequestData next;
 		  while (!item.availableFrom.empty() && (next.node == NULL)) // Go thru the availableFrom list, looking for the first node that isn't disconnected
@@ -539,7 +544,7 @@ void CRequestManager::SendRequests()
                         cs_objDownloader.unlock();
                         LOCK(next.node->cs_vSend);
   		        // from->AskFor(item.obj); basically just shoves the req into mapAskFor
-                        if (!item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
+                        if (1) // This commented code does skips requesting TX if the node is not synced.  But the req mgr should not make this decision, the caller should not give the TX to me... !item.lastRequestTime || (item.lastRequestTime && IsChainNearlySyncd()))
                           {
                             next.node->mapAskFor.insert(std::make_pair(now, item.obj));
                             item.outstandingReqs++;

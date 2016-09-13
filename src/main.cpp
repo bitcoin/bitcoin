@@ -3773,7 +3773,8 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
       }
 
     LogPrint("thin", "Processing new block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom ? pfrom->addrName.c_str():"myself",pfrom ? pfrom->id: 0);
-    
+    if (IsChainNearlySyncd()) SendExpeditedBlock(*pblock,pfrom);
+
     {
         LOCK(cs_main);
         bool fRequested = MarkBlockAsReceived(pblock->GetHash());
