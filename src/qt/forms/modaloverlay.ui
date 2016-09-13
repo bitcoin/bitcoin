@@ -82,6 +82,9 @@ QLabel { color: rgb(40,40,40);  }</string>
              </property>
              <item>
               <widget class="QPushButton" name="warningIcon">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string/>
                </property>
