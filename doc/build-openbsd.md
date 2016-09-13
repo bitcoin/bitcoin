@@ -19,7 +19,7 @@ pkg_add python # (select version 2.7.x, not 3.x)
 ln -sf /usr/local/bin/python2.7 /usr/local/bin/python2
 ```
 
-The default C++ compiler that comes with OpenBSD 5.7 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Bitcoin Core. It is possible to patch it up to compile, but with the planned transition to C++11 this is a losing battle. So here we will be installing a newer compiler.
+The default C++ compiler that comes with OpenBSD 5.7 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Bitcoin Unlimited. It is possible to patch it up to compile, but with the planned transition to C++11 this is a losing battle. So here we will be installing a newer compiler.
 
 GCC
 -------
@@ -40,7 +40,7 @@ Do not use `pkg_add boost`! The boost version installed thus is compiled using t
     ...
     Segmentation fault (core dumped)
 
-This makes it necessary to build boost, or at least the parts used by Bitcoin Core, manually:
+This makes it necessary to build boost, or at least the parts used by Bitcoin Unlimited, manually:
 
 ```
 # Pick some path to install boost to, here we create a directory within the bitcoin directory
@@ -96,7 +96,7 @@ cd db-4.8.30.NC/build_unix/
 make install
 ```
 
-### Building Bitcoin Core
+### Building Bitcoin Unlimited
 
 **Important**: use `gmake`, not `make`. The non-GNU `make` will exit with a horrible error.
 

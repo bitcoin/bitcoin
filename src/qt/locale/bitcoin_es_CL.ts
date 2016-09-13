@@ -262,7 +262,7 @@
         <translation>Abrir y url...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
+        <source>Bitcoin Unlimited client</source>
         <translation>cliente bitcoin core</translation>
     </message>
     <message>
@@ -310,8 +310,8 @@
         <translation>y recibir</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Mostrar informacion sobre Bitcoin Core</translation>
+        <source>Show information about Bitcoin Unlimited</source>
+        <translation>Mostrar informacion sobre Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -338,7 +338,7 @@
         <translation>Barra de pestañas</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>bitcoin core</translation>
     </message>
     <message>
@@ -346,11 +346,11 @@
         <translation>Pide pagos (genera codigos QR and bitcoin: URls)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Sobre Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>&amp;Sobre Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
+        <source>Modify configuration options for Bitcoin Unlimited</source>
         <translation>Modifica las opciones para BitCoin Core</translation>
     </message>
     <message>
@@ -538,7 +538,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>bitcoin core</translation>
     </message>
     <message>
@@ -561,7 +561,7 @@
         <translation>bienvenido</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>bitcoin core</translation>
     </message>
     <message>
@@ -1072,7 +1072,7 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>bitcoin core</translation>
     </message>
     <message>

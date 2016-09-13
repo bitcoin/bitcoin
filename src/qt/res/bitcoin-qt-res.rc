@@ -25,7 +25,7 @@ BEGIN
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "bitcoin-qt.exe"
-            VALUE "ProductName",        "bitcoin-qt"
+            VALUE "ProductName",        "Bitcoin Unlimited"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

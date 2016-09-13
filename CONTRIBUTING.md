@@ -67,9 +67,9 @@ Project maintainers aim for a quick turnaround on refactoring pull requests, so 
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Bitcoin Core project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
+The following applies to code changes to the Bitcoin Unlimited project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge maintainers and ultimately the project lead. 
+Whether a pull request is merged into Bitcoin Unlimited rests with the project merge maintainers and ultimately the project lead. 
 
 Maintainers will take into consideration if a patch is in line with the general principles of the project; meets the minimum standards for inclusion; and will judge the general consensus of contributors.
 
@@ -107,4 +107,4 @@ Where a patch set proposes to change the Bitcoin consensus, it must have been di
 Release Policy
 --------------
 
-The project leader is the release manager for each Bitcoin Core release.
+The project leader is the release manager for each Bitcoin Unlimited release.
