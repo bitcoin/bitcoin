@@ -7,6 +7,7 @@
 # Test fee estimation code
 #
 
+from collections import OrderedDict
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -42,7 +43,7 @@ def swap_outputs_in_rawtx(rawtx, outputs, inputnum):
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     '''
     Create and send a transaction with a random fee.
-    The transaction pays to a trival P2SH script, and assumes that its inputs
+    The transaction pays to a trivial P2SH script, and assumes that its inputs
     are of the same form.
     The function takes a list of confirmed outputs and unconfirmed outputs
     and attempts to use the confirmed list first for its inputs.
@@ -69,11 +70,11 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
         if total_in <= amount + fee:
             raise RuntimeError("Insufficient funds: need %d, have %d"%(amount+fee, total_in))
     outputs = {}
-    outputs[P2SH_1] = total_in - amount - fee
-    outputs[P2SH_2] = amount
+    outputs = OrderedDict([(P2SH_1, total_in - amount - fee),
+                           (P2SH_2, amount)])
     rawtx = from_node.createrawtransaction(inputs, outputs)
     rawtx = swap_outputs_in_rawtx(rawtx, outputs, len(inputs))
-    # Createrawtransaction constructions a transaction that is ready to be signed
+    # createrawtransaction constructs a transaction that is ready to be signed.
     # These transactions don't need to be signed, but we still have to insert the ScriptSig
     # that will satisfy the ScriptPubKey.
     completetx = rawtx[0:10]
@@ -99,12 +100,10 @@ def split_inputs(from_node, txins, txouts, initial_split = False):
     '''
     prevtxout = txins.pop()
     inputs = []
-    outputs = {}
     inputs.append({ "txid" : prevtxout["txid"], "vout" : prevtxout["vout"] })
     half_change = satoshi_round(prevtxout["amount"]/2)
     rem_change = prevtxout["amount"] - half_change  - Decimal("0.00010000")
-    outputs[P2SH_1] = half_change
-    outputs[P2SH_2] = rem_change
+    outputs = OrderedDict([(P2SH_1, half_change), (P2SH_2, rem_change)])
     rawtx = from_node.createrawtransaction(inputs, outputs)
     rawtx = swap_outputs_in_rawtx(rawtx, outputs, len(inputs))
     # If this is the initial split we actually need to sign the transaction
@@ -127,7 +126,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
         print([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
     delta = 1.0e-6 # account for rounding error
     last_e = max(fees_seen)
-    for e in filter(lambda x: x >= 0, all_estimates):
+    for e in [x for x in all_estimates if x >= 0]:
         # Estimates should be within the bounds of what transactions fees actually were:
         if float(e)+delta < min(fees_seen) or float(e)-delta > max(fees_seen):
             raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
@@ -241,12 +240,12 @@ class EstimateFeeTest(BitcoinTestFramework):
                 from_index = random.randint(1,2)
                 (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
-                tx_kbytes = (len(txhex)/2)/1000.0
+                tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee)/tx_kbytes)
             sync_mempools(self.nodes[0:3],.1)
             mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
             sync_blocks(self.nodes[0:3],.1)
-            #update which txouts are confirmed
+            # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
                 if utx["txid"] in mined:

@@ -32,13 +32,13 @@ import re
 from tests_config import *
 
 #If imported values are not defined then set to zero (or disabled)
-if not vars().has_key('ENABLE_WALLET'):
+if 'ENABLE_WALLET' not in vars():
     ENABLE_WALLET=0
-if not vars().has_key('ENABLE_BITCOIND'):
+if 'ENABLE_BITCOIND' not in vars():
     ENABLE_BITCOIND=0
-if not vars().has_key('ENABLE_UTILS'):
+if 'ENABLE_UTILS' not in vars():
     ENABLE_UTILS=0
-if not vars().has_key('ENABLE_ZMQ'):
+if 'ENABLE_ZMQ' not in vars():
     ENABLE_ZMQ=0
 
 ENABLE_COVERAGE=0
@@ -67,10 +67,24 @@ if "DASHD" not in os.environ:
 if "DASHCLI" not in os.environ:
     os.environ["DASHCLI"] = buildDir + '/src/dash-cli' + EXEEXT
 
-#Disable Windows tests by default
 if EXEEXT == ".exe" and "-win" not in opts:
-    print "Win tests currently disabled.  Use -win option to enable"
+    # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+    # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
+    print "Win tests currently disabled by default.  Use -win option to enable"
     sys.exit(0)
+
+if not (ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
+    print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+    sys.exit(0)
+
+# python-zmq may not be installed. Handle this gracefully and with some helpful info
+if ENABLE_ZMQ:
+    try:
+        import zmq
+    except ImportError as e:
+        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
+            "to run zmq tests, see dependency info in /qa/README.md.")
+        raise e
 
 #Tests
 testScripts = [
@@ -112,6 +126,9 @@ testScripts = [
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
 ]
+if ENABLE_ZMQ:
+    testScripts.append('zmq_test.py')
+
 testScriptsExt = [
     'bip9-softforks.py',
     'bip65-cltv.py',
@@ -135,11 +152,6 @@ testScriptsExt = [
     # 'replace-by-fee.py', # RBF is disabled in Dash Core
 ]
 
-#Enable ZMQ tests
-if ENABLE_ZMQ == 1:
-    testScripts.append('zmq_test.py')
-
-
 def runtests():
     coverage = None
 
@@ -147,53 +159,49 @@ def runtests():
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
 
-    if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
-        rpcTestDir = buildDir + '/qa/rpc-tests/'
-        run_extended = '-extended' in opts
-        cov_flag = coverage.flag if coverage else ''
-        flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
+    rpcTestDir = buildDir + '/qa/rpc-tests/'
+    run_extended = '-extended' in opts
+    cov_flag = coverage.flag if coverage else ''
+    flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
 
-        #Run Tests
-        for i in range(len(testScripts)):
-            if (len(opts) == 0
-                    or (len(opts) == 1 and "-win" in opts )
-                    or run_extended
-                    or testScripts[i] in opts
-                    or re.sub(".py$", "", testScripts[i]) in opts ):
+    #Run Tests
+    for i in range(len(testScripts)):
+        if (len(opts) == 0
+                or (len(opts) == 1 and "-win" in opts )
+                or run_extended
+                or testScripts[i] in opts
+                or re.sub(".py$", "", testScripts[i]) in opts ):
 
-                print("Running testscript %s%s%s ..." % (bold[1], testScripts[i], bold[0]))
-                time0 = time.time()
-                subprocess.check_call(
-                    rpcTestDir + testScripts[i] + flags, shell=True)
-                print("Duration: %s s\n" % (int(time.time() - time0)))
+            print("Running testscript %s%s%s ..." % (bold[1], testScripts[i], bold[0]))
+            time0 = time.time()
+            subprocess.check_call(
+                rpcTestDir + testScripts[i] + flags, shell=True)
+            print("Duration: %s s\n" % (int(time.time() - time0)))
 
-                # exit if help is called so we print just one set of
-                # instructions
-                p = re.compile(" -h| --help")
-                if p.match(passOn):
-                    sys.exit(0)
+            # exit if help is called so we print just one set of
+            # instructions
+            p = re.compile(" -h| --help")
+            if p.match(passOn):
+                sys.exit(0)
 
-        # Run Extended Tests
-        for i in range(len(testScriptsExt)):
-            if (run_extended or testScriptsExt[i] in opts
-                    or re.sub(".py$", "", testScriptsExt[i]) in opts):
+    # Run Extended Tests
+    for i in range(len(testScriptsExt)):
+        if (run_extended or testScriptsExt[i] in opts
+                or re.sub(".py$", "", testScriptsExt[i]) in opts):
 
-                print(
-                    "Running 2nd level testscript "
-                    + "%s%s%s ..." % (bold[1], testScriptsExt[i], bold[0]))
-                time0 = time.time()
-                subprocess.check_call(
-                    rpcTestDir + testScriptsExt[i] + flags, shell=True)
-                print("Duration: %s s\n" % (int(time.time() - time0)))
+            print(
+                "Running 2nd level testscript "
+                + "%s%s%s ..." % (bold[1], testScriptsExt[i], bold[0]))
+            time0 = time.time()
+            subprocess.check_call(
+                rpcTestDir + testScriptsExt[i] + flags, shell=True)
+            print("Duration: %s s\n" % (int(time.time() - time0)))
 
-        if coverage:
-            coverage.report_rpc_coverage()
+    if coverage:
+        coverage.report_rpc_coverage()
 
-            print("Cleaning up coverage data")
-            coverage.cleanup()
-
-    else:
-        print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+        print("Cleaning up coverage data")
+        coverage.cleanup()
 
 
 class RPCCoverage(object):

@@ -9,8 +9,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-
-COIN = 100000000
+from test_framework.mininode import COIN, MAX_BLOCK_SIZE
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
 
@@ -29,14 +28,29 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
     def run_test(self):
-        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 90)
+        utxo_count = 90
+        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], utxo_count)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb
         txids = []
 
         # Create 3 batches of transactions at 3 different fee rate levels
+        range_size = utxo_count // 3
         for i in xrange(3):
             txids.append([])
-            txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[30*i:30*i+30], (i+1)*base_fee)
+            start_range = i * range_size
+            end_range = start_range + range_size
+            txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[start_range:end_range], (i+1)*base_fee)
+
+        # Make sure that the size of each group of transactions exceeds
+        # MAX_BLOCK_SIZE -- otherwise the test needs to be revised to create
+        # more transactions.
+        mempool = self.nodes[0].getrawmempool(True)
+        sizes = [0, 0, 0]
+        for i in xrange(3):
+            for j in txids[i]:
+                assert(j in mempool)
+                sizes[i] += mempool[j]['size']
+            assert(sizes[i] > MAX_BLOCK_SIZE) # Fail => raise utxo_count
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined (lower
@@ -47,7 +61,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
         mempool = self.nodes[0].getrawmempool()
-        print "Assert that prioritised transasction was mined"
+        print "Assert that prioritised transaction was mined"
         assert(txids[0][0] not in mempool)
         assert(txids[0][1] in mempool)
 
@@ -60,7 +74,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert(high_fee_tx != None)
 
         # Add a prioritisation before a tx is in the mempool (de-prioritising a
-        # high-fee transaction).
+        # high-fee transaction so that it's now low fee).
         self.nodes[0].prioritisetransaction(high_fee_tx, -1e15, -int(2*base_fee*COIN))
 
         # Add everything back to mempool
@@ -70,8 +84,11 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         mempool = self.nodes[0].getrawmempool()
         assert(high_fee_tx in mempool)
 
-        # Now verify the high feerate transaction isn't mined.
-        self.nodes[0].generate(5)
+        # Now verify the modified-high feerate transaction isn't mined before
+        # the other high fee transactions. Keep mining until our mempool has
+        # decreased by all the high fee size that we calculated above.
+        while (self.nodes[0].getmempoolinfo()['bytes'] > sizes[0] + sizes[1]):
+            self.nodes[0].generate(1)
 
         # High fee transaction should not have been mined, but other high fee rate
         # transactions should have been.

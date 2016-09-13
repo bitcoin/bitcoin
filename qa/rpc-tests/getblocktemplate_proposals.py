@@ -10,28 +10,6 @@ from binascii import a2b_hex, b2a_hex
 from hashlib import sha256
 from struct import pack
 
-
-def check_array_result(object_array, to_match, expected):
-    """
-    Pass in array of JSON objects, a dictionary with key/value pairs
-    to match against, and another dictionary with expected key/value
-    pairs.
-    """
-    num_matched = 0
-    for item in object_array:
-        all_match = True
-        for key,value in to_match.items():
-            if item[key] != value:
-                all_match = False
-        if not all_match:
-            continue
-        for key,value in expected.items():
-            if item[key] != value:
-                raise AssertionError("%s : expected %s=%s"%(str(item), str(key), str(value)))
-            num_matched = num_matched+1
-    if num_matched == 0:
-        raise AssertionError("No objects matched %s"%(str(to_match)))
-
 def b2x(b):
     return b2a_hex(b).decode('ascii')
 
@@ -120,10 +98,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 3: Truncated final tx
         lastbyte = txlist[-1].pop()
-        try:
-            assert_template(node, tmpl, txlist, 'n/a')
-        except JSONRPCException:
-            pass  # Expected
+        assert_raises(JSONRPCException, assert_template, node, tmpl, txlist, 'n/a')
         txlist[-1].append(lastbyte)
 
         # Test 4: Add an invalid tx to the end (duplicate of gen tx)
@@ -133,7 +108,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 5: Add an invalid tx to the end (non-duplicate)
         txlist.append(bytearray(txlist[0]))
-        txlist[-1][4+1] = b'\xff'
+        txlist[-1][4+1] = 0xff
         assert_template(node, tmpl, txlist, 'bad-txns-inputs-missingorspent')
         txlist.pop()
 
@@ -144,10 +119,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 7: Bad tx count
         txlist.append(b'')
-        try:
-            assert_template(node, tmpl, txlist, 'n/a')
-        except JSONRPCException:
-            pass  # Expected
+        assert_raises(JSONRPCException, assert_template, node, tmpl, txlist, 'n/a')
         txlist.pop()
 
         # Test 8: Bad bits

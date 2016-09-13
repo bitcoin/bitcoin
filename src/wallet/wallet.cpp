@@ -1467,7 +1467,7 @@ bool CWalletTx::RelayWalletTransaction(std::string strCommand)
     assert(pwallet->GetBroadcastTransactions());
     if (!IsCoinBase())
     {
-        if (GetDepthInMainChain() == 0 && !isAbandoned()) {
+        if (GetDepthInMainChain() == 0 && !isAbandoned() && InMempool()) {
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 

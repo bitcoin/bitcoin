@@ -61,7 +61,7 @@ class JSONRPCException(Exception):
 
 def EncodeDecimal(o):
     if isinstance(o, decimal.Decimal):
-        return round(o, 8)
+        return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
 
 class AuthServiceProxy(object):
@@ -94,11 +94,10 @@ class AuthServiceProxy(object):
             self.__conn = connection
         elif self.__url.scheme == 'https':
             self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
-                                                  None, None, False,
-                                                  timeout)
+                                                  timeout=timeout)
         else:
             self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
-                                                 False, timeout)
+                                                 timeout=timeout)
 
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
@@ -156,6 +155,11 @@ class AuthServiceProxy(object):
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
+
+        content_type = http_response.getheader('Content-Type')
+        if content_type != 'application/json':
+            raise JSONRPCException({
+                'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)})
 
         responsedata = http_response.read().decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)

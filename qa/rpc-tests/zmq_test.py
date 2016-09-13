@@ -28,8 +28,8 @@ class ZMQTest (BitcoinTestFramework):
     def setup_nodes(self):
         self.zmqContext = zmq.Context()
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
-        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, "hashblock")
-        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, "hashtx")
+        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
+        self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % self.port)
         return start_nodes(4, self.options.tmpdir, extra_args=[
             ['-zmqpubhashtx=tcp://127.0.0.1:'+str(self.port), '-zmqpubhashblock=tcp://127.0.0.1:'+str(self.port)],
@@ -46,13 +46,13 @@ class ZMQTest (BitcoinTestFramework):
 
         print "listen..."
         msg = self.zmqSubSocket.recv_multipart()
-        topic = str(msg[0])
+        topic = msg[0]
         body = msg[1]
 
         msg = self.zmqSubSocket.recv_multipart()
-        topic = str(msg[0])
+        topic = msg[0]
         body = msg[1]
-        blkhash = binascii.hexlify(body)
+        blkhash = bytes_to_hex_str(body)
 
         assert_equal(genhashes[0], blkhash) #blockhash from generate must be equal to the hash received over zmq
 
@@ -63,10 +63,10 @@ class ZMQTest (BitcoinTestFramework):
         zmqHashes = []
         for x in range(0,n*2):
             msg = self.zmqSubSocket.recv_multipart()
-            topic = str(msg[0])
+            topic = msg[0]
             body = msg[1]
-            if topic == "hashblock":
-                zmqHashes.append(binascii.hexlify(body))
+            if topic == b"hashblock":
+                zmqHashes.append(bytes_to_hex_str(body))
 
         for x in range(0,n):
             assert_equal(genhashes[x], zmqHashes[x]) #blockhash from generate must be equal to the hash received over zmq
@@ -77,11 +77,11 @@ class ZMQTest (BitcoinTestFramework):
 
         # now we should receive a zmq msg because the tx was broadcast
         msg = self.zmqSubSocket.recv_multipart()
-        topic = str(msg[0])
+        topic = msg[0]
         body = msg[1]
         hashZMQ = ""
-        if topic == "hashtx":
-            hashZMQ = binascii.hexlify(body)
+        if topic == b"hashtx":
+            hashZMQ = bytes_to_hex_str(body)
 
         assert_equal(hashRPC, hashZMQ) #blockhash from generate must be equal to the hash received over zmq
 
