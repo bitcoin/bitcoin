@@ -211,6 +211,19 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
     return mnpayments.GetRequiredPaymentsString(nBlockHeight);
 }
 
+bool CMasternodePayments::CanVote(COutPoint outMasternode, int nBlockHeight)
+{
+    LOCK(cs_mapMasternodePayeeVotes);
+
+    if (mapMasternodesLastVote.count(outMasternode) && mapMasternodesLastVote[outMasternode] == nBlockHeight) {
+        return false;
+    }
+
+    //record this masternode voted
+    mapMasternodesLastVote[outMasternode] = nBlockHeight;
+    return true;
+}
+
 /**
 *   FillBlockPayee
 *

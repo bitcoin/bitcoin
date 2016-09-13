@@ -217,7 +217,7 @@ private:
 public:
     std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
-    std::map<uint256, int> mapMasternodesLastVote; //Hash(BEGIN(prevout.hash), END(prevout.n)), nBlockHeight
+    std::map<COutPoint, int> mapMasternodesLastVote;
 
     CMasternodePayments() : nMinBlocksToStore(4000), nStorageCoeff(1.25) {
     }
@@ -239,19 +239,7 @@ public:
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
 
-    bool CanVote(COutPoint outMasternode, int nBlockHeight) {
-        LOCK(cs_mapMasternodePayeeVotes);
-
-        if(mapMasternodesLastVote.count(Hash(BEGIN(outMasternode.hash), END(outMasternode.n)))) {
-            if(mapMasternodesLastVote[Hash(BEGIN(outMasternode.hash), END(outMasternode.n))] == nBlockHeight) {
-                return false;
-            }
-        }
-
-        //record this masternode voted
-        mapMasternodesLastVote[Hash(BEGIN(outMasternode.hash), END(outMasternode.n))] = nBlockHeight;
-        return true;
-    }
+    bool CanVote(COutPoint outMasternode, int nBlockHeight);
 
     int GetMinMasternodePaymentsProto();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
