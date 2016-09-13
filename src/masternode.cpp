@@ -30,8 +30,9 @@ CMasternode::CMasternode()
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
-    cacheInputAge = 0;
-    cacheInputAgeBlock = 0;
+    nTimeLastPaid = 0;
+    nBlockLastPaid = 0;
+    nCacheCollateralBlock = 0;
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = PROTOCOL_VERSION;
@@ -52,8 +53,9 @@ CMasternode::CMasternode(const CMasternode& other)
     activeState = other.activeState;
     sigTime = other.sigTime;
     lastPing = other.lastPing;
-    cacheInputAge = other.cacheInputAge;
-    cacheInputAgeBlock = other.cacheInputAgeBlock;
+    nTimeLastPaid = other.nTimeLastPaid;
+    nBlockLastPaid = other.nBlockLastPaid;
+    nCacheCollateralBlock = other.nCacheCollateralBlock;
     unitTest = other.unitTest;
     allowFreeTx = other.allowFreeTx;
     protocolVersion = other.protocolVersion;
@@ -74,8 +76,9 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     activeState = MASTERNODE_ENABLED;
     sigTime = mnb.sigTime;
     lastPing = mnb.lastPing;
-    cacheInputAge = 0;
-    cacheInputAgeBlock = 0;
+    nTimeLastPaid = 0;
+    nBlockLastPaid = 0;
+    nCacheCollateralBlock = 0;
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = mnb.protocolVersion;
@@ -200,65 +203,64 @@ void CMasternode::Check(bool forceCheck)
     activeState = MASTERNODE_ENABLED; // OK
 }
 
-int64_t CMasternode::SecondsSincePayment() {
-    int64_t sec = (GetAdjustedTime() - GetLastPaid());
-    int64_t month = 60*60*24*30;
-    if(sec < month) return sec; //if it's less than 30 days, give seconds
-
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << vin;
-    ss << sigTime;
-    uint256 hash =  ss.GetHash();
-
-    // return some deterministic value for unknown/unpaid but force it to be more than 30 days old
-    return month + UintToArith256(hash).GetCompact(false);
-}
-
-int64_t CMasternode::GetLastPaid() {
-    CBlockIndex *pindexPrev = NULL;
+int CMasternode::GetCollateralAge()
+{
+    int nHeight;
     {
-        LOCK(cs_main);
-        pindexPrev = chainActive.Tip();
-        if(!pindexPrev) return 0;
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain || !chainActive.Tip()) return -1;
+        nHeight = chainActive.Height();
     }
 
-
-    CScript mnpayee;
-    mnpayee = GetScriptForDestination(pubkey.GetID());
-
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << vin;
-    ss << sigTime;
-    uint256 hash =  ss.GetHash();
-
-    // use a deterministic offset to break a tie -- 2.5 minutes
-    int64_t nOffset = UintToArith256(hash).GetCompact(false) % 150;
-
-    const CBlockIndex *BlockReading = pindexPrev;
-
-    int nMnCount = mnodeman.CountEnabled()*1.25;
-    int n = 0;
-    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
-        if(n >= nMnCount){
-            return 0;
+    if (nCacheCollateralBlock == 0) {
+        int nInputAge = GetInputAge(vin);
+        if(nInputAge > 0) {
+            nCacheCollateralBlock = nHeight - nInputAge;
+        } else {
+            return nInputAge;
         }
-        n++;
+    }
 
-        if(mnpayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
-            /*
-                Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
-                to converge on the same payees quickly, then keep the same schedule.
-            */
-            if(mnpayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
-                return BlockReading->nTime + nOffset;
-            }
+    return nHeight - nCacheCollateralBlock;
+}
+
+void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
+{
+    if(!pindex) return;
+
+    const CBlockIndex *BlockReading = pindex;
+
+    CScript mnpayee = GetScriptForDestination(pubkey.GetID());
+    // LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s\n", vin.prevout.ToStringShort());
+
+    LOCK(cs_mapMasternodeBlocks);
+
+    for (int i = 0; BlockReading && BlockReading->nHeight > nBlockLastPaid && i < nMaxBlocksToScanBack; i++) {
+        if(mnpayments.mapMasternodeBlocks.count(BlockReading->nHeight) &&
+            mnpayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2))
+        {
+            CBlock block;
+            if(!ReadBlockFromDisk(block, BlockReading, Params().GetConsensus())) // shouldn't really happen
+                continue;
+
+            CAmount nMasternodePayment = GetMasternodePayment(BlockReading->nHeight, block.vtx[0].GetValueOut());
+
+            BOOST_FOREACH(CTxOut txout, block.vtx[0].vout)
+                if(mnpayee == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
+                    nBlockLastPaid = BlockReading->nHeight;
+                    nTimeLastPaid = BlockReading->nTime;
+                    LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- found new %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
+                    return;
+                }
         }
 
         if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
         BlockReading = BlockReading->pprev;
     }
 
-    return 0;
+    // Last payment for this masternode wasn't found in latest mnpayments blocks
+    // or it was found in mnpayments blocks but wasn't found in the blockchain.
+    // LogPrint("masternode", "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast()
@@ -271,8 +273,9 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
-    cacheInputAge = 0;
-    cacheInputAgeBlock = 0;
+    nTimeLastPaid = 0;
+    nBlockLastPaid = 0;
+    nCacheCollateralBlock = 0;
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = PROTOCOL_VERSION;
@@ -291,8 +294,9 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
-    cacheInputAge = 0;
-    cacheInputAgeBlock = 0;
+    nTimeLastPaid = 0;
+    nBlockLastPaid = 0;
+    nCacheCollateralBlock = 0;
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = protocolVersionIn;
@@ -311,8 +315,9 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     activeState = mn.activeState;
     sigTime = mn.sigTime;
     lastPing = mn.lastPing;
-    cacheInputAge = mn.cacheInputAge;
-    cacheInputAgeBlock = mn.cacheInputAgeBlock;
+    nTimeLastPaid = mn.nTimeLastPaid;
+    nBlockLastPaid = mn.nBlockLastPaid;
+    nCacheCollateralBlock = mn.nCacheCollateralBlock;
     unitTest = mn.unitTest;
     allowFreeTx = mn.allowFreeTx;
     protocolVersion = mn.protocolVersion;

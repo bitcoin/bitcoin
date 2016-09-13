@@ -122,8 +122,9 @@ public:
     std::vector<unsigned char> vchSig;
     int activeState;
     int64_t sigTime; //mnb message time
-    int cacheInputAge;
-    int cacheInputAgeBlock;
+    int64_t nTimeLastPaid;
+    int nBlockLastPaid;
+    int nCacheCollateralBlock;
     bool unitTest;
     bool allowFreeTx;
     int protocolVersion;
@@ -155,8 +156,9 @@ public:
         swap(first.activeState, second.activeState);
         swap(first.sigTime, second.sigTime);
         swap(first.lastPing, second.lastPing);
-        swap(first.cacheInputAge, second.cacheInputAge);
-        swap(first.cacheInputAgeBlock, second.cacheInputAgeBlock);
+        swap(first.nTimeLastPaid, second.nTimeLastPaid);
+        swap(first.nBlockLastPaid, second.nBlockLastPaid);
+        swap(first.nCacheCollateralBlock, second.nCacheCollateralBlock);
         swap(first.unitTest, second.unitTest);
         swap(first.allowFreeTx, second.allowFreeTx);
         swap(first.protocolVersion, second.protocolVersion);
@@ -204,8 +206,9 @@ public:
             READWRITE(protocolVersion);
             READWRITE(activeState);
             READWRITE(lastPing);
-            READWRITE(cacheInputAge);
-            READWRITE(cacheInputAgeBlock);
+            READWRITE(nTimeLastPaid);
+            READWRITE(nBlockLastPaid);
+            READWRITE(nCacheCollateralBlock);
             READWRITE(unitTest);
             READWRITE(allowFreeTx);
             READWRITE(nLastDsq);
@@ -257,19 +260,6 @@ public:
         return activeState == MASTERNODE_PRE_ENABLED;
     }
 
-    int GetMasternodeInputAge()
-    {
-        LOCK(cs_main);
-        if(chainActive.Tip() == NULL) return 0;
-
-        if(cacheInputAge == 0){
-            cacheInputAge = GetInputAge(vin);
-            cacheInputAgeBlock = chainActive.Tip()->nHeight;
-        }
-
-        return cacheInputAge + (chainActive.Tip()->nHeight - cacheInputAgeBlock);
-    }
-
     std::string Status() {
         std::string strStatus = "unknown";
 
@@ -283,7 +273,11 @@ public:
         return strStatus;
     }
 
-    int64_t GetLastPaid();
+    int GetCollateralAge();
+
+    int GetLastPaidTime() { return nTimeLastPaid; }
+    int GetLastPaidBlock() { return nBlockLastPaid; }
+    void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
 
 };
 

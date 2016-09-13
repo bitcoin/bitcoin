@@ -24,6 +24,8 @@ extern CMasternodeMan mnodeman;
 class CMasternodeMan
 {
 private:
+    static const int MASTERNODES_LAST_PAID_SCAN_BLOCKS  = 100;
+
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
@@ -134,6 +136,7 @@ public:
     /// Perform complete check and only then update list and maps
     bool CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos);
 
+    void UpdateLastPaid(const CBlockIndex *pindex);
 };
 
 #endif
