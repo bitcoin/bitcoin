@@ -350,7 +350,7 @@
         <translation>Barra de ferramentas</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Core de Bitcoin</translation>
     </message>
     <message>
@@ -358,8 +358,8 @@
         <translation>Solicitar pagos (xenera códigos QR e bitcoin: URIs)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Sobre Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>&amp;Sobre Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -681,7 +681,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Core de Bitcoin</translation>
     </message>
     <message>
@@ -689,7 +689,7 @@
         <translation>versión</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
+        <source>About Bitcoin Unlimited</source>
         <translation>Sobre Bitcoin core</translation>
     </message>
     <message>
@@ -720,7 +720,7 @@
         <translation>Empregar un directorio de datos personalizado</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Core de Bitcoin</translation>
     </message>
     <message>
@@ -1520,12 +1520,12 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Core de Bitcoin</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Os desarrolladores de Bitcoin Core</translation>
+        <source>The Bitcoin Unlimited developers</source>
+        <translation>Os desarrolladores de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>[testnet]</source>

@@ -168,8 +168,8 @@
         <translation>Ці ўпэўненыя вы, што жадаеце зашыфраваць свой гаманец?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin Core зараз будзе зачынены, каб фіналізаваць працэс шыфравання. Памятайце, што шыфраванне вашага гаманца не гарантуе абсалютную абарону ад магчымасці крадзяжу біткойнаў шкоднымі праграмамі, якія могуць інфікаваць ваш камп'ютар.</translation>
+        <source>Bitcoin Unlimited will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin Unlimited зараз будзе зачынены, каб фіналізаваць працэс шыфравання. Памятайце, што шыфраванне вашага гаманца не гарантуе абсалютную абарону ад магчымасці крадзяжу біткойнаў шкоднымі праграмамі, якія могуць інфікаваць ваш камп'ютар.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -298,8 +298,8 @@
         <translation>Адчыниць &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Bitcoin Core кліент</translation>
+        <source>Bitcoin Unlimited client</source>
+        <translation>Bitcoin Unlimited кліент</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -350,8 +350,8 @@
         <translation>Атрымаць</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Паказаць інфармацыю аб Bitcoin Core</translation>
+        <source>Show information about Bitcoin Unlimited</source>
+        <translation>Паказаць інфармацыю аб Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -386,20 +386,20 @@
         <translation>Дапамога</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Запатрабаваць плацёж (генеруецца QR-код для біткойн URI)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>Аб Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>Аб Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Мадыфікаваць опцыі канфігурацыі Bitcoin Core</translation>
+        <source>Modify configuration options for Bitcoin Unlimited</source>
+        <translation>Мадыфікаваць опцыі канфігурацыі Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -418,8 +418,8 @@
         <translation>Опцыі каманднага радка</translation>
     </message>
     <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Паказваць даведку Bitcoin Core каб атрымаць спіс магчымых опцый каманднага радка</translation>
+        <source>Show the Bitcoin Unlimited help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Паказваць даведку Bitcoin Unlimited каб атрымаць спіс магчымых опцый каманднага радка</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -775,16 +775,16 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-біт)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Аб Bitcoin Core</translation>
+        <source>About Bitcoin Unlimited</source>
+        <translation>Аб Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -806,12 +806,12 @@
         <translation>Вітаем</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Вітаем у Bitcoin Core.</translation>
+        <source>Welcome to Bitcoin Unlimited.</source>
+        <translation>Вітаем у Bitcoin Unlimited.</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1102,12 +1102,12 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Распрацоўнікі Bitcoin Core</translation>
+        <source>The Bitcoin Unlimited developers</source>
+        <translation>Распрацоўнікі Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>[testnet]</source>

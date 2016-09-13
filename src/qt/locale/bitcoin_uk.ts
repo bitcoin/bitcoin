@@ -168,8 +168,8 @@
         <translation>Ви дійсно хочете зашифрувати свій гаманець?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Клієнт «Bitcoin Core» буде закрито для завершення процесу шифрування. Пам'ятайте, що шифрування гаманця не зможе повністю захистити ваші біткоїни від крадіжки якщо ваш комп'ютер буде інфіковано шкідливими програмами.</translation>
+        <source>Bitcoin Unlimited will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Клієнт «Bitcoin Unlimited» буде закрито для завершення процесу шифрування. Пам'ятайте, що шифрування гаманця не зможе повністю захистити ваші біткоїни від крадіжки якщо ваш комп'ютер буде інфіковано шкідливими програмами.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -306,8 +306,8 @@
         <translation>Відкрити &amp;URI</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Клієнт «Bitcoin Core»</translation>
+        <source>Bitcoin Unlimited client</source>
+        <translation>Клієнт «Bitcoin Unlimited»</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -358,8 +358,8 @@
         <translation>&amp;Отримати</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Показати інформацію про Bitcoin Core</translation>
+        <source>Show information about Bitcoin Unlimited</source>
+        <translation>Показати інформацію про Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -398,20 +398,20 @@
         <translation>Панель вкладок</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation>Створити запит платежу (генерує QR-код та bitcoin: URI)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>П&amp;ро Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>П&amp;ро Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Редагувати параметри Bitcoin Core</translation>
+        <source>Modify configuration options for Bitcoin Unlimited</source>
+        <translation>Редагувати параметри Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -430,8 +430,8 @@
         <translation>П&amp;араметри командного рядка</translation>
     </message>
     <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Показати довідку Bitcoin Core для отримання переліку можливих параметрів командного рядка.</translation>
+        <source>Show the Bitcoin Unlimited help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Показати довідку Bitcoin Unlimited для отримання переліку можливих параметрів командного рядка.</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -855,8 +855,8 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>version</source>
@@ -867,8 +867,8 @@
         <translation>(%1-бітний)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Про Bitcoin Core</translation>
+        <source>About Bitcoin Unlimited</source>
+        <translation>Про Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -918,16 +918,16 @@
         <translation>Вітання</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Ласкаво просимо в Bitcoin Core.</translation>
+        <source>Welcome to Bitcoin Unlimited.</source>
+        <translation>Ласкаво просимо в Bitcoin Unlimited.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Оскільки це перший запуск програми, ви можете обрати де Bitcoin Core буде зберігати дані.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Unlimited will store its data.</source>
+        <translation>Оскільки це перший запуск програми, ви можете обрати де Bitcoin Unlimited буде зберігати дані.</translation>
     </message>
     <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin Core завантажить та збереже копію ланцюжка блоків Bitcoin. Щонайменше %1ГБ даних буде збережено в цьому каталозі. Гаманець теж буде збережено в цьому каталозі.</translation>
+        <source>Bitcoin Unlimited will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Unlimited завантажить та збереже копію ланцюжка блоків Bitcoin. Щонайменше %1ГБ даних буде збережено в цьому каталозі. Гаманець теж буде збережено в цьому каталозі.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -938,8 +938,8 @@
         <translation>Використовувати свій каталог даних:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1020,8 +1020,8 @@
         <translation>Згортати замість закриття. Якщо ця опція включена, програма закриється лише після вибору відповідного пункту в меню.</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
-        <translation>Встановлює мову інтерфейсу. Зміни набудуть чинності після перезапуску Bitcoin Core.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Unlimited.</source>
+        <translation>Встановлює мову інтерфейсу. Зміни набудуть чинності після перезапуску Bitcoin Unlimited.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1048,12 +1048,12 @@
         <translation>&amp;Мережа</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Автоматично запускати Bitcoin Core при вході до системи.</translation>
+        <source>Automatically start Bitcoin Unlimited after logging in to the system.</source>
+        <translation>Автоматично запускати Bitcoin Unlimited при вході до системи.</translation>
     </message>
     <message>
-        <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>&amp;Запускати Bitcoin Core при вході до системи</translation>
+        <source>&amp;Start Bitcoin Unlimited on system login</source>
+        <translation>&amp;Запускати Bitcoin Unlimited при вході до системи</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1518,8 +1518,8 @@
         <translation>Використання пам'яті</translation>
     </message>
     <message>
-        <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Відкрити файл журналу налагодження Bitcoin Core з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
+        <source>Open the Bitcoin Unlimited debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Відкрити файл журналу налагодження Bitcoin Unlimited з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1678,8 +1678,8 @@
         <translation>&amp;Розблокувати Вузол</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin Core RPC console.</source>
-        <translation>Вітаємо у RPC-консолі Bitcoin Core.</translation>
+        <source>Welcome to the Bitcoin Unlimited RPC console.</source>
+        <translation>Вітаємо у RPC-консолі Bitcoin Unlimited.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -2264,8 +2264,8 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Bitcoin Core is shutting down...</source>
-        <translation>Bitcoin Core вимикається...</translation>
+        <source>Bitcoin Unlimited is shutting down...</source>
+        <translation>Bitcoin Unlimited вимикається...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2414,12 +2414,12 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Розробники Bitcoin Core</translation>
+        <source>The Bitcoin Unlimited developers</source>
+        <translation>Розробники Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2936,8 +2936,8 @@
         <translation>Максимальна загальна комісія (в %s) за одну транзакцію; занадто низьке значення може скасувати відправку великих транзакцій (типово: %s)</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>Будь ласка, перевірте коректність дати і часу на своєму комп'ютері! За наявності значної похибки Bitcoin Core буде працювати неправильно.</translation>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Unlimited will not work properly.</source>
+        <translation>Будь ласка, перевірте коректність дати і часу на своєму комп'ютері! За наявності значної похибки Bitcoin Unlimited буде працювати неправильно.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -3008,8 +3008,8 @@
         <translation>Це тестова збірка пре-релізної версії - використовуйте на свій страх і ризик - не застосовувати для добування монет або торгівлі</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation>Неможливо прив'язатися до %s на цьому комп'ютері. Можливо, Bitcoin Core вже запущено.</translation>
+        <source>Unable to bind to %s on this computer. Bitcoin Unlimited is probably already running.</source>
+        <translation>Неможливо прив'язатися до %s на цьому комп'ютері. Можливо, Bitcoin Unlimited вже запущено.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
@@ -3216,8 +3216,8 @@
         <translation>Прив'язатися до даної адреси для прослуховування JSON-RPC підключень. Використовуйте запис виду [хост]:порт для IPv6. Цей параметр можна вказувати декілька разів (типово: прив'язуватися до всіх інтерфейсів)</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>Не вдалося встановити блокування на каталог даних %s. Bitcoin Core, ймовірно, вже запущений.</translation>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Unlimited is probably already running.</source>
+        <translation>Не вдалося встановити блокування на каталог даних %s. Bitcoin Unlimited, ймовірно, вже запущений.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3316,12 +3316,12 @@
         <translation>Підключитись через SOCKS5-проксі</translation>
     </message>
     <message>
-        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation>(C) 2009-%i Розробники Bitcoin Core</translation>
+        <source>Copyright (C) 2009-%i The Bitcoin Unlimited Developers</source>
+        <translation>(C) 2009-%i Розробники Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
-        <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії Bitcoin Core</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Unlimited</source>
+        <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3336,8 +3336,8 @@
         <translation>Інформація</translation>
     </message>
     <message>
-        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
-        <translation>Не вдалося пройти базові перевірки під час ініціалізації. Bitcoin Core буде вимкнено.</translation>
+        <source>Initialization sanity check failed. Bitcoin Unlimited is shutting down.</source>
+        <translation>Не вдалося пройти базові перевірки під час ініціалізації. Bitcoin Unlimited буде вимкнено.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
@@ -3456,8 +3456,8 @@
         <translation>Ім'я користувача для JSON-RPC-з'єднань</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
-        <translation>Потрібно перезаписати гаманець: перезапустіть Bitcoin Core для завершення</translation>
+        <source>Wallet needed to be rewritten: restart Bitcoin Unlimited to complete</source>
+        <translation>Потрібно перезаписати гаманець: перезапустіть Bitcoin Unlimited для завершення</translation>
     </message>
     <message>
         <source>Warning</source>

@@ -270,8 +270,8 @@
         <translation>Abrir &amp;URL...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>cliente Bitcoin Core</translation>
+        <source>Bitcoin Unlimited client</source>
+        <translation>cliente Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -338,19 +338,19 @@
         <translation>Pestañas</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>nucleo Bitcoin</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>Acerca de Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>Acerca de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>opciones de la &amp;Linea de comandos</translation>
     </message>
     <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <source>Show the Bitcoin Unlimited help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostrar mensaje de ayuda del nucleo de Bitcoin para optener una lista con los posibles comandos  de Bitcoin</translation>
     </message>
     <message>
@@ -505,7 +505,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>nucleo Bitcoin</translation>
     </message>
     <message>
@@ -517,8 +517,8 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Acerca de Bitcoin Core</translation>
+        <source>About Bitcoin Unlimited</source>
+        <translation>Acerca de Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -536,7 +536,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>nucleo Bitcoin</translation>
     </message>
     </context>
@@ -818,7 +818,7 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Bitcoin Core is shutting down...</source>
+        <source>Bitcoin Unlimited is shutting down...</source>
         <translation>Apagando el nucleo de Bitcoin...</translation>
     </message>
     <message>
@@ -848,12 +848,12 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Los desarrolladores de Bitcoin Core</translation>
+        <source>The Bitcoin Unlimited developers</source>
+        <translation>Los desarrolladores de Bitcoin Unlimited</translation>
     </message>
     </context>
 <context>

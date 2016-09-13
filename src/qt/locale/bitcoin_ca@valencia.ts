@@ -168,8 +168,8 @@
         <translation>Esteu segur que voleu encriptar el vostre moneder?</translation>
     </message>
     <message>
-        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Ara es tancarà el Bitcoin Core per finalitzar el procés d'encriptació. Tingueu present que encriptar el vostre moneder no garanteix que les vostres bitcoins no puguen ser robades per programari maliciós que infecti l'ordinador.</translation>
+        <source>Bitcoin Unlimited will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Ara es tancarà el Bitcoin Unlimited per finalitzar el procés d'encriptació. Tingueu present que encriptar el vostre moneder no garanteix que les vostres bitcoins no puguen ser robades per programari maliciós que infecti l'ordinador.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -298,8 +298,8 @@
         <translation>Obri un &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
-        <translation>Client del Bitcoin Core</translation>
+        <source>Bitcoin Unlimited client</source>
+        <translation>Client del Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -350,8 +350,8 @@
         <translation>&amp;Rep</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
-        <translation>Mostra informació del Bitcoin Core</translation>
+        <source>Show information about Bitcoin Unlimited</source>
+        <translation>Mostra informació del Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -390,7 +390,7 @@
         <translation>Barra d'eines de les pestanyes</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucli de Bitcoin</translation>
     </message>
     <message>
@@ -398,12 +398,12 @@
         <translation>Sol·licita pagaments (genera codis QR i bitcoin: URI)</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Quant al Bitcoin Core</translation>
+        <source>&amp;About Bitcoin Unlimited</source>
+        <translation>&amp;Quant al Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin Core</source>
-        <translation>Modifica les opcions de configuració del Bitcoin Core</translation>
+        <source>Modify configuration options for Bitcoin Unlimited</source>
+        <translation>Modifica les opcions de configuració del Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -422,8 +422,8 @@
         <translation>Opcions de la &amp;línia d'ordes</translation>
     </message>
     <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Mostra el missatge d'ajuda del Bitcoin Core per obtindre una llista amb les possibles opcions de línia d'ordes de Bitcoin</translation>
+        <source>Show the Bitcoin Unlimited help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Mostra el missatge d'ajuda del Bitcoin Unlimited per obtindre una llista amb les possibles opcions de línia d'ordes de Bitcoin</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -847,7 +847,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucli de Bitcoin</translation>
     </message>
     <message>
@@ -859,8 +859,8 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
-        <translation>Quant al Bitcoin Core</translation>
+        <source>About Bitcoin Unlimited</source>
+        <translation>Quant al Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -882,16 +882,16 @@
         <translation>Vos donem la benviguda</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation>Vos donem la benvinguda al Bitcoin Core.</translation>
+        <source>Welcome to Bitcoin Unlimited.</source>
+        <translation>Vos donem la benvinguda al Bitcoin Unlimited.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Atès que és la primera vegada que executeu el programa, podeu triar on emmagatzemarà el Bitcoin Core les dades.</translation>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Unlimited will store its data.</source>
+        <translation>Atès que és la primera vegada que executeu el programa, podeu triar on emmagatzemarà el Bitcoin Unlimited les dades.</translation>
     </message>
     <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>El Bitcoin Core descarregarà i emmagatzemarà una còpia de la cadena de blocs de Bitcoin. Com a mínim s'emmagatzemaran %1 GB de dades en este directori, que seguiran creixent gradualment. També s'hi emmagatzemarà el moneder.</translation>
+        <source>Bitcoin Unlimited will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>El Bitcoin Unlimited descarregarà i emmagatzemarà una còpia de la cadena de blocs de Bitcoin. Com a mínim s'emmagatzemaran %1 GB de dades en este directori, que seguiran creixent gradualment. També s'hi emmagatzemarà el moneder.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -902,7 +902,7 @@
         <translation>Utilitza un directori de dades personalitzat:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Nucli de Bitcoin</translation>
     </message>
     <message>
@@ -984,8 +984,8 @@
         <translation>Minimitza en comptes d'eixir de l'aplicació quan la finestra es tanca. Quan s'habilita esta opció l'aplicació es tancara només quan se selecciona Ix del menú. </translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
-        <translation>La interfície d'usuari pot definir-se des d'ací. El paràmetre tindrà efecte després de reiniciar el Bitcoin Core.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Unlimited.</source>
+        <translation>La interfície d'usuari pot definir-se des d'ací. El paràmetre tindrà efecte després de reiniciar el Bitcoin Unlimited.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1012,12 +1012,12 @@
         <translation>&amp;Xarxa</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>Inicia el Bitcoin Core automàticament després d'iniciar una sessió en el sistema.</translation>
+        <source>Automatically start Bitcoin Unlimited after logging in to the system.</source>
+        <translation>Inicia el Bitcoin Unlimited automàticament després d'iniciar una sessió en el sistema.</translation>
     </message>
     <message>
-        <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>&amp;Inicia el Bitcoin Core en inciar el sistema</translation>
+        <source>&amp;Start Bitcoin Unlimited on system login</source>
+        <translation>&amp;Inicia el Bitcoin Unlimited en inciar el sistema</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1446,8 +1446,8 @@
         <translation>Nombre de blocs actuals</translation>
     </message>
     <message>
-        <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Obri el fitxer de registre de depuració del Bitcoin Core del directori de dades actual. Pot portar uns quants segons per a fitxers de registre grans.</translation>
+        <source>Open the Bitcoin Unlimited debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Obri el fitxer de registre de depuració del Bitcoin Unlimited del directori de dades actual. Pot portar uns quants segons per a fitxers de registre grans.</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1550,8 +1550,8 @@
         <translation>Neteja la consola</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin Core RPC console.</source>
-        <translation>Vos donem la benviguda a la consola RPC del Bitcoin Core.</translation>
+        <source>Welcome to the Bitcoin Unlimited RPC console.</source>
+        <translation>Vos donem la benviguda a la consola RPC del Bitcoin Unlimited.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -2124,8 +2124,8 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Bitcoin Core is shutting down...</source>
-        <translation>S'està parant el Bitcoin Core...</translation>
+        <source>Bitcoin Unlimited is shutting down...</source>
+        <translation>S'està parant el Bitcoin Unlimited...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2274,12 +2274,12 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>Bitcoin Unlimited</source>
+        <translation>Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Els desenvolupadors del Bitcoin Core</translation>
+        <source>The Bitcoin Unlimited developers</source>
+        <translation>Els desenvolupadors del Bitcoin Unlimited</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2816,8 +2816,8 @@
         <translation>Esta és una versió de pre-llançament - utilitza-la sota la teva responsabilitat - No usar per a minería o aplicacions de compra-venda</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation>No es pot enllaçar %s a este ordinador. El Bitcoin Core probablement ja estiga executant-s'hi.</translation>
+        <source>Unable to bind to %s on this computer. Bitcoin Unlimited is probably already running.</source>
+        <translation>No es pot enllaçar %s a este ordinador. El Bitcoin Unlimited probablement ja estiga executant-s'hi.</translation>
     </message>
     <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
@@ -2980,8 +2980,8 @@
         <translation>Vincula a l'adreça donada per a escoltar les connexions JSON-RPC. Feu servir la notació [host]:port per a IPv6. Esta opció pot ser especificada moltes vegades (per defecte: vincula a totes les interfícies)</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>No es pot obtindre un bloqueig del directori de dades %s. El Bitcoin Core probablement ja s'estiga executant.</translation>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Unlimited is probably already running.</source>
+        <translation>No es pot obtindre un bloqueig del directori de dades %s. El Bitcoin Unlimited probablement ja s'estiga executant.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3064,11 +3064,11 @@
         <translation>Connecta a través del proxy SOCKS5</translation>
     </message>
     <message>
-        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation>Copyright (C) 2009-%i Els desenvolupadors del Bitcoin Core</translation>
+        <source>Copyright (C) 2009-%i The Bitcoin Unlimited Developers</source>
+        <translation>Copyright (C) 2009-%i Els desenvolupadors del Bitcoin Unlimited</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Unlimited</source>
         <translation>Error en carregar wallet.dat: el moneder requereix una versió més nova del Bitcoin core</translation>
     </message>
     <message>
@@ -3080,8 +3080,8 @@
         <translation>&amp;Informació</translation>
     </message>
     <message>
-        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
-        <translation>Ha fallat la inicialització de la comprovació de validesa. El Bitcoin Core s'està parant.</translation>
+        <source>Initialization sanity check failed. Bitcoin Unlimited is shutting down.</source>
+        <translation>Ha fallat la inicialització de la comprovació de validesa. El Bitcoin Unlimited s'està parant.</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
@@ -3180,8 +3180,8 @@
         <translation>Nom d'usuari per a connexions JSON-RPC</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
-        <translation>Cal reescriure el moneder: reiniceu el Bitcoin Core per completar-ho.</translation>
+        <source>Wallet needed to be rewritten: restart Bitcoin Unlimited to complete</source>
+        <translation>Cal reescriure el moneder: reiniceu el Bitcoin Unlimited per completar-ho.</translation>
     </message>
     <message>
         <source>Warning</source>

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -586,14 +587,14 @@ int main(int argc, char *argv[])
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"),
+        QMessageBox::critical(0, QObject::tr("Bitcoin Unlimited"),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"),
+        QMessageBox::critical(0, QObject::tr("Bitcoin Unlimited"),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return false;
     }
@@ -608,7 +609,7 @@ int main(int argc, char *argv[])
     try {
         SelectParams(ChainNameFromCommandLine());
     } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin"), QObject::tr("Error: %1").arg(e.what()));
+        QMessageBox::critical(0, QObject::tr("Bitcoin Unlimited"), QObject::tr("Error: %1").arg(e.what()));
         return 1;
     }
 #ifdef ENABLE_WALLET

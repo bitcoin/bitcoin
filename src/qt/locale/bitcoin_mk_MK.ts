@@ -250,7 +250,7 @@
         <translation>Отвори &amp;URI...</translation>
     </message>
     <message>
-        <source>Bitcoin Core client</source>
+        <source>Bitcoin Unlimited client</source>
         <translation>Биткоин Core софтверот</translation>
     </message>
     <message>
@@ -286,7 +286,7 @@
         <translation>&amp;Прими</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin Core</source>
+        <source>Show information about Bitcoin Unlimited</source>
         <translation>Прикажи информации за Биткоин Core</translation>
     </message>
     <message>
@@ -306,11 +306,11 @@
         <translation>&amp;Помош</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Биткоин Core</translation>
     </message>
     <message>
-        <source>&amp;About Bitcoin Core</source>
+        <source>&amp;About Bitcoin Unlimited</source>
         <translation>&amp;За Биткоин Core</translation>
     </message>
     <message numerus="yes">
@@ -575,7 +575,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Биткоин Core</translation>
     </message>
     <message>
@@ -587,14 +587,14 @@
         <translation>(%1-бит)</translation>
     </message>
     <message>
-        <source>About Bitcoin Core</source>
+        <source>About Bitcoin Unlimited</source>
         <translation>За Биткоин Core</translation>
     </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Биткоин Core</translation>
     </message>
     <message>
@@ -934,7 +934,7 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>Bitcoin Unlimited</source>
         <translation>Биткоин Core</translation>
     </message>
     </context>
