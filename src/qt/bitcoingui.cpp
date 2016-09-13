@@ -500,7 +500,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
             setTrayIconVisible(optionsModel->getHideTrayIcon());
         }
 
-        modalOverlay->setKnownBestHeight(clientModel->getHeaderHeight());
+        modalOverlay->setKnownBestHeight(clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(clientModel->getHeaderTipTime()));
     } else {
         // Disable possibility to show main window via action
         toggleHideAction->setEnabled(false);
@@ -718,7 +718,10 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     if (modalOverlay)
     {
         if (header)
-            modalOverlay->setKnownBestHeight(count);
+        {
+            /* use clientmodels getHeaderTipHeight and getHeaderTipTime because the NotifyHeaderTip signal does not fire when updating the best header */
+            modalOverlay->setKnownBestHeight(clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(clientModel->getHeaderTipTime()));
+        }
         else
             modalOverlay->tipUpdate(count, blockDate, nVerificationProgress);
     }

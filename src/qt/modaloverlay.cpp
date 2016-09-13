@@ -63,10 +63,17 @@ bool ModalOverlay::event(QEvent* ev) {
     return QWidget::event(ev);
 }
 
-void ModalOverlay::setKnownBestHeight(int count)
+void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
 {
-    if (count > bestBlockHeight)
-        bestBlockHeight = count;
+
+    /* only update the blockheight if the headerschain-tip is not older then 30 days */
+    int64_t now = QDateTime::currentDateTime().toTime_t();
+    int64_t btime = blockDate.toTime_t();
+    if (btime+3600*24*30 > now)
+    {
+        if (count > bestBlockHeight)
+            bestBlockHeight = count;
+    }
 }
 
 void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress)
@@ -122,6 +129,8 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     // show remaining amount of blocks
     if (bestBlockHeight > 0)
         ui->amountOfBlocksLeft->setText(QString::number(bestBlockHeight-count));
+    else
+        ui->expectedTimeLeft->setText(tr("Unknown. Syncing Headers..."));
 }
 
 void ModalOverlay::showHide(bool hide, bool userRequested)
