@@ -167,6 +167,18 @@ extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
 // BUIP010 Xtreme Thinblocks: end
 
+// Connection Slot mitigation - used to track connection attempts and evictions
+struct ConnectionHistory
+{
+    double nConnections;      // number of connection attempts made within 1 minute
+    int64_t nLastConnectionTime;  // the time the last connection attempt was made
+
+    double nEvictions;        // number of times a connection was de-prioritized and disconnected in last 30 minutes
+    int64_t nLastEvictionTime;    // the time the last eviction occurred.
+};
+extern std::map<CNetAddr, ConnectionHistory > mapInboundConnectionTracker;
+extern CCriticalSection cs_mapInboundConnectionTracker;
+
 // statistics
 void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t nTime);
 

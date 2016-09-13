@@ -120,6 +120,10 @@ extern CSemaphore *semOutbound;
 static CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
+// BU  Connection Slot mitigation - used to determine how many connection attempts over time
+std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
+CCriticalSection cs_mapInboundConnectionTracker;
+
 // Signals for message handling
 extern CNodeSignals g_signals;
 CNodeSignals& GetNodeSignals() { return g_signals; }
@@ -935,7 +939,14 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     {
         LOCK(cs_vNodes);
 
-        BOOST_FOREACH(CNode *node, vNodes) {
+        static int64_t nLastTime = GetTime();
+        BOOST_FOREACH(CNode *node, vNodes)
+        {
+            // Decay the activity bytes for each node over a period of 2 hours.  This gradually de-prioritizes a connection 
+            // that was once active but has gone stale for some reason and allows lower priority active nodes to climb the ladder.
+            int64_t nNow = GetTime();
+            node->nActivityBytes *= pow(1.0 - 1.0/7200, (double)(nNow - nLastTime)); // exponential 2 hour decay
+
             if (node->fWhitelisted)
                 continue;
             if (!node->fInbound)
@@ -951,8 +962,10 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
                 return true;
             }
         }
+        nLastTime = GetTime();
     }
     vEvictionCandidatesByActivity = vEvictionCandidates;
+
 
     if (vEvictionCandidates.empty()) return false;
 
@@ -988,40 +1001,70 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
 //    if (vEvictionCandidates.empty()) return false;
 
+// *** BU - we do not need to deprioritize based on netgroup and it can have unwanted repercussions for xpedited network setup
+//          as well as testing setups.
     // Identify the network group with the most connections and youngest member.
     // (vEvictionCandidates is sorted by reverse connect time)
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
-    std::vector<unsigned char> naMostConnections;
-    unsigned int nMostConnections = 0;
-    int64_t nMostConnectionsTime = 0;
-    std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
-    BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
-        mapAddrCounts[node->addr.GetGroup()].push_back(node);
-        int64_t grouptime = mapAddrCounts[node->addr.GetGroup()][0]->nTimeConnected;
-        size_t groupsize = mapAddrCounts[node->addr.GetGroup()].size();
+//    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+//    std::vector<unsigned char> naMostConnections;
+//    unsigned int nMostConnections = 0;
+//    int64_t nMostConnectionsTime = 0;
+//    std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
+//    BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
+//        mapAddrCounts[node->addr.GetGroup()].push_back(node);
+//        int64_t grouptime = mapAddrCounts[node->addr.GetGroup()][0]->nTimeConnected;
+//        size_t groupsize = mapAddrCounts[node->addr.GetGroup()].size();
 
-        if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
-            nMostConnections = groupsize;
-            nMostConnectionsTime = grouptime;
-            naMostConnections = node->addr.GetGroup();
-        }
-    }
+//        if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
+//            nMostConnections = groupsize;
+//            nMostConnectionsTime = grouptime;
+//            naMostConnections = node->addr.GetGroup();
+//        }
+//    }
 
     // Reduce to the network group with the most connections
-    vEvictionCandidates = mapAddrCounts[naMostConnections];
+//    vEvictionCandidates = mapAddrCounts[naMostConnections];
 
     // Do not disconnect peers if there is only one unprotected connection from their network group.
-    if (vEvictionCandidates.size() > 1) {
-        // Disconnect from the network group with the most connections
-        vEvictionCandidates[0]->fDisconnect = true;
-        return true;
-    }
+//    if (vEvictionCandidates.size() > 1) {
+//        // Disconnect from the network group with the most connections
+//        vEvictionCandidates[0]->fDisconnect = true;
+//        return true;
+//    }
+// *** BU end section
 
     // If we get here then we prioritize connections based on activity.  The least active incoming peer is
     // de-prioritized based on bytes in and bytes out.  A whitelisted peer will always get a connection and there is
     // no need here to check whether the peer is whitelisted or not.
     std::sort(vEvictionCandidatesByActivity.begin(), vEvictionCandidatesByActivity.end(), CompareNodeActivityBytes);
     vEvictionCandidatesByActivity[0]->fDisconnect = true;
+
+    // BU - update the connection tracker
+    {
+        double nEvictions = 0;
+        LOCK(cs_mapInboundConnectionTracker);
+        CNetAddr ipAddress = (CNetAddr)vEvictionCandidatesByActivity[0]->addr;
+        if (mapInboundConnectionTracker.count(ipAddress)) {
+            // Decay the current number of evictions (over 1800 seconds) depending on the last eviction
+            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[ipAddress].nLastEvictionTime;
+            double nRatioElapsed = (double)nTimeElapsed / 1800;
+            nEvictions = mapInboundConnectionTracker[ipAddress].nEvictions - (nRatioElapsed * mapInboundConnectionTracker[ipAddress].nEvictions);
+            if (nEvictions < 0) 
+                nEvictions = 0;
+        }
+
+        nEvictions += 1;
+        mapInboundConnectionTracker[ipAddress].nEvictions = nEvictions;
+        mapInboundConnectionTracker[ipAddress].nLastEvictionTime = GetTime();
+
+        LogPrint("evict", "Number of Evictions is %f for %s\n", nEvictions, vEvictionCandidatesByActivity[0]->addr.ToString());
+        if (nEvictions > 15) {
+            int nHoursToBan = 4;
+            CNode::Ban(ipAddress, BanReasonNodeMisbehaving, nHoursToBan*60*60);
+            LogPrintf("Banning %s for %d hours: Too many evictions - connection dropped\n", vEvictionCandidatesByActivity[0]->addr.ToString(), nHoursToBan);
+        }
+    }
+
     LogPrint("evict", "Node disconnected because too inactive:%d bytes of activity for peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
     for (unsigned int i = 0; i < vEvictionCandidatesByActivity.size(); i++) {
         LogPrint("evict", "Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
@@ -1095,7 +1138,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (CNode::IsBanned(addr) && !whitelisted)
     {
-        LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
+        LogPrint("net", "connection from %s dropped (banned)\n", addr.ToString());
         CloseSocket(hSocket);
         return;
     }
@@ -1110,6 +1153,36 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         }
     }
 
+    // BU - add inbound connection to the ip tracker and increment counter
+    // If connection attempts exceeded within allowable timeframe then ban peer
+    {
+        double nConnections = 0;
+        LOCK(cs_mapInboundConnectionTracker);
+        CNetAddr ipAddress = (CNetAddr)addr;
+        if (mapInboundConnectionTracker.count(ipAddress)) {
+            // Decay the current number of connections (over 60 seconds) depending on the last connection attempt
+            int64_t nTimeElapsed = GetTime() - mapInboundConnectionTracker[ipAddress].nLastConnectionTime;
+            double nRatioElapsed = (double)nTimeElapsed / 60;
+            nConnections = mapInboundConnectionTracker[ipAddress].nConnections - (nRatioElapsed * mapInboundConnectionTracker[ipAddress].nConnections);
+            if (nConnections < 0) 
+                nConnections = 0;
+        }
+
+        nConnections += 1;
+        mapInboundConnectionTracker[ipAddress].nConnections = nConnections;
+        mapInboundConnectionTracker[ipAddress].nLastConnectionTime = GetTime();
+
+        LogPrint("evict", "Number of Connection attempts is %f for %s\n", nConnections, addr.ToString());
+        if (nConnections > 4 && !whitelisted) {
+            int nHoursToBan = 4;
+            CNode::Ban((CNetAddr)addr, BanReasonNodeMisbehaving, nHoursToBan*60*60);
+            LogPrintf("Banning %s for %d hours: Too many connection attempts - connection dropped\n", addr.ToString(), nHoursToBan);
+            CloseSocket(hSocket);
+            return;
+        }
+    }
+    // BU - end section
+ 
     CNode* pnode = new CNode(hSocket, addr, "", true);
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
