@@ -1093,6 +1093,8 @@ UniValue addwitnessaddress(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "Public key or redeemscript not known to wallet");
     }
 
+    pwalletMain->SetAddressBook(w.result, "", "receive");
+
     return CBitcoinAddress(w.result).ToString();
 }
 
