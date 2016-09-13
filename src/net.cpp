@@ -2362,11 +2362,12 @@ void CConnman::RecordBytesSent(uint64_t bytes)
 void CConnman::SetMaxOutboundTarget(uint64_t limit)
 {
     LOCK(cs_totalBytesSent);
-    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MAX_BLOCK_SERIALIZED_SIZE;
+    // assume the average size of serialized blocks is half the maximum
+    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MAX_BLOCK_SERIALIZED_SIZE / 2;
     nMaxOutboundLimit = limit;
 
     if (limit > 0 && limit < recommendedMinimum)
-        LogPrintf("Max outbound target is very small (%s bytes) and will be overshot. Recommended minimum is %s bytes.\n", nMaxOutboundLimit, recommendedMinimum);
+        LogPrintf("Max outbound target is very small (%s MiB) and will be overshot. Recommended minimum is %s MiB.\n", nMaxOutboundLimit/1024.0/1024.0, recommendedMinimum/1024.0/1024.0);
 }
 
 uint64_t CConnman::GetMaxOutboundTarget()
