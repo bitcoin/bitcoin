@@ -22,7 +22,7 @@ struct CompareLastPaidBlock
     bool operator()(const std::pair<int, CTxIn>& t1,
                     const std::pair<int, CTxIn>& t2) const
     {
-        return t1.first < t2.first;
+        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second < t2.second);
     }
 };
 
