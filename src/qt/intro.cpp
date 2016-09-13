@@ -178,7 +178,7 @@ bool Intro::pickDataDirectory()
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR))
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || GetBoolArg("-resetguisettings", false))
     {
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
@@ -204,6 +204,7 @@ bool Intro::pickDataDirectory()
         }
 
         settings.setValue("strDataDir", dataDir);
+        settings.setValue("fReset", false);
     }
     /* Only override -datadir if different from the default, to make it possible to
      * override -datadir in the bitcoin.conf file in the default data directory
