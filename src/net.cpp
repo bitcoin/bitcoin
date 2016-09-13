@@ -1167,10 +1167,6 @@ void CConnman::ThreadSocketHandler()
                 {
                     TRY_LOCK(pnode->cs_vSend, lockSend);
                     if (lockSend) {
-                        if (pnode->nOptimisticBytesWritten) {
-                            RecordBytesSent(pnode->nOptimisticBytesWritten);
-                            pnode->nOptimisticBytesWritten = 0;
-                        }
                         if (!pnode->vSendMsg.empty()) {
                             FD_SET(pnode->hSocket, &fdsetSend);
                             continue;
@@ -2582,7 +2578,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
-    nOptimisticBytesWritten = 0;
 
     BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
