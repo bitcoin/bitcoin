@@ -24,7 +24,7 @@ using namespace std;
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70103;
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70201;
 
-extern CCriticalSection cs_vecPayments;
+extern CCriticalSection cs_vecPayees;
 extern CCriticalSection cs_mapMasternodeBlocks;
 extern CCriticalSection cs_mapMasternodePayeeVotes;
 
@@ -75,67 +75,26 @@ class CMasternodeBlockPayees
 {
 public:
     int nBlockHeight;
-    std::vector<CMasternodePayee> vecPayments;
+    std::vector<CMasternodePayee> vecPayees;
 
-    CMasternodeBlockPayees(){
-        nBlockHeight = 0;
-        vecPayments.clear();
-    }
-    CMasternodeBlockPayees(int nBlockHeightIn) {
-        nBlockHeight = nBlockHeightIn;
-        vecPayments.clear();
-    }
-
-    void AddPayee(CScript payeeIn, int nIncrement){
-        LOCK(cs_vecPayments);
-
-        BOOST_FOREACH(CMasternodePayee& payee, vecPayments){
-            if(payee.scriptPubKey == payeeIn) {
-                payee.nVotes += nIncrement;
-                return;
-            }
-        }
-
-        CMasternodePayee c(payeeIn, nIncrement);
-        vecPayments.push_back(c);
-    }
-
-    bool GetPayee(CScript& payee)
-    {
-        LOCK(cs_vecPayments);
-
-        int nVotes = -1;
-        BOOST_FOREACH(CMasternodePayee& p, vecPayments){
-            if(p.nVotes > nVotes){
-                payee = p.scriptPubKey;
-                nVotes = p.nVotes;
-            }
-        }
-
-        return (nVotes > -1);
-    }
-
-    bool HasPayeeWithVotes(CScript payee, int nVotesReq)
-    {
-        LOCK(cs_vecPayments);
-
-        BOOST_FOREACH(CMasternodePayee& p, vecPayments){
-            if(p.nVotes >= nVotesReq && p.scriptPubKey == payee) return true;
-        }
-
-        return false;
-    }
-
-    bool IsTransactionValid(const CTransaction& txNew);
-    std::string GetRequiredPaymentsString();
+    CMasternodeBlockPayees() : nBlockHeight(0) {}
+    CMasternodeBlockPayees(int nBlockHeightIn) : nBlockHeight(nBlockHeightIn) {}
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nBlockHeight);
-        READWRITE(vecPayments);
-     }
+        READWRITE(vecPayees);
+    }
+
+    void AddPayee(CMasternodePaymentWinner winner);
+    bool GetPayee(CScript& payeeRet);
+    bool HasPayeeWithVotes(CScript payeeIn, int nVotesReq);
+
+    bool IsTransactionValid(const CTransaction& txNew);
+
+    std::string GetRequiredPaymentsString();
 };
 
 // for storing the winning payments
