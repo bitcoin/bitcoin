@@ -107,11 +107,17 @@ CPubKey CWallet::GenerateNewKey()
         CExtKey externalChainChildKey; //key at m/0'/0'
         CExtKey childKey;              //key at m/0'/0'/<n>'
 
-        // try to get the master key
-        if (!GetKey(hdChain.masterKeyID, key))
-            throw std::runtime_error(std::string(__func__) + ": Master key not found");
+        // If a custom extended master private key is available, use this for child key derivation
+        if (hdChain.customMasterKey.IsValid())
+            masterKey = hdChain.customMasterKey;
+        else
+        {
+            // try to get the "master" 32byte key to use it as hd seed
+            if (!GetKey(hdChain.masterKeyID, key))
+                throw std::runtime_error(std::string(__func__) + ": Master key not found");
 
-        masterKey.SetMaster(key.begin(), key.size());
+            masterKey.SetMaster(key.begin(), key.size());
+        }
 
         // derive m/0'
         // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
@@ -630,10 +636,14 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // if we are using HD, replace the HD master key (seed) with a new one
         if (IsHDEnabled()) {
-            CKey key;
-            CPubKey masterPubKey = GenerateNewHDMasterKey();
-            if (!SetHDMasterKey(masterPubKey))
-                return false;
+            // when a custom master private key has been set, we should keep it and warn the user
+            if (hdChain.customMasterKey.IsValid())
+                LogPrintf("WARNING: the custom set extended master private key (xpriv) will be re-used after encryption of the wallet.");
+            else {
+                CPubKey masterPubKey = GenerateNewHDMasterKey();
+                if (!SetHDMasterKey(masterPubKey, GetArg("-hdxpriv", "")))
+                    return false;
+            }
         }
 
         NewKeyPool();
@@ -1207,7 +1217,7 @@ CPubKey CWallet::GenerateNewHDMasterKey()
     return pubkey;
 }
 
-bool CWallet::SetHDMasterKey(const CPubKey& pubkey)
+bool CWallet::SetHDMasterKey(const CPubKey& pubkey, const std::string& xPriv)
 {
     LOCK(cs_wallet);
 
@@ -1218,7 +1228,24 @@ bool CWallet::SetHDMasterKey(const CPubKey& pubkey)
     // the child index counter in the database
     // as a hdchain object
     CHDChain newHdChain;
-    newHdChain.masterKeyID = pubkey.GetID();
+
+    // check for >1 to ignore "0" or "1"
+    if (xPriv.size() > 1)
+    {
+        CBitcoinExtKey b58key(xPriv);
+        // copy over the key
+        newHdChain.customMasterKey = b58key.GetKey();
+        if (!newHdChain.customMasterKey.IsValid())
+        {
+            LogPrintf("%s: invalid xpriv provided\n", __func__);
+            return false;
+        }
+        // for custom key, user the xprivs pubkeys hash160 as ID
+        newHdChain.masterKeyID = newHdChain.customMasterKey.key.GetPubKey().GetID();
+    }
+    else
+        newHdChain.masterKeyID = pubkey.GetID();
+
     SetHDChain(newHdChain, false);
 
     return true;
@@ -3253,6 +3280,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
     strUsage += HelpMessageOpt("-usehd", _("Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: %u)"), DEFAULT_USE_HD_WALLET));
+    strUsage += HelpMessageOpt("-hdxpriv", _("Use a custom extended master private key (xpriv) when deterministic key generation (HD) after BIP32 is enabled. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: empty==generate new seed)"), DEFAULT_USE_HD_WALLET));
     strUsage += HelpMessageOpt("-walletrbf", strprintf(_("Send transactions with full-RBF opt-in enabled (default: %u)"), DEFAULT_WALLET_RBF));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
@@ -3344,8 +3372,9 @@ bool CWallet::InitLoadWallet()
         if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
             // generate a new master key
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
-            if (!walletInstance->SetHDMasterKey(masterPubKey))
-                throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
+            std::string hdxpriv = GetArg("-hdxpriv", "");
+            if (!walletInstance->SetHDMasterKey(masterPubKey, hdxpriv))
+                return InitError(_("Storing master key failed"));
         }
         CPubKey newDefaultKey;
         if (walletInstance->GetKeyFromPool(newDefaultKey)) {
@@ -3359,9 +3388,19 @@ bool CWallet::InitLoadWallet()
     else if (mapArgs.count("-usehd")) {
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD)
-            return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), walletFile));
+            return InitError(strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"), walletFile));
+        if (GetArg("-hdxpriv", "").size() > 1)
+        {
+            CBitcoinExtKey b58key(GetArg("-hdxpriv", ""));
+            if (!b58key.GetKey().IsValid())
+                return InitError(strprintf(_("Error loading %s: Invalid master extended private key (xpriv)"), walletFile));
+            if (!(b58key.GetKey() == walletInstance->GetHDChain().customMasterKey))
+                return InitError(strprintf(_("Error loading %s: You can't change the master extended private key (xpriv) on an already existing HD wallet"), walletFile));
+            else
+                LogPrintf("WARNING: For security reasons the -hdxpriv startup argument should be removed after wallet creation\n");
+        }
         if (!walletInstance->IsHDEnabled() && useHD)
-            return InitError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"), walletFile));
+            return InitError(strprintf(_("Error loading %s: You can't enable HD on an already existing non-HD wallet"), walletFile));
     }
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);

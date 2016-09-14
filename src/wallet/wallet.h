@@ -925,7 +925,8 @@ public:
     CPubKey GenerateNewHDMasterKey();
     
     /* Set the current HD master key (will reset the chain child index counters) */
-    bool SetHDMasterKey(const CPubKey& key);
+    /* If possibleXPriv is a valid Base58check encoded extended key it will be used as extended master key */
+    bool SetHDMasterKey(const CPubKey& key, const std::string& possibleXPriv);
 };
 
 /** A key allocated from the key pool. */

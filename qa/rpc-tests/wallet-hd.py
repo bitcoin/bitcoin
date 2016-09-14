@@ -9,6 +9,7 @@ from test_framework.util import (
     start_node,
     assert_equal,
     connect_nodes_bi,
+    bitcoind_processes,
 )
 import os
 import shutil
@@ -38,7 +39,7 @@ class WalletHDTest(BitcoinTestFramework):
         non_hd_add = self.nodes[0].getnewaddress()
         self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
 
-        # This should be enough to keep the master key and the non-HD key 
+        # This should be enough to keep the master key and the non-HD key
         self.nodes[1].backupwallet(tmpdir + "/hd.bak")
         #self.nodes[1].dumpwallet(tmpdir + "/hd.dump")
 
@@ -65,7 +66,6 @@ class WalletHDTest(BitcoinTestFramework):
         os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
         self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
-        #connect_nodes_bi(self.nodes, 0, 1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
@@ -82,6 +82,36 @@ class WalletHDTest(BitcoinTestFramework):
         #connect_nodes_bi(self.nodes, 0, 1)
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 
+        print("Testing xpriv input key ...")
+        self.stop_node(1)
+        os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1] + ['-hdxpriv=tprv8ZgxMBicQKsPdtsTRAApVU3LyNXoKGmvTFV32gfHtjpjJuWBdg9DKTs5beS8REciMXYCdGLWtoNjHu6Ty2bpBaGjtDGDnEEa4jrFQgkGNZ6', '-keypool=10'])
+        hd_add = self.nodes[1].getnewaddress()
+        hd_info = self.nodes[1].validateaddress(hd_add)
+        assert_equal(hd_info["hdkeypath"], "m/0'/0'/1'")
+        assert_equal(hd_add, "mieim7hGCyVxMLJxn49XV48Ys3eXVhW4a8")
+        
+        hd_add = self.nodes[1].getnewaddress()
+        hd_info = self.nodes[1].validateaddress(hd_add)
+        assert_equal(hd_info["hdkeypath"], "m/0'/0'/2'")
+        assert_equal(hd_add, "n2tfeKavAGwiZQi5yZWoz7dKmawvLw2Da9")
+        
+        hd_add = self.nodes[1].getnewaddress()
+        hd_info = self.nodes[1].validateaddress(hd_add)
+        assert_equal(hd_info["hdkeypath"], "m/0'/0'/3'")
+        assert_equal(hd_add, "mxxSD3zdhpxwdQhZfYpMJP6SES7TAo8c8X")
+
+        print("Encrypt wallet...")
+        #encrypt wallet, restart, unlock and dump
+        self.nodes[1].encryptwallet('test')
+        bitcoind_processes[1].wait()
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
+        self.nodes[1].walletpassphrase('test', 20)
+        hd_add = self.nodes[1].getnewaddress()
+        hd_info = self.nodes[1].validateaddress(hd_add)
+        # without passing the xpriv again, we should still continue the hd-keys-chain with the previous given xpriv
+        assert_equal(hd_info["hdkeypath"], "m/0'/0'/14'")
+        assert_equal(hd_add, "mgwHWMMqXTgvLJGzVduEucpaAf8AVviGrt")
 
 if __name__ == '__main__':
     WalletHDTest().main ()
