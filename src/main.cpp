@@ -5390,6 +5390,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::GETBLOCKTXN)
     {
         BlockTransactionsRequest req;
+        int nSize = vRecv.size();
         vRecv >> req;
 
         BlockMap::iterator it = mapBlockIndex.find(req.blockhash);
@@ -5416,7 +5417,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
             resp.txn[i] = block.vtx[req.indexes[i]];
         }
-        LogPrint("block", "recv getblocktxn %s (%d). send blocktxn (%d indexes) peer=%d\n", req.blockhash.ToString(), it->second->nHeight, i, pfrom->id);
+        LogPrint("block", "recv getblocktxn %s (%d) size=%d. send blocktxn (%d indexes) peer=%d\n", req.blockhash.ToString(), it->second->nHeight, nSize, i, pfrom->id);
         pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCKTXN, resp);
     }
 
@@ -5481,7 +5482,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
         if (!fRelayTxes && (!pfrom->fWhitelisted || !GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)))
         {
-            LogPrint("tx", "transaction sent in violation of protocol peer=%d\n", pfrom->id);
+            LogPrint("tx", "recv tx (%d bytes). sent in violation of protocol peer=%d\n", vRecv.size(), pfrom->id);
             return true;
         }
 
@@ -5647,6 +5648,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlockHeaderAndShortTxIDs cmpctblock;
+        int nSize = vRecv.size();
         vRecv >> cmpctblock;
 
         LOCK(cs_main);
@@ -5666,7 +5668,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (!AcceptBlockHeader(cmpctblock.header, state, chainparams, &pindex)) {
             int nDoS;
             if (state.IsInvalid(nDoS)) {
-                LogPrintf("recv cmpctblock. INVALID HEADER peer=%d\n", pfrom->id);
+                LogPrintf("recv cmpctblock (%d bytes). INVALID HEADER peer=%d\n", nSize, pfrom->id);
                 if (nDoS > 0)
                     Misbehaving(pfrom->GetId(), nDoS);
                 return true;
@@ -5675,7 +5677,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // If AcceptBlockHeader returned true, it set pindex
         assert(pindex);
-        LogPrint("block", "recv cmpctblock %s (%d) peer=%d\n", cmpctblock.header.GetHash().ToString(), pindex->nHeight, pfrom->id);
+        LogPrint("block", "recv cmpctblock %s (%d) %d bytes peer=%d\n", cmpctblock.header.GetHash().ToString(), pindex->nHeight, nSize, pfrom->id);
         UpdateBlockAvailability(pfrom->GetId(), pindex->GetBlockHash());
 
         std::map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
@@ -5780,6 +5782,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         BlockTransactions resp;
+        int nSize = vRecv.size();
         vRecv >> resp;
 
         LOCK(cs_main);
@@ -5787,7 +5790,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator it = mapBlocksInFlight.find(resp.blockhash);
         if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock ||
                 it->second.first != pfrom->GetId()) {
-            LogPrint("block", "recv blocktxn %s not expected peer=%d\n", resp.blockhash.ToString(), pfrom->id);
+            LogPrint("block", "recv blocktxn %s %d bytes not expected peer=%d\n", resp.blockhash.ToString(), nSize, pfrom->id);
             return true;
         }
 
@@ -5796,17 +5799,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         ReadStatus status = partialBlock.FillBlock(block, resp.txn);
         if (status == READ_STATUS_INVALID) {
             MarkBlockAsReceived(resp.blockhash); // Reset in-flight state in case of whitelist
-            LogPrint("block", "recv blocktxn. INVALID. peer=%d\n", pfrom->id);
+            LogPrint("block", "recv blocktxn %s bytes. INVALID. peer=%d\n", nSize, pfrom->id);
             Misbehaving(pfrom->GetId(), 100);
             return true;
         } else if (status == READ_STATUS_FAILED) {
             // Might have collided, fall back to getdata now :(
             std::vector<CInv> invs;
             invs.push_back(CInv(MSG_BLOCK, resp.blockhash));
-            LogPrint("block", "recv blocktxn. FAILED. send getdata %s peer=%d\n", invs[0].ToString(), pfrom->id);
+            LogPrint("block", "recv blocktxn %s bytes. FAILED. send getdata %s peer=%d\n", nSize, invs[0].ToString(), pfrom->id);
             pfrom->PushMessage(NetMsgType::GETDATA, invs);
         } else {
-            LogPrint("block", "recv blocktxn %s peer=%d\n", resp.blockhash.ToString(), pfrom->id);
+            LogPrint("block", "recv blocktxn %s %d bytes peer=%d\n", resp.blockhash.ToString(), nSize, pfrom->id);
             CValidationState state;
             ProcessNewBlock(state, chainparams, pfrom, &block, false, NULL, &connman);
             int nDoS;
