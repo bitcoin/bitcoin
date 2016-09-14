@@ -176,7 +176,13 @@ struct CExtKey {
         unsigned int len = BIP32_EXTKEY_SIZE;
         ::WriteCompactSize(s, len);
         unsigned char code[BIP32_EXTKEY_SIZE];
-        Encode(code);
+        // serialize zeros if the key is not valid
+        // this allows serializing CExtKey without acctually containing a key
+        if (!IsValid())
+            memset(code, 0, len);
+        else
+            Encode(code);
+
         s.write((const char *)&code[0], len);
     }
     template <typename Stream>
@@ -185,7 +191,30 @@ struct CExtKey {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
         s.read((char *)&code[0], len);
-        Decode(code);
+        // check if the serialized extkey contains only zeros
+        int sum = 0;
+        for (unsigned int i = 0; i < len; ++i) {
+            sum |= code[i];
+        }
+        // don't decode the buffer if it contains only zeros
+        if (sum != 0)
+            Decode(code);
+    }
+    bool IsValid() const
+    {
+        return key.IsValid() && !chaincode.IsNull();
+    }
+    void SetNull()
+    {
+        // clear the key (by setting a new one)
+        key.MakeNewKey(true);
+        // mark the key as invalid
+        std::vector<unsigned char> dummy;
+        key.Set(&dummy[0], &dummy[0], false);
+        nChild = 0;
+        nDepth = 0;
+        chaincode.SetNull();
+        vchFingerprint[0] = 0;vchFingerprint[1] = 0;vchFingerprint[2] = 0;vchFingerprint[3] = 0;
     }
 };
 
