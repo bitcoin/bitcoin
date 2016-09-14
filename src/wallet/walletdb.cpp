@@ -25,6 +25,51 @@ using namespace std;
 static uint64_t nAccountingEntryNumber = 0;
 
 //
+// CHDChain
+//
+
+bool CHDChain::IsValidKeypath(const std::string& keypathToCheck, bool requireK)
+{
+    // first element must always be 'm' (master key)
+    if (keypathToCheck.size() < 3 ||
+        keypathToCheck[0] != 'm' ||
+        keypathToCheck[1] != '/')
+        return false;
+
+    std::stringstream ss;
+    std::string dummy = keypathToCheck.substr(2); //remove m/ from the beginning
+    ss.str(dummy);
+    std::string item;
+
+    bool kFound = false;
+    while (getline(ss, item, '/')) {
+        bool hardened = (item.back() == 'h' || item.back() == '\'');
+        if (hardened)
+        {
+            // don't allow a single h or ' as item (they are only meant to attribue a child-key-index)
+            if (item.size() == 1)
+                return false;
+            item = item.substr(0, item.size()-1);
+        }
+
+        // allow the k element multiple times
+        if (item == "k")
+        {
+            kFound = true;
+            continue;
+        }
+
+        // must be a number at this point
+        // we don't care about uint32 overflows
+        if (!std::all_of(item.begin(), item.end(), ::isdigit))
+            return false;
+    }
+
+    // return true if requireK was not set or if the 'k' element was present
+    return (requireK ? kFound : true);
+}
+
+//
 // CWalletDB
 //
 

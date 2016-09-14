@@ -927,8 +927,12 @@ public:
     /* Generates a new HD master key (will not be activated) */
     CPubKey GenerateNewHDMasterKey();
     
-    /* Set the current HD master key (will reset the chain child index counters) */
-    bool SetHDMasterKey(const CPubKey& key);
+    /* Set the current HD master key and the BIP32 keypath-scheme (will reset the chain child index counters) */
+    bool SetHDMasterKeyAndScheme(const CPubKey& key, const std::string& keypathScheme);
+
+    /* Static function to derive a child key after a given keypath and masterkey */
+    static bool DeriveKeyWithKeypathScheme(const std::string keypathScheme, unsigned int childCounter, const CExtKey& masterKey, CExtKey& childKey, std::string &keypathOut);
+
 };
 
 /** A key allocated from the key pool. */

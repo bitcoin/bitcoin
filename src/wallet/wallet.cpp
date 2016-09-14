@@ -44,6 +44,7 @@ bool fWalletRbf = DEFAULT_WALLET_RBF;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
+const char * DEFAULT_HD_KEYPATH_SCHEME = "m/0'/0'/k'";
 
 /**
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
@@ -87,6 +88,38 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
     return &(it->second);
 }
 
+bool CWallet::DeriveKeyWithKeypathScheme(const std::string keypath, unsigned int childCounter, const CExtKey& masterKey, CExtKey& childKey, std::string &keypathOut)
+{
+    // cancel at this point if the keypath is not valid, set the 'k' element as not required
+    if (!CHDChain::IsValidKeypath(keypath, false))
+        return false;
+
+    // directly use the pass-by-ref childKey during the loop
+    childKey = masterKey;
+    unsigned int childkeyIndex = 0;
+    std::stringstream ss;
+    ss.str(keypath.substr(2)); //remove m/
+    std::string item;
+    keypathOut = "m";
+
+    while (getline(ss, item, '/')) {
+        bool hardened = (item.back() == 'h' || item.back() == '\'');
+        if (hardened)
+            item = item.substr(0, item.size()-1);
+
+        // replace k with the childkey index counter
+        if (item.size() == 1 && item[0] == 'k')
+            childkeyIndex = childCounter;
+        else
+            childkeyIndex = std::stoi(item);
+
+        // derive the next level, eventually add the hardened bit
+        childKey.Derive(childKey, childkeyIndex | (hardened ? BIP32_HARDENED_KEY_LIMIT : 0));
+        keypathOut+="/"+std::to_string(childkeyIndex)+(hardened ? "'" : "");
+    }
+    return true;
+}
+
 CPubKey CWallet::GenerateNewKey()
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
@@ -123,37 +156,25 @@ CPubKey CWallet::GenerateNewKey()
 
 void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
 {
-    // for now we use a fixed keypath scheme of m/0'/0'/k
-    CKey key;                      //master key seed (256bit)
-    CExtKey masterKey;             //hd master key
-    CExtKey accountKey;            //key at m/0'
-    CExtKey externalChainChildKey; //key at m/0'/0'
-    CExtKey childKey;              //key at m/0'/0'/<n>'
+
+    CKey key;            //master key seed (256bit)
+    CExtKey masterKey;
+    CExtKey childKey;
 
     // try to get the master key
     if (!GetKey(hdChain.masterKeyID, key))
         throw std::runtime_error(std::string(__func__) + ": Master key not found");
 
     masterKey.SetMaster(key.begin(), key.size());
-
-    // derive m/0'
-    // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
-    masterKey.Derive(accountKey, BIP32_HARDENED_KEY_LIMIT);
-
-    // derive m/0'/0'
-    accountKey.Derive(externalChainChildKey, BIP32_HARDENED_KEY_LIMIT);
-
-    // derive child key at next index, skip keys already known to the wallet
+    // loop until we have derived a key that does not already exists in the wallet
     do {
-        // always derive hardened keys
-        // childIndex | BIP32_HARDENED_KEY_LIMIT = derive childIndex in hardened child-index-range
-        // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
-        externalChainChildKey.Derive(childKey, hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
-        metadata.hdKeypath = "m/0'/0'/" + std::to_string(hdChain.nExternalChainCounter) + "'";
-        metadata.hdMasterKeyID = hdChain.masterKeyID;
-        // increment childkey index
+        if (!DeriveKeyWithKeypathScheme(hdChain.keypathScheme, hdChain.nExternalChainCounter, masterKey, childKey, metadata.hdKeypath))
+            throw std::runtime_error(std::string(__func__) + ": Deriving child key failed");
         hdChain.nExternalChainCounter++;
-    } while (HaveKey(childKey.key.GetPubKey().GetID()));
+    } while(HaveKey(childKey.key.GetPubKey().GetID()));
+
+    // set metadata
+    metadata.hdMasterKeyID = hdChain.masterKeyID;
     secret = childKey.key;
 
     // update the chain model in the database
@@ -639,7 +660,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         if (IsHDEnabled()) {
             CKey key;
             CPubKey masterPubKey = GenerateNewHDMasterKey();
-            if (!SetHDMasterKey(masterPubKey))
+            // set the new master seed
+            if (!SetHDMasterKeyAndScheme(masterPubKey, hdChain.keypathScheme))
                 return false;
         }
 
@@ -1220,8 +1242,11 @@ CPubKey CWallet::GenerateNewHDMasterKey()
     return pubkey;
 }
 
-bool CWallet::SetHDMasterKey(const CPubKey& pubkey)
+bool CWallet::SetHDMasterKeyAndScheme(const CPubKey& pubkey, const std::string& keypathScheme)
 {
+    if (!CHDChain::IsValidKeypath(keypathScheme))
+        throw std::runtime_error(std::string(__func__) + ": invalid BIP32 keypath-scheme");
+
     LOCK(cs_wallet);
 
     // ensure this wallet.dat can only be opened by clients supporting HD
@@ -1232,6 +1257,7 @@ bool CWallet::SetHDMasterKey(const CPubKey& pubkey)
     // as a hdchain object
     CHDChain newHdChain;
     newHdChain.masterKeyID = pubkey.GetID();
+    newHdChain.keypathScheme = keypathScheme;
     SetHDChain(newHdChain, false);
 
     return true;
@@ -1249,7 +1275,7 @@ bool CWallet::SetHDChain(const CHDChain& chain, bool memonly)
 
 bool CWallet::IsHDEnabled()
 {
-    return !hdChain.masterKeyID.IsNull();
+    return hdChain.IsValid();
 }
 
 int64_t CWalletTx::GetTxTime() const
@@ -3277,6 +3303,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
     strUsage += HelpMessageOpt("-usehd", _("Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: %u)"), DEFAULT_USE_HD_WALLET));
+    strUsage += HelpMessageOpt("-hdkeypath", _("Keypath-scheme to use when deterministic key generation (HD) after BIP32 in enabled. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: %u)"), DEFAULT_HD_KEYPATH_SCHEME));
     strUsage += HelpMessageOpt("-walletrbf", strprintf(_("Send transactions with full-RBF opt-in enabled (default: %u)"), DEFAULT_WALLET_RBF));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
@@ -3374,7 +3401,7 @@ bool CWallet::InitLoadWallet()
         if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
             // generate a new master key
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
-            if (!walletInstance->SetHDMasterKey(masterPubKey))
+            if (!walletInstance->SetHDMasterKeyAndScheme(masterPubKey, GetArg("-hdkeypath", DEFAULT_HD_KEYPATH_SCHEME)))
                 throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
         }
         CPubKey newDefaultKey;
@@ -3390,6 +3417,8 @@ bool CWallet::InitLoadWallet()
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD)
             return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), walletFile));
+        if (walletInstance->IsHDEnabled() && walletInstance->GetHDChain().keypathScheme != GetArg("-hdkeypath", DEFAULT_HD_KEYPATH_SCHEME))
+            return InitError(strprintf(_("Error loading %s: You can't change the keypath-scheme on an already existing HD wallet"), walletFile));
         if (!walletInstance->IsHDEnabled() && useHD)
             return InitError(strprintf(_("Error loading %s: You can't enable HD on a already existing non-HD wallet"), walletFile));
     }

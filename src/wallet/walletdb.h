@@ -47,8 +47,11 @@ class CHDChain
 public:
     uint32_t nExternalChainCounter;
     CKeyID masterKeyID; //!< master key hash160
+    std::string keypathScheme; //!< keypath scheme like "m/44'/0'/0'/0/k" or "m/0'/0'/k" (default)
 
-    static const int CURRENT_VERSION = 1;
+    static const int VERSION_BASIC=1;
+    static const int VERSION_WITH_FLEX_KEYPATH=2;
+    static const int CURRENT_VERSION = VERSION_WITH_FLEX_KEYPATH;
     int nVersion;
 
     CHDChain() { SetNull(); }
@@ -59,6 +62,9 @@ public:
         READWRITE(this->nVersion);
         READWRITE(nExternalChainCounter);
         READWRITE(masterKeyID);
+
+        if (this->nVersion >= VERSION_WITH_FLEX_KEYPATH)
+            READWRITE(keypathScheme);
     }
 
     void SetNull()
@@ -66,6 +72,28 @@ public:
         nVersion = CHDChain::CURRENT_VERSION;
         nExternalChainCounter = 0;
         masterKeyID.SetNull();
+        keypathScheme.clear();
+    }
+
+    // check the validity of a BIP32 keypath
+    // possible elements are
+    //   'm' for master-key
+    //   'k' for the child-key to derive (upcounting index)
+    //   ' or 'h' to attribute a child index as hardened
+    // must contain m/ at the beginning
+    // examples:
+    //   m/0'/0'/k (Bitcoin Core default)
+    //   m/44'/0'/0'/0/k (BIP44)
+    //   m/100'/0/100'/k (custom, sill valid even if PRIV-CKD follows PUB-CKD)
+    //   m/100'/k/100'/k' (Valid. result in m/100'/0/100'/0', m/100'/1/100'/1', m/100'/2/100'/2', ...)
+    //   m/100'/0/100/1 (valid if requireK is disabled)
+    static bool IsValidKeypath(const std::string& keypathToCheck, bool requireK = true);
+
+    bool IsValid()
+    {
+        if (!masterKeyID.IsNull() && keypathScheme.size() > 0)
+            return true;
+        return false;
     }
 };
 

@@ -4,6 +4,8 @@
 
 #include "wallet/wallet.h"
 
+#include "base58.h"
+
 #include <set>
 #include <stdint.h>
 #include <utility>
@@ -349,6 +351,68 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     BOOST_CHECK(wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet));
     BOOST_CHECK_EQUAL(nValueRet, 1003 * COIN);
     BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+}
+
+BOOST_AUTO_TEST_CASE(hdKeypathDerive)
+{
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0'/0'/k"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/44'/0'/0'/0/k"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/k"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/k'"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0'/0'/k'"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0'/0'/k'/k"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0'/0'/k/0"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0'/0'/k/0'"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0'/0'/k/k'/0'"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/0/0/0/0/0/0/0/k"));
+    BOOST_CHECK(CHDChain::IsValidKeypath("m/10000000000000000000000000000/0/0/0/0/0/0/k"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath(""));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("k"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("km"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("m/"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("k"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("m/0'/0'/h'"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("m/a/h'"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("100"));
+    BOOST_CHECK(!CHDChain::IsValidKeypath("foo/bar"));
+
+    CBitcoinExtKey b58ExtKey("xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi");
+    CExtKey masterKey = b58ExtKey.GetKey();
+    CExtKey childKey;
+
+    std::string keypathOut;
+    unsigned int childKeyIndex = 0;
+    CWallet::DeriveKeyWithKeypathScheme("m/0'/0'/k", childKeyIndex, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprv9zRKyaX9hfbUb1NyrdSREPVyKPM3jwrvMT3MgU7PeKnMgk3BCu5roZAEC4DKtQpHrYqWtt8Aauggp8WbvbgHivyBqEocrfeGVg3sHyT9Njd");
+    childKeyIndex++;
+
+    CWallet::DeriveKeyWithKeypathScheme("m/0'/0'/k", childKeyIndex, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprv9zRKyaX9hfbUeCGAk7rSpTP3Jw4skGGiHKdCfwwFRyVkXV2m1S8k8kkiRNk5vZ9cLHaKqSk9onAxp6RcYAppnMJiPGbmDnf5swM1GyVc9L5");
+
+    CWallet::DeriveKeyWithKeypathScheme("m/0'/0'/k'", childKeyIndex, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprv9zRKyaXJ3L8SpFYTwagt1HJLHZ2EAVBs5fSVhtW2hGBT4YFBpog7LXGmw5BJa4SuEWaa24cCyGPgPRXcAWokSygHRwPN1obzS2ENoSmaeJp");
+    BOOST_CHECK_EQUAL(keypathOut, "m/0'/0'/1'");
+
+    CWallet::DeriveKeyWithKeypathScheme("m/k'/0'/k'", childKeyIndex, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprv9yHsKJMYTB7HafxSD1G4Vn3knV6d8MsPyNsuvQfi1XdF6XGGB7wtGc55DfYgGyYSoeVAMoPtYaCMzNtz5NSMVHXNjHouKmvm9363y5wArkr");
+
+    CWallet::DeriveKeyWithKeypathScheme("m/kh/0h/kh", childKeyIndex, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprv9yHsKJMYTB7HafxSD1G4Vn3knV6d8MsPyNsuvQfi1XdF6XGGB7wtGc55DfYgGyYSoeVAMoPtYaCMzNtz5NSMVHXNjHouKmvm9363y5wArkr");
+
+    CWallet::DeriveKeyWithKeypathScheme("m/1000'/99'/10/10'", -100, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprvA1ETihdkTTyB8B3K3J2iEDpNRxgrqUHTcYq7XnTPWyxCQAxGHAdvb6q7HUjZm4r2N4PNMwbFn9ZvtP3fzpVdDBBnEbekjKxSDfVVtn1HrGg");
+    BOOST_CHECK_EQUAL(keypathOut, "m/1000'/99'/10/10'");
+
+    CWallet::DeriveKeyWithKeypathScheme("m/1000h/99h/10/10h", -100, masterKey, childKey, keypathOut);
+    b58ExtKey.SetKey(childKey);
+    BOOST_CHECK_EQUAL(b58ExtKey.ToString(), "xprvA1ETihdkTTyB8B3K3J2iEDpNRxgrqUHTcYq7XnTPWyxCQAxGHAdvb6q7HUjZm4r2N4PNMwbFn9ZvtP3fzpVdDBBnEbekjKxSDfVVtn1HrGg");
+    BOOST_CHECK_EQUAL(keypathOut, "m/1000'/99'/10/10'");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

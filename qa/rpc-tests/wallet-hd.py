@@ -65,7 +65,6 @@ class WalletHDTest(BitcoinTestFramework):
         os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
         self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
-        #connect_nodes_bi(self.nodes, 0, 1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
@@ -82,6 +81,16 @@ class WalletHDTest(BitcoinTestFramework):
         #connect_nodes_bi(self.nodes, 0, 1)
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 
+        print("Testing flexible keypath scheme ...")
+        self.stop_node(1)
+        os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1] + ['-hdkeypath=m/44h/0h/0h/0/k'])
+        hd_add = self.nodes[1].getnewaddress()
+        hd_info = self.nodes[1].validateaddress(hd_add)
+        assert_equal(hd_info["hdkeypath"], "m/44'/0'/0'/0/1")
+        hd_add = self.nodes[1].getnewaddress()
+        hd_info = self.nodes[1].validateaddress(hd_add)
+        assert_equal(hd_info["hdkeypath"], "m/44'/0'/0'/0/2")
 
 if __name__ == '__main__':
     WalletHDTest().main ()
