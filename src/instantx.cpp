@@ -51,7 +51,7 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
     // Ignore any InstantSend messages until masternode list is synced
     if(!masternodeSync.IsMasternodeListSynced()) return;
 
-    if (strCommand == NetMsgType::IX) // InstantSend Transaction Lock Request
+    if (strCommand == NetMsgType::TXLOCKREQUEST) // InstantSend Transaction Lock Request
     {
         //LogPrintf("ProcessMessageInstantSend\n");
         CDataStream vMsg(vRecv);
@@ -127,7 +127,7 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
             return;
         }
     }
-    else if (strCommand == NetMsgType::IXLOCKVOTE) // InstantSend Transaction Lock Consensus Votes
+    else if (strCommand == NetMsgType::TXLOCKVOTE) // InstantSend Transaction Lock Consensus Votes
     {
         CConsensusVote vote;
         vRecv >> vote;

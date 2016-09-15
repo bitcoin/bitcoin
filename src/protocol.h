@@ -222,8 +222,8 @@ extern const char *SENDHEADERS;
 // Dash message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
 // TODO: add description
-extern const char *IX;
-extern const char *IXLOCKVOTE;
+extern const char *TXLOCKREQUEST;
+extern const char *TXLOCKVOTE;
 extern const char *SPORK;
 extern const char *GETSPORKS;
 extern const char *MNWINNER;
@@ -340,10 +340,10 @@ enum {
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
     MSG_FILTERED_BLOCK,
-    MSG_TXLOCK_REQUEST,
-    MSG_TXLOCK_VOTE,
     // Dash message types
     // NOTE: declare non-implmented here, we must keep this enum consistent and backwards compatible
+    MSG_TXLOCK_REQUEST,
+    MSG_TXLOCK_VOTE,
     MSG_SPORK,
     MSG_MASTERNODE_WINNER,
     MSG_MASTERNODE_SCANNING_ERROR, // not implemented

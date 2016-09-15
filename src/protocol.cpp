@@ -36,8 +36,8 @@ const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
 // Dash message types
-const char *IX="ix";
-const char *IXLOCKVOTE="txlvote";
+const char *TXLOCKREQUEST="ix";
+const char *TXLOCKVOTE="txlvote";
 const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
 const char *MNWINNER="mnw";
@@ -74,8 +74,8 @@ static const char* ppszTypeName[] =
     "filtered block", // Should never occur
     // Dash message types
     // NOTE: include non-implmented here, we must keep this list in sync with enum in protocol.h
-    NetMsgType::IX,
-    NetMsgType::IXLOCKVOTE,
+    NetMsgType::TXLOCKREQUEST,
+    NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
     NetMsgType::MNWINNER,
     NetMsgType::MNSCANERROR, // not implemented
@@ -119,8 +119,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::SENDHEADERS,
     // Dash message types
     // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
-    NetMsgType::IX,
-    NetMsgType::IXLOCKVOTE,
+    NetMsgType::TXLOCKREQUEST,
+    NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
     NetMsgType::MNWINNER,

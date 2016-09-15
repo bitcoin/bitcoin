@@ -5076,26 +5076,26 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
-                    if(mapTxLockVote.count(inv.hash)) {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << mapTxLockVote[inv.hash];
-                        pfrom->PushMessage(NetMsgType::IXLOCKVOTE, ss);
-                        pushed = true;
-                    }
-                }
-            
                 if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
                     if(mapTxLockReq.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << mapTxLockReq[inv.hash];
-                        pfrom->PushMessage(NetMsgType::IX, ss);
+                        pfrom->PushMessage(NetMsgType::TXLOCKREQUEST, ss);
                         pushed = true;
                     }
                 }
-            
+
+                if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
+                    if(mapTxLockVote.count(inv.hash)) {
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapTxLockVote[inv.hash];
+                        pfrom->PushMessage(NetMsgType::TXLOCKVOTE, ss);
+                        pushed = true;
+                    }
+                }
+
                 if (!pushed && inv.type == MSG_SPORK) {
                     if(mapSporks.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
