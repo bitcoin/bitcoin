@@ -4932,6 +4932,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<uint256> vEraseQueue;
         CTransaction tx;
         vRecv >> tx;
+        if (tx.nVersion == 4) {
+            const CChainParams& chainparams = Params();
+            if (chainparams.NetworkIDString() == "main") { // ignore v4 transactions on mainnet for now
+                LogPrint("net", "transaction v4 received on mainnet, dropping.\n");
+                return true;
+            }
+        }
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
