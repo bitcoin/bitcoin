@@ -150,11 +150,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         // IS THE COLLATERAL TRANSACTION ASSOCIATED WITH THIS GOVERNANCE OBJECT MATURE/VALID?
 
         std::string strError = "";
-        if(!govobj.IsCollateralValid(strError)) {
-            LogPrintf("Governance object collateral tx is not valid - %s - %s\n", govobj.nCollateralHash.ToString(), strError);
-            return;
-        }
-
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
         if(!govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
@@ -286,7 +281,7 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
               << endl; );
 
     if(govobj.nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
-        mapLastMasternodeTrigger[govobj.pubkeyMasternode.GetHash()] = nCachedBlockHeight;
+        mapLastMasternodeTrigger[govobj.vinMasternode.prevout] = nCachedBlockHeight;
         DBG( cout << "CGovernanceManager::AddGovernanceObject Before AddNewTrigger" << endl; );
         triggerman.AddNewTrigger(govobj.GetHash());
         DBG( cout << "CGovernanceManager::AddGovernanceObject After AddNewTrigger" << endl; );
@@ -606,10 +601,10 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
     return true;
 }
 
-bool CGovernanceManager::MasternodeRateCheck(const CPubKey& pubkey)
+bool CGovernanceManager::MasternodeRateCheck(const CTxIn& vin)
 {
     LOCK(cs);
-    count_m_it it  = mapLastMasternodeTrigger.find(pubkey.GetHash());
+    txout_m_it it  = mapLastMasternodeTrigger.find(vin.prevout);
     if(it == mapLastMasternodeTrigger.end()) {
         return true;
     }
@@ -618,9 +613,11 @@ bool CGovernanceManager::MasternodeRateCheck(const CPubKey& pubkey)
     if((nCachedBlockHeight - it->second) > mindiff) {
         return true;
     }
+
+    LogPrintf("CGovernanceManager::MasternodeRateCheck Rate too high: vin = %s, current height = %d, last MN height = %d, minimum difference = %d\n", 
+              vin.prevout.ToStringShort(), nCachedBlockHeight, it->second, mindiff);
     return false;
 }
-
 
 CGovernanceObject::CGovernanceObject()
 {
@@ -685,6 +682,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
     nCollateralHash = other.nCollateralHash;
     strData = other.strData;
     nObjectType = other.nObjectType;
+
     fUnparsable = true;
 
     vinMasternode = other.vinMasternode;
@@ -699,17 +697,14 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
     fExpired = other.fExpired;
 }
 
-void CGovernanceObject::SetMasternodeInfo(const CTxIn& vin, const CPubKey& pubkey)
+void CGovernanceObject::SetMasternodeInfo(const CTxIn& vin)
 {
     vinMasternode = vin;
-    pubkeyMasternode = pubkey;
 }
 
-bool CGovernanceObject::Sign(CKey& keyMasternode)
+bool CGovernanceObject::Sign(CKey& keyMasternode, CPubKey& pubkeyMasternode)
 {
     LOCK(cs);
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
 
     std::string strError;
     uint256 nHash = GetHash();
@@ -725,10 +720,14 @@ bool CGovernanceObject::Sign(CKey& keyMasternode)
         return false;
     }
 
+    LogPrint("gobject", "CGovernanceObject::Sign: pubkey id = %s, vin = %s\n", 
+             pubkeyMasternode.GetID().ToString(), vinMasternode.prevout.ToStringShort());
+
+
     return true;
 }
 
-bool CGovernanceObject::CheckSignature()
+bool CGovernanceObject::CheckSignature(CPubKey& pubkeyMasternode)
 {
     LOCK(cs);
     std::string strError;
@@ -937,25 +936,30 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
 
     if(fCheckCollateral) {
         if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
+            std::string strVin = vinMasternode.prevout.ToStringShort();
             CMasternode mn;
-            if(!mnodeman.Get(pubkeyMasternode, mn)) {
-                strError = "Masternode not found";
+            if(!mnodeman.Get(vinMasternode, mn)) {
+                strError = "Masternode not found vin: " + strVin;
                 return false;
             }
             if(!mn.IsEnabled()) {
-                strError = "Masternode not enabled";
+                strError = "Masternode not enabled vin: " + strVin;
                 return false;
             }
 
             // Check that we have a valid MN signature
-            if(!CheckSignature()) {
-                strError = "Invalid masternode signature";
+            if(!CheckSignature(mn.pubkey2)) {
+                strError = "Invalid masternode signature for vin: " + strVin + ", pubkey id = " + mn.pubkey2.GetID().ToString();
                 return false;
             }
 
-            if(!governance.MasternodeRateCheck(pubkeyMasternode)) {
-                strError = "Masternode attempting to create too many objects";
-                return false;
+            // Only perform rate check if we are synced because during syncing it is expected
+            // that objects will be seen in rapid succession
+            if(masternodeSync.IsSynced()) {
+                if(!governance.MasternodeRateCheck(vinMasternode)) {
+                    strError = "Masternode attempting to create too many objects vin: " + strVin;
+                    return false;
+                }
             }
 
             return true;

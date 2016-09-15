@@ -81,6 +81,12 @@ public: // Types
 
     typedef object_m_t::size_type size_type;
 
+    typedef std::map<COutPoint, int> txout_m_t;
+
+    typedef txout_m_t::iterator txout_m_it;
+
+    typedef txout_m_t::const_iterator txout_m_cit;
+
 private:
 
     //hold txes until they mature enough to use
@@ -103,7 +109,7 @@ private:
     vote_m_t mapVotesByHash;
     vote_m_t mapVotesByType;
 
-    count_m_t mapLastMasternodeTrigger;
+    txout_m_t mapLastMasternodeTrigger;
 
 public:
     // critical section to protect the inner data structures
@@ -197,7 +203,7 @@ public:
 
     void AddSeenVote(uint256 nHash, int status);
 
-    bool MasternodeRateCheck(const CPubKey& pubkey);
+    bool MasternodeRateCheck(const CTxIn& vin);
 
 };
 
@@ -222,13 +228,12 @@ public:
     std::string strData; // Data field - can be used for anything
     int nObjectType;
 
-    bool fCachedLocalValidity; // is valid by blockchain
-    std::string strLocalValidityError;
-
     // Masternode info for signed objects
     CTxIn vinMasternode;
-    CPubKey pubkeyMasternode;
     std::vector<unsigned char> vchSig;
+
+    bool fCachedLocalValidity; // is valid by blockchain
+    std::string strLocalValidityError;
 
     // VARIOUS FLAGS FOR OBJECT / SET VIA MASTERNODE VOTING
 
@@ -247,9 +252,9 @@ public:
 
     // Signature related functions
 
-    void SetMasternodeInfo(const CTxIn& vin, const CPubKey& pubkey);
-    bool Sign(CKey& keyMasternode);
-    bool CheckSignature();
+    void SetMasternodeInfo(const CTxIn& vin);
+    bool Sign(CKey& keyMasternode, CPubKey& pubkeyMasternode);
+    bool CheckSignature(CPubKey& pubkeyMasternode);
 
     // CORE OBJECT FUNCTIONS
 
@@ -301,7 +306,6 @@ public:
         READWRITE(strData);
         READWRITE(nObjectType);
         READWRITE(vinMasternode);
-        READWRITE(pubkeyMasternode);
         READWRITE(vchSig);
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY

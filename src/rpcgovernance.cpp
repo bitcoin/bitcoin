@@ -76,8 +76,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
-        if (params.size() != 6)
+        if (params.size() != 6) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject prepare <parent-hash> <revision> <time> <name> <data-hex>'");
+        }
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -106,6 +107,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
         CGovernanceObject govobj(hashParent, nRevision, strName, nTime, uint256(), strData);
+
+        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
+        }
 
         std::string strError = "";
         if(!govobj.IsValidLocally(pindex, strError, false))
@@ -142,15 +147,12 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         CMasternode mn;
-        bool mnFound = mnodeman.Get(activeMasternode.pubKeyMasternode, mn);
+        bool mnFound = mnodeman.Get(activeMasternode.vin, mn);
 
         DBG( cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
+             << ", vin = " << vin.prevout.ToStringShort()
              << ", params.size() = " << params.size()
              << ", mnFound = " << mnFound << endl; );
-
-        if((params.size() == 6) && (!mnFound))  {
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Non-masternodes must include fee-txid parameter.");
-        }
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -189,11 +191,16 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // Attempt to sign triggers if we are a MN
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
             if(mnFound) {
-                govobj.SetMasternodeInfo(mn.vin, activeMasternode.pubKeyMasternode);
-                govobj.Sign(activeMasternode.keyMasternode);
+                govobj.SetMasternodeInfo(mn.vin);
+                govobj.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode);
             }
             else {
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Only valid masternodes can submit this type of object");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
+            }
+        }
+        else {
+            if(params.size() != 7) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-txid parameter must be included to submit this type of object");
             }
         }
 
@@ -208,7 +215,6 @@ UniValue gobject(const UniValue& params, bool fHelp)
         governance.AddGovernanceObject(govobj);
 
         return govobj.GetHash().ToString();
-
     }
 
     if(strCommand == "vote-conf")

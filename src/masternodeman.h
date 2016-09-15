@@ -98,8 +98,9 @@ public:
     CMasternode* Find(const CTxIn& vin);
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
-    /// A version of Find that's safe to use from outside the class
+    /// Versions of Find that are safe to use from outside the class
     bool Get(const CPubKey& pubKeyMasternode, CMasternode& masternode);
+    bool Get(const CTxIn& vin, CMasternode& masternode);
 
     /// Find an entry in the masternode list that is next to be paid
     CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
