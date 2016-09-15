@@ -28,19 +28,19 @@ struct CompareLastPaidBlock
 
 struct CompareScoreTxIn
 {
-    bool operator()(const pair<int64_t, CTxIn>& t1,
-                    const pair<int64_t, CTxIn>& t2) const
+    bool operator()(const std::pair<int64_t, CTxIn>& t1,
+                    const std::pair<int64_t, CTxIn>& t2) const
     {
-        return t1.first < t2.first;
+        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second < t2.second);
     }
 };
 
 struct CompareScoreMN
 {
-    bool operator()(const pair<int64_t, CMasternode>& t1,
-                    const pair<int64_t, CMasternode>& t2) const
+    bool operator()(const std::pair<int64_t, CMasternode>& t1,
+                    const std::pair<int64_t, CMasternode>& t2) const
     {
-        return t1.first < t2.first;
+        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second.vin < t2.second.vin);
     }
 };
 
