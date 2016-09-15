@@ -21,25 +21,29 @@ void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStr
 
     if (strCommand == NetMsgType::SPORK) {
 
-        // LogPrintf("CSporkManager::ProcessSpork\n");
         CDataStream vMsg(vRecv);
         CSporkMessage spork;
         vRecv >> spork;
 
-        LOCK(cs_main);
-        if(chainActive.Tip() == NULL) return;
-
         uint256 hash = spork.GetHash();
-        if(mapSporksActive.count(spork.nSporkID)) {
-            if (mapSporksActive[spork.nSporkID].nTimeSigned >= spork.nTimeSigned) {
-                if(fDebug) LogPrintf("CSporkManager::ProcessSpork -- seen %s block %d\n", hash.ToString(), chainActive.Tip()->nHeight);
-                return;
-            } else {
-                if(fDebug) LogPrintf("CSporkManager::ProcessSpork -- got updated spork %s block %d\n", hash.ToString(), chainActive.Tip()->nHeight);
-            }
+
+        std::string strLogMsg;
+        {
+            LOCK(cs_main);
+            if(!chainActive.Tip()) return;
+            strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, chainActive.Height(), pfrom->id);
         }
 
-        LogPrintf("spork -- hash: %s id: %d value: %10d bestHeight: %d new\n", hash.ToString(), spork.nSporkID, spork.nValue, chainActive.Tip()->nHeight);
+        if(mapSporksActive.count(spork.nSporkID)) {
+            if (mapSporksActive[spork.nSporkID].nTimeSigned >= spork.nTimeSigned) {
+                LogPrint("spork", "%s seen\n", strLogMsg);
+                return;
+            } else {
+                LogPrintf("%s updated\n", strLogMsg);
+            }
+        } else {
+            LogPrintf("%s new\n", strLogMsg);
+        }
 
         if(!spork.CheckSignature()) {
             LogPrintf("CSporkManager::ProcessSpork -- invalid signature\n");
@@ -109,7 +113,7 @@ bool CSporkManager::IsSporkActive(int nSporkID)
             case SPORK_12_RECONSIDER_BLOCKS:                r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT; break;
             case SPORK_13_OLD_SUPERBLOCK_FLAG:              r = SPORK_13_OLD_SUPERBLOCK_FLAG_DEFAULT; break;
             default:
-                LogPrintf("CSporkManager::IsSporkActive -- Unknown Spork %d\n", nSporkID);
+                LogPrint("spork", "CSporkManager::IsSporkActive -- Unknown Spork ID %d\n", nSporkID);
                 r = 4070908800; // 2099-1-1 i.e. off by default
                 break;
         }
@@ -134,7 +138,7 @@ int64_t CSporkManager::GetSporkValue(int nSporkID)
         case SPORK_12_RECONSIDER_BLOCKS:                return SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
         case SPORK_13_OLD_SUPERBLOCK_FLAG:              return SPORK_13_OLD_SUPERBLOCK_FLAG_DEFAULT;
         default:
-            LogPrintf("CSporkManager::GetSporkValue -- Unknown Spork ID %d\n", nSporkID);
+            LogPrint("spork", "CSporkManager::GetSporkValue -- Unknown Spork ID %d\n", nSporkID);
             return -1;
     }
 
@@ -151,7 +155,7 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if (strName == "SPORK_12_RECONSIDER_BLOCKS")                return SPORK_12_RECONSIDER_BLOCKS;
     if (strName == "SPORK_13_OLD_SUPERBLOCK_FLAG")              return SPORK_13_OLD_SUPERBLOCK_FLAG;
 
-    LogPrintf("CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
+    LogPrint("spork", "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
     return -1;
 }
 
@@ -167,7 +171,7 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
         case SPORK_12_RECONSIDER_BLOCKS:                return "SPORK_12_RECONSIDER_BLOCKS";
         case SPORK_13_OLD_SUPERBLOCK_FLAG:              return "SPORK_13_OLD_SUPERBLOCK_FLAG";
         default:
-            LogPrintf("CSporkManager::GetSporkNameByID -- Unknown Spork ID %d\n", nSporkID);
+            LogPrint("spork", "CSporkManager::GetSporkNameByID -- Unknown Spork ID %d\n", nSporkID);
             return "Unknown";
     }
 }
