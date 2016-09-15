@@ -755,6 +755,9 @@ class PrefilledTransaction(object):
             r += self.tx.serialize_without_witness()
         return r
 
+    def serialize_with_witness(self):
+        return self.serialize(with_witness=True)
+
     def __repr__(self):
         return "PrefilledTransaction(index=%d, tx=%s)" % (self.index, repr(self.tx))
 
@@ -779,6 +782,7 @@ class P2PHeaderAndShortIDs(object):
         self.prefilled_txn = deser_vector(f, PrefilledTransaction)
         self.prefilled_txn_length = len(self.prefilled_txn)
 
+    # When using version 2 compact blocks, we must serialize with_witness.
     def serialize(self, with_witness=False):
         r = b""
         r += self.header.serialize()
@@ -787,12 +791,20 @@ class P2PHeaderAndShortIDs(object):
         for x in self.shortids:
             # We only want the first 6 bytes
             r += struct.pack("<Q", x)[0:6]
-        r += ser_vector(self.prefilled_txn)
+        if with_witness:
+            r += ser_vector(self.prefilled_txn, "serialize_with_witness")
+        else:
+            r += ser_vector(self.prefilled_txn)
         return r
 
     def __repr__(self):
         return "P2PHeaderAndShortIDs(header=%s, nonce=%d, shortids_length=%d, shortids=%s, prefilled_txn_length=%d, prefilledtxn=%s" % (repr(self.header), self.nonce, self.shortids_length, repr(self.shortids), self.prefilled_txn_length, repr(self.prefilled_txn))
 
+# P2P version of the above that will use witness serialization (for compact
+# block version 2)
+class P2PHeaderAndShortWitnessIDs(P2PHeaderAndShortIDs):
+    def serialize(self):
+        return super(P2PHeaderAndShortWitnessIDs, self).serialize(with_witness=True)
 
 # Calculate the BIP 152-compact blocks shortid for a given transaction hash
 def calculate_shortid(k0, k1, tx_hash):
@@ -808,6 +820,7 @@ class HeaderAndShortIDs(object):
         self.nonce = 0
         self.shortids = []
         self.prefilled_txn = []
+        self.use_witness = False
 
         if p2pheaders_and_shortids != None:
             self.header = p2pheaders_and_shortids.header
@@ -819,7 +832,10 @@ class HeaderAndShortIDs(object):
                 last_index = self.prefilled_txn[-1].index
 
     def to_p2p(self):
-        ret = P2PHeaderAndShortIDs()
+        if self.use_witness:
+            ret = P2PHeaderAndShortWitnessIDs()
+        else:
+            ret = P2PHeaderAndShortIDs()
         ret.header = self.header
         ret.nonce = self.nonce
         ret.shortids_length = len(self.shortids)
@@ -840,15 +856,20 @@ class HeaderAndShortIDs(object):
         key1 = struct.unpack("<Q", hash_header_nonce_as_str[8:16])[0]
         return [ key0, key1 ]
 
-    def initialize_from_block(self, block, nonce=0, prefill_list = [0]):
+    # Version 2 compact blocks use wtxid in shortids (rather than txid)
+    def initialize_from_block(self, block, nonce=0, prefill_list = [0], use_witness = False):
         self.header = CBlockHeader(block)
         self.nonce = nonce
         self.prefilled_txn = [ PrefilledTransaction(i, block.vtx[i]) for i in prefill_list ]
         self.shortids = []
+        self.use_witness = use_witness
         [k0, k1] = self.get_siphash_keys()
         for i in range(len(block.vtx)):
             if i not in prefill_list:
-                self.shortids.append(calculate_shortid(k0, k1, block.vtx[i].sha256))
+                tx_hash = block.vtx[i].sha256
+                if use_witness:
+                    tx_hash = block.vtx[i].calc_sha256(with_witness=True)
+                self.shortids.append(calculate_shortid(k0, k1, tx_hash))
 
     def __repr__(self):
         return "HeaderAndShortIDs(header=%s, nonce=%d, shortids=%s, prefilledtxn=%s" % (repr(self.header), self.nonce, repr(self.shortids), repr(self.prefilled_txn))
@@ -1423,6 +1444,12 @@ class msg_blocktxn(object):
 
     def __repr__(self):
         return "msg_blocktxn(block_transactions=%s)" % (repr(self.block_transactions))
+
+class msg_witness_blocktxn(msg_blocktxn):
+    def serialize(self):
+        r = b""
+        r += self.block_transactions.serialize(with_witness=True)
+        return r
 
 # This is what a callback should look like for NodeConn
 # Reimplement the on_* functions to provide handling for events
