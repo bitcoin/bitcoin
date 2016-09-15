@@ -183,7 +183,7 @@ public:
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
-    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+    uint256 CalculateScore(int nBlockHeight = -1);
 
     // KEEP TRACK OF EACH GOVERNANCE ITEM INCASE THIS NODE GOES OFFLINE, SO WE CAN RECALC THEIR STATUS
     void AddGovernanceVote(uint256 nGovernanceObjectHash);

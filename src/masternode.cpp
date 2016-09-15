@@ -115,14 +115,9 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 // the proof of work for that block. The further away they are the better, the furthest will win the election
 // and get paid this block
 //
-uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
+uint256 CMasternode::CalculateScore(int nBlockHeight)
 {
-    {
-        LOCK(cs_main);
-        if(chainActive.Tip() == NULL) return uint256();
-    }
-
-    uint256 hash = uint256();
+    uint256 hash;
     uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     if(!GetBlockHash(hash, nBlockHeight)) {

@@ -369,7 +369,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         CMasternode* pmn = Find(s.second);
         if(!pmn) break;
 
-        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight - 101));
+        arith_uint256 n = UintToArith256(pmn->CalculateScore(nBlockHeight - 101));
         if(n > nHigh){
             nHigh = n;
             pBestMasternode = pmn;
@@ -413,30 +413,6 @@ CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude
     return NULL;
 }
 
-CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
-{
-    int64_t score = 0;
-    CMasternode* winner = NULL;
-
-    // scan for winner
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.Check();
-        if(mn.protocolVersion < minProtocol || !mn.IsEnabled()) continue;
-
-        // calculate the score for each Masternode
-        uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
-
-        // determine the winner
-        if(n2 > score){
-            score = n2;
-            winner = &mn;
-        }
-    }
-
-    return winner;
-}
-
 int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
     std::vector<pair<int64_t, CTxIn> > vecMasternodeScores;
@@ -452,7 +428,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
             mn.Check();
             if(!mn.IsEnabled()) continue;
         }
-        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        uint256 n = mn.CalculateScore(nBlockHeight);
         int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
@@ -490,7 +466,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
             continue;
         }
 
-        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        uint256 n = mn.CalculateScore(nBlockHeight);
         int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn));
@@ -520,7 +496,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
             if(!mn.IsEnabled()) continue;
         }
 
-        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        uint256 n = mn.CalculateScore(nBlockHeight);
         int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));

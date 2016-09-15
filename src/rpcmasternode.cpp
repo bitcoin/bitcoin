@@ -96,9 +96,9 @@ UniValue masternode(const UniValue& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "start-all" && strCommand != "start-missing" &&
          strCommand != "start-disabled" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
-        strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
-        strCommand != "outputs" && strCommand != "status" && strCommand != "calcscore"))
-        throw runtime_error(
+         strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
+         strCommand != "connect" && strCommand != "outputs" && strCommand != "status"))
+            throw std::runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to execute masternode related actions\n"
                 "\nArguments:\n"
@@ -106,7 +106,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
                 "  count        - Print number of all known masternodes (optional: 'ps', 'enabled', 'all', 'qualify')\n"
-                "  current      - Print info on current masternode winner\n"
+                "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
                 "  enforce      - Enforce masternode payments\n"
@@ -117,6 +117,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
                 "  status       - Print masternode status information\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
+                "  winner       - Print info on next masternode winner to vote for\n"
                 "  winners      - Print list of masternode winners\n"
                 );
 
@@ -175,28 +176,33 @@ UniValue masternode(const UniValue& params, bool fHelp)
         return mnodeman.size();
     }
 
-    if (strCommand == "current")
+    if (strCommand == "current" || strCommand == "winner")
     {
-        int nCount = 0;
-        LOCK(cs_main);
+        int nCount;
+        int nHeight;
+        CBlockIndex* pindex;
         CMasternode* winner = NULL;
-        if(chainActive.Tip())
-            winner = mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Height() - 100, true, nCount);
-        if(winner) {
-            UniValue obj(UniValue::VOBJ);
-
-            obj.push_back(Pair("IP:port",       winner->addr.ToString()));
-            obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
-            obj.push_back(Pair("vin",           winner->vin.prevout.ToStringShort()));
-            obj.push_back(Pair("pubkey",        CBitcoinAddress(winner->pubkey.GetID()).ToString()));
-            obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
-                                                        winner->lastPing.sigTime));
-            obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
-                                                        (winner->lastPing.sigTime - winner->sigTime)));
-            return obj;
+        {
+            LOCK(cs_main);
+            nHeight = chainActive.Height() + (strCommand == "current" ? 1 : 10);
+            pindex = chainActive.Tip();
         }
+        mnodeman.UpdateLastPaid(pindex);
+        winner = mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount);
+        if(!winner) return "unknown";
 
-        return "unknown";
+        UniValue obj(UniValue::VOBJ);
+
+        obj.push_back(Pair("height",        nHeight));
+        obj.push_back(Pair("IP:port",       winner->addr.ToString()));
+        obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
+        obj.push_back(Pair("vin",           winner->vin.prevout.ToStringShort()));
+        obj.push_back(Pair("payee",         CBitcoinAddress(winner->pubkey.GetID()).ToString()));
+        obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
+                                                    winner->lastPing.sigTime));
+        obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
+                                                    (winner->lastPing.sigTime - winner->sigTime)));
+        return obj;
     }
 
     if (strCommand == "debug")
@@ -424,47 +430,6 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         return obj;
     }
-
-    // 12.1 -- remove?
-    // /*
-    //     Shows which masternode wins by score each block
-    // */
-    // if (strCommand == "calcscore")
-    // {
-
-    //     int nHeight;
-    //     {
-    //         LOCK(cs_main);
-    //         CBlockIndex* pindex = chainActive.Tip();
-    //         if(!pindex) return NullUniValue;
-
-    //         nHeight = pindex->nHeight;
-    //     }
-
-    //     int nLast = 10;
-
-    //     if (params.size() >= 2){
-    //         nLast = atoi(params[1].get_str());
-    //     }
-    //     UniValue obj(UniValue::VOBJ);
-
-    //     std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
-    //     for(int i = nHeight - nLast; i < nHeight + 20; i++){
-    //         arith_uint256 nHigh = 0;
-    //         CMasternode *pBestMasternode = NULL;
-    //         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-    //             arith_uint256 n = UintToArith256(mn.CalculateScore(1, i - 101));
-    //             if(n > nHigh){
-    //                 nHigh = n;
-    //                 pBestMasternode = &mn;
-    //             }
-    //         }
-    //         if(pBestMasternode)
-    //             obj.push_back(Pair(strprintf("%d", i), pBestMasternode->vin.prevout.ToStringShort().c_str()));
-    //     }
-
-    //     return obj;
-    // }
 
     return NullUniValue;
 }
