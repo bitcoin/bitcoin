@@ -2062,7 +2062,7 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CDiskBlockPos& pos, const uin
     // Open history file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("%s: OpenBlockFile failed", __func__);
+        return error("%s: OpenUndoFile failed", __func__);
 
     // Read block
     uint256 hashChecksum;
