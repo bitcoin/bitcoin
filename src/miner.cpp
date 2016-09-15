@@ -187,7 +187,6 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
 
         CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mempool.mapTx.get<3>().begin();
         CTxMemPool::txiter iter;
-        uint32_t nMaxLegacySigops = MaxLegacySigops(pblock->nTime);
 
         while (mi != mempool.mapTx.get<3>().end() || !clearedTxs.empty())
         {
@@ -255,8 +254,8 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
                 continue;
 
             unsigned int nTxSigOps = iter->GetSigOpCount();
-            if (nBlockSigOps + nTxSigOps >= nMaxLegacySigops) {
-                if (nBlockSigOps > nMaxLegacySigops - 2) {
+            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS) {
+                if (nBlockSigOps > MAX_BLOCK_SIGOPS - 2) {
                     break;
                 }
                 continue;

@@ -30,7 +30,6 @@
 #include <boost/atomic.hpp>
 #include <boost/unordered_map.hpp>
 
-class ValidationCostTracker;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -353,8 +352,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, ValidationCostTracker* costTracker,
-                 std::vector<CScriptCheck> *pvChecks = NULL);
+                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
@@ -376,44 +374,6 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
  * See consensus/consensus.h for flag definitions.
  */
 bool CheckFinalTx(const CTransaction &tx, int flags = -1);
-
-/**
- * Class that keeps track of number of signature operations
- * and bytes hashed to compute signature hashes.
- */
-class ValidationCostTracker
-{
-private:
-    mutable CCriticalSection cs;
-    uint32_t nSigops;
-    const uint32_t nMaxSigops;
-    uint32_t nSighashBytes;
-    const uint32_t nMaxSighashBytes;
-
-public:
-    ValidationCostTracker(uint32_t nMaxSigopsIn, uint32_t nMaxSighashBytesIn) :
-                                  nSigops(0), nMaxSigops(nMaxSigopsIn),
-                                  nSighashBytes(0), nMaxSighashBytes(nMaxSighashBytesIn) { }
-
-    bool IsWithinLimits() const {
-        LOCK(cs);
-        return (nSigops <= nMaxSigops && nSighashBytes <= nMaxSighashBytes);
-    }
-    bool Update(const uint256& txid, uint32_t nSigopsIn, uint32_t nSighashBytesIn) {
-        LOCK(cs);
-        nSigops += nSigopsIn;
-        nSighashBytes += nSighashBytesIn;
-        return (nSigops <= nMaxSigops && nSighashBytes <= nMaxSighashBytes);
-    }
-    uint32_t GetSigOps() const {
-        LOCK(cs);
-        return nSigops;
-    }
-    uint32_t GetSighashBytes() const {
-        LOCK(cs);
-        return nSighashBytes;
-    }
-};
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
@@ -446,7 +406,6 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL
 class CScriptCheck
 {
 private:
-    ValidationCostTracker* costTracker;
     CScript scriptPubKey;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -455,15 +414,14 @@ private:
     ScriptError error;
 
 public:
-    CScriptCheck(): costTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(ValidationCostTracker* costTrackerIn, const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        costTracker(costTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+    CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
+    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
+        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
 
     bool operator()();
 
     void swap(CScriptCheck &check) {
-        std::swap(costTracker, check.costTracker);
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
         std::swap(nIn, check.nIn);
@@ -609,14 +567,5 @@ static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
 static const unsigned int REJECT_CONFLICT = 0x102;
 /** Maximum size of a block */
 unsigned int MaxBlockSize(uint32_t nBlockTime);
-
-/** Max accurately-counted sigops in a block */
-uint32_t MaxBlockSigops(uint32_t nBlockTime);
-
-/** Max accurately-counted bytes hashed to compute signatures, per block */
-uint32_t MaxBlockSighash(uint32_t nBlockTime);
-
-/** Maximum number of legacy sigops in a block */
-uint32_t MaxLegacySigops(uint32_t nBlockTime);
 
 #endif // BITCOIN_MAIN_H
