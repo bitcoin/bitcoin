@@ -110,6 +110,7 @@ BASE_SCRIPTS= [
     'listsinceblock.py',
     'p2p-leaktests.py',
     'import-abort-rescan.py',
+    'txoutsbyaddress.py',
 ]
 
 EXTENDED_SCRIPTS = [

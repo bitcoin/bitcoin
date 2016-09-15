@@ -99,7 +99,8 @@ CCoinsViewCursor *CCoinsViewDB::Cursor() const
        that restriction.  */
     i->pcursor->Seek(DB_COINS);
     // Cache key of first record
-    i->pcursor->GetKey(i->keyTmp);
+    if (!i->pcursor->Valid() || !i->pcursor->GetKey(i->keyTmp))
+        i->keyTmp.first = 0; 
     return i;
 }
 

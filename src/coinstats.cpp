@@ -20,8 +20,13 @@ bool GetUTXOStats(CCoinsView *view, CCoinsViewByScriptDB *viewbyscriptdb, CCoins
     stats.hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+        BlockMap::const_iterator iter = mapBlockIndex.find(stats.hashBlock);
+        if (iter == mapBlockIndex.end())
+            stats.nHeight = 0;
+        else
+            stats.nHeight = iter->second->nHeight;
     }
+
     ss << stats.hashBlock;
     CAmount nTotalAmount = 0;
     while (pcursor->Valid()) {
