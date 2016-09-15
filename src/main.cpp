@@ -1203,22 +1203,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        ValidationCostTracker costTracker(MAX_BLOCK_SIGOPS, MAX_BLOCK_SIGHASH);
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, &costTracker))
-        {
+        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, NULL))
             return false;
-        }
-        // Reject transactions with very high signature-hash cost:
-        uint64_t sighash_limit = (uint64_t)nSize * MAX_BLOCK_SIGHASH / MAX_BLOCK_SIZE;
-        if (costTracker.GetSighashBytes() > sighash_limit)
-        {
-            return state.DoS(0,
-                             error("AcceptToMemoryPool: too much signature hashing %s: %d > %d",
-                                   hash.ToString(), costTracker.GetSighashBytes(), sighash_limit),
-                             REJECT_NONSTANDARD, "bat-txns-too-many-sighash");
-        }
-        LogPrint("txcost", "txcost %s size: %d sigops: %d sighash: %d\n",
-                 hash.ToString(), nSize, costTracker.GetSigOps(), costTracker.GetSighashBytes());
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
