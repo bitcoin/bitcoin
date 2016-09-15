@@ -1027,8 +1027,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
 
-    LogPrint("net", "connection from %s accepted\n", addr.ToString());
-
     {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
@@ -2562,10 +2560,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         mapRecvBytesPerMsgCmd[msg] = 0;
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
-    if (fLogIPs)
-        LogPrint("net", "Added connection to %s peer=%d\n", addrName, id);
-    else
-        LogPrint("net", "Added connection peer=%d\n", id);
+    LogPrint("net", "Added %s connection %speer=%d\n", fInbound ? "Inbound" : "Outbound", fLogIPs ? addrName + " " : "", id);
 
     // Be shy and don't send version until we hear
     if (hSocket != INVALID_SOCKET && !fInbound)
