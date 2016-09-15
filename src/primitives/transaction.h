@@ -196,13 +196,15 @@ public:
     std::string ToString() const;
 };
 
+#include <boost/atomic.hpp>
+extern boost::atomic<bool> flexTransActive;
 struct CMutableTransaction;
 
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion, bool withSignatures = true) {
     ser_writedata32(s, tx.nVersion);
     nVersion = tx.nVersion;
-    if (nVersion == 4) {
+    if (flexTransActive && nVersion == 4) {
         for (auto in : tx.vin) {
             CMFToken hash(Consensus::TxInPrevHash, in.prevout.hash);
             STORECMF(hash);
@@ -241,7 +243,7 @@ template<typename Stream, typename TxType>
 inline std::vector<char> UnSerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion) {
     *const_cast<int32_t*>(&tx.nVersion) = ser_readdata32(s);
     nVersion = tx.nVersion;
-    if (nVersion == 4) {
+    if (flexTransActive && nVersion == 4) {
         return loadTransaction(UnserializeCMFs(s, Consensus::TxEnd, nType, nVersion),
             *const_cast<std::vector<CTxIn>*>(&tx.vin),
             *const_cast<std::vector<CTxOut>*>(&tx.vout), nVersion);

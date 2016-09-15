@@ -6,6 +6,8 @@
 #include <primitives/transaction.h>
 #include <random.h>
 
+#include <boost/atomic.hpp>
+
 void TxUtils::RandomScript(CScript &script) {
     static const opcodetype oplist[] = {OP_FALSE, OP_1, OP_2, OP_3, OP_CHECKSIG, OP_IF, OP_VERIF, OP_RETURN, OP_CODESEPARATOR};
     script = CScript();
@@ -35,4 +37,10 @@ void TxUtils::RandomTransaction(CMutableTransaction &tx, bool fSingle) {
         txout.nValue = insecure_rand() % 100000000;
         RandomScript(txout.scriptPubKey);
     }
+}
+
+extern boost::atomic<bool> flexTransActive;
+void TxUtils::allowNewTransactions()
+{
+    flexTransActive = true;
 }

@@ -408,6 +408,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
 BOOST_AUTO_TEST_CASE(test_version4)
 {
+    TxUtils::allowNewTransactions();
     // 10 random transactions, make sure that save/load works.
     for (int i = 0; i < 10; ++i) {
         CMutableTransaction tx1;

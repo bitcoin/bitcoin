@@ -5,6 +5,7 @@
 
 #include "data/script_invalid.json.h"
 #include "data/script_valid.json.h"
+#include "transaction_utils.h"
 
 #include "core_io.h"
 #include "key.h"
@@ -1018,6 +1019,7 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
 
 BOOST_AUTO_TEST_CASE(transactionV4)
 {
+    TxUtils::allowNewTransactions();
     CBasicKeyStore keystore;
     CKey key;
     key.MakeNewKey(true);

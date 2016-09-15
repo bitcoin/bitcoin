@@ -4,6 +4,7 @@
 
 #include "rpcserver.h"
 #include "rpcclient.h"
+#include "transaction_utils.h"
 
 #include "base58.h"
 #include "netbase.h"
@@ -145,6 +146,7 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     r = CallRPC(string("signrawtransaction ")+notsigned+" "+prevout+" "+"["+privkey1+","+privkey2+"]");
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == true);
 
+    TxUtils::allowNewTransactions();
     // again for a v4 transaction.
     r = CallRPC(string("createrawtransaction ")+prevout+" {\"3HqAe9LtNBjnsfM4CyYaWTnvCaUYT7v4oZ\":11}	0	4");
     notsigned = r.get_str();

@@ -13,6 +13,7 @@
 #include <assert.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/atomic.hpp>
 
 #include "chainparamsseeds.h"
 
@@ -332,4 +333,8 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
+    if (network == CBaseChainParams::REGTEST) {
+        extern boost::atomic<bool> flexTransActive;
+        flexTransActive = true;
+    }
 }

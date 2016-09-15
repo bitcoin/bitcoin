@@ -7,6 +7,8 @@
 #include "hash.h"
 #include "utilstrencodings.h"
 
+#include <boost/atomic.hpp>
+
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
        that the following merkle tree algorithm has a serious flaw related to
@@ -173,13 +175,16 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
      * so to make sure nobody can change sigs without invalidating the header
      * we append the v4 transactions signature hash to the tree.
      */
-    leaves.resize(size + txWithDetachableSigsCount);
-    unsigned int pos = size;
-    for (size_t s = 0; s < size; s++) {
-        if (block.vtx[s].nVersion == 4)
-            leaves[pos++] = block.vtx[s].CalculateSignaturesHash();
+    extern boost::atomic<bool> flexTransActive;
+    if (flexTransActive) {
+        leaves.resize(size + txWithDetachableSigsCount);
+        unsigned int pos = size;
+        for (size_t s = 0; s < size; s++) {
+            if (block.vtx[s].nVersion == 4)
+                leaves[pos++] = block.vtx[s].CalculateSignaturesHash();
+        }
+        assert(pos == size + txWithDetachableSigsCount);
     }
-    assert(pos == size + txWithDetachableSigsCount);
     return ComputeMerkleRoot(leaves, mutated);
 }
 

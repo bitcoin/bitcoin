@@ -11,6 +11,8 @@ class CMutableTransaction;
 namespace TxUtils {
     void RandomScript(CScript &script);
     void RandomTransaction(CMutableTransaction &tx, bool single);
+
+    void allowNewTransactions();
 }
 
 #endif
