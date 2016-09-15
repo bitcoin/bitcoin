@@ -628,7 +628,7 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
     std::vector<CScript> vScripts;
 
     // parse/deserialize input
-    // input-format = output-format, rest/gettxoutsbyaddress/bin requires binary input, gives binary output, ...
+    // only json format supported
 
     if (uriParts.size() > 0)
     {
@@ -660,44 +660,17 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
     }
 
     switch (rf) {
-    case RF_HEX: {
-        // convert hex to bin, continue then with bin part
-        std::vector<unsigned char> strRequestV = ParseHex(strRequestMutable);
-        strRequestMutable.assign(strRequestV.begin(), strRequestV.end());
-    }
-
-    case RF_BINARY: {
-        try {
-            //deserialize only if user sent a request
-            if (strRequestMutable.size() > 0)
-            {
-                if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
-                    return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
-
-                CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
-                oss << strRequestMutable;
-                oss >> fCheckMemPool;
-                //DN: TODO: fix serialization
-                //oss >> vScripts;
-            }
-        } catch (const std::ios_base::failure& e) {
-            // abort in case of unreadable binary data
-            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
-        }
-        break;
-    }
-
     case RF_JSON: {
         if (!fInputParsed)
             return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
         break;
     }
     default: {
-        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
     }
     }
 
-    // limit max scriptis
+    // limit max scripts
     if (vScripts.size() > MAX_GETTXOUTSBYADDRESS_SCRIPTS)
         return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max scripts exceeded (max: %d, tried: %d)", MAX_GETTXOUTSBYADDRESS_SCRIPTS, vScripts.size()));
 
@@ -715,8 +688,6 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
 
         CoinsByScriptToJSON(coinsByScript, nMinDepth, vObjects, vSort, true); 
     }
-
-    //DN: TODO: BIN and HEX
 
     UniValue results(UniValue::VARR);
     sort(vSort.begin(), vSort.end());
