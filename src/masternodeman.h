@@ -81,7 +81,7 @@ public:
     void Check();
 
     /// Check all Masternodes and remove inactive
-    void CheckAndRemove(bool forceExpiredRemoval = false);
+    void CheckAndRemove(bool fForceExpiredRemoval = false);
 
     /// Clear Masternode vector
     void Clear();
