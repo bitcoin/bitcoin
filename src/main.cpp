@@ -5049,6 +5049,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return true;
         }
 
+        string remoteAddr;
+        if (fLogIPs)
+            remoteAddr = ", them=" + pfrom->addr.ToString();
+
+        LogPrintf("receive version message: %s: version %d, blocks=%d, relay=%s, services=%08x us=%s%s, peer=%d\n",
+                  pfrom->cleanSubVer, pfrom->nVersion,
+                  pfrom->nStartingHeight, pfrom->fRelayTxes ? "1" : "0", nServiceInt, addrMe.ToString(),
+                  remoteAddr, pfrom->id);
+
         pfrom->addrLocal = addrMe;
         if (pfrom->fInbound && addrMe.IsRoutable())
         {
@@ -5104,15 +5113,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         pfrom->fSuccessfullyConnected = true;
-
-        string remoteAddr;
-        if (fLogIPs)
-            remoteAddr = ", them=" + pfrom->addr.ToString();
-
-        LogPrintf("receive version message: %s: version %d, blocks=%d, relay=%s, services=%08x us=%s%s, peer=%d\n",
-                  pfrom->cleanSubVer, pfrom->nVersion,
-                  pfrom->nStartingHeight, pfrom->fRelayTxes ? "1" : "0", nServiceInt, addrMe.ToString(),
-                  remoteAddr, pfrom->id);
 
         int64_t nTimeOffset = nTime - GetTime();
         pfrom->nTimeOffset = nTimeOffset;
