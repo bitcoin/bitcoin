@@ -70,6 +70,7 @@ public:
         //assert(genesis.hashMerkleRoot == uint256("0xf2ce47889874027a63af9cc324eb43b57bf1cfe68234089d5d68d88d9aef704f"));
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
+        vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(0);
         base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
