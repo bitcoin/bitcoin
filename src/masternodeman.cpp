@@ -104,14 +104,14 @@ void CMasternodeMan::CheckAndRemove(bool fForceExpiredRemoval)
     std::vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()) {
         bool fRemove =  // If it's marked to be removed from the list by CMasternode::Check for whatever reason ...
-                        (*it).activeState == CMasternode::MASTERNODE_REMOVE ||
+                        (*it).nActiveState == CMasternode::MASTERNODE_REMOVE ||
                         // or collateral was spent ...
-                        (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
+                        (*it).nActiveState == CMasternode::MASTERNODE_OUTPOINT_SPENT ||
                         // or we were asked to remove exired entries ...
-                        (fForceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED);
+                        (fForceExpiredRemoval && (*it).nActiveState == CMasternode::MASTERNODE_EXPIRED);
 
         if (fRemove) {
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).Status(), (*it).addr.ToString(), size() - 1);
+            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).GetStatus(), (*it).addr.ToString(), size() - 1);
 
             // erase all of the broadcasts we've seen from this txin, ...
             mapSeenMasternodeBroadcast.erase(CMasternodeBroadcast(*it).GetHash());
@@ -198,7 +198,7 @@ int CMasternodeMan::CountEnabled(int protocolVersion)
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
-        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
+        if(mn.nProtocolVersion < protocolVersion || !mn.IsEnabled()) continue;
         i++;
     }
 
@@ -244,12 +244,10 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
 CMasternode *CMasternodeMan::Find(const CScript &payee)
 {
     LOCK(cs);
-    CScript payee2;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
     {
-        payee2 = GetScriptForDestination(mn.pubkey.GetID());
-        if(payee2 == payee)
+        if(GetScriptForDestination(mn.pubKeyCollateralAddress.GetID()) == payee)
             return &mn;
     }
     return NULL;
@@ -267,14 +265,13 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-
-CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
+CMasternode* CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
 {
     LOCK(cs);
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
     {
-        if(mn.pubkey2 == pubKeyMasternode)
+        if(mn.pubKeyMasternode == pubKeyMasternode)
             return &mn;
     }
     return NULL;
@@ -325,7 +322,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(!mn.IsEnabled()) continue;
 
         // //check protocol version
-        if(mn.protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
+        if(mn.nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(mnpayments.IsScheduled(mn, nBlockHeight)) continue;
@@ -386,7 +383,7 @@ CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude
     bool fExclude;
 
     BOOST_FOREACH(CMasternode &mn, vMasternodesShuffled) {
-        if(mn.protocolVersion < nProtocolVersion || !mn.IsEnabled()) continue;
+        if(mn.nProtocolVersion < nProtocolVersion || !mn.IsEnabled()) continue;
         fExclude = false;
         BOOST_FOREACH(CTxIn &txinToExclude, vecToExclude) {
             if(mn.vin.prevout == txinToExclude.prevout) {
@@ -412,7 +409,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        if(mn.protocolVersion < minProtocol) continue;
+        if(mn.nProtocolVersion < minProtocol) continue;
         if(fOnlyActive) {
             mn.Check();
             if(!mn.IsEnabled()) continue;
@@ -450,10 +447,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
 
         mn.Check();
 
-        if(mn.protocolVersion < minProtocol) continue;
-        if(!mn.IsEnabled()) {
-            continue;
-        }
+        if(mn.nProtocolVersion < minProtocol || !mn.IsEnabled()) continue;
 
         uint256 n = mn.CalculateScore(nBlockHeight);
         int64_t n2 = UintToArith256(n).GetCompact(false);
@@ -479,7 +473,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        if(mn.protocolVersion < minProtocol) continue;
+        if(mn.nProtocolVersion < minProtocol) continue;
         if(fOnlyActive) {
             mn.Check();
             if(!mn.IsEnabled()) continue;

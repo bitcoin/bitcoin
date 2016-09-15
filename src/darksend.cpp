@@ -124,7 +124,7 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             }
             mnodeman.nDsqCount++;
             pmn->nLastDsq = mnodeman.nDsqCount;
-            pmn->allowFreeTx = true;
+            pmn->fAllowMixingTx = true;
 
             LogPrint("privatesend", "CDarksendPool::ProcessMessage -- DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), addr.ToString());
             vecDarksendQueue.push_back(dsq);
@@ -2292,7 +2292,7 @@ bool CDarksendQueue::CheckSignature()
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
     std::string strError = "";
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature: %s; error: %s\n", ToString(), strError);
         return false;
     }
@@ -2314,7 +2314,7 @@ bool CDarksendQueue::GetProtocolVersion(int &nProtocolVersionRet)
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL) return false;
 
-    nProtocolVersionRet = pmn->protocolVersion;
+    nProtocolVersionRet = pmn->nProtocolVersion;
     return true;
 }
 
@@ -2349,7 +2349,7 @@ bool CDarksendBroadcastTx::CheckSignature()
     std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string strError = "";
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CDarksendBroadcastTx::CheckSignature -- Got bad dstx signature, error: %s\n", strError);
         return false;
     }

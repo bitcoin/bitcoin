@@ -36,7 +36,7 @@ void CActiveMasternode::ManageState()
         pmn = mnodeman.Find(pubKeyMasternode);
         if(pmn != NULL) {
             pmn->Check();
-            if((pmn->IsEnabled() || pmn->IsPreEnabled()) && pmn->protocolVersion == PROTOCOL_VERSION)
+            if((pmn->IsEnabled() || pmn->IsPreEnabled()) && pmn->nProtocolVersion == PROTOCOL_VERSION)
                 EnableRemoteMasterNode(pmn->vin, pmn->addr);
         }
     }

@@ -252,7 +252,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
             return;
         }
         // fill payee with locally calculated winner and hope for the best
-        payee = GetScriptForDestination(winningNode->pubkey.GetID());
+        payee = GetScriptForDestination(winningNode->pubKeyCollateralAddress.GetID());
     }
 
     // GET MASTERNODE PAYMENT VARIABLES SETUP
@@ -400,7 +400,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
     if(!pCurrentBlockIndex) return false;
 
     CScript mnpayee;
-    mnpayee = GetScriptForDestination(mn.pubkey.GetID());
+    mnpayee = GetScriptForDestination(mn.pubKeyCollateralAddress.GetID());
 
     CScript payee;
     for(int64_t h = pCurrentBlockIndex->nHeight; h <= pCurrentBlockIndex->nHeight + 8; h++){
@@ -617,8 +617,8 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, int nValidationHeight, std:
         nMinRequiredProtocol = MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
     }
 
-    if(pmn->protocolVersion < nMinRequiredProtocol) {
-        strError = strprintf("Masternode protocol is too old: nProtocolVersion=%d, nMinRequiredProtocol=%d", pmn->protocolVersion, nMinRequiredProtocol);
+    if(pmn->nProtocolVersion < nMinRequiredProtocol) {
+        strError = strprintf("Masternode protocol is too old: nProtocolVersion=%d, nMinRequiredProtocol=%d", pmn->nProtocolVersion, nMinRequiredProtocol);
         return false;
     }
 
@@ -681,7 +681,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     LogPrintf("CMasternodePayments::ProcessBlock -- Masternode found by GetNextMasternodeInQueueForPayment(): %s\n", pmn->vin.prevout.ToStringShort());
 
 
-    CScript payee = GetScriptForDestination(pmn->pubkey.GetID());
+    CScript payee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
 
     CMasternodePaymentWinner newWinner(activeMasternode.vin, nBlockHeight, payee);
 
@@ -724,7 +724,7 @@ bool CMasternodePaymentWinner::CheckSignature()
                 ScriptToAsmStr(payee);
 
     std::string strError = "";
-    if (!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, strError)) {
+    if (!darkSendSigner.VerifyMessage(pmn->pubKeyMasternode, vchSig, strMessage, strError)) {
         return error("CMasternodePaymentWinner::CheckSignature -- Got bad Masternode payment signature, masternode=%s, error: %s", vinMasternode.prevout.ToStringShort().c_str(), strError);
     }
 

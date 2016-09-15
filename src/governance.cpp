@@ -948,8 +948,8 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
             }
 
             // Check that we have a valid MN signature
-            if(!CheckSignature(mn.pubkey2)) {
-                strError = "Invalid masternode signature for vin: " + strVin + ", pubkey id = " + mn.pubkey2.GetID().ToString();
+            if(!CheckSignature(mn.pubKeyMasternode)) {
+                strError = "Invalid masternode signature for: " + strVin + ", pubkey id = " + mn.pubKeyMasternode.GetID().ToString();
                 return false;
             }
 

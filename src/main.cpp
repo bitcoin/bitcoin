@@ -5677,7 +5677,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             CMasternode* pmn = mnodeman.Find(dstx.vin);
             if(pmn != NULL)
             {
-                if(!pmn->allowFreeTx){
+                if(!pmn->fAllowMixingTx) {
                     //multiple peers can send us a valid masternode transaction
                     LogPrint("privatesend", "dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString());
                     return true;
@@ -5687,7 +5687,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString());
 
-                pmn->allowFreeTx = false;
+                pmn->fAllowMixingTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
                     mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));

@@ -562,7 +562,7 @@ bool CConsensusVote::CheckSignature()
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, strError)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubKeyMasternode, vchMasterNodeSignature, strMessage, strError)) {
         LogPrintf("CConsensusVote::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
         return false;
     }

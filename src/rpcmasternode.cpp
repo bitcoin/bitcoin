@@ -195,9 +195,9 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         obj.push_back(Pair("height",        nHeight));
         obj.push_back(Pair("IP:port",       winner->addr.ToString()));
-        obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
+        obj.push_back(Pair("protocol",      (int64_t)winner->nProtocolVersion));
         obj.push_back(Pair("vin",           winner->vin.prevout.ToStringShort()));
-        obj.push_back(Pair("payee",         CBitcoinAddress(winner->pubkey.GetID()).ToString()));
+        obj.push_back(Pair("payee",         CBitcoinAddress(winner->pubKeyCollateralAddress.GetID()).ToString()));
         obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
                                                     winner->lastPing.sigTime));
         obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
@@ -351,7 +351,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
             CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CMasternode *pmn = mnodeman.Find(vin);
 
-            std::string strStatus = pmn ? pmn->Status() : "MISSING";
+            std::string strStatus = pmn ? pmn->GetStatus() : "MISSING";
 
             UniValue mnObj(UniValue::VOBJ);
             mnObj.push_back(Pair("alias", mne.getAlias()));
@@ -385,11 +385,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
 
         UniValue mnObj(UniValue::VOBJ);
-        CMasternode *pmn = mnodeman.Find(activeMasternode.vin);
 
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString()));
         mnObj.push_back(Pair("service", activeMasternode.service.ToString()));
-        if (pmn) mnObj.push_back(Pair("pubkey", CBitcoinAddress(pmn->pubkey.GetID()).ToString()));
+        mnObj.push_back(Pair("pubKeyMasternode", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString()));
         mnObj.push_back(Pair("status", activeMasternode.GetStatus()));
         return mnObj;
     }
@@ -506,9 +505,9 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
 
                 std::ostringstream stringStream;
                 stringStream << setw(9) <<
-                               mn.Status() << " " <<
-                               mn.protocolVersion << " " <<
-                               CBitcoinAddress(mn.pubkey.GetID()).ToString() << " " << setw(21) <<
+                               mn.GetStatus() << " " <<
+                               mn.nProtocolVersion << " " <<
+                               CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " << setw(21) <<
                                mn.addr.ToString() << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
@@ -528,17 +527,17 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 if (strFilter !="" && strVin.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strVin, mn.GetLastPaidTime()));
             } else if (strMode == "protocol") {
-                if(strFilter !="" && strFilter != strprintf("%d", mn.protocolVersion) &&
+                if(strFilter !="" && strFilter != strprintf("%d", mn.nProtocolVersion) &&
                     strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,       (int64_t)mn.protocolVersion));
+                obj.push_back(Pair(strVin,       (int64_t)mn.nProtocolVersion));
             } else if (strMode == "pubkey") {
-                CBitcoinAddress address(mn.pubkey.GetID());
+                CBitcoinAddress address(mn.pubKeyCollateralAddress.GetID());
 
                 if(strFilter !="" && address.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       address.ToString()));
             } else if(strMode == "status") {
-                std::string strStatus = mn.Status();
+                std::string strStatus = mn.GetStatus();
                 if(strFilter !="" && strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       strStatus));
             }
@@ -706,15 +705,15 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         BOOST_FOREACH(CMasternodeBroadcast& mnb, vecMnb) {
             UniValue resultObj(UniValue::VOBJ);
 
-            if(mnb.VerifySignature(nDos)) {
+            if(mnb.CheckSignature(nDos)) {
                 successful++;
                 resultObj.push_back(Pair("vin", mnb.vin.ToString()));
                 resultObj.push_back(Pair("addr", mnb.addr.ToString()));
-                resultObj.push_back(Pair("pubkey", CBitcoinAddress(mnb.pubkey.GetID()).ToString()));
-                resultObj.push_back(Pair("pubkey2", CBitcoinAddress(mnb.pubkey2.GetID()).ToString()));
+                resultObj.push_back(Pair("pubKeyCollateralAddress", CBitcoinAddress(mnb.pubKeyCollateralAddress.GetID()).ToString()));
+                resultObj.push_back(Pair("pubKeyMasternode", CBitcoinAddress(mnb.pubKeyMasternode.GetID()).ToString()));
                 resultObj.push_back(Pair("vchSig", EncodeBase64(&mnb.vchSig[0], mnb.vchSig.size())));
                 resultObj.push_back(Pair("sigTime", mnb.sigTime));
-                resultObj.push_back(Pair("protocolVersion", mnb.protocolVersion));
+                resultObj.push_back(Pair("protocolVersion", mnb.nProtocolVersion));
                 resultObj.push_back(Pair("nLastDsq", mnb.nLastDsq));
 
                 UniValue lastPingObj(UniValue::VOBJ);
@@ -764,7 +763,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
             int nDos = 0;
             bool fResult;
-            if (mnb.VerifySignature(nDos)) {
+            if (mnb.CheckSignature(nDos)) {
                 if (fSafe) {
                     fResult = mnodeman.CheckMnbAndUpdateMasternodeList(mnb, nDos);
                 } else {
