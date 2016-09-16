@@ -1110,12 +1110,12 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError)
 
 int CGovernanceObject::GetAbsoluteYesCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_NO);
+    return GetYesCount(eVoteSignalIn) - GetNoCount(eVoteSignalIn);
 }
 
 int CGovernanceObject::GetAbsoluteNoCount(vote_signal_enum_t eVoteSignalIn)
 {
-    return governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_NO) - governance.CountMatchingVotes((*this), eVoteSignalIn, VOTE_OUTCOME_YES);
+    return GetNoCount(eVoteSignalIn) - GetYesCount(eVoteSignalIn);
 }
 
 int CGovernanceObject::GetYesCount(vote_signal_enum_t eVoteSignalIn)
