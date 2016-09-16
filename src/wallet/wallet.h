@@ -587,6 +587,8 @@ private:
     bool fFileBacked;
 
     std::set<int64_t> setKeyPool;
+
+    int64_t IncOrderPosNext(CWalletDB *pwalletdb = NULL);
 public:
     /*
      * Main wallet lock.
@@ -740,7 +742,6 @@ public:
      * Increment the next transaction order id
      * @return next transaction order id
      */
-    int64_t IncOrderPosNext(CWalletDB *pwalletdb = NULL);
     bool AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment = "");
     bool GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bForceNew = false);
 
@@ -775,7 +776,7 @@ public:
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman);
 
-    bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
+    bool AddAccountingEntry(CAccountingEntry&, CWalletDB &walletdb);
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
