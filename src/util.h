@@ -46,7 +46,6 @@
 extern bool fMasterNode;
 extern bool fLiteMode;
 extern int nWalletBackups;
-extern int64_t enforceMasternodePaymentsTime;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::string strBudgetMode;

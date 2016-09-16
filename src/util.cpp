@@ -113,8 +113,6 @@ bool fLiteMode = false;
         -2      - disabled because wallet was locked and we were not able to replenish keypool
 */
 int nWalletBackups = 10;
-/** Spork enforcement enabled time */
-int64_t enforceMasternodePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
 string strBudgetMode = "";
 
