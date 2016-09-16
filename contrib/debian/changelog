@@ -1,8 +1,15 @@
-bitcoinclassic (1.1.1-trusty1) trusty; urgency=medium
+bitcoinclassic (1.1.91-trusty1) trusty; urgency=medium
 
+  * Introduce flexible-transactions
+  * Introduce xthin-block relay
+  * stop shipping libconsensus
+  * Make first sync much cheaper with auto-checkpointing
+  * Introduce setcoinbase / generateaddress RPC calls
+    This removes the requirement for a mining node to have a wallet.
+  * Upgrade to use C++11
   * Remove p2p alert handling
   * Fix translation (#184)
-  * Allow nodes to accept version2 tx.
+  * Allow nodes to accept version2 tx
 
  -- Tom Z <tomz@freedommail.ch>  Tue, 20 Sept 2016 10:00:00 +0100
 
