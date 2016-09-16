@@ -220,7 +220,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
     if(strCommand == "vote-conf")
     {
         if(params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-conf <governance-hash> [funding|valid|delete] [yes|no|abstain]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-conf <governance-hash> [funding|valid|delete] [yes|no|abstain]'");
 
         uint256 hash;
         std::string strVote;
