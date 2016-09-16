@@ -695,7 +695,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
             "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
+            "1. \"hash|height\"     (string | numeric, required) The block hash or the block height\n"
             "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
             "\nResult (for verbose = true):\n"
             "{\n"
@@ -726,22 +726,37 @@ UniValue getblock(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleCli("getblock", "\"0\"")
+            + HelpExampleRpc("getblock", "\"0\"")
         );
 
     LOCK(cs_main);
 
     std::string strHash = params[0].get_str();
-    uint256 hash(uint256S(strHash));
 
     bool fVerbose = true;
     if (params.size() > 1)
         fVerbose = params[1].get_bool();
 
-    if (mapBlockIndex.count(hash) == 0)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-
     CBlock block;
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    CBlockIndex* pblockindex;
+    int32_t nHeight;
+
+    if (((strHash.size() != 64) || !IsHex(strHash)) && ParseInt32(strHash, &nHeight)) {
+        pblockindex = chainActive[nHeight];
+
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+        }
+    } else {
+        uint256 hash(uint256S(strHash));
+
+        if (mapBlockIndex.count(hash) == 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+
+        pblockindex = mapBlockIndex[hash];
+    }
 
     if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
