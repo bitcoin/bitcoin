@@ -559,7 +559,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-mnconflock=<n>", strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1));
     strUsage += HelpMessageOpt("-masternodeprivkey=<n>", _("Set the masternode private key"));
     strUsage += HelpMessageOpt("-masternodeaddr=<n>", strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:9999"));
-    strUsage += HelpMessageOpt("-budgetvotemode=<mode>", _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)"));
 
     strUsage += HelpMessageGroup(_("PrivateSend options:"));
     strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
@@ -1808,9 +1807,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    //get the mode of budget voting for this masternode
-    strBudgetMode = GetArg("-budgetvotemode", "auto");
-
     if(GetBoolArg("-mnconflock", true) && pwalletMain) {
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Masternodes:\n");
@@ -1855,7 +1851,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("nInstantSendDepth %d\n", nInstantSendDepth);
     LogPrintf("PrivateSend rounds %d\n", nPrivateSendRounds);
     LogPrintf("PrivateSend amount %d\n", nPrivateSendAmount);
-    LogPrintf("Budget Mode %s\n", strBudgetMode);
 
     darkSendPool.InitDenominations();
     mnodeman.InitDummyScriptPubkey();

@@ -46,13 +46,10 @@
 extern bool fMasterNode;
 extern bool fLiteMode;
 extern int nWalletBackups;
-extern int keysLoaded;
-extern bool fSucessfullyLoaded;
-extern std::string strBudgetMode;
 
-static const bool DEFAULT_LOGTIMEMICROS = false;
-static const bool DEFAULT_LOGIPS        = false;
-static const bool DEFAULT_LOGTIMESTAMPS = true;
+static const bool DEFAULT_LOGTIMEMICROS  = false;
+static const bool DEFAULT_LOGIPS         = false;
+static const bool DEFAULT_LOGTIMESTAMPS  = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 
 /** Signals for translation. */

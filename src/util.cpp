@@ -113,8 +113,6 @@ bool fLiteMode = false;
         -2      - disabled because wallet was locked and we were not able to replenish keypool
 */
 int nWalletBackups = 10;
-bool fSucessfullyLoaded = false;
-string strBudgetMode = "";
 
 const char * const BITCOIN_CONF_FILENAME = "dash.conf";
 const char * const BITCOIN_PID_FILENAME = "dashd.pid";
