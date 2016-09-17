@@ -14,15 +14,14 @@ class TxOutsByAddressTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
+        self.extra_args = [["-txoutsbyaddressindex"], [], []]
 
     def setup_network(self, split=False):
         print("Setup network...")
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-txoutsbyaddressindex"]))
-        self.nodes.append(start_node(1, self.options.tmpdir))
-        self.nodes.append(start_node(2, self.options.tmpdir))
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        connect_nodes(self.nodes[1], 0)
+        connect_nodes(self.nodes[2], 0)
         self.is_network_split = False
-        self.sync_all()
 
     def run_test(self):
         print("Generating test blockchain...")
@@ -32,8 +31,6 @@ class TxOutsByAddressTest(BitcoinTestFramework):
             assert_equal(len(node.listunspent()), 0)
 
         # mining
-        connect_nodes(self.nodes[1], 0)
-        connect_nodes(self.nodes[2], 0)
         self.nodes[0].generate(101)
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -71,7 +68,7 @@ class TxOutsByAddressTest(BitcoinTestFramework):
         assert_equal(txid, txid2)
 
         # start node 2
-        self.nodes.append(start_node(2, self.options.tmpdir, self.args))
+        self.nodes.append(start_node(2, self.options.tmpdir, self.extra_args[2]))
 
         # mine 10 blocks alone to have the longest chain
         self.nodes[2].generate(10)
