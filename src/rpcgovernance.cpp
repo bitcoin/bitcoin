@@ -76,8 +76,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
     if(strCommand == "prepare")
     {
-        if (params.size() != 6) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject prepare <parent-hash> <revision> <time> <name> <data-hex>'");
+        if (params.size() != 5) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject prepare <parent-hash> <revision> <time> <data-hex>'");
         }
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
@@ -101,12 +101,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strTime = params[3].get_str();
         int nRevision = boost::lexical_cast<int>(strRevision);
         int nTime = boost::lexical_cast<int>(strTime);
-        std::string strName = SanitizeString(params[4].get_str());
-        std::string strData = params[5].get_str();
+        std::string strData = params[4].get_str();
 
         // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
-        CGovernanceObject govobj(hashParent, nRevision, strName, nTime, uint256(), strData);
+        CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strData);
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
@@ -126,8 +125,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // -- send the tx to the network
         pwalletMain->CommitTransaction(wtx, reservekey, NetMsgType::TX);
 
-        DBG( cout << "gobject: prepare strName = " << strName
-             << ", strData = " << govobj.GetDataAsString()
+        DBG( cout << "gobject: prepare "
+             << " strData = " << govobj.GetDataAsString()
              << ", hash = " << govobj.GetHash().GetHex()
              << ", txidFee = " << wtx.GetHash().GetHex()
              << endl; );
@@ -138,8 +137,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // AFTER COLLATERAL TRANSACTION HAS MATURED USER CAN SUBMIT GOVERNANCE OBJECT TO PROPAGATE NETWORK
     if(strCommand == "submit")
     {
-        if ((params.size() < 6) || (params.size() > 7))  {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject submit <parent-hash> <revision> <time> <name> <data-hex> <fee-txid>'");
+        if ((params.size() < 5) || (params.size() > 6))  {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject submit <parent-hash> <revision> <time> <data-hex> <fee-txid>'");
         }
 
         if(!masternodeSync.IsBlockchainSynced()) {
@@ -161,8 +160,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         uint256 txidFee;
 
-        if(params.size() == 7) {
-            txidFee = ParseHashV(params[6], "fee-txid, parameter 6");
+        if(params.size() == 6) {
+            txidFee = ParseHashV(params[5], "fee-txid, parameter 6");
         }
         uint256 hashParent;
         if(params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
@@ -177,13 +176,12 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strTime = params[3].get_str();
         int nRevision = boost::lexical_cast<int>(strRevision);
         int nTime = boost::lexical_cast<int>(strTime);
-        std::string strName = SanitizeString(params[4].get_str());
-        std::string strData = params[5].get_str();
+        std::string strData = params[4].get_str();
 
-        CGovernanceObject govobj(hashParent, nRevision, strName, nTime, txidFee, strData);
+        CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strData);
 
-        DBG( cout << "gobject: submit strName = " << strName
-             << ", strData = " << govobj.GetDataAsString()
+        DBG( cout << "gobject: submit "
+             << " strData = " << govobj.GetDataAsString()
              << ", hash = " << govobj.GetHash().GetHex()
              << ", txidFee = " << txidFee.GetHex()
              << endl; );
@@ -199,7 +197,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             }
         }
         else {
-            if(params.size() != 7) {
+            if(params.size() != 6) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-txid parameter must be included to submit this type of object");
             }
         }
@@ -546,7 +544,6 @@ UniValue gobject(const UniValue& params, bool fHelp)
             if(strShow == "valid" && !pGovObj->fCachedValid) continue;
 
             UniValue bObj(UniValue::VOBJ);
-            bObj.push_back(Pair("Name",  pGovObj->GetName()));
             bObj.push_back(Pair("DataHex",  pGovObj->GetDataAsHex()));
             bObj.push_back(Pair("DataString",  pGovObj->GetDataAsString()));
             bObj.push_back(Pair("Hash",  pGovObj->GetHash().ToString()));
@@ -567,7 +564,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("fCachedDelete",  pGovObj->fCachedDelete));
             bObj.push_back(Pair("fCachedEndorsed",  pGovObj->fCachedEndorsed));
 
-            objResult.push_back(Pair(pGovObj->GetName(), bObj));
+            objResult.push_back(Pair(pGovObj->GetHash().ToString(), bObj));
         }
 
         return objResult;
@@ -593,7 +590,6 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // REPORT BASIC OBJECT STATS
 
         UniValue objResult(UniValue::VOBJ);
-        objResult.push_back(Pair("Name",  pGovObj->GetName()));
         objResult.push_back(Pair("Hash",  pGovObj->GetHash().ToString()));
         objResult.push_back(Pair("CollateralHash",  pGovObj->nCollateralHash.ToString()));
 

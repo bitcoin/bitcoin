@@ -359,28 +359,6 @@ void CGovernanceManager::UpdateCachesAndClean()
 
 }
 
-CGovernanceObject *CGovernanceManager::FindGovernanceObject(const std::string &strName)
-{
-    // find the prop with the highest yes count
-
-    int nYesCount = -99999;
-    CGovernanceObject* pGovObj = NULL;
-
-    object_m_it it = mapObjects.begin();
-    while(it != mapObjects.end()) {
-        int nGovObjYesCount = pGovObj->GetYesCount(VOTE_SIGNAL_FUNDING);
-        if((*it).second.strName == strName && nGovObjYesCount > nYesCount) {
-            nYesCount = nGovObjYesCount;
-            pGovObj = &((*it).second);
-        }
-        ++it;
-    }
-
-    if(nYesCount == -99999) return NULL;
-
-    return pGovObj;
-}
-
 CGovernanceObject *CGovernanceManager::FindGovernanceObject(const uint256& nHash)
 {
     LOCK(cs);
@@ -623,7 +601,6 @@ CGovernanceObject::CGovernanceObject()
 {
     // MAIN OBJECT DATA
 
-    strName = "unknown";
     nTime = 0;
     nObjectType = GOVERNANCE_OBJECT_UNKNOWN;
 
@@ -645,13 +622,12 @@ CGovernanceObject::CGovernanceObject()
     LoadData();
 }
 
-CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTimeIn, uint256 nCollateralHashIn, std::string strDataIn)
+CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, int64_t nTimeIn, uint256 nCollateralHashIn, std::string strDataIn)
 {
     // MAIN OBJECT DATA
 
     nHashParent = nHashParentIn; //parent object, 0 is root
     nRevision = nRevisionIn; //object revision in the system
-    strName = strNameIn;
     nTime = nTimeIn;
     nCollateralHash = nCollateralHashIn; //fee-tx
     nObjectType = GOVERNANCE_OBJECT_UNKNOWN; // Avoid having an uninitialized variable
@@ -677,7 +653,6 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
 
     nHashParent = other.nHashParent;
     nRevision = other.nRevision;
-    strName = other.strName;
     nTime = other.nTime;
     nCollateralHash = other.nCollateralHash;
     strData = other.strData;
@@ -763,13 +738,12 @@ uint256 CGovernanceObject::GetHash()
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << nHashParent;
     ss << nRevision;
-    ss << strName;
     ss << nTime;
     ss << strData;
     // fee_tx is left out on purpose
     uint256 h1 = ss.GetHash();
 
-    DBG( printf("CGovernanceObject::GetHash %i %s %li %s\n", nRevision, strName.c_str(), nTime, strData.c_str()); );
+    DBG( printf("CGovernanceObject::GetHash %i %li %s\n", nRevision, nTime, strData.c_str()); );
 
     return h1;
 }
@@ -843,30 +817,6 @@ void CGovernanceObject::LoadData()
 }
 
 /**
-*   SetData - Example usage:
-*   --------------------------------------------------------
-*
-*   Data must be stored as an encoded hex/json string.
-*   Other than the above requirement gov objects are data-agnostic.
-*
-*/
-
-bool CGovernanceObject::SetData(std::string& strError, std::string strDataIn)
-{
-    // SET DATA FIELD TO INPUT
-
-    if(strDataIn.size() > 512*4)
-    {
-        // (assumption) this is equal to pythons len(strData) > 512*4, I think
-        strError = "Too big.";
-        return false;
-    }
-
-    strData = strDataIn;
-    return true;
-}
-
-/**
 *   GetData - Example usage:
 *   --------------------------------------------------------
 *
@@ -913,16 +863,6 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
     if(!pindex) {
         strError = "Tip is NULL";
         return true;
-    }
-
-    if(strName.size() > 20) {
-        strError = "Invalid object name, limit of 20 characters.";
-        return false;
-    }
-
-    if(strName != SanitizeString(strName)) {
-        strError = "Invalid object name, unsafe characters found.";
-        return false;
     }
 
     // IF ABSOLUTE NO COUNT (NO-YES VALID VOTES) IS MORE THAN 10% OF THE NETWORK MASTERNODES, OBJ IS INVALID
@@ -1241,7 +1181,6 @@ void CGovernanceObject::swap(CGovernanceObject& first, CGovernanceObject& second
 
     // by swapping the members of two classes,
     // the two classes are effectively swapped
-    swap(first.strName, second.strName);
     swap(first.nHashParent, second.nHashParent);
     swap(first.nRevision, second.nRevision);
     swap(first.nTime, second.nTime);

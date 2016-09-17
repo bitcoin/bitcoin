@@ -29,6 +29,8 @@ class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
 
+static const int MAX_GOVERNANCE_OBJECT_DATA_SIZE = 16 * 1024;
+
 static const int GOVERNANCE_OBJECT_UNKNOWN = 0;
 static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
@@ -135,7 +137,6 @@ public:
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
 
-    CGovernanceObject *FindGovernanceObject(const std::string &strName);
     CGovernanceObject *FindGovernanceObject(const uint256& nHash);
 
     std::vector<CGovernanceVote*> GetMatchingVotes(const uint256& nParentHash);
@@ -222,7 +223,6 @@ public:
 
     uint256 nHashParent; //parent object, 0 is root
     int nRevision; //object revision in the system
-    std::string strName; //org name, username, prop name, etc.
     int64_t nTime; //time this object was created
     uint256 nCollateralHash; //fee-tx
     std::string strData; // Data field - can be used for anything
@@ -246,7 +246,7 @@ public:
     bool fExpired; // Object is no longer of interest
 
     CGovernanceObject();
-    CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nCollateralHashIn, std::string strDataIn);
+    CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, int64_t nTime, uint256 nCollateralHashIn, std::string strDataIn);
     CGovernanceObject(const CGovernanceObject& other);
     void swap(CGovernanceObject& first, CGovernanceObject& second); // nothrow
 
@@ -267,7 +267,6 @@ public:
     void UpdateSentinelVariables(const CBlockIndex *pCurrentBlockIndex);
     int GetObjectType();
     int GetObjectSubtype();
-    std::string GetName() {return strName; }
 
     CAmount GetMinCollateralFee();
 
@@ -300,10 +299,9 @@ public:
 
         READWRITE(nHashParent);
         READWRITE(nRevision);
-        READWRITE(LIMITED_STRING(strName, 64));
         READWRITE(nTime);
         READWRITE(nCollateralHash);
-        READWRITE(strData);
+        READWRITE(LIMITED_STRING(strData, MAX_GOVERNANCE_OBJECT_DATA_SIZE));
         READWRITE(nObjectType);
         READWRITE(vinMasternode);
         READWRITE(vchSig);
@@ -315,7 +313,6 @@ private:
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
     void LoadData();
-    bool SetData(std::string& strError, std::string strDataIn);
     void GetData(UniValue& objResult);
 
 };
