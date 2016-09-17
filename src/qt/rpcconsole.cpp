@@ -623,6 +623,8 @@ void RPCConsole::on_lineEdit_returnPressed()
             cmd = cmdList.first() + " **PASSPHRASE** " + cmdList.back();
         else if(cmdList.first() == "walletpassphrasechange")
             cmd = cmdList.first() + " **OLDPASSPHRASE** **NEWPASSPHRASE**";
+        else if(cmdList.first() == "encryptwallet")
+            cmd = cmdList.first() + " **PASSPHRASE**";
         message(CMD_REQUEST, cmd);
         // Remove command, if already in history
         history.removeOne(cmd);
