@@ -1482,9 +1482,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
-if (pindexLast->nTime > 1474279200)
-		return DarkGravityWave(pindexLast, pblock);
-
+//if (pindexLast->nTime > 1474279200)
+//		return DarkGravityWave(pindexLast, pblock);
+//
 
     // Genesis block
     if (pindexLast == NULL)
