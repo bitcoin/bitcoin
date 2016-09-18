@@ -157,21 +157,4 @@ private:
     static boost::once_flag init_flag;
 };
 
-//
-// Functions for directly locking/unlocking memory objects.
-// Intended for non-dynamically allocated structures.
-//
-template <typename T>
-void LockObject(const T& t)
-{
-    LockedPageManager::Instance().LockRange((void*)(&t), sizeof(T));
-}
-
-template <typename T>
-void UnlockObject(const T& t)
-{
-    memory_cleanse((void*)(&t), sizeof(T));
-    LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
-}
-
 #endif // BITCOIN_SUPPORT_PAGELOCKER_H
