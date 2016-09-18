@@ -439,12 +439,12 @@ void CMasternodeBlockPayees::AddPayee(CMasternodePaymentWinner winner)
     LOCK(cs_vecPayees);
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
-        if (payee.scriptPubKey == winner.payee) {
-            payee.nVotes++;
+        if (payee.GetPayee() == winner.payee) {
+            payee.AddVoteHash(winner.GetHash());
             return;
         }
     }
-    CMasternodePayee payeeNew(winner.payee, 1);
+    CMasternodePayee payeeNew(winner.payee, winner.GetHash());
     vecPayees.push_back(payeeNew);
 }
 
@@ -459,9 +459,9 @@ bool CMasternodeBlockPayees::GetPayee(CScript& payeeRet)
 
     int nVotes = -1;
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
-        if (payee.nVotes > nVotes) {
-            payeeRet = payee.scriptPubKey;
-            nVotes = payee.nVotes;
+        if (payee.GetVoteCount() > nVotes) {
+            payeeRet = payee.GetPayee();
+            nVotes = payee.GetVoteCount();
         }
     }
 
@@ -473,7 +473,7 @@ bool CMasternodeBlockPayees::HasPayeeWithVotes(CScript payeeIn, int nVotesReq)
     LOCK(cs_vecPayees);
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
-        if (payee.nVotes >= nVotesReq && payee.scriptPubKey == payeeIn) {
+        if (payee.GetVoteCount() >= nVotesReq && payee.GetPayee() == payeeIn) {
             return true;
         }
     }
@@ -494,8 +494,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     //require at least MNPAYMENTS_SIGNATURES_REQUIRED signatures
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
-        if (payee.nVotes >= nMaxSignatures) {
-            nMaxSignatures = payee.nVotes;
+        if (payee.GetVoteCount() >= nMaxSignatures) {
+            nMaxSignatures = payee.GetVoteCount();
         }
     }
 
@@ -503,16 +503,16 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     if(nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees) {
-        if (payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+        if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
             BOOST_FOREACH(CTxOut txout, txNew.vout) {
-                if (payee.scriptPubKey == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
+                if (payee.GetPayee() == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
                     LogPrint("mnpayments", "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
                     return true;
                 }
             }
 
             CTxDestination address1;
-            ExtractDestination(payee.scriptPubKey, address1);
+            ExtractDestination(payee.GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
             if(strPayeesPossible == "") {
@@ -536,13 +536,13 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
     BOOST_FOREACH(CMasternodePayee& payee, vecPayees)
     {
         CTxDestination address1;
-        ExtractDestination(payee.scriptPubKey, address1);
+        ExtractDestination(payee.GetPayee(), address1);
         CBitcoinAddress address2(address1);
 
         if (strRequiredPayments != "Unknown") {
-            strRequiredPayments += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+            strRequiredPayments += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.GetVoteCount());
         } else {
-            strRequiredPayments = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+            strRequiredPayments = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.GetVoteCount());
         }
     }
 
@@ -743,28 +743,99 @@ std::string CMasternodePaymentWinner::ToString() const
     return info.str();
 }
 
+// Send all votes up to nCountNeeded blocks (but not more than GetStorageLimit)
 void CMasternodePayments::Sync(CNode* pnode, int nCountNeeded)
 {
-    LOCK(cs_mapMasternodePayeeVotes);
+    LOCK(cs_mapMasternodeBlocks);
 
     if(!pCurrentBlockIndex) return;
 
-    int nLimit = GetStorageLimit();
-    if(nCountNeeded > nLimit) nCountNeeded = nLimit;
+    if(pnode->nVersion < 70201) {
+        // Old nodes can only sync via heavy method
+        int nLimit = GetStorageLimit();
+        if(nCountNeeded > nLimit) nCountNeeded = nLimit;
+    } else {
+        // New nodes request missing payment blocks themselves, push only future winners to them
+        nCountNeeded = 0;
+    }
 
     int nInvCount = 0;
-    std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
-    while(it != mapMasternodePayeeVotes.end()) {
-        CMasternodePaymentWinner winner = (*it).second;
-        if(winner.nBlockHeight >= pCurrentBlockIndex->nHeight - nCountNeeded && winner.nBlockHeight <= pCurrentBlockIndex->nHeight + 20) {
-            pnode->PushInventory(CInv(MSG_MASTERNODE_WINNER, winner.GetHash()));
-            nInvCount++;
+
+    for(int h = pCurrentBlockIndex->nHeight - nCountNeeded; h < pCurrentBlockIndex->nHeight + 20; h++) {
+        if(mapMasternodeBlocks.count(h)) {
+            BOOST_FOREACH(CMasternodePayee& payee, mapMasternodeBlocks[h].vecPayees) {
+                std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
+                BOOST_FOREACH(uint256& hash, vecVoteHashes) {
+                    pnode->PushInventory(CInv(MSG_MASTERNODE_WINNER, hash));
+                    nInvCount++;
+                }
+            }
         }
-        ++it;
     }
 
     LogPrintf("CMasternodePayments::Sync -- Sent %d winners to peer %d\n", nInvCount, pnode->id);
     pnode->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_MNW, nInvCount);
+}
+
+// Request low data payment blocks in batches directly from some node instead of/after preliminary Sync.
+void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode)
+{
+    // Old nodes can't process this
+    if(pnode->nVersion < 70201) return;
+
+    LOCK(cs_mapMasternodeBlocks);
+
+    std::vector<CInv> vToFetch;
+    std::map<int, CMasternodeBlockPayees>::iterator it = mapMasternodeBlocks.begin();
+
+    while(it != mapMasternodeBlocks.end()) {
+        int nTotalVotes = 0;
+        bool fFound = false;
+        BOOST_FOREACH(CMasternodePayee& payee, it->second.vecPayees) {
+            if(payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+                fFound = true;
+                break;
+            }
+            nTotalVotes += payee.GetVoteCount();
+        }
+        // A clear winner (MNPAYMENTS_SIGNATURES_REQUIRED+ votes) was found
+        // or no clear winner was found but there are at least avg number of votes
+        if(fFound || nTotalVotes >= (MNPAYMENTS_SIGNATURES_TOTAL + MNPAYMENTS_SIGNATURES_REQUIRED)/2) {
+            // so just move to the next block
+            ++it;
+            continue;
+        }
+        // DEBUG
+        DBG (
+            // Let's see why this failed
+            BOOST_FOREACH(CMasternodePayee& payee, it->second.vecPayees) {
+                CTxDestination address1;
+                ExtractDestination(payee.scriptPubKey, address1);
+                CBitcoinAddress address2(address1);
+                printf("payee %s votes %d\n", address2.ToString().c_str(), payee.GetVoteCount());
+            }
+            printf("block %d votes total %d\n", it->first, nTotalVotes);
+        )
+        // END DEBUG
+        // Low data block found, let's try to sync it
+        uint256 hash;
+        if(GetBlockHash(hash, it->first)) {
+            vToFetch.push_back(CInv(MSG_MASTERNODE_WINNER_BLOCK, hash));
+        }
+        // We should not violate GETDATA rules
+        if(vToFetch.size() == MAX_INV_SZ) {
+            LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d blocks\n", pnode->id, MAX_INV_SZ);
+            pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
+            // Start filling new batch
+            vToFetch.clear();
+        }
+        ++it;
+    }
+    // Ask for the rest of it
+    if(!vToFetch.empty()) {
+        LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d blocks\n", pnode->id, vToFetch.size());
+        pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
+    }
 }
 
 std::string CMasternodePayments::ToString() const

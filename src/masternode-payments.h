@@ -40,20 +40,36 @@ std::string GetRequiredPaymentsString(int nBlockHeight);
 
 class CMasternodePayee
 {
-public:
+private:
     CScript scriptPubKey;
-    int nVotes;
+    std::vector<uint256> vecVoteHashes;
 
-    CMasternodePayee() : scriptPubKey(CScript()), nVotes(0) {}
-    CMasternodePayee(CScript payee, int nVotesIn) : scriptPubKey(payee), nVotes(nVotesIn) {}
+public:
+    CMasternodePayee() :
+        scriptPubKey(),
+        vecVoteHashes()
+        {}
+
+    CMasternodePayee(CScript payee, uint256 hashIn) :
+        scriptPubKey(payee),
+        vecVoteHashes()
+    {
+        vecVoteHashes.push_back(hashIn);
+    }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(*(CScriptBase*)(&scriptPubKey));
-        READWRITE(nVotes);
-     }
+        READWRITE(vecVoteHashes);
+    }
+
+    CScript GetPayee() { return scriptPubKey; }
+
+    void AddVoteHash(uint256 hashIn) { vecVoteHashes.push_back(hashIn); }
+    std::vector<uint256> GetVoteHashes() { return vecVoteHashes; }
+    int GetVoteCount() { return vecVoteHashes.size(); }
 };
 
 // Keep track of votes for payees from masternodes
@@ -169,6 +185,7 @@ public:
     bool ProcessBlock(int nBlockHeight);
 
     void Sync(CNode* node, int nCountNeeded);
+    void RequestLowDataPaymentBlocks(CNode* pnode);
     void CheckAndRemove();
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee);

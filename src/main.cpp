@@ -4939,6 +4939,12 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_MASTERNODE_WINNER:
         return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
 
+    case MSG_MASTERNODE_WINNER_BLOCK:
+        {
+            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+            return mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.find(mi->second->nHeight) != mnpayments.mapMasternodeBlocks.end();
+        }
+
     case MSG_MASTERNODE_ANNOUNCE:
         return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash);
 
@@ -5105,13 +5111,32 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pushed = true;
                     }
                 }
-            
+
                 if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
                     if(mnpayments.mapMasternodePayeeVotes.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << mnpayments.mapMasternodePayeeVotes[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNWINNER, ss);
+                        pushed = true;
+                    }
+                }
+
+                if (!pushed && inv.type == MSG_MASTERNODE_WINNER_BLOCK) {
+                    BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+                    LOCK(cs_mapMasternodeBlocks);
+                    if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
+                        BOOST_FOREACH(CMasternodePayee& payee, mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
+                            std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
+                            BOOST_FOREACH(uint256& hash, vecVoteHashes) {
+                                if(mnpayments.mapMasternodePayeeVotes.count(hash)) {
+                                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                                    ss.reserve(1000);
+                                    ss << mnpayments.mapMasternodePayeeVotes[hash];
+                                    pfrom->PushMessage(NetMsgType::MNWINNER, ss);
+                                }
+                            }
+                        }
                         pushed = true;
                     }
                 }

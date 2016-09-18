@@ -309,8 +309,10 @@ void CMasternodeSync::ProcessTick()
                 if(pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 nRequestedMasternodeAttempt++;
 
-                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, mnpayments.GetStorageLimit()); //sync payees
-
+                // ask node for all winners it has (new nodes will only return future winners)
+                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, mnpayments.GetStorageLimit());
+                // ask node for missing pieces only (old nodes will not be asked)
+                mnpayments.RequestLowDataPaymentBlocks(pnode);
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
