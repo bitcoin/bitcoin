@@ -385,7 +385,12 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString()));
         mnObj.push_back(Pair("service", activeMasternode.service.ToString()));
-        mnObj.push_back(Pair("pubKeyMasternode", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString()));
+
+        CMasternode mn;
+        if(mnodeman.Get(activeMasternode.vin, mn)) {
+            mnObj.push_back(Pair("payee", CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString()));
+        }
+
         mnObj.push_back(Pair("status", activeMasternode.GetStatus()));
         return mnObj;
     }
