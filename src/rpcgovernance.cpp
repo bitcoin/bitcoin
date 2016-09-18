@@ -250,21 +250,21 @@ UniValue gobject(const UniValue& params, bool fHelp)
         UniValue statusObj(UniValue::VOBJ);
         UniValue returnObj(UniValue::VOBJ);
 
-        CMasternode* pmn = mnodeman.Find(activeMasternode.pubKeyMasternode);
-        if(pmn == NULL)
-        {
+        CMasternode mn;
+        bool mnFound = mnodeman.Get(activeMasternode.vin, mn);
+
+        if(!mnFound) {
             failed++;
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
+            statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
             resultsObj.push_back(Pair("dash.conf", statusObj));
-
             returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
             returnObj.push_back(Pair("detail", resultsObj));
             return returnObj;
         }
 
-        CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
-        if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)){
+        CGovernanceVote vote(mn.vin, hash, eVoteSignal, eVoteOutcome);
+        if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)) {
             failed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -347,17 +347,28 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 continue;
             }
 
-            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
-            if(pmn == NULL)
-            {
+            uint256 nTxHash;
+            nTxHash.SetHex(mne.getTxHash());
+
+            int nOutputIndex = 0;
+            if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
+                continue;
+            }
+
+            CTxIn vin(COutPoint(nTxHash, nOutputIndex));
+
+            CMasternode mn;
+            bool mnFound = mnodeman.Get(vin, mn);
+
+            if(!mnFound) {
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
+                statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
-            CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
+            CGovernanceVote vote(mn.vin, hash, eVoteSignal, eVoteOutcome);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -431,7 +442,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries())
         {
             // IF WE HAVE A SPECIFIC NODE REQUESTED TO VOTE, DO THAT
-            if( strAlias != mne.getAlias()) continue;
+            if(strAlias != mne.getAlias()) continue;
 
             // INIT OUR NEEDED VARIABLES TO EXECUTE THE VOTE
             std::string strError;
@@ -457,8 +468,20 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             // SEARCH FOR THIS MASTERNODE ON THE NETWORK, THE NODE MUST BE ACTIVE TO VOTE
 
-            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
-            if(pmn == NULL) {
+            uint256 nTxHash;
+            nTxHash.SetHex(mne.getTxHash());
+
+            int nOutputIndex = 0;
+            if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
+                continue;
+            }
+
+            CTxIn vin(COutPoint(nTxHash, nOutputIndex));
+
+            CMasternode mn;
+            bool mnFound = mnodeman.Get(vin, mn);
+
+            if(!mnFound) {
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Masternode must be publically available on network to vote. Masternode not found."));
@@ -468,8 +491,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             // CREATE NEW GOVERNANCE OBJECT VOTE WITH OUTCOME/SIGNAL
 
-            CGovernanceVote vote(pmn->vin, hash, eVoteSignal, eVoteOutcome);
-            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+            CGovernanceVote vote(vin, hash, eVoteSignal, eVoteOutcome);
+            if(!vote.Sign(keyMasternode, pubKeyMasternode)) {
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -711,9 +734,10 @@ UniValue voteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
 
-    CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn == NULL)
-    {
+    CMasternode mn;
+    bool mnFound = mnodeman.Get(vin, mn);
+
+    if(!mnFound) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
     }
 
@@ -721,12 +745,12 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     vote.SetTime(nTime);
     vote.SetSignature(vchSig);
 
-    if(!vote.IsValid(true)){
+    if(!vote.IsValid(true)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 
     std::string strError = "";
-    if(governance.AddOrUpdateVote(vote, NULL, strError)){
+    if(governance.AddOrUpdateVote(vote, NULL, strError)) {
         governance.AddSeenVote(vote.GetHash(), SEEN_OBJECT_IS_VALID);
         vote.Relay();
         return "Voted successfully";
@@ -759,7 +783,11 @@ UniValue getgovernanceinfo(const UniValue& params, bool fHelp)
     int nLastSuperblock, nNextSuperblock;
 
     // Get current block height
-    int nBlockHeight = (int)chainActive.Height();
+    int nBlockHeight = 0;
+    {
+        LOCK(cs_main);
+        nBlockHeight = (int)chainActive.Height();
+    }
 
     // Get chain parameters
     int nSuperblockStartBlock = Params().GetConsensus().nSuperblockStartBlock;
