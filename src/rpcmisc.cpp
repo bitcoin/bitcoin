@@ -539,7 +539,8 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
             "    [\n"
             "      \"address\"  (string) The base58check encoded address\n"
             "      ,...\n"
-            "    ]\n"
+            "    ],\n"
+            "  \"chainInfo\"  (boolean) Include chain info with results\n"
             "}\n"
             "\nResult\n"
             "[\n"
@@ -555,7 +556,15 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getaddressutxos", "'{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}'")
             + HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX\"]}")
-        );
+            );
+
+    bool includeChainInfo = false;
+    if (params[0].isObject()) {
+        UniValue chainInfo = find_value(params[0].get_obj(), "chainInfo");
+        if (chainInfo.isBool()) {
+            includeChainInfo = chainInfo.get_bool();
+        }
+    }
 
     std::vector<std::pair<uint160, int> > addresses;
 
@@ -573,7 +582,7 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
 
     std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 
-    UniValue result(UniValue::VARR);
+    UniValue utxos(UniValue::VARR);
 
     for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it=unspentOutputs.begin(); it!=unspentOutputs.end(); it++) {
         UniValue output(UniValue::VOBJ);
@@ -588,10 +597,20 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
         output.push_back(Pair("script", HexStr(it->second.script.begin(), it->second.script.end())));
         output.push_back(Pair("satoshis", it->second.satoshis));
         output.push_back(Pair("height", it->second.blockHeight));
-        result.push_back(output);
+        utxos.push_back(output);
     }
 
-    return result;
+    if (includeChainInfo) {
+        UniValue result(UniValue::VOBJ);
+        result.push_back(Pair("utxos", utxos));
+
+        LOCK(cs_main);
+        result.push_back(Pair("hash", chainActive.Tip()->GetBlockHash().GetHex()));
+        result.push_back(Pair("height", (int)chainActive.Height()));
+        return result;
+    } else {
+        return utxos;
+    }
 }
 
 UniValue getaddressdeltas(const UniValue& params, bool fHelp)
@@ -609,6 +628,7 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
             "    ]\n"
             "  \"start\" (number) The start block height\n"
             "  \"end\" (number) The end block height\n"
+            "  \"chainInfo\" (boolean) Include chain info in results, only applies if start and end specified\n"
             "}\n"
             "\nResult:\n"
             "[\n"
@@ -629,12 +649,21 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
     UniValue startValue = find_value(params[0].get_obj(), "start");
     UniValue endValue = find_value(params[0].get_obj(), "end");
 
+    UniValue chainInfo = find_value(params[0].get_obj(), "chainInfo");
+    bool includeChainInfo = false;
+    if (chainInfo.isBool()) {
+        includeChainInfo = chainInfo.get_bool();
+    }
+
     int start = 0;
     int end = 0;
 
     if (startValue.isNum() && endValue.isNum()) {
         start = startValue.get_int();
         end = endValue.get_int();
+        if (start <= 0 || end <= 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Start and end is expected to be greater than zero");
+        }
         if (end < start) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "End value is expected to be greater than start");
         }
@@ -660,7 +689,7 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
         }
     }
 
-    UniValue result(UniValue::VARR);
+    UniValue deltas(UniValue::VARR);
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
         std::string address;
@@ -675,10 +704,38 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
         delta.push_back(Pair("blockindex", (int)it->first.txindex));
         delta.push_back(Pair("height", it->first.blockHeight));
         delta.push_back(Pair("address", address));
-        result.push_back(delta);
+        deltas.push_back(delta);
     }
 
-    return result;
+    UniValue result(UniValue::VOBJ);
+
+    if (includeChainInfo && start > 0 && end > 0) {
+        LOCK(cs_main);
+
+        if (start > chainActive.Height() || end > chainActive.Height()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Start or end is outside chain range");
+        }
+
+        CBlockIndex* startIndex = chainActive[start];
+        CBlockIndex* endIndex = chainActive[end];
+
+        UniValue startInfo(UniValue::VOBJ);
+        UniValue endInfo(UniValue::VOBJ);
+
+        startInfo.push_back(Pair("hash", startIndex->GetBlockHash().GetHex()));
+        startInfo.push_back(Pair("height", start));
+
+        endInfo.push_back(Pair("hash", endIndex->GetBlockHash().GetHex()));
+        endInfo.push_back(Pair("height", end));
+
+        result.push_back(Pair("deltas", deltas));
+        result.push_back(Pair("start", startInfo));
+        result.push_back(Pair("end", endInfo));
+
+        return result;
+    } else {
+        return deltas;
+    }
 }
 
 UniValue getaddressbalance(const UniValue& params, bool fHelp)

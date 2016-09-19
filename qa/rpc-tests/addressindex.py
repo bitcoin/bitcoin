@@ -171,7 +171,7 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(balance2["balance"], change_amount)
 
         # Check that deltas are returned correctly
-        deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 0, "end": 200})
+        deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 1, "end": 200})
         balance3 = 0
         for delta in deltas:
             balance3 += delta["satoshis"]
@@ -320,6 +320,27 @@ class AddressIndexTest(BitcoinTestFramework):
         self.sync_all()
         mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})
         assert_equal(len(mempool_deltas), 2)
+
+        # Include chaininfo in results
+        print "Testing results with chain info..."
+
+        deltas_with_info = self.nodes[1].getaddressdeltas({
+            "addresses": [address2],
+            "start": 1,
+            "end": 200,
+            "chainInfo": True
+        })
+        start_block_hash = self.nodes[1].getblockhash(1);
+        end_block_hash = self.nodes[1].getblockhash(200);
+        assert_equal(deltas_with_info["start"]["height"], 1)
+        assert_equal(deltas_with_info["start"]["hash"], start_block_hash)
+        assert_equal(deltas_with_info["end"]["height"], 200)
+        assert_equal(deltas_with_info["end"]["hash"], end_block_hash)
+
+        utxos_with_info = self.nodes[1].getaddressutxos({"addresses": [address2], "chainInfo": True})
+        expected_tip_block_hash = self.nodes[1].getblockhash(267);
+        assert_equal(utxos_with_info["height"], 267)
+        assert_equal(utxos_with_info["hash"], expected_tip_block_hash)
 
         print "Passed\n"
 
