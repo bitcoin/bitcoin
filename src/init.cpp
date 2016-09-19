@@ -1287,7 +1287,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // need to reindex later.
 
     assert(!g_connman);
-    g_connman = std::unique_ptr<CConnman>(new CConnman());
+    g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     CConnman& connman = *g_connman;
 
     peerLogic.reset(new PeerLogicValidation(&connman));
