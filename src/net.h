@@ -80,6 +80,8 @@ static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
+/** The default timeframe for -maxuploadtarget. 1 day. */
+static const uint64_t MAX_UPLOAD_TIMEFRAME = 60 * 60 * 24;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 
@@ -128,6 +130,8 @@ public:
         CClientUIInterface* uiInterface = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
+        uint64_t nMaxOutboundTimeframe = 0;
+        uint64_t nMaxOutboundLimit = 0;
     };
     CConnman();
     ~CConnman();
