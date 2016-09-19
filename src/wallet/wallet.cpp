@@ -3446,6 +3446,15 @@ bool CWallet::InitLoadWallet()
 
 bool CWallet::ParameterInteraction()
 {
+    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && SoftSetBoolArg("-walletbroadcast", false)) {
+        LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
+    }
+
+    if (GetBoolArg("-sysperms", false))
+        return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
+    if (GetArg("-prune", 0) && GetBoolArg("-rescan", false))
+        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
+
     if (mapArgs.count("-mintxfee"))
     {
         CAmount n = 0;
