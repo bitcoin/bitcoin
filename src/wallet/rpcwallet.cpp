@@ -1690,7 +1690,8 @@ UniValue listsinceblock(const UniValue& params, bool fHelp)
     {
         CWalletTx tx = (*it).second;
 
-        if (depth == -1 || tx.GetDepthInMainChain() < depth)
+        int txHeight = tx.GetDepthInMainChain();
+        if (depth == -1 || (txHeight < depth && txHeight >= 0))
             ListTransactions(tx, "*", 0, true, transactions, filter);
     }
 
