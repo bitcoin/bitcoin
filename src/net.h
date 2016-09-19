@@ -11,6 +11,7 @@
 #include "amount.h"
 #include "bloom.h"
 #include "compat.h"
+#include "hash.h"
 #include "limitedmap.h"
 #include "netaddress.h"
 #include "protocol.h"
@@ -125,7 +126,7 @@ public:
         uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
     };
-    CConnman();
+    CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
     bool Start(boost::thread_group& threadGroup, CScheduler& scheduler, std::string& strNodeError, Options options);
     void Stop();
@@ -298,6 +299,8 @@ public:
     void SetBestHeight(int height);
     int GetBestHeight() const;
 
+    /** Get a unique deterministic randomizer. */
+    CSipHasher GetDeterministicRandomizer(uint64_t id);
 
 private:
     struct ListenSocket {
@@ -314,6 +317,8 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
+
+    uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
     CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const CSubNet& subNet);
@@ -392,6 +397,9 @@ private:
     int nMaxFeeler;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
+
+    /** SipHasher seeds for deterministic randomness */
+    const uint64_t nSeed0, nSeed1;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
@@ -660,14 +668,13 @@ public:
     CAmount lastSentFeeFilter;
     int64_t nextSendTimeFeeFilter;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
+    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
 
 private:
     CNode(const CNode&);
     void operator=(const CNode&);
 
-    static uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
     uint64_t nLocalHostNonce;
     ServiceFlags nLocalServices;
