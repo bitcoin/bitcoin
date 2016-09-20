@@ -7,11 +7,14 @@
 #include "rpc/server.h"
 #include "init.h"
 #include "main.h"
+#include "policy/policy.h"
 #include "script/script.h"
+#include "script/sign.h"
 #include "script/standard.h"
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
+#include "consensus/validation.h"
 #include "wallet.h"
 #include "merkleblock.h"
 #include "core_io.h"
@@ -74,12 +77,157 @@ std::string DecodeDumpString(const std::string &str) {
     return ret.str();
 }
 
+bool SweepPrivKey(CBitcoinSecret key, CBitcoinAddress destAddress) {
+    // Get the private key to be swept and validate it
+    CKey dirtyKey = key.GetKey();
+    if (!dirtyKey.IsValid())
+        return false;
+
+    // Generate public key and verify it
+    CPubKey pubkey = dirtyKey.GetPubKey();
+    if (!dirtyKey.VerifyPubKey(pubkey))
+        return false;
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // Get outputs from wallet
+    std::vector<COutput> vCoins;
+    pwalletMain->AvailableCoins(vCoins, false);
+
+    // Find all outputs of the key
+    std::vector<COutput> vToSweep;
+    BOOST_FOREACH(COutput output, vCoins)
+    {
+        vector<vector<unsigned char>> vSolution;
+        txnouttype whichType;
+        if (!Solver(output.tx->vout[output.i].scriptPubKey, whichType, vSolution))
+            continue;
+
+        CKeyID keyID;
+        if (whichType == TX_PUBKEY)
+            keyID = CPubKey(vSolution[0]).GetID();
+        else
+        if (whichType == TX_PUBKEYHASH || whichType == TX_WITNESS_V0_KEYHASH)
+            keyID = CKeyID(uint160(vSolution[0]));
+
+        if (keyID == pubkey.GetID())
+            vToSweep.push_back(output);
+    }
+
+    // Add inputs to sweep transaction
+    CMutableTransaction mtx;
+    CAmount total = 0;
+    BOOST_FOREACH(COutput output, vToSweep)
+    {
+        mtx.vin.push_back(CTxIn(output.tx->GetHash(), output.i));
+        total += output.tx->vout[output.i].nValue;
+    }
+
+    if (!mtx.vin.size() || !(total > 0))
+        return false;
+
+    // Add sweep destination - fee
+    mtx.vout.push_back(CTxOut(total, GetScriptForDestination(destAddress.Get())));
+    mtx.vout[0].nValue -= 3*CWallet::GetMinimumFee(GetVirtualTransactionSize(mtx), DEFAULT_TX_CONFIRM_TARGET, mempool);
+
+    mtx.nLockTime = chainActive.Height();
+
+    // Add the private key to a keystore
+    CBasicKeyStore tempKeystore;
+    tempKeystore.AddKey(dirtyKey);
+
+    const CTransaction txConst(mtx);
+    const CKeyStore& keystoreConst = tempKeystore;
+    for (uint32_t i = 0; i < mtx.vin.size(); i++)
+    {
+        CTxIn& input = mtx.vin[i];
+        TransactionSignatureCreator creator(&keystoreConst, &txConst, i, mtx.vout[input.prevout.n].nValue);
+
+        SignatureData sigdata;
+        bool sigCreated = ProduceSignature(creator, vToSweep[i].tx->vout[input.prevout.n].scriptPubKey, sigdata);
+
+        if (sigCreated && i < mtx.vin.size()) {
+            mtx.vin[i].scriptSig = sigdata.scriptSig;
+        }
+    }
+
+    // Commit the transaction
+    const CTransaction commit(mtx);
+    CValidationState state;
+    bool fMissingInputs;
+    if (!AcceptToMemoryPool(mempool, state, commit, false, &fMissingInputs, false, maxTxFee)) {
+        if (state.IsInvalid()) {
+            throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
+        } else {
+            if (fMissingInputs) {
+                throw JSONRPCError(RPC_TRANSACTION_ERROR, "Missing inputs");
+            }
+            throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
+        }
+
+        LogPrintf("SweepPrivKey(): Error: Transaction not valid\n");
+        return false;
+    }
+
+    if (pwalletMain->GetBroadcastTransactions() && !g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    // Broadcast the transaction
+    CInv inv(MSG_TX, commit.GetHash());
+    g_connman->ForEachNode([&inv](CNode* pnode)
+    {
+        pnode->PushInventory(inv);
+    });
+
+    return true;
+}
+
+UniValue sweepkey(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "sweepkey \"bitcoinprivkey\" \"bitcoinaddress\"\n"
+            "\nSweep the privkey's outputs to the specified address.\n"
+            "\nArguments:\n"
+            "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+            "2. \"bitcoinaddress\"   (bitcoinaddress, required) The destination address\n"
+            "\nExamples:\n"
+            "\nSweep a private key\n"
+            + HelpExampleCli("sweepkey", "\"mykey\" \"myaddress\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("sweepkey", "\"mykey\" \"myaddress\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    EnsureWalletIsUnlocked();
+
+    string strSecret = params[0].get_str();
+    string strAddress = params[1].get_str();
+
+    CBitcoinSecret vchSecret;
+    if (!vchSecret.SetString(strSecret))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+    CBitcoinAddress address(strAddress);
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+
+    if (!SweepPrivKey(vchSecret, address))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "SweepPrivKey failed!");
+
+    return NullUniValue;
+}
+
 UniValue importprivkey(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
-    
-    if (fHelp || params.size() < 1 || params.size() > 3)
+
+    if (fHelp || params.size() < 1 || params.size() > 5)
         throw runtime_error(
             "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
@@ -87,6 +235,8 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
             "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "4. sweepkey             (boolean, optional, default=false) Sweep imported key for improved security\n"
+            "5. \"bitcoinaddress\"   (bitcoinaddress, optional) Destination address for sweep tx\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
             "\nExamples:\n"
             "\nDump a private key\n"
@@ -95,10 +245,11 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
             + HelpExampleCli("importprivkey", "\"mykey\"") +
             "\nImport using a label and without rescan\n"
             + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
+            "\nImport and sweep key\n"
+            + HelpExampleCli("importprivkey", "\"mykey\" \"toSweep\" true true \"destAddress\"") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
-
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -146,6 +297,24 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
 
         if (fRescan) {
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+        }
+
+        // Whether to perform key sweep after import
+        bool fSweep = false;
+        if (params.size() > 3)
+            fSweep = params[3].getBool();
+
+        if (fSweep) {
+            if (!(params.size() > 4))
+                throw JSONRPCError(RPC_WALLET_ERROR, "Must provide destination address to sweep key!");
+
+            CBitcoinAddress address(params[4].get_str());
+            if (!address.IsValid()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid destination Bitcoin address!");
+            }
+
+            // Sweep the imported key
+            SweepPrivKey(vchSecret, address);
         }
     }
 
