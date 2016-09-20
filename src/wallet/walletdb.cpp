@@ -844,6 +844,20 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
     return DB_LOAD_OK;
 }
 
+void FlushWalletDB(const std::string& strFile)
+{
+    AssertLockHeld(bitdb.cs_db);
+
+    LogPrint("db", "Flushing %s\n", strFile);
+    int64_t nStart = GetTimeMillis();
+
+    // Flush wallet file so it's self contained
+    bitdb.CloseDb(strFile);
+    bitdb.CheckpointLSN(strFile);
+
+    LogPrint("db", "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
+}
+
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
@@ -889,16 +903,9 @@ void ThreadFlushWalletDB(const string& strFile)
                     map<string, int>::iterator _mi = bitdb.mapFileUseCount.find(strFile);
                     if (_mi != bitdb.mapFileUseCount.end())
                     {
-                        LogPrint("db", "Flushing %s\n", strFile);
+                        FlushWalletDB(strFile);
                         nLastFlushed = nWalletDBUpdated;
-                        int64_t nStart = GetTimeMillis();
-
-                        // Flush wallet file so it's self contained
-                        bitdb.CloseDb(strFile);
-                        bitdb.CheckpointLSN(strFile);
-
                         bitdb.mapFileUseCount.erase(_mi++);
-                        LogPrint("db", "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
                     }
                 }
             }
