@@ -863,6 +863,12 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     return true;
 }
 
+DBErrors CWallet::ReorderTransactions()
+{
+    CWalletDB walletdb(strWalletFile);
+    return walletdb.ReorderTransactions(this);
+}
+
 int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
 {
     AssertLockHeld(cs_wallet); // nOrderPosNext
@@ -891,7 +897,7 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
     debit.nTime = nNow;
     debit.strOtherAccount = strTo;
     debit.strComment = strComment;
-    AddAccountingEntry(debit, walletdb);
+    AddAccountingEntry(debit, &walletdb);
 
     // Credit
     CAccountingEntry credit;
@@ -901,7 +907,7 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
     credit.nTime = nNow;
     credit.strOtherAccount = strFrom;
     credit.strComment = strComment;
-    AddAccountingEntry(credit, walletdb);
+    AddAccountingEntry(credit, &walletdb);
 
     if (!walletdb.TxnCommit())
         return false;
@@ -3649,9 +3655,21 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CCon
     return true;
 }
 
-bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB & pwalletdb)
+void CWallet::ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries) {
+    CWalletDB walletdb(strWalletFile);
+    return walletdb.ListAccountCreditDebit(strAccount, entries);
+}
+
+bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry)
 {
-    if (!pwalletdb.WriteAccountingEntry_Backend(acentry))
+    CWalletDB walletdb(strWalletFile);
+
+    return AddAccountingEntry(acentry, &walletdb);
+}
+
+bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB *pwalletdb)
+{
+    if (!pwalletdb->WriteAccountingEntry_Backend(acentry))
         return false;
 
     laccentries.push_back(acentry);
