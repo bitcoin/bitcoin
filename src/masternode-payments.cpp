@@ -79,25 +79,25 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
 
     // we are synced, let's try to check as much data as we can
 
-    if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-        if(CSuperblockManager::IsValid(block.vtx[0], nBlockHeight, blockReward)) {
-            LogPrint("gobject", "IsBlockValueValid -- Valid superblock at height %d: %s", nBlockHeight, block.vtx[0].ToString());
-            // all checks are done in CSuperblock::IsValid, nothing to do here
-            return true;
-        }
+    if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
+        if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+            if(CSuperblockManager::IsValid(block.vtx[0], nBlockHeight, blockReward)) {
+                LogPrint("gobject", "IsBlockValueValid -- Valid superblock at height %d: %s", nBlockHeight, block.vtx[0].ToString());
+                // all checks are done in CSuperblock::IsValid, nothing to do here
+                return true;
+            }
 
-        // triggered but invalid? that's weird
-        if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
+            // triggered but invalid? that's weird
             LogPrintf("IsBlockValueValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, block.vtx[0].ToString());
-            // should NOT allow invalid superblocks, when superblock enforcement is enabled
+            // should NOT allow invalid superblocks, when superblocks are enabled
             return false;
         }
-
-        // should NOT allow superblocks at all, when superblock enforcement is disabled
-        LogPrintf("IsBlockValueValid -- Superblock enforcement is disabled, no superblocks allowed\n");
+        LogPrint("gobject", "IsBlockValueValid -- No triggered superblock detected at height %d\n", nBlockHeight);
+    } else {
+        // should NOT allow superblocks at all, when superblocks are disabled
+        LogPrintf("IsBlockValueValid -- Superblocks are disabled, no superblocks allowed\n");
     }
 
-    LogPrint("gobject", "IsBlockValueValid -- No valid superblock detected at height %d\n", nBlockHeight);
     // it MUST be a regular block
     return isNormalBlockValueMet;
 }
@@ -147,24 +147,23 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     // superblocks started
     // SEE IF THIS IS A VALID SUPERBLOCK
 
-    if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-        if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-            LogPrint("gobject", "IsBlockPayeeValid -- Valid superblock at height %d: %s", nBlockHeight, txNew.ToString());
-            return true;
-        }
+    if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
+        if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+            if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
+                LogPrint("gobject", "IsBlockPayeeValid -- Valid superblock at height %d: %s", nBlockHeight, txNew.ToString());
+                return true;
+            }
 
-        if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
             LogPrintf("IsBlockPayeeValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, txNew.ToString());
-            // should NOT allow such superblocks, when superblock enforcement is enabled
+            // should NOT allow such superblocks, when superblocks are enabled
             return false;
         }
-
-        // should NOT allow superblocks at all, when superblock enforcement is disabled
-        LogPrintf("IsBlockPayeeValid -- Superblock enforcement is disabled, no superblocks allowed\n");
+        // continue validation, should pay MN
+        LogPrint("gobject", "IsBlockPayeeValid -- No triggered superblock detected at height %d\n", nBlockHeight);
+    } else {
+        // should NOT allow superblocks at all, when superblocks are disabled
+        LogPrintf("IsBlockPayeeValid -- Superblocks are disabled, no superblocks allowed\n");
     }
-
-    // continue validation, should pay MN
-    LogPrint("gobject", "IsBlockPayeeValid -- No valid superblock detected at height %d\n", nBlockHeight);
 
     // IF THIS ISN'T A SUPERBLOCK OR SUPERBLOCK IS INVALID, IT SHOULD PAY A MASTERNODE DIRECTLY
     if(mnpayments.IsTransactionValid(txNew, nBlockHeight)) {
