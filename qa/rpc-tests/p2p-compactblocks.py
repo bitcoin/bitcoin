@@ -78,6 +78,13 @@ class TestNode(SingleNodeConnCB):
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
+    def request_headers_and_sync(self, locator, hashstop=0):
+        self.clear_block_announcement()
+        self.get_headers(locator, hashstop)
+        assert(wait_until(self.received_block_announcement, timeout=30))
+        assert(self.received_block_announcement())
+        self.clear_block_announcement()
+
 
 class CompactBlocksTest(BitcoinTestFramework):
     def __init__(self):
@@ -130,7 +137,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     # Test "sendcmpct":
     # - No compact block announcements or getdata(MSG_CMPCT_BLOCK) unless
     #   sendcmpct is sent.
-    # - If sendcmpct is sent with version > 0, the message is ignored.
+    # - If sendcmpct is sent with version > 1, the message is ignored.
     # - If sendcmpct is sent with boolean 0, then block announcements are not
     #   made with compact blocks.
     # - If sendcmpct is then sent with boolean 1, then new block announcements
@@ -142,57 +149,66 @@ class CompactBlocksTest(BitcoinTestFramework):
         def received_sendcmpct():
             return (self.test_node.last_sendcmpct is not None)
         got_message = wait_until(received_sendcmpct, timeout=30)
+        assert(received_sendcmpct())
         assert(got_message)
         assert_equal(self.test_node.last_sendcmpct.version, 1)
 
         tip = int(self.nodes[0].getbestblockhash(), 16)
 
         def check_announcement_of_new_block(node, peer, predicate):
-            self.test_node.clear_block_announcement()
+            peer.clear_block_announcement()
             node.generate(1)
-            got_message = wait_until(peer.received_block_announcement, timeout=30)
+            got_message = wait_until(lambda: peer.block_announced, timeout=30)
+            assert(peer.block_announced)
             assert(got_message)
             with mininode_lock:
-                assert(predicate)
+                assert(predicate(peer))
 
         # We shouldn't get any block announcements via cmpctblock yet.
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is None)
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is None)
 
         # Try one more time, this time after requesting headers.
-        self.test_node.clear_block_announcement()
-        self.test_node.get_headers(locator=[tip], hashstop=0)
-        wait_until(self.test_node.received_block_announcement, timeout=30)
-        self.test_node.clear_block_announcement()
+        self.test_node.request_headers_and_sync(locator=[tip])
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is None and p.last_inv is not None)
 
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is None and self.test_node.last_inv is not None)
+        # Test a few ways of using sendcmpct that should NOT
+        # result in compact block announcements.
+        # Before each test, sync the headers chain.
+        self.test_node.request_headers_and_sync(locator=[tip])
 
         # Now try a SENDCMPCT message with too-high version
         sendcmpct = msg_sendcmpct()
         sendcmpct.version = 2
-        self.test_node.send_message(sendcmpct)
+        self.test_node.send_and_ping(sendcmpct)
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is None)
 
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is None)
+        # Headers sync before next test.
+        self.test_node.request_headers_and_sync(locator=[tip])
 
         # Now try a SENDCMPCT message with valid version, but announce=False
-        self.test_node.send_message(msg_sendcmpct())
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is None)
+        self.test_node.send_and_ping(msg_sendcmpct())
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is None)
+
+        # Headers sync before next test.
+        self.test_node.request_headers_and_sync(locator=[tip])
 
         # Finally, try a SENDCMPCT message with announce=True
         sendcmpct.version = 1
         sendcmpct.announce = True
-        self.test_node.send_message(sendcmpct)
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is not None)
+        self.test_node.send_and_ping(sendcmpct)
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is not None)
 
-        # Try one more time
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is not None)
+        # Try one more time (no headers sync should be needed!)
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is not None)
 
         # Try one more time, after turning on sendheaders
-        self.test_node.send_message(msg_sendheaders())
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is not None)
+        self.test_node.send_and_ping(msg_sendheaders())
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is not None)
 
         # Now turn off announcements
         sendcmpct.announce = False
-        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda: self.test_node.last_cmpctblock is None and self.test_node.last_headers is not None)
+        self.test_node.send_and_ping(sendcmpct)
+        check_announcement_of_new_block(self.nodes[0], self.test_node, lambda p: p.last_cmpctblock is None and p.last_headers is not None)
 
     # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
