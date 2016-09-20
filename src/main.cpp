@@ -1482,9 +1482,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
-//if (pindexLast->nTime > 1474279200)
-//		return DarkGravityWave(pindexLast, pblock);
-//
+if (pindexLast->nTime > 1474797600)
+		return DarkGravityWave(pindexLast, pblock);
+
 
     // Genesis block
     if (pindexLast == NULL)
@@ -4029,7 +4029,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pfrom->fDisconnect = true;
             return false;
         }
-        if (nTime > 1474279200 && pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+        if (nTime > 1474797600 && pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
             LogPrintf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
