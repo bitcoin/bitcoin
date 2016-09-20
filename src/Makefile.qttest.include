@@ -3,6 +3,7 @@ TESTS += qt/test/test_dash-qt
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_compattests.cpp \
+  qt/test/moc_rpcnestedtests.cpp \
   qt/test/moc_trafficgraphdatatests.cpp \
   qt/test/moc_uritests.cpp 
 
@@ -12,6 +13,7 @@ endif
 
 TEST_QT_H = \
   qt/test/compattests.h \
+  qt/test/rpcnestedtests.h \
   qt/test/uritests.h \
   qt/test/paymentrequestdata.h \
   qt/test/paymentservertests.h \
@@ -22,6 +24,7 @@ qt_test_test_dash_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_
 
 qt_test_test_dash_qt_SOURCES = \
   qt/test/compattests.cpp \
+  qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
   qt/test/trafficgraphdatatests.cpp \
