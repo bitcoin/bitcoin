@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     }
 
     // This really-big orphan should be ignored:
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 1; i++)
     {
         CTransaction txPrev = RandomOrphan();
 
