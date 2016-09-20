@@ -14,18 +14,17 @@ WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
     bitdb.MakeMock();
 
     bool fFirstRun;
-    pwalletMain = new CWallet("wallet_test.dat");
-    pwalletMain->LoadWallet(fFirstRun);
-    RegisterValidationInterface(pwalletMain);
+    CWallets::addWallet(new CWallet("wallet_test.dat"));
+    CWallets::defaultWallet()->LoadWallet(fFirstRun);
+    RegisterValidationInterface(CWallets::defaultWallet());
 
     RegisterWalletRPCCommands(tableRPC);
 }
 
 WalletTestingSetup::~WalletTestingSetup()
 {
-    UnregisterValidationInterface(pwalletMain);
-    delete pwalletMain;
-    pwalletMain = NULL;
+    UnregisterValidationInterface(CWallets::defaultWallet());
+    CWallets::destruct();
 
     bitdb.Flush(true);
     bitdb.Reset();

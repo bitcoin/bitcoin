@@ -197,8 +197,7 @@ void Shutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        pwalletMain->Flush(false);
+    CWallets::flushAllWallets(false);
 #endif
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
@@ -235,8 +234,7 @@ void Shutdown()
         pblocktree = NULL;
     }
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        pwalletMain->Flush(true);
+    CWallets::flushAllWallets(true);
 #endif
 
 #if ENABLE_ZMQ
@@ -256,8 +254,7 @@ void Shutdown()
 #endif
     UnregisterAllValidationInterfaces();
 #ifdef ENABLE_WALLET
-    delete pwalletMain;
-    pwalletMain = NULL;
+    CWallets::destruct();
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -1537,8 +1534,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        pwalletMain->postInitProcess(threadGroup);
+    if (CWallets::defaultWallet())
+        CWallets::defaultWallet()->postInitProcess(threadGroup);
 #endif
 
     return !fRequestShutdown;

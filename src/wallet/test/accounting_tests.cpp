@@ -11,13 +11,13 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
-extern CWallet* pwalletMain;
-
 BOOST_FIXTURE_TEST_SUITE(accounting_tests, WalletTestingSetup)
 
 static void
 GetResults(std::map<CAmount, CAccountingEntry>& results)
 {
+    CWallet* pwalletMain = CWallets::defaultWallet();
+
     std::list<CAccountingEntry> aes;
 
     results.clear();
@@ -31,6 +31,7 @@ GetResults(std::map<CAmount, CAccountingEntry>& results)
 
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
+    CWallet* pwalletMain = CWallets::defaultWallet();
     std::vector<CWalletTx*> vpwtx;
     CWalletTx wtx;
     CAccountingEntry ae;

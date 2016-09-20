@@ -70,7 +70,7 @@ UniValue getinfo(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+    LOCK2(cs_main, CWallets::defaultWallet() ? &CWallets::defaultWallet()->cs_wallet : NULL);
 #else
     LOCK(cs_main);
 #endif
@@ -82,9 +82,9 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("version", CLIENT_VERSION));
     obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-        obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
+    if (CWallets::defaultWallet()) {
+        obj.push_back(Pair("walletversion", CWallets::defaultWallet()->GetVersion()));
+        obj.push_back(Pair("balance",       ValueFromAmount(CWallets::defaultWallet()->GetBalance())));
     }
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
@@ -95,11 +95,11 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-        obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
+    if (CWallets::defaultWallet()) {
+        obj.push_back(Pair("keypoololdest", CWallets::defaultWallet()->GetOldestKeyPoolTime()));
+        obj.push_back(Pair("keypoolsize",   (int)CWallets::defaultWallet()->GetKeyPoolSize()));
     }
-    if (pwalletMain && pwalletMain->IsCrypted())
+    if (CWallets::defaultWallet() && CWallets::defaultWallet()->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
 #endif
@@ -118,7 +118,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         CPubKey vchPubKey;
         obj.push_back(Pair("isscript", false));
-        if (pwalletMain && pwalletMain->GetPubKey(keyID, vchPubKey)) {
+        if (CWallets::defaultWallet() && CWallets::defaultWallet()->GetPubKey(keyID, vchPubKey)) {
             obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
             obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
         }
@@ -129,7 +129,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
         obj.push_back(Pair("isscript", true));
-        if (pwalletMain && pwalletMain->GetCScript(scriptID, subscript)) {
+        if (CWallets::defaultWallet() && CWallets::defaultWallet()->GetCScript(scriptID, subscript)) {
             std::vector<CTxDestination> addresses;
             txnouttype whichType;
             int nRequired;
@@ -176,7 +176,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+    LOCK2(cs_main, CWallets::defaultWallet() ? &CWallets::defaultWallet()->cs_wallet : NULL);
 #else
     LOCK(cs_main);
 #endif
@@ -196,18 +196,18 @@ UniValue validateaddress(const JSONRPCRequest& request)
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
 #ifdef ENABLE_WALLET
-        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : ISMINE_NO;
+        isminetype mine = CWallets::defaultWallet() ? IsMine(*CWallets::defaultWallet(), dest) : ISMINE_NO;
         ret.push_back(Pair("ismine", (mine & ISMINE_SPENDABLE) ? true : false));
         ret.push_back(Pair("iswatchonly", (mine & ISMINE_WATCH_ONLY) ? true: false));
         UniValue detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
         ret.pushKVs(detail);
-        if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
+        if (CWallets::defaultWallet() && CWallets::defaultWallet()->mapAddressBook.count(dest))
+            ret.push_back(Pair("account", CWallets::defaultWallet()->mapAddressBook[dest].name));
         CKeyID keyID;
-        if (pwalletMain && address.GetKeyID(keyID) && pwalletMain->mapKeyMetadata.count(keyID) && !pwalletMain->mapKeyMetadata[keyID].hdKeypath.empty())
+        if (CWallets::defaultWallet() && address.GetKeyID(keyID) && CWallets::defaultWallet()->mapKeyMetadata.count(keyID) && !CWallets::defaultWallet()->mapKeyMetadata[keyID].hdKeypath.empty())
         {
-            ret.push_back(Pair("hdkeypath", pwalletMain->mapKeyMetadata[keyID].hdKeypath));
-            ret.push_back(Pair("hdmasterkeyid", pwalletMain->mapKeyMetadata[keyID].hdMasterKeyID.GetHex()));
+            ret.push_back(Pair("hdkeypath", CWallets::defaultWallet()->mapKeyMetadata[keyID].hdKeypath));
+            ret.push_back(Pair("hdmasterkeyid", CWallets::defaultWallet()->mapKeyMetadata[keyID].hdMasterKeyID.GetHex()));
         }
 #endif
     }
@@ -239,14 +239,14 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 #ifdef ENABLE_WALLET
         // Case 1: Bitcoin address and we have full public key:
         CBitcoinAddress address(ks);
-        if (pwalletMain && address.IsValid())
+        if (CWallets::defaultWallet() && address.IsValid())
         {
             CKeyID keyID;
             if (!address.GetKeyID(keyID))
                 throw runtime_error(
                     strprintf("%s does not refer to a key",ks));
             CPubKey vchPubKey;
-            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+            if (!CWallets::defaultWallet()->GetPubKey(keyID, vchPubKey))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks));
             if (!vchPubKey.IsFullyValid())

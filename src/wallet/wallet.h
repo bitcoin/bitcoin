@@ -29,8 +29,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-extern CWallet* pwalletMain;
-
 /**
  * Settings
  */
@@ -990,6 +988,39 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vchPubKey);
+    }
+};
+
+static CCriticalSection cs_wallets;
+class CWallets
+{
+private:
+    static std::vector<CWallet*> wallets;
+public:
+    static CWallet* defaultWallet()
+    {
+        LOCK(cs_wallets);
+        if (!wallets.size())
+            return NULL;
+        return wallets[0];
+    }
+    static void addWallet(CWallet* newWallet)
+    {
+        LOCK(cs_wallets);
+        wallets.push_back(newWallet);
+    }
+    static void flushAllWallets(bool shutdown)
+    {
+        LOCK(cs_wallets);
+        for (CWallet *pWallet : wallets)
+            pWallet->Flush(shutdown);
+    }
+    static void destruct()
+    {
+        LOCK(cs_wallets);
+        for (CWallet *pWallet : wallets)
+            delete pWallet;
+        wallets.clear();
     }
 };
 
