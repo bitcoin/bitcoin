@@ -935,9 +935,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     RegisterAllCoreRPCCommands(tableRPC);
 #ifdef ENABLE_WALLET
-    bool fDisableWallet = GetBoolArg("-disablewallet", false);
-    if (!fDisableWallet)
-        RegisterWalletRPCCommands(tableRPC);
+    RegisterWalletRPCCommands(tableRPC);
 #endif
 
     nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
@@ -965,9 +963,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!fDisableWallet && !CWallet::ParameterInteraction())
+    if (!CWallet::ParameterInteraction())
         return false;
-#endif // ENABLE_WALLET
+#endif
 
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
@@ -1095,11 +1093,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 5: verify wallet database integrity
 #ifdef ENABLE_WALLET
-    if (!fDisableWallet) {
-        if (!CWallet::Verify())
-            return false;
-    } // (!fDisableWallet)
-#endif // ENABLE_WALLET
+    if (!CWallet::Verify())
+        return false;
+#endif
     // ********************************************************* Step 6: network initialization
 
     assert(!g_connman);
@@ -1427,17 +1423,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
-    if (fDisableWallet) {
-        pwalletMain = NULL;
-        LogPrintf("Wallet disabled!\n");
-    } else {
-        CWallet::InitLoadWallet();
-        if (!pwalletMain)
-            return false;
-    }
-#else // ENABLE_WALLET
+    if (!CWallet::InitLoadWallet())
+        return false;
+#else
     LogPrintf("No wallet support compiled in!\n");
-#endif // !ENABLE_WALLET
+#endif
 
     // ********************************************************* Step 9: data directory maintenance
 
