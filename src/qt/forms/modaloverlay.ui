@@ -130,7 +130,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              <item>
               <widget class="QLabel" name="infoText">
                <property name="text">
-                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
+                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet. This means that recent transactions will not be visible, and the balance will not be up-to-date until this process has completed.</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>
@@ -149,7 +149,7 @@ QLabel { color: rgb(40,40,40);  }</string>
                 </font>
                </property>
                <property name="text">
-                <string>This means that recent transactions will not be visible, and the balance will not be up-to-date until this process has completed. Spending bitcoins is not possible during that phase!</string>
+                <string>Spending bitcoins may not be possible during that phase!</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>

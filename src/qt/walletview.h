@@ -111,7 +111,7 @@ public Q_SLOTS:
     void showProgress(const QString &title, int nProgress);
 
     /** User has requested more information about the out of sync state */
-    void requestedOfSyncWarningInfo();
+    void requestedSyncWarningInfo();
 
 Q_SIGNALS:
     /** Signal that we want to show the main window */
