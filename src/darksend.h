@@ -369,8 +369,8 @@ private:
     bool IsCollateralValid(const CTransaction& txCollateral);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool IsSignaturesComplete();
-    /// Check to make sure a signature matches an input in the pool
-    bool IsSignatureValid(const CScript& scriptSig, const CTxIn& txin);
+    /// Check to make sure a given input matches an input in the pool and its scriptSig is valid
+    bool IsInputScriptSigValid(const CTxIn& txin);
 
     bool IsDenomSkipped(CAmount nDenomValue) {
         return std::find(vecDenominationsSkipped.begin(), vecDenominationsSkipped.end(), nDenomValue) != vecDenominationsSkipped.end();

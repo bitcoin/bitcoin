@@ -838,8 +838,8 @@ void CDarksendPool::CheckForCompleteQueue()
     }
 }
 
-// check to see if the signature is valid
-bool CDarksendPool::IsSignatureValid(const CScript& scriptSig, const CTxIn& txin)
+// Check to make sure a given input matches an input in the pool and its scriptSig is valid
+bool CDarksendPool::IsInputScriptSigValid(const CTxIn& txin)
 {
     CMutableTransaction txNew;
     txNew.vin.clear();
@@ -866,15 +866,18 @@ bool CDarksendPool::IsSignatureValid(const CScript& scriptSig, const CTxIn& txin
     }
 
     if(nTxInIndex >= 0) { //might have to do this one input at a time?
-        txNew.vin[nTxInIndex].scriptSig = scriptSig;
-        LogPrint("privatesend", "CDarksendPool::IsSignatureValid -- Sign with sig %s\n", ScriptToAsmStr(scriptSig).substr(0,24));
+        txNew.vin[nTxInIndex].scriptSig = txin.scriptSig;
+        LogPrint("privatesend", "CDarksendPool::IsInputScriptSigValid -- verifying scriptSig %s\n", ScriptToAsmStr(txin.scriptSig).substr(0,24));
         if(!VerifyScript(txNew.vin[nTxInIndex].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, nTxInIndex))) {
-            LogPrint("privatesend", "CDarksendPool::IsSignatureValid -- Signing -- Error signing input %d\n", nTxInIndex);
+            LogPrint("privatesend", "CDarksendPool::IsInputScriptSigValid -- VerifyScript() failed on input %d\n", nTxInIndex);
             return false;
         }
+    } else {
+        LogPrint("privatesend", "CDarksendPool::IsInputScriptSigValid -- Failed to find matching input in pool, %s\n", txin.ToString());
+        return false;
     }
 
-    LogPrint("privatesend", "CDarksendPool::IsSignatureValid -- Signing -- Successfully validated input\n");
+    LogPrint("privatesend", "CDarksendPool::IsInputScriptSigValid -- Successfully validated input and scriptSig\n");
     return true;
 }
 
@@ -999,8 +1002,8 @@ bool CDarksendPool::AddScriptSig(const CTxIn& txinNew)
         }
     }
 
-    if(!IsSignatureValid(txinNew.scriptSig, txinNew)) {
-        LogPrint("privatesend", "CDarksendPool::AddScriptSig -- Invalid Sig\n");
+    if(!IsInputScriptSigValid(txinNew)) {
+        LogPrint("privatesend", "CDarksendPool::AddScriptSig -- Invalid scriptSig\n");
         return false;
     }
 
