@@ -414,6 +414,9 @@ void CWallet::Flush(bool shutdown)
 
 bool CWallet::Verify()
 {
+    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+        return true;
+
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
@@ -3293,6 +3296,12 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
 
 bool CWallet::InitLoadWallet()
 {
+    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+        pwalletMain = NULL;
+        LogPrintf("Wallet disabled!\n");
+        return true;
+    }
+
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
     // needed to restore wallet transaction meta data after -zapwallettxes
@@ -3464,6 +3473,9 @@ bool CWallet::InitLoadWallet()
 
 bool CWallet::ParameterInteraction()
 {
+    if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
+        return true;
+
     if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && SoftSetBoolArg("-walletbroadcast", false)) {
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
     }
