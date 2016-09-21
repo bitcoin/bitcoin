@@ -205,7 +205,7 @@ public:
     int GetBlockCount() { return mapMasternodeBlocks.size(); }
     int GetVoteCount() { return mapMasternodePaymentVotes.size(); }
 
-    bool IsEnoughData(int nMnCount);
+    bool IsEnoughData();
     int GetStorageLimit();
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
