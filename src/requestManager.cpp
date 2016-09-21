@@ -316,7 +316,9 @@ void RequestBlock(CNode* pfrom, CInv obj)
   // time the block arrives, the header chain leading up to it is already validated. Not
   // doing this will result in the received block being rejected as an orphan in case it is
   // not a direct successor.
-  if (IsChainNearlySyncd()) // only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
+  //  NOTE: only download headers if we're not doing IBD.  The IBD process will take care of it's own headers.
+  //        Also, we need to always download headers for "regtest". TODO: we need to redesign how IBD is initiated here.
+  if (IsChainNearlySyncd() || chainParams.NetworkIDString() == "regtest")
   {
     LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, obj.hash.ToString(), pfrom->id);  
     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), obj.hash);
