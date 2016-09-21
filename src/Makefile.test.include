@@ -1,3 +1,7 @@
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 TESTS += test/test_bitcoin
 bin_PROGRAMS += test/test_bitcoin
 TEST_SRCDIR = test
