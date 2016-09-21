@@ -4936,10 +4936,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
 
-    case MSG_MASTERNODE_WINNER:
-        return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
+    case MSG_MASTERNODE_PAYMENT_VOTE:
+        return mnpayments.mapMasternodePaymentVotes.count(inv.hash);
 
-    case MSG_MASTERNODE_WINNER_BLOCK:
+    case MSG_MASTERNODE_PAYMENT_BLOCK:
         {
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
             return mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.find(mi->second->nHeight) != mnpayments.mapMasternodeBlocks.end();
@@ -5112,28 +5112,28 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
-                    if(mnpayments.mapMasternodePayeeVotes.count(inv.hash)) {
+                if (!pushed && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
+                    if(mnpayments.mapMasternodePaymentVotes.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnpayments.mapMasternodePayeeVotes[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNWINNER, ss);
+                        ss << mnpayments.mapMasternodePaymentVotes[inv.hash];
+                        pfrom->PushMessage(NetMsgType::MASTERNODEPAYMENTVOTE, ss);
                         pushed = true;
                     }
                 }
 
-                if (!pushed && inv.type == MSG_MASTERNODE_WINNER_BLOCK) {
+                if (!pushed && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
                     BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
                     LOCK(cs_mapMasternodeBlocks);
                     if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
                         BOOST_FOREACH(CMasternodePayee& payee, mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
                             std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                             BOOST_FOREACH(uint256& hash, vecVoteHashes) {
-                                if(mnpayments.mapMasternodePayeeVotes.count(hash)) {
+                                if(mnpayments.mapMasternodePaymentVotes.count(hash)) {
                                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                                     ss.reserve(1000);
-                                    ss << mnpayments.mapMasternodePayeeVotes[hash];
-                                    pfrom->PushMessage(NetMsgType::MNWINNER, ss);
+                                    ss << mnpayments.mapMasternodePaymentVotes[hash];
+                                    pfrom->PushMessage(NetMsgType::MASTERNODEPAYMENTVOTE, ss);
                                 }
                             }
                         }

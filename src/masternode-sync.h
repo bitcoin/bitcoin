@@ -42,7 +42,7 @@ private:
 
     // Last time when we received some masternode asset ...
     int64_t nTimeLastMasternodeList;
-    int64_t nTimeLastMasternodeWinner;
+    int64_t nTimeLastPaymentVote;
     int64_t nTimeLastBudgetItem;
     // ... or failed
     int64_t nTimeLastFailure;
@@ -60,7 +60,7 @@ public:
     CMasternodeSync() { Reset(); }
 
     void AddedMasternodeList() { nTimeLastMasternodeList = GetTime(); }
-    void AddedMasternodeWinner() { nTimeLastMasternodeWinner = GetTime(); }
+    void AddedPaymentVote() { nTimeLastPaymentVote = GetTime(); }
     void AddedBudgetItem(uint256 hash);
 
     bool IsFailed() { return nRequestedMasternodeAssets == MASTERNODE_SYNC_FAILED; }

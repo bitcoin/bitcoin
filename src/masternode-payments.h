@@ -13,14 +13,14 @@
 #include "utilstrencodings.h"
 
 class CMasternodePayments;
-class CMasternodePaymentWinner;
+class CMasternodePaymentVote;
 class CMasternodeBlockPayees;
 
 static const int MNPAYMENTS_SIGNATURES_REQUIRED         = 6;
 static const int MNPAYMENTS_SIGNATURES_TOTAL            = 10;
 
 //! minimum peer version that can receive and send masternode payment messages,
-//  vote for masternode winner and be elected as a winner
+//  vote for masternode and be elected as a payment winner
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70103;
@@ -90,8 +90,8 @@ public:
         READWRITE(vecPayees);
     }
 
-    void AddPayee(CMasternodePaymentWinner winner);
-    bool GetPayee(CScript& payeeRet);
+    void AddPayee(const CMasternodePaymentVote& vote);
+    bool GetBestPayee(CScript& payeeRet);
     bool HasPayeeWithVotes(CScript payeeIn, int nVotesReq);
 
     bool IsTransactionValid(const CTransaction& txNew);
@@ -99,8 +99,8 @@ public:
     std::string GetRequiredPaymentsString();
 };
 
-// for storing the winning payments
-class CMasternodePaymentWinner
+// vote for the winning payment
+class CMasternodePaymentVote
 {
 public:
     CTxIn vinMasternode;
@@ -109,16 +109,18 @@ public:
     CScript payee;
     std::vector<unsigned char> vchSig;
 
-    CMasternodePaymentWinner() :
-        vinMasternode(CTxIn()),
+    CMasternodePaymentVote() :
+        vinMasternode(),
         nBlockHeight(0),
-        payee(CScript())
+        payee(),
+        vchSig()
         {}
 
-    CMasternodePaymentWinner(CTxIn vinMasternode, int nBlockHeight, CScript payee) :
+    CMasternodePaymentVote(CTxIn vinMasternode, int nBlockHeight, CScript payee) :
         vinMasternode(vinMasternode),
         nBlockHeight(nBlockHeight),
-        payee(payee)
+        payee(payee),
+        vchSig()
         {}
 
     ADD_SERIALIZE_METHODS;
@@ -165,7 +167,7 @@ private:
     const CBlockIndex *pCurrentBlockIndex;
 
 public:
-    std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
+    std::map<uint256, CMasternodePaymentVote> mapMasternodePaymentVotes;
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
     std::map<COutPoint, int> mapMasternodesLastVote;
 
@@ -175,13 +177,13 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(mapMasternodePayeeVotes);
+        READWRITE(mapMasternodePaymentVotes);
         READWRITE(mapMasternodeBlocks);
     }
 
     void Clear();
 
-    bool AddWinningMasternode(CMasternodePaymentWinner& winner);
+    bool AddPaymentVote(const CMasternodePaymentVote& vote);
     bool ProcessBlock(int nBlockHeight);
 
     void Sync(CNode* node, int nCountNeeded);
@@ -201,7 +203,7 @@ public:
     std::string ToString() const;
 
     int GetBlockCount() { return mapMasternodeBlocks.size(); }
-    int GetVoteCount() { return mapMasternodePayeeVotes.size(); }
+    int GetVoteCount() { return mapMasternodePaymentVotes.size(); }
 
     bool IsEnoughData(int nMnCount);
     int GetStorageLimit();

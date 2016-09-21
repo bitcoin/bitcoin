@@ -226,8 +226,8 @@ extern const char *TXLOCKREQUEST;
 extern const char *TXLOCKVOTE;
 extern const char *SPORK;
 extern const char *GETSPORKS;
-extern const char *MNWINNER;
-extern const char *MNWINNERSSYNC;
+extern const char *MASTERNODEPAYMENTVOTE;
+extern const char *MASTERNODEPAYMENTSYNC;
 extern const char *MNANNOUNCE;
 extern const char *MNPING;
 extern const char *DSACCEPT;
@@ -345,8 +345,8 @@ enum {
     MSG_TXLOCK_REQUEST,
     MSG_TXLOCK_VOTE,
     MSG_SPORK,
-    MSG_MASTERNODE_WINNER,
-    MSG_MASTERNODE_WINNER_BLOCK, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
+    MSG_MASTERNODE_PAYMENT_VOTE,
+    MSG_MASTERNODE_PAYMENT_BLOCK, // reusing, was MSG_MASTERNODE_SCANNING_ERROR previousely, was NOT used in 12.0
     MSG_BUDGET_VOTE, // depreciated since 12.1
     MSG_BUDGET_PROPOSAL, // depreciated since 12.1
     MSG_BUDGET_FINALIZED, // depreciated since 12.1

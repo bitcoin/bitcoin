@@ -40,9 +40,9 @@ const char *TXLOCKREQUEST="ix";
 const char *TXLOCKVOTE="txlvote";
 const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
-const char *MNWINNER="mnw";
-const char *MNWINNERBLOCK="mnwb";
-const char *MNWINNERSSYNC="mnget";
+const char *MASTERNODEPAYMENTVOTE="mnw";
+const char *MASTERNODEPAYMENTBLOCK="mnwb";
+const char *MASTERNODEPAYMENTSYNC="mnget";
 const char *MNSCANERROR="mn scan error"; // not implemented
 const char *MNBUDGETSYNC="mnvs"; // depreciated since 12.1
 const char *MNBUDGETVOTE="mvote"; // depreciated since 12.1
@@ -78,8 +78,8 @@ static const char* ppszTypeName[] =
     NetMsgType::TXLOCKREQUEST,
     NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
-    NetMsgType::MNWINNER,
-    NetMsgType::MNWINNERBLOCK, // reusing, was MNSCANERROR previousely, was NOT used in 12.0, we need this for inv
+    NetMsgType::MASTERNODEPAYMENTVOTE,
+    NetMsgType::MASTERNODEPAYMENTBLOCK, // reusing, was MNSCANERROR previousely, was NOT used in 12.0, we need this for inv
     NetMsgType::MNBUDGETVOTE, // depreciated since 12.1
     NetMsgType::MNBUDGETPROPOSAL, // depreciated since 12.1
     NetMsgType::MNBUDGETFINAL, // depreciated since 12.1
@@ -124,9 +124,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
-    NetMsgType::MNWINNER,
-    // NetMsgType::MNWINNERBLOCK, // there is no message for this, only inventory
-    NetMsgType::MNWINNERSSYNC,
+    NetMsgType::MASTERNODEPAYMENTVOTE,
+    // NetMsgType::MASTERNODEPAYMENTBLOCK, // there is no message for this, only inventory
+    NetMsgType::MASTERNODEPAYMENTSYNC,
     NetMsgType::MNANNOUNCE,
     NetMsgType::MNPING,
     NetMsgType::DSACCEPT,

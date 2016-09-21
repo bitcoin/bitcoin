@@ -51,7 +51,7 @@ void CMasternodeSync::Reset()
     nRequestedMasternodeAttempt = 0;
     nTimeAssetSyncStarted = GetTime();
     nTimeLastMasternodeList = GetTime();
-    nTimeLastMasternodeWinner = GetTime();
+    nTimeLastPaymentVote = GetTime();
     nTimeLastBudgetItem = GetTime();
     nTimeLastFailure = 0;
     nCountFailures = 0;
@@ -88,7 +88,7 @@ void CMasternodeSync::SwitchToNextAsset()
             nRequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             break;
         case(MASTERNODE_SYNC_LIST):
-            nTimeLastMasternodeWinner = GetTime();
+            nTimeLastPaymentVote = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
             break;
         case(MASTERNODE_SYNC_MNW):
@@ -113,7 +113,7 @@ std::string CMasternodeSync::GetSyncStatus()
         case MASTERNODE_SYNC_INITIAL:       return _("Synchronization pending...");
         case MASTERNODE_SYNC_SPORKS:        return _("Synchronizing sporks...");
         case MASTERNODE_SYNC_LIST:          return _("Synchronizing masternodes...");
-        case MASTERNODE_SYNC_MNW:           return _("Synchronizing masternode winners...");
+        case MASTERNODE_SYNC_MNW:           return _("Synchronizing masternode payments...");
         case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
         case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed");
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished");
@@ -144,7 +144,7 @@ void CMasternodeSync::ClearFulfilledRequest()
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         pnode->ClearFulfilledRequest("spork-sync");
-        pnode->ClearFulfilledRequest("masternode-winner-sync");
+        pnode->ClearFulfilledRequest("masternode-payment-sync");
         pnode->ClearFulfilledRequest("governance-sync");
         pnode->ClearFulfilledRequest("masternode-sync");
     }
@@ -209,7 +209,7 @@ void CMasternodeSync::ProcessTick()
                 mnodeman.DsegUpdate(pnode);
             } else if(nRequestedMasternodeAttempt < 6) {
                 int nMnCount = mnodeman.CountEnabled();
-                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
+                pnode->PushMessage(NetMsgType::MASTERNODEPAYMENTSYNC, nMnCount); //sync payment votes
                 uint256 n = uint256();
                 pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, n); //sync masternode votes
             } else {
@@ -275,13 +275,13 @@ void CMasternodeSync::ProcessTick()
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
-            // MNW : SYNC MASTERNODE WINNERS FROM OTHER CONNECTED CLIENTS
+            // MNW : SYNC MASTERNODE PAYMENT VOTES FROM OTHER CONNECTED CLIENTS
 
             if(nRequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 // check for timeout first
                 // This might take a lot longer than MASTERNODE_SYNC_TIMEOUT_SECONDS minutes due to new blocks,
                 // but that should be OK and it should timeout eventually.
-                if(nTimeLastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                if(nTimeLastPaymentVote < GetTime() - MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrintf("CMasternodeSync::Process -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if (nRequestedMasternodeAttempt == 0) {
                         LogPrintf("CMasternodeSync::Process -- WARNING: failed to sync %s\n", GetAssetName());
@@ -303,14 +303,14 @@ void CMasternodeSync::ProcessTick()
                 }
 
                 // only request once from each peer
-                if(pnode->HasFulfilledRequest("masternode-winner-sync")) continue;
-                pnode->FulfilledRequest("masternode-winner-sync");
+                if(pnode->HasFulfilledRequest("masternode-payment-sync")) continue;
+                pnode->FulfilledRequest("masternode-payment-sync");
 
                 if(pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 nRequestedMasternodeAttempt++;
 
-                // ask node for all winners it has (new nodes will only return future winners)
-                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, mnpayments.GetStorageLimit());
+                // ask node for all payment votes it has (new nodes will only return votes for future payments)
+                pnode->PushMessage(NetMsgType::MASTERNODEPAYMENTSYNC, mnpayments.GetStorageLimit());
                 // ask node for missing pieces only (old nodes will not be asked)
                 mnpayments.RequestLowDataPaymentBlocks(pnode);
 
