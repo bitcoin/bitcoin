@@ -86,7 +86,6 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     // show progress speed if we have more then one sample
     if (blockProcessTime.size() >= 2)
     {
-        // try to get the window from the last 500 seconds or at least 10 samples
         double progressStart = blockProcessTime[0].second;
         double progressDelta = 0;
         double progressPerHour = 0;
@@ -114,9 +113,9 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         ui->expectedTimeLeft->setText(GUIUtil::formateNiceTimeOffset(remainingMSecs/1000.0));
 
         // keep maximal 5000 samples
-        static int maxSamples = 5000;
-        if (blockProcessTime.count() > maxSamples)
-            blockProcessTime.remove(maxSamples, blockProcessTime.count()-maxSamples);
+        static const int MAX_SAMPLES = 5000;
+        if (blockProcessTime.count() > MAX_SAMPLES)
+            blockProcessTime.remove(MAX_SAMPLES, blockProcessTime.count()-MAX_SAMPLES);
     }
 
     // show the last block date

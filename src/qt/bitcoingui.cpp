@@ -247,7 +247,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     modalOverlay = new ModalOverlay(this->centralWidget());
 #ifdef ENABLE_WALLET
     if(enableWallet)
-        connect(walletFrame, SIGNAL(requestedOfSyncWarningInfo()), this, SLOT(showModalOverlay()));
+        connect(walletFrame, SIGNAL(requestedSyncWarningInfo()), this, SLOT(showModalOverlay()));
 #endif
 }
 
@@ -717,13 +717,13 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 {
     if (modalOverlay)
     {
-        if (header)
-        {
+        if (header) {
             /* use clientmodels getHeaderTipHeight and getHeaderTipTime because the NotifyHeaderTip signal does not fire when updating the best header */
             modalOverlay->setKnownBestHeight(clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(clientModel->getHeaderTipTime()));
         }
-        else
+        else {
             modalOverlay->tipUpdate(count, blockDate, nVerificationProgress);
+        }
     }
     if (!clientModel)
         return;
