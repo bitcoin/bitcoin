@@ -1,5 +1,8 @@
+Travis CI
+=========
+
 Support for using travis-ci has been added in order to automate pull-testing.
-See https://travis-ci.org/ for more info
+See [travis-ci.org](https://travis-ci.org/) for more info
 
 This procedure is different than the pull-tester that came before it in a few
 ways.
@@ -7,7 +10,7 @@ ways.
 There is nothing to administer. This is a major feature as it means
 that builds have no local state. Because there is no ability to login to the
 builders to install packages (tools, dependencies, etc), the entire build
-procedure must instead be controlled by a declarative script (.travis.yml).
+procedure must instead be controlled by a declarative script `.travis.yml`.
 This script declares each build configuration, creates virtual machines as
 necessary, builds, then discards the virtual machines.
 
@@ -16,7 +19,7 @@ than a single pass/fail. This helps to catch build failures and logic errors
 that present on platforms other than the ones the author has tested. This
 matrix is defined in the build script and can be changed at any time.
 
-All builders use the dependency-generator in the depends dir, rather than
+All builders use the dependency-generator in the [depends dir](/depends), rather than
 using apt-get to install build dependencies. This guarantees that the tester
 is using the same versions as Gitian, so the build results are nearly identical
 to what would be found in a final release. However, this also means that builds
