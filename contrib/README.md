@@ -1,11 +1,3 @@
-Wallet Tools
----------------------
-
-### [SpendFrom](/contrib/spendfrom) ###
-
-Use the raw transactions API to send coins received on a particular
-address (or addresses).
-
 Repository Tools
 ---------------------
 
