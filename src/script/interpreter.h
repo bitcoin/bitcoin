@@ -98,6 +98,10 @@ enum
     // Segwit script only: Require the argument of OP_IF/NOTIF to be exactly 0x01 or empty vector
     //
     SCRIPT_VERIFY_MINIMALIF = (1U << 13),
+
+    // Signature(s) must be empty vector if an CHECK(MULTI)SIG operation failed
+    //
+    SCRIPT_VERIFY_NULLFAIL = (1U << 14),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
