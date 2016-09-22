@@ -807,6 +807,7 @@ private:
 
 
     uint64_t nLocalHostNonce;
+    // Services offered to this peer
     ServiceFlags nLocalServices;
     int nMyStartingHeight;
     int nSendVersion;
