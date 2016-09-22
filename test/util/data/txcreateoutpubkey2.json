@@ -2,6 +2,8 @@
     "txid": "70f2a088cde460e677415fa1fb71895e90c231e6ed38ed203a35b6f848e9cc73",
     "hash": "70f2a088cde460e677415fa1fb71895e90c231e6ed38ed203a35b6f848e9cc73",
     "version": 1,
+    "size": 41,
+    "vsize": 41,
     "locktime": 0,
     "vin": [
     ],
