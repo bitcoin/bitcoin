@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <checkpoints.h>
 #include <coins.h>
+#include <core_io.h>
 #include <consensus/validation.h>
 #include <hash.h>
 #include <policy/feerate.h>
@@ -125,7 +126,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         if(txDetails)
         {
             UniValue objTx(UniValue::VOBJ);
-            TxToJSON(*tx, uint256(), objTx);
+            TxToUniv(*tx, uint256(), objTx);
             txs.push_back(objTx);
         }
         else
@@ -1081,7 +1082,11 @@ UniValue gettxout(const JSONRPCRequest& request)
     }
     ret.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
     UniValue o(UniValue::VOBJ);
+<<<<<<< HEAD
     ScriptPubKeyToJSON(coin.out.scriptPubKey, o, true);
+=======
+    ScriptPubKeyToUniv(coins.vout[n].scriptPubKey, o, true);
+>>>>>>> 0ff9320... refactor TxToJSON() and ScriptPubKeyToJSON()
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("coinbase", (bool)coin.fCoinBase));
 
