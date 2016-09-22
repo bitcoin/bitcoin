@@ -172,19 +172,22 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    JSONRequest jreq;
+    JSONRPCRequest jreq;
     try {
         // Parse request
         UniValue valRequest;
         if (!valRequest.read(req->ReadBody()))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
+        // Set the URI
+        jreq.URI = req->GetURI();
+
         std::string strReply;
         // singleton request
         if (valRequest.isObject()) {
             jreq.parse(valRequest);
 
-            UniValue result = tableRPC.execute(jreq.strMethod, jreq.params);
+            UniValue result = tableRPC.execute(jreq);
 
             // Send reply
             strReply = JSONRPCReply(result, NullUniValue, jreq.id);
