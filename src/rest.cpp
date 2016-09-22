@@ -286,6 +286,7 @@ static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
     switch (rf) {
     case RF_JSON: {
         JSONRPCRequest jsonRequest;
+        jsonRequest.params = UniValue(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo(jsonRequest);
         string strJSON = chainInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");

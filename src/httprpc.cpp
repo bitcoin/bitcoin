@@ -127,7 +127,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     return false;
 }
 
-static bool RPCAuthorized(const std::string& strAuth)
+static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
 {
     if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
         return false;
@@ -136,7 +136,10 @@ static bool RPCAuthorized(const std::string& strAuth)
     std::string strUserPass64 = strAuth.substr(6);
     boost::trim(strUserPass64);
     std::string strUserPass = DecodeBase64(strUserPass64);
-    
+
+    if (strUserPass.find(":") != std::string::npos)
+        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(":"));
+
     //Check if authorized under single-user field
     if (TimingResistantEqual(strUserPass, strRPCUserColonPass)) {
         return true;
@@ -159,7 +162,8 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    if (!RPCAuthorized(authHeader.second)) {
+    JSONRPCRequest jreq;
+    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", req->GetPeer().ToString());
 
         /* Deter brute-forcing
@@ -172,7 +176,6 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    JSONRPCRequest jreq;
     try {
         // Parse request
         UniValue valRequest;
