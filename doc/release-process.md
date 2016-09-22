@@ -17,6 +17,8 @@ Before every major release:
 
 ### First time / New builders
 
+If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
+
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
@@ -59,6 +61,8 @@ Tag version (or release candidate) in git
     git tag -s v(new version, e.g. 0.8.0)
 
 ### Setup and perform Gitian builds
+
+If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--build" command. Otherwise ignore this.
 
 Setup Gitian descriptors:
 
