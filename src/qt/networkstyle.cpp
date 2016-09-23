@@ -22,9 +22,9 @@ static const struct {
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
 // titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText):
-    appName(appName),
-    titleAddText(qApp->translate("SplashScreen", titleAddText))
+NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
+    appName(_appName),
+    titleAddText(qApp->translate("SplashScreen", _titleAddText))
 {
     // load pixmap
     QPixmap pixmap(":/icons/bitcoin");
