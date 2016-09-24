@@ -2,7 +2,7 @@
 #
 # linearize-hashes.py:  List blocks in a linear, no-fork version of the chain.
 #
-# Copyright (c) 2013-2014 The Bitcoin Core developers
+# Copyright (c) 2013-2014 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -17,7 +17,7 @@ import sys
 
 settings = {}
 
-class BitcoinRPC:
+class LitecoinRPC:
 	def __init__(self, host, port, username, password):
 		authpair = "%s:%s" % (username, password)
 		self.authhdr = "Basic %s" % (base64.b64encode(authpair))
@@ -53,7 +53,7 @@ class BitcoinRPC:
 		return 'error' in resp_obj and resp_obj['error'] is not None
 
 def get_block_hashes(settings, max_blocks_per_call=10000):
-	rpc = BitcoinRPC(settings['host'], settings['port'],
+	rpc = LitecoinRPC(settings['host'], settings['port'],
 			 settings['rpcuser'], settings['rpcpassword'])
 
 	height = settings['min_height']

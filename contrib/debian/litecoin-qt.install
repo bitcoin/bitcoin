@@ -1,0 +1,6 @@
+usr/local/bin/litecoin-qt usr/bin
+share/pixmaps/litecoin32.xpm usr/share/pixmaps
+share/pixmaps/litecoin16.xpm usr/share/pixmaps
+share/pixmaps/litecoin128.png usr/share/pixmaps
+debian/litecoin-qt.desktop usr/share/applications
+debian/litecoin-qt.protocol usr/share/kde4/services/

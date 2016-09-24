@@ -1,0 +1,8 @@
+/usr/bin/litecoin-cli		--	gen_context(system_u:object_r:litecoin_exec_t,s0)
+/usr/sbin/litecoind		--	gen_context(system_u:object_r:litecoin_exec_t,s0)
+/usr/lib(64)?/litecoin/litecoind		--	gen_context(system_u:object_r:litecoin_exec_t,s0)
+
+/etc/litecoin(/.*)?		gen_context(system_u:object_r:litecoin_conf_t,s0)
+/var/lib/litecoin(/.*)?		gen_context(system_u:object_r:litecoin_var_lib_t,s0)
+
+(/var)?/run/litecoind(/.*)?   gen_context(system_u:object_r:litecoin_var_run_t,s0)

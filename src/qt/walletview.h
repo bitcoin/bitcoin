@@ -1,15 +1,15 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_WALLETVIEW_H
-#define BITCOIN_QT_WALLETVIEW_H
+#ifndef LITECOIN_QT_WALLETVIEW_H
+#define LITECOIN_QT_WALLETVIEW_H
 
 #include "amount.h"
 
 #include <QStackedWidget>
 
-class BitcoinGUI;
+class LitecoinGUI;
 class ClientModel;
 class OverviewPage;
 class PlatformStyle;
@@ -39,13 +39,13 @@ public:
     explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
-    void setBitcoinGUI(BitcoinGUI *gui);
+    void setLitecoinGUI(LitecoinGUI *gui);
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
     /** Set the wallet model.
-        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
+        The wallet model represents a litecoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
@@ -121,4 +121,4 @@ Q_SIGNALS:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
 };
 
-#endif // BITCOIN_QT_WALLETVIEW_H
+#endif // LITECOIN_QT_WALLETVIEW_H

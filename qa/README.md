@@ -1,7 +1,7 @@
 The [pull-tester](/qa/pull-tester/) folder contains a script to call
 multiple tests from the [rpc-tests](/qa/rpc-tests/) folder.
 
-Every pull request to the bitcoin repository is built and run through
+Every pull request to the litecoin repository is built and run through
 the regression test suite. You can also run all or only individual
 tests locally.
 
@@ -50,9 +50,9 @@ Possible options, which apply to each individual test run:
 
 ```
   -h, --help            show this help message and exit
-  --nocleanup           Leave bitcoinds and test.* datadir on exit or error
-  --noshutdown          Don't stop bitcoinds after the test execution
-  --srcdir=SRCDIR       Source directory containing bitcoind/bitcoin-cli
+  --nocleanup           Leave litecoinds and test.* datadir on exit or error
+  --noshutdown          Don't stop litecoinds after the test execution
+  --srcdir=SRCDIR       Source directory containing litecoind/litecoin-cli
                         (default: ../../src)
   --tmpdir=TMPDIR       Root directory for datadirs
   --tracerpc            Print out all RPC calls as they are made
@@ -77,7 +77,7 @@ to recover with:
 
 ```bash
 rm -rf cache
-killall bitcoind
+killall litecoind
 ```
 
 Writing tests

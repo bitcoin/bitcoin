@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSDIALOG_H
-#define BITCOIN_QT_OPTIONSDIALOG_H
+#ifndef LITECOIN_QT_OPTIONSDIALOG_H
+#define LITECOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QValidator>
@@ -67,4 +67,4 @@ private:
     QDataWidgetMapper *mapper;
 };
 
-#endif // BITCOIN_QT_OPTIONSDIALOG_H
+#endif // LITECOIN_QT_OPTIONSDIALOG_H

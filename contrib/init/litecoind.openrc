@@ -1,0 +1,92 @@
+#!/sbin/runscript
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/litecoin/.litecoin" ]; then
+	LITECOIND_DEFAULT_DATADIR="/var/lib/litecoin/.litecoin"
+else
+	LITECOIND_DEFAULT_DATADIR="/var/lib/litecoind"
+fi
+
+LITECOIND_CONFIGFILE=${LITECOIND_CONFIGFILE:-/etc/litecoin/litecoin.conf}
+LITECOIND_PIDDIR=${LITECOIND_PIDDIR:-/var/run/litecoind}
+LITECOIND_PIDFILE=${LITECOIND_PIDFILE:-${LITECOIND_PIDDIR}/litecoind.pid}
+LITECOIND_DATADIR=${LITECOIND_DATADIR:-${LITECOIND_DEFAULT_DATADIR}}
+LITECOIND_USER=${LITECOIND_USER:-${LITECOIN_USER:-litecoin}}
+LITECOIND_GROUP=${LITECOIND_GROUP:-litecoin}
+LITECOIND_BIN=${LITECOIND_BIN:-/usr/bin/litecoind}
+LITECOIND_NICE=${LITECOIND_NICE:-${NICELEVEL:-0}}
+LITECOIND_OPTS="${LITECOIND_OPTS:-${LITECOIN_OPTS}}"
+
+name="Litecoin Core Daemon"
+description="Litecoin cryptocurrency P2P network daemon"
+
+command="/usr/bin/litecoind"
+command_args="-pid=\"${LITECOIND_PIDFILE}\" \
+		-conf=\"${LITECOIND_CONFIGFILE}\" \
+		-datadir=\"${LITECOIND_DATADIR}\" \
+		-daemon \
+		${LITECOIND_OPTS}"
+
+required_files="${LITECOIND_CONFIGFILE}"
+start_stop_daemon_args="-u ${LITECOIND_USER} \
+			-N ${LITECOIND_NICE} -w 2000"
+pidfile="${LITECOIND_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${LITECOIND_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${LITECOIND_USER}:${LITECOIND_GROUP}" \
+	"${LITECOIND_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${LITECOIND_USER}:${LITECOIND_GROUP}" \
+	"${LITECOIND_PIDDIR}"
+
+	checkpath -f \
+	-o ${LITECOIND_USER}:${LITECOIND_GROUP} \
+	-m 0660 \
+	${LITECOIND_CONFIGFILE}
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if ! grep -qs '^rpcpassword=' "${LITECOIND_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run litecoind."
+		eerror "The setting must appear in ${LITECOIND_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following"
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is also recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"Litecoin Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}

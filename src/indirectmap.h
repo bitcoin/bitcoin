@@ -1,5 +1,5 @@
-#ifndef BITCOIN_INDIRECTMAP_H
-#define BITCOIN_INDIRECTMAP_H
+#ifndef LITECOIN_INDIRECTMAP_H
+#define LITECOIN_INDIRECTMAP_H
 
 template <class T>
 struct DereferencingComparator { bool operator()(const T a, const T b) const { return *a < *b; } };
@@ -49,4 +49,4 @@ public:
     const_iterator cend() const     { return m.cend(); }
 };
 
-#endif // BITCOIN_INDIRECTMAP_H
+#endif // LITECOIN_INDIRECTMAP_H

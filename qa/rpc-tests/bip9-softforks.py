@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015 The Bitcoin Core developers
+# Copyright (c) 2015 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -195,7 +195,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         # Restart all
         self.test.block_store.close()
         stop_nodes(self.nodes)
-        wait_bitcoinds()
+        wait_litecoinds()
         shutil.rmtree(self.options.tmpdir)
         self.setup_chain()
         self.setup_network()

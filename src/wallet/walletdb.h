@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLETDB_H
-#define BITCOIN_WALLET_WALLETDB_H
+#ifndef LITECOIN_WALLET_WALLETDB_H
+#define LITECOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
 #include "primitives/transaction.h"
@@ -187,4 +187,4 @@ private:
 
 void ThreadFlushWalletDB(const std::string& strFile);
 
-#endif // BITCOIN_WALLET_WALLETDB_H
+#endif // LITECOIN_WALLET_WALLETDB_H

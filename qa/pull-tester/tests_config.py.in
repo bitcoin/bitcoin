@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,6 @@ EXEEXT="@EXEEXT@"
 
 # These will turn into comments if they were disabled when configuring.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=1
-@BUILD_BITCOIN_UTILS_TRUE@ENABLE_UTILS=1
-@BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=1
+@BUILD_LITECOIN_UTILS_TRUE@ENABLE_UTILS=1
+@BUILD_LITECOIND_TRUE@ENABLE_LITECOIND=1
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=1

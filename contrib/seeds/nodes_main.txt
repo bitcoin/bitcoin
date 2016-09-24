@@ -918,8 +918,8 @@ a6obdgzn67l7exu3.onion:8333
 ab64h7olpl7qpxci.onion:8333
 am2a4rahltfuxz6l.onion:8333
 azuxls4ihrr2mep7.onion:8333
-bitcoin7bi4op7wb.onion:8333
-bitcoinostk4e4re.onion:8333
+litecoin7bi4op7wb.onion:8333
+litecoinostk4e4re.onion:8333
 bk7yp6epnmcllq72.onion:8333
 bmutjfrj5btseddb.onion:8333
 ceeji4qpfs3ms3zc.onion:8333

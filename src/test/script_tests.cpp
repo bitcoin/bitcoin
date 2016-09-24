@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,11 +12,11 @@
 #include "script/sign.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_litecoin.h"
 #include "rpc/server.h"
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/bitcoinconsensus.h"
+#include "script/litecoinconsensus.h"
 #endif
 
 #include <fstream>
@@ -170,11 +170,11 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
-    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
-        BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(begin_ptr(scriptPubKey), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect, message);
+    if (flags & litecoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
+        BOOST_CHECK_MESSAGE(litecoinconsensus_verify_script_with_amount(begin_ptr(scriptPubKey), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect, message);
     } else {
-        BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(begin_ptr(scriptPubKey), scriptPubKey.size(), 0, (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect, message);
-        BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script(begin_ptr(scriptPubKey), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect,message);
+        BOOST_CHECK_MESSAGE(litecoinconsensus_verify_script_with_amount(begin_ptr(scriptPubKey), scriptPubKey.size(), 0, (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect, message);
+        BOOST_CHECK_MESSAGE(litecoinconsensus_verify_script(begin_ptr(scriptPubKey), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect,message);
     }
 #endif
 }

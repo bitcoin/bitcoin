@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
-#define BITCOIN_PRIMITIVES_TRANSACTION_H
+#ifndef LITECOIN_PRIMITIVES_TRANSACTION_H
+#define LITECOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
 #include "script/script.h"
@@ -462,4 +462,4 @@ struct CMutableTransaction
 /** Compute the weight of a transaction, as defined by BIP 141 */
 int64_t GetTransactionWeight(const CTransaction &tx);
 
-#endif // BITCOIN_PRIMITIVES_TRANSACTION_H
+#endif // LITECOIN_PRIMITIVES_TRANSACTION_H

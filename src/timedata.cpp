@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/litecoin-config.h"
 #endif
 
 #include "timedata.h"
@@ -44,20 +44,20 @@ static int64_t abs64(int64_t n)
     return (n >= 0 ? n : -n);
 }
 
-#define BITCOIN_TIMEDATA_MAX_SAMPLES 200
+#define LITECOIN_TIMEDATA_MAX_SAMPLES 200
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
     static set<CNetAddr> setKnown;
-    if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
+    if (setKnown.size() == LITECOIN_TIMEDATA_MAX_SAMPLES)
         return;
     if (!setKnown.insert(ip).second)
         return;
 
     // Add data
-    static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
+    static CMedianFilter<int64_t> vTimeOffsets(LITECOIN_TIMEDATA_MAX_SAMPLES, 0);
     vTimeOffsets.input(nOffsetSample);
     LogPrint("net","added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
 

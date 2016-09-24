@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
+#include "test/test_litecoin.h"
 
 #include <vector>
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
 BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
 {
     string strSecret = string("5Kg1gnAjaLfKiwhhPpGS3QfRg2m6awQvaj98JCZBZQ5SuS2F15C");
-    CBitcoinSecret vchSecret;
+    CLitecoinSecret vchSecret;
     BOOST_CHECK(vchSecret.SetString(strSecret));
 
     CKey key = vchSecret.GetKey();
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
         if (rb1.contains(RandomData()))
             ++nHits;
     }
-    // Run test_bitcoin with --log_level=message to see BOOST_TEST_MESSAGEs:
+    // Run test_litecoin with --log_level=message to see BOOST_TEST_MESSAGEs:
     BOOST_TEST_MESSAGE("RollingBloomFilter got " << nHits << " false positives (~100 expected)");
 
     // Insanely unlikely to get a fp count outside this range:
