@@ -1,13 +1,13 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
+Upstream-Name: Litecoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: https://github.com/bitcoin/bitcoin
+ irc://#litecoin@freenode.net
+Source: https://github.com/wangxinxi/litecoin
 
 Files: *
-Copyright: 2009-2016, Bitcoin Core Developers
+Copyright: 2009-2016, Litecoin Core Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Litecoin Core Developers encompasses the current developers listed on litecoin.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*
@@ -75,12 +75,12 @@ License: Expat
 Comment: Modifications of Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/about.png
-       src/qt/res/icons/bitcoin.*
-       share/pixmaps/bitcoin*
-       src/qt/res/src/bitcoin.svg
+       src/qt/res/icons/litecoin.*
+       share/pixmaps/litecoin*
+       src/qt/res/src/litecoin.svg
 Copyright: Bitboy, Jonas Schnelli
 License: public-domain
-Comment: Site: https://bitcointalk.org/?topic=1756.0
+Comment: Site: https://litecointalk.org/?topic=1756.0
 
 
 License: Expat

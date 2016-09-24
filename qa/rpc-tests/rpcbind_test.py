@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,11 +26,11 @@ def run_bind_test(tmpdir, allow_ips, connect_to, addresses, expected):
     binds = ['-rpcbind='+addr for addr in addresses]
     nodes = start_nodes(self.num_nodes, tmpdir, [base_args + binds], connect_to)
     try:
-        pid = bitcoind_processes[0].pid
+        pid = litecoind_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
     finally:
         stop_nodes(nodes)
-        wait_bitcoinds()
+        wait_litecoinds()
 
 def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     '''
@@ -47,7 +47,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     finally:
         node = None # make sure connection will be garbage collected and closed
         stop_nodes(nodes)
-        wait_bitcoinds()
+        wait_litecoinds()
 
 
 def run_test(tmpdir):
@@ -102,9 +102,9 @@ def main():
 
     parser = optparse.OptionParser(usage="%prog [options]")
     parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                      help="Leave bitcoinds and test.* datadir on exit or error")
+                      help="Leave litecoinds and test.* datadir on exit or error")
     parser.add_option("--srcdir", dest="srcdir", default="../../src",
-                      help="Source directory containing bitcoind/bitcoin-cli (default: %default%)")
+                      help="Source directory containing litecoind/litecoin-cli (default: %default%)")
     parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                       help="Root directory for datadirs")
     (options, args) = parser.parse_args()
@@ -133,7 +133,7 @@ def main():
 
     if not options.nocleanup:
         print("Cleaning up")
-        wait_bitcoinds()
+        wait_litecoinds()
         shutil.rmtree(options.tmpdir)
 
     if success:

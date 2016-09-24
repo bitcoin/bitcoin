@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 #
 
 from collections import OrderedDict
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LitecoinTestFramework
 from test_framework.util import *
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
@@ -143,7 +143,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     return all_estimates
 
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(LitecoinTestFramework):
 
     def __init__(self):
         super().__init__()

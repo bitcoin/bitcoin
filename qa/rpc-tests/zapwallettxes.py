@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LitecoinTestFramework
 from test_framework.util import *
 
 
-class ZapWalletTXesTest (BitcoinTestFramework):
+class ZapWalletTXesTest (LitecoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -52,18 +52,18 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         tx3 = self.nodes[0].gettransaction(txid3)
         assert_equal(tx3['txid'], txid3) #tx3 must be available (unconfirmed)
         
-        #restart bitcoind
+        #restart litecoind
         self.nodes[0].stop()
-        bitcoind_processes[0].wait()
+        litecoind_processes[0].wait()
         self.nodes[0] = start_node(0,self.options.tmpdir)
         
         tx3 = self.nodes[0].gettransaction(txid3)
         assert_equal(tx3['txid'], txid3) #tx must be available (unconfirmed)
         
         self.nodes[0].stop()
-        bitcoind_processes[0].wait()
+        litecoind_processes[0].wait()
         
-        #restart bitcoind with zapwallettxes
+        #restart litecoind with zapwallettxes
         self.nodes[0] = start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
         
         assert_raises(JSONRPCException, self.nodes[0].gettransaction, [txid3])

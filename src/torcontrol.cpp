@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -345,7 +345,7 @@ static bool WriteBinaryFile(const std::string &filename, const std::string &data
     return true;
 }
 
-/****** Bitcoin specific TorController implementation ********/
+/****** Litecoin specific TorController implementation ********/
 
 /** Controller that connects to Tor control socket, authenticate, then create
  * and maintain a ephemeral hidden service.

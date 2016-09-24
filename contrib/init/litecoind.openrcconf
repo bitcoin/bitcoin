@@ -1,0 +1,33 @@
+# /etc/conf.d/litecoind: config file for /etc/init.d/litecoind
+
+# Config file location
+#LITECOIND_CONFIGFILE="/etc/litecoin/litecoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $LITECOIND_USER)
+#LITECOIND_PIDDIR="/var/run/litecoind"
+
+# What filename to give the pidfile
+#LITECOIND_PIDFILE="${LITECOIND_PIDDIR}/litecoind.pid"
+
+# Where to write litecoind data (be mindful that the blockchain is large)
+#LITECOIND_DATADIR="/var/lib/litecoind"
+
+# User and group to own litecoind process
+#LITECOIND_USER="litecoin"
+#LITECOIND_GROUP="litecoin"
+
+# Path to litecoind executable
+#LITECOIND_BIN="/usr/bin/litecoind"
+
+# Nice value to run litecoind under
+#LITECOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+LITECOIND_OPTS="-disablewallet"
+
+# The timeout in seconds OpenRC will wait for litecoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+LITECOIND_SIGTERM_TIMEOUT=60

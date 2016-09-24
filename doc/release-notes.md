@@ -1,28 +1,28 @@
-Bitcoin Core version 0.13.x is now available from:
+Litecoin Core version 0.13.x is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.13.x/>
+  <https://litecoin.org/bin/litecoin-core-0.13.x/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/wangxinxi/litecoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://litecoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
 
 Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
 an OS initially released in 2001. This means that not even critical security
-updates will be released anymore. Without security updates, using a bitcoin
+updates will be released anymore. Without security updates, using a litecoin
 wallet on a XP machine is irresponsible at least.
 
-In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
-randomly crashing on Windows XP. It is [not clear](https://github.com/bitcoin/bitcoin/issues/7681#issuecomment-217439891)
+In addition to that, with 0.12.x there have been varied reports of Litecoin Core
+randomly crashing on Windows XP. It is [not clear](https://github.com/wangxinxi/litecoin/issues/7681#issuecomment-217439891)
 what the source of these crashes is, but it is likely that upstream
 libraries such as Qt are no longer being tested on XP.
 
@@ -66,4 +66,4 @@ Thanks to everyone who directly contributed to this release:
 
     ... fill in here
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/litecoin/).

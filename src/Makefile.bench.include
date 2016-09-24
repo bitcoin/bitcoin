@@ -1,10 +1,10 @@
-bin_PROGRAMS += bench/bench_bitcoin
+bin_PROGRAMS += bench/bench_litecoin
 BENCH_SRCDIR = bench
-BENCH_BINARY = bench/bench_bitcoin$(EXEEXT)
+BENCH_BINARY = bench/bench_litecoin$(EXEEXT)
 
 
-bench_bench_bitcoin_SOURCES = \
-  bench/bench_bitcoin.cpp \
+bench_bench_litecoin_SOURCES = \
+  bench/bench_litecoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
   bench/Examples.cpp \
@@ -12,38 +12,38 @@ bench_bench_bitcoin_SOURCES = \
   bench/crypto_hash.cpp \
   bench/base58.cpp
 
-bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
-bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bench_bench_bitcoin_LDADD = \
-  $(LIBBITCOIN_SERVER) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CONSENSUS) \
-  $(LIBBITCOIN_CRYPTO) \
+bench_bench_litecoin_CPPFLAGS = $(AM_CPPFLAGS) $(LITECOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_litecoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bench_bench_litecoin_LDADD = \
+  $(LIBLITECOIN_SERVER) \
+  $(LIBLITECOIN_COMMON) \
+  $(LIBLITECOIN_UTIL) \
+  $(LIBLITECOIN_CONSENSUS) \
+  $(LIBLITECOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
 if ENABLE_ZMQ
-bench_bench_bitcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+bench_bench_litecoin_LDADD += $(LIBLITECOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
-bench_bench_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
+bench_bench_litecoin_LDADD += $(LIBLITECOIN_WALLET)
 endif
 
-bench_bench_bitcoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-bench_bench_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+bench_bench_litecoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+bench_bench_litecoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno
+CLEAN_LITECOIN_BENCH = bench/*.gcda bench/*.gcno
 
-CLEANFILES += $(CLEAN_BITCOIN_BENCH)
+CLEANFILES += $(CLEAN_LITECOIN_BENCH)
 
-bitcoin_bench: $(BENCH_BINARY)
+litecoin_bench: $(BENCH_BINARY)
 
 bench: $(BENCH_BINARY) FORCE
 	$(BENCH_BINARY)
 
-bitcoin_bench_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_BENCH) $(bench_bench_bitcoin_OBJECTS) $(BENCH_BINARY)
+litecoin_bench_clean : FORCE
+	rm -f $(CLEAN_LITECOIN_BENCH) $(bench_bench_litecoin_OBJECTS) $(BENCH_BINARY)

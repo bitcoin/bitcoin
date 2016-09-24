@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #
 # Test -reindex and -reindex-chainstate with CheckBlockIndex
 #
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LitecoinTestFramework
 from test_framework.util import *
 import time
 
-class ReindexTest(BitcoinTestFramework):
+class ReindexTest(LitecoinTestFramework):
 
     def __init__(self):
         super().__init__()
@@ -26,7 +26,7 @@ class ReindexTest(BitcoinTestFramework):
         self.nodes[0].generate(3)
         blockcount = self.nodes[0].getblockcount()
         stop_node(self.nodes[0], 0)
-        wait_bitcoinds()
+        wait_litecoinds()
         self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug", "-reindex-chainstate" if justchainstate else "-reindex", "-checkblockindex=1"])
         while self.nodes[0].getblockcount() < blockcount:
             time.sleep(0.1)

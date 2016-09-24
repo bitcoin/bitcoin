@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2014 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPRESSOR_H
-#define BITCOIN_COMPRESSOR_H
+#ifndef LITECOIN_COMPRESSOR_H
+#define LITECOIN_COMPRESSOR_H
 
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -126,4 +126,4 @@ public:
     }
 };
 
-#endif // BITCOIN_COMPRESSOR_H
+#endif // LITECOIN_COMPRESSOR_H

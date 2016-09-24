@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2016 The Bitcoin Core developers
+# Copyright (c) 2010-2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #
-# mininode.py - Bitcoin P2P network half-a-node
+# mininode.py - Litecoin P2P network half-a-node
 #
 # This python code was modified from ArtForz' public domain  half-a-node, as
 # found in the mini-node branch of http://github.com/jgarzik/pynode.
 #
-# NodeConn: an object which manages p2p connectivity to a bitcoin node
+# NodeConn: an object which manages p2p connectivity to a litecoin node
 # NodeConnCB: a base class that describes the interface for receiving
 #             callbacks with network messages from a NodeConn
 # CBlock, CTransaction, CBlockHeader, CTxIn, CTxOut, etc....:
 #     data structures that should map to corresponding structures in
-#     bitcoin/primitives
+#     litecoin/primitives
 # msg_block, msg_tx, msg_headers, etc.:
 #     data structures that represent network messages
 # ser_*, deser_*: functions that handle serialization/deserialization
@@ -259,7 +259,7 @@ def FromHex(obj, hex_string):
 def ToHex(obj):
     return bytes_to_hex_str(obj.serialize())
 
-# Objects that map to bitcoind objects, which can be serialized/deserialized
+# Objects that map to litecoind objects, which can be serialized/deserialized
 
 class CAddress(object):
     def __init__(self):
@@ -490,7 +490,7 @@ class CTransaction(object):
         if len(self.vin) == 0:
             flags = struct.unpack("<B", f.read(1))[0]
             # Not sure why flags can't be zero, but this
-            # matches the implementation in bitcoind
+            # matches the implementation in litecoind
             if (flags != 0):
                 self.vin = deser_vector(f, CTxIn)
                 self.vout = deser_vector(f, CTxOut)
@@ -1139,7 +1139,7 @@ class msg_headers(object):
         self.headers = []
 
     def deserialize(self, f):
-        # comment in bitcoind indicates these should be deserialized as blocks
+        # comment in litecoind indicates these should be deserialized as blocks
         blocks = deser_vector(f, CBlock)
         for x in blocks:
             self.headers.append(CBlockHeader(x))
@@ -1377,7 +1377,7 @@ class NodeConn(asyncore.dispatcher):
         vt.addrFrom.ip = "0.0.0.0"
         vt.addrFrom.port = 0
         self.send_message(vt, True)
-        print('MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
+        print('MiniNode: Connecting to Litecoin Node IP # ' + dstaddr + ':' \
             + str(dstport))
 
         try:

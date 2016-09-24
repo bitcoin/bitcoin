@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_PARAMS_H
-#define BITCOIN_CONSENSUS_PARAMS_H
+#ifndef LITECOIN_CONSENSUS_PARAMS_H
+#define LITECOIN_CONSENSUS_PARAMS_H
 
 #include "uint256.h"
 #include <map>
@@ -64,4 +64,4 @@ struct Params {
 };
 } // namespace Consensus
 
-#endif // BITCOIN_CONSENSUS_PARAMS_H
+#endif // LITECOIN_CONSENSUS_PARAMS_H

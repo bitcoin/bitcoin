@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2015 The Bitcoin Core developers
+// Copyright (c) 2013-2015 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
     const char address2Hex[] = "0388c2037017c62240b6b72ac1a2a5f94da790596ebd06177c8572752922165cb4";
 
     UniValue v;
-    CBitcoinAddress address;
+    CLitecoinAddress address;
     BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(1, address1Hex), false));
     address.SetString(v.get_str());
     BOOST_CHECK(address.IsValid() && address.IsScript());
@@ -67,15 +67,15 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     // Test RPC calls for various wallet statistics
     UniValue r;
     CPubKey demoPubkey;
-    CBitcoinAddress demoAddress;
+    CLitecoinAddress demoAddress;
     UniValue retValue;
     string strAccount = "walletDemoAccount";
-    CBitcoinAddress setaccountDemoAddress;
+    CLitecoinAddress setaccountDemoAddress;
     {
         LOCK(pwalletMain->cs_wallet);
 
         demoPubkey = pwalletMain->GenerateNewKey();
-        demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
+        demoAddress = CLitecoinAddress(CTxDestination(demoPubkey.GetID()));
         string strPurpose = "receive";
         BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
             CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
         });
 
         CPubKey setaccountDemoPubkey = pwalletMain->GenerateNewKey();
-        setaccountDemoAddress = CBitcoinAddress(CTxDestination(setaccountDemoPubkey.GetID()));
+        setaccountDemoAddress = CLitecoinAddress(CTxDestination(setaccountDemoPubkey.GetID()));
     }
     /*********************************
      * 			setaccount
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_NO_THROW(CallRPC("getaccountaddress \"\""));
     BOOST_CHECK_NO_THROW(CallRPC("getaccountaddress accountThatDoesntExists")); // Should generate a new account
     BOOST_CHECK_NO_THROW(retValue = CallRPC("getaccountaddress " + strAccount));
-    BOOST_CHECK(CBitcoinAddress(retValue.get_str()).Get() == demoAddress.Get());
+    BOOST_CHECK(CLitecoinAddress(retValue.get_str()).Get() == demoAddress.Get());
 
     /*********************************
      * 			getaccount
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_NO_THROW(retValue = CallRPC("getaddressesbyaccount " + strAccount));
     UniValue arr = retValue.get_array();
     BOOST_CHECK(arr.size() > 0);
-    BOOST_CHECK(CBitcoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
+    BOOST_CHECK(CLitecoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
 
     /*********************************
      * 	     fundrawtransaction

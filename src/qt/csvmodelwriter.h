@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2014 The Litecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CSVMODELWRITER_H
-#define BITCOIN_QT_CSVMODELWRITER_H
+#ifndef LITECOIN_QT_CSVMODELWRITER_H
+#define LITECOIN_QT_CSVMODELWRITER_H
 
 #include <QList>
 #include <QObject>
@@ -43,4 +43,4 @@ private:
     QList<Column> columns;
 };
 
-#endif // BITCOIN_QT_CSVMODELWRITER_H
+#endif // LITECOIN_QT_CSVMODELWRITER_H

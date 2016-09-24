@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016 The Litecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import LitecoinTestFramework
 from test_framework.util import *
 import time
 from test_framework.blocktools import create_block, create_coinbase
@@ -58,7 +58,7 @@ class TestNode(NodeConnCB):
         return received_pong
 
 
-class VersionBitsWarningTest(BitcoinTestFramework):
+class VersionBitsWarningTest(LitecoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
@@ -140,7 +140,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # to ACTIVE.
         self.nodes[0].generate(VB_PERIOD)
         stop_node(self.nodes[0], 0)
-        wait_bitcoinds()
+        wait_litecoinds()
         # Empty out the alert file
         with open(self.alert_filename, 'w') as f:
             pass
@@ -150,7 +150,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         assert(len(self.nodes[0].getinfo()["errors"]) != 0)
         stop_node(self.nodes[0], 0)
-        wait_bitcoinds()
+        wait_litecoinds()
         self.test_versionbits_in_alert_file()
 
         # Test framework expects the node to still be running...
