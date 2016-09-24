@@ -711,12 +711,12 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
     //      orphan cache is limited to only 5000 entries by default. Only 500MB of memory could be consumed
     //      if there were some kind of orphan memory exhaustion attack.
     //      Dropping any tx means they need to be included in the thin block when it it mined, which is inefficient.
-    //unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-    //if (sz > 5000)
-    //{
-    //    LogPrint("mempool", "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
-    //    return false;
-    //}
+    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    if (sz > MAX_STANDARD_TX_SIZE)
+    {
+        LogPrint("mempool", "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
+        return false;
+    }
     // BU - Xtreme Thinblocks - end section
 
     mapOrphanTransactions[hash].tx = tx;
