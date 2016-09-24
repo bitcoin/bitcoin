@@ -204,7 +204,7 @@ QLabel { color: rgb(40,40,40);  }</string>
             <number>10</number>
            </property>
            <item row="0" column="0">
-            <widget class="QLabel" name="labelAmoutOfBlocksLeft">
+            <widget class="QLabel" name="labelNumberOfBlocksLeft">
              <property name="font">
               <font>
                <weight>75</weight>
@@ -212,12 +212,12 @@ QLabel { color: rgb(40,40,40);  }</string>
               </font>
              </property>
              <property name="text">
-              <string>Amount of blocks left</string>
+              <string>Number of blocks left</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLabel" name="amountOfBlocksLeft">
+            <widget class="QLabel" name="numberOfBlocksLeft">
              <property name="text">
               <string>unknown...</string>
              </property>
@@ -289,7 +289,7 @@ QLabel { color: rgb(40,40,40);  }</string>
               </font>
              </property>
              <property name="text">
-              <string>Progress increase per Hour</string>
+              <string>Progress increase per hour</string>
              </property>
             </widget>
            </item>
