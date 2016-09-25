@@ -27,10 +27,9 @@ Source1:	http://download.oracle.com/berkeley-db/db-%{bdbv}.NC.tar.gz
 Source10:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/contrib/debian/examples/bitcoin.conf
 
 #man pages
-Source20:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/contrib/debian/manpages/bitcoind.1
-Source21:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/contrib/debian/manpages/bitcoin-cli.1
-Source22:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/contrib/debian/manpages/bitcoin-qt.1
-Source23:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/contrib/debian/manpages/bitcoin.conf.5
+Source20:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/doc/man/bitcoind.1
+Source21:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/doc/man/bitcoin-cli.1
+Source22:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/doc/man/bitcoin-qt.1
 
 #selinux
 Source30:	https://raw.githubusercontent.com/bitcoin/bitcoin/v%{version}/contrib/rpm/bitcoin.te
@@ -306,7 +305,6 @@ install -p %{SOURCE21} %{buildroot}%{_mandir}/man1/bitcoin-cli.1
 %if %{_buildqt}
 install -p %{SOURCE22} %{buildroot}%{_mandir}/man1/bitcoin-qt.1
 %endif
-install -D -p %{SOURCE23} %{buildroot}%{_mandir}/man5/bitcoin.conf.5
 
 # nuke these, we do extensive testing of binaries in %%check before packaging
 rm -f %{buildroot}%{_bindir}/test_*
@@ -415,7 +413,6 @@ rm -rf %{buildroot}
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/sysconfig/bitcoin
 %attr(0644,root,root) %{_datadir}/selinux/*/*.pp
 %attr(0644,root,root) %{_mandir}/man1/bitcoind.1*
-%attr(0644,root,root) %{_mandir}/man5/bitcoin.conf.5*
 
 %files utils
 %defattr(-,root,root,-)
@@ -425,7 +422,6 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %{_bindir}/bitcoin-tx
 %attr(0755,root,root) %{_bindir}/bench_bitcoin
 %attr(0644,root,root) %{_mandir}/man1/bitcoin-cli.1*
-%attr(0644,root,root) %{_mandir}/man5/bitcoin.conf.5*
 
 
 
