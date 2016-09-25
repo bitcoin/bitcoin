@@ -232,11 +232,11 @@ UniValue waitforblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblock <blockhash> (timeout)\n"
+            "waitforblock <hash> (timeout)\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
-            "1. blockhash to wait for (string)\n"
+            "1. hash (string) Block hash to wait for.\n"
             "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
             "\nResult:\n"
             "{                           (json object)\n"
@@ -858,12 +858,12 @@ UniValue gettxout(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
-            "gettxout \"txid\" n ( includemempool )\n"
+            "gettxout \"txid\" n ( include_mempool )\n"
             "\nReturns details about an unspent transaction output.\n"
             "\nArguments:\n"
             "1. \"txid\"       (string, required) The transaction id\n"
             "2. n              (numeric, required) vout number\n"
-            "3. includemempool  (boolean, optional) Whether to include the mempool\n"
+            "3. include_mempool  (boolean, optional) Whether to include the mempool\n"
             "\nResult:\n"
             "{\n"
             "  \"bestblock\" : \"hash\",    (string) the block hash\n"
@@ -940,11 +940,11 @@ UniValue verifychain(const JSONRPCRequest& request)
     int nCheckDepth = GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     if (request.fHelp || request.params.size() > 2)
         throw runtime_error(
-            "verifychain ( checklevel numblocks )\n"
+            "verifychain ( checklevel nblocks )\n"
             "\nVerifies blockchain database.\n"
             "\nArguments:\n"
             "1. checklevel   (numeric, optional, 0-4, default=" + strprintf("%d", nCheckLevel) + ") How thorough the block verification is.\n"
-            "2. numblocks    (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
+            "2. nblocks      (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
             "\nResult:\n"
             "true|false       (boolean) Verified or not\n"
             "\nExamples:\n"
@@ -1367,33 +1367,33 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },
-    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true  },
-    { "blockchain",         "getblockcount",          &getblockcount,          true  },
-    { "blockchain",         "getblock",               &getblock,               true  },
-    { "blockchain",         "getblockhash",           &getblockhash,           true  },
-    { "blockchain",         "getblockheader",         &getblockheader,         true  },
-    { "blockchain",         "getchaintips",           &getchaintips,           true  },
-    { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
-    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true  },
-    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true  },
-    { "blockchain",         "getmempoolentry",        &getmempoolentry,        true  },
-    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
-    { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
-    { "blockchain",         "gettxout",               &gettxout,               true  },
-    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
-    { "blockchain",         "verifychain",            &verifychain,            true  },
+{ //  category              name                      actor (function)         okSafe argNames
+  //  --------------------- ------------------------  -----------------------  ------ ----------
+    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true,  {} },
+    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,  {} },
+    { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
+    { "blockchain",         "getblock",               &getblock,               true,  {"hash","verbose"} },
+    { "blockchain",         "getblockhash",           &getblockhash,           true,  {"index"} },
+    { "blockchain",         "getblockheader",         &getblockheader,         true,  {"hash","verbose"} },
+    { "blockchain",         "getchaintips",           &getchaintips,           true,  {} },
+    { "blockchain",         "getdifficulty",          &getdifficulty,          true,  {} },
+    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true,  {"txid","verbose"} },
+    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true,  {"txid","verbose"} },
+    { "blockchain",         "getmempoolentry",        &getmempoolentry,        true,  {"txid"} },
+    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true,  {} },
+    { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
+    { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
+    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
+    { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
 
-    { "blockchain",         "preciousblock",          &preciousblock,          true  },
+    { "blockchain",         "preciousblock",          &preciousblock,          true,  {"hash"} },
 
     /* Not shown in help */
-    { "hidden",             "invalidateblock",        &invalidateblock,        true  },
-    { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },
-    { "hidden",             "waitfornewblock",        &waitfornewblock,        true  },
-    { "hidden",             "waitforblock",           &waitforblock,           true  },
-    { "hidden",             "waitforblockheight",     &waitforblockheight,     true  },
+    { "hidden",             "invalidateblock",        &invalidateblock,        true,  {"hash"} },
+    { "hidden",             "reconsiderblock",        &reconsiderblock,        true,  {"hash"} },
+    { "hidden",             "waitfornewblock",        &waitfornewblock,        true,  {"timeout"} },
+    { "hidden",             "waitforblock",           &waitforblock,           true,  {"hash","timeout"} },
+    { "hidden",             "waitforblockheight",     &waitforblockheight,     true,  {"height","timeout"} },
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
