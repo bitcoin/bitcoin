@@ -546,6 +546,18 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
+def assert_raises_jsonrpc(code, fun, *args, **kwds):
+    '''Check for specific JSONRPC exception code'''
+    try:
+        fun(*args, **kwds)
+    except JSONRPCException as e:
+        if e.error["code"] != code:
+            raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
+    except Exception as e:
+        raise AssertionError("Unexpected exception raised: "+type(e).__name__)
+    else:
+        raise AssertionError("No exception raised")
+
 def assert_is_hex_string(string):
     try:
         int(string, 16)
