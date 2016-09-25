@@ -9,6 +9,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "compat.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "noui.h"
@@ -133,10 +134,18 @@ bool AppInit(int argc, char* argv[])
             fprintf(stdout, "Bitcoin server starting\n");
 
             // Daemonize
+#  if HAVE_DECL_DAEMON
+            // daemon(3) basically does exactly what follows in the else block,
+            // but it's best to use library functions where they're available
+            if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
+                fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
+                return false;
+            }
+#  else
             pid_t pid = fork();
             if (pid < 0)
             {
-                fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+                fprintf(stderr, "Error: fork() failed: %s\n", strerror(errno));
                 return false;
             }
             if (pid > 0) // Parent process, pid is child process id
@@ -147,9 +156,18 @@ bool AppInit(int argc, char* argv[])
 
             pid_t sid = setsid();
             if (sid < 0)
-                fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+                fprintf(stderr, "Error: setsid() failed: %s\n", strerror(errno));
+
+            int fd = open(_PATH_DEVNULL, O_RDWR, 0);
+            (void)dup2(fd, STDIN_FILENO);
+            (void)dup2(fd, STDOUT_FILENO);
+            (void)dup2(fd, STDERR_FILENO);
+            if (fd > 2)
+                (void)close(fd);
+
+#  endif // HAVE_DECL_DAEMON
         }
-#endif
+#endif // WIN32
         SoftSetBoolArg("-server", true);
 
         // Set this early so that parameter interactions go to console
