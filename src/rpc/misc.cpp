@@ -492,6 +492,17 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
     return obj;
 }
 
+UniValue echo(const JSONRPCRequest& request)
+{
+    if (request.fHelp)
+        throw runtime_error(
+            "echo \"message\" ...\n"
+            "\nSimply echo back the input arguments\n"
+        );
+
+    return request.params;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -504,6 +515,7 @@ static const CRPCCommand commands[] =
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true  },
+    { "hidden",             "echo",                   &echo,                   true, {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)
