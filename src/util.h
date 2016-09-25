@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <boost/filesystem/path.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
 

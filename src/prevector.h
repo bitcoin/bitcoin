@@ -49,6 +49,7 @@ public:
         typedef T* pointer;
         typedef T& reference;
         typedef std::random_access_iterator_tag iterator_category;
+        iterator() : ptr(nullptr) {}
         iterator(T* ptr_) : ptr(ptr_) {}
         T& operator*() const { return *ptr; }
         T* operator->() const { return ptr; }
@@ -79,6 +80,7 @@ public:
         typedef T* pointer;
         typedef T& reference;
         typedef std::bidirectional_iterator_tag iterator_category;
+        reverse_iterator() : ptr(nullptr) {}
         reverse_iterator(T* ptr_) : ptr(ptr_) {}
         T& operator*() { return *ptr; }
         const T& operator*() const { return *ptr; }
@@ -100,6 +102,7 @@ public:
         typedef const T* pointer;
         typedef const T& reference;
         typedef std::random_access_iterator_tag iterator_category;
+        const_iterator() : ptr(nullptr) {}
         const_iterator(const T* ptr_) : ptr(ptr_) {}
         const_iterator(iterator x) : ptr(&(*x)) {}
         const T& operator*() const { return *ptr; }
@@ -130,6 +133,7 @@ public:
         typedef const T* pointer;
         typedef const T& reference;
         typedef std::bidirectional_iterator_tag iterator_category;
+        const_reverse_iterator() : ptr(nullptr) {}
         const_reverse_iterator(T* ptr_) : ptr(ptr_) {}
         const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
         const T& operator*() const { return *ptr; }
