@@ -407,7 +407,7 @@ void CRequestManager::SendRequests()
   // those blocks and txns can take much longer to download.
   unsigned int blkReqRetryInterval = MIN_BLK_REQUEST_RETRY_INTERVAL;
   unsigned int txReqRetryInterval = MIN_TX_REQUEST_RETRY_INTERVAL;
-  if (!IsChainNearlySyncd() || IsTrafficShapingEnabled()) 
+ if ((!IsChainNearlySyncd() && Params().NetworkIDString() != "regtest") || IsTrafficShapingEnabled()) 
     {
       blkReqRetryInterval *= 6;
       txReqRetryInterval *= (12*2);  // we want to optimise block DL during IBD (and give lots of time for shaped nodes) so push the TX retry up to 2 minutes (default val of MIN_TX is 5 sec)
