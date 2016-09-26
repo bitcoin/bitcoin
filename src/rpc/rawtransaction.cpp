@@ -90,6 +90,18 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
                     txinwitness.push_back(HexStr(item.begin(), item.end()));
                 }
                 in.push_back(Pair("txinwitness", txinwitness));
+                // try to parse the last item as a pubkey
+                // In version 0, there are two valid witness types: P2WPKH and P2WSH.
+                // P2WPKH witnesses have two items on the witness stack, the second of which is a public key.
+                // We test whether the last item on the witness stack is a valid public key, and if it isn't we try to parse it as a redeem script.
+                // if someone constructed the redeem script to look like a pubkey, then he's insane
+                CPubKey pubkey(tx.wit.vtxinwit[i].scriptWitness.stack.back().begin(), tx.wit.vtxinwit[i].scriptWitness.stack.back().end());
+                if (!pubkey.IsFullyValid()) {
+                  CScript redeemScript(tx.wit.vtxinwit[i].scriptWitness.stack.back().begin(), tx.wit.vtxinwit[i].scriptWitness.stack.back().end());
+                  UniValue r(UniValue::VOBJ);
+                  ScriptPubKeyToJSON(redeemScript, r, true);
+                  in.push_back(Pair("redeemScript", r));
+                }
             }
 
         }
