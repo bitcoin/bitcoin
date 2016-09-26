@@ -292,29 +292,29 @@ template<typename Stream, typename Operation, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, int nType, int nVersion) {
     const bool fAllowWitness = !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS);
 
-    READWRITE(*const_cast<int32_t*>(&tx.nVersion));
+    READWRITE(tx.nVersion);
     unsigned char flags = 0;
     if (ser_action.ForRead()) {
-        const_cast<std::vector<CTxIn>*>(&tx.vin)->clear();
-        const_cast<std::vector<CTxOut>*>(&tx.vout)->clear();
-        const_cast<CTxWitness*>(&tx.wit)->SetNull();
+        tx.vin.clear();
+        tx.vout.clear();
+        tx.wit.SetNull();
         /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-        READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
+        READWRITE(tx.vin);
         if (tx.vin.size() == 0 && fAllowWitness) {
             /* We read a dummy or an empty vin. */
             READWRITE(flags);
             if (flags != 0) {
-                READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-                READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
+                READWRITE(tx.vin);
+                READWRITE(tx.vout);
             }
         } else {
             /* We read a non-empty vin. Assume a normal vout follows. */
-            READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
+            READWRITE(tx.vout);
         }
         if ((flags & 1) && fAllowWitness) {
             /* The witness flag is present, and we support witnesses. */
             flags ^= 1;
-            const_cast<CTxWitness*>(&tx.wit)->vtxinwit.resize(tx.vin.size());
+            tx.wit.vtxinwit.resize(tx.vin.size());
             READWRITE(tx.wit);
         }
         if (flags) {
@@ -336,24 +336,27 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
             READWRITE(vinDummy);
             READWRITE(flags);
         }
-        READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-        READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
+        READWRITE(tx.vin);
+        READWRITE(tx.vout);
         if (flags & 1) {
-            const_cast<CTxWitness*>(&tx.wit)->vtxinwit.resize(tx.vin.size());
+            tx.wit.vtxinwit.resize(tx.vin.size());
             READWRITE(tx.wit);
         }
     }
-    READWRITE(*const_cast<uint32_t*>(&tx.nLockTime));
+    READWRITE(tx.nLockTime);
 }
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
+ *
+ * This version has a cached hash value, and requires calling UpdateHash
+ * after any modifications are made.
  */
 class CTransaction
 {
 private:
     /** Memory only. */
-    const uint256 hash;
+    uint256 hash;
 
 public:
     // Default transaction version.
@@ -365,16 +368,14 @@ public:
     // MAX_STANDARD_VERSION will be equal.
     static const int32_t MAX_STANDARD_VERSION=2;
 
-    // The local variables are made const to prevent unintended modification
-    // without updating the cached hash value. However, CTransaction is not
-    // actually immutable; deserialization and assignment are implemented,
-    // and bypass the constness. This is safe, as they update the entire
-    // structure, including the hash.
-    const int32_t nVersion;
-    const std::vector<CTxIn> vin;
-    const std::vector<CTxOut> vout;
-    CTxWitness wit; // Not const: can change without invalidating the txid cache
-    const uint32_t nLockTime;
+    // Modification of any of the fields below (except wit) requires a call to
+    // UpdateHash() before further use. Consider using CMutableTransaction
+    // instead if frequent modification is needed.
+    int32_t nVersion;
+    std::vector<CTxIn> vin;
+    std::vector<CTxOut> vout;
+    CTxWitness wit;
+    uint32_t nLockTime;
 
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
@@ -440,10 +441,10 @@ public:
 
     std::string ToString() const;
 
-    void UpdateHash() const;
+    void UpdateHash();
 };
 
-/** A mutable version of CTransaction. */
+/** A version of CTransaction without cached hash. */
 struct CMutableTransaction
 {
     int32_t nVersion;
