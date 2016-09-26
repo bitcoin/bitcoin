@@ -1337,6 +1337,9 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (memcmp(hashScriptPubKey.begin(), &program[0], 32)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
+            if ((flags & SCRIPT_VERIFY_DISCOURAGE_BIG_P2WSH) && witness.stack.back().size() > 3600) {
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_BIG_P2WSH); // Policy limit for witnessScript size
+            }
         } else if (program.size() == 20) {
             // Special case for pay-to-pubkeyhash; signature + pubkey in witness
             if (witness.stack.size() != 2) {
@@ -1352,6 +1355,16 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     } else {
         // Higher version witness scripts return true for future softfork compatibility
         return set_success(serror);
+    }
+
+    // Policy limit for stack size and stack element size
+    if (flags & SCRIPT_VERIFY_DISCOURAGE_BIG_P2WSH) {
+        if (stack.size() > 100)
+            return set_error(serror, SCRIPT_ERR_DISCOURAGE_BIG_P2WSH);
+        for (unsigned int i = 0; i < stack.size(); i++) {
+            if (stack.at(i).size() > 80)
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_BIG_P2WSH);
+        }
     }
 
     // Disallow stack item size > MAX_SCRIPT_ELEMENT_SIZE in witness stack

@@ -61,6 +61,9 @@ typedef enum ScriptError_t
     SCRIPT_ERR_WITNESS_MALLEATED_P2SH,
     SCRIPT_ERR_WITNESS_UNEXPECTED,
 
+    /* resources policy */
+    SCRIPT_ERR_DISCOURAGE_BIG_P2WSH,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 
