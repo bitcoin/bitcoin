@@ -95,6 +95,14 @@ map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
 
+// BU: start block download at low numbers in case our peers are slow when we start  
+/** Number of blocks that can be requested at any given time from a single peer. */
+static unsigned int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;       
+/** Size of the "block download window": how far ahead of our current height do we fetch?
+ *  Larger windows tolerate larger download speed differences between peer, but increase the potential
+ *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
+ *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
+static unsigned int BLOCK_DOWNLOAD_WINDOW = 8;
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -5518,7 +5526,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 vector<CInv> vGetData;
                 // Download as much as possible, from earliest to latest.
                 BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch) {
-                    if (nodestate->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+                    if (nodestate->nBlocksInFlight >= (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                         // Can't download any more from this peer
                         break;
                     }
@@ -6625,7 +6633,7 @@ bool SendMessages(CNode* pto)
         // Message: getdata (blocks)
         //
         vector<CInv> vGetData;
-        if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < (int)MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             vector<CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
