@@ -882,7 +882,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
         tmp = txtmp.vout[outIdx]
         txtmp.vout = []
         for i in range(outIdx):
-            txtmp.vout.append(CTxOut())
+            txtmp.vout.append(CTxOut(-1))
         txtmp.vout.append(tmp)
 
         for i in range(len(txtmp.vin)):

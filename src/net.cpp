@@ -499,7 +499,7 @@ void CNode::PushVersion()
 
     int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0", 0), addr.nServices));
-    CAddress addrMe = GetLocalAddress(&addr);
+    CAddress addrMe = CAddress(CService(), nLocalServices);
     GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
     if (fLogIPs)
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
@@ -1707,7 +1707,7 @@ void ThreadOpenConnections()
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
-            // only consider nodes missing relevant services after 40 failed attemps
+            // only consider nodes missing relevant services after 40 failed attempts
             if ((addr.nServices & nRelevantServices) != nRelevantServices && nTries < 40)
                 continue;
 
@@ -2091,6 +2091,8 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         CNode::SetBannedSetDirty(true); // force write
         DumpBanlist();
     }
+
+    uiInterface.InitMessage(_("Starting network threads..."));
 
     fAddressesInitialized = true;
 
