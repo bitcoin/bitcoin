@@ -13,7 +13,8 @@
 ModalOverlay::ModalOverlay(QWidget *parent) :
 QWidget(parent),
 ui(new Ui::ModalOverlay),
-bestBlockHeight(0),
+bestHeaderHeight(0),
+bestHeaderDate(QDateTime()),
 layerIsVisible(false),
 userClosed(false)
 {
@@ -65,14 +66,9 @@ bool ModalOverlay::event(QEvent* ev) {
 
 void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
 {
-
-    /* only update the blockheight if the headerschain-tip is not older then 30 days */
-    int64_t now = QDateTime::currentDateTime().toTime_t();
-    int64_t btime = blockDate.toTime_t();
-    if (btime+3600*24*30 > now)
-    {
-        if (count > bestBlockHeight)
-            bestBlockHeight = count;
+    if (count > bestHeaderHeight) {
+        bestHeaderHeight = count;
+        bestHeaderDate = blockDate;
     }
 }
 
@@ -125,11 +121,22 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     ui->percentageProgress->setText(QString::number(nVerificationProgress*100, 'f', 2)+"%");
     ui->progressBar->setValue(nVerificationProgress*100);
 
+    if (!bestHeaderDate.isValid())
+        // not syncing
+        return;
+
+    // estimate the number of headers left based on nPowTargetSpacing
+    // and check if the gui is not aware of the the best header (happens rarely)
+    int estimateNumHeadersLeft = bestHeaderDate.secsTo(currentDate) / 600;
+    bool hasBestHeader = bestHeaderHeight >= count;
+
     // show remaining number of blocks
-    if (bestBlockHeight > 0)
-        ui->numberOfBlocksLeft->setText(QString::number(bestBlockHeight-count));
-    else
+    if (estimateNumHeadersLeft < 24 && hasBestHeader) {
+        ui->numberOfBlocksLeft->setText(QString::number(bestHeaderHeight - count));
+    } else {
+        ui->numberOfBlocksLeft->setText("~" + QString::number(bestHeaderHeight + estimateNumHeadersLeft - count));
         ui->expectedTimeLeft->setText(tr("Unknown. Syncing Headers..."));
+    }
 }
 
 void ModalOverlay::showHide(bool hide, bool userRequested)
