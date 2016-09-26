@@ -90,6 +90,15 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
                     txinwitness.push_back(HexStr(item.begin(), item.end()));
                 }
                 in.push_back(Pair("txinwitness", txinwitness));
+                // try to parse the last item as a pubkey
+                // if someone constructed the script to look like a pubkey, then he's insane
+                CPubKey pubkey(tx.wit.vtxinwit[i].scriptWitness.stack.back().begin(), tx.wit.vtxinwit[i].scriptWitness.stack.back().end());
+                if (!pubkey.IsFullyValid()) {
+                  CScript redeemScript(tx.wit.vtxinwit[i].scriptWitness.stack.back().begin(), tx.wit.vtxinwit[i].scriptWitness.stack.back().end());
+                  UniValue r(UniValue::VOBJ);
+                  ScriptPubKeyToJSON(redeemScript, r, true);
+                  in.push_back(Pair("redeemScript", r));
+                }
             }
 
         }
