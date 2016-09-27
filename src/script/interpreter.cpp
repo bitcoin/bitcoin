@@ -877,6 +877,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     }
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
+                    if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
+                        return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+
                     popstack(stack);
                     popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
@@ -906,6 +909,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     if (nOpCount > MAX_OPS_PER_SCRIPT)
                         return set_error(serror, SCRIPT_ERR_OP_COUNT);
                     int ikey = ++i;
+                    // ikey2 is the position of last non-signature item in the stack. Top stack item = 1.
+                    // With SCRIPT_VERIFY_NULLFAIL, this is used for cleanup if operation fails.
+                    int ikey2 = nKeysCount + 2;
                     i += nKeysCount;
                     if ((int)stack.size() < i)
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
@@ -960,8 +966,14 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     }
 
                     // Clean up stack of actual arguments
-                    while (i-- > 1)
+                    while (i-- > 1) {
+                        // If the operation failed, we require that all signatures must be empty vector
+                        if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && !ikey2 && stacktop(-1).size())
+                            return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
+                        if (ikey2 > 0)
+                            ikey2--;
                         popstack(stack);
+                    }
 
                     // A bug causes CHECKMULTISIG to consume one extra argument
                     // whose contents were not checked in any way.
