@@ -29,15 +29,14 @@ bool CMasternodeSync::IsBlockchainSynced()
     lastProcess = GetTime();
 
     if(fBlockchainSynced) return true;
+    if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
 
-    if (fImporting || fReindex) return false;
+    // same as !IsInitialBlockDownload() but no cs_main needed here
+    int nMaxBlockTime = std::max(pCurrentBlockIndex->GetBlockTime(), pindexBestHeader->GetBlockTime());
+    fBlockchainSynced = pindexBestHeader->nHeight - pCurrentBlockIndex->nHeight < 24 * 6 &&
+                        GetTime() - nMaxBlockTime < Params().MaxTipAge();
 
-    if(!pCurrentBlockIndex) return false;
-    if(pCurrentBlockIndex->nTime + 60*60 < GetTime()) return false;
-
-    fBlockchainSynced = true;
-
-    return true;
+    return fBlockchainSynced;
 }
 
 void CMasternodeSync::Fail()
