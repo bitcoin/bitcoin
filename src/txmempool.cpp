@@ -1258,8 +1258,8 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         std::vector<CTransaction> txn;
         if (pvNoSpendsRemaining) {
             txn.reserve(stage.size());
-            BOOST_FOREACH(txiter it, stage)
-                txn.push_back(it->GetTx());
+            BOOST_FOREACH(txiter iter, stage)
+                txn.push_back(iter->GetTx());
         }
         RemoveStaged(stage, false);
         if (pvNoSpendsRemaining) {
