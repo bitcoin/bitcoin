@@ -78,17 +78,16 @@ void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
 
 void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress)
 {
-    QDateTime currentDate = QDateTime::currentDateTime();
+    qint64 currentMSecs = QDateTime::currentMSecsSinceEpoch();
 
     // keep a vector of samples of verification progress at height
-    blockProcessTime.push_front(qMakePair(currentDate.currentMSecsSinceEpoch(), nVerificationProgress));
+    blockProcessTime.push_front(qMakePair(currentMSecs, nVerificationProgress));
 
     // show progress speed if we have more then one sample
     if (blockProcessTime.size() >= 2)
     {
         double progressStart = blockProcessTime[0].second;
         double progressDelta = 0;
-        double progressPerHour = 0;
         qint64 timeDelta = 0;
         qint64 remainingMSecs = 0;
         double remainingProgress = 1.0 - nVerificationProgress;
@@ -97,22 +96,17 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
             QPair<qint64, double> sample = blockProcessTime[i];
 
             // take first sample after 500 seconds or last available one
-            if (sample.first < (currentDate.currentMSecsSinceEpoch() - 500*1000) || i == blockProcessTime.size()-1)
+            if (sample.first < (currentMSecs - 500 * 1000) || i == blockProcessTime.size() - 1)
             {
                 progressDelta = progressStart-sample.second;
                 timeDelta = blockProcessTime[0].first - sample.first;
-                progressPerHour = progressDelta/(double)timeDelta*1000*3600;
                 remainingMSecs = remainingProgress / progressDelta * timeDelta;
                 break;
             }
         }
-        // show progress increase per hour
-        ui->progressIncreasePerH->setText(QString::number(progressPerHour*100, 'f', 2)+"%");
-
         // show expected remaining time
         ui->expectedTimeLeft->setText(GUIUtil::formateNiceTimeOffset(remainingMSecs/1000.0));
 
-        // keep maximal 5000 samples
         static const int MAX_SAMPLES = 5000;
         if (blockProcessTime.count() > MAX_SAMPLES)
             blockProcessTime.remove(MAX_SAMPLES, blockProcessTime.count()-MAX_SAMPLES);
@@ -126,10 +120,13 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     ui->progressBar->setValue(nVerificationProgress*100);
 
     // show remaining number of blocks
-    if (bestBlockHeight > 0)
-        ui->numberOfBlocksLeft->setText(QString::number(bestBlockHeight-count));
-    else
+    if (bestBlockHeight > 0) {
+        ui->numberOfBlocksLeft->setText(QString::number(bestBlockHeight - count));
+    } else {
+        // estimate based on nPowTargetSpacing
+        ui->numberOfBlocksLeft->setText("~" + QString::number((currentMSecs - blockDate.toMSecsSinceEpoch()) / 1000 / 600));
         ui->expectedTimeLeft->setText(tr("Unknown. Syncing Headers..."));
+    }
 }
 
 void ModalOverlay::showHide(bool hide, bool userRequested)
