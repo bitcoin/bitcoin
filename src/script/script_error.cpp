@@ -63,6 +63,8 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Non-canonical signature: S value is unnecessarily high";
         case SCRIPT_ERR_SIG_NULLDUMMY:
             return "Dummy CHECKMULTISIG argument must be zero";
+        case SCRIPT_ERR_MINIMALIF:
+            return "OP_IF/NOTIF argument must be minimal";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS:
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM:
