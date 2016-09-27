@@ -9,6 +9,7 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "netfulfilledman.h"
 #include "spork.h"
 #include "util.h"
 
@@ -293,15 +294,14 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
         int nCountNeeded;
         vRecv >> nCountNeeded;
 
-        if(Params().NetworkIDString() == CBaseChainParams::MAIN){
-            if(pfrom->HasFulfilledRequest(NetMsgType::MASTERNODEPAYMENTSYNC)) {
-                LogPrintf("MASTERNODEPAYMENTSYNC -- peer already asked me for the list, peer=%d\n", pfrom->id);
-                Misbehaving(pfrom->GetId(), 20);
-                return;
-            }
+        if(netfulfilledman.HasFulfilledRequest(pfrom->addr, NetMsgType::MASTERNODEPAYMENTSYNC)) {
+            // Asking for the payments list multiple times in a short period of time is no good
+            LogPrintf("MASTERNODEPAYMENTSYNC -- peer already asked me for the list, peer=%d\n", pfrom->id);
+            Misbehaving(pfrom->GetId(), 20);
+            return;
         }
+        netfulfilledman.AddFulfilledRequest(pfrom->addr, NetMsgType::MASTERNODEPAYMENTSYNC);
 
-        pfrom->FulfilledRequest(NetMsgType::MASTERNODEPAYMENTSYNC);
         Sync(pfrom, nCountNeeded);
         LogPrintf("MASTERNODEPAYMENTSYNC -- Sent Masternode payment votes to peer %d\n", pfrom->id);
 

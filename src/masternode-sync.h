@@ -54,7 +54,7 @@ private:
     const CBlockIndex *pCurrentBlockIndex;
 
     void Fail();
-    void ClearFulfilledRequest();
+    void ClearFulfilledRequests();
 
 public:
     CMasternodeSync() { Reset(); }

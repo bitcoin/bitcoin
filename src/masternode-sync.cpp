@@ -9,6 +9,7 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "netfulfilledman.h"
 #include "spork.h"
 #include "util.h"
 
@@ -80,7 +81,7 @@ void CMasternodeSync::SwitchToNextAsset()
             throw std::runtime_error("Can't switch to next asset from failed, should use Reset() first!");
             break;
         case(MASTERNODE_SYNC_INITIAL):
-            ClearFulfilledRequest();
+            ClearFulfilledRequests();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
@@ -101,6 +102,14 @@ void CMasternodeSync::SwitchToNextAsset()
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
             //try to activate our masternode if possible
             activeMasternode.ManageState();
+
+            TRY_LOCK(cs_vNodes, lockRecv);
+            if(!lockRecv) return;
+
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
+            }
+
             break;
     }
     nRequestedMasternodeAttempt = 0;
@@ -136,17 +145,18 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
     }
 }
 
-void CMasternodeSync::ClearFulfilledRequest()
+void CMasternodeSync::ClearFulfilledRequests()
 {
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        pnode->ClearFulfilledRequest("spork-sync");
-        pnode->ClearFulfilledRequest("masternode-payment-sync");
-        pnode->ClearFulfilledRequest("governance-sync");
-        pnode->ClearFulfilledRequest("masternode-sync");
+        netfulfilledman.RemoveFulfilledRequest(pnode->addr, "spork-sync");
+        netfulfilledman.RemoveFulfilledRequest(pnode->addr, "masternode-list-sync");
+        netfulfilledman.RemoveFulfilledRequest(pnode->addr, "masternode-payment-sync");
+        netfulfilledman.RemoveFulfilledRequest(pnode->addr, "governance-sync");
+        netfulfilledman.RemoveFulfilledRequest(pnode->addr, "full-sync");
     }
 }
 
@@ -221,12 +231,19 @@ void CMasternodeSync::ProcessTick()
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
+            if(netfulfilledman.HasFulfilledRequest(pnode->addr, "full-sync")) {
+                // we already fully synced from this node recently,
+                // disconnect to free this connection slot for a new node
+                pnode->fDisconnect = true;
+                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced node %d\n", pnode->id);
+                continue;
+            }
+
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
 
-            if(!pnode->HasFulfilledRequest("spork-sync")) {
+            if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "spork-sync")) {
                 // only request once from each peer
-                pnode->FulfilledRequest("spork-sync");
-
+                netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
                 pnode->PushMessage(NetMsgType::GETSPORKS);
 
@@ -258,14 +275,14 @@ void CMasternodeSync::ProcessTick()
                    Surely doesn't work right for testnet currently */
                 // try to fetch data from at least two peers though
                 if(nRequestedMasternodeAttempt > 1 && nMnCount > mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9) {
-                    LogPrintf("CMasternodeSync::Process -- nTick %d nRequestedMasternodeAssets %d -- found enough data\n", nTick, nRequestedMasternodeAssets);
+                    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- found enough data\n", nTick, nRequestedMasternodeAssets);
                     SwitchToNextAsset();
                     return;
                 }
 
                 // only request once from each peer
-                if(pnode->HasFulfilledRequest("masternode-sync")) continue;
-                pnode->FulfilledRequest("masternode-sync");
+                if(netfulfilledman.HasFulfilledRequest(pnode->addr, "masternode-list-sync")) continue;
+                netfulfilledman.AddFulfilledRequest(pnode->addr, "masternode-list-sync");
 
                 if (pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 nRequestedMasternodeAttempt++;
@@ -303,8 +320,8 @@ void CMasternodeSync::ProcessTick()
                 }
 
                 // only request once from each peer
-                if(pnode->HasFulfilledRequest("masternode-payment-sync")) continue;
-                pnode->FulfilledRequest("masternode-payment-sync");
+                if(netfulfilledman.HasFulfilledRequest(pnode->addr, "masternode-payment-sync")) continue;
+                netfulfilledman.AddFulfilledRequest(pnode->addr, "masternode-payment-sync");
 
                 if(pnode->nVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
                 nRequestedMasternodeAttempt++;
@@ -345,8 +362,8 @@ void CMasternodeSync::ProcessTick()
                 // }
 
                 // only request once from each peer
-                if(pnode->HasFulfilledRequest("governance-sync")) continue;
-                pnode->FulfilledRequest("governance-sync");
+                if(netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) continue;
+                netfulfilledman.AddFulfilledRequest(pnode->addr, "governance-sync");
 
                 if (pnode->nVersion < MSG_GOVERNANCE_PEER_PROTO_VERSION) continue;
                 nRequestedMasternodeAttempt++;

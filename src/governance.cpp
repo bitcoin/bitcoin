@@ -15,6 +15,7 @@
 #include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"
+#include "netfulfilledman.h"
 #include "util.h"
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
@@ -110,18 +111,14 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         uint256 nProp;
         vRecv >> nProp;
 
-        // IF THE NETWORK IS MAIN, MAKE SURE THEY HAVEN'T ASKED US BEFORE
-
-        if(Params().NetworkIDString() == CBaseChainParams::MAIN){
-            if(nProp == uint256()) {
-                if(pfrom->HasFulfilledRequest(NetMsgType::MNGOVERNANCESYNC)) {
-                    LogPrint("gobject", "peer already asked me for the list\n");
-                    // BAD PEER! BAD!
-                    Misbehaving(pfrom->GetId(), 20);
-                    return;
-                }
-                pfrom->FulfilledRequest(NetMsgType::MNGOVERNANCESYNC);
+        if(nProp == uint256()) {
+            if(netfulfilledman.HasFulfilledRequest(pfrom->addr, NetMsgType::MNGOVERNANCESYNC)) {
+                // Asking for the whole list multiple times in a short period of time is no good
+                LogPrint("gobject", "peer already asked me for the list\n");
+                Misbehaving(pfrom->GetId(), 20);
+                return;
             }
+            netfulfilledman.AddFulfilledRequest(pfrom->addr, NetMsgType::MNGOVERNANCESYNC);
         }
 
         Sync(pfrom, nProp);
