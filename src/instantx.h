@@ -29,7 +29,7 @@ static const int INSTANTSEND_SIGNATURES_TOTAL       = 10;
 static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
 
 static const int MIN_INSTANTSEND_PROTO_VERSION      = 70201;
-static const CAmount INSTANTSEND_MIN_FEE            = 1 * CENT;
+static const CAmount INSTANTSEND_MIN_FEE            = 0.1 * CENT;
 
 extern bool fEnableInstantSend;
 extern int nInstantSendDepth;

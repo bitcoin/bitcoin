@@ -38,8 +38,8 @@ static const int PRIVATESEND_SIGNING_TIMEOUT        = 15;
 //! minimum peer version accepted by DarksendPool
 static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70201;
 
-static const CAmount PRIVATESEND_COLLATERAL         = 0.01 * COIN;
-static const CAmount PRIVATESEND_POOL_MAX           = 999.99 * COIN;
+static const CAmount PRIVATESEND_COLLATERAL         = 0.001 * COIN;
+static const CAmount PRIVATESEND_POOL_MAX           = 999.999 * COIN;
 static const int DENOMS_COUNT_MAX                   = 100;
 
 static const int DEFAULT_PRIVATESEND_ROUNDS         = 2;
