@@ -23,6 +23,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "netfulfilledman.h"
 #include "policy/policy.h"
 #include "rpcserver.h"
 #include "script/standard.h"
@@ -224,6 +225,8 @@ void PrepareShutdown()
     flatdb2.Dump(mnpayments);
     CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
     flatdb3.Dump(governance);
+    CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
+    flatdb4.Dump(netfulfilledman);
 
     UnregisterNodeSignals(GetNodeSignals());
 
@@ -1870,6 +1873,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
     flatdb3.Load(governance);
     governance.ClearSeen();
+
+    uiInterface.InitMessage(_("Loading fullfiled requests cache..."));
+    CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
+    flatdb4.Load(netfulfilledman);
 
     // ********************************************************* Step 11c: update block tip in Dash modules
 
