@@ -65,6 +65,8 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Dummy CHECKMULTISIG argument must be zero";
         case SCRIPT_ERR_MINIMALIF:
             return "OP_IF/NOTIF argument must be minimal";
+        case SCRIPT_ERR_SIG_NULLFAIL:
+            return "Signature must be zero for failed CHECK(MULTI)SIG operation";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS:
             return "NOPx reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM:
