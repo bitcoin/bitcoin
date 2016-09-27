@@ -276,6 +276,9 @@ QLabel { color: rgb(40,40,40);  }</string>
                <property name="value">
                 <number>24</number>
                </property>
+               <property name="format">
+                <string/>
+               </property>
               </widget>
              </item>
             </layout>
