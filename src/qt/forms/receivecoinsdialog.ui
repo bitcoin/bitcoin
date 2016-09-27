@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>776</width>
-    <height>364</height>
+    <height>387</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
@@ -127,7 +127,7 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="2">
+        <item row="9" column="2">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QPushButton" name="receiveButton">
@@ -176,10 +176,20 @@
           </item>
          </layout>
         </item>
-        <item row="8" column="0">
+        <item row="9" column="0">
          <widget class="QLabel" name="label_7">
           <property name="text">
            <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="2">
+         <widget class="QCheckBox" name="checkUseInstantSend">
+          <property name="text">
+           <string>Request InstantSend</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
