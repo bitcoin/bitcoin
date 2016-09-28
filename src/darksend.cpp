@@ -1556,6 +1556,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- dsq masternode is not in masternode list! vin=%s\n", dsq.vin.ToString());
                 continue;
             }
+            vecMasternodesUsed.push_back(dsq.vin);
 
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- attempt to connect to masternode from queue, addr=%s\n", pmn->addr.ToString());
             nLastTimeChanged = GetTimeMillis();
@@ -1563,7 +1564,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             CNode* pnode = ConnectNode((CAddress)addr, NULL, true);
             if(pnode != NULL) {
                 pSubmittedToMasternode = pmn;
-                vecMasternodesUsed.push_back(dsq.vin);
                 nSessionDenom = dsq.nDenom;
 
                 pnode->PushMessage(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
@@ -1593,6 +1593,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             strAutoDenomResult = _("Can't find random Masternode.");
             return false;
         }
+        vecMasternodesUsed.push_back(pmn->vin);
 
         if(pmn->nLastDsq != 0 && pmn->nLastDsq + mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount) {
             nTries++;
@@ -1605,7 +1606,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         if(pnode != NULL) {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected %s\n", pmn->vin.ToString());
             pSubmittedToMasternode = pmn;
-            vecMasternodesUsed.push_back(pmn->vin);
 
             std::vector<CAmount> vecAmounts;
             pwalletMain->ConvertList(vecTxIn, vecAmounts);
@@ -1620,7 +1620,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             return true;
         } else {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect %s\n", pmn->vin.ToString());
-            vecMasternodesUsed.push_back(pmn->vin); // postpone MN we wasn't able to connect to
             nTries++;
             continue;
         }
