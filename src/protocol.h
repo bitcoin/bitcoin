@@ -52,8 +52,8 @@ public:
 public:
     enum {
         COMMAND_SIZE = 12,
-        MESSAGE_SIZE_SIZE = sizeof(int),
-        CHECKSUM_SIZE = sizeof(int),
+        MESSAGE_SIZE_SIZE = 4,
+        CHECKSUM_SIZE = 4,
 
         MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE,
         CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE,
@@ -61,7 +61,7 @@ public:
     };
     char pchMessageStart[MESSAGE_START_SIZE];
     char pchCommand[COMMAND_SIZE];
-    unsigned int nMessageSize;
+    uint32_t nMessageSize;
     uint8_t pchChecksum[CHECKSUM_SIZE];
 };
 
