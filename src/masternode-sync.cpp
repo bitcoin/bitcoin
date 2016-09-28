@@ -365,7 +365,7 @@ void CMasternodeSync::ProcessTick()
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) continue;
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "governance-sync");
 
-                if (pnode->nVersion < MSG_GOVERNANCE_PEER_PROTO_VERSION) continue;
+                if (pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
                 nRequestedMasternodeAttempt++;
 
                 pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, uint256()); //sync masternode votes

@@ -89,13 +89,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     if(fLiteMode) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    //
-    // REMOVE AFTER MIGRATION TO 12.1
-    //
-    if(pfrom->nVersion < 70201) return;
-    //
-    // END REMOVE
-    //
+    if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) return;
 
     LOCK(governance.cs);
 
@@ -864,7 +858,7 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
 
     // IF ABSOLUTE NO COUNT (NO-YES VALID VOTES) IS MORE THAN 10% OF THE NETWORK MASTERNODES, OBJ IS INVALID
 
-    if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) > mnodeman.CountEnabled(MSG_GOVERNANCE_PEER_PROTO_VERSION)/10) {
+    if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) > mnodeman.CountEnabled(MIN_GOVERNANCE_PEER_PROTO_VERSION)/10) {
         strError = "Automated removal";
         return false;
     }
@@ -1073,7 +1067,7 @@ int CGovernanceObject::GetAbstainCount(vote_signal_enum_t eVoteSignalIn)
 void CGovernanceObject::Relay()
 {
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    RelayInv(inv, MSG_GOVERNANCE_PEER_PROTO_VERSION);
+    RelayInv(inv, PROTOCOL_VERSION);
 }
 
 std::string CGovernanceManager::ToString() const
