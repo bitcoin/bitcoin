@@ -518,19 +518,20 @@ void ClearDatadirCache()
     pathCachedNetSpecific = boost::filesystem::path();
 }
 
-boost::filesystem::path GetConfigFile()
+boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+    boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
     return pathConfigFile;
 }
 
-void ReadConfigFile(map<string, string>& mapSettingsRet,
+void ReadConfigFile(const std::string& confPath,
+                    map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    boost::filesystem::ifstream streamConfig(GetConfigFile());
+    boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
         return; // No bitcoin.conf file is OK
 
