@@ -141,3 +141,12 @@ Debian-based systems the user running dashd can be added to the debian-tor group
 which has the appropriate permissions. An alternative authentication method is the use 
 of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
 Tor configuration.
+
+4. Privacy recommendations
+---------------------------
+
+- Do not add anything but bitcoin ports to the hidden service created in section 2.
+  If you run a web service too, create a new hidden service for that.
+  Otherwise it is trivial to link them, which may reduce privacy. Hidden
+  services created automatically (as in section 3) always have only one port
+  open.
