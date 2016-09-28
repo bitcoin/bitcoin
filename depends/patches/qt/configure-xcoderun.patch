@@ -1,0 +1,25 @@
+--- old/qtbase/configure
++++ new/qtbase/configure
+@@ -543,7 +543,7 @@ if [ "$BUILD_ON_MAC" = "yes" ]; then
+         exit 2
+     fi
+ 
+-    if ! /usr/bin/xcrun -find xcrun >/dev/null 2>&1; then
++    if ! /usr/bin/xcrun -find xcodebuild >/dev/null 2>&1; then
+         echo >&2
+         echo "   Xcode not set up properly. You may need to confirm the license" >&2
+         echo "   agreement by running /usr/bin/xcodebuild without arguments." >&2
+diff --git a/mkspecs/features/mac/default_pre.prf b/mkspecs/features/mac/default_pre.prf
+index 0cc8cd6..5df99d1 100644
+--- old/qtbase/mkspecs/features/mac/default_pre.prf
++++ new/qtbase/mkspecs/features/mac/default_pre.prf
+@@ -12,7 +12,7 @@ isEmpty(QMAKE_XCODE_DEVELOPER_PATH) {
+         error("Xcode is not installed in $${QMAKE_XCODE_DEVELOPER_PATH}. Please use xcode-select to choose Xcode installation path.")
+ 
+     # Make sure Xcode is set up properly
+-    isEmpty($$list($$system("/usr/bin/xcrun -find xcrun 2>/dev/null"))): \
++    isEmpty($$list($$system("/usr/bin/xcrun -find xcodebuild 2>/dev/null"))): \
+         error("Xcode not set up properly. You may need to confirm the license agreement by running /usr/bin/xcodebuild.")
+ }
+ 
+-- 
