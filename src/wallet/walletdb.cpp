@@ -251,82 +251,6 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     pcursor->close();
 }
 
-DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
-{
-    LOCK(pwallet->cs_wallet);
-    // Old wallets didn't have any defined order for transactions
-    // Probably a bad idea to change the output of this
-
-    // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
-    typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
-    typedef multimap<int64_t, TxPair > TxItems;
-    TxItems txByTime;
-
-    for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
-    {
-        CWalletTx* wtx = &((*it).second);
-        txByTime.insert(make_pair(wtx->nTimeReceived, TxPair(wtx, (CAccountingEntry*)0)));
-    }
-    list<CAccountingEntry> acentries;
-    ListAccountCreditDebit("", acentries);
-    BOOST_FOREACH(CAccountingEntry& entry, acentries)
-    {
-        txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
-    }
-
-    int64_t& nOrderPosNext = pwallet->nOrderPosNext;
-    nOrderPosNext = 0;
-    std::vector<int64_t> nOrderPosOffsets;
-    for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
-    {
-        CWalletTx *const pwtx = (*it).second.first;
-        CAccountingEntry *const pacentry = (*it).second.second;
-        int64_t& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
-
-        if (nOrderPos == -1)
-        {
-            nOrderPos = nOrderPosNext++;
-            nOrderPosOffsets.push_back(nOrderPos);
-
-            if (pwtx)
-            {
-                if (!WriteTx(*pwtx))
-                    return DB_LOAD_FAIL;
-            }
-            else
-                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
-                    return DB_LOAD_FAIL;
-        }
-        else
-        {
-            int64_t nOrderPosOff = 0;
-            BOOST_FOREACH(const int64_t& nOffsetStart, nOrderPosOffsets)
-            {
-                if (nOrderPos >= nOffsetStart)
-                    ++nOrderPosOff;
-            }
-            nOrderPos += nOrderPosOff;
-            nOrderPosNext = std::max(nOrderPosNext, nOrderPos + 1);
-
-            if (!nOrderPosOff)
-                continue;
-
-            // Since we're changing the order, write it back
-            if (pwtx)
-            {
-                if (!WriteTx(*pwtx))
-                    return DB_LOAD_FAIL;
-            }
-            else
-                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
-                    return DB_LOAD_FAIL;
-        }
-    }
-    WriteOrderPosNext(nOrderPosNext);
-
-    return DB_LOAD_OK;
-}
-
 class CWalletScanState {
 public:
     unsigned int nKeys;
@@ -711,7 +635,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
         WriteVersion(CLIENT_VERSION);
 
     if (wss.fAnyUnordered)
-        result = ReorderTransactions(pwallet);
+        result = pwallet->ReorderTransactions();
 
     pwallet->laccentries.clear();
     ListAccountCreditDebit("*", pwallet->laccentries);
