@@ -22,8 +22,6 @@
 
 using namespace std;
 
-static uint64_t nAccountingEntryNumber = 0;
-
 //
 // CWalletDB
 //
@@ -191,11 +189,6 @@ bool CWalletDB::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccount
     return Write(std::make_pair(std::string("acentry"), std::make_pair(acentry.strAccount, nAccEntryNum)), acentry);
 }
 
-bool CWalletDB::WriteAccountingEntry_Backend(const CAccountingEntry& acentry)
-{
-    return WriteAccountingEntry(++nAccountingEntryNumber, acentry);
-}
-
 CAmount CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
@@ -251,286 +244,80 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     pcursor->close();
 }
 
-class CWalletScanState {
-public:
-    unsigned int nKeys;
-    unsigned int nCKeys;
-    unsigned int nKeyMeta;
-    bool fIsEncrypted;
-    bool fAnyUnordered;
-    int nFileVersion;
-    vector<uint256> vWalletUpgrade;
-
-    CWalletScanState() {
-        nKeys = nCKeys = nKeyMeta = 0;
-        fIsEncrypted = false;
-        fAnyUnordered = false;
-        nFileVersion = 0;
-    }
-};
-
-bool
-ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
-             CWalletScanState &wss, string& strType, string& strErr)
+DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
 {
-    try {
-        // Unserialize
-        // Taking advantage of the fact that pair serialization
-        // is just the two items serialized one after the other
-        ssKey >> strType;
-        if (strType == "name")
-        {
-            string strAddress;
-            ssKey >> strAddress;
-            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].name;
-        }
-        else if (strType == "purpose")
-        {
-            string strAddress;
-            ssKey >> strAddress;
-            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].purpose;
-        }
-        else if (strType == "tx")
-        {
-            uint256 hash;
-            ssKey >> hash;
-            CWalletTx wtx;
-            ssValue >> wtx;
-            CValidationState state;
-            if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
-                return false;
+    LOCK(pwallet->cs_wallet);
+    // Old wallets didn't have any defined order for transactions
+    // Probably a bad idea to change the output of this
 
-            // Undo serialize changes in 31600
-            if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
-            {
-                if (!ssValue.empty())
-                {
-                    char fTmp;
-                    char fUnused;
-                    ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
-                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d '%s' %s",
-                                       wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount, hash.ToString());
-                    wtx.fTimeReceivedIsTxTime = fTmp;
-                }
-                else
-                {
-                    strErr = strprintf("LoadWallet() repairing tx ver=%d %s", wtx.fTimeReceivedIsTxTime, hash.ToString());
-                    wtx.fTimeReceivedIsTxTime = 0;
-                }
-                wss.vWalletUpgrade.push_back(hash);
-            }
+    // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
+    typedef pair<CWalletTx*, CAccountingEntry*> TxPair;
+    typedef multimap<int64_t, TxPair > TxItems;
+    TxItems txByTime;
 
-            if (wtx.nOrderPos == -1)
-                wss.fAnyUnordered = true;
-
-            pwallet->LoadToWallet(wtx);
-        }
-        else if (strType == "acentry")
-        {
-            string strAccount;
-            ssKey >> strAccount;
-            uint64_t nNumber;
-            ssKey >> nNumber;
-            if (nNumber > nAccountingEntryNumber)
-                nAccountingEntryNumber = nNumber;
-
-            if (!wss.fAnyUnordered)
-            {
-                CAccountingEntry acentry;
-                ssValue >> acentry;
-                if (acentry.nOrderPos == -1)
-                    wss.fAnyUnordered = true;
-            }
-        }
-        else if (strType == "watchs")
-        {
-            CScript script;
-            ssKey >> *(CScriptBase*)(&script);
-            char fYes;
-            ssValue >> fYes;
-            if (fYes == '1')
-                pwallet->LoadWatchOnly(script);
-
-            // Watch-only addresses have no birthday information for now,
-            // so set the wallet birthday to the beginning of time.
-            pwallet->nTimeFirstKey = 1;
-        }
-        else if (strType == "key" || strType == "wkey")
-        {
-            CPubKey vchPubKey;
-            ssKey >> vchPubKey;
-            if (!vchPubKey.IsValid())
-            {
-                strErr = "Error reading wallet database: CPubKey corrupt";
-                return false;
-            }
-            CKey key;
-            CPrivKey pkey;
-            uint256 hash;
-
-            if (strType == "key")
-            {
-                wss.nKeys++;
-                ssValue >> pkey;
-            } else {
-                CWalletKey wkey;
-                ssValue >> wkey;
-                pkey = wkey.vchPrivKey;
-            }
-
-            // Old wallets store keys as "key" [pubkey] => [privkey]
-            // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
-            // using EC operations as a checksum.
-            // Newer wallets store keys as "key"[pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
-            // remaining backwards-compatible.
-            try
-            {
-                ssValue >> hash;
-            }
-            catch (...) {}
-
-            bool fSkipCheck = false;
-
-            if (!hash.IsNull())
-            {
-                // hash pubkey/privkey to accelerate wallet load
-                std::vector<unsigned char> vchKey;
-                vchKey.reserve(vchPubKey.size() + pkey.size());
-                vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
-                vchKey.insert(vchKey.end(), pkey.begin(), pkey.end());
-
-                if (Hash(vchKey.begin(), vchKey.end()) != hash)
-                {
-                    strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
-                    return false;
-                }
-
-                fSkipCheck = true;
-            }
-
-            if (!key.Load(pkey, vchPubKey, fSkipCheck))
-            {
-                strErr = "Error reading wallet database: CPrivKey corrupt";
-                return false;
-            }
-            if (!pwallet->LoadKey(key, vchPubKey))
-            {
-                strErr = "Error reading wallet database: LoadKey failed";
-                return false;
-            }
-        }
-        else if (strType == "mkey")
-        {
-            unsigned int nID;
-            ssKey >> nID;
-            CMasterKey kMasterKey;
-            ssValue >> kMasterKey;
-            if(pwallet->mapMasterKeys.count(nID) != 0)
-            {
-                strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
-                return false;
-            }
-            pwallet->mapMasterKeys[nID] = kMasterKey;
-            if (pwallet->nMasterKeyMaxID < nID)
-                pwallet->nMasterKeyMaxID = nID;
-        }
-        else if (strType == "ckey")
-        {
-            CPubKey vchPubKey;
-            ssKey >> vchPubKey;
-            if (!vchPubKey.IsValid())
-            {
-                strErr = "Error reading wallet database: CPubKey corrupt";
-                return false;
-            }
-            vector<unsigned char> vchPrivKey;
-            ssValue >> vchPrivKey;
-            wss.nCKeys++;
-
-            if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey))
-            {
-                strErr = "Error reading wallet database: LoadCryptedKey failed";
-                return false;
-            }
-            wss.fIsEncrypted = true;
-        }
-        else if (strType == "keymeta")
-        {
-            CPubKey vchPubKey;
-            ssKey >> vchPubKey;
-            CKeyMetadata keyMeta;
-            ssValue >> keyMeta;
-            wss.nKeyMeta++;
-
-            pwallet->LoadKeyMetadata(vchPubKey, keyMeta);
-
-            // find earliest key creation time, as wallet birthday
-            if (!pwallet->nTimeFirstKey ||
-                (keyMeta.nCreateTime < pwallet->nTimeFirstKey))
-                pwallet->nTimeFirstKey = keyMeta.nCreateTime;
-        }
-        else if (strType == "defaultkey")
-        {
-            ssValue >> pwallet->vchDefaultKey;
-        }
-        else if (strType == "pool")
-        {
-            int64_t nIndex;
-            ssKey >> nIndex;
-            CKeyPool keypool;
-            ssValue >> keypool;
-
-            pwallet->LoadKeyPool(nIndex, keypool);
-        }
-        else if (strType == "version")
-        {
-            ssValue >> wss.nFileVersion;
-            if (wss.nFileVersion == 10300)
-                wss.nFileVersion = 300;
-        }
-        else if (strType == "cscript")
-        {
-            uint160 hash;
-            ssKey >> hash;
-            CScript script;
-            ssValue >> *(CScriptBase*)(&script);
-            if (!pwallet->LoadCScript(script))
-            {
-                strErr = "Error reading wallet database: LoadCScript failed";
-                return false;
-            }
-        }
-        else if (strType == "orderposnext")
-        {
-            ssValue >> pwallet->nOrderPosNext;
-        }
-        else if (strType == "destdata")
-        {
-            std::string strAddress, strKey, strValue;
-            ssKey >> strAddress;
-            ssKey >> strKey;
-            ssValue >> strValue;
-            if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
-            {
-                strErr = "Error reading wallet database: LoadDestData failed";
-                return false;
-            }
-        }
-        else if (strType == "hdchain")
-        {
-            CHDChain chain;
-            ssValue >> chain;
-            if (!pwallet->SetHDChain(chain, true))
-            {
-                strErr = "Error reading wallet database: SetHDChain failed";
-                return false;
-            }
-        }
-    } catch (...)
+    for (map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
     {
-        return false;
+        CWalletTx* wtx = &((*it).second);
+        txByTime.insert(make_pair(wtx->nTimeReceived, TxPair(wtx, (CAccountingEntry*)0)));
     }
-    return true;
+    list<CAccountingEntry> acentries;
+    ListAccountCreditDebit("", acentries);
+    BOOST_FOREACH(CAccountingEntry& entry, acentries)
+    {
+        txByTime.insert(make_pair(entry.nTime, TxPair((CWalletTx*)0, &entry)));
+    }
+
+    int64_t& nOrderPosNext = pwallet->nOrderPosNext;
+    nOrderPosNext = 0;
+    std::vector<int64_t> nOrderPosOffsets;
+    for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
+    {
+        CWalletTx *const pwtx = (*it).second.first;
+        CAccountingEntry *const pacentry = (*it).second.second;
+        int64_t& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
+
+        if (nOrderPos == -1)
+        {
+            nOrderPos = nOrderPosNext++;
+            nOrderPosOffsets.push_back(nOrderPos);
+
+            if (pwtx)
+            {
+                if (!WriteTx(*pwtx))
+                    return DB_LOAD_FAIL;
+            }
+            else
+                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
+                    return DB_LOAD_FAIL;
+        }
+        else
+        {
+            int64_t nOrderPosOff = 0;
+            BOOST_FOREACH(const int64_t& nOffsetStart, nOrderPosOffsets)
+            {
+                if (nOrderPos >= nOffsetStart)
+                    ++nOrderPosOff;
+            }
+            nOrderPos += nOrderPosOff;
+            nOrderPosNext = std::max(nOrderPosNext, nOrderPos + 1);
+
+            if (!nOrderPosOff)
+                continue;
+
+            // Since we're changing the order, write it back
+            if (pwtx)
+            {
+                if (!WriteTx(*pwtx))
+                    return DB_LOAD_FAIL;
+            }
+            else
+                if (!WriteAccountingEntry(pacentry->nEntryNo, *pacentry))
+                    return DB_LOAD_FAIL;
+        }
+    }
+    WriteOrderPosNext(nOrderPosNext);
+
+    return DB_LOAD_OK;
 }
 
 static bool IsKeyType(string strType)
@@ -580,7 +367,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
             // Try to be tolerant of single corrupt records:
             string strType, strErr;
-            if (!ReadKeyValue(pwallet, ssKey, ssValue, wss, strType, strErr))
+            if (!pwallet->LoadKeyValue(ssKey, ssValue, wss, strType, strErr))
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
@@ -891,7 +678,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
             {
                 // Required in LoadKeyMetadata():
                 LOCK(dummyWallet.cs_wallet);
-                fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue,
+                fReadOK = dummyWallet.LoadKeyValue(ssKey, ssValue,
                                         wss, strType, strErr);
             }
             if (!IsKeyType(strType) && strType != "hdchain")
