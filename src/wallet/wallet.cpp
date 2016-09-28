@@ -3492,7 +3492,7 @@ bool CWallet::ParameterInteraction()
     if (mapArgs.count("-mintxfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(mapArgs["-mintxfee"], n))
+        if (!ParseMoney(mapArgs["-mintxfee"], n) || 0 == n)
             return InitError(AmountErrMsg("mintxfee", mapArgs["-mintxfee"]));
         if (n > HIGH_TX_FEE_PER_KB)
             InitWarning(AmountHighWarn("-mintxfee") + " " +
