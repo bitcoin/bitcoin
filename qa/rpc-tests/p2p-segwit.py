@@ -19,7 +19,7 @@ VB_PERIOD = 144
 VB_ACTIVATION_THRESHOLD = 108
 VB_TOP_BITS = 0x20000000
 
-MAX_SIGOP_COST = 80000
+MAX_SIGOPS_WEIGHT = 80000
 
 '''
 SegWit p2p test.
@@ -1606,14 +1606,14 @@ class SegWitTest(BitcoinTestFramework):
         # We'll produce 2 extra outputs, one with a program that would take us
         # over max sig ops, and one with a program that would exactly reach max
         # sig ops
-        outputs = (MAX_SIGOP_COST // sigops_per_script) + 2
-        extra_sigops_available = MAX_SIGOP_COST % sigops_per_script
+        outputs = (MAX_SIGOPS_WEIGHT // sigops_per_script) + 2
+        extra_sigops_available = MAX_SIGOPS_WEIGHT % sigops_per_script
 
         # We chose the number of checkmultisigs/checksigs to make this work:
         assert(extra_sigops_available < 100) # steer clear of MAX_OPS_PER_SCRIPT
 
         # This script, when spent with the first
-        # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,
+        # N(=MAX_SIGOPS_WEIGHT//sigops_per_script) outputs of our transaction,
         # would push us just over the block sigop limit.
         witness_program_toomany = CScript([OP_TRUE, OP_IF, OP_TRUE, OP_ELSE] + [OP_CHECKSIG]*(extra_sigops_available + 1) + [OP_ENDIF])
         witness_hash_toomany = sha256(witness_program_toomany)

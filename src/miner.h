@@ -28,7 +28,7 @@ struct CBlockTemplate
 {
     CBlock block;
     std::vector<CAmount> vTxFees;
-    std::vector<int64_t> vTxSigOpsCost;
+    std::vector<int64_t> vTxSigOpsWeight;
     std::vector<unsigned char> vchCoinbaseCommitment;
 };
 
@@ -40,13 +40,13 @@ struct CTxMemPoolModifiedEntry {
         iter = entry;
         nSizeWithAncestors = entry->GetSizeWithAncestors();
         nModFeesWithAncestors = entry->GetModFeesWithAncestors();
-        nSigOpCostWithAncestors = entry->GetSigOpCostWithAncestors();
+        nSigOpsWeightWithAncestors = entry->GetSigOpsWeightWithAncestors();
     }
 
     CTxMemPool::txiter iter;
     uint64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
-    int64_t nSigOpCostWithAncestors;
+    int64_t nSigOpsWeightWithAncestors;
 };
 
 /** Comparator for CTxMemPool::txiter objects.
@@ -124,7 +124,7 @@ struct update_for_parent_inclusion
     {
         e.nModFeesWithAncestors -= iter->GetFee();
         e.nSizeWithAncestors -= iter->GetTxSize();
-        e.nSigOpCostWithAncestors -= iter->GetSigOpCost();
+        e.nSigOpsWeightWithAncestors -= iter->GetSigOpsWeight();
     }
 
     CTxMemPool::txiter iter;
@@ -148,7 +148,7 @@ private:
     uint64_t nBlockWeight;
     uint64_t nBlockSize;
     uint64_t nBlockTx;
-    uint64_t nBlockSigOpsCost;
+    uint64_t nBlockSigOpsWeight;
     CAmount nFees;
     CTxMemPool::setEntries inBlock;
 
@@ -189,7 +189,7 @@ private:
     /** Remove confirmed (inBlock) entries from given set */
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
     /** Test if a new package would "fit" in the block */
-    bool TestPackage(uint64_t packageSize, int64_t packageSigOpsCost);
+    bool TestPackage(uint64_t packageSize, int64_t packageSigOpsWeight);
     /** Perform checks on each transaction in a package:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
