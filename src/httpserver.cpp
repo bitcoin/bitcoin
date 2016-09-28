@@ -712,6 +712,7 @@ void HTTPRequest::StreamingData::http_chunk_cb(struct evhttp_connection* evcon, 
  */
 void HTTPRequest::StreamingData::SendChunk(struct evhttp_request* req)
 {
+#if LIBEVENT_VERSION_NUMBER >= 0x02010401
     // LogPrintf("set_http_chunk_cb\n");
     {
         std::unique_lock<std::mutex> lock(cs);
@@ -722,10 +723,12 @@ void HTTPRequest::StreamingData::SendChunk(struct evhttp_request* req)
         Update(evcon);
     else // TODO need a way to signal losing connection so the application doesn't keep sending unnecessarily, and doesn't hang
         LogPrintf("warning: evcon is 0 in SendChunk\n");
+#endif
 }
 
 bool HTTPRequest::SendChunk(const void *data, size_t size)
 {
+#if LIBEVENT_VERSION_NUMBER >= 0x02010401
     // Block as long as connection buffer is above maximum
     assert(streaming);
     std::unique_lock<std::mutex> lock(streaming->cs);
@@ -747,6 +750,10 @@ bool HTTPRequest::SendChunk(const void *data, size_t size)
     HTTPEvent* ev = new HTTPEvent(eventBase, true, boost::bind(&StreamingData::SendChunk, streaming, req));
     ev->trigger(0);
     return true;
+#else
+    LogPrintf("Error: HTTP streaming is only supported with libevent 2.1.4+\n");
+    throw std::runtime_error("Not implemented: HTTP streaming is only supported with libevent 2.1.4+");
+#endif
 }
 
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
