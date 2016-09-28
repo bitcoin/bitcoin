@@ -30,8 +30,6 @@ private:
     bool SendMasternodePing(std::string& strErrorRet);
 
 public:
-    // Initialized by init.cpp
-    std::string strMasterNodeAddr;
     // Keys for the active Masternode
     CPubKey pubKeyMasternode;
     CKey keyMasternode;

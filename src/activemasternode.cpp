@@ -59,14 +59,10 @@ void CActiveMasternode::ManageState()
             return;
         }
 
-        if(strMasterNodeAddr.empty()) {
-            if(!GetLocal(service)) {
-                strNotCapableReason = "Can't detect external address. Please use the masternodeaddr configuration option.";
-                LogPrintf("CActiveMasternode::ManageState -- not capable: %s\n", strNotCapableReason);
-                return;
-            }
-        } else {
-            service = CService(strMasterNodeAddr);
+        if(!GetLocal(service)) {
+            strNotCapableReason = "Can't detect external address. Please consider using the externalip configuration option if problem persists.";
+            LogPrintf("CActiveMasternode::ManageState -- not capable: %s\n", strNotCapableReason);
+            return;
         }
 
         int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();

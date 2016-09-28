@@ -1784,20 +1784,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if(fMasterNode) {
         LogPrintf("MASTERNODE:\n");
-        activeMasternode.strMasterNodeAddr = GetArg("-masternodeaddr", "");
 
-        CService service;
-        if(activeMasternode.strMasterNodeAddr.empty()) {
-            if(!GetLocal(service)) {
-                LogPrintf("Can't detect external address. Please consider using the masternodeaddr configuration option.\n");
-            }
-        } else {
-            service = CService(activeMasternode.strMasterNodeAddr);
-            if (!service.IsValid()) {
-                return InitError("Invalid masternodeaddr: " + activeMasternode.strMasterNodeAddr);
-            }
+        if(!GetArg("-masternodeaddr", "").empty()) {
+            // Hot masternode (either local or remote) should get its address in
+            // CActiveMasternode::ManageState() automatically and no longer relies on masternodeaddr.
+            return InitError(_("masternodeaddr option is deprecated. Please use masternode.conf to manage your remote masterndodes."));
         }
-        LogPrintf("  service: %s\n", service.ToString());
 
         std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
