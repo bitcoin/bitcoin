@@ -104,7 +104,7 @@ bool AppInit(int argc, char* argv[])
         }
         try
         {
-            ReadConfigFile(mapArgs, mapMultiArgs);
+            ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME), mapArgs, mapMultiArgs);
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
