@@ -856,6 +856,15 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
         return true;
     }
 
+    switch(nObjectType) {
+        case GOVERNANCE_OBJECT_PROPOSAL:
+        case GOVERNANCE_OBJECT_TRIGGER:
+            break;
+        default:
+            strError = strprintf("Invalid object type %d", nObjectType);
+            return false;
+    }
+
     // IF ABSOLUTE NO COUNT (NO-YES VALID VOTES) IS MORE THAN 10% OF THE NETWORK MASTERNODES, OBJ IS INVALID
 
     if(GetAbsoluteNoCount(VOTE_SIGNAL_VALID) > mnodeman.CountEnabled(MIN_GOVERNANCE_PEER_PROTO_VERSION)/10) {
@@ -921,37 +930,18 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
 
 CAmount CGovernanceObject::GetMinCollateralFee()
 {
-    CAmount nMinFee = 0;
     // Only 1 type has a fee for the moment but switch statement allows for future object types
     switch(nObjectType) {
-    case GOVERNANCE_OBJECT_PROPOSAL:
-        nMinFee = GOVERNANCE_PROPOSAL_FEE_TX;
-        break;
-    case GOVERNANCE_OBJECT_TRIGGER:
-        nMinFee = 0;
-        break;
-    default:
-      {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::GetMinCollateralFee ERROR: Unknown governance object type: " << nObjectType;
-        throw std::runtime_error(ostr.str());
-      }
+        case GOVERNANCE_OBJECT_PROPOSAL:    return GOVERNANCE_PROPOSAL_FEE_TX;
+        case GOVERNANCE_OBJECT_TRIGGER:     return 0;
+        default:                            return MAX_MONEY;
     }
-    return nMinFee;
 }
 
 bool CGovernanceObject::IsCollateralValid(std::string& strError)
 {
-    CAmount nMinFee = 0;
-    try  {
-        nMinFee = GetMinCollateralFee();
-    }
-    catch(std::exception& e) {
-        strError = e.what();
-        LogPrintf("CGovernanceObject::IsCollateralValid ERROR An exception occurred - %s\n", e.what());
-        return false;
-    }
-
+    strError = "";
+    CAmount nMinFee = GetMinCollateralFee();
     uint256 nExpectedHash = GetHash();
 
     CTransaction txCollateral;
