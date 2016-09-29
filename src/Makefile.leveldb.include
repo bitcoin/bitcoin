@@ -117,7 +117,6 @@ leveldb_libleveldb_a_SOURCES += leveldb/util/comparator.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
-leveldb_libleveldb_a_SOURCES += leveldb/util/env_win.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/filter_policy.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/hash.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/histogram.cc
