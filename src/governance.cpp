@@ -140,7 +140,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         if(mapSeenGovernanceObjects.count(govobj.GetHash())){
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
-            masternodeSync.AddedBudgetItem(govobj.GetHash());
             return;
         }
 
@@ -189,10 +188,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         // IF WE'VE SEEN THIS OBJECT THEN SKIP
 
-        if(mapSeenVotes.count(vote.GetHash())){
-            masternodeSync.AddedBudgetItem(vote.GetHash());
-            return;
-        }
+        if(mapSeenVotes.count(vote.GetHash())) return;
 
         // FIND THE MASTERNODE OF THE VOTER
 
