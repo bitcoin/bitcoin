@@ -180,7 +180,7 @@ bool CSporkManager::SetPrivKey(std::string strPrivKey)
 {
     CSporkMessage spork;
 
-    spork.Sign(strMasterPrivKey);
+    spork.Sign(strPrivKey);
 
     if(spork.CheckSignature()){
         // Test signing successful, proceed
