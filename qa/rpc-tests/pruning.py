@@ -157,7 +157,10 @@ class PruneTest(BitcoinTestFramework):
         print("Usage possibly still high bc of stale blocks in block files:", calc_usage(self.prunedir))
 
         print("Mine 220 more blocks so we have requisite history (some blocks will be big and cause pruning of previous chain)")
-        self.nodes[0].generate(220) #node 0 has many large tx's in its mempool from the disconnects
+        for i in range(22):
+            # This can be slow, so do this in multiple RPC calls to avoid
+            # RPC timeouts.
+            self.nodes[0].generate(10) #node 0 has many large tx's in its mempool from the disconnects
         sync_blocks(self.nodes[0:3], timeout=300)
 
         usage = calc_usage(self.prunedir)
