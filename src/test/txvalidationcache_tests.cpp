@@ -16,7 +16,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
+BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)  // BU harmonize suite name with filename
 
 static bool
 ToMemPool(CMutableTransaction& tx)

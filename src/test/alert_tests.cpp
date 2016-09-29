@@ -114,7 +114,7 @@ struct ReadAlerts : public TestingSetup
     std::vector<CAlert> alerts;
 };
 
-BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
+BOOST_FIXTURE_TEST_SUITE(alert_tests, ReadAlerts)  // BU harmonize suite name with filename
 
 
 BOOST_AUTO_TEST_CASE(AlertApplies)

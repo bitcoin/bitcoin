@@ -38,7 +38,7 @@ bool read_block(const std::string& filename, CBlock& block)
     return true;
 }
 
-BOOST_FIXTURE_TEST_SUITE(CheckBlock_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(checkblock_tests, BasicTestingSetup)  // BU harmonize suite name with filename
 
 
 BOOST_AUTO_TEST_CASE(TestBlock)
