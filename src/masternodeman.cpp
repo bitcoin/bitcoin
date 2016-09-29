@@ -701,7 +701,6 @@ int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
 void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
     mapSeenMasternodePing.insert(make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
-    masternodeSync.AddedMasternodeList();
 
     LogPrintf("CMasternodeMan::UpdateMasternodeList() - addr: %s\n    vin: %s\n", mnb.addr.ToString(), mnb.vin.ToString());
 
@@ -709,9 +708,11 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
     if(pmn == NULL)
     {
         CMasternode mn(mnb);
-        Add(mn);
-    } else {
-        pmn->UpdateFromNewBroadcast(mnb);
+        if(Add(mn)) {
+            masternodeSync.AddedMasternodeList();
+        }
+    } else if(pmn->UpdateFromNewBroadcast(mnb)) {
+        masternodeSync.AddedMasternodeList();
     }
 }
 
@@ -720,7 +721,6 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
 
     if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
-        masternodeSync.AddedMasternodeList();
         return true;
     }
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));

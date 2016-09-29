@@ -316,7 +316,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 
         if(mapMasternodePaymentVotes.count(vote.GetHash())) {
             LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nHeight=%d seen\n", vote.GetHash().ToString(), pCurrentBlockIndex->nHeight);
-            masternodeSync.AddedPaymentVote();
             return;
         }
 

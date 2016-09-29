@@ -29,15 +29,14 @@ bool CMasternodeSync::IsBlockchainSynced()
     lastProcess = GetTime();
 
     if(fBlockchainSynced) return true;
+    if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
 
-    if (fImporting || fReindex) return false;
+    // same as !IsInitialBlockDownload() but no cs_main needed here
+    int nMaxBlockTime = std::max(pCurrentBlockIndex->GetBlockTime(), pindexBestHeader->GetBlockTime());
+    fBlockchainSynced = pindexBestHeader->nHeight - pCurrentBlockIndex->nHeight < 24 * 6 &&
+                        GetTime() - nMaxBlockTime < Params().MaxTipAge();
 
-    if(!pCurrentBlockIndex) return false;
-    if(pCurrentBlockIndex->nTime + 60*60 < GetTime()) return false;
-
-    fBlockchainSynced = true;
-
-    return true;
+    return fBlockchainSynced;
 }
 
 void CMasternodeSync::Fail()
@@ -204,7 +203,9 @@ void CMasternodeSync::ProcessTick()
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
 
-    if(nRequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) {
+    if(nRequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL ||
+        (nRequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS && IsBlockchainSynced()))
+    {
         SwitchToNextAsset();
     }
 
@@ -246,10 +247,6 @@ void CMasternodeSync::ProcessTick()
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
                 pnode->PushMessage(NetMsgType::GETSPORKS);
-
-                // we always ask for sporks, so just skip this
-                if(nRequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) SwitchToNextAsset();
-
                 continue; // always get sporks first, switch to the next node without waiting for the next tick
             }
 
