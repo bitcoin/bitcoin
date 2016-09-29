@@ -72,7 +72,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         # Open and close to create zero-length file
-        with open(self.alert_filename, 'w') as _:
+        with open(self.alert_filename, 'w', encoding='utf8') as _:
             pass
         self.extra_args = [["-debug", "-logtimemicros=1", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
@@ -95,7 +95,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         peer.sync_with_ping()
 
     def test_versionbits_in_alert_file(self):
-        with open(self.alert_filename, 'r') as f:
+        with open(self.alert_filename, 'r', encoding='utf8') as f:
             alert_text = f.read()
         assert(VB_PATTERN.match(alert_text))
 
@@ -147,7 +147,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         stop_node(self.nodes[0], 0)
         wait_bitcoinds()
         # Empty out the alert file
-        with open(self.alert_filename, 'w') as _:
+        with open(self.alert_filename, 'w', encoding='utf8') as _:
             pass
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
 
