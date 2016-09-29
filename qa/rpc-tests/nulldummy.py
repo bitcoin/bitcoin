@@ -3,11 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import ComparisonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block, add_witness_commitment
-from test_framework.comptool import TestManager
 from test_framework.script import CScript
 from io import BytesIO
 import time
@@ -37,11 +36,12 @@ Generate 427 more blocks.
 [Policy/Consensus] Check that the new NULLDUMMY rules are enforced on the 432nd block.
 '''
 
-class NULLDUMMYTest(ComparisonTestFramework):
+class NULLDUMMYTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
         self.num_nodes = 1
+        self.setup_clean_chain = True
 
     def setup_network(self):
         # Must set the blockversion for this test
@@ -54,8 +54,6 @@ class NULLDUMMYTest(ComparisonTestFramework):
         self.wit_address = self.nodes[0].addwitnessaddress(self.address)
         self.wit_ms_address = self.nodes[0].addwitnessaddress(self.ms_address)
 
-        test = TestManager(self, self.options.tmpdir)
-        test.add_all_connections(self.nodes)
         NetworkThread().start() # Start up network handling in another thread
         self.coinbase_blocks = self.nodes[0].generate(2) # Block 2
         coinbase_txid = []
