@@ -62,7 +62,6 @@ public:
     {
         LOCK(cs_accounts);
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(id);
         READWRITE(fCrypted);
         READWRITE(vchSeed);
@@ -139,7 +138,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(extPubKey);
         READWRITE(hdchainID);
         READWRITE(nAccountIndex);
