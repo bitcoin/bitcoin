@@ -119,6 +119,8 @@ class NULLDUMMYTest(BitcoinTestFramework):
             node.sendrawtransaction(bytes_to_hex_str(tx.serialize_with_witness()), True)
         except JSONRPCException as exp:
             assert_equal(exp.error["message"], msg)
+        else:
+            assert_equal('', msg)
         return tx.hash
 
 
