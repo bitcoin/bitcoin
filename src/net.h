@@ -593,7 +593,6 @@ public:
     ServiceFlags nServices;
     ServiceFlags nServicesExpected;
     SOCKET hSocket;
-    CDataStream ssSend;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
     uint64_t nSendBytes;
@@ -644,9 +643,6 @@ protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
-
-    // Basic fuzz-testing
-    void Fuzz(int nChance); // modifies ssSend
 
 public:
     uint256 hashContinue;
