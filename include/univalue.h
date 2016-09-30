@@ -142,10 +142,10 @@ private:
 public:
     // Strict type-specific getters, these throw std::runtime_error if the
     // value is of unexpected type
-    std::vector<std::string> getKeys() const;
-    std::vector<UniValue> getValues() const;
+    const std::vector<std::string>& getKeys() const;
+    const std::vector<UniValue>& getValues() const;
     bool get_bool() const;
-    std::string get_str() const;
+    const std::string& get_str() const;
     int get_int() const;
     int64_t get_int64() const;
     double get_real() const;
