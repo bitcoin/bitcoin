@@ -22,7 +22,7 @@ class ForkNotifyTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
-        with open(self.alert_filename, 'w') as f:
+        with open(self.alert_filename, 'w', encoding='utf8') as f:
             pass  # Just open then close to create zero-length file
         self.nodes.append(start_node(0, self.options.tmpdir,
                             ["-blockversion=2", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]))
@@ -44,7 +44,7 @@ class ForkNotifyTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
 
-        with open(self.alert_filename, 'r') as f:
+        with open(self.alert_filename, 'r', encoding='utf8') as f:
             alert_text = f.read()
 
         if len(alert_text) == 0:
@@ -56,7 +56,7 @@ class ForkNotifyTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         self.sync_all()
 
-        with open(self.alert_filename, 'r') as f:
+        with open(self.alert_filename, 'r', encoding='utf8') as f:
             alert_text2 = f.read()
 
         if alert_text != alert_text2:
