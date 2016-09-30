@@ -12,7 +12,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
     Read the given dump, count the addrs that match, count change and reserve.
     Also check that the old hd_master is inactive
     """
-    with open(file_name) as inputfile:
+    with open(file_name, encoding='utf8') as inputfile:
         found_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
