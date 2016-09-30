@@ -476,7 +476,7 @@ public:
         }
     }
 
-    value_type* data() noexcept {
+    value_type* data() {
         return item_ptr(0);
     }
 
