@@ -142,7 +142,7 @@ std::string CActiveMasternode::GetStatus()
         case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Masternode";
         case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Masternode input must have at least %d confirmations", Params().GetConsensus().nMasternodeMinimumConfirmations);
         case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable masternode: " + strNotCapableReason;
-        case ACTIVE_MASTERNODE_STARTED: return "Masternode start request sent";
+        case ACTIVE_MASTERNODE_STARTED: return "Masternode successfully started";
         default: return "unknown";
     }
 }
