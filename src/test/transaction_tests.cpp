@@ -19,6 +19,7 @@
 #include "script/script_error.h"
 #include "script/standard.h"
 #include "utilstrencodings.h"
+#include "test_random.h"
 
 #include <map>
 #include <string>
@@ -769,6 +770,43 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
     BOOST_CHECK(!IsStandardTx(t, reason));
+}
+
+BOOST_AUTO_TEST_CASE(test_transaction_hashable_size)
+{
+    /*
+     * Generate 500 random transactions, with 1-100 inputs and 1-100 outputs.
+     * Some have witness, some do not.
+     * Random size for scriptSig and scriptPubKey from 0 to 499
+     * sz1 is the witness-stripped and scriptSig-stripped size, should be equal to the result of GetTransactionHashableSize
+     */
+    for (int i = 0; i < 500; i++) {
+        int nIn = 1 + insecure_rand() % 100;
+        int nOut = 1 + insecure_rand() % 100;
+        bool wit = insecure_rand() % 2;
+        CMutableTransaction mtx;
+        mtx.vin.resize(nIn);
+        mtx.vout.resize(nOut);
+        for (int j = 0; j < nOut; j++) {
+            int sizeScript = insecure_rand() % 500;
+            for (int k = 0; k < sizeScript; k++)
+                mtx.vout[j].scriptPubKey << OP_0;
+        }
+        if (wit) {
+            mtx.wit.vtxinwit.resize(nIn);
+            for (int j = 0; j < nIn; j++) {
+                int sizeWitness = insecure_rand() % 500;
+                mtx.wit.vtxinwit[j].scriptWitness.stack.resize(sizeWitness);
+            }
+        }
+        int64_t sz1 = ::GetSerializeSize(mtx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+        for (int j = 0; j < nIn; j++) {
+            int sizeScript = insecure_rand() % 500;
+            for (int k = 0; k < sizeScript; k++)
+                mtx.vin[j].scriptSig << OP_0;
+        }
+        BOOST_CHECK_EQUAL(sz1, GetTransactionHashableSize(mtx));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
