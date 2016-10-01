@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         txGrandChild[i].vout[0].nValue = 11000LL;
     }
 
-    bool fTxOutsByAddressIndex = false;
-    CTxMemPool testPool(fTxOutsByAddressIndex);
+    bool fTxOutIndex = false;
+    CTxMemPool testPool(fTxOutIndex);
 
     // Nothing in pool, remove should do nothing:
     unsigned int poolSize = testPool.size();

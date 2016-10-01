@@ -109,8 +109,8 @@ public:
     bool BatchWrite(CCoinsViewByScript* pcoinsViewByScriptIn, const uint256 &hashBlock);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
-    bool DeleteAllCoinsByScript();   // removes txoutsbyaddressindex
-    bool GenerateAllCoinsByScript(CCoinsViewDB* coinsIn); // creates txoutsbyaddressindex
+    bool DeleteAllCoinsByScript();   // removes txoutindex
+    bool GenerateAllCoinsByScript(CCoinsViewDB* coinsIn); // creates txoutindex
     CCoinsViewByScriptDBCursor *Cursor() const;
 };
 

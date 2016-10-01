@@ -47,7 +47,7 @@ class RESTTest (BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-txoutsbyaddressindex"]] * 3
+        self.extra_args = [["-txoutindex"]] * 3
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)

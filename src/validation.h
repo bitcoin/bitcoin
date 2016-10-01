@@ -168,7 +168,7 @@ extern std::atomic_bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
-extern bool fTxOutsByAddressIndex;
+extern bool fTxOutIndex;
 extern bool fIsBareMultisigStd;
 extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
@@ -536,7 +536,7 @@ extern CChain chainActive;
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
 extern CCoinsViewCache *pcoinsTip;
 
-/** Only used if -txoutsbyaddressindex */
+/** Only used if -txoutindex */
 extern CCoinsViewByScriptDB *pcoinsByScriptDB;
 extern CCoinsViewByScript *pcoinsByScript;
 

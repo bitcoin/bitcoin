@@ -331,8 +331,8 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
-CTxMemPool::CTxMemPool(const bool& _fTxOutsByAddressIndex, CBlockPolicyEstimator* estimator) :
-    nTransactionsUpdated(0), fTxOutsByAddressIndex(_fTxOutsByAddressIndex), minerPolicyEstimator(estimator)
+CTxMemPool::CTxMemPool(const bool& _fTxOutIndex, CBlockPolicyEstimator* estimator) :
+    nTransactionsUpdated(0), fTxOutIndex(_fTxOutIndex), minerPolicyEstimator(estimator)
 {
     _clear(); //lock free clear
 
@@ -434,7 +434,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     vTxHashes.emplace_back(tx.GetWitnessHash(), newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
-    if (fTxOutsByAddressIndex)
+    if (fTxOutIndex)
         for (unsigned int i = 0; i < tx.vout.size(); i++)
             if (!tx.vout[i].IsNull() && !tx.vout[i].scriptPubKey.IsUnspendable())
                 mapCoinsByScript[CCoinsViewByScript::getKey(tx.vout[i].scriptPubKey)].setCoins.insert(COutPoint(hash, (uint32_t)i));
@@ -502,7 +502,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
     {
         LOCK(cs);
 
-        if (fTxOutsByAddressIndex)
+        if (fTxOutIndex)
         {
             for (unsigned int i = 0; i < origTx.vout.size(); i++)
             {

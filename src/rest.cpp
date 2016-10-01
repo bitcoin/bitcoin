@@ -605,8 +605,8 @@ static bool rest_gettxoutsbyaddress(HTTPRequest* req, const std::string& strURIP
 {
     if (!CheckWarmup(req))
         return false;
-    if (!fTxOutsByAddressIndex)
-        return RESTERR(req, HTTP_BAD_REQUEST, "To use this function, you must start bitcoin with the -txoutsbyaddressindex parameter.");
+    if (!fTxOutIndex)
+        return RESTERR(req, HTTP_BAD_REQUEST, "To use this function, you must start bitcoin with the -txoutindex parameter.");
 
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);

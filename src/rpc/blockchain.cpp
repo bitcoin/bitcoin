@@ -828,8 +828,8 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
             "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
             "  \"transactions\": n,      (numeric) The number of transactions\n"
             "  \"txouts\": n,            (numeric) The number of output transactions\n"
-            "  \"addresses\": n,         (numeric) The number of addresses and scripts. Only if -txoutsbyaddressindex=1\n"
-            "  \"txoutsbyaddress\": n,   (numeric) The number of output transactions. Only if -txoutsbyaddressindex=1\n"
+            "  \"addresses\": n,         (numeric) The number of addresses and scripts. Only if -txoutindex=1\n"
+            "  \"txoutsbyaddress\": n,   (numeric) The number of output transactions. Only if -txoutindex=1\n"
             "  \"bytes_serialized\": n,  (numeric) The serialized size\n"
             "  \"hash_serialized\": \"hash\",   (string) The serialized hash\n"
             "  \"total_amount\": x.xxx          (numeric) The total amount\n"
@@ -947,7 +947,7 @@ UniValue gettxoutsbyaddress(const JSONRPCRequest& request)
             "\nReturns a list of unspent transaction outputs by address (or script).\n"
             "The list is ordered by confirmations in descending order.\n"
             "Note that passing minconf=0 will include the mempool.\n"
-            "\nTo use this function, you must start bitcoin with the -txoutsbyaddressindex parameter.\n"
+            "\nTo use this function, you must start bitcoin with the -txoutindex parameter.\n"
             "\nArguments:\n"
             "1. minconf          (numeric) Minimum confirmations\n"
             "2. \"addresses\"    (string) A json array of bitcoin addresses (or scripts)\n"
@@ -991,8 +991,8 @@ UniValue gettxoutsbyaddress(const JSONRPCRequest& request)
             + HelpExampleRpc("gettxoutsbyaddress", "6, \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
         );
 
-    if (!fTxOutsByAddressIndex)
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "To use this function, you must start bitcoin with the -txoutsbyaddressindex parameter.");
+    if (!fTxOutIndex)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "To use this function, you must start bitcoin with the -txoutindex parameter.");
 
     RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM)(UniValue::VARR)(UniValue::VNUM)(UniValue::VNUM));
 
