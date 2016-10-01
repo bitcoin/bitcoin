@@ -32,7 +32,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="toolTip">
-            <string extracomment="The largest block that will be mined"/>
+             <string>The largest block that will be mined</string>
            </property>
            <property name="text">
             <string>Maximum Generated Block Size (bytes) </string>
@@ -40,7 +40,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="miningMaxBlock"/>
+          <widget class="QLineEdit" name="miningMaxBlock">
+           <property name="toolTip">
+             <string>The largest block that will be mined</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -225,12 +229,15 @@
            <property name="text">
             <string>Excessive Block Size (in bytes)</string>
            </property>
+            <property name="toolTip">
+              <string>Blocks above this size will be considered &quot;excessive&quot;.  That is, they will not be relayed or become part of the active chain until &quot;Excessive Acceptance&quot; blocks have been mined on top of them.</string>
+            </property>
           </widget>
          </item>
          <item>
           <widget class="QLineEdit" name="excessiveBlockSize">
            <property name="toolTip">
-            <string extracomment="Blocks above this size will be considered &quot;excessive&quot;.  That is, they will not be relayed or become part of the active chain until &quot;Excessive Acceptance&quot; blocks have been mined on top of them."/>
+             <string>Blocks above this size will be considered &quot;excessive&quot;.  That is, they will not be relayed or become part of the active chain until &quot;Excessive Acceptance&quot; blocks have been mined on top of them.</string>
            </property>
           </widget>
          </item>
@@ -241,7 +248,7 @@
          <item>
           <widget class="QLabel" name="label_4">
            <property name="toolTip">
-            <string extracomment="An excessive block normally blocks a chain from being accepted.  However, if the chain grows deeper than this accept the excessive block (and the chain)."/>
+             <string>An excessive block normally blocks a chain from being accepted.  However, if the chain grows deeper than this accept the excessive block (and the chain).</string>
            </property>
            <property name="text">
             <string>Excessive Acceptance Depth (in blocks)</string>
@@ -249,7 +256,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="excessiveAcceptDepth"/>
+           <widget class="QLineEdit" name="excessiveAcceptDepth">
+             <property name="toolTip">
+               <string>An excessive block normally blocks a chain from being accepted.  However, if the chain grows deeper than this accept the excessive block (and the chain).</string>
+             </property>
+           </widget>
          </item>
         </layout>
        </item>
