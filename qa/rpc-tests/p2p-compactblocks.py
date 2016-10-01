@@ -237,6 +237,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         for i in range(num_transactions):
             self.nodes[0].sendtoaddress(address, 0.1)
 
+        self.test_node.sync_with_ping()
+
         # Now mine a block, and look at the resulting compact block.
         self.test_node.clear_block_announcement()
         block_hash = int(self.nodes[0].generate(1)[0], 16)
