@@ -416,8 +416,8 @@ private:
     CBlockPolicyEstimator* minerPolicyEstimator;
 
     uint64_t totalTxSize;      //!< sum of all mempool tx' byte sizes
-    const bool& fTxOutsByAddressIndex;
-    CCoinsMapByScript mapCoinsByScript; // only used if -txoutsbyaddressindex
+    const bool& fTxOutIndex;
+    CCoinsMapByScript mapCoinsByScript; // only used if -txoutindex
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
     CFeeRate minReasonableRelayFee;
@@ -504,7 +504,7 @@ public:
      *  around what it "costs" to relay a transaction around the network and
      *  below which we would reasonably say a transaction has 0-effective-fee.
      */
-    CTxMemPool(const CFeeRate& _minReasonableRelayFee, const bool& _fTxOutsByAddressIndex);
+    CTxMemPool(const CFeeRate& _minReasonableRelayFee, const bool& _fTxOutIndex);
     ~CTxMemPool();
 
     /**

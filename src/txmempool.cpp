@@ -348,9 +348,9 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee, const bool& _fTxOutsByAddressIndex) :
+CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee, const bool& _fTxOutIndex) :
     nTransactionsUpdated(0),
-    fTxOutsByAddressIndex(_fTxOutsByAddressIndex)
+    fTxOutIndex(_fTxOutIndex)
 {
     _clear(); //lock free clear
 
@@ -459,7 +459,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     vTxHashes.emplace_back(hash, newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
-    if (fTxOutsByAddressIndex)
+    if (fTxOutIndex)
         for (unsigned int i = 0; i < tx.vout.size(); i++)
             if (!tx.vout[i].IsNull() && !tx.vout[i].scriptPubKey.IsUnspendable())
                 mapCoinsByScript[CCoinsViewByScript::getKey(tx.vout[i].scriptPubKey)].setCoins.insert(COutPoint(hash, (uint32_t)i));
@@ -526,7 +526,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<CTransact
     {
         LOCK(cs);
 
-        if (fTxOutsByAddressIndex)
+        if (fTxOutIndex)
         {
             for (unsigned int i = 0; i < origTx.vout.size(); i++)
             {
