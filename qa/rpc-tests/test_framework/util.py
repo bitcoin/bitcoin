@@ -266,7 +266,6 @@ def initialize_chain(test_dir, num_nodes, cachedir):
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
-        wait_bitcoinds()
         disable_mocktime()
         for i in range(MAX_NODES):
             os.remove(log_filename(cachedir, i, "debug.log"))
@@ -365,6 +364,7 @@ def stop_nodes(nodes):
         except http.client.CannotSendRequest as e:
             print("WARN: Unable to stop node: " + repr(e))
     del nodes[:] # Emptying array closes connections as a side effect
+    wait_bitcoinds()
 
 def set_node_times(nodes, t):
     for node in nodes:
