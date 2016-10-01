@@ -174,6 +174,10 @@ testScriptsExt = [
     'pruning.py', # leave pruning last as it takes a REALLY long time
 ]
 
+testScriptsManual = [
+    'compatibility.py',
+]
+
 
 def runtests():
     test_list = []
@@ -182,7 +186,7 @@ def runtests():
     elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
         test_list = testScripts
     else:
-        for t in testScripts + testScriptsExt:
+        for t in testScripts + testScriptsExt + testScriptsManual:
             if t in opts or re.sub(".py$", "", t) in opts:
                 test_list.append(t)
 
