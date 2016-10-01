@@ -204,7 +204,7 @@ bool CCoinsViewByScriptDB::DeleteAllCoinsByScript()
 
 bool CCoinsViewByScriptDB::GenerateAllCoinsByScript(CCoinsViewDB* coinsIn)
 {
-    LogPrintf("Building address index for -txoutsbyaddressindex. Be patient...\n");
+    LogPrintf("Building address index for -txoutindex. Be patient...\n");
     int64_t nTxCount = coinsIn->CountCoins();
 
     std::unique_ptr<CCoinsViewCursor> pcursor(coinsIn->Cursor());

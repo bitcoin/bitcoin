@@ -8,13 +8,13 @@ from test_framework.util import *
 
 
 class TxOutsByAddressTest(BitcoinTestFramework):
-    """Tests -txoutsbyaddressindex"""
+    """Tests -txoutindex"""
 
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-txoutsbyaddressindex"], [], []]
+        self.extra_args = [["-txoutindex"], [], []]
 
     def setup_network(self, split=False):
         print("Setup network...")

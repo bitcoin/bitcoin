@@ -67,7 +67,7 @@ int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = false;
-bool fTxOutsByAddressIndex = false;
+bool fTxOutIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
 bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
@@ -83,7 +83,7 @@ bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
-CTxMemPool mempool(::minRelayTxFee, fTxOutsByAddressIndex);
+CTxMemPool mempool(::minRelayTxFee, fTxOutIndex);
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
 
@@ -1999,7 +1999,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
         // Flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
             return AbortNode(state, "Failed to write to coin database");
-        if (fTxOutsByAddressIndex) {
+        if (fTxOutIndex) {
             if (!pcoinsByScript->Flush())
                 return AbortNode(state, "Failed to write to coin database");
         }
@@ -2041,7 +2041,7 @@ void static UpdateAddressIndex(const CTxOut& txout, const COutPoint& outpoint, b
 
 void static UpdateAddressIndex(const CBlock& block, CBlockUndo& blockundo, bool fConnect)
 {
-    if (!fTxOutsByAddressIndex)
+    if (!fTxOutIndex)
         return;
 
     assert(block.vtx.size() > 0);

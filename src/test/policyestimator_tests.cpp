@@ -16,8 +16,8 @@ BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    bool fTxOutsByAddressIndex = false;
-    CTxMemPool mpool(CFeeRate(1000), fTxOutsByAddressIndex);
+    bool fTxOutIndex = false;
+    CTxMemPool mpool(CFeeRate(1000), fTxOutIndex);
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
     CAmount deltaFee(100);
