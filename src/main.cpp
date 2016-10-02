@@ -3675,6 +3675,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
     if (ppindex)
         *ppindex = pindex;
 
+    CheckBlockIndex(chainparams.GetConsensus());
+
     return true;
 }
 
@@ -5827,8 +5829,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 return ProcessMessage(pfrom, NetMsgType::HEADERS, vHeadersMsg, nTimeReceived, chainparams, connman);
             }
         }
-
-        CheckBlockIndex(chainparams.GetConsensus());
     }
 
     else if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
@@ -6025,8 +6025,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 }
             }
         }
-
-        CheckBlockIndex(chainparams.GetConsensus());
         }
 
         NotifyHeaderTip();
