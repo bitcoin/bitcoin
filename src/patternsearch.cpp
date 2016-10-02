@@ -5,10 +5,10 @@
 #include "main.h"
 #include <openssl/evp.h>
 #include <boost/thread.hpp>
-#include <mm_malloc.h>
-#if (__x86_64__ || __i386__)
+#if (__x86_64__)
 #include <cpuid.h>
 #endif
+#include "aligned_malloc.h"
 #include "util.h"
 #include "sha512.h"
 #include "aes.h"
@@ -72,7 +72,7 @@ namespace patternsearch
         uint64_t* desination[SHA512_PARALLEL_N];
 
         for (int i=0; i<SHA512_PARALLEL_N; ++i) {
-            TempBufs[i] = (uint64_t*)malloc(32);
+            TempBufs[i] = (uint64_t*)aligned_malloc(32);
             memcpy(TempBufs[i], (char*)&midHash, 32);
         }
 
@@ -87,12 +87,12 @@ namespace patternsearch
         }
 
         for (int i=0; i<SHA512_PARALLEL_N; ++i) {
-            free(TempBufs[i]);
+            aligned_free(TempBufs[i]);
         }
 	}
 
 	void static aesSearch(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, std::vector< std::pair<uint32_t,uint32_t> > *results, boost::mutex *mtx, int* minerStopFlag){
-		unsigned char* cache = (unsigned char*)_mm_malloc(sizeof(char)* (cacheMemorySize + 16), 16);
+		unsigned char* cache = (unsigned char*)aligned_malloc(sizeof(char)* (cacheMemorySize + 16));
 		uint32_t* cache32 = (uint32_t*)cache;
 		uint64_t* cache64 = (uint64_t*)cache;
 		uint64_t* data64 = (uint64_t*)mainMemoryPsuedoRandomData;
@@ -126,13 +126,13 @@ namespace patternsearch
 			}
 		}
 		EVP_CIPHER_CTX_cleanup(&ctx);
-		_mm_free(cache);
+		aligned_free(cache);
 	}
 	
 	void static aesSearchAESNI(char *mainMemoryPsuedoRandomData, int threadNumber, int totalThreads, std::vector< std::pair<uint32_t,uint32_t> > *results, boost::mutex *mtx, int* minerStopFlag){
 	    // start
 	    CacheEntry* Garbage = (CacheEntry*)mainMemoryPsuedoRandomData;
-	    CacheEntry* Cache = (CacheEntry*)_mm_malloc(sizeof(CacheEntry) * AES_PARALLEL_N, 16);
+	    CacheEntry* Cache = (CacheEntry*)aligned_malloc(sizeof(CacheEntry) * AES_PARALLEL_N);
 
 	    uint32_t* data[AES_PARALLEL_N];
 	    const uint32_t* next[AES_PARALLEL_N];
@@ -140,9 +140,9 @@ namespace patternsearch
 	    for(int n=0; n<AES_PARALLEL_N; ++n) {
 	        data[n] = Cache[n].dwords;
 	    }
-	    uint32_t* ExpKey = (uint32_t*)_mm_malloc(sizeof(uint32_t) * AES_PARALLEL_N * 16 * 4, 16);
-	    uint32_t* ivs = (uint32_t*)_mm_malloc(sizeof(uint32_t) * AES_PARALLEL_N * 4, 16);
-	    uint32_t* last = (uint32_t*)_mm_malloc(sizeof(uint32_t) * 2 * 4, 16);
+	    uint32_t* ExpKey = (uint32_t*)aligned_malloc(sizeof(uint32_t) * AES_PARALLEL_N * 16 * 4);
+	    uint32_t* ivs = (uint32_t*)aligned_malloc(sizeof(uint32_t) * AES_PARALLEL_N * 4);
+	    uint32_t* last = (uint32_t*)aligned_malloc(sizeof(uint32_t) * 2 * 4);
 
 	    // Search for pattern in pseudo random data
 	    int searchNumber = COMPARE_SIZE / totalThreads;
@@ -186,10 +186,10 @@ namespace patternsearch
 	        }
 	    }
 
-	    _mm_free(last);
-	    _mm_free(ivs);
-	    _mm_free(ExpKey);
-	    _mm_free(Cache);
+	    aligned_free(last);
+	    aligned_free(ivs);
+	    aligned_free(ExpKey);
+	    aligned_free(Cache);
 	}
 
 
@@ -199,7 +199,7 @@ namespace patternsearch
 
 		bool aes_ni_supported = false;
 		bool avx2_supported = false;
-#if (__x86_64__ || __i386__)
+#if (__x86_64__)
 		uint32_t eax, ebx, ecx, edx;
 		eax = ebx = ecx = edx = 0;
 		__get_cpuid(1, &eax, &ebx, &ecx, &edx);
