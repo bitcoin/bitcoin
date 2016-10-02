@@ -1,6 +1,6 @@
 #include "sha512.h"
 
-#ifdef __AVX2__
+#if (__AVX2__) && !(__APPLE__)
 
 #include <string.h>
 #include <stdlib.h>
