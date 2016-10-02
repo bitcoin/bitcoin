@@ -203,10 +203,10 @@ namespace patternsearch
 		uint32_t eax, ebx, ecx, edx;
 		eax = ebx = ecx = edx = 0;
 		__get_cpuid(1, &eax, &ebx, &ecx, &edx);
-		aes_ni_supported = ecx & bit_AES;
+		aes_ni_supported = ecx & (1 << 25) /* bit_AES */;
 		if (__get_cpuid_max(0, NULL) >= 7) {
 			__cpuid_count (7, 0, eax, ebx, ecx, edx);
-			avx2_supported = ebx & bit_AVX2;
+			avx2_supported = ebx & (1 << 5) /* bit_AVX2 */;
 		}
 		LogPrintf("CPU support: AES-NI = %b, AVX2 = %b\n", aes_ni_supported, avx2_supported);
 #endif
