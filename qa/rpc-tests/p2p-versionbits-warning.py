@@ -144,8 +144,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # is cleared, and restart the node. This should move the versionbit state
         # to ACTIVE.
         self.nodes[0].generate(VB_PERIOD)
-        stop_node(self.nodes[0], 0)
-        wait_bitcoinds()
+        stop_nodes(self.nodes)
         # Empty out the alert file
         with open(self.alert_filename, 'w', encoding='utf8') as _:
             pass
@@ -156,8 +155,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["errors"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getnetworkinfo()["warnings"])
-        stop_node(self.nodes[0], 0)
-        wait_bitcoinds()
+        stop_nodes(self.nodes)
         self.test_versionbits_in_alert_file()
 
         # Test framework expects the node to still be running...
