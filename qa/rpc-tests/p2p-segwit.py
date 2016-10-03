@@ -64,6 +64,9 @@ class TestNode(NodeConnCB):
             self.getdataset.add(inv.hash)
         self.last_getdata = message
 
+    def on_getheaders(self, conn, message):
+        self.last_getheaders = message
+
     def on_pong(self, conn, message):
         self.last_pong = message
 
@@ -97,6 +100,10 @@ class TestNode(NodeConnCB):
         test_function = lambda: self.last_getdata != None
         self.sync(test_function, timeout)
 
+    def wait_for_getheaders(self, timeout=60):
+        test_function = lambda: self.last_getheaders != None
+        self.sync(test_function, timeout)
+
     def wait_for_inv(self, expected_inv, timeout=60):
         test_function = lambda: self.last_inv != expected_inv
         self.sync(test_function, timeout)
@@ -111,12 +118,15 @@ class TestNode(NodeConnCB):
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
         with mininode_lock:
             self.last_getdata = None
+            self.last_getheaders = None
+        msg = msg_headers()
+        msg.headers = [ CBlockHeader(block) ]
         if use_header:
-            msg = msg_headers()
-            msg.headers = [ CBlockHeader(block) ]
             self.send_message(msg)
         else:
             self.send_message(msg_inv(inv=[CInv(2, block.sha256)]))
+            self.wait_for_getheaders()
+            self.send_message(msg)
         self.wait_for_getdata()
         return
 
