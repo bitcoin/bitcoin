@@ -41,7 +41,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # 101, 102, and 103 are spend-able.
         new_blocks = self.nodes[1].generate(4)
         self.sync_all()
-
         node0_address = self.nodes[0].getnewaddress()
         node1_address = self.nodes[1].getnewaddress()
 
@@ -56,7 +55,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_101_raw = self.create_tx(coinbase_txids[1], node1_address, 50)
         spend_102_raw = self.create_tx(coinbase_txids[2], node0_address, 50)
         spend_103_raw = self.create_tx(coinbase_txids[3], node0_address, 50)
-
+ 
         # Create a block-height-locked transaction which will be invalid after reorg
         timelock_tx = self.nodes[0].createrawtransaction([{"txid": coinbase_txids[0], "vout": 0}], {node0_address: 50})
         # Set the time lock
@@ -64,12 +63,13 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         timelock_tx = timelock_tx[:-8] + hex(self.nodes[0].getblockcount() + 2)[2:] + "000000"
         timelock_tx = self.nodes[0].signrawtransaction(timelock_tx)["hex"]
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
-
+ 
         # Broadcast and mine spend_102 and 103:
         spend_102_id = self.nodes[0].sendrawtransaction(spend_102_raw)
         spend_103_id = self.nodes[0].sendrawtransaction(spend_103_raw)
         self.nodes[0].generate(1)
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
+        self.sync_all()
 
         # Create 102_1 and 103_1:
         spend_102_1_raw = self.create_tx(spend_102_id, node1_address, 50)
@@ -78,14 +78,15 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # Broadcast and mine 103_1:
         spend_103_1_id = self.nodes[0].sendrawtransaction(spend_103_1_raw)
         last_block = self.nodes[0].generate(1)
+        self.sync_all()
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
-
+        self.sync_all()
+ 
         # ... now put spend_101 and spend_102_1 in memory pools:
         spend_101_id = self.nodes[0].sendrawtransaction(spend_101_raw)
         spend_102_1_id = self.nodes[0].sendrawtransaction(spend_102_1_raw)
-
         self.sync_all()
-
+ 
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, timelock_tx_id})
 
         for node in self.nodes:
@@ -96,7 +97,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # immature/invalid:
         for node in self.nodes:
             node.invalidateblock(new_blocks[0])
-
         self.sync_all()
 
         # mempool should be empty.
