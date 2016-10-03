@@ -2448,10 +2448,6 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 
     cvBlockChange.notify_all();
 
-    extern boost::atomic<bool> flexTransActive;
-    if (chainActive.Height() == 930000)
-        flexTransActive = true;
-
     // Check the version of the last 100 blocks to see if we need to upgrade:
     static bool fWarned = false;
     if (!IsInitialBlockDownload())

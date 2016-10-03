@@ -18,8 +18,8 @@ class Transactionv4(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-flextrans"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-flextrans"]))
         connect_nodes(self.nodes[0], 1)
 
         self.is_network_split = False
