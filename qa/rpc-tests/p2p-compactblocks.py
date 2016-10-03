@@ -27,6 +27,7 @@ class TestNode(SingleNodeConnCB):
         self.last_cmpctblock = None
         self.block_announced = False
         self.last_getdata = None
+        self.last_getheaders = None
         self.last_getblocktxn = None
         self.last_block = None
         self.last_blocktxn = None
@@ -63,6 +64,9 @@ class TestNode(SingleNodeConnCB):
 
     def on_getdata(self, conn, message):
         self.last_getdata = message
+
+    def on_getheaders(self, conn, message):
+        self.last_getheaders = message
 
     def on_getblocktxn(self, conn, message):
         self.last_getblocktxn = message
@@ -393,6 +397,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
             if announce == "inv":
                 test_node.send_message(msg_inv([CInv(2, block.sha256)]))
+                success = wait_until(lambda: test_node.last_getheaders is not None, timeout=30)
+                assert(success)
+                test_node.send_header_for_blocks([block])
             else:
                 test_node.send_header_for_blocks([block])
             success = wait_until(lambda: test_node.last_getdata is not None, timeout=30)
