@@ -912,14 +912,6 @@ class SegWitTest(BitcoinTestFramework):
         # But eliminating the witness should fix it
         self.test_node.test_transaction_acceptance(tx, with_witness=False, accepted=True)
 
-        # Verify that inv's to test_node come with getdata's for non-witness tx's
-        # Just tweak the transaction, announce it, and verify we get a getdata
-        # for a normal tx
-        tx.vout[0].scriptPubKey = CScript([OP_TRUE, OP_TRUE])
-        tx.rehash()
-        self.test_node.announce_tx_and_wait_for_getdata(tx)
-        assert(self.test_node.last_getdata.inv[0].type == 1)
-
         # Cleanup: mine the first transaction and update utxo
         self.nodes[0].generate(1)
         assert_equal(len(self.nodes[0].getrawmempool()),  0)
@@ -1025,7 +1017,7 @@ class SegWitTest(BitcoinTestFramework):
     def test_block_relay(self, segwit_activated):
         print("\tTesting block relay")
 
-        blocktype = 2|MSG_WITNESS_FLAG if segwit_activated else 2
+        blocktype = 2|MSG_WITNESS_FLAG
 
         # test_node has set NODE_WITNESS, so all getdata requests should be for
         # witness blocks.
