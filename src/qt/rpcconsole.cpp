@@ -74,14 +74,14 @@ const QStringList historyFilter = QStringList()
     << "walletpassphrasechange"
     << "encryptwallet";
 
-bool command_may_contain_sensitive_data(const QString cmd)
+QString command_filter_sensitive_data(const QString cmd)
 {
     Q_FOREACH(QString unallowedCmd, historyFilter) {
         if (cmd.trimmed().startsWith(unallowedCmd)) {
-            return true;
+            return unallowedCmd;
         }
     }
-    return false;
+    return cmd;
 }
 
 }
@@ -779,20 +779,18 @@ void RPCConsole::on_lineEdit_returnPressed()
         message(CMD_REQUEST, cmd);
         Q_EMIT cmdRequest(cmd);
 
-        bool storeHistory = !command_may_contain_sensitive_data(cmd);
+        cmd = command_filter_sensitive_data(cmd);
 
-        if (storeHistory)
-        {
-            // Remove command, if already in history
-            history.removeOne(cmd);
-            // Append command to history
-            history.append(cmd);
-            // Enforce maximum history size
-            while(history.size() > CONSOLE_HISTORY)
-                history.removeFirst();
-            // Set pointer to end of history
-            historyPtr = history.size();
-        }
+        // Remove command, if already in history
+        history.removeOne(cmd);
+        // Append command to history
+        history.append(cmd);
+        // Enforce maximum history size
+        while(history.size() > CONSOLE_HISTORY)
+            history.removeFirst();
+        // Set pointer to end of history
+        historyPtr = history.size();
+
         // Scroll console view to end
         scrollToEnd();
     }
