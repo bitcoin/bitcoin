@@ -45,24 +45,13 @@ public:
     Qt::SortOrder sortOrder;
 
     /** Pull a full list of banned nodes from CNode into our cache */
-    void refreshBanlist()
+    void updateBanlist(QList<CCombinedBan> banlist)
     {
-        banmap_t banMap;
-        if(g_connman)
-            g_connman->GetBanned(banMap);
+        cachedBanlist = std::move(banlist);
+    }
 
-        cachedBanlist.clear();
-#if QT_VERSION >= 0x040700
-        cachedBanlist.reserve(banMap.size());
-#endif
-        for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
-        {
-            CCombinedBan banEntry;
-            banEntry.subnet = (*it).first;
-            banEntry.banEntry = (*it).second;
-            cachedBanlist.append(banEntry);
-        }
-
+    void sortBanlist()
+    {
         if (sortColumn >= 0)
             // sort cachedBanlist (use stable sort to prevent rows jumping around unneceesarily)
             qStableSort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
@@ -90,9 +79,6 @@ BanTableModel::BanTableModel(ClientModel *parent) :
     priv = new BanTablePriv();
     // default to unsorted
     priv->sortColumn = -1;
-
-    // load initial data
-    refresh();
 }
 
 int BanTableModel::rowCount(const QModelIndex &parent) const
@@ -160,18 +146,19 @@ QModelIndex BanTableModel::index(int row, int column, const QModelIndex &parent)
     return QModelIndex();
 }
 
-void BanTableModel::refresh()
+void BanTableModel::update(QList<CCombinedBan> banlist)
 {
-    Q_EMIT layoutAboutToBeChanged();
-    priv->refreshBanlist();
-    Q_EMIT layoutChanged();
+    priv->updateBanlist(std::move(banlist));
+    sort(priv->sortColumn, priv->sortOrder);
 }
 
 void BanTableModel::sort(int column, Qt::SortOrder order)
 {
+    Q_EMIT layoutAboutToBeChanged();
     priv->sortColumn = column;
     priv->sortOrder = order;
-    refresh();
+    priv->sortBanlist();
+    Q_EMIT layoutChanged();
 }
 
 bool BanTableModel::shouldShow()

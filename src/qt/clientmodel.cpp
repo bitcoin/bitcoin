@@ -213,7 +213,23 @@ QString ClientModel::dataDir() const
 
 void ClientModel::updateBanlist()
 {
-    banTableModel->refresh();
+    banmap_t banMap;
+    if(!g_connman)
+        return;
+    g_connman->GetBanned(banMap);
+
+    QList<CCombinedBan> banlist;
+#if QT_VERSION >= 0x040700
+    banlist.reserve(banMap.size());
+#endif
+    for (banmap_t::const_iterator it = banMap.begin(); it != banMap.end(); it++)
+    {
+        CCombinedBan banEntry;
+        banEntry.subnet = (*it).first;
+        banEntry.banEntry = (*it).second;
+        banlist.append(banEntry);
+    }
+    banTableModel->update(std::move(banlist));
 }
 
 // Handlers for core signals

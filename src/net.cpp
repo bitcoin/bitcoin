@@ -2100,6 +2100,9 @@ bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, st
 
         LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
             banmap.size(), GetTimeMillis() - nStart);
+
+        if (clientInterface)
+            clientInterface->BannedListChanged();
     } else {
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
         SetBannedSetDirty(true); // force write
