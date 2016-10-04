@@ -629,6 +629,7 @@ void CNode::copyStats(CNodeStats &stats)
 {
     stats.nodeid = this->GetId();
     X(nServices);
+    X(addr);
     X(fRelayTxes);
     X(nLastSend);
     X(nLastRecv);
