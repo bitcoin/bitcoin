@@ -21,6 +21,8 @@ QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
+struct CNodeCombinedStats;
+
 enum BlockSource {
     BLOCK_SOURCE_NONE,
     BLOCK_SOURCE_REINDEX,
@@ -63,6 +65,8 @@ public:
 
     double getVerificationProgress(const CBlockIndex *tip) const;
     QDateTime getLastBlockDate() const;
+
+    QList<CNodeCombinedStats> getNodeStats() const;
 
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
