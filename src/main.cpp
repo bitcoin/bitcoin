@@ -3760,16 +3760,21 @@ static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned 
 
 bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, const CNode* pfrom, const CBlock* pblock, bool fForceProcessing, CDiskBlockPos* dbp)
 {
+    LogPrint("thin", "Processing new block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom ? pfrom->addrName.c_str():"myself",pfrom ? pfrom->id: 0);
     // Preliminary checks
+    if (!CheckBlockHeader(*pblock, state, true))  // block header is bad
+	{
+	  // demerit the sender
+	  return error("%s: CheckBlockHeader FAILED", __func__);
+	}
+    if (IsChainNearlySyncd()) SendExpeditedBlock(*pblock,pfrom);
+
     bool checked = CheckBlock(*pblock, state);
     if (!checked)
       {
         int byteLen = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrintf("Invalid block: ver:%x time:%d Tx size:%d len:%d\n", pblock->nVersion, pblock->nTime, pblock->vtx.size(),byteLen);
       }
-
-    LogPrint("thin", "Processing new block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom ? pfrom->addrName.c_str():"myself",pfrom ? pfrom->id: 0);
-    if (IsChainNearlySyncd()) SendExpeditedBlock(*pblock,pfrom);
 
     {
         LOCK(cs_main);
@@ -5891,12 +5896,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> block;
 
         CInv inv(MSG_BLOCK, block.GetHash());
-        LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+        LogPrint("blk", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
         UnlimitedLogBlock(block,inv.hash.ToString(),receiptTime);
 
         pfrom->AddInventoryKnown(inv);
-        
-        if (IsChainNearlySyncd()) SendExpeditedBlock(block, pfrom); // BU send the received block out right away
+
+        if (IsChainNearlySyncd()) // BU send the received block out expedited channels quickly
+          {
+          CValidationState state;
+          if (CheckBlockHeader(block, state, true))  // block header is fine
+            SendExpeditedBlock(block, pfrom); 
+          }
         requester.Received(inv, pfrom, msgSize);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
