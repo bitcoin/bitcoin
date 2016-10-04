@@ -11,7 +11,7 @@ bitcoinclassic (1.1.91-trusty1) trusty; urgency=medium
   * Fix translation (#184)
   * Allow nodes to accept version2 tx
 
- -- Tom Z <tomz@freedommail.ch>  Tue, 20 Sept 2016 10:00:00 +0100
+ -- Tom Z <tomz@freedommail.ch>  Tue, 20 Sep 2016 10:00:00 +0100
 
 bitcoinclassic (1.1.0-trusty1) trusty; urgency=medium
 
