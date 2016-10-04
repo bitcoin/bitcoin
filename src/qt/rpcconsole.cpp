@@ -573,6 +573,18 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
+void RPCConsole::WriteCommandHistory()
+{
+    // persist history
+    QSettings settings;
+    settings.beginWriteArray("nRPCConsoleWindowHistory");
+    for (int i = 0; i < history.size(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue("cmd", history.at(i));
+    }
+    settings.endArray();
+}
+
 RPCConsole::~RPCConsole()
 {
     QSettings settings;
@@ -591,13 +603,7 @@ RPCConsole::~RPCConsole()
     settings.setValue("PeersTabPeerHeaderState", m_peer_widget_header_state);
     settings.setValue("PeersTabBanlistHeaderState", m_banlist_widget_header_state);
 
-    // persist history
-    settings.beginWriteArray("nRPCConsoleWindowHistory");
-    for (int i = 0; i < history.size(); ++i) {
-        settings.setArrayIndex(i);
-        settings.setValue("cmd", history.at(i));
-    }
-    settings.endArray();
+    WriteCommandHistory();
 
     m_node.rpcUnsetTimerInterface(rpcTimerInterface);
     delete rpcTimerInterface;
