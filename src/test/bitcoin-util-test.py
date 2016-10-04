@@ -19,11 +19,14 @@ test/bitcoin-util-test.py --src=[srcdir]
 
 
 if __name__ == '__main__':
+    verbose = False
     try:
         srcdir = os.environ["srcdir"]
     except:
         parser = argparse.ArgumentParser(description=help_text)
         parser.add_argument('-s', '--srcdir')
+        parser.add_argument('-v', '--verbose', action='store_true')
         args = parser.parse_args()
         srcdir = args.srcdir
-    bctest.bctester(srcdir + "/test/data", "bitcoin-util-test.json", buildenv)
+        verbose = args.verbose
+    bctest.bctester(srcdir + "/test/data", "bitcoin-util-test.json", buildenv, verbose = verbose)
