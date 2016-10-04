@@ -768,7 +768,10 @@ void RPCConsole::on_lineEdit_returnPressed()
         Q_FOREACH(QString unallowedCmd, historyFilter)
         {
             if (cmd.trimmed().startsWith(unallowedCmd))
-                storeHistory = false; break;
+            {
+                storeHistory = false;
+                break;
+            }
         }
 
         if (storeHistory)
