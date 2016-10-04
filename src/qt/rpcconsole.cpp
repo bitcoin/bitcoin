@@ -981,20 +981,21 @@ void RPCConsole::banSelectedNode(int bantime)
     if (!clientModel || !g_connman)
         return;
 
-    // Get currently selected peer address
-    QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address).toString();
-    // Find possible nodes, ban it and clear the selected node
-    std::string nStr = strNode.toStdString();
-    std::string addr;
-    int port = 0;
-    SplitHostPort(nStr, port, addr);
-
-    CNetAddr resolved;
-    if(!LookupHost(addr.c_str(), resolved, false))
+    if(cachedNodeid == -1)
         return;
-    g_connman->Ban(resolved, BanReasonManuallyAdded, bantime);
-    clearSelectedNode();
-    clientModel->getBanTableModel()->refresh();
+
+    // Get currently selected peer address
+    int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(cachedNodeid);
+    if(detailNodeRow < 0)
+        return;
+
+    // Find possible nodes, ban it and clear the selected node
+    const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
+    if(stats) {
+        g_connman->Ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
+        clearSelectedNode();
+        clientModel->getBanTableModel()->refresh();
+    }
 }
 
 void RPCConsole::unbanSelectedNode()
