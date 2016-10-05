@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -35,26 +35,26 @@ class TimestampIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining 25 blocks..."
+        print("Mining 25 blocks...")
         blockhashes = self.nodes[0].generate(25)
         time.sleep(3)
-        print "Mining 25 blocks..."
+        print("Mining 25 blocks...")
         blockhashes.extend(self.nodes[0].generate(25))
         time.sleep(3)
-        print "Mining 25 blocks..."
+        print("Mining 25 blocks...")
         blockhashes.extend(self.nodes[0].generate(25))
         self.sync_all()
         low = self.nodes[1].getblock(blockhashes[0])["time"]
         high = low + 76
 
-        print "Checking timestamp index..."
+        print("Checking timestamp index...")
         hashes = self.nodes[1].getblockhashes(high, low)
 
         assert_equal(len(hashes), len(blockhashes))
 
         assert_equal(hashes, blockhashes)
 
-        print "Passed\n"
+        print("Passed\n")
 
 
 if __name__ == '__main__':
