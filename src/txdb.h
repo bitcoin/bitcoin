@@ -6,9 +6,13 @@
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
 
+#include "main.h"
 #include "coins.h"
 #include "dbwrapper.h"
 #include "chain.h"
+#include "addressindex.h"
+#include "spentindex.h"
+#include "timestampindex.h"
 
 #include <map>
 #include <string>
@@ -19,17 +23,6 @@
 
 class CBlockIndex;
 class CCoinsViewDBCursor;
-struct CAddressUnspentKey;
-struct CAddressUnspentValue;
-struct CAddressIndexKey;
-struct CAddressIndexIteratorKey;
-struct CAddressIndexIteratorHeightKey;
-struct CTimestampIndexKey;
-struct CTimestampIndexIteratorKey;
-struct CTimestampBlockIndexKey;
-struct CTimestampBlockIndexValue;
-struct CSpentIndexKey;
-struct CSpentIndexValue;
 class uint256;
 
 //! Compensate for extra memory peak (x1.5-x1.9) at flush time.
@@ -148,7 +141,6 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex);
-    bool blockOnchainActive(const uint256 &hash);
 };
 
 #endif // BITCOIN_TXDB_H
