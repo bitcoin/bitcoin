@@ -7,8 +7,8 @@ AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
 if EMBEDDED_LEVELDB
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
-LIBLEVELDB += $(builddir)/leveldb/libleveldb.a
-LIBMEMENV  += $(builddir)/leveldb/libmemenv.a
+LIBLEVELDB += $(top_srcdir)/src/leveldb/libleveldb.a
+LIBMEMENV  += $(top_srcdir)/src/leveldb/libmemenv.a
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
 $(LIBLEVELDB): $(LIBMEMENV)
