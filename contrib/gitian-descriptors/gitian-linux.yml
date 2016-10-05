@@ -65,11 +65,11 @@ script: |
   done
   }
 
-  export PATH=${WRAP_DIR}:${PATH}
-
   # Faketime for depends so intermediate results are comparable
+  export PATH_orig=${PATH}
   create_global_faketime_wrappers "2000-01-01 12:00:00"
   create_per-host_faketime_wrappers "2000-01-01 12:00:00"
+  export PATH=${WRAP_DIR}:${PATH}
 
   cd hodlcoin
   BASEPREFIX=`pwd`/depends
@@ -79,8 +79,10 @@ script: |
   done
 
   # Faketime for binaries
+  export PATH=${PATH_orig}
   create_global_faketime_wrappers "${REFERENCE_DATETIME}"
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+  export PATH=${WRAP_DIR}:${PATH}
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
@@ -119,4 +121,3 @@ script: |
   mv $SOURCEDIST $OUTDIR/src
   mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-linux64.tar.gz
   mv ${OUTDIR}/${DISTNAME}-i686-*.tar.gz ${OUTDIR}/${DISTNAME}-linux32.tar.gz
-
