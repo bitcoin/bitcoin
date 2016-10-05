@@ -1,23 +1,35 @@
 <!--- Remove sections that do not apply -->
+
+This issue tracker is only for technical issues related to bitcoin-core.
+
+General bitcoin questions and/or support requests and are best directed to the [Bitcoin StackExchange](https://bitcoin.stackexchange.com).
+
 ### Describe the issue
 
-### Is the issue reproducible?
-#### List steps to reproduce below:
-1. 
-2. 
-3. 
+### Can you reliably reproduce the issue?
+#### If so, please list the steps to reproduce below:
+1.
+2.
+3.
 
-### Expected behavior
+### Expected behaviour
 Tell us what should happen
 
-### Actual behavior
+### Actual behaviour
 Tell us what happens instead
 
-### Any information in the debug.log file related to this issue?
+### Screenshots.
+If the issue is related to the GUI, screenshots can be added to this issue via drag & drop.
 
-### Screenshots (if available)
+### What version of bitcoin-core are you using?
+List the version number/commit ID, and if it is an official binary, self compiled or a distribution package such as PPA.
 
-### What binary version was used (official or self compiled)
+### Machine specs:
+- OS:
+- CPU:
+- RAM:
+- Disk size:
+- Disk Type (HD/SDD):
 
-### Machine specs: CPU, RAM, Disk space & OS (Windows, OS X, Linux) 
-
+### Any extra information that might be useful in the debugging process.
+This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred.
