@@ -643,7 +643,7 @@ git merge commit are mentioned.
 - #8041 `5b736dd` Fix bip9-softforks blockstore issue (MarcoFalke)
 - #7994 `1f01443` Add op csv tests to script_tests.json (Christewart)
 - #8038 `e2bf830` Various minor fixes (MarcoFalke)
-- #8072 `1b87e5b` Travis: 'make check' in parallel and verbose (MarcoFalke)
+- #8072 `1b87e5b` Travis: 'make check' in parallel and verbose (theuni)
 - #8056 `8844ef1` Remove hardcoded "4 nodes" from test_framework (MarcoFalke)
 - #8047 `37f9a1f` Test_framework: Set wait-timeout for bitcoind procs (MarcoFalke)
 - #8095 `6700cc9` Test framework: only cleanup on successful test runs (sdaftuar)
