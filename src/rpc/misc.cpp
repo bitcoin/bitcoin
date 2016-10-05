@@ -485,33 +485,6 @@ UniValue setmocktime(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
-    { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
-    { "util",               "createmultisig",         &createmultisig,         true  },
-    { "util",               "createwitnessaddress",   &createwitnessaddress,   true  },
-    { "util",               "verifymessage",          &verifymessage,          true  },
-    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true  },
-
-    /* Address index */
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true  },
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
-
-    /* Not shown in help */
-    { "hidden",             "setmocktime",            &setmocktime,            true  },
-};
-
-void RegisterMiscRPCCommands(CRPCTable &tableRPC)
-{
-    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
-}
-
 bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
 {
     if (type == 2) {
@@ -1037,4 +1010,34 @@ UniValue getspentinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("height", value.blockHeight));
 
     return obj;
+}
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+  //  --------------------- ------------------------  -----------------------  ----------
+    { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
+    { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
+    { "util",               "createmultisig",         &createmultisig,         true  },
+    { "util",               "createwitnessaddress",   &createwitnessaddress,   true  },
+    { "util",               "verifymessage",          &verifymessage,          true  },
+    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true  },
+
+    /* Address index */
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true  },
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
+
+    /* Blockchain */
+    { "blockchain",         "getspentinfo",           &getspentinfo,           false },
+
+    /* Not shown in help */
+    { "hidden",             "setmocktime",            &setmocktime,            true  },
+};
+
+void RegisterMiscRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
