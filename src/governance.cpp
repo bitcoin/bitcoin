@@ -494,33 +494,35 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
     {
         LOCK(cs);
         if(!mapObjects.count(vote.GetParentHash()))  {
-                if(pfrom)  {
-                    // only ask for missing items after our syncing process is complete --
-                    //   otherwise we'll think a full sync succeeded when they return a result
-                    if(!masternodeSync.IsSynced()) return false;
+            if(pfrom)  {
+                // only ask for missing items after our syncing process is complete --
+                //   otherwise we'll think a full sync succeeded when they return a result
+                if(!masternodeSync.IsSynced()) return false;
 
-                    // ADD THE VOTE AS AN ORPHAN, TO BE USED UPON RECEIVAL OF THE PARENT OBJECT
+                // ADD THE VOTE AS AN ORPHAN, TO BE USED UPON RECEIVAL OF THE PARENT OBJECT
 
-                    LogPrintf("CGovernanceManager::AddOrUpdateVote - Unknown object %d, asking for source\n", vote.GetParentHash().ToString());
-                    mapOrphanVotes[vote.GetParentHash()] = vote;
+                LogPrintf("CGovernanceManager::AddOrUpdateVote - Unknown object %d, asking for source\n", vote.GetParentHash().ToString());
+                mapOrphanVotes[vote.GetParentHash()] = vote;
 
-                    // ASK FOR THIS VOTES PARENT SPECIFICALLY FROM THIS USER (THEY SHOULD HAVE IT, NO?)
+                // ASK FOR THIS VOTES PARENT SPECIFICALLY FROM THIS USER (THEY SHOULD HAVE IT, NO?)
 
-                    if(!mapAskedForGovernanceObject.count(vote.GetParentHash())){
-                        syncparent = true;
-                        votehash = vote.GetParentHash();
-                        mapAskedForGovernanceObject[vote.GetParentHash()] = GetTime();
-                    }
+                if(!mapAskedForGovernanceObject.count(vote.GetParentHash())){
+                    syncparent = true;
+                    votehash = vote.GetParentHash();
+                    mapAskedForGovernanceObject[vote.GetParentHash()] = GetTime();              
+                } else {
+                    strError = "Governance object not found! Sync message has been already pushed.";
+                    return false;
                 }
-
-                strError = "Governance object not found!";
-                return false;
+            }
         }
     }
 
     // Need to keep this out of the locked section
     if(syncparent) {
         pfrom->PushMessage(NetMsgType::MNGOVERNANCESYNC, votehash);
+        strError = "Governance object not found! Sync message was pushed.";
+        return false;
     }
 
     // Reestablish lock
