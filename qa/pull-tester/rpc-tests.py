@@ -130,6 +130,7 @@ testScripts = [
     'addressindex.py',
     'timestampindex.py',
     'spentindex.py',
+    'txindex.py',
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
