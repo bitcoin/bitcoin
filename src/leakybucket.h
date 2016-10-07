@@ -10,6 +10,7 @@
 #endif
 
 #include <boost/chrono/chrono.hpp>
+#include <limits>
 
 extern const int64_t DEFAULT_MAX_RECV_BURST;
 extern const int64_t DEFAULT_AVE_RECV;
