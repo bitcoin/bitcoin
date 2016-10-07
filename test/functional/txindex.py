@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -36,22 +36,22 @@ class TxIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining blocks..."
+        print("Mining blocks...")
         self.nodes[0].generate(105)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
 
-        print "Testing transaction index..."
+        print("Testing transaction index...")
 
         privkey = "cSdkPxkAjA4HDr5VHgsebAPDEh9Gyub4HK8UJr2DFGGqKKy4K5sG"
         address = "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW"
-        addressHash = "0b2f0a0c31bfe0406b0ccc1381fdbe311946dadc".decode("hex")
+        addressHash = bytes([11,47,10,12,49,191,224,64,107,12,204,19,129,253,190,49,25,70,218,220])
         scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
-        amount = unspent[0]["amount"] * 100000000
+        amount = int(unspent[0]["amount"] * 100000000)
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
@@ -66,7 +66,7 @@ class TxIndexTest(BitcoinTestFramework):
         assert_equal(verbose["vout"][0]["valueSat"], 5000000000);
         assert_equal(verbose["vout"][0]["value"], 50);
 
-        print "Passed\n"
+        print("Passed\n")
 
 
 if __name__ == '__main__':
