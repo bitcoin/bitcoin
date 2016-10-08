@@ -1,61 +1,73 @@
 [
   { "exec": "./bitcoin-tx",
     "args": ["-create"],
-    "output_cmp": "blanktx.hex"
+    "output_cmp": "blanktx.hex",
+    "description": "Creates a blank transaction"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json","-create"],
-    "output_cmp": "blanktx.json"
+    "output_cmp": "blanktx.json",
+    "description": "Creates a blank transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-"],
     "input": "blanktx.hex",
-    "output_cmp": "blanktx.hex"
+    "output_cmp": "blanktx.hex",
+    "description": "Creates a blank transaction when nothing is piped into bitcoin-tx"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json","-"],
     "input": "blanktx.hex",
-    "output_cmp": "blanktx.json"
+    "output_cmp": "blanktx.json",
+    "description": "Creates a blank transaction when nothing is piped into bitcoin-tx (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-", "delin=1"],
     "input": "tx394b54bb.hex",
-    "output_cmp": "tt-delin1-out.hex"
+    "output_cmp": "tt-delin1-out.hex",
+    "description": "Deletes a single input from a transaction"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json", "-", "delin=1"],
     "input": "tx394b54bb.hex",
-    "output_cmp": "tt-delin1-out.json"
+    "output_cmp": "tt-delin1-out.json",
+    "description": "Deletes a single input from a transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-", "delin=31"],
     "input": "tx394b54bb.hex",
-    "return_code": 1
+    "return_code": 1,
+    "description": "Attempts to delete an input with a bad index from a transaction. Expected to fail."
   },
   { "exec": "./bitcoin-tx",
     "args": ["-", "delout=1"],
     "input": "tx394b54bb.hex",
-    "output_cmp": "tt-delout1-out.hex"
+    "output_cmp": "tt-delout1-out.hex",
+    "description": "Deletes a single output from a transaction"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json", "-", "delout=1"],
     "input": "tx394b54bb.hex",
-    "output_cmp": "tt-delout1-out.json"
+    "output_cmp": "tt-delout1-out.json",
+    "description": "Deletes a single output from a transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-", "delout=2"],
     "input": "tx394b54bb.hex",
-    "return_code": 1
+    "return_code": 1,
+    "description": "Attempts to delete an output with a bad index from a transaction. Expected to fail."
   },
   { "exec": "./bitcoin-tx",
     "args": ["-", "locktime=317000"],
     "input": "tx394b54bb.hex",
-    "output_cmp": "tt-locktime317000-out.hex"
+    "output_cmp": "tt-locktime317000-out.hex",
+    "description": "Adds an nlocktime to a transaction"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json", "-", "locktime=317000"],
     "input": "tx394b54bb.hex",
-    "output_cmp": "tt-locktime317000-out.json"
+    "output_cmp": "tt-locktime317000-out.json",
+    "description": "Adds an nlocktime to a transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -65,7 +77,8 @@
      "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outaddr=4:1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46"],
-    "output_cmp": "txcreate1.hex"
+    "output_cmp": "txcreate1.hex",
+    "description": "Creates a new transaction with three inputs and two outputs"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -76,15 +89,18 @@
      "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outaddr=4:1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46"],
-    "output_cmp": "txcreate1.json"
+    "output_cmp": "txcreate1.json",
+    "description": "Creates a new transaction with three inputs and two outputs (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-create", "outscript=0:"],
-    "output_cmp": "txcreate2.hex"
+    "output_cmp": "txcreate2.hex",
+    "description": "Creates a new transaction with a single empty output script"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json", "-create", "outscript=0:"],
-    "output_cmp": "txcreate2.json"
+    "output_cmp": "txcreate2.json",
+    "description": "Creates a new transaction with a single empty output script (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -94,7 +110,8 @@
      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
      "sign=ALL",
      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
-    "output_cmp": "txcreatesign.hex"
+    "output_cmp": "txcreatesign.hex",
+    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -105,21 +122,24 @@
      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
      "sign=ALL",
      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
-    "output_cmp": "txcreatesign.json"
+    "output_cmp": "txcreatesign.json",
+    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outdata=4:badhexdata"],
-    "return_code": 1
+    "return_code": 1,
+    "description": "Attempts to create a new transaction with one input and an output with malformed hex data. Expected to fail"
   },
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outdata=badhexdata"],
-    "return_code": 1
+    "return_code": 1,
+    "description": "Attempts to create a new transaction with one input and an output with no value and malformed hex data. Expected to fail"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -127,7 +147,8 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
-    "output_cmp": "txcreatedata1.hex"
+    "output_cmp": "txcreatedata1.hex",
+    "description": "Creates a new transaction with one input, one address output and one data output"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -136,7 +157,8 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
-    "output_cmp": "txcreatedata1.json"
+    "output_cmp": "txcreatedata1.json",
+    "description": "Creates a new transaction with one input, one address output and one data output (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -144,7 +166,8 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
-    "output_cmp": "txcreatedata2.hex"
+    "output_cmp": "txcreatedata2.hex",
+    "description": "Creates a new transaction with one input, one address output and one data (zero value) output"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -153,14 +176,16 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
-    "output_cmp": "txcreatedata2.json"
+    "output_cmp": "txcreatedata2.json",
+    "description": "Creates a new transaction with one input, one address output and one data (zero value) output (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967293",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
-    "output_cmp": "txcreatedata_seq0.hex"
+    "output_cmp": "txcreatedata_seq0.hex",
+    "description": "Creates a new transaction with one input with sequence number and one address output"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -168,19 +193,22 @@
      "-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967293",
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
-    "output_cmp": "txcreatedata_seq0.json"
+    "output_cmp": "txcreatedata_seq0.json",
+    "description": "Creates a new transaction with one input with sequence number and one address output (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
     ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
-    "output_cmp": "txcreatedata_seq1.hex"
+    "output_cmp": "txcreatedata_seq1.hex",
+    "description": "Adds a new input with sequence number to a transaction"
   },
   { "exec": "./bitcoin-tx",
     "args":
     ["-json",
      "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
-    "output_cmp": "txcreatedata_seq1.json"
+    "output_cmp": "txcreatedata_seq1.json",
+    "description": "Adds a new input with sequence number to a transaction (output in json)"
   }
 ]
