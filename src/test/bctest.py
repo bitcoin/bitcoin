@@ -45,13 +45,17 @@ def bctest(testDir, testObj, exeext):
 		print("Return code mismatch for " + outputFn)
 		sys.exit(1)
 
-def bctester(testDir, input_basename, buildenv):
+def bctester(testDir, input_basename, buildenv, verbose = False):
 	input_filename = testDir + "/" + input_basename
 	raw_data = open(input_filename).read()
 	input_data = json.loads(raw_data)
 
 	for testObj in input_data:
+		if verbose and "description" in testObj:
+			print ("Testing: " + testObj["description"])
 		bctest(testDir, testObj, buildenv.exeext)
+		if verbose and "description" in testObj:
+			print ("PASS")
 
 	sys.exit(0)
 
