@@ -266,7 +266,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         ).arg(strNearestAmount));
     } else {
         recipients[0].inputType = ALL_COINS;
-        strFunds = tr("using") + " <b>" + tr("any available funds (not recommended)") + "</b>";
+        strFunds = tr("using") + " <b>" + tr("any available funds (not anonymous)") + "</b>";
     }
 
     if(ui->checkUseInstantSend->isChecked()) {
