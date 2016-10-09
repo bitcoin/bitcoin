@@ -382,7 +382,9 @@ class CompactBlocksTest(BitcoinTestFramework):
             comp_block = HeaderAndShortIDs()
             comp_block.header = CBlockHeader(block)
             comp_block.nonce = 0
-            comp_block.shortids = [1]  # this is useless, and wrong
+            [k0, k1] = comp_block.get_siphash_keys()
+            comp_block.shortids = [
+                    calculate_shortid(k0, k1, block.vtx[0].sha256) ]
             test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
             assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
             # Expect a getblocktxn message.
