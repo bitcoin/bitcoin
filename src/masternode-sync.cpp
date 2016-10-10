@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
+#include "checkpoints.h"
 #include "governance.h"
 #include "main.h"
 #include "masternode.h"
@@ -30,6 +31,8 @@ bool CMasternodeSync::IsBlockchainSynced()
 
     if(fBlockchainSynced) return true;
     if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
+    if(fCheckpointsEnabled && pCurrentBlockIndex->nHeight < Checkpoints::GetTotalBlocksEstimate(Params().Checkpoints()))
+        return false;
 
     // same as !IsInitialBlockDownload() but no cs_main needed here
     int nMaxBlockTime = std::max(pCurrentBlockIndex->GetBlockTime(), pindexBestHeader->GetBlockTime());
