@@ -35,7 +35,8 @@ protected:
 
 private:
     Ui::ModalOverlay *ui;
-    int bestBlockHeight; //best known height (based on the headers)
+    int bestHeaderHeight; //best known height (based on the headers)
+    QDateTime bestHeaderDate;
     QVector<QPair<qint64, double> > blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
