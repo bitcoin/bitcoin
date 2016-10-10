@@ -726,6 +726,12 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
+    // We check addr before both initial mnb and update
+    if(!mnb.IsValidNetAddr()) {
+        LogPrintf("CMasternodeBroadcast::CheckMnbAndUpdateMasternodeList -- Invalid addr, rejected: masternode=%s  sigTime=%lld  addr=%s\n",
+                    mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
+        return false;
+    }
 
     if(!mnb.CheckAndUpdate(nDos)){
         LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());

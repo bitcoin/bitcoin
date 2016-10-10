@@ -203,6 +203,14 @@ void CMasternode::Check(bool fForce)
     nActiveState = MASTERNODE_ENABLED; // OK
 }
 
+bool CMasternode::IsValidNetAddr()
+{
+    // TODO: regtest is fine with any addresses for now,
+    // should probably be a bit smarter if one day we start to implement tests for this
+    return Params().NetworkIDString() == CBaseChainParams::REGTEST ||
+            (addr.IsIPv4() && IsReachable(addr) && addr.IsRoutable());
+}
+
 std::string CMasternode::GetStatus()
 {
     switch(nActiveState) {
@@ -333,6 +341,14 @@ bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
     }
 
     mnbRet = CMasternodeBroadcast(service, txin, pubKeyCollateralAddressNew, pubKeyMasternodeNew, PROTOCOL_VERSION);
+
+    if(!mnbRet.IsValidNetAddr()) {
+        strErrorRet = strprintf("Invalid IP address, masternode=%s", txin.prevout.ToStringShort());
+        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorRet);
+        mnbRet = CMasternodeBroadcast();
+        return false;
+    }
+
     mnbRet.lastPing = mnp;
     if(!mnbRet.Sign(keyCollateralAddressNew)) {
         strErrorRet = strprintf("Failed to sign broadcast, masternode=%s", txin.prevout.ToStringShort());

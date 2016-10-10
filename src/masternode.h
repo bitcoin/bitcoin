@@ -212,6 +212,8 @@ public:
     bool IsEnabled() { return nActiveState == MASTERNODE_ENABLED; }
     bool IsPreEnabled() { return nActiveState == MASTERNODE_PRE_ENABLED; }
 
+    bool IsValidNetAddr();
+
     std::string GetStatus();
 
     int GetCollateralAge();
