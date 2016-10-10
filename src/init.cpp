@@ -27,7 +27,6 @@
 #include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "keepass.h"
 #endif
 
 #include <stdint.h>
@@ -637,7 +636,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
     // Sanity check
     if (!InitSanityCheck())
-        return InitError(_("Initialization sanity check failed. Bitcoin Core is shutting down."));
+        return InitError(_("Initialization sanity check failed. Crowncoin Core is shutting down."));
 
     std::string strDataDir = GetDataDir().string();
 #ifdef ENABLE_WALLET
@@ -734,9 +733,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (r == CDBEnv::RECOVER_FAIL)
                 return InitError(_("wallet.dat corrupt, salvage failed"));
         }
-
-    // Initialize KeePass Integration
-    keePassInt.init();
 
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET

@@ -10,7 +10,6 @@
 #include "coincontrol.h"
 #include "net.h"
 #include "darksend.h"
-#include "keepass.h"
 #include "instantx.h"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -138,7 +137,7 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
      * these. Do not add them to the wallet and warn. */
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
     {
-        std::string strAddr = CBitcoinAddress(redeemScript.GetID()).ToString();
+        std::string strAddr = CCrowncoinAddress(redeemScript.GetID()).ToString();
         LogPrintf("%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n",
             __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
         return true;
@@ -173,18 +172,6 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly
         return true;
     }
 
-    // Verify KeePassIntegration
-    if(strWalletPassphrase == "keepass" && GetBoolArg("-keepass", false)) {
-        try {
-            strWalletPassphraseFinal = keePassInt.retrievePassphrase();
-        } catch (std::exception& e) {
-            LogPrintf("CWallet::Unlock could not retrieve passphrase from KeePass: Error: %s\n", e.what());
-            return false;
-        }
-    } else {
-        strWalletPassphraseFinal = strWalletPassphrase;
-    }
-
     CCrypter crypter;
     CKeyingMaterial vMasterKey;
 
@@ -209,22 +196,10 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool anonymizeOnly
 bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
     bool fWasLocked = IsLocked();
-    bool bUseKeePass = false;
 
     SecureString strOldWalletPassphraseFinal;
 
-    // Verify KeePassIntegration
-    if(strOldWalletPassphrase == "keepass" && GetBoolArg("-keepass", false)) {
-        bUseKeePass = true;
-        try {
-            strOldWalletPassphraseFinal = keePassInt.retrievePassphrase();
-        } catch (std::exception& e) {
-            LogPrintf("CWallet::ChangeWalletPassphrase could not retrieve passphrase from KeePass: Error: %s\n", e.what());
-            return false;
-        }
-    } else {
-        strOldWalletPassphraseFinal = strOldWalletPassphrase;
-    }
+    strOldWalletPassphraseFinal = strOldWalletPassphrase;
 
     {
         LOCK(cs_wallet);
@@ -260,17 +235,6 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
                 CWalletDB(strWalletFile).WriteMasterKey(pMasterKey.first, pMasterKey.second);
                 if (fWasLocked)
                     Lock();
-
-                // Update KeePass if necessary
-                if(bUseKeePass) {
-                    LogPrintf("CWallet::ChangeWalletPassphrase - Updating KeePass with new passphrase");
-                    try {
-                        keePassInt.updatePassphrase(strNewWalletPassphrase);
-                    } catch (std::exception& e) {
-                        LogPrintf("CWallet::ChangeWalletPassphrase - could not update passphrase in KeePass: Error: %s\n", e.what());
-                        return false;
-                    }
-                }
 
                 return true;
             }
@@ -497,16 +461,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
         CDB::Rewrite(strWalletFile);
-
-        // Update KeePass if necessary
-        if(GetBoolArg("-keepass", false)) {
-            LogPrintf("CWallet::EncryptWallet - Updating KeePass with new passphrase");
-            try {
-                keePassInt.updatePassphrase(strWalletPassphrase);
-            } catch (std::exception& e) {
-                LogPrintf("CWallet::EncryptWallet - could not update passphrase in KeePass: Error: %s\n", e.what());
-            }
-        }
 
     }
     NotifyStatusChanged(this);

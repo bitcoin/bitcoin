@@ -11,7 +11,6 @@
 #include "util.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "keepass.h"
 
 #include <stdint.h>
 
@@ -1917,57 +1916,4 @@ Value getwalletinfo(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
-}
-
-Value keepass(const Array& params, bool fHelp) {
-    string strCommand;
-
-    if (params.size() >= 1)
-        strCommand = params[0].get_str();
-
-    if (fHelp  ||
-        (strCommand != "genkey" && strCommand != "init" && strCommand != "setpassphrase"))
-        throw runtime_error(
-            "keepass <genkey|init|setpassphrase>\n");
-
-    if (strCommand == "genkey")
-    {
-        SecureString result;
-        // Generate RSA key
-        //std::string keePassKey = CKeePassIntegrator::generateKey();
-        //return keePassKey;
-        SecureString sKey = CKeePassIntegrator::generateKeePassKey();
-        result = "Generated Key: ";
-        result += sKey;
-        return result.c_str();
-    }
-    else if(strCommand == "init")
-    {
-        // Generate base64 encoded 256 bit RSA key and associate with KeePassHttp
-        SecureString result;
-        SecureString sKey;
-        std::string sId;
-        std::string sErrorMessage;
-        keePassInt.rpcAssociate(sId, sKey);
-        result = "Association successful. Id: ";
-        result += sId.c_str();
-        result += " - Key: ";
-        result += sKey.c_str();
-        return result.c_str();
-    }
-    else if(strCommand == "setpassphrase")
-    {
-        if(params.size() != 2) {
-            return "setlogin: invalid number of parameters. Requires a passphrase";
-        }
-
-        SecureString sPassphrase = SecureString(params[1].get_str().c_str());
-
-        keePassInt.updatePassphrase(sPassphrase);
-
-        return "setlogin: Updated credentials.";
-    }
-
-    return "Invalid command";
-
 }
