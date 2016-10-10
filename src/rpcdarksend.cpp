@@ -354,20 +354,7 @@ Value throne(const Array& params, bool fHelp)
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
-                BOOST_FOREACH(CThrone& mn, vThrones) {
-                    std::string strAddr = mn.addr.ToString();
-                    if (strAddr == mne.getIp()){
-                        found2 = true;
-                        found = false;
-                    }
-                }
-                bool result;
-                if (!found2){
-                    result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
-                } else {
-                    errorMessage = "Throne has already been started and your IP added to the list.";
-                }
-
+                bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
                 statusObj.push_back(Pair("result", result ? "successful" : "failed"));
                 if(!result) {
                     statusObj.push_back(Pair("errorMessage", errorMessage));
@@ -376,7 +363,7 @@ Value throne(const Array& params, bool fHelp)
             }
         }
 
-        if(!found && !found2) {
+        if(!found) {
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
         }
@@ -410,38 +397,20 @@ Value throne(const Array& params, bool fHelp)
         int total = 0;
         int successful = 0;
         int fail = 0;
-        bool found = false;
 
         Object resultsObj;
         std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             total++;
-
             std::string errorMessage;
-            bool result;
-            BOOST_FOREACH(CThrone& mn, vThrones) {
-                std::string strAddr = mn.addr.ToString();
-                if (strAddr == mne.getIp()){
-                    found = true;
-                }
-                if (!found){
-                    result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
-                } else {
-                    errorMessage = "Throne has already been started and your IP added to the list.";
-                    result = false;
-                }
-            }
-
+            bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
             Object statusObj;
             statusObj.push_back(Pair("alias", mne.getAlias()));
             statusObj.push_back(Pair("result", result ? "successful" : "failed"));
 
-            if (result && !found) {
+            if (result) {
                 successful++;
-            } else if (!result && found){
-                fail++;
-                statusObj.push_back(Pair("errorMessage", errorMessage));
             } else {
                 fail++;
                 statusObj.push_back(Pair("errorMessage", errorMessage));
