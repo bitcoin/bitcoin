@@ -27,7 +27,6 @@
 #include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "keepass.h"
 #endif
 
 #include <stdint.h>
@@ -734,9 +733,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (r == CDBEnv::RECOVER_FAIL)
                 return InitError(_("wallet.dat corrupt, salvage failed"));
         }
-
-    // Initialize KeePass Integration
-    keePassInt.init();
 
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
