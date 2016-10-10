@@ -5,7 +5,7 @@ define(_CLIENT_VERSION_MINOR, 9)
 define(_CLIENT_VERSION_REVISION, 2)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
-define(_COPYRIGHT_YEAR, 2014)
+define(_COPYRIGHT_YEAR, 2016)
 AC_INIT([Crowncoin],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@crowncoin.com],[crowncoin])
 AC_CONFIG_AUX_DIR([src/build-aux])
 AC_CONFIG_MACRO_DIR([src/m4])
@@ -232,12 +232,25 @@ case $host in
 
        AC_CHECK_PROG([BREW],brew, brew)
        if test x$BREW = xbrew; then
-         dnl add default homebrew paths
-         openssl_prefix=`$BREW --prefix openssl`
-         bdb_prefix=`$BREW --prefix berkeley-db4`
-         export PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-         CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
-         LIBS="$LIBS -L$bdb_prefix/lib"
++         dnl These Homebrew packages may be bottled, meaning that they won't be found
+         dnl in expected paths because they may conflict with system files. Ask
+         dnl Homebrew where each one is located, then adjust paths accordingly.
+         dnl It's safe to add these paths even if the functionality is disabled by
+         dnl the user (--without-wallet or --without-gui for example).
+
+         openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
+         bdb_prefix=`$BREW --prefix berkeley-db4 2>/dev/null`
+         qt5_prefix=`$BREW --prefix qt5 2>/dev/null`
+         if test x$openssl_prefix != x; then
+           export PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+         fi
+         if test x$bdb_prefix != x; then
+           CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
+           LIBS="$LIBS -L$bdb_prefix/lib"
+         fi
+         if test x$qt5_prefix != x; then
+           export PKG_CONFIG_PATH="$qt5_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+         fi
        fi
      else
        case $build_os in
@@ -325,7 +338,10 @@ if test x$use_glibc_compat != xno; then
   #__fdelt_chk's params and return type have changed from long unsigned int to long int.
   # See which one is present here.
   AC_MSG_CHECKING(__fdelt_chk type)
-  AC_TRY_COMPILE([#define __USE_FORTIFY_LEVEL 2
+  AC_TRY_COMPILE([#ifdef _FORTIFY_SOURCE
+                    #undef _FORTIFY_SOURCE
+                  #endif
+                  #define _FORTIFY_SOURCE 2
                   #include <sys/select.h>
      extern "C" long unsigned int __fdelt_warn(long unsigned int);],[],
     [ fdelt_type="long unsigned int"],
@@ -420,7 +436,7 @@ if test x$use_tests = xyes; then
   dnl Determine if -DBOOST_TEST_DYN_LINK is needed
   AC_MSG_CHECKING([for dynamic linked boost test])
   TEMP_LIBS="$LIBS"
-  LIBS="$LIBS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
+  LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
   AC_LINK_IFELSE([AC_LANG_SOURCE([
@@ -493,7 +509,7 @@ CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR(No working boost sleep implementation found. If on ubuntu 13.10 with libboost1.54-all-dev remove libboost.1.54-all-dev and use libboost1.53-all-dev)
+  AC_MSG_ERROR(No working boost sleep implementation found.)
 fi
 
 AC_ARG_WITH([cli],
@@ -603,7 +619,7 @@ else
     AC_MSG_RESULT($use_upnp_default)
     AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test x$TARGET_OS = xwindows; then
-      CPPFLAGS="$CPPFLAGS -DSTATICLIB"
+      CPPFLAGS="$CPPFLAGS -DMINIUPNP_STATICLIB"
     fi
   else
     AC_MSG_RESULT(no)

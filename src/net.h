@@ -38,6 +38,10 @@ namespace boost {
 
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
+/** The maximum number of entries in mapAskFor */
+static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
+/** The maximum number of new addresses to accumulate before announcing. */
+static const unsigned int MAX_ADDR_TO_SEND = 1000;
 
 inline unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
 inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
@@ -401,8 +405,13 @@ public:
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (addr.IsValid() && !setAddrKnown.count(addr))
-            vAddrToSend.push_back(addr);
+        if (addr.IsValid() && !setAddrKnown.count(addr)) {
+            if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
+                vAddrToSend[insecure_rand() % vAddrToSend.size()] = addr;
+            } else {
+                vAddrToSend.push_back(addr);
+            }
+        }
     }
 
 
@@ -425,6 +434,9 @@ public:
 
     void AskFor(const CInv& inv)
     {
+        if (mapAskFor.size() > MAPASKFOR_MAX_SZ)
+            return;
+
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
         int64_t nRequestTime;
@@ -459,7 +471,7 @@ public:
         ENTER_CRITICAL_SECTION(cs_vSend);
         assert(ssSend.size() == 0);
         ssSend << CMessageHeader(pszCommand, 0);
-        LogPrint("net", "sending: %s ", pszCommand);
+        LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?

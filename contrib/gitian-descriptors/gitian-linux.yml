@@ -25,8 +25,13 @@ remotes:
 - "url": "https://github.com/Crowndev/crowncoin.git"
   "dir": "crowncoin"
 files:
+<<<<<<< HEAD
+- "bitcoin-deps-linux32-gitian-r9.zip"
+- "bitcoin-deps-linux64-gitian-r9.zip"
+=======
 - "crowncoin-deps-linux32-gitian-r6.zip"
 - "crowncoin-deps-linux64-gitian-r6.zip"
+>>>>>>> origin/dirty-merge-0.9
 - "boost-linux32-1.55.0-gitian-r1.zip"
 - "boost-linux64-1.55.0-gitian-r1.zip"
 - "qt-linux32-4.6.4-gitian-r1.tar.gz"
@@ -59,7 +64,7 @@ script: |
     local: *;
   };' > $LINKER_SCRIPT
   function do_configure {
-      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=crowncoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+      ./configure "$@" --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=crowncoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
   cd crowncoin

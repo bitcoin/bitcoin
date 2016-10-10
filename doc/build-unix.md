@@ -68,10 +68,6 @@ for Ubuntu 12.04 and later:
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
 
-for Ubuntu 13.10:
-	libboost1.54 will not work,
-	remove libboost1.54-all-dev and install libboost1.53-all-dev instead.
-
 for Debian 7 (Wheezy) and later:
  The oldstable repository contains db4.8 packages.
  Add the following line to /etc/apt/sources.list,

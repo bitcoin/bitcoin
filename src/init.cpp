@@ -211,8 +211,9 @@ std::string HelpMessage(HelpMessageMode hmm)
     }
     strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
     strUsage += "  -dbcache=<n>           " + strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache) + "\n";
-    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
     strUsage += "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + " " + _("on startup") + "\n";
+    strUsage += "  -maxorphanblocks=<n>   " + strprintf(_("Keep at most <n> unconnectable blocks in memory (default: %u)"), DEFAULT_MAX_ORPHAN_BLOCKS) + "\n";
+    strUsage += "  -maxorphantx=<n>       " + strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS) + "\n";
     strUsage += "  -par=<n>               " + strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"), -(int)boost::thread::hardware_concurrency(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS) + "\n";
     strUsage += "  -pid=<file>            " + _("Specify pid file (default: crowncoind.pid)") + "\n";
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
@@ -226,7 +227,8 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n";
     strUsage += "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n";
     strUsage += "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + _("(default: 1)") + "\n";
-    strUsage += "  -dnsseed               " + _("Find peers using DNS lookup (default: 1 unless -connect)") + "\n";
+    strUsage += "  -dnsseed               " + _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)") + "\n";
+    strUsage += "  -forcednsseed          " + _("Always query for peer addresses via DNS lookup (default: 0)") + "\n";
     strUsage += "  -externalip=<ip>       " + _("Specify your own public address") + "\n";
     strUsage += "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n";
     strUsage += "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n";
@@ -250,12 +252,7 @@ std::string HelpMessage(HelpMessageMode hmm)
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
-    strUsage += "  -keepass               " + _("Use KeePass 2 integration using KeePassHttp plugin (default: 0)") + "\n";
-    strUsage += "  -keepassport=<port>    " + _("Connect to KeePassHttp on port <port> (default: 19455)") + "\n";
-    strUsage += "  -keepasskey=<key>      " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
-    strUsage += "  -keepassid=<name>      " + _("KeePassHttp id for the established association") + "\n";
-    strUsage += "  -keepassname=<name>    " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
-    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 1000)") + "\n";
+    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
@@ -285,8 +282,10 @@ std::string HelpMessage(HelpMessageMode hmm)
     if (hmm == HMM_CROWNCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
+#ifdef ENABLE_WALLET
     strUsage += "  -gen                   " + _("Generate coins (default: 0)") + "\n";
     strUsage += "  -genproclimit=<n>      " + _("Set the processor limit for when generation is on (-1 = unlimited, default: -1)") + "\n";
+#endif
     strUsage += "  -help-debug            " + _("Show all debugging options (usage: --help -help-debug)") + "\n";
     strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n";
     if (GetBoolArg("-help-debug", false))
@@ -413,6 +412,23 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
             LogPrintf("Warning: Could not open blocks file %s\n", path.string());
         }
     }
+}
+
+/** Sanity checks
+ *  Ensure that Crowncoin is running in a usable environment with all
+ *  necessary library support.
+ */
+bool InitSanityCheck(void)
+{
+    if(!ECC_InitSanityCheck()) {
+        InitError("OpenSSL appears to lack support for elliptic curve cryptography. For more "
+                  "information, visit https://en.bitcoin.it/wiki/OpenSSL_and_EC_Libraries");
+        return false;
+    }
+
+    // TODO: remaining sanity checks, see #4081
+
+    return true;
 }
 
 /** Initialize crowncoin.
@@ -619,6 +635,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+    // Sanity check
+    if (!InitSanityCheck())
+        return InitError(_("Initialization sanity check failed. Bitcoin Core is shutting down."));
 
     std::string strDataDir = GetDataDir().string();
 #ifdef ENABLE_WALLET
@@ -751,11 +770,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
 
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy, nSocksVersion);
+        SetProxy(NET_IPV4, addrProxy, nSocksVersion);
         if (nSocksVersion > 4) {
-            if (!IsLimited(NET_IPV6))
-                SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+            SetProxy(NET_IPV6, addrProxy, nSocksVersion);
             SetNameProxy(addrProxy, nSocksVersion);
         }
         fProxy = true;

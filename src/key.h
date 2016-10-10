@@ -307,4 +307,7 @@ struct CExtKey {
     void SetMaster(const unsigned char *seed, unsigned int nSeedLen);
 };
 
+/** Check that required EC support is available at runtime */
+bool ECC_InitSanityCheck(void);
+
 #endif

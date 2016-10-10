@@ -1,5 +1,4 @@
 Crowncoin 0.9.2 BETA
-=====================
 
 Copyright (c) 2009-2014 Crowncoin Developers
 

@@ -138,6 +138,22 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
      * these. Do not add them to the wallet and warn. */
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
     {
+        std::string strAddr = CBitcoinAddress(redeemScript.GetID()).ToString();
+        LogPrintf("%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n",
+            __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
+        return true;
+    }
+
+    return CCryptoKeyStore::AddCScript(redeemScript);
+}
+
+bool CWallet::Unlock(const SecureString& strWalletPassphrase)
+{
+    /* A sanity check was added in pull #3843 to avoid adding redeemScripts
+     * that never can be redeemed. However, old wallets may still contain
+     * these. Do not add them to the wallet and warn. */
+    if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
+    {
         std::string strAddr = CCrowncoinAddress(redeemScript.GetID()).ToString();
         LogPrintf("%s: Warning: This wallet contains a redeemScript of size %i which exceeds maximum size %i thus can never be redeemed. Do not use address %s.\n",
             __func__, redeemScript.size(), MAX_SCRIPT_ELEMENT_SIZE, strAddr);
@@ -1860,10 +1876,14 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                 {
                     int64_t nCredit = pcoin.first->vout[pcoin.second].nValue;
-                    //The priority after the next block (depth+1) is used instead of the current,
+                    //The coin age after the next block (depth+1) is used instead of the current,
                     //reflecting an assumption the user would accept a bit more delay for
                     //a chance at a free transaction.
-                    dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
+                    //But mempool inputs might still be in the mempool, so their age stays 0
+                    int age = pcoin.first->GetDepthInMainChain();
+                    if (age != 0)
+                        age += 1;
+                    dPriority += (double)nCredit * age;
                 }
 
                 int64_t nChange = nValueIn - nValue - nFeeRet;
