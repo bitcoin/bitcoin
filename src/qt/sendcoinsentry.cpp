@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,10 +30,8 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
 
-    // normal bitcoin address field
-    GUIUtil::setupAddressWidget(ui->payTo, this);
-    // just a label for displaying bitcoin address(es)
-    ui->payTo_is->setFont(GUIUtil::bitcoinAddressFont());
+    // just a label for displaying Crowncoin address(es)
+    ui->payTo_is->setFont(GUIUtil::crowncoinAddressFont());
 }
 
 SendCoinsEntry::~SendCoinsEntry()
@@ -60,9 +58,9 @@ void SendCoinsEntry::on_addressBookButton_clicked()
     }
 }
 
-void SendCoinsEntry::on_payTo_textChanged(const QString &address)
+void SendCoinsEntry::on_payTo_textChanged(const QString &value)
 {
-    updateLabel(address);
+    updateLabel();
 }
 
 void SendCoinsEntry::setModel(WalletModel *model)
@@ -98,7 +96,7 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("CRW")
     updateDisplayUnit();
 }
 
@@ -119,7 +117,9 @@ bool SendCoinsEntry::validate()
     if (recipient.paymentRequest.IsInitialized())
         return retval;
 
-    if (!model->validateAddress(ui->payTo->text()))
+    const SendCoinsRecipient rv = getValue ();
+    CTxDestination dest;
+    if (!rv.getAddress (*model, dest))
     {
         ui->payTo->setValid(false);
         retval = false;
@@ -146,7 +146,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
         return recipient;
 
     // Normal payment
-    recipient.address = ui->payTo->text();
+    recipient.recipient = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
@@ -173,7 +173,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
     {
         if (recipient.authenticatedMerchant.isEmpty()) // insecure
         {
-            ui->payTo_is->setText(recipient.address);
+            ui->payTo_is->setText(recipient.recipient);
             ui->memoTextLabel_is->setText(recipient.message);
             ui->payAmount_is->setValue(recipient.amount);
             ui->payAmount_is->setReadOnly(true);
@@ -196,7 +196,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
         ui->messageLabel->setVisible(!recipient.message.isEmpty());
 
         ui->addAsLabel->clear();
-        ui->payTo->setText(recipient.address); // this may set a label from addressbook
+        ui->payTo->setText(recipient.recipient); // this may set a label from addressbook
         if (!recipient.label.isEmpty()) // if a label had been set from the addressbook, dont overwrite with an empty label
             ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
@@ -230,10 +230,20 @@ void SendCoinsEntry::updateDisplayUnit()
     }
 }
 
-bool SendCoinsEntry::updateLabel(const QString &address)
+bool SendCoinsEntry::updateLabel()
 {
     if(!model)
         return false;
+
+    /* Resolve recipient.  */
+    const SendCoinsRecipient rv = getValue ();
+    CTxDestination dest;
+    if (!rv.getAddress (*model, dest))
+      return false;
+    CCrowncoinAddress addr;
+    if (!addr.Set (dest))
+      return false;
+    const QString address = QString::fromStdString (addr.ToString ());
 
     // Fill in label from address book, if address has an associated label
     QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);

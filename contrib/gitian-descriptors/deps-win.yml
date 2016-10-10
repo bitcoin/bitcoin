@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-deps"
+name: "crowncoin-deps"
 suites:
 - "precise"
 architectures:
@@ -124,5 +124,5 @@ script: |
     done
     #
     cd $INSTALLPREFIX
-    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r16.zip
+    find include lib | sort | zip -X@ $OUTDIR/crowncoin-deps-win$BITS-gitian-r13.zip
   done # for BITS in

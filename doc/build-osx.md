@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build bitcoind(headless client) for OSX.
+This guide will show you how to build crowncoind(headless client) for OSX.
 
 Notes
 -----
@@ -33,6 +33,36 @@ in order to install library dependencies.
 
 The installation of the actual dependencies is covered in the Instructions
 sections below.
+
+Instructions: MacPorts
+----------------------
+
+### Install dependencies
+
+Installing the dependencies using MacPorts is very straightforward.
+
+    sudo port install boost db48@+no_java openssl miniupnpc autoconf pkgconfig automake
+
+Optional: install Qt4
+
+    sudo port install qt4-mac qrencode protobuf-cpp
+
+### Building `crowncoind`
+
+1. Clone the github tree to get the source code and go into the directory.
+
+        git clone git@github.com:crowncoin/crowncoin.git crowncoin
+        cd crowncoin
+
+2.  Build crowncoind (and Crowncoin-Qt, if configured):
+
+        ./autogen.sh
+        ./configure
+        make
+
+3.  It is a good idea to build and run the unit tests, too:
+
+        make check
 
 Instructions: Homebrew
 ----------------------
@@ -78,14 +108,14 @@ After exiting, you'll get a warning that the install is keg-only, which means it
     $ brew --force link berkeley-db4
 
 
-### Building `bitcoind`
+### Building `crowncoind`
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/bitcoin/bitcoin.git
-        cd bitcoin
+        git clone https://github.com/Climbee/crowncoin.git
+        cd crowncoin
 
-2.  Build bitcoind:
+2.  Build crowncoind:
 
         ./autogen.sh
         ./configure
@@ -97,11 +127,11 @@ After exiting, you'll get a warning that the install is keg-only, which means it
 
 Creating a release build
 ------------------------
-You can ignore this section if you are building `bitcoind` for your own use.
+You can ignore this section if you are building `crowncoind` for your own use.
 
-bitcoind/bitcoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
+crowncoind/crowncoin-cli binaries are not included in the Crowncoin-Qt.app bundle.
 
-If you are building `bitcoind` or `Bitcoin-Qt` for others, your build machine should be set up
+If you are building `crowncoind` or `Crowncoin-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -110,29 +140,41 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk
 
-Once dependencies are compiled, see release-process.md for how the Bitcoin-Qt.app
+For MacPorts, that means editing your macports.conf and setting
+`macosx_deployment_target` and `build_arch`:
+
+    macosx_deployment_target=10.6
+    build_arch=x86_64
+
+... and then uninstalling and re-installing, or simply rebuilding, all ports.
+
+As of December 2012, the `boost` port does not obey `macosx_deployment_target`.
+Download `http://gavinandresen-crowncoin.s3.amazonaws.com/boost_macports_fix.zip`
+for a fix.
+
+Once dependencies are compiled, see release-process.md for how the Crowncoin-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running
 -------
 
-It's now available at `./bitcoind`, provided that you are still in the `src`
+It's now available at `./crowncoind`, provided that you are still in the `src`
 directory. We have to first create the RPC configuration file, though.
 
-Run `./bitcoind` to get the filename where it should be put, or just try these
+Run `./crowncoind` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+    echo -e "rpcuser=crowncoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crowncoin/crowncoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Crowncoin/crowncoin.conf"
 
 When next you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
 you can monitor its process by looking at the debug.log file, like this:
 
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/Crowncoin/debug.log
 
 Other commands:
 
-    ./bitcoind -daemon # to start the bitcoin daemon.
-    ./bitcoin-cli --help  # for a list of command-line options.
-    ./bitcoin-cli help    # When the daemon is running, to get a list of RPC commands
+    ./crowncoind -daemon # to start the crowncoin daemon.
+    ./crowncoin-cli --help  # for a list of command-line options.
+    ./crowncoin-cli help    # When the daemon is running, to get a list of RPC commands

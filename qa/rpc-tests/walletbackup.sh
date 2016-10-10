@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Crowncoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,8 +39,8 @@ if [ $# -lt 1 ]; then
         exit 1
 fi
 
-BITCOIND=${1}/bitcoind
-CLI=${1}/bitcoin-cli
+CROWNCOIND=${1}/crowncoind
+CLI=${1}/crowncoin-cli
 
 DIR="${BASH_SOURCE%/*}"
 SENDANDWAIT="${DIR}/send.sh"
@@ -55,7 +55,7 @@ echo "Starting nodes..."
 D4=${D}/node4
 CreateDataDir $D4 port=11030 rpcport=11031
 B4ARGS="-datadir=$D4"
-$BITCOIND $BITCOINDARGS $B4ARGS &
+$CROWNCOIND $CROWNCOINDARGS $B4ARGS &
 B4PID=$!
 
 # Want default keypool for 1/2/3, and
@@ -64,7 +64,7 @@ B4PID=$!
 function CreateConfDir {
   DIR=$1
   mkdir -p $DIR
-  CONF=$DIR/bitcoin.conf
+  CONF=$DIR/crowncoin.conf
   echo "regtest=1" >> $CONF
   echo "rpcuser=rt" >> $CONF
   echo "rpcpassword=rt" >> $CONF
@@ -80,17 +80,17 @@ function CreateConfDir {
 D1=${D}/node1
 CreateConfDir $D1 port=11000 rpcport=11001 addnode=127.0.0.1:11030
 B1ARGS="-datadir=$D1"
-$BITCOIND $B1ARGS &
+$CROWNCOIND $B1ARGS &
 B1PID=$!
 D2=${D}/node2
 CreateConfDir $D2 port=11010 rpcport=11011 addnode=127.0.0.1:11030
 B2ARGS="-datadir=$D2"
-$BITCOIND $B2ARGS &
+$CROWNCOIND $B2ARGS &
 B2PID=$!
 D3=${D}/node3
 CreateConfDir $D3 port=11020 rpcport=11021 addnode=127.0.0.1:11030 addnode=127.0.0.1:11000
 B3ARGS="-datadir=$D3"
-$BITCOIND $BITCOINDARGS $B3ARGS &
+$CROWNCOIND $CROWNCOINDARGS $B3ARGS &
 B3PID=$!
 
 # Wait until all nodes are at the same block number
@@ -128,7 +128,7 @@ function WaitMemPools {
 
 echo "Generating initial blockchain..."
 
-# 1 block, 50 XBT each == 50 BTC
+# 1 block, 50 XBT each == 50 CRW
 $CLI $B1ARGS setgenerate true 1
 WaitBlocks
 $CLI $B2ARGS setgenerate true 1
@@ -150,7 +150,7 @@ echo "Creating transactions..."
 function S {
   TXID=$( $CLI -datadir=${D}/node${1} sendtoaddress ${2} "${3}" 0 )
   if [[ $TXID == "" ]] ; then
-      echoerr "node${1}: error sending ${3} btc"
+      echoerr "node${1}: error sending ${3} CRW"
       echo -n "node${1} balance: "
       $CLI -datadir=${D}/node${1} getbalance "*" 0
       exit 1
@@ -231,11 +231,11 @@ function EraseThree {
   rm $D3/regtest/wallet.dat
 }
 function StartThree {
-  $BITCOIND $BITCOINDARGS $B1ARGS &
+  $CROWNCOIND $CROWNCOINDARGS $B1ARGS &
   B1PID=$!
-  $BITCOIND $BITCOINDARGS $B2ARGS &
+  $CROWNCOIND $CROWNCOINDARGS $B2ARGS &
   B2PID=$!
-  $BITCOIND $BITCOINDARGS $B3ARGS &
+  $CROWNCOIND $CROWNCOINDARGS $B3ARGS &
   B3PID=$!
 }
 

@@ -5,84 +5,84 @@ AM_CPPFLAGS += -I$(top_srcdir)/src \
   -I$(top_builddir)/src/qt/forms \
   $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS)
-bin_PROGRAMS = bitcoin-qt
-noinst_LIBRARIES = libbitcoinqt.a
+bin_PROGRAMS = crowncoin-qt
+noinst_LIBRARIES = libcrowncoinqt.a
 SUBDIRS = . $(BUILD_TEST_QT)
 DIST_SUBDIRS = . test
 
-# bitcoin qt core #
+# crowncoin qt core #
 QT_TS = \
-  locale/bitcoin_ach.ts \
-  locale/bitcoin_af_ZA.ts \
-  locale/bitcoin_ar.ts \
-  locale/bitcoin_be_BY.ts \
-  locale/bitcoin_bg.ts \
-  locale/bitcoin_bs.ts \
-  locale/bitcoin_ca_ES.ts \
-  locale/bitcoin_ca.ts \
-  locale/bitcoin_ca@valencia.ts \
-  locale/bitcoin_cmn.ts \
-  locale/bitcoin_cs.ts \
-  locale/bitcoin_cy.ts \
-  locale/bitcoin_da.ts \
-  locale/bitcoin_de.ts \
-  locale/bitcoin_el_GR.ts \
-  locale/bitcoin_en.ts \
-  locale/bitcoin_eo.ts \
-  locale/bitcoin_es_CL.ts \
-  locale/bitcoin_es_DO.ts \
-  locale/bitcoin_es_MX.ts \
-  locale/bitcoin_es.ts \
-  locale/bitcoin_es_UY.ts \
-  locale/bitcoin_et.ts \
-  locale/bitcoin_eu_ES.ts \
-  locale/bitcoin_fa_IR.ts \
-  locale/bitcoin_fa.ts \
-  locale/bitcoin_fi.ts \
-  locale/bitcoin_fr_CA.ts \
-  locale/bitcoin_fr.ts \
-  locale/bitcoin_gl.ts \
-  locale/bitcoin_gu_IN.ts \
-  locale/bitcoin_he.ts \
-  locale/bitcoin_hi_IN.ts \
-  locale/bitcoin_hr.ts \
-  locale/bitcoin_hu.ts \
-  locale/bitcoin_id_ID.ts \
-  locale/bitcoin_it.ts \
-  locale/bitcoin_ja.ts \
-  locale/bitcoin_ka.ts \
-  locale/bitcoin_kk_KZ.ts \
-  locale/bitcoin_ko_KR.ts \
-  locale/bitcoin_ky.ts \
-  locale/bitcoin_la.ts \
-  locale/bitcoin_lt.ts \
-  locale/bitcoin_lv_LV.ts \
-  locale/bitcoin_mn.ts \
-  locale/bitcoin_ms_MY.ts \
-  locale/bitcoin_nb.ts \
-  locale/bitcoin_nl.ts \
-  locale/bitcoin_pam.ts \
-  locale/bitcoin_pl.ts \
-  locale/bitcoin_pt_BR.ts \
-  locale/bitcoin_pt_PT.ts \
-  locale/bitcoin_ro_RO.ts \
-  locale/bitcoin_ru.ts \
-  locale/bitcoin_sah.ts \
-  locale/bitcoin_sk.ts \
-  locale/bitcoin_sl_SI.ts \
-  locale/bitcoin_sq.ts \
-  locale/bitcoin_sr.ts \
-  locale/bitcoin_sv.ts \
-  locale/bitcoin_th_TH.ts \
-  locale/bitcoin_tr.ts \
-  locale/bitcoin_uk.ts \
-  locale/bitcoin_ur_PK.ts \
-  locale/bitcoin_uz@Cyrl.ts \
-  locale/bitcoin_vi.ts \
-  locale/bitcoin_vi_VN.ts \
-  locale/bitcoin_zh_CN.ts \
-  locale/bitcoin_zh_HK.ts \
-  locale/bitcoin_zh_TW.ts
+  locale/crowncoin_ach.ts \
+  locale/crowncoin_af_ZA.ts \
+  locale/crowncoin_ar.ts \
+  locale/crowncoin_be_BY.ts \
+  locale/crowncoin_bg.ts \
+  locale/crowncoin_bs.ts \
+  locale/crowncoin_ca_ES.ts \
+  locale/crowncoin_ca.ts \
+  locale/crowncoin_ca@valencia.ts \
+  locale/crowncoin_cmn.ts \
+  locale/crowncoin_cs.ts \
+  locale/crowncoin_cy.ts \
+  locale/crowncoin_da.ts \
+  locale/crowncoin_de.ts \
+  locale/crowncoin_el_GR.ts \
+  locale/crowncoin_en.ts \
+  locale/crowncoin_eo.ts \
+  locale/crowncoin_es_CL.ts \
+  locale/crowncoin_es_DO.ts \
+  locale/crowncoin_es_MX.ts \
+  locale/crowncoin_es.ts \
+  locale/crowncoin_es_UY.ts \
+  locale/crowncoin_et.ts \
+  locale/crowncoin_eu_ES.ts \
+  locale/crowncoin_fa_IR.ts \
+  locale/crowncoin_fa.ts \
+  locale/crowncoin_fi.ts \
+  locale/crowncoin_fr_CA.ts \
+  locale/crowncoin_fr.ts \
+  locale/crowncoin_gl.ts \
+  locale/crowncoin_gu_IN.ts \
+  locale/crowncoin_he.ts \
+  locale/crowncoin_hi_IN.ts \
+  locale/crowncoin_hr.ts \
+  locale/crowncoin_hu.ts \
+  locale/crowncoin_id_ID.ts \
+  locale/crowncoin_it.ts \
+  locale/crowncoin_ja.ts \
+  locale/crowncoin_ka.ts \
+  locale/crowncoin_kk_KZ.ts \
+  locale/crowncoin_ko_KR.ts \
+  locale/crowncoin_ky.ts \
+  locale/crowncoin_la.ts \
+  locale/crowncoin_lt.ts \
+  locale/crowncoin_lv_LV.ts \
+  locale/crowncoin_mn.ts \
+  locale/crowncoin_ms_MY.ts \
+  locale/crowncoin_nb.ts \
+  locale/crowncoin_nl.ts \
+  locale/crowncoin_pam.ts \
+  locale/crowncoin_pl.ts \
+  locale/crowncoin_pt_BR.ts \
+  locale/crowncoin_pt_PT.ts \
+  locale/crowncoin_ro_RO.ts \
+  locale/crowncoin_ru.ts \
+  locale/crowncoin_sah.ts \
+  locale/crowncoin_sk.ts \
+  locale/crowncoin_sl_SI.ts \
+  locale/crowncoin_sq.ts \
+  locale/crowncoin_sr.ts \
+  locale/crowncoin_sv.ts \
+  locale/crowncoin_th_TH.ts \
+  locale/crowncoin_tr.ts \
+  locale/crowncoin_uk.ts \
+  locale/crowncoin_ur_PK.ts \
+  locale/crowncoin_uz@Cyrl.ts \
+  locale/crowncoin_vi.ts \
+  locale/crowncoin_vi_VN.ts \
+  locale/crowncoin_zh_CN.ts \
+  locale/crowncoin_zh_HK.ts \
+  locale/crowncoin_zh_TW.ts
 
 QT_FORMS_UI = \
   forms/aboutdialog.ui \
@@ -101,16 +101,22 @@ QT_FORMS_UI = \
   forms/sendcoinsdialog.ui \
   forms/sendcoinsentry.ui \
   forms/signverifymessagedialog.ui \
-  forms/transactiondescdialog.ui
+  forms/transactiondescdialog.ui \
+  forms/thronemanager.ui \
+  forms/addeditadrenalinenode.ui \
+  forms/adrenalinenodeconfigdialog.ui 
 
 QT_MOC_CPP = \
   moc_addressbookpage.cpp \
   moc_addresstablemodel.cpp \
   moc_askpassphrasedialog.cpp \
-  moc_bitcoinaddressvalidator.cpp \
-  moc_bitcoinamountfield.cpp \
-  moc_bitcoingui.cpp \
-  moc_bitcoinunits.cpp \
+  moc_thronemanager.cpp \
+  moc_addeditadrenalinenode.cpp \
+  moc_adrenalinenodeconfigdialog.cpp \
+  moc_crowncoinaddressvalidator.cpp \
+  moc_crowncoinamountfield.cpp \
+  moc_crowncoingui.cpp \
+  moc_crowncoinunits.cpp \
   moc_clientmodel.cpp \
   moc_coincontroldialog.cpp \
   moc_coincontroltreewidget.cpp \
@@ -148,31 +154,31 @@ QT_MOC_CPP = \
   moc_walletmodel.cpp \
   moc_walletview.cpp
 
-BITCOIN_MM = \
+CROWNCOIN_MM = \
   macdockiconhandler.mm \
   macnotificationhandler.mm
 
 QT_MOC = \
-  bitcoin.moc \
+  crowncoin.moc \
   intro.moc \
   overviewpage.moc \
   rpcconsole.moc
 
-QT_QRC_CPP = qrc_bitcoin.cpp
-QT_QRC = bitcoin.qrc
+QT_QRC_CPP = qrc_crowncoin.cpp
+QT_QRC = crowncoin.qrc
 
 PROTOBUF_CC = paymentrequest.pb.cc
 PROTOBUF_H = paymentrequest.pb.h
 PROTOBUF_PROTO = paymentrequest.proto
 
-BITCOIN_QT_H = \
+CROWNCOIN_QT_H = \
   addressbookpage.h \
   addresstablemodel.h \
   askpassphrasedialog.h \
-  bitcoinaddressvalidator.h \
-  bitcoinamountfield.h \
-  bitcoingui.h \
-  bitcoinunits.h \
+  crowncoinaddressvalidator.h \
+  crowncoinamountfield.h \
+  crowncoingui.h \
+  crowncoinunits.h \
   clientmodel.h \
   coincontroldialog.h \
   coincontroltreewidget.h \
@@ -213,15 +219,18 @@ BITCOIN_QT_H = \
   walletmodel.h \
   walletmodeltransaction.h \
   walletview.h \
-  winshutdownmonitor.h
+  winshutdownmonitor.h \
+  thronemanager.h \
+  addeditadrenalinenode.h \
+  adrenalinenodeconfigdialog.h 
 
 RES_ICONS = \
   res/icons/add.png \
   res/icons/address-book.png \
-  res/icons/bitcoin.ico \
-  res/icons/bitcoin.png \
-  res/icons/bitcoin_testnet.ico \
-  res/icons/bitcoin_testnet.png \
+  res/icons/crowncoin.ico \
+  res/icons/crowncoin.png \
+  res/icons/crowncoin_testnet.ico \
+  res/icons/crowncoin_testnet.png \
   res/icons/clock1.png \
   res/icons/clock2.png \
   res/icons/clock3.png \
@@ -260,12 +269,12 @@ RES_ICONS = \
   res/icons/tx_output.png \
   res/icons/tx_mined.png
 
-BITCOIN_QT_CPP = \
-  bitcoin.cpp \
-  bitcoinaddressvalidator.cpp \
-  bitcoinamountfield.cpp \
-  bitcoingui.cpp \
-  bitcoinunits.cpp \
+CROWNCOIN_QT_CPP = \
+  crowncoin.cpp \
+  crowncoinaddressvalidator.cpp \
+  crowncoinamountfield.cpp \
+  crowncoingui.cpp \
+  crowncoinunits.cpp \
   clientmodel.cpp \
   csvmodelwriter.cpp \
   guiutil.cpp \
@@ -280,10 +289,12 @@ BITCOIN_QT_CPP = \
   splashscreen.cpp \
   trafficgraphwidget.cpp \
   utilitydialog.cpp \
-  winshutdownmonitor.cpp
-
+  winshutdownmonitor.cpp \
+  thronemanager.cpp \
+  addeditadrenalinenode.cpp \
+  adrenalinenodeconfigdialog.cpp 
 if ENABLE_WALLET
-BITCOIN_QT_CPP += \
+CROWNCOIN_QT_CPP += \
   addressbookpage.cpp \
   addresstablemodel.cpp \
   askpassphrasedialog.cpp \
@@ -319,40 +330,40 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
-BITCOIN_RC = res/bitcoin-qt-res.rc
+CROWNCOIN_RC = res/crowncoin-qt-res.rc
 
-libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+libcrowncoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
-libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+libcrowncoinqt_a_SOURCES = $(CROWNCOIN_QT_CPP) $(CROWNCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
-nodist_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_libcrowncoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP)
 
-BUILT_SOURCES = $(nodist_libbitcoinqt_a_SOURCES)
+BUILT_SOURCES = $(nodist_libcrowncoinqt_a_SOURCES)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-# bitcoin-qt binary #
-bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+# crowncoin-qt binary #
+crowncoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
-bitcoin_qt_SOURCES = bitcoin.cpp
+crowncoin_qt_SOURCES = crowncoin.cpp
 if TARGET_DARWIN
-  bitcoin_qt_SOURCES += $(BITCOIN_MM)
+  crowncoin_qt_SOURCES += $(CROWNCOIN_MM)
 endif
 if TARGET_WINDOWS
-  bitcoin_qt_SOURCES += $(BITCOIN_RC)
+  crowncoin_qt_SOURCES += $(CROWNCOIN_RC)
 endif
-bitcoin_qt_LDADD = libbitcoinqt.a $(LIBBITCOIN_SERVER)
+crowncoin_qt_LDADD = libcrowncoinqt.a $(LIBCROWNCOIN_SERVER)
 if ENABLE_WALLET
-bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+crowncoin_qt_LDADD += $(LIBCROWNCOIN_WALLET)
 endif
-bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+crowncoin_qt_LDADD += $(LIBCROWNCOIN_CLI) $(LIBCROWNCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
-bitcoin_qt_LDFLAGS = $(QT_LDFLAGS)
+crowncoin_qt_LDFLAGS = $(QT_LDFLAGS)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))
@@ -363,15 +374,15 @@ QT_QM=$(QT_TS:.ts=.qm)
 .PHONY: FORCE
 .SECONDARY: $(QT_QM)
 
-bitcoinstrings.cpp: FORCE
-	$(MAKE) -C $(top_srcdir)/src qt/bitcoinstrings.cpp
+crowncoinstrings.cpp: FORCE
+	$(MAKE) -C $(top_srcdir)/src qt/crowncoinstrings.cpp
 
-translate: bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: crowncoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(CROWNCOIN_QT_CPP) $(CROWNCOIN_QT_H) $(CROWNCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/bitcoin_en.ts
+	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/crowncoin_en.ts
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
-	@cd $(abs_srcdir); test -f $(RCC) && QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin -o $(abs_builddir)/$@ $< || \
+	@cd $(abs_srcdir); test -f $(RCC) && QT_SELECT=$(QT_SELECT) $(RCC) -name crowncoin -o $(abs_builddir)/$@ $< || \
 	  echo error: could not build $@
 	$(SED) -e '/^\*\*.*Created:/d' $@ > $@.n && mv $@{.n,}
 	$(SED) -e '/^\*\*.*by:/d' $@  > $@.n && mv $@{.n,}

@@ -1,5 +1,11 @@
 *.tar.gz
 
+src/crowncoin-cli
+src/crowncoind
+src/qt/crowncoin-qt
+src/qt/test/test_crowncoin-qt
+src/test/test_crowncoin
+
 *.exe
 src/bitcoin
 src/bitcoind
@@ -83,3 +89,5 @@ qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/build-tests.sh
 
 !src/leveldb*/Makefile
+CMakeLists.txt
+.idea/

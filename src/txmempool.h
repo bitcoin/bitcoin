@@ -1,14 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_TXMEMPOOL_H
-#define BITCOIN_TXMEMPOOL_H
+#ifndef CROWNCOIN_TXMEMPOOL_H
+#define CROWNCOIN_TXMEMPOOL_H
 
 #include <list>
 
 #include "coins.h"
 #include "core.h"
+#include "names.h"
 #include "sync.h"
 
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
@@ -62,6 +63,15 @@ public:
     std::map<uint256, CTxMemPoolEntry> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
 
+    /* Keep track of all names that are currently operated on by pending
+       transactions in the mempool.  Alternatively, we could also adapt
+       CCoinsViewMemPool to be a "full" CCoinsView also with respect
+       to names -- but this makes things more complicated.  Just checking
+       that no name appears twice in the mempool and that all name
+       operations are valid with respect to the "actual", DB-backed CCoinsView
+       should be enough for this purpose.  */
+    CNameMemPool names;
+
     CTxMemPool();
 
     /*
@@ -110,4 +120,4 @@ public:
     bool HaveCoins(const uint256 &txid);
 };
 
-#endif /* BITCOIN_TXMEMPOOL_H */
+#endif /* CROWNCOIN_TXMEMPOOL_H */

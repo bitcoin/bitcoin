@@ -3,28 +3,29 @@ include Makefile.include
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
-  libbitcoin_server.a \
-  libbitcoin_common.a \
-  libbitcoin_cli.a
+  libcrowncoin_server.a \
+  libcrowncoin_common.a \
+  libcrowncoin_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libbitcoin_wallet.a
+noinst_LIBRARIES += libcrowncoin_wallet.a
 endif
 
 bin_PROGRAMS =
 
-if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+if BUILD_CROWNCOIND
+  bin_PROGRAMS += crowncoind
 endif
 
-if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcoin-cli
+if BUILD_CROWNCOIN_CLI
+  bin_PROGRAMS += crowncoin-cli
 endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
 .PHONY: FORCE
-# bitcoin core #
-BITCOIN_CORE_H = \
+# Crowncoin #
+CROWNCOIN_CORE_H = \
+  activethrone.h \
   addrman.h \
   alert.h \
   allocators.h \
@@ -39,16 +40,25 @@ BITCOIN_CORE_H = \
   compat.h \
   core.h \
   crypter.h \
+  darksend.h \
+  darksend-relay.h \
   db.h \
   hash.h \
   init.h \
+  instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
+  throne.h \
+  throne-pos.h \
+  throneman.h \
+  throneconfig.h \
   miner.h \
   mruset.h \
+  names.h \
   netbase.h \
   net.h \
   noui.h \
@@ -58,6 +68,7 @@ BITCOIN_CORE_H = \
   rpcserver.h \
   script.h \
   serialize.h \
+  spork.h \
   sync.h \
   threadsafety.h \
   tinyformat.h \
@@ -87,7 +98,8 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libbitcoin_server_a_SOURCES = \
+libcrowncoin_server_a_SOURCES = \
+  activethrone.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -98,33 +110,47 @@ libbitcoin_server_a_SOURCES = \
   leveldbwrapper.cpp \
   main.cpp \
   miner.cpp \
+  names.cpp \
   net.cpp \
   noui.cpp \
   rpcblockchain.cpp \
+  rpcdarksend.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
+  rpcnames.cpp \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   txdb.cpp \
   txmempool.cpp \
   $(JSON_H) \
-  $(BITCOIN_CORE_H)
+  $(CROWNCOIN_CORE_H)
 
-libbitcoin_wallet_a_SOURCES = \
+libcrowncoin_wallet_a_SOURCES = \
+  activethrone.cpp \
   db.cpp \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \
   walletdb.cpp \
-  $(BITCOIN_CORE_H)
+  keepass.cpp \
+  $(CROWNCOIN_CORE_H)
 
-libbitcoin_common_a_SOURCES = \
+libcrowncoin_common_a_SOURCES = \
+  activethrone.cpp \
+  auxpow.cpp \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
   core.cpp \
+  darksend.cpp \
+  darksend-relay.cpp \
+  throne.cpp \
+  throne-pos.cpp \
+  throneman.cpp \
+  throneconfig.cpp \
+  instantx.cpp \
   hash.cpp \
   key.cpp \
   netbase.cpp \
@@ -134,50 +160,51 @@ libbitcoin_common_a_SOURCES = \
   sync.cpp \
   util.cpp \
   version.cpp \
-  $(BITCOIN_CORE_H)
+  spork.cpp \
+  $(CROWNCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcoin_common_a_SOURCES += compat/glibc_compat.cpp
-libbitcoin_common_a_SOURCES += compat/glibcxx_compat.cpp
+libcrowncoin_common_a_SOURCES += compat/glibc_compat.cpp
+libcrowncoin_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libbitcoin_cli_a_SOURCES = \
+libcrowncoin_cli_a_SOURCES = \
   rpcclient.cpp \
-  $(BITCOIN_CORE_H)
+  $(CROWNCOIN_CORE_H)
 
-nodist_libbitcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libcrowncoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
-# bitcoind binary #
-bitcoind_LDADD = \
-  libbitcoin_server.a \
-  libbitcoin_cli.a \
-  libbitcoin_common.a \
+# crowncoind binary #
+crowncoind_LDADD = \
+  libcrowncoin_server.a \
+  libcrowncoin_cli.a \
+  libcrowncoin_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-bitcoind_LDADD += libbitcoin_wallet.a
+crowncoind_LDADD += libcrowncoin_wallet.a
 endif
-bitcoind_SOURCES = bitcoind.cpp
+crowncoind_SOURCES = crowncoind.cpp
 #
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoind-res.rc
+crowncoind_SOURCES += crowncoind-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
+crowncoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
-# bitcoin-cli binary #
-bitcoin_cli_LDADD = \
-  libbitcoin_cli.a \
-  libbitcoin_common.a \
+# crowncoin-cli binary #
+crowncoin_cli_LDADD = \
+  libcrowncoin_cli.a \
+  libcrowncoin_common.a \
   $(BOOST_LIBS)
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
+crowncoin_cli_SOURCES = crowncoin-cli.cpp
 #
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+crowncoin_cli_SOURCES += crowncoin-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -188,7 +215,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_cli_a_SOURCES)
+qt/crowncoinstrings.cpp: $(libcrowncoin_server_a_SOURCES) $(libcrowncoin_common_a_SOURCES) $(libcrowncoin_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 

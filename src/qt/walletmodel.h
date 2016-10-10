@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,7 @@ class AddressTableModel;
 class OptionsModel;
 class RecentRequestsTableModel;
 class TransactionTableModel;
+class WalletModel;
 class WalletModelTransaction;
 
 class CCoinControl;
@@ -38,14 +39,14 @@ class SendCoinsRecipient
 public:
     explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
     explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+        recipient(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an insecure payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
     // Info: As we don't need to process addresses in here when using
     // payment requests, we can abuse it for displaying an address list.
     // Todo: This is a hack, should be replaced with a cleaner solution!
-    QString address;
+    QString recipient;
     QString label;
     qint64 amount;
     // If from a payment request, this is used for storing the memo
@@ -63,7 +64,7 @@ public:
     (
         SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(this);
 
-        std::string sAddress = pthis->address.toStdString();
+        std::string sAddress = pthis->recipient.toStdString();
         std::string sLabel = pthis->label.toStdString();
         std::string sMessage = pthis->message.toStdString();
         std::string sPaymentRequest;
@@ -82,7 +83,7 @@ public:
 
         if (fRead)
         {
-            pthis->address = QString::fromStdString(sAddress);
+            pthis->recipient = QString::fromStdString(sAddress);
             pthis->label = QString::fromStdString(sLabel);
             pthis->message = QString::fromStdString(sMessage);
             if (!sPaymentRequest.empty())
@@ -90,9 +91,14 @@ public:
             pthis->authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
         }
     )
+
+    /* Get the recipient address.  This translates a recipient name if
+       applicable.  Returns false if the name cannot be resolved.  */
+    bool getAddress (const WalletModel& model, CTxDestination& dest) const;
+
 };
 
-/** Interface to Bitcoin wallet from Qt view code. */
+/** Interface to Crowncoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -132,7 +138,11 @@ public:
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
-    bool validateAddress(const QString &address);
+    bool validateAddress(const QString &address) const;
+
+    /* Check if a given name can be used as a "sendtoname" recipient and
+       if yes, set the address to the one that should be used.  */
+    bool checkRecipientName (const QString& name, CTxDestination& dest) const;
 
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn

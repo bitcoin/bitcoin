@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Crowncoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,8 +13,8 @@ fi
 
 set -f
 
-BITCOIND=${1}/bitcoind
-CLI=${1}/bitcoin-cli
+CROWNCOIND=${1}/crowncoind
+CLI=${1}/crowncoin-cli
 
 DIR="${BASH_SOURCE%/*}"
 SENDANDWAIT="${DIR}/send.sh"
@@ -29,13 +29,13 @@ D=$(mktemp -d test.XXXXX)
 D1=${D}/node1
 CreateDataDir $D1 port=11000 rpcport=11001
 B1ARGS="-datadir=$D1"
-$BITCOIND $B1ARGS &
+$CROWNCOIND $B1ARGS &
 B1PID=$!
 
 D2=${D}/node2
 CreateDataDir $D2 port=11010 rpcport=11011
 B2ARGS="-datadir=$D2"
-$BITCOIND $B2ARGS &
+$CROWNCOIND $B2ARGS &
 B2PID=$!
 
 # Wait until both nodes are at the same block number
@@ -85,14 +85,14 @@ CheckBalance "$B2ARGS" 0
 # restart B2 with no connection
 $CLI $B2ARGS stop > /dev/null 2>&1
 wait $B2PID
-$BITCOIND $B2ARGS &
+$CROWNCOIND $B2ARGS &
 B2PID=$!
 
 B2ADDRESS=$( $CLI $B2ARGS getaccountaddress "from1" )
 
 # Have B1 create two transactions; second will
 # spend change from first, since B1 starts with only a single
-# 50 bitcoin output:
+# 50 crowncoin output:
 $CLI $B1ARGS move "" "foo" 10.0 > /dev/null
 $CLI $B1ARGS move "" "bar" 10.0 > /dev/null
 TXID1=$( $CLI $B1ARGS sendfrom foo $B2ADDRESS 1.0 0)
@@ -129,7 +129,7 @@ $CLI $B2ARGS addnode 127.0.0.1:11000 onetry
 $CLI $B2ARGS setgenerate true 1
 WaitBlocks
 
-# B1 should have 49 BTC; the 2 BTC send is
+# B1 should have 49 CRW; the 2 CRW send is
 # conflicted, and should not count in
 # balances.
 CheckBalance "$B1ARGS" 49
@@ -137,7 +137,7 @@ CheckBalance "$B1ARGS" 49 "*"
 CheckBalance "$B1ARGS" 9 "foo"
 CheckBalance "$B1ARGS" 10 "bar"
 
-# B2 should have 51 BTC
+# B2 should have 51 CRW
 CheckBalance "$B2ARGS" 51
 CheckBalance "$B2ARGS" 1 "from1"
 

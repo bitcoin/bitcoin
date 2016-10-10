@@ -23,7 +23,7 @@
       <attribute name="title">
        <string>&amp;Information</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
+      <layout class="QGridLayout" name="gridLayout" columnstretch="0,0">
        <property name="horizontalSpacing">
         <number>12</number>
        </property>
@@ -86,6 +86,13 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Build date</string>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="0">
         <widget class="QLabel" name="label_14">
          <property name="text">
@@ -112,10 +119,10 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_12">
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_13">
          <property name="text">
-          <string>Build date</string>
+          <string>Startup time</string>
          </property>
         </widget>
        </item>
@@ -135,10 +142,10 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_13">
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>Startup time</string>
+          <string>Name</string>
          </property>
         </widget>
        </item>
@@ -171,10 +178,10 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="label_8">
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_7">
          <property name="text">
-          <string>Name</string>
+          <string>Number of connections</string>
          </property>
         </widget>
        </item>
@@ -194,10 +201,10 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="label_7">
+       <item row="11" column="0">
+        <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Number of connections</string>
+          <string>Current number of blocks</string>
          </property>
         </widget>
        </item>
@@ -217,7 +224,7 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <widget class="QLabel" name="label_10">
          <property name="font">
           <font>
@@ -230,14 +237,14 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0">
-        <widget class="QLabel" name="label_3">
+       <item row="12" column="0">
+        <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>Current number of blocks</string>
+          <string>Estimated total blocks</string>
          </property>
         </widget>
        </item>
-       <item row="10" column="1">
+       <item row="11" column="1">
         <widget class="QLabel" name="numberOfBlocks">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -256,7 +263,10 @@
        <item row="11" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Last block time</string>
+          <string>&amp;Open</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -305,7 +315,7 @@
        <item row="14" column="0">
         <widget class="QPushButton" name="openDebugLogfileButton">
          <property name="toolTip">
-          <string>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</string>
+          <string>Open the Crowncoin debug log file from the current data directory. This can take a few seconds for large log files.</string>
          </property>
          <property name="text">
           <string>&amp;Open</string>
@@ -327,6 +337,20 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="9" column="0">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Throne Count</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1">
+        <widget class="QLabel" name="throneCount">
+         <property name="text">
+          <string>N/A</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -387,7 +411,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../crowncoin.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="shortcut">
@@ -668,7 +692,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../crowncoin.qrc"/>
  </resources>
  <connections/>
 </ui>

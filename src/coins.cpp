@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 The Bitcoin developers
+// Copyright (c) 2012-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -55,7 +55,10 @@ bool CCoinsView::SetCoins(const uint256 &txid, const CCoins &coins) { return fal
 bool CCoinsView::HaveCoins(const uint256 &txid) { return false; }
 uint256 CCoinsView::GetBestBlock() { return uint256(0); }
 bool CCoinsView::SetBestBlock(const uint256 &hashBlock) { return false; }
-bool CCoinsView::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
+bool CCoinsView::GetName (const CName& name, CNameData& data) const { return false; }
+bool CCoinsView::SetName (const CName& name, const CNameData& data) { return false; }
+bool CCoinsView::DeleteName (const CName& name) { return false; }
+bool CCoinsView::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names) { return false; }
 bool CCoinsView::GetStats(CCoinsStats &stats) { return false; }
 
 
@@ -65,8 +68,11 @@ bool CCoinsViewBacked::SetCoins(const uint256 &txid, const CCoins &coins) { retu
 bool CCoinsViewBacked::HaveCoins(const uint256 &txid) { return base->HaveCoins(txid); }
 uint256 CCoinsViewBacked::GetBestBlock() { return base->GetBestBlock(); }
 bool CCoinsViewBacked::SetBestBlock(const uint256 &hashBlock) { return base->SetBestBlock(hashBlock); }
+bool CCoinsViewBacked::GetName (const CName& name, CNameData& data) const { return base->GetName (name, data); }
+bool CCoinsViewBacked::SetName (const CName& name, const CNameData& data) { return base->SetName (name, data); }
+bool CCoinsViewBacked::DeleteName (const CName& name) { return base->DeleteName (name); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
-bool CCoinsViewBacked::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
+bool CCoinsViewBacked::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names) { return base->BatchWrite(mapCoins, hashBlock, names); }
 bool CCoinsViewBacked::GetStats(CCoinsStats &stats) { return base->GetStats(stats); }
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
@@ -121,21 +127,48 @@ bool CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
     return true;
 }
 
-bool CCoinsViewCache::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlockIn) {
+bool CCoinsViewCache::GetName (const CName& name, CNameData& data) const {
+    if (cacheNames.IsDeleted (name))
+        return false;
+    if (cacheNames.Get (name, data))
+        return true;
+
+    /* Note: This does not attempt to cache name queries.  The cache
+       only keeps track of changes!  */
+
+    return base->GetName (name, data);
+}
+
+bool CCoinsViewCache::SetName (const CName& name, const CNameData& data) {
+    cacheNames.Set (name, data);
+    return true;
+}
+
+bool CCoinsViewCache::DeleteName (const CName& name) {
+    cacheNames.Delete (name);
+    return true;
+}
+
+bool CCoinsViewCache::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlockIn, const CNameCache& names) {
     for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
         cacheCoins[it->first] = it->second;
     hashBlock = hashBlockIn;
+    cacheNames.Apply (names);
     return true;
 }
 
 bool CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock);
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, cacheNames);
     if (fOk)
+    {
         cacheCoins.clear();
+        cacheNames.Clear();
+    }
     return fOk;
 }
 
 unsigned int CCoinsViewCache::GetCacheSize() {
+    // Do not take name operations into account here.
     return cacheCoins.size();
 }
 

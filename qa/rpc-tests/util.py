@@ -1,14 +1,14 @@
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Crowncoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Helpful routines for regression testing
 #
 
-# Add python-bitcoinrpc to module search path:
+# Add python-crowncoinrpc to module search path:
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-crowncoinrpc"))
 
 from decimal import Decimal
 import json
@@ -16,14 +16,14 @@ import shutil
 import subprocess
 import time
 
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from crowncoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
 START_P2P_PORT=11000
 START_RPC_PORT=11100
 
 def check_json_precision():
-    """Make sure json library being used does not lose precision converting BTC values"""
+    """Make sure json library being used does not lose precision converting CRW values"""
     n = Decimal("20000000.00000003")
     satoshis = int(json.loads(json.dumps(float(n)))*1.0e8)
     if satoshis != 2000000000000003:
@@ -55,32 +55,32 @@ def sync_mempools(rpc_connections):
         time.sleep(1)
         
 
-bitcoind_processes = []
+crowncoind_processes = []
 
 def initialize_chain(test_dir):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
-    bitcoind and bitcoin-cli must be in search path.
+    crowncoind and crowncoin-cli must be in search path.
     """
 
     if not os.path.isdir(os.path.join("cache", "node0")):
         devnull = open("/dev/null", "w+")
-        # Create cache directories, run bitcoinds:
+        # Create cache directories, run crowncoinds:
         for i in range(4):
             datadir = os.path.join("cache", "node"+str(i))
             os.makedirs(datadir)
-            with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
+            with open(os.path.join(datadir, "crowncoin.conf"), 'w') as f:
                 f.write("regtest=1\n");
                 f.write("rpcuser=rt\n");
                 f.write("rpcpassword=rt\n");
                 f.write("port="+str(START_P2P_PORT+i)+"\n");
                 f.write("rpcport="+str(START_RPC_PORT+i)+"\n");
-            args = [ "bitcoind", "-keypool=1", "-datadir="+datadir ]
+            args = [ "crowncoind", "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(START_P2P_PORT))
-            bitcoind_processes.append(subprocess.Popen(args))
-            subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+            crowncoind_processes.append(subprocess.Popen(args))
+            subprocess.check_call([ "crowncoin-cli", "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
         devnull.close()
         rpcs = []
@@ -103,7 +103,7 @@ def initialize_chain(test_dir):
 
         # Shut them down, and remove debug.logs:
         stop_nodes(rpcs)
-        wait_bitcoinds()
+        wait_crowncoinds()
         for i in range(4):
             os.remove(debug_log("cache", i))
 
@@ -113,13 +113,13 @@ def initialize_chain(test_dir):
         shutil.copytree(from_dir, to_dir)
 
 def start_nodes(num_nodes, dir):
-    # Start bitcoinds, and wait for RPC interface to be up and running:
+    # Start crowncoinds, and wait for RPC interface to be up and running:
     devnull = open("/dev/null", "w+")
     for i in range(num_nodes):
         datadir = os.path.join(dir, "node"+str(i))
-        args = [ "bitcoind", "-datadir="+datadir ]
-        bitcoind_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+        args = [ "crowncoind", "-datadir="+datadir ]
+        crowncoind_processes.append(subprocess.Popen(args))
+        subprocess.check_call([ "crowncoin-cli", "-datadir="+datadir,
                                   "-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
     # Create&return JSON-RPC connections
@@ -137,11 +137,11 @@ def stop_nodes(nodes):
         nodes[i].stop()
     del nodes[:] # Emptying array closes connections as a side effect
 
-def wait_bitcoinds():
-    # Wait for all bitcoinds to cleanly exit
-    for bitcoind in bitcoind_processes:
-        bitcoind.wait()
-    del bitcoind_processes[:]
+def wait_crowncoinds():
+    # Wait for all crowncoinds to cleanly exit
+    for crowncoind in crowncoind_processes:
+        crowncoind.wait()
+    del crowncoind_processes[:]
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(START_P2P_PORT+node_num)

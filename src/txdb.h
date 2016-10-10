@@ -1,13 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXDB_LEVELDB_H
-#define BITCOIN_TXDB_LEVELDB_H
+#ifndef CROWNCOIN_TXDB_LEVELDB_H
+#define CROWNCOIN_TXDB_LEVELDB_H
 
 #include "leveldbwrapper.h"
 #include "main.h"
+#include "names.h"
 
 #include <map>
 #include <string>
@@ -38,7 +39,10 @@ public:
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    bool GetName (const CName& name, CNameData& data) const;
+    bool SetName (const CName& name, const CNameData& data);
+    bool DeleteName (const CName& name);
+    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names);
     bool GetStats(CCoinsStats &stats);
 };
 
@@ -66,4 +70,4 @@ public:
     bool LoadBlockIndexGuts();
 };
 
-#endif // BITCOIN_TXDB_LEVELDB_H
+#endif // CROWNCOIN_TXDB_LEVELDB_H

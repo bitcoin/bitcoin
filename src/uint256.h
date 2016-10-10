@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef CROWNCOIN_UINT256_H
+#define CROWNCOIN_UINT256_H
 
 #include <stdint.h>
 #include <stdio.h>
@@ -365,6 +365,11 @@ public:
     unsigned int size() const
     {
         return sizeof(pn);
+    }
+
+    uint64_t Get64(int n=0) const
+    {
+        return pn[2*n] | (uint64_t)pn[2*n+1] << 32;
     }
 
     uint64_t GetLow64() const

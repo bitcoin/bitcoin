@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,11 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
+#include "throneman.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //
-// BitcoinMiner
+// CrowncoinMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
@@ -112,6 +114,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
+    int payments = 0;
     // Create coinbase tx
     CTransaction txNew;
     txNew.vin.resize(1);
@@ -119,10 +122,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     txNew.vout.resize(1);
     txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
-    // Add our coinbase tx as first transaction
-    pblock->vtx.push_back(txNew);
-    pblocktemplate->vTxFees.push_back(-1); // updated at end
-    pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+    // Initialise the block version.
+    pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION);
 
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
@@ -139,12 +140,59 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
+    // start throne payments
+    bool bThroNePayment = false;
+    bool hasPayment = false;
+
+    if ( Params().NetworkID() == CChainParams::TESTNET ){
+        if (GetTimeMicros() > START_THRONE_PAYMENTS_TESTNET ){
+            bThroNePayment = true;
+        }
+    }else{
+        if (GetTimeMicros() > START_THRONE_PAYMENTS){
+            bThroNePayment = true;
+        }
+    }
+
     // Collect memory pool transactions into the block
     int64_t nFees = 0;
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         CCoinsViewCache view(*pcoinsTip, true);
+
+        if(bThroNePayment) {
+            hasPayment = true;
+            //spork
+            if(!thronePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
+                //no throne detected
+                CThrone* winningNode = mnodeman.GetCurrentThroNe(1);
+                if(winningNode){
+                    pblock->payee.SetDestination(winningNode->pubkey.GetID());
+                } else {
+                    LogPrintf("CreateNewBlock: Failed to detect throne to pay\n");
+                    hasPayment = false;
+                }
+            }
+
+            if(hasPayment){
+                payments++;
+                txNew.vout.resize(2);
+
+                txNew.vout[payments].scriptPubKey = pblock->payee;
+
+                CTxDestination address1;
+                ExtractDestination(pblock->payee, address1);
+                CCrowncoinAddress address2(address1);
+
+                LogPrintf("Throne payment to %s\n", address2.ToString().c_str());
+            }
+        }
+
+        // Add our coinbase tx as first transaction
+        pblock->vtx.push_back(txNew);
+        pblocktemplate->vTxFees.push_back(-1); // updated at end
+        pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
@@ -277,7 +325,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 continue;
 
             CValidationState state;
-            if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH))
+            if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_NAMES))
                 continue;
 
             CTxUndo txundo;
@@ -320,9 +368,29 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
+        int64_t blockValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+        int64_t thronePayment = GetThronePayment(pindexPrev->nHeight+1, blockValue);
 
-        pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
+        //create throne payment
+        if(payments > 0){
+            pblock->vtx[0].vout[payments].nValue = thronePayment;
+            blockValue -= thronePayment;
+        }
+        pblock->vtx[0].vout[0].nValue = blockValue;
+
         pblocktemplate->vTxFees[0] = -nFees;
+
+		
+		LogPrintf(" Payments size:  %ld\n",pblock->vtx[0].vout.size());
+		for(unsigned int i=0; i < pblock->vtx[0].vout.size();i++){
+			int64_t payout = pblock->vtx[0].vout[i].nValue;
+			CTxDestination address;
+			ExtractDestination(pblock->vtx[0].vout[i].scriptPubKey, address);
+			CCrowncoinAddress addresss(address);
+			LogPrintf(" Payouts: %s :-, %ld  number : %d \n",addresss.ToString().c_str(),payout, i);
+
+		}
+		
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -344,7 +412,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     return pblocktemplate.release();
 }
 
-void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -386,7 +454,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     tmp;
     memset(&tmp, 0, sizeof(tmp));
 
-    tmp.block.nVersion       = pblock->nVersion;
+    tmp.block.nVersion       = pblock->nVersion.GetFullVersion();
     tmp.block.hashPrevBlock  = pblock->hashPrevBlock;
     tmp.block.hashMerkleRoot = pblock->hashMerkleRoot;
     tmp.block.nTime          = pblock->nTime;
@@ -462,15 +530,12 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
-    uint256 hash = pblock->GetHash();
-    uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
-
-    if (hash > hashTarget)
+    if (!CheckProofOfWork(*pblock))
         return false;
 
     //// debug print
-    LogPrintf("BitcoinMiner:\n");
-    LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
+    LogPrintf("CrowncoinMiner:\n");
+    LogPrintf("proof-of-work found\n");
     pblock->print();
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
@@ -478,7 +543,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-            return error("BitcoinMiner : generated block is stale");
+            return error("CrowncoinMiner : generated block is stale");
 
         // Remove key from key pool
         reservekey.KeepKey();
@@ -492,17 +557,17 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
         // Process this block the same as if we had received it from another node
         CValidationState state;
         if (!ProcessBlock(state, NULL, pblock))
-            return error("BitcoinMiner : ProcessBlock, block not accepted");
+            return error("CrowncoinMiner : ProcessBlock, block not accepted");
     }
 
     return true;
 }
 
-void static BitcoinMiner(CWallet *pwallet)
+void static CrowncoinMiner(CWallet *pwallet)
 {
-    LogPrintf("BitcoinMiner started\n");
+    LogPrintf("CrowncoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("bitcoin-miner");
+    RenameThread("crowncoin-miner");
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
@@ -528,7 +593,7 @@ void static BitcoinMiner(CWallet *pwallet)
         CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-        LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
+        LogPrintf("Running CrowncoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
         //
@@ -639,12 +704,12 @@ void static BitcoinMiner(CWallet *pwallet)
     } }
     catch (boost::thread_interrupted)
     {
-        LogPrintf("BitcoinMiner terminated\n");
+        LogPrintf("CrowncoinMiner terminated\n");
         throw;
     }
 }
 
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
+void GenerateCrowncoins(bool fGenerate, CWallet* pwallet, int nThreads)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -667,8 +732,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+        minerThreads->create_thread(boost::bind(&CrowncoinMiner, pwallet));
 }
 
 #endif
-

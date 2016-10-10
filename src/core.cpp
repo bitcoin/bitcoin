@@ -1,10 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core.h"
 
+#include "chainparams.h"
 #include "util.h"
 
 std::string COutPoint::ToString() const
@@ -54,6 +55,7 @@ void CTxIn::print() const
 CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
+    nRounds = -10; // an initial value, should be no way to get this by calculations
     scriptPubKey = scriptPubKeyIn;
 }
 
@@ -212,9 +214,30 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
     return n;
 }
 
-uint256 CBlockHeader::GetHash() const
+void CBlockVersion::SetBaseVersion(int32_t nBaseVersion)
 {
-    return Hash(BEGIN(nVersion), END(nNonce));
+    assert(nBaseVersion >= 1 && nBaseVersion < VERSION_AUXPOW);
+    assert(!IsAuxpow());
+    const int32_t nChainId = Params().AuxpowChainId();
+    nVersion = nBaseVersion | (nChainId * VERSION_CHAIN_START);
+}
+
+uint256 CPureBlockHeader::GetHash() const
+{
+    return SerializeHash(*this);
+}
+
+void CBlockHeader::SetAuxpow (CAuxPow* apow)
+{
+    if (apow)
+    {
+        auxpow.reset(apow);
+        nVersion.SetAuxpow(true);
+    } else
+    {
+        auxpow.reset();
+        nVersion.SetAuxpow(false);
+    }
 }
 
 uint256 CBlock::BuildMerkleTree() const
@@ -271,7 +294,7 @@ void CBlock::print() const
 {
     LogPrintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
         GetHash().ToString(),
-        nVersion,
+        nVersion.GetFullVersion(),
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
