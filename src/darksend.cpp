@@ -1298,6 +1298,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     if(!pwalletMain || pwalletMain->IsLocked(true)) return false;
     if(nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
 
+    if(!masternodeSync.IsMasternodeListSynced()) {
+        strAutoDenomResult = _("Can't mix while sync in progress.");
+        return false;
+    }
+
     switch(nWalletBackups) {
         case 0:
             LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating -- Automatic backups disabled, no mixing available.\n");
@@ -1366,11 +1371,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     TRY_LOCK(cs_darksend, lockDS);
     if(!lockDS) {
         strAutoDenomResult = _("Lock is already in place.");
-        return false;
-    }
-
-    if(!masternodeSync.IsBlockchainSynced()) {
-        strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
 
