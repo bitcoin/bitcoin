@@ -212,7 +212,6 @@ inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion,
                 CMFToken index(Consensus::TxInPrevIndex, (uint64_t) in.prevout.n);
                 STORECMF(index);
             }
-            // TODO check sequence to maybe store the BIP68 stuff.
         }
         for (auto out : tx.vout) {
             CMFToken token(Consensus::TxOutValue, (uint64_t) out.nValue);
@@ -220,6 +219,14 @@ inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion,
             std::vector<char> script(out.scriptPubKey.begin(), out.scriptPubKey.end());
             token = CMFToken(Consensus::TxOutScript, script);
             STORECMF(token);
+        }
+        for (auto in : tx.vin) {
+            if ((in.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0) {
+                const bool timeBased = in.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG; // time, as opposed to block-based
+                CMFToken lock(timeBased ? Consensus::LockByTime : Consensus::LockByBlock, (uint64_t) (in.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK));
+                STORECMF(lock);
+                break;
+            }
         }
         if (withSignatures) {
             for (auto in : tx.vin) {

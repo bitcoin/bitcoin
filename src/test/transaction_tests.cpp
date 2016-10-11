@@ -413,6 +413,10 @@ BOOST_AUTO_TEST_CASE(test_version4)
     for (int i = 0; i < 10; ++i) {
         CMutableTransaction tx1;
         TxUtils::RandomTransaction(tx1, true);
+        // clean them a little because nSequence has some double meanings.
+        for (unsigned int in = 1; in < tx1.vin.size(); ++in) { // only keep the sequenc on the first one.
+            tx1.vin[in].nSequence = CTxIn::SEQUENCE_FINAL;
+        }
         tx1.nVersion = 4;
         CDataStream ds1(0, 0);
         tx1.Serialize(ds1, 0, 0);
@@ -437,6 +441,7 @@ BOOST_AUTO_TEST_CASE(test_version4)
         BOOST_CHECK(tx1.vout.front().scriptPubKey == tx3.vout.front().scriptPubKey);
         BOOST_CHECK(tx1.vout == tx3.vout);
         BOOST_CHECK(tx1.nVersion == tx3.nVersion);
+        BOOST_CHECK(tx1.vin.front().nSequence == tx3.vin.front().nSequence);
         BOOST_CHECK(tx1.GetHash() == tx3.GetHash());
 
         CTransaction tx4;

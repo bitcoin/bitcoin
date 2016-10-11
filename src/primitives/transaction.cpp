@@ -139,7 +139,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             break;
         }
         case Consensus::TxInScript: {
-            if (inputCount == 0) {
+            if (inputCount == 0) { // copy all of the input tags
                 CDataStream stream(0, 4);
                 ser_writedata32(stream, nVersion);
                 for (unsigned int i = 0; i < index; ++i) {
@@ -174,7 +174,19 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             break;
         }
         case Consensus::LockByBlock:
+            if (inputs.empty())
+                throw std::runtime_error("Transaction needs inputs");
+            if (token.longData() > 0xFFFF || inputs[0].nSequence != CTxIn::SEQUENCE_FINAL)
+                throw std::runtime_error("LockByBlock invalid");
+            inputs[0].nSequence = token.longData();
+            break;
         case Consensus::LockByTime:
+            if (inputs.empty())
+                throw std::runtime_error("Transaction needs inputs");
+            if (token.longData() > 0xFFFF || inputs[0].nSequence != CTxIn::SEQUENCE_FINAL)
+                throw std::runtime_error("LockByTime invalid");
+            inputs[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | token.longData();
+            break;
         case Consensus::ScriptVersion:
             // TODO
             break;
