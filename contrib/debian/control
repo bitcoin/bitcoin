@@ -23,7 +23,7 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://www.bitcoin.org/
+Homepage: https://bitcoincore.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
 Vcs-Browser: https://github.com/bitcoin/bitcoin
 

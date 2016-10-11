@@ -5,6 +5,7 @@
 #include "bench.h"
 
 #include <iostream>
+#include <iomanip>
 #include <sys/time.h>
 
 using namespace benchmark;
@@ -25,7 +26,7 @@ BenchRunner::BenchRunner(std::string name, BenchFunction func)
 void
 BenchRunner::RunAll(double elapsedTimeForOne)
 {
-    std::cout << "Benchmark" << "," << "count" << "," << "min" << "," << "max" << "," << "average" << "\n";
+    std::cout << "#Benchmark" << "," << "count" << "," << "min" << "," << "max" << "," << "average" << "\n";
 
     for (std::map<std::string,BenchFunction>::iterator it = benchmarks.begin();
          it != benchmarks.end(); ++it) {
@@ -38,22 +39,34 @@ BenchRunner::RunAll(double elapsedTimeForOne)
 
 bool State::KeepRunning()
 {
+    if (count & countMask) {
+      ++count;
+      return true;
+    }
     double now;
     if (count == 0) {
-        beginTime = now = gettimedouble();
+        lastTime = beginTime = now = gettimedouble();
     }
     else {
-        // timeCheckCount is used to avoid calling gettime most of the time,
-        // so benchmarks that run very quickly get consistent results.
-        if ((count+1)%timeCheckCount != 0) {
-            ++count;
-            return true; // keep going
-        }
         now = gettimedouble();
-        double elapsedOne = (now - lastTime)/timeCheckCount;
+        double elapsed = now - lastTime;
+        double elapsedOne = elapsed * countMaskInv;
         if (elapsedOne < minTime) minTime = elapsedOne;
         if (elapsedOne > maxTime) maxTime = elapsedOne;
-        if (elapsedOne*timeCheckCount < maxElapsed/16) timeCheckCount *= 2;
+        if (elapsed*128 < maxElapsed) {
+          // If the execution was much too fast (1/128th of maxElapsed), increase the count mask by 8x and restart timing.
+          // The restart avoids including the overhead of this code in the measurement.
+          countMask = ((countMask<<3)|7) & ((1LL<<60)-1);
+          countMaskInv = 1./(countMask+1);
+          count = 0;
+          minTime = std::numeric_limits<double>::max();
+          maxTime = std::numeric_limits<double>::min();
+          return true;
+        }
+        if (elapsed*16 < maxElapsed) {
+          countMask = ((countMask<<1)|1) & ((1LL<<60)-1);
+          countMaskInv = 1./(countMask+1);
+        }
     }
     lastTime = now;
     ++count;
@@ -64,7 +77,7 @@ bool State::KeepRunning()
 
     // Output results
     double average = (now-beginTime)/count;
-    std::cout << name << "," << count << "," << minTime << "," << maxTime << "," << average << "\n";
+    std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << "\n";
 
     return false;
 }

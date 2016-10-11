@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Run this script every time you change one of the png files. Using pngcrush, it will optimize the png files, remove various color profiles, remove ancillary chunks (alla) and text chunks (text).
 #pngcrush -brute -ow -rem gAMA -rem cHRM -rem iCCP -rem sRGB -rem alla -rem text

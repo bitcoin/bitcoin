@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -70,7 +70,7 @@ namespace GUIUtil
        @param[in] role    Data role to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    QString getEntryData(QAbstractItemView *view, int column, int role);
+    QVariant getEntryData(QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
 
@@ -199,6 +199,8 @@ namespace GUIUtil
 
     /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
+
+    QString formateNiceTimeOffset(qint64 secs);
 
 #if defined(Q_OS_MAC) && QT_VERSION >= 0x050000
     // workaround for Qt OSX Bug:

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,11 +28,11 @@ template <class Locker>
 class LockedPageManagerBase
 {
 public:
-    LockedPageManagerBase(size_t page_size) : page_size(page_size)
+    LockedPageManagerBase(size_t _page_size) : page_size(_page_size)
     {
         // Determine bitmask for extracting page from address
-        assert(!(page_size & (page_size - 1))); // size must be power of two
-        page_mask = ~(page_size - 1);
+        assert(!(_page_size & (_page_size - 1))); // size must be power of two
+        page_mask = ~(_page_size - 1);
     }
 
     ~LockedPageManagerBase()

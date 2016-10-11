@@ -1,53 +1,67 @@
-#!/usr/bin/env python
-'''
-Run this script inside of src/ and it will look for all the files
-that were changed this year that still have the last year in the
-copyright headers, and it will fix the headers on that file using
-a perl regex one liner.
+#!/usr/bin/env python3
+"""
+Run this script to update all the copyright headers of files
+that were changed this year.
 
-For example: if it finds something like this and we're in 2014
+For example:
 
-// Copyright (c) 2009-2013 The Bitcoin Core developers
+// Copyright (c) 2009-2012 The Bitcoin Core developers
 
 it will change it to
 
-// Copyright (c) 2009-2014 The Bitcoin Core developers
-
-It will do this for all the files in the folder and its children.
-
-Author: @gubatron
-'''
-import os
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+"""
+import subprocess
 import time
+import re
 
-year = time.gmtime()[0]
-last_year = year - 1
-command = "perl -pi -e 's/%s The Bitcoin/%s The Bitcoin/' %s"
-listFilesCommand = "find . | grep %s"
+CMD_GIT_LIST_FILES = ['git', 'ls-files']
+CMD_GIT_DATE = ['git', 'log', '--format=%ad', '--date=short', '-1']
+CMD_PERL_REGEX = ['perl', '-pi', '-e']
+REGEX_TEMPLATE = 's/(20\\d\\d)(?:-20\\d\\d)? The Bitcoin/$1-%s The Bitcoin/'
 
-extensions = [".cpp",".h"]
-
-def getLastGitModifiedDate(filePath):
-  gitGetLastCommitDateCommand = "git log " + filePath +" | grep Date | head -n 1"
-  p = os.popen(gitGetLastCommitDateCommand)
-  result = ""
-  for l in p:
-    result = l
-    break
-  result = result.replace("\n","")
-  return result
-
-n=1
-for extension in extensions:
-  foundFiles = os.popen(listFilesCommand % extension)
-  for filePath in foundFiles:
-    filePath = filePath[1:-1]
-    if filePath.endswith(extension):
-      filePath = os.getcwd() + filePath
-      modifiedTime = getLastGitModifiedDate(filePath)
-      if len(modifiedTime) > 0 and str(year) in modifiedTime:
-        print n,"Last Git Modified: ", modifiedTime, " - ", filePath
-        os.popen(command % (last_year,year,filePath))
-        n = n + 1
+FOLDERS = ["qa/", "src/"]
+EXTENSIONS = [".cpp",".h", ".py"]
 
 
+def get_git_date(file_path):
+    d = subprocess.run(CMD_GIT_DATE + [file_path],
+                       stdout=subprocess.PIPE,
+                       check=True,
+                       universal_newlines=True).stdout
+    # yyyy-mm-dd
+    return d.split('-')[0]
+
+
+def skip_file(file_path):
+    for ext in EXTENSIONS:
+        if file_path.endswith(ext):
+            return False
+    else:
+        return True
+
+if __name__ == "__main__":
+    year = str(time.gmtime()[0])
+    regex_current = re.compile("%s The Bitcoin" % year)
+    n = 1
+    for folder in FOLDERS:
+        for file_path in subprocess.run(
+            CMD_GIT_LIST_FILES + [folder],
+            stdout=subprocess.PIPE,
+            check=True,
+            universal_newlines=True
+        ).stdout.split("\n"):
+            if skip_file(file_path):
+                # print(file_path, "(skip)")
+                continue
+            git_date = get_git_date(file_path)
+            if not year == git_date:
+                # print(file_path, year, "(skip)")
+                continue
+            if regex_current.search(open(file_path, "r").read()) is not None:
+                # already up to date
+                # print(file_path, year, "(skip)")
+                continue
+            print(n, file_path, "(update to %s)" % year)
+            subprocess.run(CMD_PERL_REGEX + [REGEX_TEMPLATE % year, file_path], check=True)
+            n = n + 1

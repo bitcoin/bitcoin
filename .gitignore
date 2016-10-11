@@ -103,14 +103,11 @@ linux-build
 win32-build
 qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/tests_config.py
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
-qa/tmp
-cache/
-share/BitcoindComparisonTool.jar
+qa/cache/*
 
 !src/leveldb*/Makefile
 
 /doc/doxygen/
 
 libbitcoinconsensus.pc
+contrib/devtools/split-debug.sh

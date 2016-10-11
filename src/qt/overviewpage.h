@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,6 +42,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void transactionClicked(const QModelIndex &index);
+    void outOfSyncWarningClicked();
 
 private:
     Ui::OverviewPage *ui;
@@ -62,6 +63,7 @@ private Q_SLOTS:
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);
+    void handleOutOfSyncWarningClicks();
 };
 
 #endif // BITCOIN_QT_OVERVIEWPAGE_H

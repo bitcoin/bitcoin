@@ -48,7 +48,8 @@ public:
     void refreshBanlist()
     {
         banmap_t banMap;
-        CNode::GetBanned(banMap);
+        if(g_connman)
+            g_connman->GetBanned(banMap);
 
         cachedBanlist.clear();
 #if QT_VERSION >= 0x040700
@@ -103,7 +104,7 @@ int BanTableModel::rowCount(const QModelIndex &parent) const
 int BanTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return columns.length();;
+    return columns.length();
 }
 
 QVariant BanTableModel::data(const QModelIndex &index, int role) const

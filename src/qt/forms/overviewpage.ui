@@ -61,7 +61,7 @@
             <item>
              <widget class="QPushButton" name="labelWalletStatus">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="maximumSize">
                <size>
@@ -447,7 +447,7 @@
             <item>
              <widget class="QPushButton" name="labelTransactionsStatus">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="maximumSize">
                <size>

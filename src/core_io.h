@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ class UniValue;
 // core_read.cpp
 extern CScript ParseScript(const std::string& s);
 extern std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
-extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx);
+extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
 extern bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 extern uint256 ParseHashUV(const UniValue& v, const std::string& strName);
 extern uint256 ParseHashStr(const std::string&, const std::string& strName);

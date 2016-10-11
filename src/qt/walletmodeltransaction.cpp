@@ -1,13 +1,14 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletmodeltransaction.h"
 
+#include "policy/policy.h"
 #include "wallet/wallet.h"
 
-WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &recipients) :
-    recipients(recipients),
+WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
+    recipients(_recipients),
     walletTransaction(0),
     keyChange(0),
     fee(0)
@@ -33,7 +34,7 @@ CWalletTx *WalletModelTransaction::getTransaction()
 
 unsigned int WalletModelTransaction::getTransactionSize()
 {
-    return (!walletTransaction ? 0 : (::GetSerializeSize(*(CTransaction*)walletTransaction, SER_NETWORK, PROTOCOL_VERSION)));
+    return (!walletTransaction ? 0 : ::GetVirtualTransactionSize(*walletTransaction));
 }
 
 CAmount WalletModelTransaction::getTransactionFee()

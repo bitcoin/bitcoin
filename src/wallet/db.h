@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -228,19 +228,17 @@ protected:
         return pcursor;
     }
 
-    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags = DB_NEXT)
+    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, bool setRange = false)
     {
         // Read at cursor
         Dbt datKey;
-        if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
+        unsigned int fFlags = DB_NEXT;
+        if (setRange) {
             datKey.set_data(&ssKey[0]);
             datKey.set_size(ssKey.size());
+            fFlags = DB_SET_RANGE;
         }
         Dbt datValue;
-        if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE) {
-            datValue.set_data(&ssValue[0]);
-            datValue.set_size(ssValue.size());
-        }
         datKey.set_flags(DB_DBT_MALLOC);
         datValue.set_flags(DB_DBT_MALLOC);
         int ret = pcursor->get(&datKey, &datValue, fFlags);

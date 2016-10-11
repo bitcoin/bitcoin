@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,33 +44,32 @@ inline T* NCONST_PTR(const T* val)
     return const_cast<T*>(val);
 }
 
-/** 
- * Get begin pointer of vector (non-const version).
- * @note These functions avoid the undefined case of indexing into an empty
- * vector, as well as that of indexing after the end of the vector.
+/**
+ * Important: Do not use the following functions in new code, but use v.data()
+ * and v.data() + v.size() respectively directly. They were once introduced to
+ * have a compatible, safe way to get the begin and end pointer of a vector.
+ * However with C++11 the language has built-in functionality for this and it's
+ * more readable to just use that.
  */
 template <typename V>
 inline typename V::value_type* begin_ptr(V& v)
 {
-    return v.empty() ? NULL : &v[0];
+    return v.data();
 }
-/** Get begin pointer of vector (const version) */
 template <typename V>
 inline const typename V::value_type* begin_ptr(const V& v)
 {
-    return v.empty() ? NULL : &v[0];
+    return v.data();
 }
-/** Get end pointer of vector (non-const version) */
 template <typename V>
 inline typename V::value_type* end_ptr(V& v)
 {
-    return v.empty() ? NULL : (&v[0] + v.size());
+    return v.data() + v.size();
 }
-/** Get end pointer of vector (const version) */
 template <typename V>
 inline const typename V::value_type* end_ptr(const V& v)
 {
-    return v.empty() ? NULL : (&v[0] + v.size());
+    return v.data() + v.size();
 }
 
 /*
@@ -322,8 +321,8 @@ uint64_t ReadCompactSize(Stream& is)
  * 0:         [0x00]  256:        [0x81 0x00]
  * 1:         [0x01]  16383:      [0xFE 0x7F]
  * 127:       [0x7F]  16384:      [0xFF 0x00]
- * 128:  [0x80 0x00]  16511: [0x80 0xFF 0x7F]
- * 255:  [0x80 0x7F]  65535: [0x82 0xFD 0x7F]
+ * 128:  [0x80 0x00]  16511:      [0xFF 0x7F]
+ * 255:  [0x80 0x7F]  65535: [0x82 0xFE 0x7F]
  * 2^32:           [0x8E 0xFE 0xFE 0xFF 0x00]
  */
 
@@ -373,6 +372,7 @@ I ReadVarInt(Stream& is)
 
 #define FLATDATA(obj) REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
 #define VARINT(obj) REF(WrapVarInt(REF(obj)))
+#define COMPACTSIZE(obj) REF(CCompactSize(REF(obj)))
 #define LIMITED_STRING(obj,n) REF(LimitedString< n >(REF(obj)))
 
 /** 
@@ -440,6 +440,28 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s, int, int) {
         n = ReadVarInt<Stream,I>(s);
+    }
+};
+
+class CCompactSize
+{
+protected:
+    uint64_t &n;
+public:
+    CCompactSize(uint64_t& nIn) : n(nIn) { }
+
+    unsigned int GetSerializeSize(int, int) const {
+        return GetSizeOfCompactSize(n);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s, int, int) const {
+        WriteCompactSize<Stream>(s, n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int, int) {
+        n = ReadCompactSize<Stream>(s);
     }
 };
 
