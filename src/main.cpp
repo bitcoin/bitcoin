@@ -1666,7 +1666,6 @@ void CheckForkWarningConditions()
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
                 pindexBestForkBase->phashBlock->ToString() + std::string("'");
             CAlert::Notify(warning, true);
-            }
         }
         if (pindexBestForkTip && pindexBestForkBase)
         {
@@ -2087,14 +2086,15 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 
     unsigned int flags = SCRIPT_VERIFY_NOCACHE |
                          (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
-    if (considerNames)
-        flags |= SCRIPT_VERIFY_NAMES;
-    if (block.nVersion >= 3 &&
+
+    if (block.nVersion.GetBaseVersion() >= 3 &&
         ((!TestNet() && CBlockIndex::IsSuperMajority(3, pindex->pprev, 750, 1000)) ||
             (TestNet() && CBlockIndex::IsSuperMajority(3, pindex->pprev, 51, 100)))) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
+    if (considerNames)
+        flags |= SCRIPT_VERIFY_NAMES;
 
     CBlockUndo blockundo(pindex);
 
@@ -2927,7 +2927,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
             }
         }
         // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-        if (block.nVersion < 3)
+        if (block.nVersion.GetBaseVersion() < 3)
         {
             if ((!TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 950, 1000)) ||
                 (TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 75, 100)))
