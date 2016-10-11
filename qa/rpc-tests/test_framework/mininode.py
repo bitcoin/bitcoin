@@ -1320,7 +1320,7 @@ class msg_reject(object):
             % (self.message, self.code, self.reason, self.data)
 
 # Helper function
-def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
+def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf')):
     attempt = 0
     elapsed = 0
 
@@ -1536,7 +1536,7 @@ class SingleNodeConnCB(NodeConnCB):
         def received_pong():
             return (self.last_pong.nonce == self.ping_counter)
         self.send_message(msg_ping(nonce=self.ping_counter))
-        success = wait_until(received_pong, timeout)
+        success = wait_until(received_pong, timeout=timeout)
         self.ping_counter += 1
         return success
 

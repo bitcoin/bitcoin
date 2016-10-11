@@ -42,11 +42,10 @@ class RPCBindTest(BitcoinTestFramework):
             assert_equal(set(get_bind_addrs(pid)), set(expected))
         finally:
             stop_nodes(self.nodes)
-            wait_bitcoinds()
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
-        Start a node with rpcwallow IP, and request getinfo
+        Start a node with rpcallow IP, and request getinfo
         at a non-localhost IP.
         '''
         base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
@@ -58,7 +57,6 @@ class RPCBindTest(BitcoinTestFramework):
         finally:
             node = None # make sure connection will be garbage collected and closed
             stop_nodes(self.nodes)
-            wait_bitcoinds()
 
     def run_test(self):
         # due to OS-specific network stats queries, this test works only on Linux
