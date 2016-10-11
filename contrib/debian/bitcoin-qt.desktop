@@ -1,9 +1,9 @@
 [Desktop Entry]
 Encoding=UTF-8
 Name=Bitcoin
-Comment=Bitcoin P2P Cryptocurrency
+Comment=Connect to the Bitcoin P2P Network
 Comment[fr]=Bitcoin, monnaie virtuelle cryptographique pair à pair
-Comment[de]=Bitcoin, eine virtuelle, kryptographische peer-to-peer Währung
+Comment[de]=Bitcoin, eine virtuelle kryptographische peer-to-peer Währung
 Comment[tr]=Bitcoin, eşten eşe kriptografik sanal para birimi
 Exec=bitcoin-qt %u
 Terminal=false
