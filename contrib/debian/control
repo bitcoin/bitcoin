@@ -2,7 +2,7 @@ Source: bitcoinunlimited
 Section: utils
 Priority: optional
 Maintainer: Andrew Stone <g.andrew.stone@gmail.com>
-Uploaders: Micah Anderson <micah@debian.org>
+Uploaders: Andrea Suisani <sickpig@gmail.com>
 Build-Depends: debhelper,
  devscripts,
  automake,
@@ -11,6 +11,7 @@ Build-Depends: debhelper,
  libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
  libssl-dev,
+ libevent-dev,
  pkg-config,
  libminiupnpc8-dev | libminiupnpc-dev (>> 1.6),
  libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
@@ -40,7 +41,7 @@ Description: peer-to-peer network based digital currency - daemon
  This package provides the daemon, bitcoind, and the CLI tool
  bitcoin-cli to interact with the daemon.
 
-Package: bitcoinunlimited-qt
+Package: bitcoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
