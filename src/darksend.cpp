@@ -1564,7 +1564,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             nLastTimeChanged = GetTimeMillis();
             // connect to Masternode and submit the queue request
             CNode* pnode = ConnectNode((CAddress)addr, NULL, true);
-            if(pnode != NULL) {
+            if(pnode != NULL && pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION) {
                 pSubmittedToMasternode = pmn;
                 nSessionDenom = dsq.nDenom;
 
@@ -1605,7 +1605,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         nLastTimeChanged = GetTimeMillis();
         LogPrintf("CDarksendPool::DoAutomaticDenominating -- attempt %d connection to Masternode %s\n", nTries, pmn->addr.ToString());
         CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
-        if(pnode != NULL) {
+        if(pnode != NULL && pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected %s\n", pmn->vin.ToString());
             pSubmittedToMasternode = pmn;
 
@@ -2326,7 +2326,8 @@ bool CDarksendQueue::Relay()
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage(NetMsgType::DSQUEUE, (*this));
+        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+            pnode->PushMessage(NetMsgType::DSQUEUE, (*this));
 
     return true;
 }
@@ -2365,7 +2366,8 @@ void CDarksendPool::RelayFinalTransaction(const CTransaction& txFinal)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage(NetMsgType::DSFINALTX, nSessionID, txFinal);
+        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+            pnode->PushMessage(NetMsgType::DSFINALTX, nSessionID, txFinal);
 }
 
 void CDarksendPool::RelayIn(const CDarkSendEntry& entry)
@@ -2383,14 +2385,16 @@ void CDarksendPool::RelayStatus(int nErrorID)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, nState, nEntriesCount, nAcceptedEntriesCount, nErrorID);
+        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+            pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, nState, nEntriesCount, nAcceptedEntriesCount, nErrorID);
 }
 
 void CDarksendPool::RelayCompletedTransaction(bool fError, int nErrorID)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage(NetMsgType::DSCOMPLETE, nSessionID, fError, nErrorID);
+        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+            pnode->PushMessage(NetMsgType::DSCOMPLETE, nSessionID, fError, nErrorID);
 }
 
 void CDarksendPool::SetState(unsigned int nStateNew)
