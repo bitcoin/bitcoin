@@ -332,7 +332,7 @@
     </message>
     <message>
         <source>%1 client</source>
-        <translation>cliente %1</translation>
+        <translation>%1</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -643,7 +643,7 @@
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation>$Iniciar %1 ao fazer login no sistema</translation>
+        <translation>&amp;Iniciar %1 ao fazer login no sistema</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1752,11 +1752,11 @@
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>Corte configurado abaixo do nível mínimo de %d de MiB. Por favor use um número mais alto.</translation>
+        <translation>Prune configurado abaixo do mínimo de %d MiB. Por favor use um número mais alto.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Corte: a ultima sincronização da carteira foi além do dado comprimido. Você precisa reindexar ( -reindex , faça o download de toda a blockchain novamente)</translation>
+        <translation>Prune: A ultima sincronização da carteira foi além do dado comprimido. Você precisa reindexar (fazer o download de toda a blockchain novamente)</translation>
     </message>
     <message>
         <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
@@ -1764,7 +1764,7 @@
     </message>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans não são possíveis no modo de corte. Você precisa usar -reindex, que irá fazer o download de toda a blockchain novamente.</translation>
+        <translation>Rescans não são possíveis no modo prune. Você precisa usar -reindex, que irá fazer o download de toda a blockchain novamente.</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
@@ -1792,7 +1792,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
@@ -1887,6 +1887,10 @@
         <translation>Lista Branca pares de ligação da máscara de rede dado ou o endereço IP . Pode ser especificado várias vezes.</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>Você precisa reconstruir o banco de dados utilizando -reindex-chainstate para mudar -txindex</translation>
+    </message>
+    <message>
         <source>%s corrupt, salvage failed</source>
         <translation>%s corrompido, recuperação falhou</translation>
     </message>
@@ -1909,6 +1913,10 @@
     <message>
         <source>Block creation options:</source>
         <translation>Opções de criação de blocos:</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Impossível resolver  -%s endereço: '%s'</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
@@ -2007,6 +2015,10 @@
         <translation>Bloco gênese incorreto ou não encontrado. Datadir errado para a rede?</translation>
     </message>
     <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>O teste de integridade de inicialização falhou. O %s está sendo desligado.</translation>
+    </message>
+    <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>Endereço -onion inválido: '%s'</translation>
     </message>
@@ -2024,15 +2036,11 @@
     </message>
     <message>
         <source>Loading banlist...</source>
-        <translation>Carregando banlist...</translation>
+        <translation>Carregando lista de banidos...</translation>
     </message>
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
         <translation>Localização do cookie de autenticação (padrão: diretório de dados)</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Número mínimo de bytes por sigop em transações que transmitimos e mineramos (default: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2043,16 +2051,20 @@
         <translation>Somente conectar a clientes na rede &lt;net&gt; (ipv4, ipv6 ou onion)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Mostra essa mensagem de ajuda e sai</translation>
+    </message>
+    <message>
         <source>Print version and exit</source>
         <translation>Mostra a versão e sai</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation>O modo Prune não pode ser configurado com um valor negativo.</translation>
+        <translation>O modo prune não pode ser configurado com um valor negativo.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation>O modo Prune é incompatível com -txindex.</translation>
+        <translation>O modo prune é incompatível com -txindex.</translation>
     </message>
     <message>
         <source>Rewinding blocks...</source>
@@ -2061,6 +2073,10 @@
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Define o tamanho do cache do banco de dados em megabytes (%d para %d, padrão: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>Define a altura máxima BIP141 do bloco (padrão: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
@@ -2419,6 +2435,10 @@
         <translation>Aviso: Versões de bloco desconhecidas sendo mineradas! É possível que regras estranhas estejam ativas</translation>
     </message>
     <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Atenção: Arquivo da carteira corrompido, dados recuperados! Original %s salvo como %s em %s; se seu saldo ou transações estiverem incorretos, você deve restaurar o backup.</translation>
+    </message>
+    <message>
         <source>(default: %s)</source>
         <translation>(padrão: %s)</translation>
     </message>
@@ -2536,7 +2556,7 @@
     </message>
     <message>
         <source>Done loading</source>
-        <translation>Carregamento terminado</translation>
+        <translation>Carregamento terminado!</translation>
     </message>
     <message>
         <source>Error</source>

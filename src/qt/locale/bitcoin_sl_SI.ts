@@ -63,7 +63,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmaska</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Prepoved do</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -243,6 +251,14 @@
         <translation><numerusform>%n aktivna povezava v omrežje Bitcoin</numerusform><numerusform>%n aktivni povezavi v omrežje Bitcoin</numerusform><numerusform>%n aktivne povezave v omrežje Bitcoin</numerusform><numerusform>%n aktivnih povezav v omrežje Bitcoin</numerusform></translation>
     </message>
     <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Indeksirani bloki na disku ...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Obdelava blokov na disku ...</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>Ni virov za prenos blokov ...</translation>
     </message>
@@ -297,6 +313,10 @@
     <message>
         <source>Up to date</source>
         <translation>Posodobljeno</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 odjemalec</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -485,6 +505,10 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
+        <source>About %1</source>
+        <translation>O %1</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>Možnosti ukazne vrstice</translation>
     </message>
@@ -496,12 +520,28 @@
         <source>command-line options</source>
         <translation>možnosti ukazne vrstice</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>UI možnosti:</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Nastavi jezik, na primer "sl_SI" (privzeto: sistemsko)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Začni minimizirano</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Dobrodošli</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Dobrodošli v %1</translation>
     </message>
     <message>
         <source>Use the default data directory</source>

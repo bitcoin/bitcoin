@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;اغلاق</translation>
+        <translation>ا&amp;غلاق</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>

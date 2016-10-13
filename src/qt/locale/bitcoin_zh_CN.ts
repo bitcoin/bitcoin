@@ -115,6 +115,10 @@
         <translation>&amp;关于 %1</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>显示 %1 相关信息</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>关于Qt(&amp;Q)</translation>
     </message>
@@ -125,6 +129,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>选项(&amp;O)...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>修改%1配置选项</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -255,6 +263,14 @@
         <translation><numerusform>%n 个到比特币网络的活动连接</numerusform></translation>
     </message>
     <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>正在为数据块建立索引...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>正在处理数据块...</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>沒有可用的区块来源...</translation>
     </message>
@@ -309,6 +325,10 @@
     <message>
         <source>Up to date</source>
         <translation>已是最新</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 客戶</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -497,6 +517,10 @@
         <translation>(%1 位)</translation>
     </message>
     <message>
+        <source>About %1</source>
+        <translation>關於 %1</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>命令行选项</translation>
     </message>
@@ -532,12 +556,25 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>显示启动画面（默认：%u）</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>重置图形界面所有的变更设置</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>欢迎</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>
+歡迎來到 %1</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>由于这是第一次启动此程序，您可以选择%1的数据所存储的位置</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1878,10 +1915,6 @@
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
         <translation>认证Cookie的位置 (默认: data目录)</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>我们关联和挖掘的每sigop的最低交易字节(默认: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>

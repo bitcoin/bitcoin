@@ -103,6 +103,10 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>Ban Node for</source>
+        <translation>Nodo bannato per</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>

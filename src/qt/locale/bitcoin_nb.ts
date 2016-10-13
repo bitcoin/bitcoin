@@ -115,6 +115,10 @@
         <translation> &amp;Om %1</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Vis informasjon om %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Om &amp;Qt</translation>
     </message>
@@ -125,6 +129,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Innstillinger...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Endre innstilinger for %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -742,6 +750,10 @@
         <translation>&amp;Vindu</translation>
     </message>
     <message>
+        <source>Hide tray icon</source>
+        <translation>Skjul søppel ikon</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Vis kun ikon i systemkurv etter minimering av vinduet.</translation>
     </message>
@@ -1048,6 +1060,14 @@
     <message>
         <source>User Agent</source>
         <translation>Brukeragent</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Forminsk font størrelsen</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Forstørr font størrelse</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1827,6 +1847,10 @@
         <translation>Feil under oppstart av lommeboken sitt databasemiljø %s!</translation>
     </message>
     <message>
+        <source>Error loading %s</source>
+        <translation>Feil ved lasting av %s</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Feil ved lasting av blokkdatabase</translation>
     </message>
@@ -1867,6 +1891,14 @@
         <translation>Bare koble til noder i nettverket &lt;net&gt; (IPv4, IPv6 eller onion)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Skriv ut denne hjelpemeldingen og avslutt</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Skriv ut denne versjonen og avslutt</translation>
+    </message>
+    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Beskjæringsmodus kan ikke konfigureres med en negativ verdi.</translation>
     </message>
@@ -1885,6 +1917,10 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Angi lommebokfil (inne i datamappe)</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation>Kildekoden er tilgjengelig fra %s.</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>

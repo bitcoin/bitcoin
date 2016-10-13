@@ -243,6 +243,10 @@
         <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
     </message>
     <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>بازکردن یک بیت کوین: آدرس یا درخواست پرداخت</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>گزینه‌های خط‌فرمان</translation>
     </message>
@@ -488,6 +492,14 @@
         <source>command-line options</source>
         <translation>گزینه‌های خط فرمان</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>گزینه‌های رابط کاربری:</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>نمایش پنجرهٔ خوشامدگویی در ابتدای اجرای برنامه (پیش‌فرض: %u)</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -522,7 +534,11 @@
         <source>Open URI</source>
         <translation>بازکردن آدرس</translation>
     </message>
-    </context>
+    <message>
+        <source>Select payment request file</source>
+        <translation>انتخاب فایل درخواست پرداخت</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -532,6 +548,10 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;عمومی</translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation>مگابایت</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -673,6 +693,10 @@
         <translation>تراز علی‌الحساب شما</translation>
     </message>
     <message>
+        <source>Pending:</source>
+        <translation>در انتظار:</translation>
+    </message>
+    <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>مجموع تراکنش‌هایی که هنوز تأیید نشده‌اند؛ و هنوز روی تراز علی‌الحساب اعمال نشده‌اند</translation>
     </message>
@@ -717,6 +741,10 @@
     <message>
         <source>Amount</source>
         <translation>مبلغ</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>یک آدرس بیت‌کوین وارد کنید (مثلاً %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -794,6 +822,10 @@
         <translation>تعداد فعلی بلوک‌ها</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>استخر حافظه</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation>مصرف حافظه</translation>
     </message>
@@ -812,6 +844,14 @@
     <message>
         <source>Services</source>
         <translation>سرویس ها</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>مدت اتصال</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>ارسال شده آخرین بار</translation>
     </message>
     <message>
         <source>Last Receive</source>
@@ -909,12 +949,24 @@
         <translation>پیام:</translation>
     </message>
     <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>برای درخواست پرداخت از این فرم استفاده کنید.تمام قسمت ها &lt;b&gt;اختیاری&lt;b&gt; هستند.</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>تمام قسمت های فرم را خالی کن.</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>پاک‌کردن</translation>
     </message>
     <message>
         <source>Show</source>
         <translation>نمایش</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>حذف ورودی های انتخاب‌شده از لیست</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -941,6 +993,14 @@
     <message>
         <source>Send Coins</source>
         <translation>ارسال سکه</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>ورودی‌ها...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation>به طور خودکار انتخاب شدند</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -979,8 +1039,20 @@
         <translation>هزینهٔ تراکنش:</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>انتخاب...</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>در هر کیلوبایت</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation>پنهان کردن</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>در مجموع حداقل</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -1009,6 +1081,10 @@
     <message>
         <source>Add &amp;Recipient</source>
         <translation>&amp;دریافت‌کنندهٔ جدید</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>تمام قسمت های فرم را خالی کن.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1369,6 +1445,10 @@
     <message>
         <source>Loading addresses...</source>
         <translation>بار گیری آدرس ها</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(پیش‌فرض %s)</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>

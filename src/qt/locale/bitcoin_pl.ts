@@ -1872,6 +1872,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>&lt;category&gt; mogą być:</translation>
     </message>
     <message>
+        <source>Append comment to the user agent string</source>
+        <translation>Dodaj komentarz do pola user agent</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet on startup</source>
         <translation>Próbuj odzyskać klucze prywatne z uszkodzonego portfela podczas uruchamiania.</translation>
     </message>

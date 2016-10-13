@@ -75,12 +75,146 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <source>Synchronizing with network...</source>
+        <translation>Usklađivanje sa mrežom...</translation>
+    </message>
+    <message>
+        <source>&amp;Overview</source>
+        <translation>&amp;Pregled</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Isključi aplikaciju</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Opcije...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Izmeni pristupnu frazu...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Slanje adresa...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Primanje adresa...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Otvori &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Pošalji novčiće na Bitcoin adresu</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Proveri poruku...</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Novčanik</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;Pošalji</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Primi</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Prikazati / Sakriti</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Prikaži ili sakrij glavni prozor</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Podešavanja</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Pomoć</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Greska</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Upozorenje</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Informacije</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 klijent</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Datum: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Iznos: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tip: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Oznaka: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adresa: %1
+</translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Količina:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>Prioritet:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Naknada:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Nakon Naknade:</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Kolicina</translation>
@@ -89,10 +223,26 @@
         <source>Date</source>
         <translation>Datum</translation>
     </message>
-    </context>
+    <message>
+        <source>Priority</source>
+        <translation>Prioritet</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
-    </context>
+    <message>
+        <source>Edit Address</source>
+        <translation>Izmeni Adresu</translation>
+    </message>
+    <message>
+        <source>&amp;Label</source>
+        <translation>&amp;Oznaka</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp;Adresa</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -136,6 +286,26 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Količina:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>Prioritet:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Naknada:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Nakon Naknade:</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -163,6 +333,14 @@
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Informacije</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Upozorenje</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

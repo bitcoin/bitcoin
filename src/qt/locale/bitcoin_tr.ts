@@ -1831,6 +1831,10 @@
         <translation>MIT yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
     </message>
     <message>
+        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
+        <translation>Oluşturma ve aktarşa muamelelerinde sigop başına eşdeğer bayt (varsayılan: %u)</translation>
+    </message>
+    <message>
         <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
         <translation>%s yüklenmesinde hata: zaten var olan ve HD olmayan bir cüzdanda HD etkinleştirilemez.</translation>
     </message>
@@ -2053,10 +2057,6 @@
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
         <translation>auth çerezinin konumu (varsayılan: veri klasörü)</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Aktardığımız ve oluşturduğumuz muamelelerdeki sigop başına asgari bayt (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>

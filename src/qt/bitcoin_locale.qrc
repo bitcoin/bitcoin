@@ -4,8 +4,8 @@
         <file alias="af_ZA">locale/bitcoin_af_ZA.qm</file>
         <file alias="ar">locale/bitcoin_ar.qm</file>
         <file alias="be_BY">locale/bitcoin_be_BY.qm</file>
-        <file alias="bg">locale/bitcoin_bg.qm</file>
         <file alias="bg_BG">locale/bitcoin_bg_BG.qm</file>
+        <file alias="bg">locale/bitcoin_bg.qm</file>
         <file alias="ca_ES">locale/bitcoin_ca_ES.qm</file>
         <file alias="ca">locale/bitcoin_ca.qm</file>
         <file alias="ca@valencia">locale/bitcoin_ca@valencia.qm</file>
@@ -57,6 +57,7 @@
         <file alias="mn">locale/bitcoin_mn.qm</file>
         <file alias="ms_MY">locale/bitcoin_ms_MY.qm</file>
         <file alias="nb">locale/bitcoin_nb.qm</file>
+        <file alias="ne">locale/bitcoin_ne.qm</file>
         <file alias="nl">locale/bitcoin_nl.qm</file>
         <file alias="pam">locale/bitcoin_pam.qm</file>
         <file alias="pl">locale/bitcoin_pl.qm</file>

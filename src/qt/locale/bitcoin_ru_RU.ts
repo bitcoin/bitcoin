@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Закрыть</translation>
+        <translation>&amp;Закрыть</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -54,6 +54,10 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin Core</translation>
+    </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>Опции командной строки</translation>
@@ -185,12 +189,20 @@
         <translation>Bitcoin Core</translation>
     </message>
     <message>
+        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
+        <translation>bitcoin-core</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Информация</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>Предупреждение</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</translation>
     </message>
     <message>
         <source>Error</source>
