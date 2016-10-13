@@ -27,6 +27,7 @@
 #include <boost/thread.hpp>
 
 std::unique_ptr<CConnman> g_connman;
+FastRandomContext insecure_rand_ctx(true);
 
 extern bool fPrintToConsole;
 extern void noui_connect();

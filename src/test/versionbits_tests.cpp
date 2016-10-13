@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
-#include "random.h"
+#include "test_random.h"
 #include "versionbits.h"
 #include "test/test_bitcoin.h"
 #include "chainparams.h"
