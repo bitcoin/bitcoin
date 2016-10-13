@@ -308,3 +308,35 @@ To build executables for ARM:
 
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
+
+Building on FreeBSD
+--------------------
+
+(Updated as of FreeBSD 10.3)
+
+Clang is installed by default as `cc` compiler, this makes it easier to get
+started than on [OpenBSD](build-openbsd.md). Installing dependencies:
+
+    pkg install autoconf automake libtool pkgconf
+    pkg install boost-libs openssl libevent2
+
+(`libressl` instead of `openssl` will also work)
+
+For the wallet (optional):
+
+    pkg install db5
+
+This will give a warning "configure: WARNING: Found Berkeley DB other
+than 4.8; wallets opened by this build will not be portable!", but as FreeBSD never
+had a binary release, this may not matter. If backwards compatibility
+with 4.8-built Bitcoin Core is needed follow the steps under "Berkeley DB" above.
+
+Then build using:
+
+    ./autogen.sh
+    ./configure --with-incompatible-bdb CPPFLAGS=-I/usr/local/include/db5 LDFLAGS=-L/usr/local/lib/db5
+    make
+
+*Note on debugging*: The version of `gdb` installed by default is [ancient and considered harmful](https://wiki.freebsd.org/GdbRetirement).
+It is not suitable for debugging a multi-threaded C++ program, not even for getting backtraces. Please install the package `gdb` and
+use the versioned gdb command e.g. `gdb7111`.
