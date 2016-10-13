@@ -191,7 +191,7 @@ public:
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
-    uint256 CalculateScore(int nBlockHeight = -1);
+    arith_uint256 CalculateScore(const uint256& blockHash);
 
     bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
 

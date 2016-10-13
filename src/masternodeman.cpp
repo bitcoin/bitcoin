@@ -335,17 +335,22 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     // Sort them low to high
     sort(vecMasternodeLastPaid.begin(), vecMasternodeLastPaid.end(), CompareLastPaidBlock());
 
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, nBlockHeight - 101)) {
+        LogPrintf("CMasternode::GetNextMasternodeInQueueForPayment -- ERROR: GetBlockHash() failed at nBlockHeight %d\n", nBlockHeight - 101);
+        return NULL;
+    }
     // Look at 1/10 of the oldest nodes (by last payment), calculate their scores and pay the best one
     //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
     //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
     //  -- (chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = CountEnabled()/10;
     int nCountTenth = 0;
-    arith_uint256 nHigh = 0;
+    arith_uint256 nHighest = 0;
     BOOST_FOREACH (PAIRTYPE(int, CMasternode*)& s, vecMasternodeLastPaid){
-        arith_uint256 n = UintToArith256(s.second->CalculateScore(nBlockHeight - 101));
-        if(n > nHigh){
-            nHigh = n;
+        arith_uint256 nScore = s.second->CalculateScore(blockHash);
+        if(nScore > nHighest){
+            nHighest = nScore;
             pBestMasternode = s.second;
         }
         nCountTenth++;
@@ -401,8 +406,8 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     std::vector<std::pair<int64_t, CMasternode*> > vecMasternodeScores;
 
     //make sure we know about this block
-    uint256 hash = uint256();
-    if(!GetBlockHash(hash, nBlockHeight)) return -1;
+    uint256 blockHash = uint256();
+    if(!GetBlockHash(blockHash, nBlockHeight)) return -1;
 
     LOCK(cs);
 
@@ -413,10 +418,9 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
             mn.Check();
             if(!mn.IsEnabled()) continue;
         }
-        uint256 n = mn.CalculateScore(nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t nScore = mn.CalculateScore(blockHash).GetCompact(false);
 
-        vecMasternodeScores.push_back(std::make_pair(n2, &mn));
+        vecMasternodeScores.push_back(std::make_pair(nScore, &mn));
     }
 
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareScoreMN());
@@ -436,8 +440,8 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
     std::vector<std::pair<int, CMasternode> > vecMasternodeRanks;
 
     //make sure we know about this block
-    uint256 hash = uint256();
-    if(!GetBlockHash(hash, nBlockHeight)) return vecMasternodeRanks;
+    uint256 blockHash = uint256();
+    if(!GetBlockHash(blockHash, nBlockHeight)) return vecMasternodeRanks;
 
     LOCK(cs);
 
@@ -448,10 +452,9 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
 
         if(mn.nProtocolVersion < minProtocol || !mn.IsEnabled()) continue;
 
-        uint256 n = mn.CalculateScore(nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t nScore = mn.CalculateScore(blockHash).GetCompact(false);
 
-        vecMasternodeScores.push_back(std::make_pair(n2, &mn));
+        vecMasternodeScores.push_back(std::make_pair(nScore, &mn));
     }
 
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareScoreMN());
@@ -471,6 +474,12 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
 
     LOCK(cs);
 
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, nBlockHeight)) {
+        LogPrintf("CMasternode::GetMasternodeByRank -- ERROR: GetBlockHash() failed at nBlockHeight %d\n", nBlockHeight);
+        return NULL;
+    }
+
     // Fill scores
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
@@ -480,10 +489,9 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
             if(!mn.IsEnabled()) continue;
         }
 
-        uint256 n = mn.CalculateScore(nBlockHeight);
-        int64_t n2 = UintToArith256(n).GetCompact(false);
+        int64_t nScore = mn.CalculateScore(blockHash).GetCompact(false);
 
-        vecMasternodeScores.push_back(std::make_pair(n2, &mn));
+        vecMasternodeScores.push_back(std::make_pair(nScore, &mn));
     }
 
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareScoreMN());
