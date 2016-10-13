@@ -65,6 +65,8 @@ contain invalid parameters.
 
 The first boolean argument to `getaddednodeinfo` has been removed. This is an incompatible change.
 
+Call "getmininginfo" loses the "testnet" field in favor of the more generic "chain" (which has been present for years).
+
 ### Configuration and command-line options
 
 ### Block and transaction handling
