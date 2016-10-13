@@ -17,6 +17,7 @@ const std::string CBaseChainParams::REGTEST = "regtest";
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
+    strUsage += HelpMessageOpt("-chain=<chain>", _("Use the chain <chain> (default: main). Allowed values: main, testnet, regtest"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
@@ -89,14 +90,15 @@ void SelectBaseParams(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fTestNet = GetBoolArg("-testnet", false);
+    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
+    bool fTestNet = gArgs.GetBoolArg("-testnet", false);
+    bool fChainArgSet = gArgs.IsArgSet("-chain");
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if (fChainArgSet ? (fTestNet || fRegTest) : (fTestNet && fRegTest))
+        throw std::runtime_error("Invalid combination of -regtest, -testnet and -chain. Only one can be used.");
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    return gArgs.GetArg("-chain", CBaseChainParams::MAIN);
 }
