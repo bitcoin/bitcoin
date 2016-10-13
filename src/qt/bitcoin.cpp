@@ -524,7 +524,7 @@ int GuiMain(int argc, char* argv[])
     PaymentServer::ipcParseCommandLine(*node, argc, argv);
 #endif
 
-    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(networkStyle->getAppName());
