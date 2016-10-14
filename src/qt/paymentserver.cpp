@@ -191,7 +191,7 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             savedPaymentRequests.append(arg);
 
             SendCoinsRecipient r;
-            if (GUIUtil::parseCrowncoinURI(arg, &r) && !r.address.isEmpty())
+            if (GUIUtil::parseCrowncoinURI(arg, &r) && !r.recipient.isEmpty())
             {
                 CCrowncoinAddress address(r.recipient.toStdString());
 
