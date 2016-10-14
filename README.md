@@ -5,6 +5,7 @@ http://www.crowncoin.com
 
 Copyright (c) 2009-2014 Crowncoin Developers
 
+
 What is Crowncoin?
 ----------------
 

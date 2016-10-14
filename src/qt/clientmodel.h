@@ -61,8 +61,6 @@ public:
     bool inInitialBlockDownload() const;
     //! Return true if core is importing blocks
     enum BlockSource getBlockSource() const;
-    //! Return conservative estimate of total number of blocks, or 0 if unknown
-    int getNumBlocksOfPeers() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
@@ -77,7 +75,6 @@ private:
 
     int cachedNumBlocks;
     QString cachedThroneCountString;
-    int cachedNumBlocksOfPeers;
     bool cachedReindexing;
     bool cachedImporting;
 
@@ -91,7 +88,7 @@ private:
 
 signals:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, int countOfPeers);
+    void numBlocksChanged(int count);
     void strThronesChanged(const QString &strThrones);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);

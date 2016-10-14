@@ -60,9 +60,9 @@ public:
         READWRITE(setSubVer);
         READWRITE(nPriority);
 
-        READWRITE(strComment);
-        READWRITE(strStatusBar);
-        READWRITE(strReserved);
+        READWRITE(LIMITED_STRING(strComment, 65536));
+        READWRITE(LIMITED_STRING(strStatusBar, 256));
+        READWRITE(LIMITED_STRING(strReserved, 256));
     )
 
     void SetNull();
@@ -99,6 +99,7 @@ public:
     bool RelayTo(CNode* pnode) const;
     bool CheckSignature() const;
     bool ProcessAlert(bool fThread = true);
+    static void Notify(const std::string& strMessage, bool fThread);
 
     /*
      * Get copy of (active) alert object by hash. Returns a null alert if it is not found.

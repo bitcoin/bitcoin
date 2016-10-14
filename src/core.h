@@ -6,7 +6,7 @@
 #ifndef CROWNCOIN_CORE_H
 #define CROWNCOIN_CORE_H
 
-#include "script.h"
+#include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
 

@@ -40,6 +40,7 @@ script: |
   tar xzf qt-everywhere-opensource-src-4.6.4.tar.gz
   cd qt-everywhere-opensource-src-4.6.4
   QTBUILDDIR=$(pwd)
+  sed 's/TODAY=`date +%Y-%m-%d`/TODAY=2011-01-30/' -i configure
 
   # Need to build 4.6-versioned host utilities as well (lrelease/qrc/lupdate/...)
   ./configure -prefix $INSTALLPREFIX -confirm-license -release -opensource -no-qt3support -no-multimedia -no-audio-backend -no-phonon -no-phonon-backend -no-declarative -no-script -no-scripttools -no-javascript-jit -no-webkit -no-svg -no-xmlpatterns -no-sql-sqlite -no-nis -no-cups -no-iconv -no-dbus -no-gif -no-libtiff -no-opengl -nomake examples -nomake demos -nomake docs

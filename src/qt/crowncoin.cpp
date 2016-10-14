@@ -475,6 +475,7 @@ int main(int argc, char *argv[])
 #endif
 
     Q_INIT_RESOURCE(crowncoin);
+    GUIUtil::SubstituteFonts();
     CrowncoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps

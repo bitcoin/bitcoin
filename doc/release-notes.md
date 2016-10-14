@@ -2,25 +2,49 @@ Crowncoin version 0.9.2 is now available from:
 
   https://crowncoin.org/bin/0.9.2/
 
-This is a new minor version release, bringing mostly bug fixes and some minor
-improvements. OpenSSL has been updated because of a security issue (CVE-2014-0224).
-Upgrading to this release is recommended.
+This is a new minor version release, bringing only bug fixes and updated
+translations. Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
   https://github.com/crowncoin/crowncoin/issues
 
-Upgrading and downgrading
-==========================
-
 How to Upgrade
---------------
+===============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Crowncoin-Qt (on Mac) or
 crowncoind/crowncoin-qt (on Linux).
 
+<<<<<<< HEAD
+Notable changes
+================
+
+Mining and relay policy enhancements
+------------------------------------
+
+Bitcoin Core's block templates are now for version 3 blocks only, and any mining
+software relying on its `getblocktemplate` must be updated in parallel to use
+libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
+If you are solo mining, this will affect you the moment you upgrade Bitcoin
+Core, which must be done prior to BIP66 achieving its 951/1001 status.
+If you are mining with the stratum mining protocol: this does not affect you.
+If you are mining with the getblocktemplate protocol to a pool: this will affect
+you at the pool operator's discretion, which must be no later than BIP66
+achieving its 951/1001 status.
+
+0.9.5 changelog
+================
+
+- `74f29c2` Check pindexBestForkBase for null
+- `9cd1dd9` Fix priority calculation in CreateTransaction
+- `6b4163b` Sanitize command strings before logging them.
+- `3230b32` Raise version of created blocks, and enforce DERSIG in mempool
+- `989d499` Backport of some of BIP66's tests
+- `ab03660` Implement BIP 66 validation rules and switchover logic
+- `8438074` build: fix dynamic boost check when --with-boost= is used
+=======
 If you are upgrading from version 0.7.2 or earlier, the first time you run
 0.9.0 your blockchain files will be re-indexed, which will take anywhere from 
 30 minutes to several hours, depending on the speed of your machine.
@@ -135,70 +159,18 @@ Miscellaneous:
 - Avoid exception at startup when system locale not recognized
 - Changed bitrpc.py's raw_input to getpass for passwords to conceal characters during command line input
 - devtools: add a script to fetch and postprocess translations
+>>>>>>> origin/dirty-merge-0.9
 
 Credits
 --------
 
-Thanks to everyone who contributed to this release:
+Thanks to who contributed to this release, at least:
 
-- Addy Yeow
-- Altoidnerd
-- Andrea D'Amore
-- Andreas Schildbach
-- Bardi Harborow
-- Brandon Dahler
-- Bryan Bishop
-- Chris Beams
-- Christian von Roques
+- 21E14
+- Alex Morcos
 - Cory Fields
-- Cozz Lovan
-- daniel
-- Daniel Newton
-- David A. Harding
-- ditto-b
-- duanemoody
-- Eric S. Bullington
-- Fabian Raetz
-- Gavin Andresen
 - Gregory Maxwell
-- gubatron
-- Haakon Nilsen
-- harry
-- Hector Jusforgues
-- Isidoro Ghezzi
-- Jeff Garzik
-- Johnathan Corgan
-- jtimon
-- Kamil Domanski
-- langerhans
-- Luke Dashjr
-- Manuel Araoz
-- Mark Friedenbach
-- Matt Corallo
-- Matthew Bogosian
-- Meeh
-- Michael Ford
-- Michagogo
-- Mikael Wikman
-- Mike Hearn
-- olalonde
-- paveljanik
-- peryaudo
-- Philip Kaufmann
-- philsong
 - Pieter Wuille
-- R E Broadley
-- richierichrawr
-- Rune K. Svendsen
-- rxl
-- shshshsh
-- Simon de la Rouviere
-- Stuart Cardall
-- super3
-- Telepatheic
-- Thomas Zander
-- Torstein Husebø
-- Warren Togami
 - Wladimir J. van der Laan
-- Yoichi Hirai
 
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).

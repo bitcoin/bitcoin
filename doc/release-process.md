@@ -43,8 +43,8 @@ Release Process
 
  Fetch and build inputs: (first time, or when dependency versions change)
 
-	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.tar.gz' -O miniupnpc-1.9.tar.gz
-	wget 'https://www.openssl.org/source/openssl-1.0.1h.tar.gz'
+	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20140701.tar.gz' -O miniupnpc-1.9.20140701.tar.gz
+	wget 'https://www.openssl.org/source/openssl-1.0.1k.tar.gz'
 	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
 	wget 'http://zlib.net/zlib-1.2.8.tar.gz'
 	wget 'ftp://ftp.simplesystems.org/pub/png/src/history/libpng16/libpng-1.6.8.tar.gz'
@@ -59,7 +59,7 @@ Release Process
 	wget 'http://www.opensource.apple.com/tarballs/cctools/cctools-809.tar.gz'
 	wget 'http://www.opensource.apple.com/tarballs/dyld/dyld-195.5.tar.gz'
 	wget 'http://www.opensource.apple.com/tarballs/ld64/ld64-127.2.tar.gz'
-	wget 'http://cdrkit.org/releases/cdrkit-1.1.11.tar.gz'
+	wget 'http://pkgs.fedoraproject.org/repo/pkgs/cdrkit/cdrkit-1.1.11.tar.gz/efe08e2f3ca478486037b053acd512e9/cdrkit-1.1.11.tar.gz'
 	wget 'https://github.com/theuni/libdmg-hfsplus/archive/libdmg-hfsplus-v0.1.tar.gz'
 	wget 'http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz' -O \
 	     clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
@@ -93,8 +93,8 @@ Release Process
     f03be39fb26670243d3a659e64d18e19d03dec5c11e9912011107768390b5268  crowncoin-deps-linux64-gitian-r6.zip
     f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
     88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
-    74ec2d301cf1a9d03b194153f545102ba45dad02b390485212fe6717de486361  qt-linux32-4.6.4-gitian-r1.tar.gz
-    01d0477e299467f09280f15424781154e2b1ea4072c5edb16e044c234954fd9a  qt-linux64-4.6.4-gitian-r1.tar.gz
+    57e57dbdadc818cd270e7e00500a5e1085b3bcbdef69a885f0fb7573a8d987e1  qt-linux32-4.6.4-gitian-r1.tar.gz
+    60eb4b9c5779580b7d66529efa5b2836ba1a70edde2a0f3f696d647906a826be  qt-linux64-4.6.4-gitian-r1.tar.gz
     60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
     f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
     70de248cd0dd7e7476194129e818402e974ca9c5751cbf591644dc9f332d3b59  crowncoin-deps-win32-gitian-r13.zip
@@ -147,38 +147,25 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 	zip -r crowncoin-${VERSION}-win.zip crowncoin-${VERSION}-win
 	rm -rf crowncoin-${VERSION}-win
 
-###Next steps:
+**Mac OS X .dmg:**
 
-* Code-sign Windows -setup.exe (in a Windows virtual machine using signtool)
- Note: only Gavin has the code-signing keys currently.
-
-* upload builds to SourceForge
-
-* create SHA256SUMS for builds, and PGP-sign it
-
-* update crowncoin.org version
-  make sure all OS download links go to the right versions
-  
-* update download sizes on crowncoin.org/_templates/download.html
-
-* update forum version
-
-* update wiki download links
+	mv Bitcoin-Qt.dmg bitcoin-${VERSION}-osx.dmg
 
 * update wiki changelog: [https://en.crowncoin.it/wiki/Changelog](https://en.crowncoin.it/wiki/Changelog)
 
 Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
-	git add ${VERSION}/${SIGNER}
+	git add ${VERSION}-linux/${SIGNER}
 	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-osx/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
 
 -------------------------------------------------------------------------
 
-### After 3 or more people have gitian-built, repackage gitian-signed zips:
+### After 3 or more people have gitian-built and their results match:
 
 From a directory containing crowncoin source, gitian.sigs and gitian zips
 
@@ -208,9 +195,24 @@ From a directory containing crowncoin source, gitian.sigs and gitian zips
 	cp crowncoin-${VERSION}-win-gitian.zip ../
 	popd
 
-- Upload gitian zips to SourceForge
+    - Code-sign MacOSX .dmg
 
-- Announce the release:
+  Note: only Gavin has the code-signing keys currently.
+
+- Create `SHA256SUMS.asc` for builds, and PGP-sign it. This is done manually.
+  Include all the files to be uploaded. The file has `sha256sum` format with a
+  simple header at the top:
+
+```
+Hash: SHA256
+
+0060f7d38b98113ab912d4c184000291d7f026eaf77ca5830deec15059678f54  bitcoin-x.y.z-linux.tar.gz
+...
+```
+
+- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+
+- Update bitcoin.org version
 
   - Add the release to crowncoin.org: https://github.com/crowncoin/crowncoin.org/tree/master/_releases
 

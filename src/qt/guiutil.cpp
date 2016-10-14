@@ -61,6 +61,13 @@
 static boost::filesystem::detail::utf8_codecvt_facet utf8;
 #endif
 
+#if defined(Q_OS_MAC)
+extern double NSAppKitVersionNumber;
+#if !defined(NSAppKitVersionNumber10_9)
+#define NSAppKitVersionNumber10_9 1265
+#endif
+#endif
+
 namespace GUIUtil {
 
 QString dateTimeStr(const QDateTime &date)
@@ -76,7 +83,11 @@ QString dateTimeStr(qint64 nTime)
 QFont crowncoinAddressFont()
 {
     QFont font("Monospace");
+#if QT_VERSION >= 0x040800
+    font.setStyleHint(QFont::Monospace);
+#else
     font.setStyleHint(QFont::TypeWriter);
+#endif
     return font;
 }
 
@@ -366,6 +377,26 @@ ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *pa
     QObject(parent), size_threshold(size_threshold)
 {
 
+}
+
+void SubstituteFonts()
+{
+#if defined(Q_OS_MAC)
+// Background:
+// OSX's default font changed in 10.9 and QT is unable to find it with its
+// usual fallback methods when building against the 10.7 sdk or lower.
+// The 10.8 SDK added a function to let it find the correct fallback font.
+// If this fallback is not properly loaded, some characters may fail to
+// render correctly.
+//
+// Solution: If building with the 10.7 SDK or lower and the user's platform
+// is 10.9 or higher at runtime, substitute the correct font. This needs to
+// happen before the QApplication is created.
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
+        QFont::insertSubstitution(".Lucida Grande UI", "Lucida Grande");
+#endif
+#endif
 }
 
 bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)

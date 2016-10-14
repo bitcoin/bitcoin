@@ -47,7 +47,6 @@ CROWNCOIN_CORE_H = \
   init.h \
   instantx.h \
   key.h \
-  keepass.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
@@ -134,7 +133,6 @@ libcrowncoin_wallet_a_SOURCES = \
   rpcwallet.cpp \
   wallet.cpp \
   walletdb.cpp \
-  keepass.cpp \
   $(CROWNCOIN_CORE_H)
 
 libcrowncoin_common_a_SOURCES = \
