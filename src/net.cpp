@@ -1078,40 +1078,12 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
-    int nInbound = 0;
-    //NOTE: BU added separate tracking of outbound nodes added via the "-addnode" option.  This means that you actually
-    //      may end up with up to 2 * nMaxOutConnections outbound connections due to the separate semaphores.
-    //
-    //1. Limit the number of possible "-addnode" outbounds to not exceed nMaxOutConnections
-    //   Otherwise we waste inbound connection slots on outbound addnodes that are blocked waiting on the semaphore.
-    //2. BUT, if less than nMaxOutConnections in vAddedNodes, open up any of the unreserved
-    //   "-addnode" connection slots to the inbound pool to prevent holding presently unneeded outbound connection slots.
-    int nMaxAddNodeOutbound = nMaxOutConnections;
-    {
-        LOCK(cs_vAddedNodes);
-        nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
-    }
-    int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
-    //REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't tracked
-    //         b. This also doesn't take into account whether or not the tracked vAddedNodes are valid or connected
-    //         c. There is also an edge case where if less than nMaxOutConnections entries exist in vAddedNodes
-    //            and there are already "maxconnections", between inbound and outbound nodes, the user can still use
-    //            RPC "addnode <node> add" to successfully start additional outbound connections
-    //         Points a. and c. can allow users to exceed "maxconnections"
-    //         Point b. can cause us to waste slots holding them for invalid addnode entries that will never connect.
 
     if (hSocket != INVALID_SOCKET)
         if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
             LogPrintf("Warning: Unknown socket family\n");
 
     bool whitelisted = hListenSocket.whitelisted || CNode::IsWhitelistedRange(addr);
-    {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if (pnode->fInbound)
-                nInbound++;
-    }
-
     if (hSocket == INVALID_SOCKET)
     {
         int nErr = WSAGetLastError();
@@ -1142,6 +1114,37 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         CloseSocket(hSocket);
         return;
     }
+
+    //BU - Moved locks below checks above as they may return without us ever having to take these locks (esp. IsBanned check)
+    //NOTE: BU added separate tracking of outbound nodes added via the "-addnode" option.  This means that you actually
+    //      may end up with up to 2 * nMaxOutConnections outbound connections due to the separate semaphores.
+    //
+    //1. Limit the number of possible "-addnode" outbounds to not exceed nMaxOutConnections
+    //   Otherwise we waste inbound connection slots on outbound addnodes that are blocked waiting on the semaphore.
+    //2. BUT, if less than nMaxOutConnections in vAddedNodes, open up any of the unreserved
+    //   "-addnode" connection slots to the inbound pool to prevent holding presently unneeded outbound connection slots.
+    int nMaxAddNodeOutbound = nMaxOutConnections;
+    {
+        LOCK(cs_vAddedNodes);
+        nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
+    }
+    int nMaxInbound = nMaxConnections - nMaxOutConnections - nMaxAddNodeOutbound;
+    //REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't tracked
+    //         b. This also doesn't take into account whether or not the tracked vAddedNodes are valid or connected
+    //         c. There is also an edge case where if less than nMaxOutConnections entries exist in vAddedNodes
+    //            and there are already "maxconnections", between inbound and outbound nodes, the user can still use
+    //            RPC "addnode <node> add" to successfully start additional outbound connections
+    //         Points a. and c. can allow users to exceed "maxconnections"
+    //         Point b. can cause us to waste slots holding them for invalid addnode entries that will never connect.
+
+    int nInbound = 0;
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            if (pnode->fInbound)
+                nInbound++;
+    }
+    //BU - end section
 
     if (nInbound >= nMaxInbound)
     {
