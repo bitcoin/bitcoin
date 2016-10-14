@@ -405,6 +405,7 @@ bool MarkBlockAsReceived(const uint256& hash) {
             MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;
             BLOCK_DOWNLOAD_WINDOW = 8;
         }
+
         LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), nResponseTime);
         LogPrint("thin", "Average block response time is %.2f seconds\n", avgResponseTime);
         LogPrintf("BLOCK_DOWNLOAD_WINDOW is %d MAX_BLOCKS_IN_TRANSIT_PER_PEER is %d\n", BLOCK_DOWNLOAD_WINDOW, MAX_BLOCKS_IN_TRANSIT_PER_PEER);
@@ -3668,10 +3669,10 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         CBlockIndex* pindexPrev = NULL;
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi == mapBlockIndex.end())
-            return state.DoS(10, error("%s: prev block not found", __func__), 0, "bad-prevblk");
+	  return state.DoS(10, error("%s: previous block %s not found while accepting %s", __func__,block.hashPrevBlock.ToString(),hash.ToString()), 0, "bad-prevblk");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            return state.DoS(100, error("%s: previous block invalid", __func__), REJECT_INVALID, "bad-prevblk");
 
         assert(pindexPrev);
         if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
@@ -3800,7 +3801,10 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret)
+	  {
+            // BU TODO: if block comes out of order (before its parent) this will happen.  We should cache the block until the parents arrive.
             return error("%s: AcceptBlock FAILED", __func__);
+	  }
     }
 
     if (!ActivateBestChain(state, chainparams, pblock))

@@ -87,7 +87,7 @@ bool CTxMemPool::UpdateForDescendants(txiter updateIt, int maxDescendantsToVisit
             return false;
         }
         setAllDescendants.insert(cit);
-        stageEntries.erase(cit);
+        stageEntries.erase(cit);  // BU its ok to erase here because GetMemPoolChildren does not dereference cit
         const setEntries &setChildren = GetMemPoolChildren(cit);
         BOOST_FOREACH(const txiter childEntry, setChildren) {
             cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
@@ -213,7 +213,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         txiter stageit = *parentHashes.begin();
 
         setAncestors.insert(stageit);
-        parentHashes.erase(stageit);
+        // parentHashes.erase(stageit);  // BU: Core bug, use after free, moved below
         totalSizeWithAncestors += stageit->GetTxSize();
 
         if (stageit->GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
@@ -238,6 +238,8 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
                 return false;
             }
         }
+
+        parentHashes.erase(stageit);  // BU: Fix use after free bug by moving this last
     }
 
     return true;
@@ -459,7 +461,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants
     while (!stage.empty()) {
         txiter it = *stage.begin();
         setDescendants.insert(it);
-        stage.erase(it);
+        stage.erase(it);  // BU its ok to erase here because GetMemPoolChildren does not dereference it
 
         const setEntries &setChildren = GetMemPoolChildren(it);
         BOOST_FOREACH(const txiter &childiter, setChildren) {
