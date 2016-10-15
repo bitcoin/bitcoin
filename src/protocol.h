@@ -18,8 +18,6 @@
 #include <stdint.h>
 #include <string>
 
-#define MESSAGE_START_SIZE 4
-
 /** Message header.
  * (4) message start.
  * (12) command.
@@ -29,6 +27,16 @@
 class CMessageHeader
 {
 public:
+    enum {
+        MESSAGE_START_SIZE = 4,
+        COMMAND_SIZE = 12,
+        MESSAGE_SIZE_SIZE = 4,
+        CHECKSUM_SIZE = 4,
+
+        MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE,
+        CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE,
+        HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE
+    };
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
     CMessageHeader(const MessageStartChars& pchMessageStartIn);
@@ -48,17 +56,6 @@ public:
         READWRITE(FLATDATA(pchChecksum));
     }
 
-    // TODO: make private (improves encapsulation)
-public:
-    enum {
-        COMMAND_SIZE = 12,
-        MESSAGE_SIZE_SIZE = 4,
-        CHECKSUM_SIZE = 4,
-
-        MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE,
-        CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE,
-        HEADER_SIZE = MESSAGE_START_SIZE + COMMAND_SIZE + MESSAGE_SIZE_SIZE + CHECKSUM_SIZE
-    };
     char pchMessageStart[MESSAGE_START_SIZE];
     char pchCommand[COMMAND_SIZE];
     uint32_t nMessageSize;
@@ -315,20 +312,24 @@ public:
     unsigned int nTime;
 };
 
-/** getdata message types */
+/** getdata message type flags */
 const uint32_t MSG_WITNESS_FLAG = 1 << 30;
 const uint32_t MSG_TYPE_MASK    = 0xffffffff >> 2;
+
+/** getdata / inv message types.
+ * These numbers are defined by the protocol. When adding a new value, be sure
+ * to mention it in the respective BIP.
+ */
 enum GetDataMsg
 {
     UNDEFINED = 0,
-    MSG_TX,
-    MSG_BLOCK,
-    MSG_TYPE_MAX = MSG_BLOCK,
+    MSG_TX = 1,
+    MSG_BLOCK = 2,
     // The following can only occur in getdata. Invs always use TX or BLOCK.
-    MSG_FILTERED_BLOCK,
-    MSG_CMPCT_BLOCK,
-    MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG,
-    MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,
+    MSG_FILTERED_BLOCK = 3,  //!< Defined in BIP37
+    MSG_CMPCT_BLOCK = 4,     //!< Defined in BIP152
+    MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
+    MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
 };
 
