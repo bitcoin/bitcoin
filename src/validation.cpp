@@ -2158,7 +2158,7 @@ static int64_t nTimePostConnect = 0;
  */
 struct ConnectTrace {
     std::vector<CTransactionRef> txConflicted;
-    std::vector<std::tuple<CTransactionRef,CBlockIndex*,int>> txChanged;
+    std::vector<std::pair<CBlockIndex*, std::shared_ptr<const CBlock> > > blocksConnected;
 };
 
 /**
@@ -2170,11 +2170,15 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     assert(pindexNew->pprev == chainActive.Tip());
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
-    CBlock block;
     if (!pblock) {
-        if (!ReadBlockFromDisk(block, pindexNew, chainparams.GetConsensus()))
+        std::shared_ptr<CBlock> pblockNew = std::make_shared<CBlock>();
+        connectTrace.blocksConnected.emplace_back(pindexNew, pblockNew);
+        if (!ReadBlockFromDisk(*pblockNew, pindexNew, chainparams.GetConsensus()))
             return AbortNode(state, "Failed to read block");
-        pblock = &block;
+        pblock = pblockNew.get();
+    } else {
+        //TODO: This copy is a major performance regression, but ProcessNewBlock callers need updated to fix this
+        connectTrace.blocksConnected.emplace_back(pindexNew, std::make_shared<const CBlock>(*pblock));
     }
     // Apply the block atomically to the chain state.
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
@@ -2204,9 +2208,6 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, &connectTrace.txConflicted, !IsInitialBlockDownload());
     // Update chainActive & related variables.
     UpdateTip(pindexNew, chainparams);
-
-    for (unsigned int i=0; i < pblock->vtx.size(); i++)
-        connectTrace.txChanged.emplace_back(pblock->vtx[i], pindexNew, i);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint("bench", "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
@@ -2329,6 +2330,8 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
                     state = CValidationState();
                     fInvalidFound = true;
                     fContinue = false;
+                    // If we didn't actually connect the block, don't notify listeners about it
+                    connectTrace.blocksConnected.pop_back();
                     break;
                 } else {
                     // A system error occurred (disk space, database error, ...).
@@ -2431,8 +2434,12 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             GetMainSignals().SyncTransaction(*tx, pindexNewTip, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
         }
         // ... and about transactions that got confirmed:
-        for (unsigned int i = 0; i < connectTrace.txChanged.size(); i++)
-            GetMainSignals().SyncTransaction(*std::get<0>(connectTrace.txChanged[i]), std::get<1>(connectTrace.txChanged[i]), std::get<2>(connectTrace.txChanged[i]));
+        for (const auto& pair : connectTrace.blocksConnected) {
+            assert(pair.second);
+            const CBlock& block = *(pair.second);
+            for (unsigned int i = 0; i < block.vtx.size(); i++)
+                GetMainSignals().SyncTransaction(*block.vtx[i], pair.first, i);
+        }
 
         // Notify external listeners about the new tip.
         GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
