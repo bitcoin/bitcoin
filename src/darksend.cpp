@@ -1565,7 +1565,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             nLastTimeChanged = GetTimeMillis();
             // connect to Masternode and submit the queue request
             CNode* pnode = ConnectNode((CAddress)addr, NULL, true);
-            if(pnode != NULL && pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION) {
+            if(pnode) {
                 pSubmittedToMasternode = pmn;
                 nSessionDenom = dsq.nDenom;
 
@@ -1606,7 +1606,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         nLastTimeChanged = GetTimeMillis();
         LogPrintf("CDarksendPool::DoAutomaticDenominating -- attempt %d connection to Masternode %s\n", nTries, pmn->addr.ToString());
         CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
-        if(pnode != NULL && pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION) {
+        if(pnode) {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected %s\n", pmn->vin.ToString());
             pSubmittedToMasternode = pmn;
 
