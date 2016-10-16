@@ -1872,16 +1872,11 @@ class SegWitTest(BitcoinTestFramework):
 
         # Stack element size over 80 bytes is non-standard
         p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
-        # It can't be used to blind a node to the transaction
-        self.std_node.announce_tx_and_wait_for_getdata(p2wsh_txs[1])
-        self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, False, b'bad-witness-nonstandard')
-        self.std_node.announce_tx_and_wait_for_getdata(p2wsh_txs[1])
         self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, False, b'bad-witness-nonstandard')
         # Non-standard nodes should accept
         self.test_node.test_transaction_acceptance(p2wsh_txs[1], True, True)
         # Standard nodes should accept if element size is not over 80 bytes
         p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
-        self.std_node.announce_tx_and_wait_for_getdata(p2wsh_txs[1])
         self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, True)
 
         # witnessScript size at 3600 bytes is standard
@@ -1900,13 +1895,9 @@ class SegWitTest(BitcoinTestFramework):
         self.std_node.test_transaction_acceptance(p2sh_txs[0], True, False, b'bad-witness-nonstandard')
         self.test_node.test_transaction_acceptance(p2sh_txs[0], True, True)
         p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
-        self.std_node.announce_tx_and_wait_for_getdata(p2sh_txs[1])
-        self.std_node.test_transaction_acceptance(p2sh_txs[1], True, False, b'bad-witness-nonstandard')
-        self.std_node.announce_tx_and_wait_for_getdata(p2sh_txs[1])
         self.std_node.test_transaction_acceptance(p2sh_txs[1], True, False, b'bad-witness-nonstandard')
         self.test_node.test_transaction_acceptance(p2sh_txs[1], True, True)
         p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
-        self.std_node.announce_tx_and_wait_for_getdata(p2sh_txs[1])
         self.std_node.test_transaction_acceptance(p2sh_txs[1], True, True)
         p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
         self.test_node.test_transaction_acceptance(p2sh_txs[2], True, True)
