@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin developers
+// Copyright (c) 2009-2016 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -151,6 +151,58 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         }
     }
 
+    return true;
+}
+
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+{
+    if (tx.IsCoinBase())
+        return true; // Coinbases are skipped
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        // We don't care if witness for this input is empty, since it must not be bloated.
+        // If the script is invalid without witness, it would be caught sooner or later during validation.
+        if (tx.wit.vtxinwit[i].IsNull())
+            continue;
+
+        const CTxOut &prev = mapInputs.GetOutputFor(tx.vin[i]);
+
+        // get the scriptPubKey corresponding to this input:
+        CScript prevScript = prev.scriptPubKey;
+
+        if (prevScript.IsPayToScriptHash()) {
+            std::vector <std::vector<unsigned char> > stack;
+            // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
+            // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
+            // If the check fails at this stage, we know that this txid must be a bad one.
+            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
+                return false;
+            if (stack.empty())
+                return false;
+            prevScript = CScript(stack.back().begin(), stack.back().end());
+        }
+
+        int witnessversion = 0;
+        std::vector<unsigned char> witnessprogram;
+
+        // Non-witness program must not be associated with any witness
+        if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
+            return false;
+
+        // Check P2WSH standard limits
+        if (witnessversion == 0 && witnessprogram.size() == 32) {
+            if (tx.wit.vtxinwit[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
+                return false;
+            size_t sizeWitnessStack = tx.wit.vtxinwit[i].scriptWitness.stack.size() - 1;
+            if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
+                return false;
+            for (unsigned int j = 0; j < sizeWitnessStack; j++) {
+                if (tx.wit.vtxinwit[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
+                    return false;
+            }
+        }
+    }
     return true;
 }
 
