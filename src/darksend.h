@@ -446,6 +446,7 @@ public:
     int GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSingleRandomDenom = false);
     int GetDenominations(const std::vector<CTxDSOut>& vecTxDSOut);
     std::string GetDenominationsToString(int nDenom);
+    bool GetDenominationsBits(int nDenom, std::vector<int> &vecBitsRet);
 
     void SetMinBlockSpacing(int nMinBlockSpacingIn) { nMinBlockSpacing = nMinBlockSpacingIn; }
 

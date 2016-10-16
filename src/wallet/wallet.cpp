@@ -2331,12 +2331,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     return true;
 }
 
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool fUseInstantSend) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType nCoinType, bool fUseInstantSend) const
 {
     // Note: this function should never be used for "always free" tx types like dstx
 
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, false, coin_type, fUseInstantSend);
+    AvailableCoins(vCoins, true, coinControl, false, nCoinType, fUseInstantSend);
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
@@ -2346,11 +2346,11 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             if(!out.fSpendable)
                 continue;
 
-            if(coin_type == ONLY_DENOMINATED) {
-                CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
-                int rounds = GetInputPrivateSendRounds(vin);
+            if(nCoinType == ONLY_DENOMINATED) {
+                CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
+                int nRounds = GetInputPrivateSendRounds(txin);
                 // make sure it's actually anonymized
-                if(rounds < nPrivateSendRounds) continue;
+                if(nRounds < nPrivateSendRounds) continue;
             }
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.insert(make_pair(out.tx, out.i));
@@ -2358,21 +2358,21 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
         return (nValueRet >= nTargetValue);
     }
 
-    //if we're doing only denominated, we need to round up to the nearest .1DRK
-    if(coin_type == ONLY_DENOMINATED) {
+    //if we're doing only denominated, we need to round up to the nearest smallest denomination
+    if(nCoinType == ONLY_DENOMINATED) {
+        CAmount nSmallestDenom = vecPrivateSendDenominations.back();
         // Make outputs by looping through denominations, from large to small
-        BOOST_FOREACH(CAmount v, vecPrivateSendDenominations)
+        BOOST_FOREACH(CAmount nDenom, vecPrivateSendDenominations)
         {
             BOOST_FOREACH(const COutput& out, vCoins)
             {
-                if(out.tx->vout[out.i].nValue == v                                            //make sure it's the denom we're looking for
-                    && nValueRet + out.tx->vout[out.i].nValue < nTargetValue + (0.1*COIN)+100 //round the amount up to .1DRK over
-                ){
-                    CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
-                    int rounds = GetInputPrivateSendRounds(vin);
+                //make sure it's the denom we're looking for, round the amount up to smallest denom
+                if(out.tx->vout[out.i].nValue == nDenom && nValueRet + nDenom < nTargetValue + nSmallestDenom) {
+                    CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
+                    int nRounds = GetInputPrivateSendRounds(txin);
                     // make sure it's actually anonymized
-                    if(rounds < nPrivateSendRounds) continue;
-                    nValueRet += out.tx->vout[out.i].nValue;
+                    if(nRounds < nPrivateSendRounds) continue;
+                    nValueRet += nDenom;
                     setCoinsRet.insert(make_pair(out.tx, out.i));
                 }
             }
@@ -2480,19 +2480,13 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
 bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vecTxInRet, std::vector<COutput>& vCoinsRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax)
 {
     vecTxInRet.clear();
+    vCoinsRet.clear();
     nValueRet = 0;
 
-    vCoinsRet.clear();
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, NULL, false, ONLY_DENOMINATED);
 
-    std::random_shuffle(vCoins.rbegin(), vCoins.rend());
-
-    //keep track of each denomination that we have
-    bool fFound100 = false;
-    bool fFound10 = false;
-    bool fFound1 = false;
-    bool fFoundDot1 = false;
+    std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
 
     // ( bit on if present )
     // bit 0 - 100DASH+1
@@ -2500,56 +2494,45 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     // bit 2 - 1DASH+1
     // bit 3 - .1DASH+1
 
-    //Check to see if any of the denomination are off, in that case mark them as fulfilled
-    if(!(nDenom & (1 << 0))) fFound100 = true;
-    if(!(nDenom & (1 << 1))) fFound10 = true;
-    if(!(nDenom & (1 << 2))) fFound1 = true;
-    if(!(nDenom & (1 << 3))) fFoundDot1 = true;
+    std::vector<int> vecBits;
+    if (!darkSendPool.GetDenominationsBits(nDenom, vecBits)) {
+        return false;
+    }
+
+    int nDenomResult = 0;
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         // masternode-like input should not be selected by AvailableCoins now anyway
         //if(out.tx->vout[out.i].nValue == 1000*COIN) continue;
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
-            bool fAccepted = false;
 
-            CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
+            CTxIn txin = CTxIn(out.tx->GetHash(), out.i);
 
             int nRounds = GetInputPrivateSendRounds(txin);
             if(nRounds >= nPrivateSendRoundsMax) continue;
             if(nRounds < nPrivateSendRoundsMin) continue;
 
-            if(fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
-                //we can return this for submission
-                if(nValueRet >= nValueMin){
-                    //random reduce the max amount we'll submit for anonymity
-                    nValueMax -= (rand() % (nValueMax/5));
-                    //on average use 50% of the inputs or less
-                    int r = (rand() % (int)vCoins.size());
-                    if((int)vecTxInRet.size() > r) return true;
+            BOOST_FOREACH(int nBit, vecBits) {
+                if(out.tx->vout[out.i].nValue == vecPrivateSendDenominations[nBit]) {
+                    if(nValueRet >= nValueMin) {
+                        //randomly reduce the max amount we'll submit (for anonymity)
+                        nValueMax -= (GetInsecureRand(nValueMax/5));
+                        //on average use 50% of the inputs or less
+                        int r = GetInsecureRand((int)vCoins.size());
+                        if((int)vecTxInRet.size() > r) return true;
+                    }
+                    txin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
+                    nValueRet += out.tx->vout[out.i].nValue;
+                    vecTxInRet.push_back(txin);
+                    vCoinsRet.push_back(out);
+                    nDenomResult |= 1 << nBit;
                 }
-                //Denomination criterion has been met, we can take any matching denominations
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)    +100000)) {fAccepted = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+10000)) {fAccepted = true;}
-                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN) +1000)) {fAccepted = true;}
-                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+100)) {fAccepted = true;}
-            } else {
-                //Criterion has not been satisfied, we will only take 1 of each until it is.
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)    +100000)) {fAccepted = true; fFound100 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+10000)) {fAccepted = true; fFound10 = true;}
-                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN) +1000)) {fAccepted = true; fFound1 = true;}
-                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+100)) {fAccepted = true; fFoundDot1 = true;}
             }
-            if(!fAccepted) continue;
-
-            txin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
-            nValueRet += out.tx->vout[out.i].nValue;
-            vecTxInRet.push_back(txin);
-            vCoinsRet.push_back(out);
         }
     }
 
-    return (nValueRet >= nValueMin && fFound100 && fFound10 && fFound1 && fFoundDot1);
+    return nValueRet >= nValueMin && nDenom == nDenomResult;
 }
 
 struct CompareByAmount
