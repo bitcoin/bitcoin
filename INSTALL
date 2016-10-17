@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Building Dash
 
 Use the autogen script to prepare the build environment.
@@ -15,10 +14,3 @@ Always verify the signatures and checksums.
 See doc/build-*.md for instructions on building dashd,
 the intended-for-services, no-graphical-interface, reference
 implementation of Dash.
-=======
-Building Crowncoin
-
-See doc/build-*.md for instructions on building crowncoind,
-the intended-for-services, no-graphical-interface, reference
-implementation of Crowncoin.
->>>>>>> origin/dirty-merge-dash-0.11.0

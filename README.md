@@ -1,20 +1,12 @@
-<<<<<<< HEAD
 Dash Core staging tree 0.12
 ===============================
 
 `master:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=master)](https://travis-ci.org/dashpay/dash) `v0.12.0.x:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=v0.12.0.x)](https://travis-ci.org/dashpay/dash/branches) `v0.12.1.x:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=v0.12.1.x)](https://travis-ci.org/dashpay/dash/branches)
 
 https://www.dash.org
-=======
-Crowncoin integration/staging tree
-=====================================
 
-http://www.crowncoin.com
->>>>>>> origin/dirty-merge-dash-0.11.0
+Copyright (c) 2009-2015 Bitcoin Core Developers
 
-Copyright (c) 2009-2014 Crowncoin Developers
-
-<<<<<<< HEAD
 Copyright (c) 2014-2015 Dash Core Developers
 
 
@@ -30,29 +22,11 @@ source software which enables the use of this currency.
 For more information, as well as an immediately useable, binary version of
 the Dash Core software, see https://www.dash.org/downloads.
 
-=======
-
-What is Crowncoin?
-----------------
-
-Crowncoin is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Crowncoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Crowncoin Core is the name of open source
-software which enables the use of this currency.
-
-For more information, as well as an immediately useable, binary version of
-the Crowncoin Core software, see http://www.crowncoin.org/en/download.
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 License
 -------
 
-<<<<<<< HEAD
 Dash Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-=======
-Crowncoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
->>>>>>> origin/dirty-merge-dash-0.11.0
 information or see http://opensource.org/licenses/MIT.
 
 Development Process
@@ -62,26 +36,8 @@ The `master` branch is meant to be stable. Development is normally done in separ
 [Tags](https://github.com/dashpay/dash/tags) are created to indicate new official,
 stable release versions of Dash Core.
 
-<<<<<<< HEAD
 The contribution workflow is described in [CONTRIBUTING.md](https://github.com/dashpay/dash/blob/v0.12.1.x/CONTRIBUTING.md).
 
-=======
-If it is a simple/trivial/non-controversial change, then one of the Crowncoin
-development team members simply pulls it.
-
-If it is a *more complicated or potentially controversial* change, then the patch
-submitter will be asked to start a discussion (if they haven't already) on the
-[mailing list](http://sourceforge.net/mailarchive/forum.php?forum_name=crowncoin-development).
-
-The patch will be accepted if there is broad consensus that it is a good thing.
-Developers should expect to rework and resubmit patches if the code doesn't
-match the project's coding conventions (see [doc/coding.md](doc/coding.md)) or are
-controversial.
-
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/crowncoin/crowncoin/tags) are created
-regularly to indicate new official, stable release versions of Crowncoin.
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 Testing
 -------
@@ -99,33 +55,20 @@ submit new unit tests for old code. Unit tests can be compiled and run (assuming
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
 used for manual QA testing — a link to them will appear in a comment on the
-<<<<<<< HEAD
 pull request posted by [DashPullTester](https://github.com/dashpay/PullTester). See https://github.com/TheBlueMatt/test-scripts
 for the build/test scripts. ***TODO***
-=======
-pull request posted by [CrowncoinPullTester](https://github.com/CrowncoinPullTester). See https://github.com/TheBlueMatt/test-scripts
-for the build/test scripts.
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 ### Manual Quality Assurance (QA) Testing
 
 Large changes should have a test plan, and should be tested by somebody other
 than the developer who wrote the code.
-<<<<<<< HEAD
 See https://github.com/dashpay/QA/ for how to create a test plan. ***TODO***
-=======
-See https://github.com/crowncoin/QA/ for how to create a test plan.
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-<<<<<<< HEAD
 [Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/dash/).
-=======
-[Crowncoin Core's Transifex page](https://www.transifex.com/projects/p/crowncoin/).
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
@@ -156,11 +99,7 @@ to see it.
 
 **testnet and regtest modes**
 
-<<<<<<< HEAD
 Run with the -testnet option to run with "play dash" on the test network, if you
-=======
-Run with the -testnet option to run with "play crowncoins" on the test network, if you
->>>>>>> origin/dirty-merge-dash-0.11.0
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.
@@ -169,11 +108,7 @@ that run in -regtest mode.
 
 **DEBUG_LOCKORDER**
 
-<<<<<<< HEAD
 Dash Core is a multithreaded application, and deadlocks or other multithreading bugs
-=======
-Crowncoin Core is a multithreaded application, and deadlocks or other multithreading bugs
->>>>>>> origin/dirty-merge-dash-0.11.0
 can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
 CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
 are held, and adds warnings to the debug.log file if inconsistencies are detected.

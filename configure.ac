@@ -6,7 +6,6 @@ define(_CLIENT_VERSION_REVISION, 0)
 define(_CLIENT_VERSION_BUILD, 60)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2016)
-<<<<<<< HEAD
 AC_INIT([Dash Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@dash.org],[dash])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([src/config/dash-config.h])
@@ -14,15 +13,6 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-=======
-AC_INIT([Crowncoin],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@crowncoin.com],[crowncoin])
-AC_CONFIG_AUX_DIR([src/build-aux])
-AC_CONFIG_MACRO_DIR([src/m4])
-AC_CANONICAL_HOST
-AH_TOP([#ifndef CROWNCOIN_CONFIG_H])
-AH_TOP([#define CROWNCOIN_CONFIG_H])
-AH_BOTTOM([#endif //CROWNCOIN_CONFIG_H])
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 AH_TOP([#ifndef DASH_CONFIG_H])
 AH_TOP([#define DASH_CONFIG_H])
@@ -156,39 +146,7 @@ AC_ARG_ENABLE([glibc-back-compat],
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
-<<<<<<< HEAD
 # Enable debug
-=======
-
-AC_CONFIG_SRCDIR([src])
-AC_CONFIG_HEADERS([src/crowncoin-config.h])
-
-dnl Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_CXXCPP
-AC_PROG_INSTALL
-AC_PROG_OBJC
-AC_PROG_LN_S
-m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
-AC_PROG_MKDIR_P
-AC_PROG_SED
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-AC_PATH_TOOL(GCOV, gcov)
-AC_PATH_PROG(LCOV, lcov)
-AC_PATH_PROG(JAVA, java)
-AC_PATH_PROG(GENHTML, genhtml)
-AC_PATH_PROG([GIT], [git])
-AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROG(XGETTEXT,xgettext)
-AC_PATH_PROG(HEXDUMP,hexdump)
-PKG_PROG_PKG_CONFIG
-
-# Enable debug 
->>>>>>> origin/dirty-merge-dash-0.11.0
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
                     [use debug compiler flags and macros (default is no)])],
@@ -314,11 +272,7 @@ case $host in
 
        AC_CHECK_PROG([BREW],brew, brew)
        if test x$BREW = xbrew; then
-<<<<<<< HEAD
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
-=======
-+         dnl These Homebrew packages may be bottled, meaning that they won't be found
->>>>>>> origin/dirty-merge-dash-0.11.0
          dnl in expected paths because they may conflict with system files. Ask
          dnl Homebrew where each one is located, then adjust paths accordingly.
          dnl It's safe to add these paths even if the functionality is disabled by
@@ -409,11 +363,7 @@ AC_C_BIGENDIAN([AC_MSG_ERROR("Big Endian not supported")])
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
 
-<<<<<<< HEAD
 # The following macro will add the necessary defines to dash-config.h, but
-=======
-# The following macro will add the necessary defines to crowncoin-config.h, but
->>>>>>> origin/dirty-merge-dash-0.11.0
 # they also need to be passed down to any subprojects. Pull the results out of
 # the cache and add them to CPPFLAGS.
 AC_SYS_LARGEFILE
@@ -556,7 +506,7 @@ AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    CROWNCOIN_FIND_BDB48
+    BITCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -717,23 +667,7 @@ if test x$boost_sleep != xyes; then
   AC_MSG_ERROR(No working boost sleep implementation found.)
 fi
 
-<<<<<<< HEAD
 fi
-=======
-AC_ARG_WITH([cli],
-  [AS_HELP_STRING([--with-cli],
-  [with CLI (default is yes)])],
-  [build_crowncoin_cli=$withval],
-  [build_crowncoin_cli=yes])
-
-AC_ARG_WITH([daemon],
-  [AS_HELP_STRING([--with-daemon],
-  [with daemon (default is yes)])],
-  [build_crowncoind=$withval],
-  [build_crowncoind=yes])
-
-CROWNCOIN_QT_INIT
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 if test x$use_pkgconfig = xyes; then
 
@@ -745,17 +679,11 @@ if test x$use_pkgconfig = xyes; then
   m4_ifdef(
     [PKG_CHECK_MODULES],
     [
-<<<<<<< HEAD
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto  not found.)])
       BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
-=======
-      PKG_CHECK_MODULES([SSL], [libssl], [INCLUDES="$INCLUDES $SSL_CFLAGS"; LIBS="$LIBS $SSL_LIBS"], [AC_MSG_ERROR(openssl  not found.)])
-      PKG_CHECK_MODULES([CRYPTO], [libcrypto], [INCLUDES="$INCLUDES $CRYPTO_CFLAGS"; LIBS="$LIBS $CRYPTO_LIBS"], [AC_MSG_ERROR(libcrypto  not found.)])
-      CROWNCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [CROWNCOIN_QT_FAIL(libprotobuf not found)])])
->>>>>>> origin/dirty-merge-dash-0.11.0
       if test x$use_qr != xno; then
-        CROWNCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
     ]
   )
@@ -766,7 +694,6 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-<<<<<<< HEAD
   BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
   if test x$use_qr != xno; then
     BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
@@ -806,27 +733,6 @@ if test x$build_bitcoin_libs = xyes; then
   AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
-=======
-  CROWNCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,CROWNCOIN_QT_FAIL(libprotobuf not found)))
-  if test x$use_qr != xno; then
-    CROWNCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])])
-    CROWNCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
-  fi
-fi
-
-CROWNCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
-
-AC_MSG_CHECKING([whether to build crowncoind])
-AM_CONDITIONAL([BUILD_CROWNCOIND], [test x$build_crowncoind = xyes])
-AC_MSG_RESULT($build_crowncoind)
-
-AC_MSG_CHECKING([whether to build crowncoin-cli])
-AM_CONDITIONAL([BUILD_CROWNCOIN_CLI], [test x$build_crowncoin_cli = xyes])
-AC_MSG_RESULT($build_crowncoin_cli)
-
-dnl sets $crowncoin_enable_qt, $crowncoin_enable_qt_test, $crowncoin_enable_qt_dbus
-CROWNCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 AC_LANG_POP
 
@@ -887,14 +793,14 @@ else
 fi
 
 dnl these are only used when qt is enabled
-if test x$crowncoin_enable_qt != xno; then
+if test x$bitcoin_enable_qt != xno; then
   BUILD_QT=qt
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
-  if test x$crowncoin_enable_qt_dbus != xno; then
+  if test x$bitcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
-  AC_MSG_RESULT($crowncoin_enable_qt_dbus)
+  AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
@@ -917,13 +823,8 @@ if test x$crowncoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-<<<<<<< HEAD
   AC_MSG_CHECKING([whether to build test_dash-qt])
   if test x$use_tests$bitcoin_enable_qt_test = xyesyes; then
-=======
-  AC_MSG_CHECKING([whether to build test_crowncoin-qt])
-  if test x$use_tests$crowncoin_enable_qt_test = xyesyes; then
->>>>>>> origin/dirty-merge-dash-0.11.0
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="test"
   else
@@ -931,11 +832,7 @@ if test x$crowncoin_enable_qt != xno; then
   fi
 fi
 
-<<<<<<< HEAD
 AC_MSG_CHECKING([whether to build test_dash])
-=======
-AC_MSG_CHECKING([whether to build test_crowncoin])
->>>>>>> origin/dirty-merge-dash-0.11.0
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="test"
@@ -943,7 +840,6 @@ else
   AC_MSG_RESULT([no])
 fi
 
-<<<<<<< HEAD
 AC_MSG_CHECKING([whether to reduce exports])
 if test x$use_reduce_exports != xno; then
   AC_MSG_RESULT([yes])
@@ -953,10 +849,6 @@ fi
 
 if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_tests = xnonononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui or --enable-tests])
-=======
-if test "x$use_tests$build_crowncoind$use_qt" = "xnonono"; then
-  AC_MSG_ERROR([No targets! Please specify at least one of: --enable-cli --enable-daemon --enable-gui or --enable-tests])
->>>>>>> origin/dirty-merge-dash-0.11.0
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
@@ -996,7 +888,6 @@ AC_SUBST(LEVELDB_TARGET_FLAGS)
 AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
-<<<<<<< HEAD
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
@@ -1041,9 +932,3 @@ case $host in
      chmod 755 libtool
    ;;
 esac
-=======
-AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
-AC_CONFIG_FILES([qa/pull-tester/run-crowncoind-for-test.sh],[chmod +x qa/pull-tester/run-crowncoind-for-test.sh])
-AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])
-AC_OUTPUT
->>>>>>> origin/dirty-merge-dash-0.11.0
