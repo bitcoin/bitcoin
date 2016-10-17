@@ -378,8 +378,8 @@ std::vector<CGovernanceVote*> CGovernanceManager::GetMatchingVotes(const uint256
 
     // LOOP THROUGH ALL VOTES AND FIND THOSE MATCHING USER HASH
 
-    vote_m_it it2 = mapVotesByHash.begin();
-    while(it2 != mapVotesByHash.end()) {
+    vote_m_it it2 = mapVotesByType.begin();
+    while(it2 != mapVotesByType.end()) {
         if((*it2).second.GetParentHash() == nParentHash) {
             vecResult.push_back(&(*it2).second);
         }
