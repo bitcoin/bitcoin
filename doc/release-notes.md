@@ -66,9 +66,12 @@ Segwit also simplifies the ability to add new features to Bitcoin and
 improves the efficiency of full nodes, which will help provide long-term
 benefits to Bitcoin users.
 
-Activation for the segwit soft fork is being managed using BIP9 versionbits.
-The earliest activation date is set to 15 November 2016 (UTC) and
-its versionbit is bit 1.
+Activation for the segwit soft fork is being managed using BIP9
+versionbits.  Segwit's version bit is bit 1, and nodes will begin
+tracking which blocks signal support for segwit on 15 November 2016
+(UTC).  If 95% of blocks within a 2,016-block retarget period (about two
+weeks) signal support for segwit, the soft fork will be locked in.
+After another 2,016 blocks, segwit will activate.
 
 For more information about segwit, please see the [segwit FAQ][], the
 [segwit wallet developers guide][] or BIPs [141][BIP141], [143][BIP143],
