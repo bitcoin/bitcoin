@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Crowncoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_NET_H
-#define CROWNCOIN_NET_H
+#ifndef BITCOIN_NET_H
+#define BITCOIN_NET_H
 
 #include "bloom.h"
 #include "compat.h"
@@ -68,12 +68,8 @@ void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const std::string& addrName);
 CNode* FindNode(const CService& ip);
-<<<<<<< HEAD
 CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL, bool darkSendMaster=false);
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
-=======
-CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL, bool darkSendMaster=false);
->>>>>>> origin/dirty-merge-dash-0.11.0
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
@@ -262,14 +258,11 @@ public:
     // b) the peer may tell us in their version message that we should not relay tx invs
     //    until they have initialized their bloom filter.
     bool fRelayTxes;
-<<<<<<< HEAD
     // Should be 'true' only if we connected to this node to actually mix funds.
     // In this case node will be released automatically via CMasternodeMan::ProcessMasternodeConnections().
     // Connecting to verify connectability/status or connecting for sending/relaying single message
     // (even if it's relative to mixing e.g. for blinding) should NOT set this to 'true'.
     // For such cases node should be released manually (preferably right after corresponding code).
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
     bool fDarkSendMaster;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
@@ -285,14 +278,11 @@ protected:
 
     std::vector<std::string> vecRequestsFulfilled; //keep track of what client has asked for
     
-<<<<<<< HEAD
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     static std::vector<CSubNet> vWhitelistedRange;
     static CCriticalSection cs_vWhitelistedRange;
 
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
     // Basic fuzz-testing
     void Fuzz(int nChance); // modifies ssSend
 
@@ -646,7 +636,6 @@ public:
         return false;
     }
 
-<<<<<<< HEAD
     void ClearFulfilledRequest(std::string strRequest)
     {
         std::vector<std::string>::iterator it = vecRequestsFulfilled.begin();
@@ -659,8 +648,6 @@ public:
         }
     }
 
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
     void FulfilledRequest(std::string strRequest)
     {
         if(HasFulfilledRequest(strRequest)) return;
@@ -709,17 +696,10 @@ public:
 };
 
 class CTransaction;
-<<<<<<< HEAD
 void RelayTransaction(const CTransaction& tx);
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
 void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll=false);    
 void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-=======
-void RelayTransaction(const CTransaction& tx, const uint256& hash);
-void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
-void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool relayToAll=false);
-
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB

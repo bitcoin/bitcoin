@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-<<<<<<< HEAD
 # Copyright (c) 2014 The Bitcoin Core developers
 # Copyright (c) 2014-2015 The Dash developers
-=======
-# Copyright (c) 2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,11 +12,7 @@ function echoerr {
 
 # Usage: ExtractKey <key> "<json_object_string>"
 # Warning: this will only work for the very-well-behaved
-<<<<<<< HEAD
 # JSON produced by dashd, do NOT use it to try to
-=======
-# JSON produced by crowncoind, do NOT use it to try to
->>>>>>> origin/dirty-merge-dash-0.11.0
 # parse arbitrary/nested/etc JSON.
 function ExtractKey {
     echo $2 | tr -d ' "{}\n' | awk -v RS=',' -F: "\$1 ~ /$1/ { print \$2}"
@@ -29,11 +21,7 @@ function ExtractKey {
 function CreateDataDir {
   DIR=$1
   mkdir -p $DIR
-<<<<<<< HEAD
   CONF=$DIR/dash.conf
-=======
-  CONF=$DIR/crowncoin.conf
->>>>>>> origin/dirty-merge-dash-0.11.0
   echo "regtest=1" >> $CONF
   echo "keypool=2" >> $CONF
   echo "rpcuser=rt" >> $CONF

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,9 +6,6 @@
 #include "config/dash-config.h"
 #endif
 
-=======
-#include "crowncoin-config.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #include <cstddef>
 
 #if defined(HAVE_SYS_SELECT_H)

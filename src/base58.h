@@ -1,5 +1,4 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -14,22 +13,6 @@
  */
 #ifndef BITCOIN_BASE58_H
 #define BITCOIN_BASE58_H
-=======
-// Copyright (c) 2009-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-//
-// Why base-58 instead of standard base-64 encoding?
-// - Don't want 0OIl characters that look the same in some fonts and
-//      could be used to create visually identical looking account numbers.
-// - A string with non-alphanumeric characters is not as easily accepted as an account number.
-// - E-mail usually won't line-break if there's no punctuation to break at.
-// - Double-clicking selects the whole number as one word if it's all alphanumeric.
-//
-#ifndef CROWNCOIN_BASE58_H
-#define CROWNCOIN_BASE58_H
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include "chainparams.h"
 #include "key.h"
@@ -111,17 +94,13 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 };
 
-<<<<<<< HEAD
 /** base58-encoded Dash addresses.
-=======
-/** base58-encoded Crowncoin addresses.
->>>>>>> origin/dirty-merge-dash-0.11.0
  * Public-key-hash-addresses have version 0 (or 111 testnet).
  * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
  * Script-hash-addresses have version 5 (or 196 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
-class CCrowncoinAddress : public CBase58Data {
+class CBitcoinAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id);
     bool Set(const CScriptID &id);
@@ -129,10 +108,10 @@ public:
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
-    CCrowncoinAddress() {}
-    CCrowncoinAddress(const CTxDestination &dest) { Set(dest); }
-    CCrowncoinAddress(const std::string& strAddress) { SetString(strAddress); }
-    CCrowncoinAddress(const char* pszAddress) { SetString(pszAddress); }
+    CBitcoinAddress() {}
+    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
+    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
+    CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
@@ -142,7 +121,7 @@ public:
 /**
  * A base58-encoded secret key
  */
-class CCrowncoinSecret : public CBase58Data
+class CBitcoinSecret : public CBase58Data
 {
 public:
     void SetKey(const CKey& vchSecret);
@@ -151,11 +130,11 @@ public:
     bool SetString(const char* pszSecret);
     bool SetString(const std::string& strSecret);
 
-    CCrowncoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
-    CCrowncoinSecret() {}
+    CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
+    CBitcoinSecret() {}
 };
 
-template<typename K, int Size, CChainParams::Base58Type Type> class CCrowncoinExtKeyBase : public CBase58Data
+template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
 {
 public:
     void SetKey(const K &key) {
@@ -170,14 +149,14 @@ public:
         return ret;
     }
 
-    CCrowncoinExtKeyBase(const K &key) {
+    CBitcoinExtKeyBase(const K &key) {
         SetKey(key);
     }
 
-    CCrowncoinExtKeyBase() {}
+    CBitcoinExtKeyBase() {}
 };
 
-typedef CCrowncoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CCrowncoinExtKey;
-typedef CCrowncoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CCrowncoinExtPubKey;
+typedef CBitcoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CBitcoinExtKey;
+typedef CBitcoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CBitcoinExtPubKey;
 
-#endif // CROWNCOIN_BASE58_H
+#endif // BITCOIN_BASE58_H

@@ -1,5 +1,4 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
@@ -14,17 +13,6 @@
 
 #if defined(HAVE_CONFIG_H)
 #include "config/dash-config.h"
-=======
-// Copyright (c) 2009-2014 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef CROWNCOIN_UTIL_H
-#define CROWNCOIN_UTIL_H
-
-#if defined(HAVE_CONFIG_H)
-#include "crowncoin-config.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
 #include "compat.h"
@@ -38,7 +26,6 @@
 #include <vector>
 
 #include <boost/filesystem/path.hpp>
-<<<<<<< HEAD
 #include <boost/thread/exceptions.hpp>
 
 //Dash only features
@@ -46,93 +33,17 @@
 extern bool fMasterNode;
 extern bool fLiteMode;
 extern bool fEnableInstantX;
-=======
-#include <boost/thread.hpp>
-
-class CNetAddr;
-class uint256;
-
-static const int64_t COIN = 100000000;
-static const int64_t CENT = 1000000;
-
-#define BEGIN(a)            ((char*)&(a))
-#define END(a)              ((char*)&((&(a))[1]))
-#define UBEGIN(a)           ((unsigned char*)&(a))
-#define UEND(a)             ((unsigned char*)&((&(a))[1]))
-#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-
-// This is needed because the foreach macro can't get over the comma in pair<t1, t2>
-#define PAIRTYPE(t1, t2)    std::pair<t1, t2>
-
-// Align by increasing pointer, must have extra space at end of buffer
-template <size_t nBytes, typename T>
-T* alignup(T* p)
-{
-    union
-    {
-        T* ptr;
-        size_t n;
-    } u;
-    u.ptr = p;
-    u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
-    return u.ptr;
-}
-
-#ifdef WIN32
-#define MSG_DONTWAIT        0
-
-#ifndef S_IRUSR
-#define S_IRUSR             0400
-#define S_IWUSR             0200
-#endif
-#else
-#define MAX_PATH            1024
-#endif
-// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
-#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
-#endif
-
-inline void MilliSleep(int64_t n)
-{
-// Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
-// until fixed in 1.52. Use the deprecated sleep method for the broken case.
-// See: https://svn.boost.org/trac/boost/ticket/7238
-#if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(n));
-#elif defined(HAVE_WORKING_BOOST_SLEEP)
-    boost::this_thread::sleep(boost::posix_time::milliseconds(n));
-#else
-//should never get here
-#error missing boost sleep implementation
-#endif
-}
-
-//Dash only features
-
-extern bool fThroNe;
-extern bool fLiteMode;
->>>>>>> origin/dirty-merge-dash-0.11.0
 extern int nInstantXDepth;
 extern int nDarksendRounds;
 extern int nAnonymizeDarkcoinAmount;
 extern int nLiquidityProvider;
 extern bool fEnableDarksend;
-<<<<<<< HEAD
 extern int64_t enforceMasternodePaymentsTime;
 extern std::string strMasterNodeAddr;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::vector<int64_t> darkSendDenominations;
 extern std::string strBudgetMode;
-=======
-extern int64_t enforceThronePaymentsTime;
-extern std::string strThroNeAddr;
-extern int nThroneMinProtocol;
-extern int keysLoaded;
-extern bool fSucessfullyLoaded;
-extern std::vector<int64_t> darkSendDenominations;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
@@ -192,26 +103,6 @@ static inline bool error(const char* format)
 }
 
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
-<<<<<<< HEAD
-=======
-std::string FormatMoney(int64_t n, bool fPlus=false);
-bool ParseMoney(const std::string& str, int64_t& nRet);
-bool ParseMoney(const char* pszIn, int64_t& nRet);
-std::string SanitizeString(const std::string& str);
-std::vector<unsigned char> ParseHex(const char* psz);
-std::vector<unsigned char> ParseHex(const std::string& str);
-bool IsHex(const std::string& str);
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
-std::string DecodeBase64(const std::string& str);
-SecureString DecodeBase64Secure(const SecureString& input);
-std::string EncodeBase64(const unsigned char* pch, size_t len);
-std::string EncodeBase64(const std::string& str);
-SecureString EncodeBase64Secure(const SecureString& input);
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
-std::string DecodeBase32(const std::string& str);
-std::string EncodeBase32(const unsigned char* pch, size_t len);
-std::string EncodeBase32(const std::string& str);
->>>>>>> origin/dirty-merge-dash-0.11.0
 void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *fileout);
 bool TruncateFile(FILE *file, unsigned int length);
@@ -222,12 +113,7 @@ bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
-<<<<<<< HEAD
 boost::filesystem::path GetMasternodeConfigFile();
-=======
-boost::filesystem::path GetThroneConfigFile();
-boost::filesystem::path GetPidFile();
->>>>>>> origin/dirty-merge-dash-0.11.0
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
@@ -308,11 +194,7 @@ void RenameThread(const char* name);
  */
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
 {
-<<<<<<< HEAD
     std::string s = strprintf("dash-%s", name);
-=======
-    std::string s = strprintf("crowncoin-%s", name);
->>>>>>> origin/dirty-merge-dash-0.11.0
     RenameThread(s.c_str());
     LogPrintf("%s thread start\n", name);
     try
@@ -343,11 +225,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-<<<<<<< HEAD
     std::string s = strprintf("dash-%s", name);
-=======
-    std::string s = strprintf("crowncoin-%s", name);
->>>>>>> origin/dirty-merge-dash-0.11.0
     RenameThread(s.c_str());
     try
     {

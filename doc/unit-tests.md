@@ -6,7 +6,6 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with 'make check'.
 
-<<<<<<< HEAD
 To run the dashd tests manually, launch src/test/test_dash .
 
 To add more dashd tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
@@ -16,15 +15,4 @@ implement new BOOST_AUTO_TEST_SUITE sections.
 To run the dash-qt tests manually, launch src/qt/test/dash-qt_test
 
 To add more dash-qt tests, add them to the `src/qt/test/` directory and
-=======
-To run the crowncoind tests manually, launch src/test/test_crowncoin .
-
-To add more crowncoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
-.cpp files in the test/ directory or add new .cpp files that
-implement new BOOST_AUTO_TEST_SUITE sections.
-
-To run the crowncoin-qt tests manually, launch src/qt/test/crowncoin-qt_test
-
-To add more crowncoin-qt tests, add them to the `src/qt/test/` directory and
->>>>>>> origin/dirty-merge-dash-0.11.0
 the `src/qt/test/test_main.cpp` file.

@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,12 +7,8 @@
 #include "ui_sendcoinsdialog.h"
 
 #include "addresstablemodel.h"
-<<<<<<< HEAD
 #include "bitcoinunits.h"
 #include "clientmodel.h"
-=======
-#include "crowncoinunits.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #include "coincontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -282,30 +274,12 @@ void SendCoinsDialog::on_sendButton_clicked()
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         // generate bold amount string
-<<<<<<< HEAD
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b> ").append(strFunds);
 
-=======
-        QString amount = "<b>" + CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
-        amount.append("</b>");
->>>>>>> origin/dirty-merge-dash-0.11.0
         // generate monospace address string
-        QString addrOrName = "<span style='font-family: monospace;'>";
-        if (model->validateAddress (rcp.recipient))
-          addrOrName += rcp.recipient;
-        else
-          {
-            CTxDestination dest;
-            if (!model->checkRecipientName (rcp.recipient, dest))
-              return;
-            CCrowncoinAddress addr;
-            if (!addr.Set (dest))
-              return;
-            const QString strAddr(QString::fromStdString (addr.ToString ()));
-            addrOrName += QString("%1: %2").arg (rcp.recipient, strAddr);
-          }
-        addrOrName.append("</span>");
+        QString address = "<span style='font-family: monospace;'>" + rcp.address;
+        address.append("</span>");
 
         QString recipientElement;
 
@@ -314,11 +288,11 @@ void SendCoinsDialog::on_sendButton_clicked()
             if(rcp.label.length() > 0) // label with address
             {
                 recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label));
-                recipientElement.append(QString(" (%1)").arg(addrOrName));
+                recipientElement.append(QString(" (%1)").arg(address));
             }
             else // just address
             {
-                recipientElement = tr("%1 to %2").arg(amount, addrOrName);
+                recipientElement = tr("%1 to %2").arg(amount, address);
             }
         }
         else if(!rcp.authenticatedMerchant.isEmpty()) // secure payment request
@@ -327,7 +301,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         }
         else // insecure payment request
         {
-            recipientElement = tr("%1 to %2").arg(amount, addrOrName);
+            recipientElement = tr("%1 to %2").arg(amount, address);
         }
 
         formatted.append(recipientElement);
@@ -368,7 +342,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
-        CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
+        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
@@ -383,11 +357,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-<<<<<<< HEAD
         questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
-=======
-        questionString.append(CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
->>>>>>> origin/dirty-merge-dash-0.11.0
         questionString.append("</span> ");
         questionString.append(tr("are added as transaction fee"));
         questionString.append(" ");
@@ -401,10 +371,9 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    foreach(CrowncoinUnits::Unit u, CrowncoinUnits::availableUnits())
+    foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
-<<<<<<< HEAD
             alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
     }
 
@@ -427,13 +396,6 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
     }
     questionString.append("<hr />");
     questionString.append(tr("<b>(%1 of %2 entries displayed)</b>").arg(displayedEntries).arg(messageEntries));
-=======
-            alternativeUnits.append(CrowncoinUnits::formatWithUnit(u, totalAmount));
-    }
-    questionString.append(tr("Total Amount %1 (= %2)")
-        .arg(CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
-        .arg(alternativeUnits.join(" " + tr("or") + " ")));
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Display message box    
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
@@ -585,31 +547,8 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
 
 bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
 {
-<<<<<<< HEAD
     // Just paste the entry, all pre-checks
     // are done in paymentserver.cpp.
-=======
-    QString strSendCoins = tr("Send Coins");
-    if (rv.paymentRequest.IsInitialized()) {
-        // Expired payment request?
-        const payments::PaymentDetails& details = rv.paymentRequest.getDetails();
-        if (details.has_expires() && (int64_t)details.expires() < GetTime())
-        {
-            emit message(strSendCoins, tr("Payment request expired"),
-                CClientUIInterface::MSG_WARNING);
-            return false;
-        }
-    }
-    else {
-        CCrowncoinAddress address(rv.recipient.toStdString());
-        if (!address.IsValid()) {
-            emit message(strSendCoins, tr("Invalid payment address %1").arg(rv.recipient),
-                CClientUIInterface::MSG_WARNING);
-            return false;
-        }
-    }
-
->>>>>>> origin/dirty-merge-dash-0.11.0
     pasteEntry(rv);
     return true;
 }
@@ -626,7 +565,6 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
 
     if(model && model->getOptionsModel())
     {
-<<<<<<< HEAD
 	    uint64_t bal = 0;
         QSettings settings;
         settings.setValue("bUseDarkSend", ui->checkUseDarksend->isChecked());
@@ -637,9 +575,6 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
 	    }
 
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
-=======
-        ui->labelBalance->setText(CrowncoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 }
 
@@ -912,7 +847,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
-        CCrowncoinAddress addr = CCrowncoinAddress(text.toStdString());
+        CBitcoinAddress addr = CBitcoinAddress(text.toStdString());
 
         if (text.isEmpty()) // Nothing entered
         {
@@ -920,11 +855,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-<<<<<<< HEAD
             ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Dash address"));
-=======
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Crowncoin address"));
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
         else // Valid address
         {

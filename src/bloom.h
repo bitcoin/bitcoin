@@ -1,14 +1,9 @@
-<<<<<<< HEAD
 // Copyright (c) 2012-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
-=======
-// Copyright (c) 2012 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_BLOOM_H
-#define CROWNCOIN_BLOOM_H
+#ifndef BITCOIN_BLOOM_H
+#define BITCOIN_BLOOM_H
 
 #include "serialize.h"
 
@@ -102,8 +97,4 @@ public:
     void UpdateEmptyFull();
 };
 
-<<<<<<< HEAD
 #endif // BITCOIN_BLOOM_H
-=======
-#endif /* CROWNCOIN_BLOOM_H */
->>>>>>> origin/dirty-merge-dash-0.11.0

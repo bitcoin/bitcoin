@@ -1,15 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
-=======
-// Copyright (c) 2009-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_KEY_H
-#define CROWNCOIN_KEY_H
+#ifndef BITCOIN_KEY_H
+#define BITCOIN_KEY_H
 
 #include "allocators.h"
 #include "serialize.h"

@@ -1,6 +1,5 @@
 UNIX BUILD NOTES
 ====================
-<<<<<<< HEAD
 Some notes on how to build Dash in Unix. 
 
 Note
@@ -12,9 +11,6 @@ for example, when specifying the the path of the dependency:
 
 Here BDB_PREFIX must absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
-=======
-Some notes on how to build Crowncoin in Unix. 
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 To Build
 ---------------------
@@ -26,11 +22,7 @@ make
 make install # optional
 ```
 
-<<<<<<< HEAD
 This will build dash-qt as well if the dependencies are met.
-=======
-This will build crowncoin-qt as well if the dependencies are met.
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 Dependencies
 ---------------------
@@ -58,11 +50,7 @@ System requirements
 --------------------
 
 C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
-<<<<<<< HEAD
 memory available when compiling Dash Core. With 512MB of memory or less
-=======
-memory available when compiling Crowncoin. With 512MB of memory or less
->>>>>>> origin/dirty-merge-dash-0.11.0
 compilation will take much longer due to swap thrashing.
 
 Dependency Build Instructions: Ubuntu & Debian
@@ -75,10 +63,10 @@ for Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be inst
 
 	sudo apt-get install libboost-all-dev
 
- db4.8 packages are available [here](https://launchpad.net/~crowncoin/+archive/crowncoin).
+ db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
  You can add the repository using the following command:
 
-        sudo add-apt-repository ppa:crowncoin/crowncoin
+        sudo add-apt-repository ppa:bitcoin/bitcoin
         sudo apt-get update
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
@@ -106,11 +94,7 @@ Optional:
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
 
-<<<<<<< HEAD
 If you want to build Dash-Qt, make sure that the required packages for Qt development
-=======
-If you want to build Crowncoin-Qt, make sure that the required packages for Qt development
->>>>>>> origin/dirty-merge-dash-0.11.0
 are installed. Either Qt 4 or Qt 5 are necessary to build the GUI.
 If both Qt 4 and Qt 5 are installed, Qt 4 will be used. Pass `--with-gui=qt5` to configure to choose Qt5.
 To build without GUI pass `--without-gui`.
@@ -127,20 +111,12 @@ libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
 
-<<<<<<< HEAD
 Once these are installed, they will be found by configure and a dash-qt executable will be
-=======
-Once these are installed, they will be found by configure and a crowncoin-qt executable will be
->>>>>>> origin/dirty-merge-dash-0.11.0
 built by default.
 
 Notes
 -----
-<<<<<<< HEAD
 The release is built with GCC and then "strip dashd" to strip the debug
-=======
-The release is built with GCC and then "strip crowncoind" to strip the debug
->>>>>>> origin/dirty-merge-dash-0.11.0
 symbols, which reduces the executable size by about 90%.
 
 
@@ -169,17 +145,10 @@ Berkeley DB
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself:
 
 ```bash
-<<<<<<< HEAD
 DASH_ROOT=$(pwd)
 
 # Pick some path to install BDB to, here we create a directory within the dash directory
 BDB_PREFIX="${DASH_ROOT}/db4"
-=======
-CROWNCOIN_ROOT=$(pwd)
-
-# Pick some path to install BDB to, here we create a directory within the crowncoin directory
-BDB_PREFIX="${CROWNCOIN_ROOT}/db4"
->>>>>>> origin/dirty-merge-dash-0.11.0
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
@@ -194,13 +163,8 @@ cd db-4.8.30.NC/build_unix/
 ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 make install
 
-<<<<<<< HEAD
 # Configure Dash Core to use our own-built instance of BDB
 cd $DASH_ROOT
-=======
-# Configure Crowncoin to use our own-built instance of BDB
-cd $CROWNCOIN_ROOT
->>>>>>> origin/dirty-merge-dash-0.11.0
 ./configure (other args...) LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
 ```
 
@@ -217,11 +181,7 @@ If you need to build Boost yourself:
 
 Security
 --------
-<<<<<<< HEAD
 To help make your Dash installation more secure by making certain attacks impossible to
-=======
-To help make your crowncoin installation more secure by making certain attacks impossible to
->>>>>>> origin/dirty-merge-dash-0.11.0
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
@@ -245,11 +205,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-<<<<<<< HEAD
     	scanelf -e ./dashd
-=======
-    	scanelf -e ./crowncoin
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     The output should contain:
      TYPE
@@ -257,21 +213,13 @@ Hardening enables the following features:
 
 * Non-executable Stack
     If the stack is executable then trivial stack based buffer overflow exploits are possible if
-<<<<<<< HEAD
     vulnerable buffers are found. By default, dash should be built with a non-executable stack
-=======
-    vulnerable buffers are found. By default, crowncoin should be built with a non-executable stack
->>>>>>> origin/dirty-merge-dash-0.11.0
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-<<<<<<< HEAD
     `scanelf -e ./dashd`
-=======
-    `scanelf -e ./crowncoin`
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     the output should contain:
 	STK/REL/PTL
@@ -281,11 +229,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-<<<<<<< HEAD
 When the intention is to run only a P2P node without a wallet, dash may be compiled in
-=======
-When the intention is to run only a P2P node without a wallet, crowncoin may be compiled in
->>>>>>> origin/dirty-merge-dash-0.11.0
 disable-wallet mode with:
 
     ./configure --disable-wallet

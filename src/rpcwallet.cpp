@@ -1,12 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
-=======
-// Copyright (c) 2009-2014 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
@@ -89,21 +84,13 @@ Value getnewaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress ( \"account\" )\n"
-<<<<<<< HEAD
             "\nReturns a new Dash address for receiving payments.\n"
-=======
-            "\nReturns a new Crowncoin address for receiving payments.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "If 'account' is specified (recommended), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
             "\nResult:\n"
-<<<<<<< HEAD
             "\"dashaddress\"    (string) The new dash address\n"
-=======
-            "\"crowncoinaddress\"    (string) The new Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
             + HelpExampleCli("getnewaddress", "\"\"")
@@ -127,11 +114,11 @@ Value getnewaddress(const Array& params, bool fHelp)
 
     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
-    return CCrowncoinAddress(keyID).ToString();
+    return CBitcoinAddress(keyID).ToString();
 }
 
 
-CCrowncoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
+CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
 
@@ -165,7 +152,7 @@ CCrowncoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
         walletdb.WriteAccount(strAccount, account);
     }
 
-    return CCrowncoinAddress(account.vchPubKey.GetID());
+    return CBitcoinAddress(account.vchPubKey.GetID());
 }
 
 Value getaccountaddress(const Array& params, bool fHelp)
@@ -173,19 +160,11 @@ Value getaccountaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaccountaddress \"account\"\n"
-<<<<<<< HEAD
             "\nReturns the current Dash address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
             "\"dashaddress\"   (string) The account dash address\n"
-=======
-            "\nReturns the current Crowncoin address for receiving payments to this account.\n"
-            "\nArguments:\n"
-            "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
-            "\nResult:\n"
-            "\"crowncoinaddress\"   (string) The account Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nExamples:\n"
             + HelpExampleCli("getaccountaddress", "")
             + HelpExampleCli("getaccountaddress", "\"\"")
@@ -209,11 +188,7 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getrawchangeaddress\n"
-<<<<<<< HEAD
             "\nReturns a new Dash address, for receiving change.\n"
-=======
-            "\nReturns a new Crowncoin address, for receiving change.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "This is for use with raw transactions, NOT normal use.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
@@ -234,7 +209,7 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
 
     CKeyID keyID = vchPubKey.GetID();
 
-    return CCrowncoinAddress(keyID).ToString();
+    return CBitcoinAddress(keyID).ToString();
 }
 
 
@@ -242,30 +217,19 @@ Value setaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-<<<<<<< HEAD
             "setaccount \"dashaddress\" \"account\"\n"
             "\nSets the account associated with the given address.\n"
             "\nArguments:\n"
             "1. \"dashaddress\"  (string, required) The dash address to be associated with an account.\n"
-=======
-            "setaccount \"crowncoinaddress\" \"account\"\n"
-            "\nSets the account associated with the given address.\n"
-            "\nArguments:\n"
-            "1. \"crowncoinaddress\"  (string, required) The Crowncoin address to be associated with an account.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "2. \"account\"         (string, required) The account to assign the address to.\n"
             "\nExamples:\n"
             + HelpExampleCli("setaccount", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" \"tabby\"")
             + HelpExampleRpc("setaccount", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\", \"tabby\"")
         );
 
-    CCrowncoinAddress address(params[0].get_str());
+    CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-<<<<<<< HEAD
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
-=======
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crowncoin address");
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 
     string strAccount;
@@ -295,17 +259,10 @@ Value getaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-<<<<<<< HEAD
             "getaccount \"dashaddress\"\n"
             "\nReturns the account associated with the given address.\n"
             "\nArguments:\n"
             "1. \"dashaddress\"  (string, required) The dash address for account lookup.\n"
-=======
-            "getaccount \"crowncoinaddress\"\n"
-            "\nReturns the account associated with the given address.\n"
-            "\nArguments:\n"
-            "1. \"crowncoinaddress\"  (string, required) The Crowncoin address for account lookup.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nResult:\n"
             "\"accountname\"        (string) the account address\n"
             "\nExamples:\n"
@@ -313,13 +270,9 @@ Value getaccount(const Array& params, bool fHelp)
             + HelpExampleRpc("getaccount", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"")
         );
 
-    CCrowncoinAddress address(params[0].get_str());
+    CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-<<<<<<< HEAD
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
-=======
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crowncoin address");
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     string strAccount;
     map<CTxDestination, CAddressBookData>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
@@ -339,11 +292,7 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
             "1. \"account\"  (string, required) The account name.\n"
             "\nResult:\n"
             "[                     (json array of string)\n"
-<<<<<<< HEAD
             "  \"dashaddress\"  (string) a dash address associated with the given account\n"
-=======
-            "  \"crowncoinaddress\"  (string) a Crowncoin address associated with the given account\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
@@ -355,9 +304,9 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
     // Find all addresses that have the given account
     Array ret;
-    BOOST_FOREACH(const PAIRTYPE(CCrowncoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
     {
-        const CCrowncoinAddress& address = item.first;
+        const CBitcoinAddress& address = item.first;
         const string& strName = item.second.name;
         if (strName == strAccount)
             ret.push_back(address.ToString());
@@ -403,21 +352,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-<<<<<<< HEAD
             "sendtoaddress \"dashaddress\" amount ( \"comment\" \"comment-to\" )\n"
             "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
             "1. \"dashaddress\"  (string, required) The dash address to send to.\n"
             "2. \"amount\"      (numeric, required) The amount in btc to send. eg 0.1\n"
-=======
-            "sendtoaddress \"crowncoinaddress\" amount ( \"comment\" \"comment-to\" )\n"
-            "\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"crowncoinaddress\"  (string, required) The Crowncoin address to send to.\n"
-            "2. \"amount\"      (numeric, required) The amount in CRW to send. eg 0.1\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
             "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
@@ -431,13 +371,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\", 0.1, \"donation\", \"seans outpost\"")
         );
 
-    CCrowncoinAddress address(params[0].get_str());
+    CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-<<<<<<< HEAD
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
-=======
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crowncoin address");
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Amount
     CAmount nAmount = AmountFromValue(params[1]);
@@ -511,13 +447,8 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             "[\n"
             "  [\n"
             "    [\n"
-<<<<<<< HEAD
             "      \"dashaddress\",     (string) The dash address\n"
             "      amount,                 (numeric) The amount in btc\n"
-=======
-            "      \"crowncoinaddress\",     (string) The Crowncoin address\n"
-            "      amount,                 (numeric) The amount in CRW\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "      \"account\"             (string, optional) The account\n"
             "    ]\n"
             "    ,...\n"
@@ -537,12 +468,12 @@ Value listaddressgroupings(const Array& params, bool fHelp)
         BOOST_FOREACH(CTxDestination address, grouping)
         {
             Array addressInfo;
-            addressInfo.push_back(CCrowncoinAddress(address).ToString());
+            addressInfo.push_back(CBitcoinAddress(address).ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
                 LOCK(pwalletMain->cs_wallet);
-                if (pwalletMain->mapAddressBook.find(CCrowncoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CCrowncoinAddress(address).Get())->second.name);
+                if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -555,19 +486,11 @@ Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-<<<<<<< HEAD
             "signmessage \"dashaddress\" \"message\"\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
             "1. \"dashaddress\"  (string, required) The dash address to use for the private key.\n"
-=======
-            "signmessage \"crowncoinaddress\" \"message\"\n"
-            "\nSign a message with the private key of an address"
-            + HelpRequiringPassphrase() + "\n"
-            "\nArguments:\n"
-            "1. \"crowncoinaddress\"  (string, required) The Crowncoin address to use for the private key.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -587,7 +510,7 @@ Value signmessage(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
 
-    CCrowncoinAddress addr(strAddress);
+    CBitcoinAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -614,20 +537,13 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-<<<<<<< HEAD
             "getreceivedbyaddress \"dashaddress\" ( minconf )\n"
             "\nReturns the total amount received by the given dashaddress in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
             "1. \"dashaddress\"  (string, required) The dash address for transactions.\n"
-=======
-            "getreceivedbyaddress \"crowncoinaddress\" ( minconf )\n"
-            "\nReturns the total amount received by the given crowncoinaddress in transactions with at least minconf confirmations.\n"
-            "\nArguments:\n"
-            "1. \"crowncoinaddress\"  (string, required) The Crowncoin address for transactions.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "\nResult:\n"
-            "amount   (numeric) The total amount in CRW received at this address.\n"
+            "amount   (numeric) The total amount in btc received at this address.\n"
             "\nExamples:\n"
             "\nThe amount from transactions with at least 1 confirmation\n"
             + HelpExampleCli("getreceivedbyaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"") +
@@ -639,20 +555,11 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("getreceivedbyaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\", 6")
        );
 
-<<<<<<< HEAD
     // Dash address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
     CScript scriptPubKey = GetScriptForDestination(address.Get());
-=======
-    // Crowncoin address
-    CCrowncoinAddress address = CCrowncoinAddress(params[0].get_str());
-    CScript scriptPubKey;
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crowncoin address");
-    scriptPubKey.SetDestination(address.Get());
->>>>>>> origin/dirty-merge-dash-0.11.0
     if (!IsMine(*pwalletMain,scriptPubKey))
         return (double)0.0;
 
@@ -689,7 +596,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "\nResult:\n"
-            "amount              (numeric) The total amount in CRW received for this account.\n"
+            "amount              (numeric) The total amount in btc received for this account.\n"
             "\nExamples:\n"
             "\nAmount received by the default account with at least 1 confirmation\n"
             + HelpExampleCli("getreceivedbyaccount", "\"\"") +
@@ -777,7 +684,7 @@ Value getbalance(const Array& params, bool fHelp)
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
-            "amount              (numeric) The total amount in CRW received for this account.\n"
+            "amount              (numeric) The total amount in btc received for this account.\n"
             "\nExamples:\n"
             "\nThe total amount in the server across all accounts\n"
             + HelpExampleCli("getbalance", "") +
@@ -861,9 +768,9 @@ Value movecmd(const Array& params, bool fHelp)
             "\nResult:\n"
             "true|false           (boolean) true if successfull.\n"
             "\nExamples:\n"
-            "\nMove 0.01 CRW from the default account to the account named tabby\n"
+            "\nMove 0.01 btc from the default account to the account named tabby\n"
             + HelpExampleCli("move", "\"\" \"tabby\" 0.01") +
-            "\nMove 0.01 CRW timotei to akiko with a comment and funds have 6 confirmations\n"
+            "\nMove 0.01 btc timotei to akiko with a comment and funds have 6 confirmations\n"
             + HelpExampleCli("move", "\"timotei\" \"akiko\" 0.01 6 \"happy birthday!\"") +
             "\nAs a json rpc call\n"
             + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
@@ -916,24 +823,14 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
-<<<<<<< HEAD
             "sendfrom \"fromaccount\" \"todashaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
             "\nSent an amount from an account to a dash address.\n"
-=======
-            "sendfrom \"fromaccount\" \"tocrowncoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
-            "\nSent an amount from an account to a Crowncoin address.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "The amount is a real and is rounded to the nearest 0.00000001."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
             "1. \"fromaccount\"       (string, required) The name of the account to send funds from. May be the default account using \"\".\n"
-<<<<<<< HEAD
             "2. \"todashaddress\"  (string, required) The dash address to send funds to.\n"
             "3. amount                (numeric, required) The amount in btc. (transaction fee is added on top).\n"
-=======
-            "2. \"tocrowncoinaddress\"  (string, required) The Crowncoin address to send funds to.\n"
-            "3. amount                (numeric, required) The amount in CRW. (transaction fee is added on top).\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
             "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
             "                                     This is not part of the transaction, just kept in your wallet.\n"
@@ -943,13 +840,8 @@ Value sendfrom(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"transactionid\"        (string) The transaction id.\n"
             "\nExamples:\n"
-<<<<<<< HEAD
             "\nSend 0.01 btc from the default account to the address, must have at least 1 confirmation\n"
             + HelpExampleCli("sendfrom", "\"\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" 0.01") +
-=======
-            "\nSend 0.01 CRW from the default account to the address, must have at least 1 confirmation\n"
-            + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
             + HelpExampleCli("sendfrom", "\"tabby\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\" 0.01 6 \"donation\" \"seans outpost\"") +
             "\nAs a json rpc call\n"
@@ -957,15 +849,10 @@ Value sendfrom(const Array& params, bool fHelp)
         );
 
     string strAccount = AccountFromValue(params[0]);
-    CCrowncoinAddress address(params[1].get_str());
+    CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
-<<<<<<< HEAD
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
     CAmount nAmount = AmountFromValue(params[2]);
-=======
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crowncoin address");
-    int64_t nAmount = AmountFromValue(params[2]);
->>>>>>> origin/dirty-merge-dash-0.11.0
     int nMinDepth = 1;
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
@@ -1001,11 +888,7 @@ Value sendmany(const Array& params, bool fHelp)
             "1. \"fromaccount\"         (string, required) The account to send the funds from, can be \"\" for the default account\n"
             "2. \"amounts\"             (string, required) A json object with addresses and amounts\n"
             "    {\n"
-<<<<<<< HEAD
             "      \"address\":amount   (numeric) The dash address is the key, the numeric amount in btc is the value\n"
-=======
-            "      \"address\":amount   (numeric) The Crowncoin address is the key, the numeric amount in CRW is the value\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "      ,...\n"
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
@@ -1033,24 +916,15 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["comment"] = params[3].get_str();
 
-<<<<<<< HEAD
     set<CBitcoinAddress> setAddress;
     vector<pair<CScript, CAmount> > vecSend;
-=======
-    set<CCrowncoinAddress> setAddress;
-    vector<pair<CScript, int64_t> > vecSend;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     CAmount totalAmount = 0;
     BOOST_FOREACH(const Pair& s, sendTo)
     {
-        CCrowncoinAddress address(s.name_);
+        CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-<<<<<<< HEAD
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Dash address: ")+s.name_);
-=======
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Crowncoin address: ")+s.name_);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
@@ -1092,34 +966,20 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     {
         string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-<<<<<<< HEAD
             "Each key is a Dash address or hex-encoded public key.\n"
-=======
-            "Each key is a Crowncoin address or hex-encoded public key.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "If 'account' is specified, assign address to that account.\n"
 
             "\nArguments:\n"
             "1. nrequired        (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-<<<<<<< HEAD
             "2. \"keysobject\"   (string, required) A json array of dash addresses or hex-encoded public keys\n"
             "     [\n"
             "       \"address\"  (string) dash address or hex-encoded public key\n"
-=======
-            "2. \"keysobject\"   (string, required) A json array of Crowncoin addresses or hex-encoded public keys\n"
-            "     [\n"
-            "       \"address\"  (string) Crowncoin address or hex-encoded public key\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "       ...,\n"
             "     ]\n"
             "3. \"account\"      (string, optional) An account to assign the addresses to.\n"
 
             "\nResult:\n"
-<<<<<<< HEAD
             "\"dashaddress\"  (string) A dash address associated with the keys.\n"
-=======
-            "\"crowncoinaddress\"  (string) A Crowncoin address associated with the keys.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
@@ -1140,7 +1000,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     pwalletMain->AddCScript(inner);
 
     pwalletMain->SetAddressBook(innerID, strAccount, "send");
-    return CCrowncoinAddress(innerID).ToString();
+    return CBitcoinAddress(innerID).ToString();
 }
 
 
@@ -1178,7 +1038,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             filter = filter | ISMINE_WATCH_ONLY;
 
     // Tally
-    map<CCrowncoinAddress, tallyitem> mapTally;
+    map<CBitcoinAddress, tallyitem> mapTally;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
@@ -1214,11 +1074,11 @@ Value ListReceived(const Array& params, bool fByAccounts)
     // Reply
     Array ret;
     map<string, tallyitem> mapAccountTally;
-    BOOST_FOREACH(const PAIRTYPE(CCrowncoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
     {
-        const CCrowncoinAddress& address = item.first;
+        const CBitcoinAddress& address = item.first;
         const string& strAccount = item.second.name;
-        map<CCrowncoinAddress, tallyitem>::iterator it = mapTally.find(address);
+        map<CBitcoinAddress, tallyitem>::iterator it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
@@ -1303,7 +1163,7 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
             "    \"involvesWatchonly\" : \"true\",    (bool) Only returned if imported addresses were involved in transaction\n"
             "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
             "    \"account\" : \"accountname\",       (string) The account of the receiving address. The default account is \"\".\n"
-            "    \"amount\" : x.xxx,                  (numeric) The total amount in CRW received by the address\n"
+            "    \"amount\" : x.xxx,                  (numeric) The total amount in btc received by the address\n"
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included\n"
             "    \"bcconfirmations\" : n              (numeric) The number of blockchain confirmations of the most recent transaction included\n"
             "  }\n"
@@ -1353,7 +1213,7 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
 
 static void MaybePushAddress(Object & entry, const CTxDestination &dest)
 {
-    CCrowncoinAddress addr;
+    CBitcoinAddress addr;
     if (addr.Set(dest))
         entry.push_back(Pair("address", addr.ToString()));
 }
@@ -1463,25 +1323,17 @@ Value listtransactions(const Array& params, bool fHelp)
             "  {\n"
             "    \"account\":\"accountname\",       (string) The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
-<<<<<<< HEAD
             "    \"address\":\"dashaddress\",    (string) The dash address of the transaction. Not present for \n"
-=======
-            "    \"address\":\"crowncoinaddress\",    (string) The Crowncoin address of the transaction. Not present for \n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "                                                move transactions (category = move).\n"
             "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
             "                                                transaction between accounts, and not associated with an address,\n"
             "                                                transaction id or block. 'send' and 'receive' transactions are \n"
             "                                                associated with an address, transaction id and block details\n"
-            "    \"amount\": x.xxx,          (numeric) The amount in CRW. This is negative for the 'send' category, and for the\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the\n"
             "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
             "                                         and for the 'move' category for inbound funds.\n"
-<<<<<<< HEAD
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the \n"
-=======
-            "    \"fee\": x.xxx,             (numeric) The amount of the fee in CRW. This is negative and only available for the \n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "                                         'send' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and \n"
             "                                         'receive' category of transactions.\n"
@@ -1657,20 +1509,12 @@ Value listsinceblock(const Array& params, bool fHelp)
             "{\n"
             "  \"transactions\": [\n"
             "    \"account\":\"accountname\",       (string) The account name associated with the transaction. Will be \"\" for the default account.\n"
-<<<<<<< HEAD
             "    \"address\":\"dashaddress\",    (string) The dash address of the transaction. Not present for move transactions (category = move).\n"
-=======
-            "    \"address\":\"crowncoinaddress\",    (string) The Crowncoin address of the transaction. Not present for move transactions (category = move).\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
-            "    \"amount\": x.xxx,          (numeric) The amount in CRW. This is negative for the 'send' category, and for the 'move' category for moves \n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the 'move' category for moves \n"
             "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
-<<<<<<< HEAD
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the 'send' category of transactions.\n"
-=======
-            "    \"fee\": x.xxx,             (numeric) The amount of the fee in CRW. This is negative and only available for the 'send' category of transactions.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"bcconfirmations\" : n,    (numeric) The number of blockchain confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
@@ -1749,7 +1593,7 @@ Value gettransaction(const Array& params, bool fHelp)
             "2. \"includeWatchonly\"    (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
             "\nResult:\n"
             "{\n"
-            "  \"amount\" : x.xxx,        (numeric) The transaction amount in CRW\n"
+            "  \"amount\" : x.xxx,        (numeric) The transaction amount in btc\n"
             "  \"confirmations\" : n,     (numeric) The number of confirmations\n"
             "  \"bcconfirmations\" : n,   (numeric) The number of blockchain confirmations\n"
             "  \"blockhash\" : \"hash\",  (string) The block hash\n"
@@ -1761,16 +1605,10 @@ Value gettransaction(const Array& params, bool fHelp)
             "  \"details\" : [\n"
             "    {\n"
             "      \"account\" : \"accountname\",  (string) The account name involved in the transaction, can be \"\" for the default account.\n"
-<<<<<<< HEAD
             "      \"address\" : \"dashaddress\",   (string) The dash address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx                  (numeric) The amount in btc\n"
             "      \"vout\" : n,                       (numeric) the vout value\n"
-=======
-            "      \"address\" : \"crowncoinaddress\",   (string) The Crowncoin address involved in the transaction\n"
-            "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
-            "      \"amount\" : x.xxx                  (numeric) The amount in CRW\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "    }\n"
             "    ,...\n"
             "  ],\n"
@@ -1884,11 +1722,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout ( anonymizeonly )\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-<<<<<<< HEAD
             "This is needed prior to performing transactions related to private keys such as sending dashs\n"
-=======
-            "This is needed prior to performing transactions related to private keys such as sending crowncoins\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
@@ -2031,17 +1865,10 @@ Value encryptwallet(const Array& params, bool fHelp)
             "\nExamples:\n"
             "\nEncrypt you wallet\n"
             + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-<<<<<<< HEAD
             "\nNow set the passphrase to use the wallet, such as for signing or sending dash\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can so something like sign\n"
             + HelpExampleCli("signmessage", "\"dashaddress\" \"test message\"") +
-=======
-            "\nNow set the passphrase to use the wallet, such as for signing or sending crowncoin\n"
-            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
-            "\nNow we can so something like sign\n"
-            + HelpExampleCli("signmessage", "\"crowncoinaddress\" \"test message\"") +
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nNow lock the wallet again by removing the passphrase\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a json rpc call\n"
@@ -2071,11 +1898,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-<<<<<<< HEAD
     return "wallet encrypted; dash server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
-=======
-    return "wallet encrypted; Crowncoin server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 Value lockunspent(const Array& params, bool fHelp)
@@ -2085,11 +1908,7 @@ Value lockunspent(const Array& params, bool fHelp)
             "lockunspent unlock [{\"txid\":\"txid\",\"vout\":n},...]\n"
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
-<<<<<<< HEAD
             "A locked transaction output will not be chosen by automatic coin selection, when spending dashs.\n"
-=======
-            "A locked transaction output will not be chosen by automatic coin selection, when spending crowncoins.\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
             "is always cleared (by virtue of process exit) when a node stops or fails.\n"
             "Also see the listunspent call\n"
@@ -2212,11 +2031,7 @@ Value settxfee(const Array& params, bool fHelp)
             "settxfee amount\n"
             "\nSet the transaction fee per kB.\n"
             "\nArguments:\n"
-<<<<<<< HEAD
             "1. amount         (numeric, required) The transaction fee in DASH/kB rounded to the nearest 0.00000001\n"
-=======
-            "1. amount         (numeric, required) The transaction fee in CRW/kB rounded to the nearest 0.00000001\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "\nResult\n"
             "true|false        (boolean) Returns true if successful\n"
             "\nExamples:\n"
@@ -2242,11 +2057,7 @@ Value getwalletinfo(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-<<<<<<< HEAD
             "  \"balance\": xxxxxxx,         (numeric) the total dash balance of the wallet\n"
-=======
-            "  \"balance\": xxxxxxx,         (numeric) the total crowncoin balance of the wallet\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
@@ -2266,7 +2077,6 @@ Value getwalletinfo(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
-<<<<<<< HEAD
 }
 
 Value keepass(const Array& params, bool fHelp) {
@@ -2321,6 +2131,3 @@ Value keepass(const Array& params, bool fHelp) {
     return "Invalid command";
 
 }
-=======
-}
->>>>>>> origin/dirty-merge-dash-0.11.0

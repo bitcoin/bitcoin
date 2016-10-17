@@ -1,15 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
-=======
-// Copyright (c) 2009-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_KEYSTORE_H
-#define CROWNCOIN_KEYSTORE_H
+#ifndef BITCOIN_KEYSTORE_H
+#define BITCOIN_KEYSTORE_H
 
 #include "key.h"
 #include "pubkey.h"
@@ -40,11 +35,7 @@ public:
     virtual void GetKeys(std::set<CKeyID> &setAddress) const =0;
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
-<<<<<<< HEAD
     //! Support for BIP 0013 : see https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki
-=======
-    // Support for BIP 0013 : see https://github.com/crowncoin/bips/blob/master/bip-0013.mediawiki
->>>>>>> origin/dirty-merge-dash-0.11.0
     virtual bool AddCScript(const CScript& redeemScript) =0;
     virtual bool HaveCScript(const CScriptID &hash) const =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;

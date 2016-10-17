@@ -1,5 +1,4 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -10,14 +9,6 @@
 #if defined(HAVE_CONFIG_H)
 #include "config/dash-config.h"
 #endif
-=======
-// Copyright (c) 2009-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef _CROWNCOIN_COMPAT_H
-#define _CROWNCOIN_COMPAT_H
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT

@@ -1,16 +1,12 @@
-// Copyright (c) 2009-2013 The Crowncoin developers
+// Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_NETBASE_H
-#define CROWNCOIN_NETBASE_H
+#ifndef BITCOIN_NETBASE_H
+#define BITCOIN_NETBASE_H
 
 #if defined(HAVE_CONFIG_H)
-<<<<<<< HEAD
 #include "config/dash-config.h"
-=======
-#include "crowncoin-config.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
 #include "compat.h"

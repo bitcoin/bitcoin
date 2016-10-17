@@ -1,16 +1,12 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2013 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "overviewpage.h"
 #include "ui_overviewpage.h"
 
-#include "crowncoinunits.h"
+#include "bitcoinunits.h"
 #include "clientmodel.h"
 #include "darksend.h"
 #include "darksendconfig.h"
@@ -35,11 +31,7 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-<<<<<<< HEAD
     TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::DASH)
-=======
-    TxViewDelegate(): QAbstractItemDelegate(), unit(CrowncoinUnits::CRW)
->>>>>>> origin/dirty-merge-dash-0.11.0
     {
 
     }
@@ -96,11 +88,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-<<<<<<< HEAD
         QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
-=======
-        QString amountText = CrowncoinUnits::formatWithUnit(unit, amount, true);
->>>>>>> origin/dirty-merge-dash-0.11.0
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -194,7 +182,6 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
-<<<<<<< HEAD
     currentAnonymizedBalance = anonymizedBalance;
     currentWatchOnlyBalance = watchOnlyBalance;
     currentWatchUnconfBalance = watchUnconfBalance;
@@ -208,12 +195,6 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelWatchPending->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchImmature->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchTotal->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-=======
-    ui->labelBalance->setText(CrowncoinUnits::formatWithUnit(unit, balance));
-    ui->labelUnconfirmed->setText(CrowncoinUnits::formatWithUnit(unit, unconfirmedBalance));
-    ui->labelImmature->setText(CrowncoinUnits::formatWithUnit(unit, immatureBalance));
-    ui->labelTotal->setText(CrowncoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance));
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
@@ -298,11 +279,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 
-<<<<<<< HEAD
     // update the display unit, to not use the default ("DASH")
-=======
-    // update the display unit, to not use the default ("CRW")
->>>>>>> origin/dirty-merge-dash-0.11.0
     updateDisplayUnit();
 }
 

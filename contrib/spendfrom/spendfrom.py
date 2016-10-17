@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 #
-<<<<<<< HEAD
 # Use the raw transactions API to spend dashs received on particular addresses,
-=======
-# Use the raw transactions API to spend crowncoins received on particular addresses,
->>>>>>> origin/dirty-merge-dash-0.11.0
 # and send any change back to that same address.
 #
 # Example usage:
 #  spendfrom.py  # Lists available funds
 #  spendfrom.py --from=ADDRESS --to=ADDRESS --amount=11.00
 #
-<<<<<<< HEAD
 # Assumes it will talk to a dashd or Dash-Qt running
-=======
-# Assumes it will talk to a crowncoind or Crowncoin-Qt running
->>>>>>> origin/dirty-merge-dash-0.11.0
 # on localhost.
 #
 # Depends on jsonrpc
@@ -34,14 +26,13 @@ from jsonrpc import ServiceProxy, json
 BASE_FEE=Decimal("0.001")
 
 def check_json_precision():
-    """Make sure json library being used does not lose precision converting CRW values"""
+    """Make sure json library being used does not lose precision converting BTC values"""
     n = Decimal("20000000.00000003")
     satoshis = int(json.loads(json.dumps(float(n)))*1.0e8)
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
 def determine_db_dir():
-<<<<<<< HEAD
     """Return the default location of the dash data directory"""
     if platform.system() == "Darwin":
         return os.path.expanduser("~/Library/Application Support/Dash/")
@@ -51,17 +42,6 @@ def determine_db_dir():
 
 def read_bitcoin_config(dbdir):
     """Read the dash.conf file from dbdir, returns dictionary of settings"""
-=======
-    """Return the default location of the crowncoin data directory"""
-    if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Crowncoin/")
-    elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Crowncoin")
-    return os.path.expanduser("~/.crowncoin")
-
-def read_crowncoin_config(dbdir):
-    """Read the crowncoin.conf file from dbdir, returns dictionary of settings"""
->>>>>>> origin/dirty-merge-dash-0.11.0
     from ConfigParser import SafeConfigParser
 
     class FakeSecHead(object):
@@ -79,7 +59,6 @@ def read_crowncoin_config(dbdir):
                 return s
 
     config_parser = SafeConfigParser()
-<<<<<<< HEAD
     config_parser.readfp(FakeSecHead(open(os.path.join(dbdir, "dash.conf"))))
     return dict(config_parser.items("all"))
 
@@ -89,26 +68,11 @@ def connect_JSON(config):
     testnet = (int(testnet) > 0)  # 0/1 in config file, convert to True/False
     if not 'rpcport' in config:
         config['rpcport'] = 19998 if testnet else 9998
-=======
-    config_parser.readfp(FakeSecHead(open(os.path.join(dbdir, "crowncoin.conf"))))
-    return dict(config_parser.items("all"))
-
-def connect_JSON(config):
-    """Connect to a crowncoin JSON-RPC server"""
-    testnet = config.get('testnet', '0')
-    testnet = (int(testnet) > 0)  # 0/1 in config file, convert to True/False
-    if not 'rpcport' in config:
-        config['rpcport'] = 19341 if testnet else 9341
->>>>>>> origin/dirty-merge-dash-0.11.0
     connect = "http://%s:%s@127.0.0.1:%s"%(config['rpcuser'], config['rpcpassword'], config['rpcport'])
     try:
         result = ServiceProxy(connect)
         # ServiceProxy is lazy-connect, so send an RPC command mostly to catch connection errors,
-<<<<<<< HEAD
         # but also make sure the dashd we're talking to is/isn't testnet:
-=======
-        # but also make sure the crowncoind we're talking to is/isn't testnet:
->>>>>>> origin/dirty-merge-dash-0.11.0
         if result.getmininginfo()['testnet'] != testnet:
             sys.stderr.write("RPC server at "+connect+" testnet setting mismatch\n")
             sys.exit(1)
@@ -117,20 +81,14 @@ def connect_JSON(config):
         sys.stderr.write("Error connecting to RPC server at "+connect+"\n")
         sys.exit(1)
 
-<<<<<<< HEAD
 def unlock_wallet(dashd):
     info = dashd.getinfo()
-=======
-def unlock_wallet(crowncoind):
-    info = crowncoind.getinfo()
->>>>>>> origin/dirty-merge-dash-0.11.0
     if 'unlocked_until' not in info:
         return True # wallet is not encrypted
     t = int(info['unlocked_until'])
     if t <= time.time():
         try:
             passphrase = getpass.getpass("Wallet is locked; enter passphrase: ")
-<<<<<<< HEAD
             dashd.walletpassphrase(passphrase, 5)
         except:
             sys.stderr.write("Wrong passphrase\n")
@@ -153,30 +111,6 @@ def list_available(dashd):
         pk = vout["scriptPubKey"]
 
         # This code only deals with ordinary pay-to-dash-address
-=======
-            crowncoind.walletpassphrase(passphrase, 5)
-        except:
-            sys.stderr.write("Wrong passphrase\n")
-
-    info = crowncoind.getinfo()
-    return int(info['unlocked_until']) > time.time()
-
-def list_available(crowncoind):
-    address_summary = dict()
-
-    address_to_account = dict()
-    for info in crowncoind.listreceivedbyaddress(0):
-        address_to_account[info["address"]] = info["account"]
-
-    unspent = crowncoind.listunspent(0)
-    for output in unspent:
-        # listunspent doesn't give addresses, so:
-        rawtx = crowncoind.getrawtransaction(output['txid'], 1)
-        vout = rawtx["vout"][output['vout']]
-        pk = vout["scriptPubKey"]
-
-        # This code only deals with ordinary pay-to-crowncoin-address
->>>>>>> origin/dirty-merge-dash-0.11.0
         # or pay-to-script-hash outputs right now; anything exotic is ignored.
         if pk["type"] != "pubkeyhash" and pk["type"] != "scripthash":
             continue
@@ -205,13 +139,8 @@ def select_coins(needed, inputs):
         n += 1
     return (outputs, have-needed)
 
-<<<<<<< HEAD
 def create_tx(dashd, fromaddresses, toaddress, amount, fee):
     all_coins = list_available(dashd)
-=======
-def create_tx(crowncoind, fromaddresses, toaddress, amount, fee):
-    all_coins = list_available(crowncoind)
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     total_available = Decimal("0.0")
     needed = amount+fee
@@ -223,20 +152,15 @@ def create_tx(crowncoind, fromaddresses, toaddress, amount, fee):
         total_available += all_coins[addr]["total"]
 
     if total_available < needed:
-        sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed));
+        sys.stderr.write("Error, only %f BTC available, need %f\n"%(total_available, needed));
         sys.exit(1)
 
     #
     # Note:
     # Python's json/jsonrpc modules have inconsistent support for Decimal numbers.
     # Instead of wrestling with getting json.dumps() (used by jsonrpc) to encode
-<<<<<<< HEAD
     # Decimals, I'm casting amounts to float before sending them to dashd.
     #
-=======
-    # Decimals, I'm casting amounts to float before sending them to crowncoind.
-    #  
->>>>>>> origin/dirty-merge-dash-0.11.0
     outputs = { toaddress : float(amount) }
     (inputs, change_amount) = select_coins(needed, potential_inputs)
     if change_amount > BASE_FEE:  # don't bother with zero or tiny change
@@ -246,13 +170,8 @@ def create_tx(crowncoind, fromaddresses, toaddress, amount, fee):
         else:
             outputs[change_address] = float(change_amount)
 
-<<<<<<< HEAD
     rawtx = dashd.createrawtransaction(inputs, outputs)
     signed_rawtx = dashd.signrawtransaction(rawtx)
-=======
-    rawtx = crowncoind.createrawtransaction(inputs, outputs)
-    signed_rawtx = crowncoind.signrawtransaction(rawtx)
->>>>>>> origin/dirty-merge-dash-0.11.0
     if not signed_rawtx["complete"]:
         sys.stderr.write("signrawtransaction failed\n")
         sys.exit(1)
@@ -260,17 +179,10 @@ def create_tx(crowncoind, fromaddresses, toaddress, amount, fee):
 
     return txdata
 
-<<<<<<< HEAD
 def compute_amount_in(dashd, txinfo):
     result = Decimal("0.0")
     for vin in txinfo['vin']:
         in_info = dashd.getrawtransaction(vin['txid'], 1)
-=======
-def compute_amount_in(crowncoind, txinfo):
-    result = Decimal("0.0")
-    for vin in txinfo['vin']:
-        in_info = crowncoind.getrawtransaction(vin['txid'], 1)
->>>>>>> origin/dirty-merge-dash-0.11.0
         vout = in_info['vout'][vin['vout']]
         result = result + vout['value']
     return result
@@ -281,21 +193,12 @@ def compute_amount_out(txinfo):
         result = result + vout['value']
     return result
 
-<<<<<<< HEAD
 def sanity_test_fee(dashd, txdata_hex, max_fee):
     class FeeError(RuntimeError):
         pass
     try:
         txinfo = dashd.decoderawtransaction(txdata_hex)
         total_in = compute_amount_in(dashd, txinfo)
-=======
-def sanity_test_fee(crowncoind, txdata_hex, max_fee):
-    class FeeError(RuntimeError):
-        pass
-    try:
-        txinfo = crowncoind.decoderawtransaction(txdata_hex)
-        total_in = compute_amount_in(crowncoind, txinfo)
->>>>>>> origin/dirty-merge-dash-0.11.0
         total_out = compute_amount_out(txinfo)
         if total_in-total_out > max_fee:
             raise FeeError("Rejecting transaction, unreasonable fee of "+str(total_in-total_out))
@@ -318,25 +221,15 @@ def main():
 
     parser = optparse.OptionParser(usage="%prog [options]")
     parser.add_option("--from", dest="fromaddresses", default=None,
-<<<<<<< HEAD
                       help="addresses to get dashs from")
     parser.add_option("--to", dest="to", default=None,
                       help="address to get send dashs to")
-=======
-                      help="addresses to get crowncoins from")
-    parser.add_option("--to", dest="to", default=None,
-                      help="address to get send crowncoins to")
->>>>>>> origin/dirty-merge-dash-0.11.0
     parser.add_option("--amount", dest="amount", default=None,
                       help="amount to send")
     parser.add_option("--fee", dest="fee", default="0.0",
                       help="fee to include")
     parser.add_option("--datadir", dest="datadir", default=determine_db_dir(),
-<<<<<<< HEAD
                       help="location of dash.conf file with RPC username/password (default: %default)")
-=======
-                      help="location of crowncoin.conf file with RPC username/password (default: %default)")
->>>>>>> origin/dirty-merge-dash-0.11.0
     parser.add_option("--testnet", dest="testnet", default=False, action="store_true",
                       help="Use the test network")
     parser.add_option("--dry_run", dest="dry_run", default=False, action="store_true",
@@ -345,19 +238,12 @@ def main():
     (options, args) = parser.parse_args()
 
     check_json_precision()
-    config = read_crowncoin_config(options.datadir)
+    config = read_bitcoin_config(options.datadir)
     if options.testnet: config['testnet'] = True
-<<<<<<< HEAD
     dashd = connect_JSON(config)
 
     if options.amount is None:
         address_summary = list_available(dashd)
-=======
-    crowncoind = connect_JSON(config)
-
-    if options.amount is None:
-        address_summary = list_available(crowncoind)
->>>>>>> origin/dirty-merge-dash-0.11.0
         for address,info in address_summary.iteritems():
             n_transactions = len(info['outputs'])
             if n_transactions > 1:
@@ -367,7 +253,6 @@ def main():
     else:
         fee = Decimal(options.fee)
         amount = Decimal(options.amount)
-<<<<<<< HEAD
         while unlock_wallet(dashd) == False:
             pass # Keep asking for passphrase until they get it right
         txdata = create_tx(dashd, options.fromaddresses.split(","), options.to, amount, fee)
@@ -376,16 +261,6 @@ def main():
             print(txdata)
         else:
             txid = dashd.sendrawtransaction(txdata)
-=======
-        while unlock_wallet(crowncoind) == False:
-            pass # Keep asking for passphrase until they get it right
-        txdata = create_tx(crowncoind, options.fromaddresses.split(","), options.to, amount, fee)
-        sanity_test_fee(crowncoind, txdata, amount*Decimal("0.01"))
-        if options.dry_run:
-            print(txdata)
-        else:
-            txid = crowncoind.sendrawtransaction(txdata)
->>>>>>> origin/dirty-merge-dash-0.11.0
             print(txid)
 
 if __name__ == '__main__':

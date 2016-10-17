@@ -1,10 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2009-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,34 +19,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
-<<<<<<< HEAD
 #include "masternode-payments.h"
-=======
-#include "throneman.h"
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// CrowncoinMiner
-//
-
-int static FormatHashBlocks(void* pbuffer, unsigned int len)
-{
-    unsigned char* pdata = (unsigned char*)pbuffer;
-    unsigned int blocks = 1 + ((len + 8) / 64);
-    unsigned char* pend = pdata + 64 * blocks;
-    memset(pdata + len, 0, 64 * blocks - len);
-    pdata[len] = 0x80;
-    unsigned int bits = len * 8;
-    pend[-1] = (bits >> 0) & 0xff;
-    pend[-2] = (bits >> 8) & 0xff;
-    pend[-3] = (bits >> 16) & 0xff;
-    pend[-4] = (bits >> 24) & 0xff;
-    return blocks;
-}
-
-static const unsigned int pSHA256InitState[8] =
-{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -129,15 +98,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
-<<<<<<< HEAD
-    // -regtest only: allow overriding block.nVersion with
-    // -blockversion=N to test forking scenarios
-    if (Params().MineBlocksOnDemand())
-        pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
-
-=======
-    int payments = 0;
->>>>>>> origin/dirty-merge-dash-0.11.0
     // Create coinbase tx
     CMutableTransaction txNew;
     txNew.vin.resize(1);
@@ -145,12 +105,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     txNew.vout.resize(1);
     txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
-<<<<<<< HEAD
-=======
-    // Initialise the block version.
+    /* Initialise the block version.  */
     pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION);
 
->>>>>>> origin/dirty-merge-dash-0.11.0
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
@@ -166,20 +123,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
-    // start throne payments
-    bool bThroNePayment = false;
-    bool hasPayment = false;
-
-    if ( Params().NetworkID() == CChainParams::TESTNET ){
-        if (GetTimeMicros() > START_THRONE_PAYMENTS_TESTNET ){
-            bThroNePayment = true;
-        }
-    }else{
-        if (GetTimeMicros() > START_THRONE_PAYMENTS){
-            bThroNePayment = true;
-        }
-    }
-
     // Collect memory pool transactions into the block
     CAmount nFees = 0;
 
@@ -189,39 +132,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         CCoinsViewCache view(pcoinsTip);
-
-        // Add our coinbase tx as first transaction
-        pblock->vtx.push_back(txNew);
-        pblocktemplate->vTxFees.push_back(-1); // updated at end
-        pblocktemplate->vTxSigOps.push_back(-1); // updated at end
-
-        if(bThroNePayment) {
-            hasPayment = true;
-            //spork
-            if(!thronePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
-                //no throne detected
-                CThrone* winningNode = mnodeman.GetCurrentThroNe(1);
-                if(winningNode){
-                    pblock->payee.SetDestination(winningNode->pubkey.GetID());
-                } else {
-                    LogPrintf("CreateNewBlock: Failed to detect throne to pay\n");
-                    hasPayment = false;
-                }
-            }
-
-            if(hasPayment){
-                payments++;
-                txNew.vout.resize(2);
-
-                txNew.vout[payments].scriptPubKey = pblock->payee;
-
-                CTxDestination address1;
-                ExtractDestination(pblock->payee, address1);
-                CCrowncoinAddress address2(address1);
-
-                LogPrintf("Throne payment to %s\n", address2.ToString().c_str());
-            }
-        }
 
         // Add our coinbase tx as first transaction
         pblock->vtx.push_back(txNew);
@@ -367,11 +277,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
             CValidationState state;
-<<<<<<< HEAD
             if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-=======
-            if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_NAMES))
->>>>>>> origin/dirty-merge-dash-0.11.0
                 continue;
 
             CTxUndo txundo;
@@ -421,35 +327,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
-        int64_t blockValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
-        int64_t thronePayment = GetThronePayment(pindexPrev->nHeight+1, blockValue);
 
-        //create throne payment
-        if(payments > 0){
-            pblock->vtx[0].vout[payments].nValue = thronePayment;
-            blockValue -= thronePayment;
-        }
-        pblock->vtx[0].vout[0].nValue = blockValue;
-
-<<<<<<< HEAD
         // Compute final coinbase transaction.
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
         pblock->vtx[0] = txNew;
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
         pblocktemplate->vTxFees[0] = -nFees;
-
-		
-		LogPrintf(" Payments size:  %ld\n",pblock->vtx[0].vout.size());
-		for(unsigned int i=0; i < pblock->vtx[0].vout.size();i++){
-			int64_t payout = pblock->vtx[0].vout[i].nValue;
-			CTxDestination address;
-			ExtractDestination(pblock->vtx[0].vout[i].scriptPubKey, address);
-			CCrowncoinAddress addresss(address);
-			LogPrintf(" Payouts: %s :-, %ld  number : %d \n",addresss.ToString().c_str(),payout, i);
-
-		}
-		
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -466,7 +348,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     return pblocktemplate.release();
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -485,55 +367,6 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
-<<<<<<< HEAD
-=======
-
-void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1)
-{
-    //
-    // Pre-build hash buffers
-    //
-    struct
-    {
-        struct unnamed2
-        {
-            int nVersion;
-            uint256 hashPrevBlock;
-            uint256 hashMerkleRoot;
-            unsigned int nTime;
-            unsigned int nBits;
-            unsigned int nNonce;
-        }
-        block;
-        unsigned char pchPadding0[64];
-        uint256 hash1;
-        unsigned char pchPadding1[64];
-    }
-    tmp;
-    memset(&tmp, 0, sizeof(tmp));
-
-    tmp.block.nVersion       = pblock->nVersion.GetFullVersion();
-    tmp.block.hashPrevBlock  = pblock->hashPrevBlock;
-    tmp.block.hashMerkleRoot = pblock->hashMerkleRoot;
-    tmp.block.nTime          = pblock->nTime;
-    tmp.block.nBits          = pblock->nBits;
-    tmp.block.nNonce         = pblock->nNonce;
-
-    FormatHashBlocks(&tmp.block, sizeof(tmp.block));
-    FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));
-
-    // Byte swap all the input buffer
-    for (unsigned int i = 0; i < sizeof(tmp)/4; i++)
-        ((unsigned int*)&tmp)[i] = ByteReverse(((unsigned int*)&tmp)[i]);
-
-    // Precalc the first half of the first hash, which stays constant
-    SHA256Transform(pmidstate, &tmp.block, pSHA256InitState);
-
-    memcpy(pdata, &tmp.block, 128);
-    memcpy(phash1, &tmp.hash1, 64);
-}
-
->>>>>>> origin/dirty-merge-dash-0.11.0
 #ifdef ENABLE_WALLET
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -590,50 +423,23 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 
 bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
-<<<<<<< HEAD
     LogPrintf("%s\n", pblock->ToString());
-=======
-    if (!CheckProofOfWork(*pblock))
-        return false;
-
-    //// debug print
-    LogPrintf("CrowncoinMiner:\n");
-    LogPrintf("proof-of-work found\n");
-    pblock->print();
->>>>>>> origin/dirty-merge-dash-0.11.0
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
     // Found a solution
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-<<<<<<< HEAD
             return error("DashMiner : generated block is stale");
     }
-=======
-            return error("CrowncoinMiner : generated block is stale");
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Remove key from key pool
     reservekey.KeepKey();
 
-<<<<<<< HEAD
     // Track how many getdata requests this block gets
     {
         LOCK(wallet.cs_wallet);
         wallet.mapRequestCount[pblock->GetHash()] = 0;
-=======
-        // Track how many getdata requests this block gets
-        {
-            LOCK(wallet.cs_wallet);
-            wallet.mapRequestCount[pblock->GetHash()] = 0;
-        }
-
-        // Process this block the same as if we had received it from another node
-        CValidationState state;
-        if (!ProcessBlock(state, NULL, pblock))
-            return error("CrowncoinMiner : ProcessBlock, block not accepted");
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 
     // Process this block the same as if we had received it from another node
@@ -644,26 +450,17 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-<<<<<<< HEAD
 // ***TODO*** that part changed in bitcoin, we are using a mix with old one here for now
 void static BitcoinMiner(CWallet *pwallet)
 {
     LogPrintf("DashMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("dash-miner");
-=======
-void static CrowncoinMiner(CWallet *pwallet)
-{
-    LogPrintf("CrowncoinMiner started\n");
-    SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("crowncoin-miner");
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-<<<<<<< HEAD
     try {
         while (true) {
             if (Params().MiningRequiresPeers()) {
@@ -680,56 +477,6 @@ void static CrowncoinMiner(CWallet *pwallet)
                     MilliSleep(1000);
                 } while (true);
             }
-=======
-    try { while (true) {
-        if (Params().NetworkID() != CChainParams::REGTEST) {
-            // Busy-wait for the network to come online so we don't waste time mining
-            // on an obsolete chain. In regtest mode we expect to fly solo.
-            while (vNodes.empty())
-                MilliSleep(1000);
-        }
-
-        //
-        // Create new block
-        //
-        unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrev = chainActive.Tip();
-
-        auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
-        if (!pblocktemplate.get())
-            return;
-        CBlock *pblock = &pblocktemplate->block;
-        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
-
-        LogPrintf("Running CrowncoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
-               ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
-
-        //
-        // Pre-build hash buffers
-        //
-        char pmidstatebuf[32+16]; char* pmidstate = alignup<16>(pmidstatebuf);
-        char pdatabuf[128+16];    char* pdata     = alignup<16>(pdatabuf);
-        char phash1buf[64+16];    char* phash1    = alignup<16>(phash1buf);
-
-        FormatHashBuffers(pblock, pmidstate, pdata, phash1);
-
-        unsigned int& nBlockTime = *(unsigned int*)(pdata + 64 + 4);
-        unsigned int& nBlockBits = *(unsigned int*)(pdata + 64 + 8);
-        unsigned int& nBlockNonce = *(unsigned int*)(pdata + 64 + 12);
-
-
-        //
-        // Search
-        //
-        int64_t nStart = GetTime();
-        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
-        uint256 hashbuf[2];
-        uint256& hash = *alignup<16>(hashbuf);
-        while (true)
-        {
-            unsigned int nHashesDone = 0;
-            unsigned int nNonceFound;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             //
             // Create new block
@@ -838,11 +585,7 @@ void static CrowncoinMiner(CWallet *pwallet)
     }
     catch (boost::thread_interrupted)
     {
-<<<<<<< HEAD
         LogPrintf("DashMiner terminated\n");
-=======
-        LogPrintf("CrowncoinMiner terminated\n");
->>>>>>> origin/dirty-merge-dash-0.11.0
         throw;
     }
     catch (const std::runtime_error &e)
@@ -852,7 +595,7 @@ void static CrowncoinMiner(CWallet *pwallet)
     }
 }
 
-void GenerateCrowncoins(bool fGenerate, CWallet* pwallet, int nThreads)
+void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -876,11 +619,7 @@ void GenerateCrowncoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&CrowncoinMiner, pwallet));
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
 }
 
-<<<<<<< HEAD
 #endif // ENABLE_WALLET
-=======
-#endif
->>>>>>> origin/dirty-merge-dash-0.11.0

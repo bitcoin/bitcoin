@@ -139,14 +139,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 {
     unsigned int retarget = DIFF_DGW;
 
-    if (Params().NetworkID() != CBaseChainParams::TESTNET) {
-        if (pindexLast->nHeight + 1 >= 34140) retarget = DIFF_DGW;
-        else if (pindexLast->nHeight + 1 >= 15200) retarget = DIFF_KGW;
-        else retarget = DIFF_BTC;
-    } else {
-        if (pindexLast->nHeight + 1 >= 2000) retarget = DIFF_DGW;
-        else retarget = DIFF_BTC;
-    }
+    if (pindexLast->nHeight + 1 >= 1059780) retarget = DIFF_DGW;
+    else retarget = DIFF_BTC;
 
     // Default Bitcoin style retargeting
     if (retarget == DIFF_BTC)

@@ -4,26 +4,16 @@
 
 CDarkSendRelay::CDarkSendRelay()
 {
-<<<<<<< HEAD
     vinMasternode = CTxIn();
-=======
-    vinThrone = CTxIn();
->>>>>>> origin/dirty-merge-dash-0.11.0
     nBlockHeight = 0;
     nRelayType = 0;
     in = CTxIn();
     out = CTxOut();
 }
 
-<<<<<<< HEAD
 CDarkSendRelay::CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2)
 {
     vinMasternode = vinMasternodeIn;
-=======
-CDarkSendRelay::CDarkSendRelay(CTxIn& vinThroneIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2)
-{
-    vinThrone = vinThroneIn;
->>>>>>> origin/dirty-merge-dash-0.11.0
     vchSig = vchSigIn;
     nBlockHeight = nBlockHeightIn;
     nRelayType = nRelayTypeIn;
@@ -35,11 +25,7 @@ std::string CDarkSendRelay::ToString()
 {
     std::ostringstream info;
 
-<<<<<<< HEAD
     info << "vin: " << vinMasternode.ToString() <<
-=======
-    info << "vin: " << vinThrone.ToString() <<
->>>>>>> origin/dirty-merge-dash-0.11.0
         " nBlockHeight: " << (int)nBlockHeight <<
         " nRelayType: "  << (int)nRelayType <<
         " in " << in.ToString() <<
@@ -99,11 +85,7 @@ bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
 
 void CDarkSendRelay::Relay()
 {
-<<<<<<< HEAD
     int nCount = std::min(mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION), 20);
-=======
-    int nCount = std::min(mnodeman.CountEnabled(), 20);
->>>>>>> origin/dirty-merge-dash-0.11.0
     int nRank1 = (rand() % nCount)+1; 
     int nRank2 = (rand() % nCount)+1; 
 
@@ -119,7 +101,6 @@ void CDarkSendRelay::Relay()
 
 void CDarkSendRelay::RelayThroughNode(int nRank)
 {
-<<<<<<< HEAD
     CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
 
     if(pmn != NULL){
@@ -130,21 +111,6 @@ void CDarkSendRelay::RelayThroughNode(int nRank)
             pnode->PushMessage("dsr", (*this));
             pnode->Release();
             return;
-=======
-    CThrone* pmn = mnodeman.GetThroneByRank(nRank, nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
-
-    if(pmn != NULL){
-        //printf("RelayThroughNode %s\n", pmn->addr.ToString().c_str());
-        if(ConnectNode((CAddress)pmn->addr, NULL, true)){
-            //printf("Connected\n");
-            CNode* pNode = FindNode(pmn->addr);
-            if(pNode)
-            {
-                //printf("Found\n");
-                pNode->PushMessage("dsr", (*this));
-                return;
-            }
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
     } else {
         //printf("RelayThroughNode NULL\n");

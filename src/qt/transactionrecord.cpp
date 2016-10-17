@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,13 +58,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.involvesWatchAddress = mine == ISMINE_WATCH_ONLY;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                 {
-<<<<<<< HEAD
                     // Received by Dash Address
-=======
-                    // Received by Crowncoin address
->>>>>>> origin/dirty-merge-dash-0.11.0
                     sub.type = TransactionRecord::RecvWithAddress;
-                    sub.address = CCrowncoinAddress(address).ToString();
+                    sub.address = CBitcoinAddress(address).ToString();
                 }
                 else
                 {
@@ -190,13 +182,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
                 {
-<<<<<<< HEAD
                     // Sent to Dash Address
-=======
-                    // Sent to Crowncoin address
->>>>>>> origin/dirty-merge-dash-0.11.0
                     sub.type = TransactionRecord::SendToAddress;
-                    sub.address = CCrowncoinAddress(address).ToString();
+                    sub.address = CBitcoinAddress(address).ToString();
                 }
                 else
                 {

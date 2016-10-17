@@ -11,17 +11,13 @@
   </array>
 
   <key>CFBundleIconFile</key>
-  <string>crowncoin.icns</string>
+  <string>bitcoin.icns</string>
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
 
   <key>CFBundleGetInfoString</key>
-<<<<<<< HEAD
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers, 2014-@COPYRIGHT_YEAR@ The Dash Core developers</string>
-=======
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ The Crowncoin developers</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
 
   <key>CFBundleShortVersionString</key>
   <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
@@ -33,17 +29,10 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-<<<<<<< HEAD
   <string>Dash-Qt</string>
 
   <key>CFBundleIdentifier</key>
   <string>io.dashpay.Dash-Qt</string>
-=======
-  <string>Crowncoin-Qt</string>
-
-  <key>CFBundleIdentifier</key>
-  <string>org.crowncoin.Crowncoin-Qt</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -51,17 +40,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-<<<<<<< HEAD
       <string>io.dash.DashPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>dash</string>
-=======
-      <string>org.crowncoin.CrowncoinPayment</string>
-      <key>CFBundleURLSchemes</key>
-      <array>
-        <string>crowncoin</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
       </array>
     </dict>
   </array>
@@ -70,15 +52,9 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-<<<<<<< HEAD
       <string>io.dash.paymentrequest</string>
       <key>UTTypeDescription</key>
       <string>Dash payment request</string>
-=======
-      <string>org.crowncoin.paymentrequest</string>
-      <key>UTTypeDescription</key>
-      <string>Crowncoin payment request</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
@@ -86,17 +62,10 @@
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.mime-type</key>
-<<<<<<< HEAD
         <string>application/x-dash-payment-request</string>
         <key>public.filename-extension</key>
         <array>
           <string>dashpaymentrequest</string>
-=======
-        <string>application/x-crowncoin-payment-request</string>
-        <key>public.filename-extension</key>
-        <array>
-          <string>crowncoinpaymentrequest</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
         </array>
       </dict>
     </dict>
@@ -109,11 +78,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-<<<<<<< HEAD
         <string>io.dash.paymentrequest</string>
-=======
-        <string>org.crowncoin.paymentrequest</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>

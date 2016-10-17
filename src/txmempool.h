@@ -1,29 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
-=======
-// Copyright (c) 2009-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef CROWNCOIN_TXMEMPOOL_H
-#define CROWNCOIN_TXMEMPOOL_H
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include <list>
 
 #include "amount.h"
 #include "coins.h"
-<<<<<<< HEAD
 #include "primitives/transaction.h"
-=======
-#include "core.h"
-#include "names.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #include "sync.h"
 
 class CAutoFile;
@@ -113,21 +100,8 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
-<<<<<<< HEAD
     CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
-=======
-    /* Keep track of all names that are currently operated on by pending
-       transactions in the mempool.  Alternatively, we could also adapt
-       CCoinsViewMemPool to be a "full" CCoinsView also with respect
-       to names -- but this makes things more complicated.  Just checking
-       that no name appears twice in the mempool and that all name
-       operations are valid with respect to the "actual", DB-backed CCoinsView
-       should be enough for this purpose.  */
-    CNameMemPool names;
-
-    CTxMemPool();
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -200,8 +174,4 @@ public:
     bool HaveCoins(const uint256 &txid) const;
 };
 
-<<<<<<< HEAD
 #endif // BITCOIN_TXMEMPOOL_H
-=======
-#endif /* CROWNCOIN_TXMEMPOOL_H */
->>>>>>> origin/dirty-merge-dash-0.11.0

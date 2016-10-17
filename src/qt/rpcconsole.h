@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Crowncoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,15 +18,11 @@ namespace Ui {
     class RPCConsole;
 }
 
-<<<<<<< HEAD
 QT_BEGIN_NAMESPACE
 class QItemSelection;
 QT_END_NAMESPACE
 
 /** Local Bitcoin RPC console. */
-=======
-/** Local Crowncoin RPC console. */
->>>>>>> origin/dirty-merge-dash-0.11.0
 class RPCConsole: public QDialog
 {
     Q_OBJECT
@@ -84,7 +80,6 @@ public slots:
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
-<<<<<<< HEAD
     /** Switch to info tab and show */
     void showInfo();
     /** Switch to console tab and show */
@@ -103,9 +98,6 @@ public slots:
     void peerLayoutChanged();
     /** Show folder with wallet backups in default browser */
     void showBackups();
-=======
-    void setThroneCount(const QString &strThrones);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 signals:
     // For RPC command executor

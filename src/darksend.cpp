@@ -6,12 +6,8 @@
 #include "main.h"
 #include "init.h"
 #include "util.h"
-<<<<<<< HEAD
 #include "masternodeman.h"
 #include "script/sign.h"
-=======
-#include "throneman.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #include "instantx.h"
 #include "ui_interface.h"
 #include <boost/algorithm/string/replace.hpp>
@@ -21,15 +17,11 @@
 
 #include <algorithm>
 #include <boost/assign/list_of.hpp>
-<<<<<<< HEAD
 #include <openssl/rand.h>
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 using namespace std;
 using namespace boost;
 
-<<<<<<< HEAD
 // The main object for accessing Darksend
 CDarksendPool darkSendPool;
 // A helper object for signing messages from Masternodes
@@ -42,25 +34,6 @@ std::vector<CTxIn> vecMasternodesUsed;
 map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
-=======
-CCriticalSection cs_darksend;
-
-// The main object for accessing Darksend
-CDarksendPool darkSendPool;
-// A helper object for signing messages from Thrones
-CDarkSendSigner darkSendSigner;
-// The current Darksends in progress on the network
-std::vector<CDarksendQueue> vecDarksendQueue;
-// Keep track of the used Thrones
-std::vector<CTxIn> vecThronesUsed;
-// Keep track of the scanning errors I've seen
-map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
-// Keep track of the active Throne
-CActiveThrone activeThrone;
-
-// Count peers we've requested the list from
-int RequestedThroNeList = 0;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 /* *** BEGIN DARKSEND MAGIC - DASH **********
     Copyright (c) 2014-2015, Dash Developers
@@ -70,7 +43,6 @@ int RequestedThroNeList = 0;
 
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-<<<<<<< HEAD
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
     if(!masternodeSync.IsBlockchainSynced()) return;
 
@@ -82,32 +54,14 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             errorID = ERR_VERSION;
             LogPrintf("dsa -- incompatible version! \n");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
-    if(IsInitialBlockDownload()) return;
-
-    if (strCommand == "dsa") { //Darksend Accept Into Pool
-
-        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
-            std::string strError = _("Incompatible version.");
-            LogPrintf("dsa -- incompatible version! \n");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, strError);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             return;
         }
 
-<<<<<<< HEAD
         if(!fMasterNode){
             errorID = ERR_NOT_A_MN;
             LogPrintf("dsa -- not a Masternode! \n");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-        if(!fThroNe){
-            std::string strError = _("This is not a Throne.");
-            LogPrintf("dsa -- not a Throne! \n");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, strError);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             return;
         }
@@ -116,41 +70,24 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         CTransaction txCollateral;
         vRecv >> nDenom >> txCollateral;
 
-<<<<<<< HEAD
         CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
         if(pmn == NULL)
         {
             errorID = ERR_MN_LIST;
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-        std::string error = "";
-        CThrone* pmn = mnodeman.Find(activeThrone.vin);
-        if(pmn == NULL)
-        {
-            std::string strError = _("Not in the Throne list.");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, strError);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
         if(sessionUsers == 0) {
             if(pmn->nLastDsq != 0 &&
-<<<<<<< HEAD
                 pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
                 LogPrintf("dsa -- last dsq too recent, must wait. %s \n", pfrom->addr.ToString());
                 errorID = ERR_RECENT;
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-                pmn->nLastDsq + mnodeman.CountThronesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
-                LogPrintf("dsa -- last dsq too recent, must wait. %s \n", pfrom->addr.ToString().c_str());
-                std::string strError = _("Last Darksend was too recent.");
-                pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, strError);
->>>>>>> origin/dirty-merge-dash-0.11.0
                 return;
             }
         }
 
-<<<<<<< HEAD
         if(!IsCompatibleWithSession(nDenom, txCollateral, errorID))
         {
             LogPrintf("dsa -- not compatible with existing transactions! \n");
@@ -159,16 +96,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         } else {
             LogPrintf("dsa -- is compatible, please submit! \n");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_ACCEPTED, errorID);
-=======
-        if(!IsCompatibleWithSession(nDenom, txCollateral, error))
-        {
-            LogPrintf("dsa -- not compatible with existing transactions! \n");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
-            return;
-        } else {
-            LogPrintf("dsa -- is compatible, please submit! \n");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_ACCEPTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
@@ -189,33 +116,19 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         if(dsq.IsExpired()) return;
 
-<<<<<<< HEAD
         CMasternode* pmn = mnodeman.Find(dsq.vin);
-=======
-        CThrone* pmn = mnodeman.Find(dsq.vin);
->>>>>>> origin/dirty-merge-dash-0.11.0
         if(pmn == NULL) return;
 
         // if the queue is ready, submit if we can
         if(dsq.ready) {
-<<<<<<< HEAD
             if(!pSubmittedToMasternode) return;
             if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)addr){
                 LogPrintf("dsq - message doesn't match current Masternode - %s != %s\n", pSubmittedToMasternode->addr.ToString(), addr.ToString());
-=======
-            if(!pSubmittedToThrone) return;
-            if((CNetAddr)pSubmittedToThrone->addr != (CNetAddr)addr){
-                LogPrintf("dsq - message doesn't match current Throne - %s != %s\n", pSubmittedToThrone->addr.ToString().c_str(), addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
                 return;
             }
 
             if(state == POOL_STATUS_QUEUE){
-<<<<<<< HEAD
                 LogPrint("darksend", "Darksend queue is ready - %s\n", addr.ToString());
-=======
-                if (fDebug)  LogPrintf("Darksend queue is ready - %s\n", addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
                 PrepareDarksendDenominate();
             }
         } else {
@@ -223,65 +136,38 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 if(q.vin == dsq.vin) return;
             }
 
-<<<<<<< HEAD
             LogPrint("darksend", "dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(pmn->nLastDsq != 0 &&
                 pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
                 LogPrint("darksend", "dsq -- Masternode sending too many dsq messages. %s \n", pmn->addr.ToString());
-=======
-            if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, mnodeman.nDsqCount);
-            //don't allow a few nodes to dominate the queuing process
-            if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountThronesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
-                if(fDebug) LogPrintf("dsq -- Throne sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
                 return;
             }
             mnodeman.nDsqCount++;
             pmn->nLastDsq = mnodeman.nDsqCount;
             pmn->allowFreeTx = true;
 
-<<<<<<< HEAD
             LogPrint("darksend", "dsq - new Darksend queue object - %s\n", addr.ToString());
-=======
-            if(fDebug) LogPrintf("dsq - new Darksend queue object - %s\n", addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             vecDarksendQueue.push_back(dsq);
             dsq.Relay();
             dsq.time = GetTime();
         }
 
     } else if (strCommand == "dsi") { //DarkSend vIn
-<<<<<<< HEAD
         int errorID;
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             LogPrintf("dsi -- incompatible version! \n");
             errorID = ERR_VERSION;
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-        std::string error = "";
-        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
-            LogPrintf("dsi -- incompatible version! \n");
-            error = _("Incompatible version.");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             return;
         }
 
-<<<<<<< HEAD
         if(!fMasterNode){
             LogPrintf("dsi -- not a Masternode! \n");
             errorID = ERR_NOT_A_MN;
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-        if(!fThroNe){
-            LogPrintf("dsi -- not a Throne! \n");
-            error = _("This is not a Throne.");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             return;
         }
@@ -295,13 +181,8 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         //do we have enough users in the current session?
         if(!IsSessionReady()){
             LogPrintf("dsi -- session not complete! \n");
-<<<<<<< HEAD
             errorID = ERR_SESSION;
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-            error = _("Session not complete!");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
@@ -309,13 +190,8 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         if(!IsCompatibleWithEntries(out))
         {
             LogPrintf("dsi -- not compatible with existing transactions! \n");
-<<<<<<< HEAD
             errorID = ERR_EXISTING_TX;
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-            error = _("Not compatible with existing transactions.");
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
@@ -326,18 +202,13 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             bool missingTx = false;
 
             CValidationState state;
-<<<<<<< HEAD
             CMutableTransaction tx;
-=======
-            CTransaction tx;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             BOOST_FOREACH(const CTxOut o, out){
                 nValueOut += o.nValue;
                 tx.vout.push_back(o);
 
                 if(o.scriptPubKey.size() != 25){
-<<<<<<< HEAD
                     LogPrintf("dsi - non-standard pubkey detected! %s\n", o.scriptPubKey.ToString());
                     errorID = ERR_NON_STANDARD_PUBKEY;
                     pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
@@ -347,17 +218,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                     LogPrintf("dsi - invalid script! %s\n", o.scriptPubKey.ToString());
                     errorID = ERR_INVALID_SCRIPT;
                     pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-                    LogPrintf("dsi - non-standard pubkey detected! %s\n", o.scriptPubKey.ToString().c_str());
-                    error = _("Non-standard public key detected.");
-                    pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
-                    return;
-                }
-                if(!o.scriptPubKey.IsNormalPaymentScript()){
-                    LogPrintf("dsi - invalid script! %s\n", o.scriptPubKey.ToString().c_str());
-                    error = _("Invalid script detected.");
-                    pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
                     return;
                 }
             }
@@ -365,11 +225,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             BOOST_FOREACH(const CTxIn i, in){
                 tx.vin.push_back(i);
 
-<<<<<<< HEAD
                 LogPrint("darksend", "dsi -- tx in %s\n", i.ToString());
-=======
-                if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
                 CTransaction tx2;
                 uint256 hash;
@@ -383,21 +239,14 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
 
             if (nValueIn > DARKSEND_POOL_MAX) {
-<<<<<<< HEAD
                 LogPrintf("dsi -- more than Darksend pool max! %s\n", tx.ToString());
                 errorID = ERR_MAXIMUM;
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-                LogPrintf("dsi -- more than Darksend pool max! %s\n", tx.ToString().c_str());
-                error = _("Value more than Darksend pool maximum allows.");
-                pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
                 return;
             }
 
             if(!missingTx){
                 if (nValueIn-nValueOut > nValueIn*.01) {
-<<<<<<< HEAD
                     LogPrintf("dsi -- fees are too high! %s\n", tx.ToString());
                     errorID = ERR_FEES;
                     pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
@@ -428,35 +277,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
         } else {
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-=======
-                    LogPrintf("dsi -- fees are too high! %s\n", tx.ToString().c_str());
-                    error = _("Transaction fees are too high.");
-                    pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
-                    return;
-                }
-            } else {
-                LogPrintf("dsi -- missing input tx! %s\n", tx.ToString().c_str());
-                error = _("Missing input transaction information.");
-                pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
-                return;
-            }
-
-            if(!AcceptableInputs(mempool, state, tx)){
-                LogPrintf("dsi -- transaction not valid! \n");
-                error = _("Transaction not valid.");
-                pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
-                return;
-            }
-        }
-
-        if(AddEntry(in, nAmount, txCollateral, out, error)){
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_ACCEPTED, error);
-            Check();
-
-            RelayStatus(sessionID, GetState(), GetEntriesCount(), THRONE_RESET);
-        } else {
-            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, error);
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
 
     } else if (strCommand == "dssu") { //Darksend status update
@@ -464,15 +284,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-<<<<<<< HEAD
         if(!pSubmittedToMasternode) return;
         if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pfrom->addr){
             //LogPrintf("dssu - message doesn't match current Masternode - %s != %s\n", pSubmittedToMasternode->addr.ToString(), pfrom->addr.ToString());
-=======
-        if(!pSubmittedToThrone) return;
-        if((CNetAddr)pSubmittedToThrone->addr != (CNetAddr)pfrom->addr){
-            //LogPrintf("dssu - message doesn't match current Throne - %s != %s\n", pSubmittedToThrone->addr.ToString().c_str(), pfrom->addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
@@ -480,28 +294,17 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         int state;
         int entriesCount;
         int accepted;
-<<<<<<< HEAD
         int errorID;
         vRecv >> sessionIDMessage >> state >> entriesCount >> accepted >> errorID;
 
         LogPrint("darksend", "dssu - state: %i entriesCount: %i accepted: %i error: %s \n", state, entriesCount, accepted, GetMessageByID(errorID));
-=======
-        std::string error;
-        vRecv >> sessionIDMessage >> state >> entriesCount >> accepted >> error;
-
-        if(fDebug) LogPrintf("dssu - state: %i entriesCount: %i accepted: %i error: %s \n", state, entriesCount, accepted, error.c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         if((accepted != 1 && accepted != 0) && sessionID != sessionIDMessage){
             LogPrintf("dssu - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
             return;
         }
 
-<<<<<<< HEAD
         StatusUpdate(state, entriesCount, accepted, errorID, sessionIDMessage);
-=======
-        StatusUpdate(state, entriesCount, accepted, error, sessionIDMessage);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     } else if (strCommand == "dss") { //Darksend Sign Final Tx
 
@@ -518,36 +321,22 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         BOOST_FOREACH(const CTxIn item, sigs)
         {
             if(AddScriptSig(item)) success = true;
-<<<<<<< HEAD
             LogPrint("darksend", " -- sigs count %d %d\n", (int)sigs.size(), count);
-=======
-            if(fDebug) LogPrintf(" -- sigs count %d %d\n", (int)sigs.size(), count);
->>>>>>> origin/dirty-merge-dash-0.11.0
             count++;
         }
 
         if(success){
             darkSendPool.Check();
-<<<<<<< HEAD
             RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
-=======
-            RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
     } else if (strCommand == "dsf") { //Darksend Final tx
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
-<<<<<<< HEAD
         if(!pSubmittedToMasternode) return;
         if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pfrom->addr){
             //LogPrintf("dsc - message doesn't match current Masternode - %s != %s\n", pSubmittedToMasternode->addr.ToString(), pfrom->addr.ToString());
-=======
-        if(!pSubmittedToThrone) return;
-        if((CNetAddr)pSubmittedToThrone->addr != (CNetAddr)pfrom->addr){
-            //LogPrintf("dsc - message doesn't match current Throne - %s != %s\n", pSubmittedToThrone->addr.ToString().c_str(), pfrom->addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
@@ -556,11 +345,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> txNew;
 
         if(sessionID != sessionIDMessage){
-<<<<<<< HEAD
             LogPrint("darksend", "dsf - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
-=======
-            if (fDebug) LogPrintf("dsf - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
@@ -573,21 +358,14 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-<<<<<<< HEAD
         if(!pSubmittedToMasternode) return;
         if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pfrom->addr){
             //LogPrintf("dsc - message doesn't match current Masternode - %s != %s\n", pSubmittedToMasternode->addr.ToString(), pfrom->addr.ToString());
-=======
-        if(!pSubmittedToThrone) return;
-        if((CNetAddr)pSubmittedToThrone->addr != (CNetAddr)pfrom->addr){
-            //LogPrintf("dsc - message doesn't match current Throne - %s != %s\n", pSubmittedToThrone->addr.ToString().c_str(), pfrom->addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             return;
         }
 
         int sessionIDMessage;
         bool error;
-<<<<<<< HEAD
         int errorID;
         vRecv >> sessionIDMessage >> error >> errorID;
 
@@ -597,130 +375,21 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
         darkSendPool.CompletedTransaction(error, errorID);
-=======
-        std::string lastMessage;
-        vRecv >> sessionIDMessage >> error >> lastMessage;
-
-        if(sessionID != sessionIDMessage){
-            if (fDebug) LogPrintf("dsc - message doesn't match current Darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
-            return;
-        }
-
-        darkSendPool.CompletedTransaction(error, lastMessage);
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 
 }
 
 int randomizeList (int i) { return std::rand()%i;}
 
-<<<<<<< HEAD
 void CDarksendPool::Reset(){
     cachedLastSuccess = 0;
     lastNewBlock = 0;
     txCollateral = CMutableTransaction();
     vecMasternodesUsed.clear();
-=======
-// Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
-int GetInputDarksendRounds(CTxIn in, int rounds)
-{
-    static std::map<uint256, CWalletTx> mDenomWtxes;
-
-    if(rounds >= 17) return rounds;
-
-    uint256 hash = in.prevout.hash;
-    unsigned int nout = in.prevout.n;
-
-    CWalletTx wtx;
-    if(pwalletMain->GetTransaction(hash, wtx))
-    {
-        std::map<uint256, CWalletTx>::const_iterator mdwi = mDenomWtxes.find(hash);
-        // not known yet, let's add it
-        if(mdwi == mDenomWtxes.end())
-        {
-            if(fDebug) LogPrintf("GetInputDarksendRounds INSERTING %s\n", hash.ToString());
-            mDenomWtxes[hash] = wtx;
-        }
-        // found and it's not an initial value, just return it
-        else if(mDenomWtxes[hash].vout[nout].nRounds != -10)
-        {
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-
-        // bounds check
-        if(nout >= wtx.vout.size())
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = -4;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        mDenomWtxes[hash].vout[nout].nRounds = -3;
-        if(pwalletMain->IsCollateralAmount(wtx.vout[nout].nValue))
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = -3;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        //make sure the final output is non-denominate
-        mDenomWtxes[hash].vout[nout].nRounds = -2;
-        if(/*rounds == 0 && */!pwalletMain->IsDenominatedAmount(wtx.vout[nout].nValue)) //NOT DENOM
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = -2;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        bool fAllDenoms = true;
-        BOOST_FOREACH(CTxOut out, wtx.vout)
-        {
-            fAllDenoms = fAllDenoms && pwalletMain->IsDenominatedAmount(out.nValue);
-        }
-        // this one is denominated but there is another non-denominated output found in the same tx
-        if(!fAllDenoms)
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = 0;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        int nShortest = -10; // an initial value, should be no way to get this by calculations
-        bool fDenomFound = false;
-        // only denoms here so let's look up
-        BOOST_FOREACH(CTxIn in2, wtx.vin)
-        {
-            if(pwalletMain->IsMine(in2))
-            {
-                int n = GetInputDarksendRounds(in2, rounds+1);
-                // denom found, find the shortest chain or initially assign nShortest with the first found value
-                if(n >= 0 && (n < nShortest || nShortest == -10))
-                {
-                    nShortest = n;
-                    fDenomFound = true;
-                }
-            }
-        }
-        mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
-                ? nShortest + 1 // good, we a +1 to the shortest one
-                : 0;            // too bad, we are the fist one in that chain
-        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-        return mDenomWtxes[hash].vout[nout].nRounds;
-    }
-
-    return rounds-1;
-}
-
-void CDarksendPool::Reset(){
-    cachedLastSuccess = 0;
-    vecThronesUsed.clear();
->>>>>>> origin/dirty-merge-dash-0.11.0
     UnlockCoins();
     SetNull();
 }
 
-<<<<<<< HEAD
 void CDarksendPool::SetNull(){
 
     // MN side
@@ -741,33 +410,6 @@ void CDarksendPool::SetNull(){
     finalTransaction.vin.clear();
     finalTransaction.vout.clear();
     lastTimeChanged = GetTimeMillis();
-=======
-void CDarksendPool::SetNull(bool clearEverything){
-    finalTransaction.vin.clear();
-    finalTransaction.vout.clear();
-
-    entries.clear();
-
-    state = POOL_STATUS_IDLE;
-
-    lastTimeChanged = GetTimeMillis();
-
-    entriesCount = 0;
-    lastEntryAccepted = 0;
-    countEntriesAccepted = 0;
-    lastNewBlock = 0;
-
-    sessionUsers = 0;
-    sessionDenom = 0;
-    sessionFoundThrone = false;
-    vecSessionCollateral.clear();
-    txCollateral = CTransaction();
-
-    if(clearEverything){
-        myEntries.clear();
-        sessionID = 0;
-    }
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // -- seed random number generator (used for ordering output lists)
     unsigned int seed = 0;
@@ -776,21 +418,13 @@ void CDarksendPool::SetNull(bool clearEverything){
 }
 
 bool CDarksendPool::SetCollateralAddress(std::string strAddress){
-<<<<<<< HEAD
     CBitcoinAddress address;
-=======
-    CCrowncoinAddress address;
->>>>>>> origin/dirty-merge-dash-0.11.0
     if (!address.SetString(strAddress))
     {
         LogPrintf("CDarksendPool::SetCollateralAddress - Invalid Darksend collateral address\n");
         return false;
     }
-<<<<<<< HEAD
     collateralPubKey = GetScriptForDestination(address.Get());
-=======
-    collateralPubKey.SetDestination(address.Get());
->>>>>>> origin/dirty-merge-dash-0.11.0
     return true;
 }
 
@@ -798,7 +432,6 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
 // Unlock coins after Darksend fails or succeeds
 //
 void CDarksendPool::UnlockCoins(){
-<<<<<<< HEAD
     while(true) {
         TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
         if(!lockWallet) {MilliSleep(50); continue;}
@@ -806,15 +439,10 @@ void CDarksendPool::UnlockCoins(){
                 pwalletMain->UnlockCoin(v.prevout);
         break;
     }
-=======
-    BOOST_FOREACH(CTxIn v, lockedCoins)
-        pwalletMain->UnlockCoin(v.prevout);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     lockedCoins.clear();
 }
 
-<<<<<<< HEAD
 std::string CDarksendPool::GetStatus()
 {
     static int showingDarkSendMessage = 0;
@@ -886,39 +514,15 @@ void CDarksendPool::Check()
             LogPrint("darksend", "CDarksendPool::Check() -- TRYING TRANSACTION \n");
             UpdateState(POOL_STATUS_FINALIZE_TRANSACTION);
         }
-=======
-//
-// Check the Darksend progress and send client updates if a Throne
-//
-void CDarksendPool::Check()
-{
-    if(fDebug && fThroNe) LogPrintf("CDarksendPool::Check() - entries count %lu\n", entries.size());
-
-    //printf("CDarksendPool::Check() %d - %d - %d\n", state, anonTx.CountEntries(), GetTimeMillis()-lastTimeChanged);
-
-    // If entries is full, then move on to the next phase
-    if(state == POOL_STATUS_ACCEPTING_ENTRIES && (int)entries.size() >= GetMaxPoolTransactions())
-    {
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- TRYING TRANSACTION \n");
-        UpdateState(POOL_STATUS_FINALIZE_TRANSACTION);
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 
     // create the finalized transaction for distribution to the clients
     if(state == POOL_STATUS_FINALIZE_TRANSACTION) {
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::Check() -- FINALIZE TRANSACTIONS\n");
         UpdateState(POOL_STATUS_SIGNING);
 
         if (fMasterNode) {
             CMutableTransaction txNew;
-=======
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- FINALIZE TRANSACTIONS\n");
-        UpdateState(POOL_STATUS_SIGNING);
-
-        if (fThroNe) {
-            CTransaction txNew;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             // make our new transaction
             for(unsigned int i = 0; i < entries.size(); i++){
@@ -934,11 +538,7 @@ void CDarksendPool::Check()
             std::random_shuffle ( txNew.vout.begin(), txNew.vout.end(), randomizeList);
 
 
-<<<<<<< HEAD
             LogPrint("darksend", "Transaction 1: %s\n", txNew.ToString());
-=======
-            if(fDebug) LogPrintf("Transaction 1: %s\n", txNew.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             finalTransaction = txNew;
 
             // request signatures from clients
@@ -947,13 +547,8 @@ void CDarksendPool::Check()
     }
 
     // If we have all of the signatures, try to compile the transaction
-<<<<<<< HEAD
     if(fMasterNode && state == POOL_STATUS_SIGNING && SignaturesComplete()) {
         LogPrint("darksend", "CDarksendPool::Check() -- SIGNING\n");
-=======
-    if(state == POOL_STATUS_SIGNING && SignaturesComplete()) {
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- SIGNING\n");
->>>>>>> origin/dirty-merge-dash-0.11.0
         UpdateState(POOL_STATUS_TRANSMISSION);
 
         CheckFinalTransaction();
@@ -961,32 +556,21 @@ void CDarksendPool::Check()
 
     // reset if we're here for 10 seconds
     if((state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) && GetTimeMillis()-lastTimeChanged >= 10000) {
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::Check() -- timeout, RESETTING\n");
         UnlockCoins();
         SetNull();
         if(fMasterNode) RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
-=======
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- RESETTING MESSAGE \n");
-        SetNull(true);
-        if(fThroNe) RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
-        UnlockCoins();
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 }
 
 void CDarksendPool::CheckFinalTransaction()
 {
-<<<<<<< HEAD
     if (!fMasterNode) return; // check and relay final tx only on masternode
 
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
     CWalletTx txNew = CWalletTx(pwalletMain, finalTransaction);
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
     {
-<<<<<<< HEAD
         LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
 
         // See if the transaction is valid
@@ -1051,78 +635,6 @@ void CDarksendPool::CheckFinalTransaction()
         LogPrint("darksend", "CDarksendPool::Check() -- COMPLETED -- RESETTING\n");
         SetNull();
         RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
-=======
-        if (fThroNe) { //only the main node is master atm
-            if(fDebug) LogPrintf("Transaction 2: %s\n", txNew.ToString().c_str());
-
-            // See if the transaction is valid
-            if (!txNew.AcceptToMemoryPool(false))
-            {
-                LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
-                SetNull();
-                pwalletMain->Lock();
-
-                // not much we can do in this case
-                UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-                RelayCompletedTransaction(sessionID, true, "Transaction not valid, please try again");
-                return;
-            }
-
-            LogPrintf("CDarksendPool::Check() -- IS MASTER -- TRANSMITTING DARKSEND\n");
-
-            // sign a message
-
-            int64_t sigTime = GetAdjustedTime();
-            std::string strMessage = txNew.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
-            std::string strError = "";
-            std::vector<unsigned char> vchSig;
-            CKey key2;
-            CPubKey pubkey2;
-
-            if(!darkSendSigner.SetKey(strThroNePrivKey, strError, key2, pubkey2))
-            {
-                LogPrintf("CDarksendPool::Check() - ERROR: Invalid Throneprivkey: '%s'\n", strError.c_str());
-                return;
-            }
-
-            if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
-                LogPrintf("CDarksendPool::Check() - Sign message failed\n");
-                return;
-            }
-
-            if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
-                LogPrintf("CDarksendPool::Check() - Verify message failed\n");
-                return;
-            }
-
-            if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
-                CDarksendBroadcastTx dstx;
-                dstx.tx = txNew;
-                dstx.vin = activeThrone.vin;
-                dstx.vchSig = vchSig;
-                dstx.sigTime = sigTime;
-
-                mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
-            }
-
-            // Broadcast the transaction to the network
-            txNew.fTimeReceivedIsTxTime = true;
-            txNew.RelayWalletTransaction();
-
-            // Tell the clients it was successful
-            RelayCompletedTransaction(sessionID, false, _("Transaction created successfully."));
-
-            // Randomly charge clients
-            ChargeRandomFees();
-
-            // Reset
-            if(fDebug) LogPrintf("CDarksendPool::Check() -- COMPLETED -- RESETTING \n");
-            SetNull(true);
-            UnlockCoins();
-            if(fThroNe) RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
-            pwalletMain->Lock();
-        }
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 }
 
@@ -1134,7 +646,6 @@ void CDarksendPool::CheckFinalTransaction()
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a hault.
 //
-<<<<<<< HEAD
 // How does this work? Messages to Masternodes come in via "dsi", these require a valid collateral
 // transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
 // until the transaction is either complete or fails.
@@ -1229,80 +740,6 @@ void CDarksendPool::ChargeFees(){
 
                     // Broadcast
                     if (!wtxCollateral.AcceptToMemoryPool(false))
-=======
-// How does this work? Messages to Thrones come in via "dsi", these require a valid collateral
-// transaction for the client to be able to enter the pool. This transaction is kept by the Throne
-// until the transaction is either complete or fails.
-//
-void CDarksendPool::ChargeFees(){
-    if(fThroNe) {
-        //we don't need to charge collateral for every offence.
-        int offences = 0;
-        int r = rand()%100;
-        if(r > 33) return;
-
-        if(state == POOL_STATUS_ACCEPTING_ENTRIES){
-            BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
-                bool found = false;
-                BOOST_FOREACH(const CDarkSendEntry& v, entries) {
-                    if(v.collateral == txCollateral) {
-                        found = true;
-                    }
-                }
-
-                // This queue entry didn't send us the promised transaction
-                if(!found){
-                    LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't send transaction). Found offence.\n");
-                    offences++;
-                }
-            }
-        }
-
-        if(state == POOL_STATUS_SIGNING) {
-            // who didn't sign?
-            BOOST_FOREACH(const CDarkSendEntry v, entries) {
-                BOOST_FOREACH(const CTxDSIn s, v.sev) {
-                    if(!s.fHasSig){
-                        LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't sign). Found offence\n");
-                        offences++;
-                    }
-                }
-            }
-        }
-
-        r = rand()%100;
-        int target = 0;
-
-        //mostly offending?
-        if(offences >= POOL_MAX_TRANSACTIONS-1 && r > 33) return;
-
-        //everyone is an offender? That's not right
-        if(offences >= POOL_MAX_TRANSACTIONS) return;
-
-        //charge one of the offenders randomly
-        if(offences > 1) target = 50;
-
-        //pick random client to charge
-        r = rand()%100;
-
-        if(state == POOL_STATUS_ACCEPTING_ENTRIES){
-            BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
-                bool found = false;
-                BOOST_FOREACH(const CDarkSendEntry& v, entries) {
-                    if(v.collateral == txCollateral) {
-                        found = true;
-                    }
-                }
-
-                // This queue entry didn't send us the promised transaction
-                if(!found && r > target){
-                    LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't send transaction). charging fees.\n");
-
-                    CWalletTx wtxCollateral = CWalletTx(pwalletMain, txCollateral);
-
-                    // Broadcast
-                    if (!wtxCollateral.AcceptToMemoryPool(true))
->>>>>>> origin/dirty-merge-dash-0.11.0
                     {
                         // This must not fail. The transaction has already been signed and recorded.
                         LogPrintf("CDarksendPool::ChargeFees() : Error: Transaction not valid");
@@ -1312,42 +749,13 @@ void CDarksendPool::ChargeFees(){
                 }
             }
         }
-<<<<<<< HEAD
-=======
-
-        if(state == POOL_STATUS_SIGNING) {
-            // who didn't sign?
-            BOOST_FOREACH(const CDarkSendEntry v, entries) {
-                BOOST_FOREACH(const CTxDSIn s, v.sev) {
-                    if(!s.fHasSig && r > target){
-                        LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't sign). charging fees.\n");
-
-                        CWalletTx wtxCollateral = CWalletTx(pwalletMain, v.collateral);
-
-                        // Broadcast
-                        if (!wtxCollateral.AcceptToMemoryPool(false))
-                        {
-                            // This must not fail. The transaction has already been signed and recorded.
-                            LogPrintf("CDarksendPool::ChargeFees() : Error: Transaction not valid");
-                        }
-                        wtxCollateral.RelayWalletTransaction();
-                        return;
-                    }
-                }
-            }
-        }
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 }
 
 // charge the collateral randomly
 //  - Darksend is completely free, to pay miners we randomly pay the collateral of users.
 void CDarksendPool::ChargeRandomFees(){
-<<<<<<< HEAD
     if(fMasterNode) {
-=======
-    if(fThroNe) {
->>>>>>> origin/dirty-merge-dash-0.11.0
         int i = 0;
 
         BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
@@ -1384,7 +792,6 @@ void CDarksendPool::ChargeRandomFees(){
 // Check for various timeouts (queue objects, Darksend, etc)
 //
 void CDarksendPool::CheckTimeout(){
-<<<<<<< HEAD
     if(!fEnableDarksend && !fMasterNode) return;
 
     // catching hanging sessions
@@ -1402,50 +809,26 @@ void CDarksendPool::CheckTimeout(){
                 LogPrint("darksend", "CDarksendPool::CheckTimeout() -- Pool success -- Running Check()\n");
                 Check();
                 break;
-=======
-    if(!fEnableDarksend && !fThroNe) return;
-
-    // catching hanging sessions
-    if(!fThroNe) {
-        if(state == POOL_STATUS_TRANSMISSION) {
-            if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session complete -- Running Check()\n");
-            Check();
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
     }
 
     // check Darksend queue objects for timeouts
     int c = 0;
-<<<<<<< HEAD
     vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
     while(it != vecDarksendQueue.end()){
         if((*it).IsExpired()){
             LogPrint("darksend", "CDarksendPool::CheckTimeout() : Removing expired queue entry - %d\n", c);
             it = vecDarksendQueue.erase(it);
         } else ++it;
-=======
-    vector<CDarksendQueue>::iterator it;
-    for(it=vecDarksendQueue.begin();it<vecDarksendQueue.end();it++){
-        if((*it).IsExpired()){
-            if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() : Removing expired queue entry - %d\n", c);
-            vecDarksendQueue.erase(it);
-            break;
-        }
->>>>>>> origin/dirty-merge-dash-0.11.0
         c++;
     }
 
     int addLagTime = 0;
-<<<<<<< HEAD
     if(!fMasterNode) addLagTime = 10000; //if we're the client, give the server a few extra seconds before resetting.
-=======
-    if(!fThroNe) addLagTime = 10000; //if we're the client, give the server a few extra seconds before resetting.
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     if(state == POOL_STATUS_ACCEPTING_ENTRIES || state == POOL_STATUS_QUEUE){
         c = 0;
 
-<<<<<<< HEAD
         // check for a timeout and reset if needed
         vector<CDarkSendEntry>::iterator it2 = entries.begin();
         while(it2 != entries.end()){
@@ -1460,32 +843,10 @@ void CDarksendPool::CheckTimeout(){
                     RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
                 }
             } else ++it2;
-=======
-        // if it's a Throne, the entries are stored in "entries", otherwise they're stored in myEntries
-        std::vector<CDarkSendEntry> *vec = &myEntries;
-        if(fThroNe) vec = &entries;
-
-        // check for a timeout and reset if needed
-        vector<CDarkSendEntry>::iterator it2;
-        for(it2=vec->begin();it2<vec->end();it2++){
-            if((*it2).IsExpired()){
-                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() : Removing expired entry - %d\n", c);
-                vec->erase(it2);
-                if(entries.size() == 0 && myEntries.size() == 0){
-                    SetNull(true);
-                    UnlockCoins();
-                }
-                if(fThroNe){
-                    RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
-                }
-                break;
-            }
->>>>>>> origin/dirty-merge-dash-0.11.0
             c++;
         }
 
         if(GetTimeMillis()-lastTimeChanged >= (DARKSEND_QUEUE_TIMEOUT*1000)+addLagTime){
-<<<<<<< HEAD
             UnlockCoins();
             SetNull();
         }
@@ -1506,30 +867,6 @@ void CDarksendPool::CheckTimeout(){
 
             UpdateState(POOL_STATUS_ERROR);
             lastMessage = _("Signing timed out.");
-=======
-            lastTimeChanged = GetTimeMillis();
-
-            SetNull(true);
-        }
-    } else if(GetTimeMillis()-lastTimeChanged >= (DARKSEND_QUEUE_TIMEOUT*1000)+addLagTime){
-        if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session timed out (30s) -- resetting\n");
-        SetNull();
-        UnlockCoins();
-
-        UpdateState(POOL_STATUS_ERROR);
-        lastMessage = _("Session timed out, please resubmit.");
-    }
-
-    if(state == POOL_STATUS_SIGNING && GetTimeMillis()-lastTimeChanged >= (DARKSEND_SIGNING_TIMEOUT*1000)+addLagTime ) {
-            if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session timed out -- restting\n");
-            ChargeFees();
-            SetNull();
-            UnlockCoins();
-            //add my transactions to the new session
-
-            UpdateState(POOL_STATUS_ERROR);
-            lastMessage = _("Signing timed out, please resubmit.");
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 }
 
@@ -1537,11 +874,7 @@ void CDarksendPool::CheckTimeout(){
 // Check for complete queue
 //
 void CDarksendPool::CheckForCompleteQueue(){
-<<<<<<< HEAD
     if(!fEnableDarksend && !fMasterNode) return;
-=======
-    if(!fEnableDarksend && !fThroNe) return;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     /* Check to see if we're ready for submissions from clients */
     //
@@ -1553,11 +886,7 @@ void CDarksendPool::CheckForCompleteQueue(){
 
         CDarksendQueue dsq;
         dsq.nDenom = sessionDenom;
-<<<<<<< HEAD
         dsq.vin = activeMasternode.vin;
-=======
-        dsq.vin = activeThrone.vin;
->>>>>>> origin/dirty-merge-dash-0.11.0
         dsq.time = GetTime();
         dsq.ready = true;
         dsq.Sign();
@@ -1567,11 +896,7 @@ void CDarksendPool::CheckForCompleteQueue(){
 
 // check to see if the signature is valid
 bool CDarksendPool::SignatureValid(const CScript& newSig, const CTxIn& newVin){
-<<<<<<< HEAD
     CMutableTransaction txNew;
-=======
-    CTransaction txNew;
->>>>>>> origin/dirty-merge-dash-0.11.0
     txNew.vin.clear();
     txNew.vout.clear();
 
@@ -1597,24 +922,14 @@ bool CDarksendPool::SignatureValid(const CScript& newSig, const CTxIn& newVin){
     if(found >= 0){ //might have to do this one input at a time?
         int n = found;
         txNew.vin[n].scriptSig = newSig;
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::SignatureValid() - Sign with sig %s\n", newSig.ToString().substr(0,24));
         if (!VerifyScript(txNew.vin[n].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, n))){
             LogPrint("darksend", "CDarksendPool::SignatureValid() - Signing - Error signing input %u\n", n);
-=======
-        if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Sign with sig %s\n", newSig.ToString().substr(0,24).c_str());
-        if (!VerifyScript(txNew.vin[n].scriptSig, sigPubKey, txNew, n, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0)){
-            if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Signing - Error signing input %u\n", n);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return false;
         }
     }
 
-<<<<<<< HEAD
     LogPrint("darksend", "CDarksendPool::SignatureValid() - Signing - Successfully validated input\n");
-=======
-    if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Signing - Successfully validated input\n");
->>>>>>> origin/dirty-merge-dash-0.11.0
     return true;
 }
 
@@ -1631,11 +946,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
         nValueOut += o.nValue;
 
         if(!o.scriptPubKey.IsNormalPaymentScript()){
-<<<<<<< HEAD
             LogPrintf ("CDarksendPool::IsCollateralValid - Invalid Script %s\n", txCollateral.ToString());
-=======
-            LogPrintf ("CDarksendPool::IsCollateralValid - Invalid Script %s\n", txCollateral.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             return false;
         }
     }
@@ -1653,17 +964,12 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     }
 
     if(missingTx){
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::IsCollateralValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString());
-=======
-        if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
     //collateral transactions are required to pay out DARKSEND_COLLATERAL as a fee to the miners
     if(nValueIn - nValueOut < DARKSEND_COLLATERAL) {
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::IsCollateralValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString());
         return false;
     }
@@ -1677,18 +983,6 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
             if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
             return false;
         }
-=======
-        if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
-        return false;
-    }
-
-    if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
-
-    CValidationState state;
-    if(!AcceptableInputs(mempool, state, txCollateral)){
-        if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
-        return false;
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 
     return true;
@@ -1698,7 +992,6 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
 //
 // Add a clients transaction to the pool
 //
-<<<<<<< HEAD
 bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID){
     if (!fMasterNode) return false;
 
@@ -1706,60 +999,32 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
         if (in.prevout.IsNull() || nAmount < 0) {
             LogPrint("darksend", "CDarksendPool::AddEntry - input not valid!\n");
             errorID = ERR_INVALID_INPUT;
-=======
-bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, std::string& error){
-    if (!fThroNe) return false;
-
-    BOOST_FOREACH(CTxIn in, newInput) {
-        if (in.prevout.IsNull() || nAmount < 0) {
-            if(fDebug) LogPrintf ("CDarksendPool::AddEntry - input not valid!\n");
-            error = _("Input is not valid.");
->>>>>>> origin/dirty-merge-dash-0.11.0
             sessionUsers--;
             return false;
         }
     }
 
     if (!IsCollateralValid(txCollateral)){
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::AddEntry - collateral not valid!\n");
         errorID = ERR_INVALID_COLLATERAL;
-=======
-        if(fDebug) LogPrintf ("CDarksendPool::AddEntry - collateral not valid!\n");
-        error = _("Collateral is not valid.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         sessionUsers--;
         return false;
     }
 
     if((int)entries.size() >= GetMaxPoolTransactions()){
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::AddEntry - entries is full!\n");
         errorID = ERR_ENTRIES_FULL;
-=======
-        if(fDebug) LogPrintf ("CDarksendPool::AddEntry - entries is full!\n");
-        error = _("Entries are full.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         sessionUsers--;
         return false;
     }
 
     BOOST_FOREACH(CTxIn in, newInput) {
-<<<<<<< HEAD
         LogPrint("darksend", "looking for vin -- %s\n", in.ToString());
         BOOST_FOREACH(const CDarkSendEntry& v, entries) {
             BOOST_FOREACH(const CTxDSIn& s, v.sev){
                 if((CTxIn)s == in) {
                     LogPrint("darksend", "CDarksendPool::AddEntry - found in vin\n");
                     errorID = ERR_ALREADY_HAVE;
-=======
-        if(fDebug) LogPrintf("looking for vin -- %s\n", in.ToString().c_str());
-        BOOST_FOREACH(const CDarkSendEntry& v, entries) {
-            BOOST_FOREACH(const CTxDSIn& s, v.sev){
-                if((CTxIn)s == in) {
-                    if(fDebug) LogPrintf ("CDarksendPool::AddEntry - found in vin\n");
-                    error = _("Already have that input.");
->>>>>>> origin/dirty-merge-dash-0.11.0
                     sessionUsers--;
                     return false;
                 }
@@ -1771,71 +1036,42 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
     v.Add(newInput, nAmount, txCollateral, newOutput);
     entries.push_back(v);
 
-<<<<<<< HEAD
     LogPrint("darksend", "CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString());
     errorID = MSG_ENTRIES_ADDED;
-=======
-    if(fDebug) LogPrintf("CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString().c_str());
-    error = "";
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     return true;
 }
 
 bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
-<<<<<<< HEAD
     LogPrint("darksend", "CDarksendPool::AddScriptSig -- new sig  %s\n", newVin.scriptSig.ToString().substr(0,24));
-=======
-    if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- new sig  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 
     BOOST_FOREACH(const CDarkSendEntry& v, entries) {
         BOOST_FOREACH(const CTxDSIn& s, v.sev){
             if(s.scriptSig == newVin.scriptSig) {
-<<<<<<< HEAD
                 LogPrint("darksend", "CDarksendPool::AddScriptSig - already exists\n");
-=======
-                printf("CDarksendPool::AddScriptSig - already exists \n");
->>>>>>> origin/dirty-merge-dash-0.11.0
                 return false;
             }
         }
     }
 
     if(!SignatureValid(newVin.scriptSig, newVin)){
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::AddScriptSig - Invalid Sig\n");
         return false;
     }
 
     LogPrint("darksend", "CDarksendPool::AddScriptSig -- sig %s\n", newVin.ToString());
-=======
-        if(fDebug) LogPrintf("CDarksendPool::AddScriptSig - Invalid Sig\n");
-        return false;
-    }
-
-    if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- sig %s\n", newVin.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     BOOST_FOREACH(CTxIn& vin, finalTransaction.vin){
         if(newVin.prevout == vin.prevout && vin.nSequence == newVin.nSequence){
             vin.scriptSig = newVin.scriptSig;
             vin.prevPubKey = newVin.prevPubKey;
-<<<<<<< HEAD
             LogPrint("darksend", "CDarkSendPool::AddScriptSig -- adding to finalTransaction  %s\n", newVin.scriptSig.ToString().substr(0,24));
-=======
-            if(fDebug) LogPrintf("CDarkSendPool::AddScriptSig -- adding to finalTransaction  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
     }
     for(unsigned int i = 0; i < entries.size(); i++){
         if(entries[i].AddSig(newVin)){
-<<<<<<< HEAD
             LogPrint("darksend", "CDarkSendPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24));
-=======
-            if(fDebug) LogPrintf("CDarkSendPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             return true;
         }
     }
@@ -1855,7 +1091,6 @@ bool CDarksendPool::SignaturesComplete(){
 }
 
 //
-<<<<<<< HEAD
 // Execute a Darksend denomination via a Masternode.
 // This is only ran from clients
 //
@@ -1867,13 +1102,6 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
     }
 
     if(txCollateral == CMutableTransaction()){
-=======
-// Execute a Darksend denomination via a Throne.
-// This is only ran from clients
-//
-void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount){
-    if(darkSendPool.txCollateral == CTransaction()){
->>>>>>> origin/dirty-merge-dash-0.11.0
         LogPrintf ("CDarksendPool:SendDarksendDenominate() - Darksend collateral not set");
         return;
     }
@@ -1886,7 +1114,6 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         lockedCoins.push_back(in);
 
     //BOOST_FOREACH(CTxOut o, vout)
-<<<<<<< HEAD
     //    LogPrintf(" vout - %s\n", o.ToString());
 
 
@@ -1903,24 +1130,6 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         SetNull();
         fEnableDarksend = false;
         LogPrintf("CDarksendPool::SendDarksendDenominate() - Not enough disk space, disabling Darksend.\n");
-=======
-    //    LogPrintf(" vout - %s\n", o.ToString().c_str());
-
-
-    // we should already be connected to a Throne
-    if(!sessionFoundThrone){
-        LogPrintf("CDarksendPool::SendDarksendDenominate() - No Throne has been selected yet.\n");
-        UnlockCoins();
-        SetNull(true);
-        return;
-    }
-
-    if (!CheckDiskSpace())
-        return;
-
-    if(fThroNe) {
-        LogPrintf("CDarksendPool::SendDarksendDenominate() - Darksend from a Throne is not supported currently.\n");
->>>>>>> origin/dirty-merge-dash-0.11.0
         return;
     }
 
@@ -1935,11 +1144,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         int64_t nValueOut = 0;
 
         CValidationState state;
-<<<<<<< HEAD
         CMutableTransaction tx;
-=======
-        CTransaction tx;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         BOOST_FOREACH(const CTxOut& o, vout){
             nValueOut += o.nValue;
@@ -1949,7 +1154,6 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         BOOST_FOREACH(const CTxIn& i, vin){
             tx.vin.push_back(i);
 
-<<<<<<< HEAD
             LogPrint("darksend", "dsi -- tx in %s\n", i.ToString());
         }
 
@@ -1965,23 +1169,12 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
                 return;
             }
             break;
-=======
-            if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
-        }
-
-        LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
-
-        if(!AcceptableInputs(mempool, state, tx)){
-            LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
-            return;
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
     }
 
     // store our entry for later use
     CDarkSendEntry e;
     e.Add(vin, amount, txCollateral, vout);
-<<<<<<< HEAD
     entries.push_back(e);
 
     RelayIn(entries[0].sev, entries[0].amount, txCollateral, entries[0].vout);
@@ -1989,64 +1182,37 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 }
 
 // Incoming message from Masternode updating the progress of Darksend
-=======
-    myEntries.push_back(e);
-
-    RelayIn(myEntries[0].sev, myEntries[0].amount, txCollateral, myEntries[0].vout);
-    Check();
-}
-
-// Incoming message from Throne updating the progress of Darksend
->>>>>>> origin/dirty-merge-dash-0.11.0
 //    newAccepted:  -1 mean's it'n not a "transaction accepted/not accepted" message, just a standard update
 //                  0 means transaction was not accepted
 //                  1 means transaction was accepted
 
-<<<<<<< HEAD
 bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccepted, int& errorID, int newSessionID){
     if(fMasterNode) return false;
-=======
-bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccepted, std::string& error, int newSessionID){
-    if(fThroNe) return false;
->>>>>>> origin/dirty-merge-dash-0.11.0
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
 
     UpdateState(newState);
     entriesCount = newEntriesCount;
 
-<<<<<<< HEAD
     if(errorID != MSG_NOERR) strAutoDenomResult = _("Masternode:") + " " + GetMessageByID(errorID);
-=======
-    if(error.size() > 0) strAutoDenomResult = _("Throne:") + " " + error;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     if(newAccepted != -1) {
         lastEntryAccepted = newAccepted;
         countEntriesAccepted += newAccepted;
         if(newAccepted == 0){
             UpdateState(POOL_STATUS_ERROR);
-<<<<<<< HEAD
             lastMessage = GetMessageByID(errorID);
-=======
-            lastMessage = error;
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
 
         if(newAccepted == 1 && newSessionID != 0) {
             sessionID = newSessionID;
             LogPrintf("CDarksendPool::StatusUpdate - set sessionID to %d\n", sessionID);
-<<<<<<< HEAD
             sessionFoundMasternode = true;
-=======
-            sessionFoundThrone = true;
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
     }
 
     if(newState == POOL_STATUS_ACCEPTING_ENTRIES){
         if(newAccepted == 1){
             LogPrintf("CDarksendPool::StatusUpdate - entry accepted! \n");
-<<<<<<< HEAD
             sessionFoundMasternode = true;
             //wait for other users. Masternode will report when ready
             UpdateState(POOL_STATUS_QUEUE);
@@ -2057,53 +1223,26 @@ bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
             DoAutomaticDenominating(); //try another Masternode
         }
         if(sessionFoundMasternode) return true;
-=======
-            sessionFoundThrone = true;
-            //wait for other users. Throne will report when ready
-            UpdateState(POOL_STATUS_QUEUE);
-        } else if (newAccepted == 0 && sessionID == 0 && !sessionFoundThrone) {
-            LogPrintf("CDarksendPool::StatusUpdate - entry not accepted by Throne \n");
-            UnlockCoins();
-            UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-            DoAutomaticDenominating(); //try another Throne
-        }
-        if(sessionFoundThrone) return true;
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
 
     return true;
 }
 
 //
-<<<<<<< HEAD
 // After we receive the finalized transaction from the Masternode, we must
-=======
-// After we receive the finalized transaction from the Throne, we must
->>>>>>> origin/dirty-merge-dash-0.11.0
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
 bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNode* node){
-<<<<<<< HEAD
     if(fMasterNode) return false;
 
     finalTransaction = finalTransactionNew;
     LogPrintf("CDarksendPool::SignFinalTransaction %s", finalTransaction.ToString());
-=======
-    if(fThroNe) return false;
-
-    finalTransaction = finalTransactionNew;
-    LogPrintf("CDarksendPool::SignFinalTransaction %s\n", finalTransaction.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     vector<CTxIn> sigs;
 
     //make sure my inputs/outputs are present, otherwise refuse to sign
-<<<<<<< HEAD
     BOOST_FOREACH(const CDarkSendEntry e, entries) {
-=======
-    BOOST_FOREACH(const CDarkSendEntry e, myEntries) {
->>>>>>> origin/dirty-merge-dash-0.11.0
         BOOST_FOREACH(const CTxDSIn s, e.sev) {
             /* Sign my transaction and all outputs */
             int mine = -1;
@@ -2118,18 +1257,10 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 }
             }
 
-<<<<<<< HEAD
             if(mine >= 0){ //might have to do this one input at a time?
                 int foundOutputs = 0;
                 CAmount nValue1 = 0;
                 CAmount nValue2 = 0;
-=======
-
-            if(mine >= 0){ //might have to do this one input at a time?
-                int foundOutputs = 0;
-                int64_t nValue1 = 0;
-                int64_t nValue2 = 0;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
                 for(unsigned int i = 0; i < finalTransaction.vout.size(); i++){
                     BOOST_FOREACH(const CTxOut& o, e.vout) {
@@ -2148,50 +1279,30 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                     // in this case, something went wrong and we'll refuse to sign. It's possible we'll be charged collateral. But that's
                     // better then signing if the transaction doesn't look like what we wanted.
                     LogPrintf("CDarksendPool::Sign - My entries are not correct! Refusing to sign. %d entries %d target. \n", foundOutputs, targetOuputs);
-<<<<<<< HEAD
                     UnlockCoins();
                     SetNull();
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
 
                     return false;
                 }
 
-<<<<<<< HEAD
                 const CKeyStore& keystore = *pwalletMain;
 
                 LogPrint("darksend", "CDarksendPool::Sign - Signing my input %i\n", mine);
                 if(!SignSignature(keystore, prevPubKey, finalTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
                     LogPrint("darksend", "CDarksendPool::Sign - Unable to sign my own transaction! \n");
-=======
-                if(fDebug) LogPrintf("CDarksendPool::Sign - Signing my input %i\n", mine);
-                if(!SignSignature(*pwalletMain, prevPubKey, finalTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
-                    if(fDebug) LogPrintf("CDarksendPool::Sign - Unable to sign my own transaction! \n");
->>>>>>> origin/dirty-merge-dash-0.11.0
                     // not sure what to do here, it will timeout...?
                 }
 
                 sigs.push_back(finalTransaction.vin[mine]);
-<<<<<<< HEAD
                 LogPrint("darksend", " -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString());
-=======
-                if(fDebug) LogPrintf(" -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             }
 
         }
 
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::Sign - txNew:\n%s", finalTransaction.ToString());
     }
 
 	// push all of our signatures to the Masternode
-=======
-        if(fDebug) LogPrintf("CDarksendPool::Sign - txNew:\n%s", finalTransaction.ToString().c_str());
-    }
-
-	// push all of our signatures to the Throne
->>>>>>> origin/dirty-merge-dash-0.11.0
 	if(sigs.size() > 0 && node != NULL)
 	    node->PushMessage("dss", sigs);
 
@@ -2201,39 +1312,19 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
 
 void CDarksendPool::NewBlock()
 {
-<<<<<<< HEAD
     LogPrint("darksend", "CDarksendPool::NewBlock \n");
-=======
-    if(fDebug) LogPrintf("CDarksendPool::NewBlock \n");
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     //we we're processing lots of blocks, we'll just leave
     if(GetTime() - lastNewBlock < 10) return;
     lastNewBlock = GetTime();
 
     darkSendPool.CheckTimeout();
-<<<<<<< HEAD
 }
 
 // Darksend transaction was completed (failed or successful)
 void CDarksendPool::CompletedTransaction(bool error, int errorID)
 {
     if(fMasterNode) return;
-=======
-
-    if(!fEnableDarksend) return;
-
-    if(!fThroNe){
-        //denominate all non-denominated inputs every 25 minutes.
-        if(chainActive.Tip()->nHeight % 10 == 0) UnlockCoins();
-    }
-}
-
-// Darksend transaction was completed (failed or successful)
-void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
-{
-    if(fThroNe) return;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     if(error){
         LogPrintf("CompletedTransaction -- error \n");
@@ -2241,32 +1332,18 @@ void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
 
         Check();
         UnlockCoins();
-<<<<<<< HEAD
         SetNull();
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
     } else {
         LogPrintf("CompletedTransaction -- success \n");
         UpdateState(POOL_STATUS_SUCCESS);
 
-<<<<<<< HEAD
         UnlockCoins();
         SetNull();
-=======
-        myEntries.clear();
-        UnlockCoins();
-        if(!fThroNe) SetNull(true);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         // To avoid race conditions, we'll only let DS run once per block
         cachedLastSuccess = chainActive.Tip()->nHeight;
     }
-<<<<<<< HEAD
     lastMessage = GetMessageByID(errorID);
-=======
-    lastMessage = lastMessageNew;
-    completedTransaction = true;
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 void CDarksendPool::ClearLastMessage()
@@ -2279,7 +1356,6 @@ void CDarksendPool::ClearLastMessage()
 //
 // This does NOT run by default for daemons, only for QT.
 //
-<<<<<<< HEAD
 bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnableDarksend) return false;
@@ -2298,25 +1374,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 
     if(!masternodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
-=======
-bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
-{
-    LOCK(cs_darksend);
-
-    if(IsInitialBlockDownload()) return false;
-
-    if(fThroNe) return false;
-    if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
-
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
-        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
-        strAutoDenomResult = _("Last successful Darksend action was too recent.");
-        return false;
-    }
-    if(!fEnableDarksend) {
-        if(fDebug) LogPrintf("CDarksendPool::DoAutomaticDenominating - Darksend is disabled\n");
-        strAutoDenomResult = _("Darksend is disabled.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
@@ -2325,7 +1382,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-<<<<<<< HEAD
     if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
         LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
         strAutoDenomResult = _("Last successful Darksend action was too recent.");
@@ -2335,23 +1391,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     if(mnodeman.size() == 0){
         LogPrint("darksend", "CDarksendPool::DoAutomaticDenominating - No Masternodes detected\n");
         strAutoDenomResult = _("No Masternodes detected.");
-=======
-    if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS){
-        if(darkSendPool.GetMyTransactionCount() > 0){
-            return true;
-        }
-    }
-
-    if(mnodeman.size() == 0){
-        if(fDebug) LogPrintf("CDarksendPool::DoAutomaticDenominating - No Thrones detected\n");
-        strAutoDenomResult = _("No Thrones detected.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
-<<<<<<< HEAD
     CAmount nValueMin = CENT;
     CAmount nValueIn = 0;
 
@@ -2360,36 +1404,20 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     // should not be less than fees in DARKSEND_COLLATERAL + few (lets say 5) smallest denoms
     CAmount nLowestDenom = DARKSEND_COLLATERAL + darkSendDenominations[darkSendDenominations.size() - 1]*5;
-=======
-    int64_t nValueMin = CENT;
-    int64_t nValueIn = 0;
-
-    // should not be less than fees in DARKSEND_COLLATERAL + few (lets say 5) smallest denoms
-    int64_t nLowestDenom = DARKSEND_COLLATERAL + darkSendDenominations[darkSendDenominations.size() - 1]*5;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // if there are no DS collateral inputs yet
     if(!pwalletMain->HasCollateralInputs())
         // should have some additional amount for them
         nLowestDenom += DARKSEND_COLLATERAL*4;
 
-<<<<<<< HEAD
     CAmount nBalanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
-=======
-    int64_t nBalanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // if balanceNeedsAnonymized is more than pool max, take the pool max
     if(nBalanceNeedsAnonymized > DARKSEND_POOL_MAX) nBalanceNeedsAnonymized = DARKSEND_POOL_MAX;
 
     // if balanceNeedsAnonymized is more than non-anonymized, take non-anonymized
-<<<<<<< HEAD
     CAmount nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
     if(nBalanceNeedsAnonymized > nAnonymizableBalance) nBalanceNeedsAnonymized = nAnonymizableBalance;
-=======
-    int64_t nBalanceNotYetAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance();
-    if(nBalanceNeedsAnonymized > nBalanceNotYetAnonymized) nBalanceNeedsAnonymized = nBalanceNotYetAnonymized;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     if(nBalanceNeedsAnonymized < nLowestDenom)
     {
@@ -2398,11 +1426,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-<<<<<<< HEAD
     LogPrint("darksend", "DoAutomaticDenominating : nLowestDenom=%d, nBalanceNeedsAnonymized=%d\n", nLowestDenom, nBalanceNeedsAnonymized);
-=======
-    if (fDebug) LogPrintf("DoAutomaticDenominating : nLowestDenom=%d, nBalanceNeedsAnonymized=%d\n", nLowestDenom, nBalanceNeedsAnonymized);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // select coins that should be given to the pool
     if (!pwalletMain->SelectCoinsDark(nValueMin, nBalanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds))
@@ -2412,7 +1436,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
         if (pwalletMain->SelectCoinsDark(nValueMin, 9999999*COIN, vCoins, nValueIn, -2, 0))
         {
-<<<<<<< HEAD
             nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true) + pwalletMain->GetDenominatedBalance() - pwalletMain->GetAnonymizedBalance();
             nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
 
@@ -2421,9 +1444,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             if(nBalanceNeedsDenominated < nLowestDenom) return false; // most likely we just waiting for denoms to confirm
             if(!fDryRun) return CreateDenominated(nBalanceNeedsDenominated);
 
-=======
-            if(!fDryRun) return CreateDenominated(nBalanceNeedsAnonymized);
->>>>>>> origin/dirty-merge-dash-0.11.0
             return true;
         } else {
             LogPrintf("DoAutomaticDenominating : Can't denominate - no compatible inputs left\n");
@@ -2433,7 +1453,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     }
 
-<<<<<<< HEAD
     if(fDryRun) return true;
 
     nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true) + pwalletMain->GetDenominatedBalance() - pwalletMain->GetAnonymizedBalance();
@@ -2457,38 +1476,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
         if(pwalletMain->GetDenominatedBalance(true) > 0){ //get denominated unconfirmed inputs
-=======
-    //check to see if we have the collateral sized inputs, it requires these
-    if(!pwalletMain->HasCollateralInputs()){
-        if(!fDryRun) MakeCollateralAmounts();
-        return true;
-    }
-
-    if(fDryRun) return true;
-
-    std::vector<CTxOut> vOut;
-
-    // initial phase, find a Throne
-    if(!sessionFoundThrone){
-        int nUseQueue = rand()%100;
-        UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-
-        sessionTotalValue = pwalletMain->GetTotalValue(vCoins);
-
-        //randomize the amounts we mix
-        if(sessionTotalValue > nBalanceNeedsAnonymized) sessionTotalValue = nBalanceNeedsAnonymized;
-
-        double fDarkcoinSubmitted = (sessionTotalValue / CENT);
-        LogPrintf("Submitting Darksend for %f DASH CENT - sessionTotalValue %d\n", fDarkcoinSubmitted, sessionTotalValue);
-
-        if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
->>>>>>> origin/dirty-merge-dash-0.11.0
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
             strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
             return false;
         }
 
-<<<<<<< HEAD
         //check our collateral nad create new if needed
         std::string strReason;
         CValidationState state;
@@ -2515,16 +1507,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             LogPrint("darksend", "  vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
         }
 
-=======
-        //check our collateral
-        if(txCollateral != CTransaction()){
-            if(!IsCollateralValid(txCollateral)) {
-                txCollateral = CTransaction();
-                LogPrintf("DoAutomaticDenominating -- Invalid collateral, resetting.\n");
-            }
-        }
-
->>>>>>> origin/dirty-merge-dash-0.11.0
         //don't use the queues all of the time for mixing
         if(nUseQueue > 33){
 
@@ -2543,7 +1525,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 //non-denom's are incompatible
                 if((dsq.nDenom & (1 << 4))) continue;
 
-<<<<<<< HEAD
                 bool fUsed = false;
                 //don't reuse Masternodes
                 BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed){
@@ -2553,20 +1534,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     }
                 }
                 if(fUsed) continue;
-=======
-                //don't reuse Thrones
-                BOOST_FOREACH(CTxIn usedVin, vecThronesUsed){
-                    if(dsq.vin == usedVin) {
-                        continue;
-                    }
-                }
->>>>>>> origin/dirty-merge-dash-0.11.0
 
                 std::vector<CTxIn> vTempCoins;
                 std::vector<COutput> vTempCoins2;
                 // Try to match their denominations if possible
                 if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, nBalanceNeedsAnonymized, vTempCoins, vTempCoins2, nValueIn, 0, nDarksendRounds)){
-<<<<<<< HEAD
                     LogPrintf("DoAutomaticDenominating --- Couldn't match denominations %d\n", dsq.nDenom);
                     continue;
                 }
@@ -2598,62 +1570,18 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     strAutoDenomResult = _("Error connecting to Masternode.");
                     dsq.time = 0; //remove node
                     continue;
-=======
-                    LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
-                    continue;
-                }
-
-                // connect to Throne and submit the queue request
-                if(ConnectNode((CAddress)addr, NULL, true)){
-                    CNode* pNode = FindNode(addr);
-                    if(pNode)
-                    {
-                        std::string strReason;
-                        if(txCollateral == CTransaction()){
-                            if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
-                                LogPrintf("DoAutomaticDenominating -- dsa error:%s\n", strReason.c_str());
-                                return false;
-                            }
-                        }
-
-                        CThrone* pmn = mnodeman.Find(dsq.vin);
-                        if(pmn == NULL)
-                        {
-                            LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in throne list!", dsq.vin.ToString());
-                            continue;
-                        }
-                        pSubmittedToThrone = pmn;
-                        vecThronesUsed.push_back(dsq.vin);
-                        sessionDenom = dsq.nDenom;
-
-                        pNode->PushMessage("dsa", sessionDenom, txCollateral);
-                        LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d %d - %s\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue), pNode->addr.ToString().c_str());
-                        strAutoDenomResult = "";
-                        dsq.time = 0; //remove node
-                        return true;
-                    }
-                } else {
-                    LogPrintf("DoAutomaticDenominating --- error connecting \n");
-                    strAutoDenomResult = _("Error connecting to Throne.");
-                    dsq.time = 0; //remove node
-                    return DoAutomaticDenominating();
->>>>>>> origin/dirty-merge-dash-0.11.0
                 }
             }
         }
 
-<<<<<<< HEAD
         // do not initiate queue if we are a liquidity proveder to avoid useless inter-mixing
         if(nLiquidityProvider) return false;
 
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
         int i = 0;
 
         // otherwise, try one randomly
         while(i < 10)
         {
-<<<<<<< HEAD
             CMasternode* pmn = mnodeman.FindRandomNotInVec(vecMasternodesUsed, MIN_POOL_PEER_PROTO_VERSION);
             if(pmn == NULL)
             {
@@ -2664,34 +1592,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
             if(pmn->nLastDsq != 0 &&
                 pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
-=======
-            CThrone* pmn = mnodeman.FindRandom();
-            if(pmn == NULL)
-            {
-                LogPrintf("DoAutomaticDenominating --- Throne list is empty!\n");
-                return false;
-            }
-            //don't reuse Thrones
-            BOOST_FOREACH(CTxIn usedVin, vecThronesUsed) {
-                if(pmn->vin == usedVin){
-                    i++;
-                    continue;
-                }
-            }
-            if(pmn->protocolVersion < MIN_POOL_PEER_PROTO_VERSION) {
-                i++;
-                continue;
-            }
-
-            if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountThronesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
->>>>>>> origin/dirty-merge-dash-0.11.0
                 i++;
                 continue;
             }
 
             lastTimeChanged = GetTimeMillis();
-<<<<<<< HEAD
             LogPrintf("DoAutomaticDenominating --- attempt %d connection to Masternode %s\n", i, pmn->addr.ToString());
             CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
             if(pnode != NULL){
@@ -2710,66 +1615,22 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 return true;
             } else {
                 vecMasternodesUsed.push_back(pmn->vin); // postpone MN we wasn't able to connect to
-=======
-            LogPrintf("DoAutomaticDenominating -- attempt %d connection to Throne %s\n", i, pmn->addr.ToString().c_str());
-            if(ConnectNode((CAddress)pmn->addr, NULL, true)){
-
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                {
-                    if((CNetAddr)pnode->addr != (CNetAddr)pmn->addr) continue;
-
-                    std::string strReason;
-                    if(txCollateral == CTransaction()){
-                        if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
-                            LogPrintf("DoAutomaticDenominating -- create collateral error:%s\n", strReason.c_str());
-                            return false;
-                        }
-                    }
-
-                    pSubmittedToThrone = pmn;
-                    vecThronesUsed.push_back(pmn->vin);
-
-                    std::vector<int64_t> vecAmounts;
-                    pwalletMain->ConvertList(vCoins, vecAmounts);
-                    sessionDenom = GetDenominationsByAmounts(vecAmounts);
-
-                    pnode->PushMessage("dsa", sessionDenom, txCollateral);
-                    LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d - denom %d\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue));
-                    strAutoDenomResult = "";
-                    return true;
-                }
-            } else {
->>>>>>> origin/dirty-merge-dash-0.11.0
                 i++;
                 continue;
             }
         }
 
-<<<<<<< HEAD
         strAutoDenomResult = _("No compatible Masternode found.");
         return false;
     }
 
     strAutoDenomResult = _("Mixing in progress...");
-=======
-        strAutoDenomResult = _("No compatible Throne found.");
-        return false;
-    }
-
-    strAutoDenomResult = "";
-    if(!ready) return true;
-
-    if(sessionDenom == 0) return true;
-
->>>>>>> origin/dirty-merge-dash-0.11.0
     return false;
 }
 
 
 bool CDarksendPool::PrepareDarksendDenominate()
 {
-<<<<<<< HEAD
     std::string strError = "";
     // Submit transaction to the pool if we get here
     // Try to use only inputs with the same number of rounds starting from lowest number of rounds possible
@@ -2787,16 +1648,6 @@ bool CDarksendPool::PrepareDarksendDenominate()
     // Should never actually get here but just in case
     strAutoDenomResult = strError;
     LogPrintf("DoAutomaticDenominating : Error running denominate, %s\n", strError);
-=======
-    // Submit transaction to the pool if we get here, use sessionDenom so we use the same amount of money
-    std::string strError = pwalletMain->PrepareDarksendDenominate(0, nDarksendRounds);
-    LogPrintf("DoAutomaticDenominating : Running Darksend denominate. Return '%s'\n", strError.c_str());
-
-    if(strError == "") return true;
-
-    strAutoDenomResult = strError;
-    LogPrintf("DoAutomaticDenominating : Error running denominate, %s\n", strError.c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
     return false;
 }
 
@@ -2813,11 +1664,7 @@ bool CDarksendPool::SendRandomPaymentToSelf()
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-<<<<<<< HEAD
     scriptChange = GetScriptForDestination(vchPubKey.GetID());
-=======
-    scriptChange.SetDestination(vchPubKey.GetID());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -2830,21 +1677,13 @@ bool CDarksendPool::SendRandomPaymentToSelf()
     CCoinControl *coinControl=NULL;
     bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey, nFeeRet, strFail, coinControl, ONLY_DENOMINATED);
     if(!success){
-<<<<<<< HEAD
         LogPrintf("SendRandomPaymentToSelf: Error - %s\n", strFail);
-=======
-        LogPrintf("SendRandomPaymentToSelf: Error - %s\n", strFail.c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
     pwalletMain->CommitTransaction(wtx, reservekey);
 
-<<<<<<< HEAD
     LogPrintf("SendRandomPaymentToSelf Success: tx %s\n", wtx.GetHash().GetHex());
-=======
-    LogPrintf("SendRandomPaymentToSelf Success: tx %s\n", wtx.GetHash().GetHex().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     return true;
 }
@@ -2852,22 +1691,10 @@ bool CDarksendPool::SendRandomPaymentToSelf()
 // Split up large inputs or create fee sized inputs
 bool CDarksendPool::MakeCollateralAmounts()
 {
-<<<<<<< HEAD
-=======
-    // make our change address
-    CReserveKey reservekey(pwalletMain);
-
-    CScript scriptChange;
-    CPubKey vchPubKey;
-    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
-
->>>>>>> origin/dirty-merge-dash-0.11.0
     CWalletTx wtx;
     int64_t nFeeRet = 0;
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
-<<<<<<< HEAD
     CCoinControl *coinControl = NULL;
 
     // make our collateral address
@@ -2894,27 +1721,10 @@ bool CDarksendPool::MakeCollateralAmounts()
         if(!success){
             LogPrintf("MakeCollateralAmounts: ONLY_NOT1000IFMN Error - %s\n", strFail);
             reservekeyCollateral.ReturnKey();
-=======
-
-    vecSend.push_back(make_pair(scriptChange, DARKSEND_COLLATERAL*4));
-
-    CCoinControl *coinControl=NULL;
-    // try to use non-denominated and not mn-like funds
-    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
-            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOTMN);
-    if(!success){
-        // if we failed (most likeky not enough funds), try to use denominated instead -
-        // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
-        success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
-                nFeeRet, strFail, coinControl, ONLY_DENOMINATED);
-        if(!success){
-            LogPrintf("MakeCollateralAmounts: Error - %s\n", strFail.c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             return false;
         }
     }
 
-<<<<<<< HEAD
     reservekeyCollateral.KeepKey();
 
     LogPrintf("MakeCollateralAmounts: tx %s\n", wtx.GetHash().GetHex());
@@ -2926,13 +1736,6 @@ bool CDarksendPool::MakeCollateralAmounts()
     }
 
     cachedLastSuccess = chainActive.Tip()->nHeight;
-=======
-    // use the same cachedLastSuccess as for DS mixinx to prevent race
-    if(pwalletMain->CommitTransaction(wtx, reservekey))
-        cachedLastSuccess = chainActive.Tip()->nHeight;
-
-    LogPrintf("MakeCollateralAmounts Success: tx %s\n", wtx.GetHash().GetHex().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     return true;
 }
@@ -2940,24 +1743,12 @@ bool CDarksendPool::MakeCollateralAmounts()
 // Create denominations
 bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 {
-<<<<<<< HEAD
-=======
-    // make our change address
-    CReserveKey reservekey(pwalletMain);
-
-    CScript scriptChange;
-    CPubKey vchPubKey;
-    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
-
->>>>>>> origin/dirty-merge-dash-0.11.0
     CWalletTx wtx;
     int64_t nFeeRet = 0;
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
     int64_t nValueLeft = nTotalValue;
 
-<<<<<<< HEAD
     // make our collateral address
     CReserveKey reservekeyCollateral(pwalletMain);
     // make our change address
@@ -2973,11 +1764,6 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
     // ****** Add collateral outputs ************ /
     if(!pwalletMain->HasCollateralInputs()) {
         vecSend.push_back(make_pair(scriptCollateral, DARKSEND_COLLATERAL*4));
-=======
-    // ****** Add collateral outputs ************ /
-    if(!pwalletMain->HasCollateralInputs()) {
-        vecSend.push_back(make_pair(scriptChange, DARKSEND_COLLATERAL*4));
->>>>>>> origin/dirty-merge-dash-0.11.0
         nValueLeft -= DARKSEND_COLLATERAL*4;
     }
 
@@ -2987,7 +1773,6 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 
         // add each output up to 10 times until it can't be added again
         while(nValueLeft - v >= DARKSEND_COLLATERAL && nOutputs <= 10) {
-<<<<<<< HEAD
             CScript scriptDenom;
             CPubKey vchPubKey;
             //use a unique change address
@@ -2997,16 +1782,6 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
             reservekeyDenom.KeepKey();
 
             vecSend.push_back(make_pair(scriptDenom, v));
-=======
-            CScript scriptChange;
-            CPubKey vchPubKey;
-            //use a unique change address
-            assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-            scriptChange.SetDestination(vchPubKey.GetID());
-            reservekey.KeepKey();
-
-            vecSend.push_back(make_pair(scriptChange, v));
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             //increment outputs and subtract denomination amount
             nOutputs++;
@@ -3021,7 +1796,6 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
     // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 
     CCoinControl *coinControl=NULL;
-<<<<<<< HEAD
     bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
             nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOT1000IFMN);
     if(!success){
@@ -3041,20 +1815,6 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
         LogPrintf("CreateDenominated: CommitTransaction failed!\n");
 
     LogPrintf("CreateDenominated: tx %s\n", wtx.GetHash().GetHex());
-=======
-    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
-            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOTMN);
-    if(!success){
-        LogPrintf("CreateDenominated: Error - %s\n", strFail.c_str());
-        return false;
-    }
-
-    // use the same cachedLastSuccess as for DS mixinx to prevent race
-    if(pwalletMain->CommitTransaction(wtx, reservekey))
-        cachedLastSuccess = chainActive.Tip()->nHeight;
-
-    LogPrintf("CreateDenominated Success: tx %s\n", wtx.GetHash().GetHex().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     return true;
 }
@@ -3067,17 +1827,10 @@ bool CDarksendPool::IsCompatibleWithEntries(std::vector<CTxOut>& vout)
         LogPrintf(" IsCompatibleWithEntries %d %d\n", GetDenominations(vout), GetDenominations(v.vout));
 /*
         BOOST_FOREACH(CTxOut o1, vout)
-<<<<<<< HEAD
             LogPrintf(" vout 1 - %s\n", o1.ToString());
 
         BOOST_FOREACH(CTxOut o2, v.vout)
             LogPrintf(" vout 2 - %s\n", o2.ToString());
-=======
-            LogPrintf(" vout 1 - %s\n", o1.ToString().c_str());
-
-        BOOST_FOREACH(CTxOut o2, v.vout)
-            LogPrintf(" vout 2 - %s\n", o2.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
 */
         if(GetDenominations(vout) != GetDenominations(v.vout)) return false;
     }
@@ -3085,24 +1838,15 @@ bool CDarksendPool::IsCompatibleWithEntries(std::vector<CTxOut>& vout)
     return true;
 }
 
-<<<<<<< HEAD
 bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txCollateral, int& errorID)
-=======
-bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txCollateral, std::string& strReason)
->>>>>>> origin/dirty-merge-dash-0.11.0
 {
     if(nDenom == 0) return false;
 
     LogPrintf("CDarksendPool::IsCompatibleWithSession - sessionDenom %d sessionUsers %d\n", sessionDenom, sessionUsers);
 
     if (!unitTest && !IsCollateralValid(txCollateral)){
-<<<<<<< HEAD
         LogPrint("darksend", "CDarksendPool::IsCompatibleWithSession - collateral not valid!\n");
         errorID = ERR_INVALID_COLLATERAL;
-=======
-        if(fDebug) LogPrintf ("CDarksendPool::IsCompatibleWithSession - collateral not valid!\n");
-        strReason = _("Collateral not valid.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
@@ -3113,20 +1857,12 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
         sessionDenom = nDenom;
         sessionUsers++;
         lastTimeChanged = GetTimeMillis();
-<<<<<<< HEAD
-=======
-        entries.clear();
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         if(!unitTest){
             //broadcast that I'm accepting entries, only if it's the first entry through
             CDarksendQueue dsq;
             dsq.nDenom = nDenom;
-<<<<<<< HEAD
             dsq.vin = activeMasternode.vin;
-=======
-            dsq.vin = activeThrone.vin;
->>>>>>> origin/dirty-merge-dash-0.11.0
             dsq.time = GetTime();
             dsq.Sign();
             dsq.Relay();
@@ -3138,23 +1874,14 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
     }
 
     if((state != POOL_STATUS_ACCEPTING_ENTRIES && state != POOL_STATUS_QUEUE) || sessionUsers >= GetMaxPoolTransactions()){
-<<<<<<< HEAD
         if((state != POOL_STATUS_ACCEPTING_ENTRIES && state != POOL_STATUS_QUEUE)) errorID = ERR_MODE;
         if(sessionUsers >= GetMaxPoolTransactions()) errorID = ERR_QUEUE_FULL;
-=======
-        if((state != POOL_STATUS_ACCEPTING_ENTRIES && state != POOL_STATUS_QUEUE)) strReason = _("Incompatible mode.");
-        if(sessionUsers >= GetMaxPoolTransactions()) strReason = _("Throne queue is full.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         LogPrintf("CDarksendPool::IsCompatibleWithSession - incompatible mode, return false %d %d\n", state != POOL_STATUS_ACCEPTING_ENTRIES, sessionUsers >= GetMaxPoolTransactions());
         return false;
     }
 
     if(nDenom != sessionDenom) {
-<<<<<<< HEAD
         errorID = ERR_DENOM;
-=======
-        strReason = _("No matching denominations found for mixing.");
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
@@ -3211,11 +1938,7 @@ int CDarksendPool::GetDenominations(const std::vector<CTxDSOut>& vout){
 }
 
 // return a bitshifted integer representing the denominations in this list
-<<<<<<< HEAD
 int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fSingleRandomDenom){
-=======
-int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout){
->>>>>>> origin/dirty-merge-dash-0.11.0
     std::vector<pair<int64_t, int> > denomUsed;
 
     // make a list of denominations, with zero uses
@@ -3238,16 +1961,11 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout){
     int c = 0;
     // if the denomination is used, shift the bit on.
     // then move to the next
-<<<<<<< HEAD
     BOOST_FOREACH (PAIRTYPE(int64_t, int)& s, denomUsed) {
         int bit = (fSingleRandomDenom ? rand()%2 : 1) * s.second;
         denom |= bit << c++;
         if(fSingleRandomDenom && bit) break; // use just one random denomination
     }
-=======
-    BOOST_FOREACH (PAIRTYPE(int64_t, int)& s, denomUsed)
-        denom |= s.second << c++;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Function returns as follows:
     //
@@ -3266,22 +1984,11 @@ int CDarksendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount){
 
     // Make outputs by looping through denominations, from small to large
     BOOST_REVERSE_FOREACH(int64_t v, vecAmount){
-<<<<<<< HEAD
         CTxOut o(v, e);
         vout1.push_back(o);
     }
 
     return GetDenominations(vout1, true);
-=======
-        int nOutputs = 0;
-
-        CTxOut o(v, e);
-        vout1.push_back(o);
-        nOutputs++;
-    }
-
-    return GetDenominations(vout1);
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
@@ -3313,7 +2020,6 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
         LogPrintf("GetDenominationsByAmount --- %d nOutputs %d\n", v, nOutputs);
     }
 
-<<<<<<< HEAD
     return GetDenominations(vout1);
 }
 
@@ -3344,34 +2050,17 @@ std::string CDarksendPool::GetMessageByID(int messageID) {
     default:
         return "";
     }
-=======
-    //add non-denom left overs as change
-    if(nValueLeft > 0){
-        CTxOut o(nValueLeft, e);
-        vout1.push_back(o);
-    }
-
-    return GetDenominations(vout1);
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     CScript payee2;
-<<<<<<< HEAD
     payee2 = GetScriptForDestination(pubkey.GetID());
-=======
-    payee2.SetDestination(pubkey.GetID());
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     CTransaction txVin;
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)){
         BOOST_FOREACH(CTxOut out, txVin.vout){
-<<<<<<< HEAD
             if(out.nValue == 1000*COIN){
-=======
-            if(out.nValue == 10000*COIN){
->>>>>>> origin/dirty-merge-dash-0.11.0
                 if(out.scriptPubKey == payee2) return true;
             }
         }
@@ -3381,11 +2070,7 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
 }
 
 bool CDarkSendSigner::SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey){
-<<<<<<< HEAD
     CBitcoinSecret vchSecret;
-=======
-    CCrowncoinSecret vchSecret;
->>>>>>> origin/dirty-merge-dash-0.11.0
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) {
@@ -3425,7 +2110,6 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSi
         return false;
     }
 
-<<<<<<< HEAD
     if (pubkey2.GetID() != pubkey.GetID()) {
         errorMessage = strprintf("keys don't match - input: %s, recovered: %s, message: %s, sig: %s\n",
                     pubkey.GetID().ToString(), pubkey2.GetID().ToString(), strMessage,
@@ -3434,21 +2118,11 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSi
     }
 
     return true;
-=======
-    if (fDebug && pubkey2.GetID() != pubkey.GetID())
-        LogPrintf("CDarkSendSigner::VerifyMessage -- keys don't match: %s %s", pubkey2.GetID().ToString(), pubkey.GetID().ToString());
-
-    return (pubkey2.GetID() == pubkey.GetID());
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 bool CDarksendQueue::Sign()
 {
-<<<<<<< HEAD
     if(!fMasterNode) return false;
-=======
-    if(!fThroNe) return false;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(time) + boost::lexical_cast<std::string>(ready);
 
@@ -3456,15 +2130,9 @@ bool CDarksendQueue::Sign()
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-<<<<<<< HEAD
     if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CDarksendQueue():Relay - ERROR: Invalid Masternodeprivkey: '%s'\n", errorMessage);
-=======
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
-    {
-        LogPrintf("CDarksendQueue():Relay - ERROR: Invalid Throneprivkey: '%s'\n", errorMessage.c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
         return false;
     }
 
@@ -3495,11 +2163,7 @@ bool CDarksendQueue::Relay()
 
 bool CDarksendQueue::CheckSignature()
 {
-<<<<<<< HEAD
     CMasternode* pmn = mnodeman.Find(vin);
-=======
-    CThrone* pmn = mnodeman.Find(vin);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     if(pmn != NULL)
     {
@@ -3507,11 +2171,7 @@ bool CDarksendQueue::CheckSignature()
 
         std::string errorMessage = "";
         if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-<<<<<<< HEAD
             return error("CDarksendQueue::CheckSignature() - Got bad Masternode address signature %s \n", vin.ToString().c_str());
-=======
-            return error("CDarksendQueue::CheckSignature() - Got bad Throne address signature %s \n", vin.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
 
         return true;
@@ -3532,10 +2192,7 @@ void CDarksendPool::RelayFinalTransaction(const int sessionID, const CTransactio
 
 void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout)
 {
-<<<<<<< HEAD
     if(!pSubmittedToMasternode) return;
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     std::vector<CTxIn> vin2;
     std::vector<CTxOut> vout2;
@@ -3546,23 +2203,13 @@ void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmo
     BOOST_FOREACH(CTxDSOut out, vout)
         vout2.push_back(out);
 
-<<<<<<< HEAD
     CNode* pnode = FindNode(pSubmittedToMasternode->addr);
     if(pnode != NULL) {
         LogPrintf("RelayIn - found master, relaying message - %s \n", pnode->addr.ToString());
-=======
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        if(!pSubmittedToThrone) return;
-        if((CNetAddr)darkSendPool.pSubmittedToThrone->addr != (CNetAddr)pnode->addr) continue;
-        LogPrintf("RelayIn - found master, relaying message - %s \n", pnode->addr.ToString().c_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
         pnode->PushMessage("dsi", vin2, nAmount, txCollateral, vout2);
     }
 }
 
-<<<<<<< HEAD
 void CDarksendPool::RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const int errorID)
 {
     LOCK(cs_vNodes);
@@ -3575,36 +2222,17 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
         pnode->PushMessage("dsc", sessionID, error, errorID);
-=======
-void CDarksendPool::RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const std::string error)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dssu", sessionID, newState, newEntriesCount, newAccepted, error);
-}
-
-void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dsc", sessionID, error, errorMessage);
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 //TODO: Rename/move to core
 void ThreadCheckDarkSendPool()
 {
-<<<<<<< HEAD
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
-=======
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("dash-darksend");
 
     unsigned int c = 0;
-<<<<<<< HEAD
 
     while (true)
     {
@@ -3641,75 +2269,3 @@ void ThreadCheckDarkSendPool()
         }
     }
 }
-=======
-    std::string errorMessage;
-
-    while (true)
-    {
-        c++;
-
-        MilliSleep(1000);
-        //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
-
-        darkSendPool.CheckTimeout();
-        darkSendPool.CheckForCompleteQueue();
-
-        if(c % 60 == 0)
-        {
-            LOCK(cs_main);
-            /*
-                cs_main is required for doing CThrone.Check because something
-                is modifying the coins view without a mempool lock. It causes
-                segfaults from this code without the cs_main lock.
-            */
-            mnodeman.CheckAndRemove();
-            mnodeman.ProcessThroneConnections();
-            thronePayments.CleanPaymentList();
-            CleanTransactionLocksList();
-        }
-
-        if(c % THRONE_PING_SECONDS == 0) activeThrone.ManageStatus();
-
-        if(c % THRONES_DUMP_SECONDS == 0) DumpThrones();
-
-        //try to sync the Throne list and payment list every 5 seconds from at least 3 nodes
-        if(c % 5 == 0 && RequestedThroNeList < 3){
-            bool fIsInitialDownload = IsInitialBlockDownload();
-            if(!fIsInitialDownload) {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                {
-                    if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
-
-                        //keep track of who we've asked for the list
-                        if(pnode->HasFulfilledRequest("mnsync")) continue;
-                        pnode->FulfilledRequest("mnsync");
-
-                        LogPrintf("Successfully synced, asking for Throne list and payment list\n");
-
-                        //request full mn list only if Thrones.dat was updated quite a long time ago
-                        mnodeman.DsegUpdate(pnode);
-
-                        pnode->PushMessage("mnget"); //sync payees
-                        pnode->PushMessage("getsporks"); //get current network sporks
-                        RequestedThroNeList++;
-                    }
-                }
-            }
-        }
-
-        if(c % 60 == 0){
-            //if we've used 1/5 of the Throne list, then clear the list.
-            if((int)vecThronesUsed.size() > (int)mnodeman.size() / 5)
-                vecThronesUsed.clear();
-        }
-
-        if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 6 == 0){
-            darkSendPool.DoAutomaticDenominating();
-        }
-    }
-}
-
-
-
->>>>>>> origin/dirty-merge-dash-0.11.0

@@ -2,13 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-<<<<<<< HEAD
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
-=======
-#ifndef _CROWNCOIN_ADDRMAN
-#define _CROWNCOIN_ADDRMAN 1
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include "netbase.h"
 #include "protocol.h"

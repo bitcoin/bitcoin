@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Crowncoin developers
+// Copyright (c) 2011-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,12 +8,12 @@
 #include <QFrame>
 #include <QMap>
 
-class CrowncoinGUI;
+class BitcoinGUI;
 class ClientModel;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
-class ThroneManager;
+
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
@@ -23,7 +23,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(CrowncoinGUI *_gui = 0);
+    explicit WalletFrame(BitcoinGUI *_gui = 0);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
@@ -39,7 +39,7 @@ public:
 
 private:
     QStackedWidget *walletStack;
-    CrowncoinGUI *gui;
+    BitcoinGUI *gui;
     ClientModel *clientModel;
     QMap<QString, WalletView*> mapWalletViews;
 
@@ -68,7 +68,6 @@ public slots:
     void backupWallet();
     /** Change encrypted wallet passphrase */
     void changePassphrase();
-    void gotoThroneManagerPage();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
     /** Lock wallet */

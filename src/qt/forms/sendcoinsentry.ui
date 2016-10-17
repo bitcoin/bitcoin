@@ -51,11 +51,7 @@
       <item>
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
-<<<<<<< HEAD
          <string>The Dash address to send the payment to</string>
-=======
-         <string>The address or name to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L or crowncoin)</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
         </property>
        </widget>
       </item>
@@ -68,11 +64,7 @@
          <string/>
         </property>
         <property name="icon">
-<<<<<<< HEAD
          <iconset resource="../dash.qrc">
-=======
-         <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
         </property>
         <property name="shortcut">
@@ -89,11 +81,7 @@
          <string/>
         </property>
         <property name="icon">
-<<<<<<< HEAD
          <iconset resource="../dash.qrc">
-=======
-         <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
         </property>
         <property name="shortcut">
@@ -110,11 +98,7 @@
          <string/>
         </property>
         <property name="icon">
-<<<<<<< HEAD
          <iconset resource="../dash.qrc">
-=======
-         <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -155,7 +139,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="CrowncoinAmountField" name="payAmount"/>
+     <widget class="BitcoinAmountField" name="payAmount"/>
     </item>
     <item row="3" column="0">
      <widget class="QLabel" name="messageLabel">
@@ -170,11 +154,7 @@
     <item row="3" column="1">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
-<<<<<<< HEAD
        <string>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</string>
-=======
-       <string>A message that was attached to the crowncoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crowncoin network.</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
       </property>
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
@@ -642,11 +622,7 @@
          <string/>
         </property>
         <property name="icon">
-<<<<<<< HEAD
          <iconset resource="../dash.qrc">
-=======
-         <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -684,7 +660,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="CrowncoinAmountField" name="payAmount_is">
+     <widget class="BitcoinAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1182,11 +1158,7 @@
          <string/>
         </property>
         <property name="icon">
-<<<<<<< HEAD
          <iconset resource="../dash.qrc">
-=======
-         <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -1224,7 +1196,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="CrowncoinAmountField" name="payAmount_s">
+     <widget class="BitcoinAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1240,9 +1212,9 @@
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>CrowncoinAmountField</class>
+   <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>crowncoinamountfield.h</header>
+   <header>bitcoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1258,11 +1230,7 @@
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>
-<<<<<<< HEAD
   <include location="../dash.qrc"/>
-=======
-  <include location="../crowncoin.qrc"/>
->>>>>>> origin/dirty-merge-dash-0.11.0
  </resources>
  <connections/>
 </ui>

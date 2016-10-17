@@ -60,11 +60,7 @@
         <string>&amp;New</string>
        </property>
        <property name="icon">
-<<<<<<< HEAD
         <iconset resource="../dash.qrc">
-=======
-        <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -81,11 +77,7 @@
         <string>&amp;Copy</string>
        </property>
        <property name="icon">
-<<<<<<< HEAD
         <iconset resource="../dash.qrc">
-=======
-        <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
        </property>
        <property name="autoDefault">
@@ -102,11 +94,7 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-<<<<<<< HEAD
         <iconset resource="../dash.qrc">
-=======
-        <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -136,11 +124,7 @@
         <string>&amp;Export</string>
        </property>
        <property name="icon">
-<<<<<<< HEAD
         <iconset resource="../dash.qrc">
-=======
-        <iconset resource="../crowncoin.qrc">
->>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
        </property>
        <property name="autoDefault">
@@ -169,11 +153,7 @@
   </layout>
  </widget>
  <resources>
-<<<<<<< HEAD
   <include location="../dash.qrc"/>
-=======
-  <include location="../crowncoin.qrc"/>
->>>>>>> origin/dirty-merge-dash-0.11.0
  </resources>
  <connections/>
 </ui>

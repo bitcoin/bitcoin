@@ -836,11 +836,7 @@ if config.dmg is not None:
                 items_positions.append(itemscript.substitute(params))
 
         params = {
-<<<<<<< HEAD
             "disk" : "Dash-Qt",
-=======
-            "disk" : "Crowncoin-Qt",
->>>>>>> origin/dirty-merge-dash-0.11.0
             "window_bounds" : "300,300,800,620",
             "icon_size" : "96",
             "background_commands" : "",

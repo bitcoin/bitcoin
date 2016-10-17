@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Crowncoin developers
+// Copyright (c) 2011-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@ namespace Ui {
 }
 
 /**
- * A single entry in the dialog for sending crowncoins.
+ * A single entry in the dialog for sending bitcoins.
  * Stacked widget, with different UIs for payment requests
  * with a strong payee identity.
  */
@@ -54,7 +54,7 @@ signals:
 
 private slots:
     void deleteClicked();
-    void on_payTo_textChanged(const QString &value);
+    void on_payTo_textChanged(const QString &address);
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
@@ -64,7 +64,7 @@ private:
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
 
-    bool updateLabel();
+    bool updateLabel(const QString &address);
 };
 
 #endif // BITCOIN_QT_SENDCOINSENTRY_H

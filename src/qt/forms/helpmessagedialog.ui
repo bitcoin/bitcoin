@@ -16,11 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-<<<<<<< HEAD
    <string notr="true">Dash Core - Command-line options</string>
-=======
-   <string>Crowncoin - Command-line options</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
@@ -32,11 +28,7 @@
       </sizepolicy>
      </property>
      <property name="pixmap">
-<<<<<<< HEAD
       <pixmap resource="../dash.qrc">:/images/about</pixmap>
-=======
-      <pixmap resource="../crowncoin.qrc">:/images/about</pixmap>
->>>>>>> origin/dirty-merge-dash-0.11.0
      </property>
     </widget>
    </item>
@@ -95,11 +87,7 @@
   </layout>
  </widget>
  <resources>
-<<<<<<< HEAD
   <include location="../dash.qrc"/>
-=======
-  <include location="../crowncoin.qrc"/>
->>>>>>> origin/dirty-merge-dash-0.11.0
  </resources>
  <connections>
   <connection>

@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,13 +17,8 @@
 #include <QMessageBox>
 
 /* Minimum free space (in bytes) needed for data directory */
-<<<<<<< HEAD
 static const uint64_t GB_BYTES = 1000000000LL;
 static const uint64_t BLOCK_CHAIN_SIZE = 1LL * GB_BYTES;
-=======
-static const uint64_t MB_BYTES = 1000000LL;
-static const uint64_t BLOCK_CHAIN_SIZE = 20LL * MB_BYTES;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
@@ -122,7 +113,7 @@ Intro::Intro(QWidget *parent) :
     signalled(false)
 {
     ui->setupUi(this);
-    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(BLOCK_CHAIN_SIZE/MB_BYTES));
+    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(BLOCK_CHAIN_SIZE/GB_BYTES));
     startThread();
 }
 
@@ -177,7 +168,7 @@ void Intro::pickDataDirectory()
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
         intro.setDataDirectory(dataDir);
-        intro.setWindowIcon(QIcon(":icons/crowncoin"));
+        intro.setWindowIcon(QIcon(":icons/bitcoin"));
 
         while(true)
         {
@@ -191,13 +182,8 @@ void Intro::pickDataDirectory()
                 TryCreateDirectory(GUIUtil::qstringToBoostPath(dataDir));
                 break;
             } catch(fs::filesystem_error &e) {
-<<<<<<< HEAD
                 QMessageBox::critical(0, tr("Dash Core"),
                     tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
-=======
-                QMessageBox::critical(0, tr("Crowncoin"),
-                    tr("Error: Specified data directory \"%1\" can not be created.").arg(dataDir));
->>>>>>> origin/dirty-merge-dash-0.11.0
                 /* fall through, back to choosing screen */
             }
         }
@@ -205,13 +191,8 @@ void Intro::pickDataDirectory()
         settings.setValue("strDataDir", dataDir);
     }
     /* Only override -datadir if different from the default, to make it possible to
-<<<<<<< HEAD
      * override -datadir in the dash.conf file in the default data directory
      * (to be consistent with dashd behavior)
-=======
-     * override -datadir in the crowncoin.conf file in the default data directory
-     * (to be consistent with crowncoind behavior)
->>>>>>> origin/dirty-merge-dash-0.11.0
      */
     if(dataDir != getDefaultDataDirectory())
         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
@@ -235,17 +216,10 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
     {
         ui->freeSpace->setText("");
     } else {
-<<<<<<< HEAD
         QString freeString = tr("%1 GB of free space available").arg(bytesAvailable/GB_BYTES);
         if(bytesAvailable < BLOCK_CHAIN_SIZE)
         {
             freeString += " " + tr("(of %1 GB needed)").arg(BLOCK_CHAIN_SIZE/GB_BYTES);
-=======
-        QString freeString = QString::number(bytesAvailable/MB_BYTES) + tr("MB of free space available");
-        if(bytesAvailable < BLOCK_CHAIN_SIZE)
-        {
-            freeString += " " + tr("(of %1MB needed)").arg(BLOCK_CHAIN_SIZE/MB_BYTES);
->>>>>>> origin/dirty-merge-dash-0.11.0
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
         } else {
             ui->freeSpace->setStyleSheet("");

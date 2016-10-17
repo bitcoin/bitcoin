@@ -1,15 +1,11 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "transactiondesc.h"
 
-#include "crowncoinunits.h"
+#include "bitcoinunits.h"
 #include "guiutil.h"
 #include "paymentserver.h"
 #include "transactionrecord.h"
@@ -140,7 +136,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 CTxDestination address = CBitcoinAddress(rec->address).Get();
                 if (wallet->mapAddressBook.count(address))
                 {
-<<<<<<< HEAD
                     strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
                     strHTML += "<b>" + tr("To") + ":</b> ";
                     strHTML += GUIUtil::HtmlEscape(rec->address);
@@ -150,24 +145,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     else
                         strHTML += " (" + addressOwned + ")";
                     strHTML += "<br>";
-=======
-                    CTxDestination address;
-                    if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
-                    {
-                        if (wallet->mapAddressBook.count(address))
-                        {
-                            strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
-                            strHTML += "<b>" + tr("To") + ":</b> ";
-                            strHTML += GUIUtil::HtmlEscape(CCrowncoinAddress(address).ToString());
-                            if (!wallet->mapAddressBook[address].name.empty())
-                                strHTML += " (" + tr("own address") + ", " + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + ")";
-                            else
-                                strHTML += " (" + tr("own address") + ")";
-                            strHTML += "<br>";
-                        }
-                    }
-                    break;
->>>>>>> origin/dirty-merge-dash-0.11.0
                 }
             }
         }
@@ -181,7 +158,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         // Online transaction
         std::string strAddress = wtx.mapValue["to"];
         strHTML += "<b>" + tr("To") + ":</b> ";
-        CTxDestination dest = CCrowncoinAddress(strAddress).Get();
+        CTxDestination dest = CBitcoinAddress(strAddress).Get();
         if (wallet->mapAddressBook.count(dest) && !wallet->mapAddressBook[dest].name.empty())
             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[dest].name) + " ";
         strHTML += GUIUtil::HtmlEscape(strAddress) + "<br>";
@@ -200,11 +177,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             nUnmatured += wallet->GetCredit(txout, ISMINE_ALL);
         strHTML += "<b>" + tr("Credit") + ":</b> ";
         if (wtx.IsInMainChain())
-<<<<<<< HEAD
             strHTML += BitcoinUnits::formatHtmlWithUnit(unit, nUnmatured)+ " (" + tr("matures in %n more block(s)", "", wtx.GetBlocksToMaturity()) + ")";
-=======
-            strHTML += CrowncoinUnits::formatWithUnit(unit, nUnmatured)+ " (" + tr("matures in %n more block(s)", "", wtx.GetBlocksToMaturity()) + ")";
->>>>>>> origin/dirty-merge-dash-0.11.0
         else
             strHTML += "(" + tr("not accepted") + ")";
         strHTML += "<br>";
@@ -214,11 +187,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         //
         // Credit
         //
-<<<<<<< HEAD
         strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet) + "<br>";
-=======
-        strHTML += "<b>" + tr("Credit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, nNet) + "<br>";
->>>>>>> origin/dirty-merge-dash-0.11.0
     }
     else
     {
@@ -260,51 +229,32 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                         strHTML += "<b>" + tr("To") + ":</b> ";
                         if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
                             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-<<<<<<< HEAD
                         strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
                         if(toSelf == ISMINE_SPENDABLE)
                             strHTML += " (own address)";
                         else if(toSelf == ISMINE_WATCH_ONLY)
                             strHTML += " (watch-only)";
-=======
-                        strHTML += GUIUtil::HtmlEscape(CCrowncoinAddress(address).ToString());
->>>>>>> origin/dirty-merge-dash-0.11.0
                         strHTML += "<br>";
                     }
                 }
 
-<<<<<<< HEAD
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -txout.nValue) + "<br>";
                 if(toSelf)
                     strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, txout.nValue) + "<br>";
-=======
-                strHTML += "<b>" + tr("Debit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, -txout.nValue) + "<br>";
->>>>>>> origin/dirty-merge-dash-0.11.0
             }
 
             if (fAllToMe)
             {
                 // Payment to self
-<<<<<<< HEAD
                 CAmount nChange = wtx.GetChange();
                 CAmount nValue = nCredit - nChange;
                 strHTML += "<b>" + tr("Total debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nValue) + "<br>";
                 strHTML += "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
-=======
-                int64_t nChange = wtx.GetChange();
-                int64_t nValue = nCredit - nChange;
-                strHTML += "<b>" + tr("Debit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, -nValue) + "<br>";
-                strHTML += "<b>" + tr("Credit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, nValue) + "<br>";
->>>>>>> origin/dirty-merge-dash-0.11.0
             }
 
             CAmount nTxFee = nDebit - wtx.GetValueOut();
             if (nTxFee > 0)
-<<<<<<< HEAD
                 strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
-=======
-                strHTML += "<b>" + tr("Transaction fee") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, -nTxFee) + "<br>";
->>>>>>> origin/dirty-merge-dash-0.11.0
         }
         else
         {
@@ -313,7 +263,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             //
             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
                 if (wallet->IsMine(txin))
-<<<<<<< HEAD
                     strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (wallet->IsMine(txout))
@@ -322,16 +271,6 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     }
 
     strHTML += "<b>" + tr("Net amount") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nNet, true) + "<br>";
-=======
-                    strHTML += "<b>" + tr("Debit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, -wallet->GetDebit(txin)) + "<br>";
-            BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-                if (wallet->IsMine(txout))
-                    strHTML += "<b>" + tr("Credit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, wallet->GetCredit(txout)) + "<br>";
-        }
-    }
-
-    strHTML += "<b>" + tr("Net amount") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, nNet, true) + "<br>";
->>>>>>> origin/dirty-merge-dash-0.11.0
 
     //
     // Message
@@ -343,11 +282,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + TransactionRecord::formatSubTxId(wtx.GetHash(), rec->idx) + "<br>";
 
-<<<<<<< HEAD
     // Message from normal dash:URI (dash:XyZ...?message=example)
-=======
-    // Message from normal crowncoin:URI (crowncoin:123...?message=example)
->>>>>>> origin/dirty-merge-dash-0.11.0
     foreach (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
@@ -381,17 +316,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         strHTML += "<hr><br>" + tr("Debug information") + "<br><br>";
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
             if(wallet->IsMine(txin))
-<<<<<<< HEAD
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -wallet->GetDebit(txin, ISMINE_ALL)) + "<br>";
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
             if(wallet->IsMine(txout))
                 strHTML += "<b>" + tr("Credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, wallet->GetCredit(txout, ISMINE_ALL)) + "<br>";
-=======
-                strHTML += "<b>" + tr("Debit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, -wallet->GetDebit(txin)) + "<br>";
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-            if(wallet->IsMine(txout))
-                strHTML += "<b>" + tr("Credit") + ":</b> " + CrowncoinUnits::formatWithUnit(unit, wallet->GetCredit(txout)) + "<br>";
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         strHTML += "<br><b>" + tr("Transaction") + ":</b><br>";
         strHTML += GUIUtil::HtmlEscape(wtx.ToString(), true);
@@ -415,16 +343,11 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     {
                         if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
                             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-                        strHTML += QString::fromStdString(CCrowncoinAddress(address).ToString());
+                        strHTML += QString::fromStdString(CBitcoinAddress(address).ToString());
                     }
-<<<<<<< HEAD
                     strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, vout.nValue);
                     strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false"));
                     strHTML = strHTML + " IsWatchOnly=" + (wallet->IsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false")) + "</li>";
-=======
-                    strHTML = strHTML + " " + tr("Amount") + "=" + CrowncoinUnits::formatWithUnit(unit, vout.nValue);
-                    strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) ? tr("true") : tr("false")) + "</li>";
->>>>>>> origin/dirty-merge-dash-0.11.0
                 }
             }
         }

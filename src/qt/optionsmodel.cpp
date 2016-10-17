@@ -1,23 +1,15 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-<<<<<<< HEAD
 #include "config/dash-config.h"
-=======
-#include "crowncoin-config.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
 #include "optionsmodel.h"
 
-#include "crowncoinunits.h"
+#include "bitcoinunits.h"
 #include "guiutil.h"
 
 #include "amount.h"
@@ -68,11 +60,7 @@ void OptionsModel::Init()
 
     // Display
     if (!settings.contains("nDisplayUnit"))
-<<<<<<< HEAD
         settings.setValue("nDisplayUnit", BitcoinUnits::DASH);
-=======
-        settings.setValue("nDisplayUnit", CrowncoinUnits::CRW);
->>>>>>> origin/dirty-merge-dash-0.11.0
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("strThirdPartyTxUrls"))

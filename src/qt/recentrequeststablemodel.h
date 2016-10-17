@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Crowncoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,11 +53,7 @@ private:
     Qt::SortOrder order;
 };
 
-<<<<<<< HEAD
 /** Model for list of recently generated payment requests / dash: URIs.
-=======
-/** Model for list of recently generated payment requests / crowncoin: URIs.
->>>>>>> origin/dirty-merge-dash-0.11.0
  * Part of wallet model.
  */
 class RecentRequestsTableModel: public QAbstractTableModel

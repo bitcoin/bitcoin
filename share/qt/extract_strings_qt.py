@@ -9,11 +9,7 @@ import operator
 import os
 import sys
 
-<<<<<<< HEAD
 OUT_CPP="qt/dashstrings.cpp"
-=======
-OUT_CPP="src/qt/crowncoinstrings.cpp"
->>>>>>> origin/dirty-merge-dash-0.11.0
 EMPTY=['""']
 
 def parse_po(text):
@@ -73,18 +69,10 @@ f.write("""
 #define UNUSED
 #endif
 """)
-<<<<<<< HEAD
 f.write('static const char UNUSED *dash_strings[] = {\n')
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:
         f.write('QT_TRANSLATE_NOOP("dash-core", %s),\n' % ('\n'.join(msgid)))
-=======
-f.write('static const char UNUSED *crowncoin_strings[] = {\n')
-messages.sort(key=operator.itemgetter(0))
-for (msgid, msgstr) in messages:
-    if msgid != EMPTY:
-        f.write('QT_TRANSLATE_NOOP("crowncoin-core", %s),\n' % ('\n'.join(msgid)))
->>>>>>> origin/dirty-merge-dash-0.11.0
 f.write('};\n')
 f.close()

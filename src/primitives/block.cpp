@@ -5,13 +5,23 @@
 
 #include "primitives/block.h"
 
+#include "auxpow.h"
 #include "hash.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
+#include "crypto/common.h"
 
-uint256 CBlockHeader::GetHash() const
+void CBlockHeader::SetAuxpow (CAuxPow* apow)
 {
-    return HashX11(BEGIN(nVersion), END(nNonce));
+    if (apow)
+    {
+        auxpow.reset(apow);
+        nVersion.SetAuxpow(true);
+    } else
+    {
+        auxpow.reset();
+        nVersion.SetAuxpow(false);
+    }
 }
 
 uint256 CBlock::BuildMerkleTree(bool* fMutated) const
@@ -113,7 +123,7 @@ std::string CBlock::ToString() const
     std::stringstream s;
     s << strprintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
         GetHash().ToString(),
-        nVersion,
+        nVersion.GetFullVersion(),
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,

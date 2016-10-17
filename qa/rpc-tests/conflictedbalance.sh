@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-<<<<<<< HEAD
 # Copyright (c) 2014 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-=======
-# Copyright (c) 2014 The Crowncoin developers
-# Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Test marking of spent outputs
@@ -29,13 +24,8 @@ fi
 
 set -f
 
-<<<<<<< HEAD
 BITCOIND=${BITCOIND:-${1}/bitcoind}
 CLI=${BITCOINCLI:-${1}/bitcoin-cli}
-=======
-CROWNCOIND=${1}/crowncoind
-CLI=${1}/crowncoin-cli
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 DIR="${BASH_SOURCE%/*}"
 SENDANDWAIT="${DIR}/send.sh"
@@ -50,13 +40,13 @@ D=$(mktemp -d test.XXXXX)
 D1=${D}/node1
 CreateDataDir $D1 port=11000 rpcport=11001
 B1ARGS="-datadir=$D1 -debug=mempool"
-$CROWNCOIND $B1ARGS &
+$BITCOIND $B1ARGS &
 B1PID=$!
 
 D2=${D}/node2
 CreateDataDir $D2 port=11010 rpcport=11011
 B2ARGS="-datadir=$D2 -debug=mempool"
-$CROWNCOIND $B2ARGS &
+$BITCOIND $B2ARGS &
 B2PID=$!
 
 # Wait until all four nodes are at the same block number
@@ -107,7 +97,7 @@ CheckBalance "$B2ARGS" 0
 # restart B2 with no connection
 $CLI $B2ARGS stop > /dev/null 2>&1
 wait $B2PID
-$CROWNCOIND $B2ARGS &
+$BITCOIND $B2ARGS &
 B2PID=$!
 
 B1ADDRESS=$( $CLI $B1ARGS getnewaddress )

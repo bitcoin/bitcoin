@@ -1,19 +1,15 @@
-<<<<<<< HEAD
 # Copyright (c) 2014 The Bitcoin Core developers
 # Copyright (c) 2014-2015 The Dash developers
-=======
-# Copyright (c) 2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Helpful routines for regression testing
 #
 
-# Add python-crowncoinrpc to module search path:
+# Add python-bitcoinrpc to module search path:
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-crowncoinrpc"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
 
 from decimal import Decimal, ROUND_DOWN
 import json
@@ -23,7 +19,7 @@ import subprocess
 import time
 import re
 
-from crowncoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
 def p2p_port(n):
@@ -32,7 +28,7 @@ def rpc_port(n):
     return 12000 + n + os.getpid()%999
 
 def check_json_precision():
-    """Make sure json library being used does not lose precision converting CRW values"""
+    """Make sure json library being used does not lose precision converting BTC values"""
     n = Decimal("20000000.00000003")
     satoshis = int(json.loads(json.dumps(float(n)))*1.0e8)
     if satoshis != 2000000000000003:
@@ -63,7 +59,6 @@ def sync_mempools(rpc_connections):
             break
         time.sleep(1)
 
-<<<<<<< HEAD
 bitcoind_processes = {}
 
 def initialize_datadir(dirname, n):
@@ -77,24 +72,16 @@ def initialize_datadir(dirname, n):
         f.write("port="+str(p2p_port(n))+"\n");
         f.write("rpcport="+str(rpc_port(n))+"\n");
     return datadir
-=======
-crowncoind_processes = []
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 def initialize_chain(test_dir):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
-<<<<<<< HEAD
     dashd and dash-cli must be in search path.
-=======
-    crowncoind and crowncoin-cli must be in search path.
->>>>>>> origin/dirty-merge-dash-0.11.0
     """
 
     if not os.path.isdir(os.path.join("cache", "node0")):
         devnull = open("/dev/null", "w+")
-<<<<<<< HEAD
         # Create cache directories, run dashds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
@@ -103,23 +90,6 @@ def initialize_chain(test_dir):
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
             subprocess.check_call([ os.getenv("BITCOINCLI", "dash-cli"), "-datadir="+datadir,
-=======
-        # Create cache directories, run crowncoinds:
-        for i in range(4):
-            datadir = os.path.join("cache", "node"+str(i))
-            os.makedirs(datadir)
-            with open(os.path.join(datadir, "crowncoin.conf"), 'w') as f:
-                f.write("regtest=1\n");
-                f.write("rpcuser=rt\n");
-                f.write("rpcpassword=rt\n");
-                f.write("port="+str(START_P2P_PORT+i)+"\n");
-                f.write("rpcport="+str(START_RPC_PORT+i)+"\n");
-            args = [ "crowncoind", "-keypool=1", "-datadir="+datadir ]
-            if i > 0:
-                args.append("-connect=127.0.0.1:"+str(START_P2P_PORT))
-            crowncoind_processes.append(subprocess.Popen(args))
-            subprocess.check_call([ "crowncoin-cli", "-datadir="+datadir,
->>>>>>> origin/dirty-merge-dash-0.11.0
                                     "-rpcwait", "getblockcount"], stdout=devnull)
         devnull.close()
         rpcs = []
@@ -147,7 +117,7 @@ def initialize_chain(test_dir):
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
-        wait_crowncoinds()
+        wait_bitcoinds()
         for i in range(4):
             os.remove(log_filename("cache", i, "debug.log"))
             os.remove(log_filename("cache", i, "db.log"))
@@ -160,7 +130,6 @@ def initialize_chain(test_dir):
         shutil.copytree(from_dir, to_dir)
         initialize_datadir(test_dir, i) # Overwrite port/rpcport in dash.conf
 
-<<<<<<< HEAD
 def initialize_chain_clean(test_dir, num_nodes):
     """
     Create an empty blockchain and num_nodes wallets.
@@ -202,17 +171,6 @@ def start_node(i, dirname, extra_args=None, rpchost=None):
     subprocess.check_call([ os.getenv("BITCOINCLI", "dash-cli"), "-datadir="+datadir] +
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)
-=======
-def start_nodes(num_nodes, dir):
-    # Start crowncoinds, and wait for RPC interface to be up and running:
-    devnull = open("/dev/null", "w+")
-    for i in range(num_nodes):
-        datadir = os.path.join(dir, "node"+str(i))
-        args = [ "crowncoind", "-datadir="+datadir ]
-        crowncoind_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "crowncoin-cli", "-datadir="+datadir,
-                                  "-rpcwait", "getblockcount"], stdout=devnull)
->>>>>>> origin/dirty-merge-dash-0.11.0
     devnull.close()
     url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
     proxy = AuthServiceProxy(url)
@@ -239,7 +197,6 @@ def stop_nodes(nodes):
         node.stop()
     del nodes[:] # Emptying array closes connections as a side effect
 
-<<<<<<< HEAD
 def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
@@ -249,13 +206,6 @@ def wait_bitcoinds():
     for bitcoind in bitcoind_processes.values():
         bitcoind.wait()
     bitcoind_processes.clear()
-=======
-def wait_crowncoinds():
-    # Wait for all crowncoinds to cleanly exit
-    for crowncoind in crowncoind_processes:
-        crowncoind.wait()
-    del crowncoind_processes[:]
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))

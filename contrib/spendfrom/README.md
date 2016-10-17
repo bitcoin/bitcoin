@@ -7,11 +7,7 @@ address (or addresses).
 Depends on [jsonrpc](http://json-rpc.org/).
 
 	spendfrom.py --from=FROMADDRESS1[,FROMADDRESS2] --to=TOADDRESS --amount=amount \
-<<<<<<< HEAD
 	             --fee=fee --datadir=/path/to/.dash --testnet --dry_run
-=======
-	             --fee=fee --datadir=/path/to/.crowncoin --testnet --dry_run
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 With no arguments, outputs a list of amounts associated with addresses.
 
@@ -20,11 +16,7 @@ With arguments, sends coins received by the `FROMADDRESS` addresses to the `TOAD
 ### Notes ###
 
 - You may explicitly specify how much fee to pay (a fee more than 1% of the amount
-<<<<<<< HEAD
 will fail,  though, to prevent dash-losing accidents). Spendfrom may fail if
-=======
-will fail,  though, to prevent crowncoin-losing accidents). Spendfrom may fail if
->>>>>>> origin/dirty-merge-dash-0.11.0
 it thinks the transaction would never be confirmed (if the amount being sent is
 too small, or if the transaction is too many bytes for the fee).
 

@@ -20,11 +20,7 @@
       <string notr="true">QLabel { font-style:italic; }</string>
      </property>
      <property name="text">
-<<<<<<< HEAD
       <string>Welcome to Dash Core.</string>
-=======
-      <string>Welcome to Crowncoin.</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -50,11 +46,7 @@
    <item>
     <widget class="QLabel" name="label_4">
      <property name="text">
-<<<<<<< HEAD
       <string>As this is the first time the program is launched, you can choose where Dash Core will store its data.</string>
-=======
-      <string>As this is the first time the program is launched, you can choose where Crowncoin will store its data.</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -64,11 +56,7 @@
    <item>
     <widget class="QLabel" name="sizeWarningLabel">
      <property name="text">
-<<<<<<< HEAD
       <string>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
-=======
-      <string>Crowncoin will download and store a copy of the Crowncoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
->>>>>>> origin/dirty-merge-dash-0.11.0
      </property>
      <property name="wordWrap">
       <bool>true</bool>

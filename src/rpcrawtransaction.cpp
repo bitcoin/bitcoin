@@ -1,12 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
-=======
-// Copyright (c) 2009-2014 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
@@ -56,7 +51,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
 
     Array a;
     BOOST_FOREACH(const CTxDestination& addr, addresses)
-        a.push_back(CCrowncoinAddress(addr).ToString());
+        a.push_back(CBitcoinAddress(addr).ToString());
     out.push_back(Pair("addresses", a));
 }
 
@@ -150,7 +145,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
             "  ],\n"
             "  \"vout\" : [              (array of json objects)\n"
             "     {\n"
-            "       \"value\" : x.xxx,            (numeric) The value in CRW\n"
+            "       \"value\" : x.xxx,            (numeric) The value in btc\n"
             "       \"n\" : n,                    (numeric) index\n"
             "       \"scriptPubKey\" : {          (json object)\n"
             "         \"asm\" : \"asm\",          (string) the asm\n"
@@ -158,11 +153,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
             "         \"reqSigs\" : n,            (numeric) The required sigs\n"
             "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
             "         \"addresses\" : [           (json array of string)\n"
-<<<<<<< HEAD
             "           \"dashaddress\"        (string) dash address\n"
-=======
-            "           \"crowncoinaddress\"        (string) Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "           ,...\n"
             "         ]\n"
             "       }\n"
@@ -217,15 +208,9 @@ Value listunspent(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
             "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
-<<<<<<< HEAD
             "3. \"addresses\"    (string) A json array of dash addresses to filter\n"
             "    [\n"
             "      \"address\"   (string) dash address\n"
-=======
-            "3. \"addresses\"    (string) A json array of Crowncoin addresses to filter\n"
-            "    [\n"
-            "      \"address\"   (string) Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "      ,...\n"
             "    ]\n"
             "\nResult\n"
@@ -233,14 +218,10 @@ Value listunspent(const Array& params, bool fHelp)
             "  {\n"
             "    \"txid\" : \"txid\",        (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
-<<<<<<< HEAD
             "    \"address\" : \"address\",  (string) the dash address\n"
-=======
-            "    \"address\" : \"address\",  (string) the Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "    \"account\" : \"account\",  (string) The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\", (string) the script key\n"
-            "    \"amount\" : x.xxx,         (numeric) the transaction amount in CRW\n"
+            "    \"amount\" : x.xxx,         (numeric) the transaction amount in btc\n"
             "    \"confirmations\" : n       (numeric) The number of confirmations\n"
             "  }\n"
             "  ,...\n"
@@ -262,7 +243,6 @@ Value listunspent(const Array& params, bool fHelp)
     if (params.size() > 1)
         nMaxDepth = params[1].get_int();
 
-<<<<<<< HEAD
     set<CBitcoinAddress> setAddress;
     if (params.size() > 2) {
         Array inputs = params[2].get_array();
@@ -270,17 +250,6 @@ Value listunspent(const Array& params, bool fHelp)
             CBitcoinAddress address(input.get_str());
             if (!address.IsValid())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Dash address: ")+input.get_str());
-=======
-    set<CCrowncoinAddress> setAddress;
-    if (params.size() > 2)
-    {
-        Array inputs = params[2].get_array();
-        BOOST_FOREACH(Value& input, inputs)
-        {
-            CCrowncoinAddress address(input.get_str());
-            if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Crowncoin address: ")+input.get_str());
->>>>>>> origin/dirty-merge-dash-0.11.0
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
            setAddress.insert(address);
@@ -310,26 +279,15 @@ Value listunspent(const Array& params, bool fHelp)
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
         entry.push_back(Pair("vout", out.i));
         CTxDestination address;
-<<<<<<< HEAD
         if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address)) {
             entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
-=======
-        if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
-        {
-            entry.push_back(Pair("address", CCrowncoinAddress(address).ToString()));
->>>>>>> origin/dirty-merge-dash-0.11.0
             if (pwalletMain->mapAddressBook.count(address))
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
         }
         entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
         if (pk.IsPayToScriptHash()) {
             CTxDestination address;
-<<<<<<< HEAD
             if (ExtractDestination(pk, address)) {
-=======
-            if (ExtractDestination(pk, address))
-            {
->>>>>>> origin/dirty-merge-dash-0.11.0
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwalletMain->GetCScript(hash, redeemScript))
@@ -367,11 +325,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
             "     ]\n"
             "2. \"addresses\"           (string, required) a json object with addresses as keys and amounts as values\n"
             "    {\n"
-<<<<<<< HEAD
             "      \"address\": x.xxx   (numeric, required) The key is the dash address, the value is the btc amount\n"
-=======
-            "      \"address\": x.xxx   (numeric, required) The key is the Crowncoin address, the value is the CRW amount\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "      ,...\n"
             "    }\n"
 
@@ -406,20 +360,11 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vin.push_back(in);
     }
 
-<<<<<<< HEAD
     set<CBitcoinAddress> setAddress;
     BOOST_FOREACH(const Pair& s, sendTo) {
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Dash address: ")+s.name_);
-=======
-    set<CCrowncoinAddress> setAddress;
-    BOOST_FOREACH(const Pair& s, sendTo)
-    {
-        CCrowncoinAddress address(s.name_);
-        if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Crowncoin address: ")+s.name_);
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
@@ -464,7 +409,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             "  ],\n"
             "  \"vout\" : [             (array of json objects)\n"
             "     {\n"
-            "       \"value\" : x.xxx,            (numeric) The value in CRW\n"
+            "       \"value\" : x.xxx,            (numeric) The value in btc\n"
             "       \"n\" : n,                    (numeric) index\n"
             "       \"scriptPubKey\" : {          (json object)\n"
             "         \"asm\" : \"asm\",          (string) the asm\n"
@@ -472,11 +417,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             "         \"reqSigs\" : n,            (numeric) The required sigs\n"
             "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
             "         \"addresses\" : [           (json array of string)\n"
-<<<<<<< HEAD
             "           \"12tvKAXCxZjSmdNbao16dKXC8tRWfcF5oc\"   (string) dash address\n"
-=======
-            "           \"12tvKAXCxZjSmdNbao16dKXC8tRWfcF5oc\"   (string) Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "           ,...\n"
             "         ]\n"
             "       }\n"
@@ -518,11 +459,7 @@ Value decodescript(const Array& params, bool fHelp)
             "  \"type\":\"type\", (string) The output type\n"
             "  \"reqSigs\": n,    (numeric) The required signatures\n"
             "  \"addresses\": [   (json array of string)\n"
-<<<<<<< HEAD
             "     \"address\"     (string) dash address\n"
-=======
-            "     \"address\"     (string) Crowncoin address\n"
->>>>>>> origin/dirty-merge-dash-0.11.0
             "     ,...\n"
             "  ],\n"
             "  \"p2sh\",\"address\" (string) script address\n"
@@ -544,11 +481,7 @@ Value decodescript(const Array& params, bool fHelp)
     }
     ScriptPubKeyToJSON(script, r, false);
 
-<<<<<<< HEAD
     r.push_back(Pair("p2sh", CBitcoinAddress(CScriptID(script)).ToString()));
-=======
-    r.push_back(Pair("p2sh", CCrowncoinAddress(script.GetID()).ToString()));
->>>>>>> origin/dirty-merge-dash-0.11.0
     return r;
 }
 
@@ -649,14 +582,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
     if (params.size() > 2 && params[2].type() != null_type) {
         fGivenKeys = true;
         Array keys = params[2].get_array();
-<<<<<<< HEAD
         BOOST_FOREACH(Value k, keys) {
             CBitcoinSecret vchSecret;
-=======
-        BOOST_FOREACH(Value k, keys)
-        {
-            CCrowncoinSecret vchSecret;
->>>>>>> origin/dirty-merge-dash-0.11.0
             bool fGood = vchSecret.SetString(k.get_str());
             if (!fGood)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");

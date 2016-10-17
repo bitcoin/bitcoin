@@ -111,26 +111,8 @@ def main():
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['ipnum']))
 
-<<<<<<< HEAD
     for ip in ips:
         print ip['ip']
-=======
-    ips = []
-    pattern = re.compile(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}):9340")
-    for line in lines:
-        m = pattern.match(line)
-        if m is None:
-            continue
-        ip = 0
-        for i in range(0,4):
-            ip = ip + (int(m.group(i+1)) << (8*(i)))
-        if ip == 0:
-            continue
-        ips.append(ip)
-
-    for row in range(0, min(NSEEDS,len(ips)), 8):
-        print "    " + ", ".join([ "0x%08x"%i for i in ips[row:row+8] ]) + ","
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 if __name__ == '__main__':
     main()

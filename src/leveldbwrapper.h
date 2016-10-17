@@ -1,14 +1,9 @@
-<<<<<<< HEAD
 // Copyright (c) 2012-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
-=======
-// Copyright (c) 2012-2013 The Crowncoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
->>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CROWNCOIN_LEVELDBWRAPPER_H
-#define CROWNCOIN_LEVELDBWRAPPER_H
+#ifndef BITCOIN_LEVELDBWRAPPER_H
+#define BITCOIN_LEVELDBWRAPPER_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -94,13 +89,9 @@ public:
     CLevelDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     ~CLevelDBWrapper();
 
-<<<<<<< HEAD
     template <typename K, typename V>
     bool Read(const K& key, V& value) const throw(leveldb_error)
     {
-=======
-    template<typename K, typename V> bool Read(const K& key, V& value) const throw(leveldb_error) {
->>>>>>> origin/dirty-merge-dash-0.11.0
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -131,13 +122,9 @@ public:
         return WriteBatch(batch, fSync);
     }
 
-<<<<<<< HEAD
     template <typename K>
     bool Exists(const K& key) const throw(leveldb_error)
     {
-=======
-    template<typename K> bool Exists(const K& key) const throw(leveldb_error) {
->>>>>>> origin/dirty-merge-dash-0.11.0
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -183,4 +170,4 @@ public:
     }
 };
 
-#endif // CROWNCOIN_LEVELDBWRAPPER_H
+#endif // BITCOIN_LEVELDBWRAPPER_H

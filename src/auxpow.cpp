@@ -1,69 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 Vince Durham
-// Copyright (c) 2009-2014 The Crowncoin developers
-// Copyright (c) 2014-2015 Daniel Kraft
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core.h"
+#include "auxpow.h"
+
 #include "main.h"
 #include "util.h"
 
+#include "script/script.h"
+
 #include <algorithm>
-
-typedef std::vector<unsigned char> valtype;
-
-/* Moved from main.cpp.  CMerkleTx is necessary for auxpow.  */
-
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
-{
-    AssertLockHeld(cs_main);
-    CBlock blockTmp;
-
-    if (pblock == NULL) {
-        CCoins coins;
-        if (pcoinsTip->GetCoins(GetHash(), coins)) {
-            CBlockIndex *pindex = chainActive[coins.nHeight];
-            if (pindex) {
-                if (!ReadBlockFromDisk(blockTmp, pindex))
-                    return 0;
-                pblock = &blockTmp;
-            }
-        }
-    }
-
-    if (pblock) {
-        // Update the tx's hashBlock
-        hashBlock = pblock->GetHash();
-
-        // Locate the transaction
-        for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
-            if (pblock->vtx[nIndex] == *(CTransaction*)this)
-                break;
-        if (nIndex == (int)pblock->vtx.size())
-        {
-            vMerkleBranch.clear();
-            nIndex = -1;
-            LogPrintf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
-            return 0;
-        }
-
-        // Fill in merkle branch
-        vMerkleBranch = pblock->GetMerkleBranch(nIndex);
-    }
-
-    // Is the tx in a block that's in the main chain
-    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi == mapBlockIndex.end())
-        return 0;
-    CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    return chainActive.Height() - pindex->nHeight + 1;
-}
-
-/* ************************************************************************** */
 
 bool
 CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
@@ -71,9 +20,6 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
     if (nIndex != 0)
         return error("AuxPow is not a generate");
 
-    /* In contrast to Namecoin, we always enforce a strict chain ID.
-       There's not really a use to allow non-strict on testnet unless
-       you want to accept legacy blocks.  */
     if (parentBlock.nVersion.GetChainId () == nChainId)
         return error("Aux POW parent has our chain ID");
 
@@ -132,7 +78,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
 
     int nSize;
     memcpy(&nSize, &pc[0], 4);
-    const unsigned merkleHeight = vChainMerkleBranch.size ();
+    const unsigned merkleHeight = vChainMerkleBranch.size();
     if (nSize != (1 << merkleHeight))
         return error("Aux POW merkle branch size does not match parent coinbase");
 

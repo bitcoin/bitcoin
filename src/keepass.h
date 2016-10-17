@@ -15,10 +15,6 @@
 #include <map>
 
 #include "json/json_spirit_value.h"
-<<<<<<< HEAD
-=======
-#include "crypter.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #include "allocators.h"
 
 class CKeePassIntegrator {

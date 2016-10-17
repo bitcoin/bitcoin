@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2011-2013 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -112,11 +108,7 @@ void EditAddressDialog::accept()
             break;
         case AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-<<<<<<< HEAD
                 tr("The entered address \"%1\" is not a valid Dash address.").arg(ui->addressEdit->text()),
-=======
-                tr("The entered address \"%1\" is not a valid Crowncoin address.").arg(ui->addressEdit->text()),
->>>>>>> origin/dirty-merge-dash-0.11.0
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::DUPLICATE_ADDRESS:

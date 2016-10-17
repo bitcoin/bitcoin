@@ -1,19 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-=======
-// Copyright (c) 2009-2014 The Crowncoin developers
->>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-<<<<<<< HEAD
 #include "config/dash-config.h"
-=======
-#include "crowncoin-config.h"
->>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
 #include "net.h"
@@ -408,12 +400,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaste
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
         {
-<<<<<<< HEAD
             pnode->fDarkSendMaster = darkSendMaster;
-=======
-            if(darkSendMaster)
-                pnode->fDarkSendMaster = true;
->>>>>>> origin/dirty-merge-dash-0.11.0
 
             pnode->AddRef();
             return pnode;
@@ -450,10 +437,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaste
 
         pnode->nTimeConnected = GetTime();
         if(darkSendMaster) pnode->fDarkSendMaster = true;
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/dirty-merge-dash-0.11.0
         return pnode;
     } else if (!proxyConnectionFailed) {
         // If connecting to the node failed, and failure is not caused by a problem connecting to
@@ -581,11 +565,7 @@ void CNode::copyStats(CNodeStats &stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-<<<<<<< HEAD
     // Raw ping time is in microseconds, but show it to user as whole seconds (Dash users should be well used to small numbers with many decimal places by now :)
-=======
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Crowncoin users should be well used to small numbers with many decimal places by now :)
->>>>>>> origin/dirty-merge-dash-0.11.0
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
 
@@ -1075,15 +1055,9 @@ void ThreadMapPort()
     int error = 0;
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
 #else
-<<<<<<< HEAD
     /* miniupnpc 1.9.20150730 */
     int error = 0;
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
-=======
-     /* miniupnpc 1.9.20150730 */
-     int error = 0;
-     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
->>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
     struct UPNPUrls urls;
@@ -1110,11 +1084,7 @@ void ThreadMapPort()
             }
         }
 
-<<<<<<< HEAD
         string strDesc = "Dash " + FormatFullVersion();
-=======
-        string strDesc = "Crowncoin " + FormatFullVersion();
->>>>>>> origin/dirty-merge-dash-0.11.0
 
         try {
             while (true) {
@@ -1611,11 +1581,7 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-<<<<<<< HEAD
             strError = strprintf(_("Unable to bind to %s on this computer. Dash Core is probably already running."), addrBind.ToString());
-=======
-            strError = strprintf(_("Unable to bind to %s on this computer. Crowncoin is probably already running."), addrBind.ToString());
->>>>>>> origin/dirty-merge-dash-0.11.0
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -1847,12 +1813,7 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
     }
 }
 
-<<<<<<< HEAD
 void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
-=======
-
-void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool relayToAll)
->>>>>>> origin/dirty-merge-dash-0.11.0
 {
     CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
 
@@ -1863,7 +1824,6 @@ void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool r
         if(!relayToAll && !pnode->fRelayTxes)
             continue;
 
-<<<<<<< HEAD
         pnode->PushMessage("ix", tx);
     }
 }
@@ -1873,11 +1833,6 @@ void RelayInv(CInv &inv, const int minProtoVersion) {
     BOOST_FOREACH(CNode* pnode, vNodes)
         if(pnode->nVersion >= minProtoVersion)
             pnode->PushInventory(inv);
-=======
-        pnode->PushMessage("txlreq", tx);
-    }
-
->>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 void CNode::RecordBytesRecv(uint64_t bytes)

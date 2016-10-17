@@ -1,15 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Crowncoin developers
+// Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-<<<<<<< HEAD
 
 #ifndef BITCOIN_WALLETDB_H
 #define BITCOIN_WALLETDB_H
-=======
-#ifndef CROWNCOIN_WALLETDB_H
-#define CROWNCOIN_WALLETDB_H
->>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include "amount.h"
 #include "db.h"
@@ -77,29 +72,6 @@ public:
     }
 };
 
-class CAdrenalineNodeConfig
-{
-public:
-    int nVersion;
-    std::string sAlias;
-    std::string sAddress;
-    std::string sCollateralAddress;
-    std::string sThronePrivKey;
-
-    CAdrenalineNodeConfig()
-    {
-	nVersion = 0;
-    }
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(nVersion);
-        READWRITE(sAlias);
-        READWRITE(sAddress);
-        READWRITE(sCollateralAddress);
-	READWRITE(sThronePrivKey);
-    )
-};
-
 /** Access to the wallet database (wallet.dat) */
 class CWalletDB : public CDB
 {
@@ -116,10 +88,6 @@ public:
 
     bool WriteTx(uint256 hash, const CWalletTx& wtx);
     bool EraseTx(uint256 hash);
-
-    bool WriteAdrenalineNodeConfig(std::string sAlias, const CAdrenalineNodeConfig& nodeConfig);
-    bool ReadAdrenalineNodeConfig(std::string sAlias, CAdrenalineNodeConfig& nodeConfig);
-    bool EraseAdrenalineNodeConfig(std::string sAlias);
 
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
@@ -171,4 +139,4 @@ private:
 
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 
-#endif // CROWNCOIN_WALLETDB_H
+#endif // BITCOIN_WALLETDB_H
