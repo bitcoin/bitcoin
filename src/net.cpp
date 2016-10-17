@@ -1454,6 +1454,7 @@ static std::string GetDNSHost(const CDNSSeedData& data, ServiceFlags* requiredSe
         return data.host;
     }
 
+    // See chainparams.cpp, most dnsseeds only support one or two possible servicebits hostnames
     return strprintf("x%x.%s", *requiredServiceBits, data.host);
 }
 
