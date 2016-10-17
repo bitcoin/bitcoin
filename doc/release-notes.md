@@ -1,6 +1,6 @@
-Bitcoin Core version 0.13.x is now available from:
+Bitcoin Core version 0.13.1 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.13.x/>
+  <https://bitcoin.org/bin/bitcoin-core-0.13.1/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
@@ -38,8 +38,86 @@ report issues about Windows XP to the issue tracker.
 Notable changes
 ===============
 
-Example item
---------------
+Segregated witness soft fork
+----------------------------
+
+Segregated witness (segwit) is a soft fork that, if activated, will
+allow transaction-producing software to separate (segregate) transaction
+signatures (witnesses) from the rest of the data in a transaction, and
+to allow miners to place those witnesses outside of the traditional
+block structure. This provides two immediate benefits:
+
+- **Elimination of malleability:** Segregating the witness allows both
+  existing software and upgraded software that receives transactions to
+  calculate the transaction identifier (txid) of segwit-using
+  transactions without referencing the witness. This solves all known
+  cases of unwanted third-party transaction malleability, which is a
+  problem that makes programming Bitcoin wallet software more difficult
+  and which seriously complicates the design of smart contracts for
+  Bitcoin.
+
+- **Capacity increase:** Moving witness data outside of the traditional
+  block structure (but still inside a new-style block structure) means
+  new-style blocks can hold more data than older-style blocks, allowing
+  a modest increase to the amount of transaction data that can fit in a
+  block.
+
+Segwit also simplifies the ability to add new features to Bitcoin and
+improves the efficiency of full nodes, which will help provide long-term
+benefits to Bitcoin users.
+
+Activation for the segwit soft fork is being managed using BIP9
+versionbits.  Segwit's version bit is bit 1, and nodes will begin
+tracking which blocks signal support for segwit at the beginning of the
+first retarget period after segwit's start date of 15 November 2016.  If
+95% of blocks within a 2,016-block retarget period (about two weeks)
+signal support for segwit, the soft fork will be locked in.  After
+another 2,016 blocks, segwit will activate.
+
+For more information about segwit, please see the [segwit FAQ][], the
+[segwit wallet developers guide][] or BIPs [141][BIP141], [143][BIP143],
+[144][BIP144], and [145][BIP145].  If you're a miner or mining pool
+operator, please see the [versionbits FAQ][] for information about
+signaling support for a soft fork.
+
+[Segwit FAQ]: https://bitcoincore.org/en/2016/01/26/segwit-benefits/
+[segwit wallet developers guide]: https://bitcoincore.org/en/segwit_wallet_dev/
+[BIP141]: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
+[BIP143]: https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
+[BIP144]: https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki
+[BIP145]: https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki
+[versionbits FAQ]: https://bitcoincore.org/en/2016/06/08/version-bits-miners-faq/
+
+
+Null dummy soft fork
+-------------------
+
+Combined with the segwit soft fork is a soft fork that turns a
+long-existing network relay policy into a consensus rule.  The
+`OP_CHECKMULTISIG` and `OP_CHECKMULTISIGVERIFY` opcodes consume an extra
+stack element ("dummy element") after signature validation. The dummy
+element is not inspected in any manner, and could be replaced by any
+value without invalidating the script.
+
+Because any value can be used for this dummy element, it's possible for
+a third-party to insert data into other people's transactions, changing
+the transaction's txid (called transaction malleability) and possibly
+causing other problems.
+
+Since Bitcoin Core 0.10.0, nodes have defaulted to only relaying and
+mining transactions whose dummy element was a null value (0x00, also
+called OP_0).  The null dummy soft fork turns this relay rule into a
+consensus rule both for non-segwit transactions and segwit transactions,
+so that this method of mutating transactions is permanently eliminated
+from the network.
+
+Signaling for the null dummy soft fork is done by signaling support
+for segwit, and the null dummy soft fork will activate at the same time
+as segwit.
+
+For more information, please see [BIP147][].
+
+[BIP147]: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
 
 Low-level RPC changes
 ---------------------
