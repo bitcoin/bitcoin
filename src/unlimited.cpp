@@ -117,8 +117,9 @@ int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consen
     
     int32_t nVersion = ComputeBlockVersion(pindexPrev, params);
 
-    if (nTime <= params.SizeForkExpiration())
-	  nVersion |= FORK_BIT_2MB;
+    // turn BIP109 off by default by commenting this out: 
+    // if (nTime <= params.SizeForkExpiration())
+    //	  nVersion |= FORK_BIT_2MB;
  
     return nVersion;
 }
