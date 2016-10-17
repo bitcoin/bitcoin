@@ -106,7 +106,14 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
     /* Initialise the block version.  */
-    pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION);
+    const int32_t nChainId = Params().AuxpowChainId();
+    pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
+
+
+    // -regtest only: allow overriding block.nVersion with
+    // -blockversion=N to test forking scenarios
+    if (Params().MineBlocksOnDemand())
+        pblock->nVersion.SetBaseVersion(GetArg("-blockversion", pblock->nVersion.GetBaseVersion()), nChainId);
 
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);

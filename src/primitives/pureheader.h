@@ -62,7 +62,7 @@ public:
      * set, to initialise a block!
      * @param nBaseVersion The base version.
      */
-    void SetBaseVersion(int32_t nBaseVersion);
+    void SetBaseVersion(int32_t nBaseVersion, int32_t nChainId);
 
     /**
      * Extract the chain ID.
@@ -129,7 +129,7 @@ public:
      */
     inline bool IsLegacy() const
     {
-        return nVersion == 1;
+        return nVersion < VERSION_AUXPOW;
     }
 
 };
@@ -145,7 +145,7 @@ class CPureBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=4;
+    static const int32_t CURRENT_VERSION=2;
     CBlockVersion nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
