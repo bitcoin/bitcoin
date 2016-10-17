@@ -89,6 +89,7 @@ git merge commit are mentioned.
 - #8612 `2215c22` Check for compatibility with download in FindNextBlocksToDownload (sipa)
 - #8606 `bbf379b` Fix some locks (sipa)
 - #8594 `ab295bb` Do not add random inbound peers to addrman (gmaxwell)
+- #8940 `5b4192b` Add x9 service bit support to dnsseed.bluematt.me, seed.bitcoinstats.com (TheBlueMatt, cdecker)
 
 ### Build system
 - #8293 `fa5b249` Allow building libbitcoinconsensus without any univalue (luke-jr)
@@ -157,6 +158,7 @@ git merge commit are mentioned.
 - #8625 `0a35573` Clarify statement about parallel jobs in rpc-tests.py (isle2983)
 - #8624 `0e6d753` build: Mention curl (MarcoFalke)
 - #8604 `b09e13c` build,doc: Update for 0.13.0+ and OpenBSD 5.9 (laanwj)
+- #8939 `06d15fb` Update implemented bips for 0.13.1 (sipa)
 
 ### Miscellaneous
 - #8742 `d31ac72` Specify Protobuf version 2 in paymentrequest.proto (fanquake)
@@ -181,6 +183,7 @@ Thanks to everyone who directly contributed to this release:
 - BtcDrak
 - Chris Stewart
 - Christian Barcenas
+- Christian Decker
 - Cory Fields
 - crowning-
 - Dagur Valberg Johannsson
