@@ -1,11 +1,15 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "recentrequeststablemodel.h"
 
+<<<<<<< HEAD
 #include "bitcoinunits.h"
 #include "clientversion.h"
+=======
+#include "crowncoinunits.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "streams.h"
@@ -86,7 +90,7 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
             else if (role == Qt::EditRole)
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::separatorNever);
             else
-                return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
+                return CrowncoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -149,7 +153,7 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
         for (int i = 0; i < count; ++i)
         {
             rec = &list[row+i];
-            if (!walletModel->saveReceiveRequest(rec->recipient.address.toStdString(), rec->id, ""))
+            if (!walletModel->saveReceiveRequest(rec->recipient.recipient.toStdString(), rec->id, ""))
                 return false;
         }
 
@@ -178,7 +182,7 @@ void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient
     CDataStream ss(SER_DISK, CLIENT_VERSION);
     ss << newEntry;
 
-    if (!walletModel->saveReceiveRequest(recipient.address.toStdString(), newEntry.id, ss.str()))
+    if (!walletModel->saveReceiveRequest(recipient.recipient.toStdString(), newEntry.id, ss.str()))
         return;
 
     addNewRequest(newEntry);

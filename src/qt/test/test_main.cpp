@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
@@ -5,6 +6,11 @@
 
 #if defined(HAVE_CONFIG_H)
 #include "config/dash-config.h"
+=======
+#include "crowncoin-config.h"
+#if defined(HAVE_CONFIG_H)
+#include "crowncoin-config.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
 #include "util.h"
@@ -35,7 +41,11 @@ int main(int argc, char *argv[])
     // Don't remove this, it's needed to access
     // QCoreApplication:: in the tests
     QCoreApplication app(argc, argv);
+<<<<<<< HEAD
     app.setApplicationName("Dash-Qt-test");
+=======
+    app.setApplicationName("Crowncoin-Qt-test");
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     URITests test1;
     if (QTest::qExec(&test1) != 0)

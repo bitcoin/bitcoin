@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 TOR SUPPORT IN DASH
 =======================
 
 It is possible to run Dash as a Tor hidden service, and connect to such services.
+=======
+TOR SUPPORT IN CROWNCOIN
+======================
+
+It is possible to run Crowncoin as a Tor hidden service, and connect to such services.
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 The following directions assume you have a Tor proxy running on port 9050. Many
 distributions default to having a SOCKS proxy listening on port 9050, but others
@@ -10,10 +17,17 @@ port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.htm
 for how to properly configure Tor.
 
 
+<<<<<<< HEAD
 1. Run dash behind a Tor proxy
 ----------------------------------
 
 The first step is running Dash behind a Tor proxy. This will already make all
+=======
+1. Run crowncoin behind a Tor proxy
+---------------------------------
+
+The first step is running Crowncoin behind a Tor proxy. This will already make all
+>>>>>>> origin/dirty-merge-dash-0.11.0
 outgoing connections be anonymized, but more is possible.
 
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -41,16 +55,25 @@ port 9050 and only allows .onion nodes to connect:
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
+<<<<<<< HEAD
 	./dashd -proxy=127.0.0.1:9050
 
 
 2. Run a dash hidden server
 -------------------------------
+=======
+	./crowncoin -proxy=127.0.0.1:9050
+
+
+2. Run a crowncoin hidden server
+------------------------------
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
 config file):
 
+<<<<<<< HEAD
 	HiddenServiceDir /var/lib/tor/dash-service/
 	HiddenServicePort 9999 127.0.0.1:9999
 	HiddenServicePort 19999 127.0.0.1:19999
@@ -62,6 +85,19 @@ your dashd's P2P listen port (9999 by default).
 	                this option, and this can be a .onion address. Given the above
 	                configuration, you can find your onion address in
 	                /var/lib/tor/dash-service/hostname. Onion addresses are given
+=======
+	HiddenServiceDir /var/lib/tor/crowncoin-service/
+	HiddenServicePort 9340 127.0.0.1:9340
+	HiddenServicePort 19340 127.0.0.1:19340
+
+The directory can be different of course, but (both) port numbers should be equal to
+your crowncoind's P2P listen port (9340 by default).
+
+	-externalip=X   You can tell crowncoin about its publicly reachable address using
+	                this option, and this can be a .onion address. Given the above
+	                configuration, you can find your onion address in
+	                /var/lib/tor/crowncoin-service/hostname. Onion addresses are given
+>>>>>>> origin/dirty-merge-dash-0.11.0
 	                preference for your node to advertize itself with, for connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
 	                Tor proxy typically runs).
@@ -78,24 +114,38 @@ your dashd's P2P listen port (9999 by default).
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
+<<<<<<< HEAD
 	./dashd -proxy=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -listen
+=======
+	./crowncoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 (obviously, replace the Onion address with your own). If you don't care too much
 about hiding your node, and want to be reachable on IPv4 as well, additionally
 specify:
 
+<<<<<<< HEAD
 	./dashd ... -discover
 
 and open port 9999 on your firewall (or use -upnp).
+=======
+	./crowncoind ... -discover
+
+and open port 9340 on your firewall (or use -upnp).
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
+<<<<<<< HEAD
 	./dashd -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
 
 3. List of known dash Tor relays
 ------------------------------------
+=======
+	./crowncoin -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 * [dashie7ghp67.onion](http://dashie7ghp67.onion/)
 * [drktalkwaybgxnoq.onion](http://drktalkwaybgxnoq.onion/)

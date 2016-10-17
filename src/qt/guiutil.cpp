@@ -1,12 +1,16 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2011-2013 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "guiutil.h"
 
-#include "bitcoinaddressvalidator.h"
-#include "bitcoinunits.h"
+#include "crowncoinaddressvalidator.h"
+#include "crowncoinunits.h"
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
@@ -88,7 +92,7 @@ QString dateTimeStr(qint64 nTime)
     return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
 }
 
-QFont bitcoinAddressFont()
+QFont crowncoinAddressFont()
 {
     QFont font("Monospace");
 #if QT_VERSION >= 0x040800
@@ -103,14 +107,18 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 {
     parent->setFocusProxy(widget);
 
-    widget->setFont(bitcoinAddressFont());
+    widget->setFont(crowncoinAddressFont());
 #if QT_VERSION >= 0x040700
+<<<<<<< HEAD
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
     widget->setPlaceholderText(QObject::tr("Enter a Dash address (e.g. %1)").arg("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+=======
+    widget->setPlaceholderText(QObject::tr("Enter a Crowncoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
-    widget->setValidator(new BitcoinAddressEntryValidator(parent));
-    widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
+    widget->setValidator(new CrowncoinAddressEntryValidator(parent));
+    widget->setCheckValidator(new CrowncoinAddressCheckValidator(parent));
 }
 
 void setupAmountWidget(QLineEdit *widget, QWidget *parent)
@@ -122,8 +130,9 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
-bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
+bool parseCrowncoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
+<<<<<<< HEAD
     // return if URI is not valid or is no dash: URI
     if(!uri.isValid() || uri.scheme() != QString("dash"))
         return false;
@@ -134,6 +143,14 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     if (rv.address.endsWith("/")) {
         rv.address.truncate(rv.address.length() - 1);
     }
+=======
+    // return if URI is not valid or is no crowncoin: URI
+    if(!uri.isValid() || uri.scheme() != QString("crowncoin"))
+        return false;
+
+    SendCoinsRecipient rv;
+    rv.recipient = uri.path();
+>>>>>>> origin/dirty-merge-dash-0.11.0
     rv.amount = 0;
 
 #if QT_VERSION < 0x050000
@@ -165,7 +182,11 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
+<<<<<<< HEAD
                 if(!BitcoinUnits::parse(BitcoinUnits::DASH, i->second, &rv.amount))
+=======
+                if(!CrowncoinUnits::parse(CrowncoinUnits::CRW, i->second, &rv.amount))
+>>>>>>> origin/dirty-merge-dash-0.11.0
                 {
                     return false;
                 }
@@ -183,8 +204,9 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     return true;
 }
 
-bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
+bool parseCrowncoinURI(QString uri, SendCoinsRecipient *out)
 {
+<<<<<<< HEAD
     // Convert dash:// to dash:
     //
     //    Cannot handle this later, because dash:// will cause Qt to see the part after // as host,
@@ -192,19 +214,36 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
     if(uri.startsWith("dash://", Qt::CaseInsensitive))
     {
         uri.replace(0, 7, "dash:");
+=======
+    // Convert crowncoin:// to crowncoin:
+    //
+    //    Cannot handle this later, because crowncoin:// will cause Qt to see the part after // as host,
+    //    which will lower-case it (and thus invalidate the address).
+    if(uri.startsWith("crowncoin://", Qt::CaseInsensitive))
+    {
+        uri.replace(0, 10, "crowncoin:");
+>>>>>>> origin/dirty-merge-dash-0.11.0
     }
     QUrl uriInstance(uri);
-    return parseBitcoinURI(uriInstance, out);
+    return parseCrowncoinURI(uriInstance, out);
 }
 
-QString formatBitcoinURI(const SendCoinsRecipient &info)
+QString formatCrowncoinURI(const SendCoinsRecipient &info)
 {
+<<<<<<< HEAD
     QString ret = QString("dash:%1").arg(info.address);
+=======
+    QString ret = QString("crowncoin:%1").arg(info.recipient);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     int paramCount = 0;
 
     if (info.amount)
     {
+<<<<<<< HEAD
         ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::DASH, info.amount, false, BitcoinUnits::separatorNever));
+=======
+        ret += QString("?amount=%1").arg(CrowncoinUnits::format(CrowncoinUnits::CRW, info.amount));
+>>>>>>> origin/dirty-merge-dash-0.11.0
         paramCount++;
     }
 
@@ -227,8 +266,13 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
 bool isDust(const QString& address, const CAmount& amount)
 {
+<<<<<<< HEAD
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script = GetScriptForDestination(dest);
+=======
+    CTxDestination dest = CCrowncoinAddress(address.toStdString()).Get();
+    CScript script; script.SetDestination(dest);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     CTxOut txOut(amount, script);
     return txOut.IsDust(::minRelayTxFee);
 }
@@ -590,12 +634,20 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
+<<<<<<< HEAD
     return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash.lnk";
+=======
+    return GetSpecialFolderPath(CSIDL_STARTUP) / "Crowncoin.lnk";
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 bool GetStartOnSystemStartup()
 {
+<<<<<<< HEAD
     // check for Dash.lnk
+=======
+    // check for Crowncoin.lnk
+>>>>>>> origin/dirty-merge-dash-0.11.0
     return boost::filesystem::exists(StartupShortcutPath());
 }
 
@@ -672,7 +724,11 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
+<<<<<<< HEAD
     return GetAutostartDir() / "dash.desktop";
+=======
+    return GetAutostartDir() / "crowncoin.desktop";
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 bool GetStartOnSystemStartup()
@@ -710,10 +766,17 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         boost::filesystem::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
             return false;
+<<<<<<< HEAD
         // Write a dash.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         optionFile << "Name=Dash\n";
+=======
+        // Write a crowncoin.desktop file to the autostart directory:
+        optionFile << "[Desktop Entry]\n";
+        optionFile << "Type=Application\n";
+        optionFile << "Name=Crowncoin\n";
+>>>>>>> origin/dirty-merge-dash-0.11.0
         optionFile << "Exec=" << pszExePath << " -min\n";
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
@@ -732,7 +795,11 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
 {
+<<<<<<< HEAD
     // loop through the list of startup items and try to find the dash app
+=======
+    // loop through the list of startup items and try to find the crowncoin app
+>>>>>>> origin/dirty-merge-dash-0.11.0
     CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, NULL);
     for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
@@ -753,21 +820,26 @@ LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef
 
 bool GetStartOnSystemStartup()
 {
-    CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFURLRef crowncoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, crowncoinAppUrl);
     return !!foundItem; // return boolified object
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
-    CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFURLRef crowncoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, crowncoinAppUrl);
 
     if(fAutoStart && !foundItem) {
+<<<<<<< HEAD
         // add dash app to startup item list
         LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, NULL, NULL, bitcoinAppUrl, NULL, NULL);
+=======
+        // add crowncoin app to startup item list
+        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, NULL, NULL, crowncoinAppUrl, NULL, NULL);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     }
     else if(!fAutoStart && foundItem) {
         // remove item

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 
 #include <QStackedWidget>
 
-class BitcoinGUI;
+class CrowncoinGUI;
 class ClientModel;
 class OverviewPage;
 class ReceiveCoinsDialog;
@@ -17,7 +17,8 @@ class SendCoinsDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
-
+class ThroneManager;
+class AddEditAdrenalineNode;
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QModelIndex;
@@ -38,13 +39,13 @@ public:
     explicit WalletView(QWidget *parent);
     ~WalletView();
 
-    void setBitcoinGUI(BitcoinGUI *gui);
+    void setCrowncoinGUI(CrowncoinGUI *gui);
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
     /** Set the wallet model.
-        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
+        The wallet model represents a crowncoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
@@ -56,7 +57,7 @@ public:
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;
-
+    ThroneManager *throneManagerPage;
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
@@ -76,7 +77,7 @@ public slots:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-
+	void gotoThroneManagerPage();
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */

@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2011-2014 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +11,7 @@
 
 #include "ui_helpmessagedialog.h"
 
-#include "bitcoingui.h"
+#include "crowncoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
 
@@ -29,16 +33,32 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nHelpMessageDialogWindow", this->size(), this);
 
+<<<<<<< HEAD
     QString version = tr("Dash Core") + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
     /* On x86 add a bit specifier to the version so that users can distinguish between
      * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambigious.
      */
+=======
+    // Set current copyright year
+    ui->copyrightLabel->setText(tr("Copyright") + QString(" &copy; 2009-%1 ").arg(COPYRIGHT_YEAR) + tr("The Crowncoin developers"));
+}
+
+void AboutDialog::setModel(ClientModel *model)
+{
+    if(model)
+    {
+        QString version = model->formatFullVersion();
+        /* On x86 add a bit specifier to the version so that users can distinguish between
+         * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambigious.
+         */
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #if defined(__x86_64__)
     version += " " + tr("(%1-bit)").arg(64);
 #elif defined(__i386__ )
     version += " " + tr("(%1-bit)").arg(32);
 #endif
 
+<<<<<<< HEAD
     if (about)
     {
         setWindowTitle(tr("About Dash Core"));
@@ -77,6 +97,44 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         text = version + "\n" + header + "\n" + coreOptions + "\n" + uiOptions;
         ui->helpMessageLabel->setText(text);
     }
+=======
+AboutDialog::~AboutDialog()
+{
+    delete ui;
+}
+
+void AboutDialog::on_buttonBox_accepted()
+{
+    close();
+}
+
+/** "Help message" dialog box */
+HelpMessageDialog::HelpMessageDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::HelpMessageDialog)
+{
+    ui->setupUi(this);
+    GUIUtil::restoreWindowGeometry("nHelpMessageDialogWindow", this->size(), this);
+
+    header = tr("Crowncoin") + " " + tr("version") + " " +
+        QString::fromStdString(FormatFullVersion()) + "\n\n" +
+        tr("Usage:") + "\n" +
+        "  crowncoin-qt [" + tr("command-line options") + "]                     " + "\n";
+
+    coreOptions = QString::fromStdString(HelpMessage(HMM_CROWNCOIN_QT));
+
+    uiOptions = tr("UI options") + ":\n" +
+        "  -choosedatadir            " + tr("Choose data directory on startup (default: 0)") + "\n" +
+        "  -lang=<lang>              " + tr("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
+        "  -min                      " + tr("Start minimized") + "\n" +
+        "  -rootcertificates=<file>  " + tr("Set SSL root certificates for payment request (default: -system-)") + "\n" +
+        "  -splash                   " + tr("Show splash screen on startup (default: 1)");
+
+    ui->helpMessageLabel->setFont(GUIUtil::crowncoinAddressFont());
+
+    // Set help message text
+    ui->helpMessageLabel->setText(header + "\n" + coreOptions + "\n" + uiOptions);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 HelpMessageDialog::~HelpMessageDialog()
@@ -109,6 +167,7 @@ void HelpMessageDialog::on_okButton_accepted()
 
 
 /** "Shutdown" window */
+<<<<<<< HEAD
 ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
     QWidget(parent, f)
 {
@@ -120,16 +179,28 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
 }
 
 void ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
+=======
+void ShutdownWindow::showShutdownWindow(CrowncoinGUI *window)
+>>>>>>> origin/dirty-merge-dash-0.11.0
 {
     if (!window)
         return;
 
     // Show a simple window indicating shutdown status
+<<<<<<< HEAD
     QWidget *shutdownWindow = new ShutdownWindow();
     // We don't hold a direct pointer to the shutdown window after creation, so use
     // Qt::WA_DeleteOnClose to make sure that the window will be deleted eventually.
     shutdownWindow->setAttribute(Qt::WA_DeleteOnClose);
     shutdownWindow->setWindowTitle(window->windowTitle());
+=======
+    QWidget *shutdownWindow = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout();
+    layout->addWidget(new QLabel(
+        tr("Crowncoin is shutting down...") + "<br /><br />" +
+        tr("Do not shut down the computer until this window disappears.")));
+    shutdownWindow->setLayout(layout);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Center shutdown window at where main window was
     const QPoint global = window->mapToGlobal(window->rect().center());

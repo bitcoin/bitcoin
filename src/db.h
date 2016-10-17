@@ -1,10 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2009-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_DB_H
-#define BITCOIN_DB_H
+#ifndef CROWNCOIN_DB_H
+#define CROWNCOIN_DB_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -311,4 +316,4 @@ public:
     bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
 };
 
-#endif // BITCOIN_DB_H
+#endif // CROWNCOIN_DB_H

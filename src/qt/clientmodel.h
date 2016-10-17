@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2011-2013 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +38,11 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
+<<<<<<< HEAD
 /** Model for Dash network client. */
+=======
+/** Model for Crowncoin network client. */
+>>>>>>> origin/dirty-merge-dash-0.11.0
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -48,7 +56,11 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
+<<<<<<< HEAD
     QString getMasternodeCountString() const;
+=======
+    QString getThroneCountString() const;
+>>>>>>> origin/dirty-merge-dash-0.11.0
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
@@ -76,7 +88,11 @@ private:
     PeerTableModel *peerTableModel;
 
     int cachedNumBlocks;
+<<<<<<< HEAD
     QString cachedMasternodeCountString;
+=======
+    QString cachedThroneCountString;
+>>>>>>> origin/dirty-merge-dash-0.11.0
     bool cachedReindexing;
     bool cachedImporting;
 
@@ -91,7 +107,11 @@ private:
 signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);
+<<<<<<< HEAD
     void strMasternodesChanged(const QString &strMasternodes);
+=======
+    void strThronesChanged(const QString &strThrones);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 

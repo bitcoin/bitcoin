@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +21,7 @@ class AddressTableModel;
 class OptionsModel;
 class RecentRequestsTableModel;
 class TransactionTableModel;
+class WalletModel;
 class WalletModelTransaction;
 
 class CCoinControl;
@@ -39,15 +40,20 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+<<<<<<< HEAD
     explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
         address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+=======
+    explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
+        recipient(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     // If from an insecure payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
     // Info: As we don't need to process addresses in here when using
     // payment requests, we can abuse it for displaying an address list.
     // Todo: This is a hack, should be replaced with a cleaner solution!
-    QString address;
+    QString recipient;
     QString label;
     AvailableCoinsType inputType;
     bool useInstantX;
@@ -65,11 +71,17 @@ public:
 
     ADD_SERIALIZE_METHODS;
 
+<<<<<<< HEAD
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         std::string sAddress = address.toStdString();
         std::string sLabel = label.toStdString();
         std::string sMessage = message.toStdString();
+=======
+        std::string sAddress = pthis->recipient.toStdString();
+        std::string sLabel = pthis->label.toStdString();
+        std::string sMessage = pthis->message.toStdString();
+>>>>>>> origin/dirty-merge-dash-0.11.0
         std::string sPaymentRequest;
         if (!ser_action.ForRead() && paymentRequest.IsInitialized())
             paymentRequest.SerializeToString(&sPaymentRequest);
@@ -86,17 +98,32 @@ public:
 
         if (ser_action.ForRead())
         {
+<<<<<<< HEAD
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
             message = QString::fromStdString(sMessage);
+=======
+            pthis->recipient = QString::fromStdString(sAddress);
+            pthis->label = QString::fromStdString(sLabel);
+            pthis->message = QString::fromStdString(sMessage);
+>>>>>>> origin/dirty-merge-dash-0.11.0
             if (!sPaymentRequest.empty())
                 paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
             authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
         }
+<<<<<<< HEAD
     }
+=======
+    )
+
+    /* Get the recipient address.  This translates a recipient name if
+       applicable.  Returns false if the name cannot be resolved.  */
+    bool getAddress (const WalletModel& model, CTxDestination& dest) const;
+
+>>>>>>> origin/dirty-merge-dash-0.11.0
 };
 
-/** Interface to Bitcoin wallet from Qt view code. */
+/** Interface to Crowncoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -143,7 +170,11 @@ public:
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
-    bool validateAddress(const QString &address);
+    bool validateAddress(const QString &address) const;
+
+    /* Check if a given name can be used as a "sendtoname" recipient and
+       if yes, set the address to the one that should be used.  */
+    bool checkRecipientName (const QString& name, CTxDestination& dest) const;
 
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn

@@ -1,10 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2012 The Bitcoin developers
+// Copyright (c) 2012 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+#ifndef CROWNCOIN_UI_INTERFACE_H
+#define CROWNCOIN_UI_INTERFACE_H
 
 #include <stdint.h>
 #include <string>
@@ -15,6 +15,7 @@
 class CBasicKeyStore;
 class CWallet;
 class uint256;
+class CAdrenalineNodeConfig;
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -89,6 +90,8 @@ public:
      * @note called with lock cs_mapAlerts held.
      */
     boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
+
+	boost::signals2::signal<void (CAdrenalineNodeConfig nodeConfig)> NotifyAdrenalineNodeChanged;
 
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;

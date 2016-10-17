@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.sublime-project
 *.sublime-workspace
 todo.txt
@@ -118,3 +119,98 @@ qa/pull-tester/test.*/*
 .cproject
 .project
 /doc/doxygen/
+=======
+*.tar.gz
+
+src/crowncoin-cli
+src/crowncoind
+src/qt/crowncoin-qt
+src/qt/test/test_crowncoin-qt
+src/test/test_crowncoin
+
+*.exe
+src/bitcoin
+src/bitcoind
+src/bitcoin-cli
+src/test/test_bitcoin
+src/qt/test/test_bitcoin-qt
+
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.log
+config.status
+configure
+src/bitcoin-config.h
+src/bitcoin-config.h.in
+src/build-aux/
+src/stamp-h1
+share/setup.nsi
+share/qt/Info.plist
+
+src/qt/*.moc
+src/qt/moc_*.cpp
+src/qt/forms/ui_*.h
+
+src/qt/test/moc*.cpp
+
+.deps
+.dirstamp
+.*.swp
+*.*~*
+*.bak
+*.rej
+*.orig
+*.o
+*.o-*
+*.patch
+.bitcoin
+*.a
+*.pb.cc
+*.pb.h
+
+*.log
+*.trs
+*.dmg
+
+*.json.h
+*.raw.h
+
+# Compilation and Qt preprocessor part
+*.qm
+Makefile
+bitcoin-qt
+Bitcoin-Qt.app
+
+# Unit-tests
+Makefile.test
+bitcoin-qt_test
+
+# Resources cpp
+qrc_*.cpp
+
+# Qt creator
+*.pro.user
+
+# Mac specific
+.DS_Store
+build
+
+#lcov
+*.gcno
+/*.info
+test_bitcoin.coverage/
+total.coverage/
+coverage_percent.txt
+
+#build tests
+linux-coverage-build
+linux-build
+win32-build
+qa/pull-tester/run-bitcoind-for-test.sh
+qa/pull-tester/build-tests.sh
+
+!src/leveldb*/Makefile
+CMakeLists.txt
+.idea/
+>>>>>>> origin/dirty-merge-dash-0.11.0

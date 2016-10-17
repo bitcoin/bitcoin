@@ -1,6 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2009-2014 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,6 +68,23 @@ bool CWalletDB::EraseTx(uint256 hash)
 {
     nWalletDBUpdated++;
     return Erase(std::make_pair(std::string("tx"), hash));
+}
+
+bool CWalletDB::WriteAdrenalineNodeConfig(std::string sAlias, const CAdrenalineNodeConfig& nodeConfig)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("adrenaline"), sAlias), nodeConfig, true);
+}
+
+bool CWalletDB::ReadAdrenalineNodeConfig(std::string sAlias, CAdrenalineNodeConfig& nodeConfig)
+{
+    return Read(std::make_pair(std::string("adrenaline"), sAlias), nodeConfig);
+}
+
+bool CWalletDB::EraseAdrenalineNodeConfig(std::string sAlias)
+{
+    nWalletDBUpdated++;
+    return Erase(std::make_pair(std::string("adrenaline"), sAlias));
 }
 
 bool CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
@@ -356,13 +377,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].name;
+            ssValue >> pwallet->mapAddressBook[CCrowncoinAddress(strAddress).Get()].name;
         }
         else if (strType == "purpose")
         {
             string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].purpose;
+            ssValue >> pwallet->mapAddressBook[CCrowncoinAddress(strAddress).Get()].purpose;
         }
         else if (strType == "tx")
         {
@@ -579,13 +600,21 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pwallet->nOrderPosNext;
         }
+        else if (strType == "adrenaline")
+	{
+	    std::string sAlias;
+	    ssKey >> sAlias;
+	    CAdrenalineNodeConfig adrenalineNodeConfig;
+	    ssValue >> adrenalineNodeConfig;
+	    pwallet->mapMyAdrenalineNodes.insert(make_pair(sAlias, adrenalineNodeConfig));
+	}
         else if (strType == "destdata")
         {
             std::string strAddress, strKey, strValue;
             ssKey >> strAddress;
             ssKey >> strKey;
             ssValue >> strValue;
-            if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
+            if (!pwallet->LoadDestData(CCrowncoinAddress(strAddress).Get(), strKey, strValue))
             {
                 strErr = "Error reading wallet database: LoadDestData failed";
                 return false;
@@ -791,7 +820,11 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
+<<<<<<< HEAD
     RenameThread("dash-wallet");
+=======
+    RenameThread("crowncoin-wallet");
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     static bool fOneThread;
     if (fOneThread)

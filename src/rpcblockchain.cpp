@@ -1,7 +1,12 @@
 // Copyright (c) 2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2009-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "checkpoints.h"
@@ -63,7 +68,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
     result.push_back(Pair("confirmations", confirmations));
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
-    result.push_back(Pair("version", block.nVersion));
+    result.push_back(Pair("version", block.nVersion.GetFullVersion()));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     Array txs;
     BOOST_FOREACH(const CTransaction&tx, block.vtx)
@@ -173,7 +178,11 @@ Value getrawmempool(const Array& params, bool fHelp)
             "{                           (json object)\n"
             "  \"transactionid\" : {       (json object)\n"
             "    \"size\" : n,             (numeric) transaction size in bytes\n"
+<<<<<<< HEAD
             "    \"fee\" : n,              (numeric) transaction fee in dashs\n"
+=======
+            "    \"fee\" : n,              (numeric) transaction fee in crowncoins\n"
+>>>>>>> origin/dirty-merge-dash-0.11.0
             "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
             "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
             "    \"startingpriority\" : n, (numeric) priority when transaction entered pool\n"
@@ -304,7 +313,6 @@ Value getblock(const Array& params, bool fHelp)
 
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
-
     if(!ReadBlockFromDisk(block, pblockindex))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
@@ -424,14 +432,19 @@ Value gettxout(const Array& params, bool fHelp)
             "{\n"
             "  \"bestblock\" : \"hash\",    (string) the block hash\n"
             "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
-            "  \"value\" : x.xxx,           (numeric) The transaction value in btc\n"
+            "  \"value\" : x.xxx,           (numeric) The transaction value in CRW\n"
             "  \"scriptPubKey\" : {         (json object)\n"
             "     \"asm\" : \"code\",       (string) \n"
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
+<<<<<<< HEAD
             "     \"addresses\" : [          (array of string) array of dash addresses\n"
             "        \"dashaddress\"     (string) dash address\n"
+=======
+            "     \"addresses\" : [          (array of string) array of Crowncoin addresses\n"
+            "        \"crowncoinaddress\"     (string) Crowncoin address\n"
+>>>>>>> origin/dirty-merge-dash-0.11.0
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -544,6 +557,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     obj.push_back(Pair("verificationprogress",  Checkpoints::GuessVerificationProgress(chainActive.Tip())));
     obj.push_back(Pair("chainwork",             chainActive.Tip()->nChainWork.GetHex()));
     return obj;
+<<<<<<< HEAD
 }
 
 /** Comparison function for sorting the getchaintips heads.  */
@@ -748,3 +762,6 @@ Value reconsiderblock(const Array& params, bool fHelp)
 
     return Value::null;
 }
+=======
+}
+>>>>>>> origin/dirty-merge-dash-0.11.0

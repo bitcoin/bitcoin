@@ -1,11 +1,21 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2011-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "paymentserver.h"
 
+<<<<<<< HEAD
 #include "bitcoinunits.h"
+=======
+#include "crowncoinunits.h"
+#include "guiconstants.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #include "guiutil.h"
 #include "optionsmodel.h"
 
@@ -50,6 +60,7 @@
 using namespace boost;
 using namespace std;
 
+<<<<<<< HEAD
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("dash:");
 // BIP70 payment protocol messages
@@ -61,6 +72,13 @@ const char* BIP71_MIMETYPE_PAYMENTACK = "application/dash-paymentack";
 const char* BIP71_MIMETYPE_PAYMENTREQUEST = "application/dash-paymentrequest";
 // BIP70 max payment request size in bytes (DoS protection)
 const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
+=======
+const int CROWNCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
+const QString CROWNCOIN_IPC_PREFIX("crowncoin:");
+const char* CROWNCOIN_REQUEST_MIMETYPE = "application/crowncoin-paymentrequest";
+const char* CROWNCOIN_PAYMENTACK_MIMETYPE = "application/crowncoin-paymentack";
+const char* CROWNCOIN_PAYMENTACK_CONTENTTYPE = "application/crowncoin-payment";
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -79,7 +97,11 @@ void PaymentServer::freeCertStore()
 //
 static QString ipcServerName()
 {
+<<<<<<< HEAD
     QString name("DashQt");
+=======
+    QString name("CrowncoinQt");
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Append a simple hash of the datadir
     // Note that GetDataDir(true) returns a different path
@@ -199,18 +221,22 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
         if (arg.startsWith("-"))
             continue;
 
+<<<<<<< HEAD
         // If the dash: URI contains a payment request, we are not able to detect the
         // network as that would require fetching and parsing the payment request.
         // That means clicking such an URI which contains a testnet payment request
         // will start a mainnet instance and throw a "wrong network" error.
         if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // dash: URI
+=======
+        if (arg.startsWith(CROWNCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // crowncoin: URI
+>>>>>>> origin/dirty-merge-dash-0.11.0
         {
             savedPaymentRequests.append(arg);
 
             SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
+            if (GUIUtil::parseCrowncoinURI(arg, &r) && !r.recipient.isEmpty())
             {
-                CBitcoinAddress address(r.address.toStdString());
+                CCrowncoinAddress address(r.recipient.toStdString());
 
                 if (address.IsValid(Params(CBaseChainParams::MAIN)))
                 {
@@ -261,7 +287,7 @@ bool PaymentServer::ipcSendCommandLine()
     {
         QLocalSocket* socket = new QLocalSocket();
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
-        if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
+        if (!socket->waitForConnected(CROWNCOIN_IPC_CONNECT_TIMEOUT))
         {
             delete socket;
             socket = NULL;
@@ -276,7 +302,12 @@ bool PaymentServer::ipcSendCommandLine()
 
         socket->write(block);
         socket->flush();
+<<<<<<< HEAD
         socket->waitForBytesWritten(BITCOIN_IPC_CONNECT_TIMEOUT);
+=======
+
+        socket->waitForBytesWritten(CROWNCOIN_IPC_CONNECT_TIMEOUT);
+>>>>>>> origin/dirty-merge-dash-0.11.0
         socket->disconnectFromServer();
 
         delete socket;
@@ -299,7 +330,11 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     // Install global event filter to catch QFileOpenEvents
+<<<<<<< HEAD
     // on Mac: sent when you click dash: links
+=======
+    // on Mac: sent when you click crowncoin: links
+>>>>>>> origin/dirty-merge-dash-0.11.0
     // other OSes: helpful when dealing with payment request files (in the future)
     if (parent)
         parent->installEventFilter(this);
@@ -316,7 +351,11 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
         if (!uriServer->listen(name)) {
             // constructor is called early in init, so don't use "emit message()" here
             QMessageBox::critical(0, tr("Payment request error"),
+<<<<<<< HEAD
                 tr("Cannot start dash: click-to-pay handler"));
+=======
+                tr("Cannot start crowncoin: click-to-pay handler"));
+>>>>>>> origin/dirty-merge-dash-0.11.0
         }
         else {
             connect(uriServer, SIGNAL(newConnection()), this, SLOT(handleURIConnection()));
@@ -331,12 +370,20 @@ PaymentServer::~PaymentServer()
 }
 
 //
+<<<<<<< HEAD
 // OSX-specific way of handling dash: URIs and
+=======
+// OSX-specific way of handling crowncoin: URIs and
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // PaymentRequest mime types
 //
 bool PaymentServer::eventFilter(QObject *object, QEvent *event)
 {
+<<<<<<< HEAD
     // clicking on dash: URIs creates FileOpen events on the Mac
+=======
+    // clicking on crowncoin: URIs creates FileOpen events on the Mac
+>>>>>>> origin/dirty-merge-dash-0.11.0
     if (event->type() == QEvent::FileOpen)
     {
         QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
@@ -358,7 +405,11 @@ void PaymentServer::initNetManager()
     if (netManager != NULL)
         delete netManager;
 
+<<<<<<< HEAD
     // netManager is used to fetch paymentrequests given in dash: URIs
+=======
+    // netManager is used to fetch paymentrequests given in crowncoin: URIs
+>>>>>>> origin/dirty-merge-dash-0.11.0
     netManager = new QNetworkAccessManager(this);
 
     QNetworkProxy proxy;
@@ -398,7 +449,11 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
     }
 
+<<<<<<< HEAD
     if (s.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // dash: URI
+=======
+    if (s.startsWith(CROWNCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // crowncoin: URI
+>>>>>>> origin/dirty-merge-dash-0.11.0
     {
 #if QT_VERSION < 0x050000
         QUrl uri(s);
@@ -430,6 +485,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
         else // normal URI
         {
             SendCoinsRecipient recipient;
+<<<<<<< HEAD
             if (GUIUtil::parseBitcoinURI(s, &recipient))
             {
                 CBitcoinAddress address(recipient.address.toStdString());
@@ -443,6 +499,13 @@ void PaymentServer::handleURIOrFile(const QString& s)
             else
                 emit message(tr("URI handling"),
                     tr("URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters."),
+=======
+            if (GUIUtil::parseCrowncoinURI(s, &recipient))
+                emit receivedPaymentRequest(recipient);
+            else
+                emit message(tr("URI handling"),
+                    tr("URI can not be parsed! This can be caused by an invalid Crowncoin address or malformed URI parameters."),
+>>>>>>> origin/dirty-merge-dash-0.11.0
                     CClientUIInterface::ICON_WARNING);
 
             return;
@@ -560,10 +623,15 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
             // Append destination address
-            addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
+            addresses.append(QString::fromStdString(CCrowncoinAddress(dest).ToString()));
         }
+<<<<<<< HEAD
         else if (!recipient.authenticatedMerchant.isEmpty()) {
             // Insecure payments to custom dash addresses are not supported
+=======
+        else if (!recipient.authenticatedMerchant.isEmpty()){
+            // Insecure payments to custom Crowncoin addresses are not supported
+>>>>>>> origin/dirty-merge-dash-0.11.0
             // (there is no good way to tell the user where they are paying in a way
             // they'd have a chance of understanding).
             emit message(tr("Payment request rejected"),
@@ -574,10 +642,16 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
 
         // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
+<<<<<<< HEAD
         if (txOut.IsDust(::minRelayTxFee)) {
             emit message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
                 .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
                 CClientUIInterface::MSG_ERROR);
+=======
+        if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
+            QString msg = tr("Requested payment amount of %1 is too small (considered dust).")
+                .arg(CrowncoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
             return false;
         }
@@ -585,7 +659,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         recipient.amount += sendingTo.second;
     }
     // Store addresses and format them to fit nicely into the GUI
-    recipient.address = addresses.join("<br />");
+    recipient.recipient = addresses.join("<br />");
 
     if (!recipient.authenticatedMerchant.isEmpty()) {
         qDebug() << "PaymentServer::processPaymentRequest : Secure payment request from " << recipient.authenticatedMerchant;
@@ -603,7 +677,11 @@ void PaymentServer::fetchRequest(const QUrl& url)
     netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTREQUEST);
     netRequest.setUrl(url);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+<<<<<<< HEAD
     netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTREQUEST);
+=======
+    netRequest.setRawHeader("Accept", CROWNCOIN_REQUEST_MIMETYPE);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     netManager->get(netRequest);
 }
 
@@ -616,9 +694,15 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     QNetworkRequest netRequest;
     netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTACK);
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
+<<<<<<< HEAD
     netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BIP71_MIMETYPE_PAYMENT);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
     netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTACK);
+=======
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, CROWNCOIN_PAYMENTACK_CONTENTTYPE);
+    netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("Accept", CROWNCOIN_PAYMENTACK_MIMETYPE);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     payments::Payment payment;
     payment.set_merchant_data(details.merchant_data());

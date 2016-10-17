@@ -1,23 +1,23 @@
-Bitcoin version 0.7.1 is now available from:
-  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.7.1/
+Crowncoin version 0.7.1 is now available from:
+  http://sourceforge.net/projects/crowncoin/files/Crowncoin/crowncoin-0.7.1/
 
 This is a bug-fix minor release.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/bitcoin/bitcoin/issues
+  https://github.com/crowncoin/crowncoin/issues
 
 Project source code is hosted at github; you can get
 source-only tarballs/zipballs directly from there:
-  https://github.com/bitcoin/bitcoin/tarball/v0.7.1  # .tar.gz
-  https://github.com/bitcoin/bitcoin/zipball/v0.7.1  # .zip
+  https://github.com/crowncoin/crowncoin/tarball/v0.7.1  # .tar.gz
+  https://github.com/crowncoin/crowncoin/zipball/v0.7.1  # .zip
 
 Ubuntu Linux users can use the "Personal Package Archive" (PPA)
 maintained by Matt Corallo to automatically keep
 up-to-date.  Just type:
-  sudo apt-add-repository ppa:bitcoin/bitcoin
+  sudo apt-add-repository ppa:crowncoin/crowncoin
   sudo apt-get update
-in your terminal, then install the bitcoin-qt package:
-  sudo apt-get install bitcoin-qt
+in your terminal, then install the crowncoin-qt package:
+  sudo apt-get install crowncoin-qt
 
 KNOWN ISSUES
 ------------
@@ -30,7 +30,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+/Applications/Crowncoin-Qt (on Mac) or crowncoind/crowncoin-qt (on Linux).
 
 If you were running on Linux with a version that might have been compiled
 with a different version of Berkeley DB (for example, if you were using an
@@ -75,9 +75,13 @@ Dependency changes
 Bug fixes
 ---------
 
-* Clicking on a bitcoin: URI on Windows should now launch Bitcoin-Qt properly.
+* Clicking on a crowncoin: URI on Windows should now launch Crowncoin-Qt properly.
 
+<<<<<<< HEAD:doc/release-notes/bitcoin/release-notes-0.7.1.md
 * When running -testnet, use RPC port 19998 by default.
+=======
+* When running -testnet, use RPC port 19341 by default.
+>>>>>>> origin/dirty-merge-dash-0.11.0:doc/release-notes/release-notes-0.7.1.md
 
 * Better detection and handling of corrupt wallet.dat and blkindex.dat files.
   Previous versions would crash with a DB_RUNRECOVERY exception, this

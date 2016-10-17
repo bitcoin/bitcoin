@@ -1,11 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2009-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef CROWNCOIN_UINT256_H
+#define CROWNCOIN_UINT256_H
 
 #include <assert.h>
 #include <cstring>
@@ -260,11 +265,14 @@ public:
     {
         return pn[2*n] | (uint64_t)pn[2*n+1] << 32;
     }
+<<<<<<< HEAD
     /**
      * Returns the position of the highest bit set plus one, or zero if the
      * value is zero.
      */
     unsigned int bits() const;
+=======
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     uint64_t GetLow64() const
     {

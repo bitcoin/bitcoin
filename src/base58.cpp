@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 // Copyright (c) 2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2014 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
@@ -201,6 +206,7 @@ int CBase58Data::CompareTo(const CBase58Data& b58) const
     return 0;
 }
 
+<<<<<<< HEAD
 namespace
 {
 class CBitcoinAddressVisitor : public boost::static_visitor<bool>
@@ -220,16 +226,37 @@ public:
 
 bool CBitcoinAddress::Set(const CKeyID& id)
 {
+=======
+namespace {
+    class CCrowncoinAddressVisitor : public boost::static_visitor<bool> {
+    private:
+        CCrowncoinAddress *addr;
+    public:
+        CCrowncoinAddressVisitor(CCrowncoinAddress *addrIn) : addr(addrIn) { }
+
+        bool operator()(const CKeyID &id) const { return addr->Set(id); }
+        bool operator()(const CScriptID &id) const { return addr->Set(id); }
+        bool operator()(const CNoDestination &no) const { return false; }
+    };
+};
+
+bool CCrowncoinAddress::Set(const CKeyID &id) {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
     return true;
 }
 
+<<<<<<< HEAD
 bool CBitcoinAddress::Set(const CScriptID& id)
 {
+=======
+bool CCrowncoinAddress::Set(const CScriptID &id) {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
     return true;
 }
 
+<<<<<<< HEAD
 bool CBitcoinAddress::Set(const CTxDestination& dest)
 {
     return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
@@ -242,14 +269,25 @@ bool CBitcoinAddress::IsValid() const
 
 bool CBitcoinAddress::IsValid(const CChainParams& params) const
 {
+=======
+bool CCrowncoinAddress::Set(const CTxDestination &dest) {
+    return boost::apply_visitor(CCrowncoinAddressVisitor(this), dest);
+}
+
+bool CCrowncoinAddress::IsValid() const {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     bool fCorrectSize = vchData.size() == 20;
     bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
                          vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     return fCorrectSize && fKnownVersion;
 }
 
+<<<<<<< HEAD
 CTxDestination CBitcoinAddress::Get() const
 {
+=======
+CTxDestination CCrowncoinAddress::Get() const {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     if (!IsValid())
         return CNoDestination();
     uint160 id;
@@ -262,8 +300,12 @@ CTxDestination CBitcoinAddress::Get() const
         return CNoDestination();
 }
 
+<<<<<<< HEAD
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 {
+=======
+bool CCrowncoinAddress::GetKeyID(CKeyID &keyID) const {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return false;
     uint160 id;
@@ -272,6 +314,7 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
     return true;
 }
 
+<<<<<<< HEAD
 bool CBitcoinAddress::IsScript() const
 {
     return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
@@ -279,27 +322,43 @@ bool CBitcoinAddress::IsScript() const
 
 void CBitcoinSecret::SetKey(const CKey& vchSecret)
 {
+=======
+bool CCrowncoinAddress::IsScript() const {
+    return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+}
+
+void CCrowncoinSecret::SetKey(const CKey& vchSecret) {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     assert(vchSecret.IsValid());
     SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
     if (vchSecret.IsCompressed())
         vchData.push_back(1);
 }
 
+<<<<<<< HEAD
 CKey CBitcoinSecret::GetKey()
 {
+=======
+CKey CCrowncoinSecret::GetKey() {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     CKey ret;
     assert(vchData.size() >= 32);
     ret.Set(vchData.begin(), vchData.begin() + 32, vchData.size() > 32 && vchData[32] == 1);
     return ret;
 }
 
+<<<<<<< HEAD
 bool CBitcoinSecret::IsValid() const
 {
+=======
+bool CCrowncoinSecret::IsValid() const {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
     bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
     return fExpectedFormat && fCorrectVersion;
 }
 
+<<<<<<< HEAD
 bool CBitcoinSecret::SetString(const char* pszSecret)
 {
     return CBase58Data::SetString(pszSecret) && IsValid();
@@ -307,5 +366,12 @@ bool CBitcoinSecret::SetString(const char* pszSecret)
 
 bool CBitcoinSecret::SetString(const std::string& strSecret)
 {
+=======
+bool CCrowncoinSecret::SetString(const char* pszSecret) {
+    return CBase58Data::SetString(pszSecret) && IsValid();
+}
+
+bool CCrowncoinSecret::SetString(const std::string& strSecret) {
+>>>>>>> origin/dirty-merge-dash-0.11.0
     return SetString(strSecret.c_str());
 }

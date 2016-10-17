@@ -1,17 +1,29 @@
 Gitian building
 ================
 
+<<<<<<< HEAD
 *Setup instructions for a gitian build of Dash using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Dash
 Core executables. It provides a way to be reasonably sure that the
 executables are really built from source on GitHub. It also makes sure that
+=======
+*Setup instructions for a gitian build of Crowncoin using a Debian VM or physical system.*
+
+Gitian is the deterministic build process that is used to build the Crowncoin
+Core executables [1]. It provides a way to be reasonably sure that the
+executables are really built from source on github. It also makes sure that
+>>>>>>> origin/dirty-merge-dash-0.11.0
 the same, tested dependencies are used and statically built into the executable.
 
 Multiple developers build the source code by following a specific descriptor
 ("recipe"), cryptographically sign the result, and upload the resulting signature.
 These results are compared and only if they match, the build is accepted and uploaded
+<<<<<<< HEAD
 to dashpay.io.
+=======
+to crowncoin.org.
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 More independent gitian builders are needed, which is why I wrote this
 guide. It is preferred to follow these steps yourself instead of using someone else's
@@ -26,7 +38,11 @@ Table of Contents
 - [Installing gitian](#installing-gitian)
 - [Setting up gitian images](#setting-up-gitian-images)
 - [Getting and building the inputs](#getting-and-building-the-inputs)
+<<<<<<< HEAD
 - [Building Dash](#building-dash)
+=======
+- [Building Crowncoin](#building-crowncoin)
+>>>>>>> origin/dirty-merge-dash-0.11.0
 - [Building an alternative repository](#building-an-alternative-repository)
 - [Signing externally](#signing-externally)
 - [Uploading signatures](#uploading-signatures)
@@ -277,6 +293,7 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
+<<<<<<< HEAD
 Clone the git repositories for dash and gitian and then checkout the dash version that you want to build.
 
 ```bash
@@ -285,6 +302,13 @@ git clone https://github.com/dashpay/dash.git
 cd dash
 git checkout v${VERSION}
 cd ..
+=======
+Clone the git repositories for crowncoin and gitian,
+
+```bash
+git clone https://github.com/devrandom/gitian-builder.git
+git clone https://github.com/crowncoin/crowncoin
+>>>>>>> origin/dirty-merge-dash-0.11.0
 ```
 
 **Note**: if you've installed Gitian before May 16, 2015, please update to the latest version, see https://github.com/devrandom/gitian-builder/issues/86
@@ -321,10 +345,15 @@ There will be a lot of warnings printed during build of the images. These can be
 Getting and building the inputs
 --------------------------------
 
+<<<<<<< HEAD
 Follow the instructions in [doc/release-process.md](release-process.md) in the dash repository
 under 'Fetch and build inputs' to install sources which require manual intervention. Also follow
 the next step: 'Seed the Gitian sources cache', which will fetch all necessary source files allowing
 for gitian to work offline.
+=======
+In [doc/release-process.md](release-process.md) in the crowncoin repository under 'Fetch and build inputs'.
+you will find a list of `wget` commands that can be executed to get the dependencies.
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 Building Dash
 ----------------
@@ -342,15 +371,31 @@ tail -f var/install.log
 tail -f var/build.log
 ```
 
+<<<<<<< HEAD
 Output from `gbuild` will look something like
 
 ```bash
     Initialized empty Git repository in /home/debian/gitian-builder/inputs/dash/.git/
+=======
+Building Crowncoin
+----------------
+
+To build Crowncoin (for Linux and/or Windows) just follow the steps under 'perform
+gitian builds' in [doc/release-process.md](release-process.md) in the crowncoin repository.
+
+Output from `gbuild` will look something like
+
+    Initialized empty Git repository in /home/debian/gitian-builder/inputs/crowncoin/.git/
+>>>>>>> origin/dirty-merge-dash-0.11.0
     remote: Reusing existing pack: 35606, done.
     remote: Total 35606 (delta 0), reused 0 (delta 0)
     Receiving objects: 100% (35606/35606), 26.52 MiB | 4.28 MiB/s, done.
     Resolving deltas: 100% (25724/25724), done.
+<<<<<<< HEAD
     From https://github.com/dashpay/dash
+=======
+    From https://github.com/crowncoin/crowncoin
+>>>>>>> origin/dirty-merge-dash-0.11.0
     ... (new tags, new branch etc)
     --- Building for precise x86_64 ---
     Stopping target if it is up
@@ -377,11 +422,18 @@ and inputs.
 
 For example:
 ```bash
+<<<<<<< HEAD
 URL=https://github.com/crowning-/dash.git
 COMMIT=b616fb8ef0d49a919b72b0388b091aaec5849b96
 ./bin/gbuild --commit dash=${COMMIT} --url dash=${URL} ../dash/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit dash=${COMMIT} --url dash=${URL} ../dash/contrib/gitian-descriptors/gitian-win.yml
 ./bin/gbuild --commit dash=${COMMIT} --url dash=${URL} ../dash/contrib/gitian-descriptors/gitian-osx.yml
+=======
+URL=https://github.com/laanwj/crowncoin.git
+COMMIT=2014_03_windows_unicode_path
+./bin/gbuild --commit crowncoin=${COMMIT} --url crowncoin=${URL} ../crowncoin/contrib/gitian-descriptors/gitian-linux.yml
+./bin/gbuild --commit crowncoin=${COMMIT} --url crowncoin=${URL} ../crowncoin/contrib/gitian-descriptors/gitian-win.yml
+>>>>>>> origin/dirty-merge-dash-0.11.0
 ```
 
 Signing externally
@@ -396,9 +448,14 @@ When you execute `gsign` you will get an error from GPG, which can be ignored. C
 in `gitian.sigs` to your signing machine and do
 
 ```bash
+<<<<<<< HEAD
     gpg --detach-sign ${VERSION}-linux/${SIGNER}/dash-build.assert
     gpg --detach-sign ${VERSION}-win/${SIGNER}/dash-build.assert
     gpg --detach-sign ${VERSION}-osx/${SIGNER}/dash-build.assert
+=======
+    gpg --detach-sign ${VERSION}/${SIGNER}/crowncoin-build.assert
+    gpg --detach-sign ${VERSION}-win/${SIGNER}/crowncoin-build.assert
+>>>>>>> origin/dirty-merge-dash-0.11.0
 ```
 
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
@@ -407,7 +464,16 @@ gitian build.
 Uploading signatures (not yet implemented)
 ---------------------
 
+<<<<<<< HEAD
 In the future it will be possible to push your signatures (both the `.assert` and `.assert.sig` files) to the
 [dash/gitian.sigs](https://github.com/dashpay/gitian.sigs/) repository, or if that's not possible to create a pull
 request.
 There will be an official announcement when this repository is online.
+=======
+After building and signing you can push your signatures (both the `.assert` and
+`.assert.sig` files) to the
+[crowncoin/gitian.sigs](https://github.com/crowncoin/gitian.sigs/) repository, or
+if not possible create a pull request. You can also mail the files to me
+(laanwj@gmail.com) and I'll commit them.
+
+>>>>>>> origin/dirty-merge-dash-0.11.0

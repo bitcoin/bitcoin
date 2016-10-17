@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 // Copyright (c) 2012-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2012-2014 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "coins.h"
@@ -54,6 +59,7 @@ bool CCoins::Spend(int nPos) {
 }
 
 
+<<<<<<< HEAD
 bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) const { return false; }
 bool CCoinsView::HaveCoins(const uint256 &txid) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(0); }
@@ -68,6 +74,32 @@ uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
 bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
 bool CCoinsViewBacked::GetStats(CCoinsStats &stats) const { return base->GetStats(stats); }
+=======
+bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) { return false; }
+bool CCoinsView::SetCoins(const uint256 &txid, const CCoins &coins) { return false; }
+bool CCoinsView::HaveCoins(const uint256 &txid) { return false; }
+uint256 CCoinsView::GetBestBlock() { return uint256(0); }
+bool CCoinsView::SetBestBlock(const uint256 &hashBlock) { return false; }
+bool CCoinsView::GetName (const CName& name, CNameData& data) const { return false; }
+bool CCoinsView::SetName (const CName& name, const CNameData& data) { return false; }
+bool CCoinsView::DeleteName (const CName& name) { return false; }
+bool CCoinsView::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names) { return false; }
+bool CCoinsView::GetStats(CCoinsStats &stats) { return false; }
+
+
+CCoinsViewBacked::CCoinsViewBacked(CCoinsView &viewIn) : base(&viewIn) { }
+bool CCoinsViewBacked::GetCoins(const uint256 &txid, CCoins &coins) { return base->GetCoins(txid, coins); }
+bool CCoinsViewBacked::SetCoins(const uint256 &txid, const CCoins &coins) { return base->SetCoins(txid, coins); }
+bool CCoinsViewBacked::HaveCoins(const uint256 &txid) { return base->HaveCoins(txid); }
+uint256 CCoinsViewBacked::GetBestBlock() { return base->GetBestBlock(); }
+bool CCoinsViewBacked::SetBestBlock(const uint256 &hashBlock) { return base->SetBestBlock(hashBlock); }
+bool CCoinsViewBacked::GetName (const CName& name, CNameData& data) const { return base->GetName (name, data); }
+bool CCoinsViewBacked::SetName (const CName& name, const CNameData& data) { return base->SetName (name, data); }
+bool CCoinsViewBacked::DeleteName (const CName& name) { return base->DeleteName (name); }
+void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
+bool CCoinsViewBacked::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names) { return base->BatchWrite(mapCoins, hashBlock, names); }
+bool CCoinsViewBacked::GetStats(CCoinsStats &stats) { return base->GetStats(stats); }
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 
@@ -150,6 +182,7 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
     hashBlock = hashBlockIn;
 }
 
+<<<<<<< HEAD
 bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
     assert(!hasModifier);
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
@@ -182,17 +215,59 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
         CCoinsMap::iterator itOld = it++;
         mapCoins.erase(itOld);
     }
+=======
+bool CCoinsViewCache::GetName (const CName& name, CNameData& data) const {
+    if (cacheNames.IsDeleted (name))
+        return false;
+    if (cacheNames.Get (name, data))
+        return true;
+
+    /* Note: This does not attempt to cache name queries.  The cache
+       only keeps track of changes!  */
+
+    return base->GetName (name, data);
+}
+
+bool CCoinsViewCache::SetName (const CName& name, const CNameData& data) {
+    cacheNames.Set (name, data);
+    return true;
+}
+
+bool CCoinsViewCache::DeleteName (const CName& name) {
+    cacheNames.Delete (name);
+    return true;
+}
+
+bool CCoinsViewCache::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlockIn, const CNameCache& names) {
+    for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+        cacheCoins[it->first] = it->second;
+>>>>>>> origin/dirty-merge-dash-0.11.0
     hashBlock = hashBlockIn;
+    cacheNames.Apply (names);
     return true;
 }
 
 bool CCoinsViewCache::Flush() {
+<<<<<<< HEAD
     bool fOk = base->BatchWrite(cacheCoins, hashBlock);
     cacheCoins.clear();
     return fOk;
 }
 
 unsigned int CCoinsViewCache::GetCacheSize() const {
+=======
+    bool fOk = base->BatchWrite(cacheCoins, hashBlock, cacheNames);
+    if (fOk)
+    {
+        cacheCoins.clear();
+        cacheNames.Clear();
+    }
+    return fOk;
+}
+
+unsigned int CCoinsViewCache::GetCacheSize() {
+    // Do not take name operations into account here.
+>>>>>>> origin/dirty-merge-dash-0.11.0
     return cacheCoins.size();
 }
 

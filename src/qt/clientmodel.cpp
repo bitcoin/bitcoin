@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2011-2013 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,9 +19,13 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
+<<<<<<< HEAD
 #include "masternodeman.h"
 #include "masternode-sync.h"
 #include "util.h"
+=======
+#include "throneman.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include <stdint.h>
 
@@ -28,11 +36,16 @@
 static const int64_t nClientStartupTime = GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
+<<<<<<< HEAD
     QObject(parent),
     optionsModel(optionsModel),
     peerTableModel(0),
     cachedNumBlocks(0),
     cachedMasternodeCountString(""),
+=======
+    QObject(parent), optionsModel(optionsModel),
+    cachedNumBlocks(0), cachedThroneCountString(""),
+>>>>>>> origin/dirty-merge-dash-0.11.0
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
 {
@@ -68,11 +81,17 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return nNum;
 }
 
+<<<<<<< HEAD
 QString ClientModel::getMasternodeCountString() const
 {
     return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
             .arg(QString::number((int)mnodeman.CountEnabled()));
+=======
+QString ClientModel::getThroneCountString() const
+{
+    return QString::number((int)mnodeman.CountEnabled()) + " / " + QString::number((int)mnodeman.size());
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 int ClientModel::getNumBlocks() const
@@ -152,6 +171,7 @@ void ClientModel::updateMnTimer()
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain)
         return;
+<<<<<<< HEAD
     QString newMasternodeCountString = getMasternodeCountString();
 
     if (cachedMasternodeCountString != newMasternodeCountString)
@@ -159,6 +179,15 @@ void ClientModel::updateMnTimer()
         cachedMasternodeCountString = newMasternodeCountString;
 
         emit strMasternodesChanged(cachedMasternodeCountString);
+=======
+    QString newThroneCountString = getThroneCountString();
+
+    if (cachedThroneCountString != newThroneCountString)
+    {
+        cachedThroneCountString = newThroneCountString;
+
+        emit strThronesChanged(cachedThroneCountString);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     }
 }
 

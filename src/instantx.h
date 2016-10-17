@@ -5,6 +5,7 @@
 #ifndef INSTANTX_H
 #define INSTANTX_H
 
+<<<<<<< HEAD
 #include "sync.h"
 #include "net.h"
 #include "key.h"
@@ -24,6 +25,17 @@
 */
 #define INSTANTX_SIGNATURES_REQUIRED           6
 #define INSTANTX_SIGNATURES_TOTAL              10
+=======
+#include "bignum.h"
+#include "sync.h"
+#include "net.h"
+#include "key.h"
+#include "core.h"
+#include "util.h"
+#include "script.h"
+#include "base58.h"
+#include "main.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 using namespace std;
 using namespace boost;
@@ -32,7 +44,11 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
+<<<<<<< HEAD
 static const int MIN_INSTANTX_PROTO_VERSION = 70103;
+=======
+static const int MIN_INSTANTX_PROTO_VERSION = 70066;
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransaction> mapTxLockReqRejected;
@@ -55,7 +71,11 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight);
 
 //process consensus vote message
+<<<<<<< HEAD
 bool ProcessConsensusVote(CNode *pnode, CConsensusVote& ctx);
+=======
+bool ProcessConsensusVote(CConsensusVote& ctx);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 // keep transaction locks in memory for an hour
 void CleanTransactionLocksList();
@@ -65,16 +85,24 @@ int64_t GetAverageVoteTime();
 class CConsensusVote
 {
 public:
+<<<<<<< HEAD
     CTxIn vinMasternode;
     uint256 txHash;
     int nBlockHeight;
     std::vector<unsigned char> vchMasterNodeSignature;
+=======
+    CTxIn vinThrone;
+    uint256 txHash;
+    int nBlockHeight;
+    std::vector<unsigned char> vchThroNeSignature;
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     uint256 GetHash() const;
 
     bool SignatureValid();
     bool Sign();
 
+<<<<<<< HEAD
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -84,6 +112,15 @@ public:
         READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
     }
+=======
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(txHash);
+        READWRITE(vinThrone);
+        READWRITE(vchThroNeSignature);
+        READWRITE(nBlockHeight);
+    )
+>>>>>>> origin/dirty-merge-dash-0.11.0
 };
 
 class CTransactionLock
@@ -106,4 +143,8 @@ public:
 };
 
 
+<<<<<<< HEAD
 #endif
+=======
+#endif
+>>>>>>> origin/dirty-merge-dash-0.11.0

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Copyright (c) 2012-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ static void ResetArgs(const std::string& strArg)
       boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
 
     // Insert dummy executable name:
-    vecArg.insert(vecArg.begin(), "testbitcoin");
+    vecArg.insert(vecArg.begin(), "testcrowncoin");
 
     // Convert to char*:
     std::vector<const char*> vecChar;

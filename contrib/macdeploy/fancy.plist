@@ -22,7 +22,11 @@
 			<integer>370</integer>
 			<integer>156</integer>
 		</array>
+<<<<<<< HEAD
 		<key>Dash-Qt.app</key>
+=======
+		<key>Crowncoin-Qt.app</key>
+>>>>>>> origin/dirty-merge-dash-0.11.0
 		<array>
 			<integer>128</integer>
 			<integer>156</integer>

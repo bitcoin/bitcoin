@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2009-2014 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
@@ -175,8 +180,13 @@ Value addnode(const Array& params, bool fHelp)
             "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
             "2. \"command\"  (string, required) 'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once\n"
             "\nExamples:\n"
+<<<<<<< HEAD
             + HelpExampleCli("addnode", "\"192.168.0.6:9999\" \"onetry\"")
             + HelpExampleRpc("addnode", "\"192.168.0.6:9999\", \"onetry\"")
+=======
+            + HelpExampleCli("addnode", "\"192.168.0.6:9340\" \"onetry\"")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:9340\", \"onetry\"")
+>>>>>>> origin/dirty-merge-dash-0.11.0
         );
 
     string strNode = params[0].get_str();
@@ -229,7 +239,11 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             "    \"connected\" : true|false,          (boolean) If connected\n"
             "    \"addresses\" : [\n"
             "       {\n"
+<<<<<<< HEAD
             "         \"address\" : \"192.168.0.201:9999\",  (string) The dash server host and port\n"
+=======
+            "         \"address\" : \"192.168.0.201:9340\",  (string) The crowncoin server host and port\n"
+>>>>>>> origin/dirty-merge-dash-0.11.0
             "         \"connected\" : \"outbound\"           (string) connection, inbound or outbound\n"
             "       }\n"
             "       ,...\n"
@@ -380,6 +394,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             "Returns an object containing various state info regarding P2P networking.\n"
             "\nResult:\n"
             "{\n"
+<<<<<<< HEAD
             "  \"version\": xxxxx,                      (numeric) the server version\n"
             "  \"subversion\": \"/Dash Core:x.x.x/\",     (string) the server subversion string\n"
             "  \"protocolversion\": xxxxx,              (numeric) the protocol version\n"
@@ -403,6 +418,18 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             "    \"score\": xxx                         (numeric) relative score\n"
             "  }\n"
             "  ,...\n"
+=======
+            "  \"version\": xxxxx,           (numeric) the server version\n"
+            "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
+            "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
+            "  \"connections\": xxxxx,       (numeric) the number of connections\n"
+            "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
+            "  \"relayfee\": x.xxxx,         (numeric) minimum relay fee for non-free transactions in CRW/kb\n"
+            "  \"localaddresses\": [,        (array) list of local addresses\n"
+            "    \"address\": \"xxxx\",      (string) network address\n"
+            "    \"port\": xxx,              (numeric) network port\n"
+            "    \"score\": xxx              (numeric) relative score\n"
+>>>>>>> origin/dirty-merge-dash-0.11.0
             "  ]\n"
             "}\n"
             "\nExamples:\n"

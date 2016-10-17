@@ -2,7 +2,12 @@
 #
 # linearize-hashes.py:  List blocks in a linear, no-fork version of the chain.
 #
+<<<<<<< HEAD:contrib/linearize/linearize-hashes.py
 # Copyright (c) 2013-2014 The Bitcoin developers
+=======
+#
+# Copyright (c) 2013 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0:contrib/linearize/linearize.py
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -17,7 +22,13 @@ import sys
 
 settings = {}
 
+<<<<<<< HEAD:contrib/linearize/linearize-hashes.py
 class BitcoinRPC:
+=======
+class CrowncoinRPC:
+	OBJID = 1
+
+>>>>>>> origin/dirty-merge-dash-0.11.0:contrib/linearize/linearize.py
 	def __init__(self, host, port, username, password):
 		authpair = "%s:%s" % (username, password)
 		self.authhdr = "Basic %s" % (base64.b64encode(authpair))
@@ -52,8 +63,13 @@ class BitcoinRPC:
 	def response_is_error(resp_obj):
 		return 'error' in resp_obj and resp_obj['error'] is not None
 
+<<<<<<< HEAD:contrib/linearize/linearize-hashes.py
 def get_block_hashes(settings, max_blocks_per_call=10000):
 	rpc = BitcoinRPC(settings['host'], settings['port'],
+=======
+def get_blocks(settings):
+	rpc = CrowncoinRPC(settings['host'], settings['port'],
+>>>>>>> origin/dirty-merge-dash-0.11.0:contrib/linearize/linearize.py
 			 settings['rpcuser'], settings['rpcpassword'])
 
 	height = settings['min_height']
@@ -96,7 +112,11 @@ if __name__ == '__main__':
 	if 'host' not in settings:
 		settings['host'] = '127.0.0.1'
 	if 'port' not in settings:
+<<<<<<< HEAD:contrib/linearize/linearize-hashes.py
 		settings['port'] = 9998
+=======
+		settings['port'] = 9341
+>>>>>>> origin/dirty-merge-dash-0.11.0:contrib/linearize/linearize.py
 	if 'min_height' not in settings:
 		settings['min_height'] = 0
 	if 'max_height' not in settings:

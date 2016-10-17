@@ -1,15 +1,19 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
+<<<<<<< HEAD
 #include "config/dash-config.h"
+=======
+#include "crowncoin-config.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #endif
 
 #include "optionsdialog.h"
 #include "ui_optionsdialog.h"
 
-#include "bitcoinunits.h"
+#include "crowncoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "darksend.h"
@@ -119,7 +123,12 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
 #endif
 
+<<<<<<< HEAD
     ui->unit->setModel(new BitcoinUnits(this));
+=======
+    ui->unit->setModel(new CrowncoinUnits(this));
+    ui->transactionFee->setSingleStep(CTransaction::nMinTxFee);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     /* Widget-to-option mapper */
     mapper = new QDataWidgetMapper(this);
@@ -156,6 +165,12 @@ void OptionsDialog::setModel(OptionsModel *model)
         mapper->toFirst();
     }
 
+<<<<<<< HEAD
+=======
+    /* update the display unit, to not use the default ("CRW") */
+    updateDisplayUnit();
+
+>>>>>>> origin/dirty-merge-dash-0.11.0
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
 
     /* Main */
@@ -176,7 +191,7 @@ void OptionsDialog::setModel(OptionsModel *model)
 void OptionsDialog::setMapper()
 {
     /* Main */
-    mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
+    mapper->addMapping(ui->crowncoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 

@@ -329,10 +329,17 @@
          </property>
         </widget>
        </item>
+<<<<<<< HEAD
        <item row="5" column="1">
         <widget class="QLabel" name="buildDate">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
+=======
+       <item row="14" column="0">
+        <widget class="QPushButton" name="openDebugLogfileButton">
+         <property name="toolTip">
+          <string>Open the Crowncoin debug log file from the current data directory. This can take a few seconds for large log files.</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </property>
          <property name="text">
           <string>N/A</string>
@@ -345,16 +352,42 @@
          </property>
         </widget>
        </item>
+<<<<<<< HEAD
        <item row="4" column="0">
         <widget class="QLabel" name="berkeleyDBVersionLabel">
          <property name="text">
           <string>Using BerkeleyDB version</string>
+=======
+       <item row="15" column="0">      
+         <widget class="QLabel" name="label_15">     
+          <property name="text">     
+           <string>Throne Count</string>     
+          </property>      
+         </widget>     
+        </item>      
+        <item row="15" column="1">      
+         <widget class="QLabel" name="throneCount">      
+          <property name="text">     
+           <string>N/A</string>      
+          </property>      
+         </widget>
+       </item>
+       <item row="16" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </property>
          <property name="indent">
           <number>10</number>
          </property>
+<<<<<<< HEAD
         </widget>
        </item>
+=======
+        </spacer>
+        </item>  
+>>>>>>> origin/dirty-merge-dash-0.11.0
       </layout>
      </widget>
      <widget class="QWidget" name="tab_console">
@@ -414,7 +447,11 @@
             <string/>
            </property>
            <property name="icon">
+<<<<<<< HEAD
             <iconset resource="../dash.qrc">
+=======
+            <iconset resource="../crowncoin.qrc">
+>>>>>>> origin/dirty-merge-dash-0.11.0
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="shortcut">
@@ -1334,7 +1371,11 @@
   </customwidget>
  </customwidgets>
  <resources>
+<<<<<<< HEAD
   <include location="../dash.qrc"/>
+=======
+  <include location="../crowncoin.qrc"/>
+>>>>>>> origin/dirty-merge-dash-0.11.0
  </resources>
  <connections/>
 </ui>

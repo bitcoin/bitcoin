@@ -1,13 +1,23 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
+=======
+// Copyright (c) 2009-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef CROWNCOIN_TXDB_LEVELDB_H
+#define CROWNCOIN_TXDB_LEVELDB_H
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include "leveldbwrapper.h"
 #include "main.h"
+#include "names.h"
 
 #include <map>
 #include <string>
@@ -32,11 +42,24 @@ protected:
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
+<<<<<<< HEAD
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
     bool GetStats(CCoinsStats &stats) const;
+=======
+    bool GetCoins(const uint256 &txid, CCoins &coins);
+    bool SetCoins(const uint256 &txid, const CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
+    uint256 GetBestBlock();
+    bool SetBestBlock(const uint256 &hashBlock);
+    bool GetName (const CName& name, CNameData& data) const;
+    bool SetName (const CName& name, const CNameData& data);
+    bool DeleteName (const CName& name);
+    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names);
+    bool GetStats(CCoinsStats &stats);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 };
 
 /** Access to the block database (blocks/index/) */
@@ -62,4 +85,8 @@ public:
     bool LoadBlockIndexGuts();
 };
 
+<<<<<<< HEAD
 #endif // BITCOIN_TXDB_H
+=======
+#endif // CROWNCOIN_TXDB_LEVELDB_H
+>>>>>>> origin/dirty-merge-dash-0.11.0

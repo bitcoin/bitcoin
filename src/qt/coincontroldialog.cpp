@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2011-2013 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +11,7 @@
 #include "ui_coincontroldialog.h"
 
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "crowncoinunits.h"
 #include "guiutil.h"
 #include "init.h"
 #include "optionsmodel.h"
@@ -639,7 +643,11 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 
     // actually update labels
+<<<<<<< HEAD
     int nDisplayUnit = BitcoinUnits::DASH;
+=======
+    int nDisplayUnit = CrowncoinUnits::CRW;
+>>>>>>> origin/dirty-merge-dash-0.11.0
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
@@ -660,11 +668,12 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
-    l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
-    l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
-    l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
+    l2->setText(CrowncoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
+    l3->setText(CrowncoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
+    l4->setText(CrowncoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
     l5->setText(((nBytes > 0) ? "~" : "") + QString::number(nBytes));        // Bytes
     l6->setText(sPriorityLabel);                                             // Priority
+<<<<<<< HEAD
     l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
     if (nPayFee > 0 && !(payTxFee.GetFeePerK() > 0 && fPayAtLeastCustomFee && nBytes < 1000))
@@ -683,10 +692,25 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     // tool tips
     QString toolTip1 = tr("This label turns red, if the transaction size is greater than 1000 bytes.") + "<br /><br />";
     toolTip1 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CWallet::minTxFee.GetFeePerK())) + "<br /><br />";
+=======
+    l7->setText((fLowOutput ? (fDust ? tr("Dust") : tr("yes")) : tr("no"))); // Low Output / Dust
+    l8->setText(CrowncoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
+
+    // turn labels "red"
+    l5->setStyleSheet((nBytes >= 1000) ? "color:red;" : "");                            // Bytes >= 1000
+    l6->setStyleSheet((dPriority > 0 && !AllowFree(dPriority)) ? "color:red;" : "");    // Priority < "medium"
+    l7->setStyleSheet((fLowOutput) ? "color:red;" : "");                                // Low Output = "yes"
+    l8->setStyleSheet((nChange > 0 && nChange < CENT) ? "color:red;" : "");             // Change < 0.01CRW
+
+    // tool tips
+    QString toolTip1 = tr("This label turns red, if the transaction size is greater than 1000 bytes.") + "<br /><br />";
+    toolTip1 += tr("This means a fee of at least %1 per kB is required.").arg(CrowncoinUnits::formatWithUnit(nDisplayUnit, CTransaction::nMinTxFee)) + "<br /><br />";
+>>>>>>> origin/dirty-merge-dash-0.11.0
     toolTip1 += tr("Can vary +/- 1 byte per input.");
 
     QString toolTip2 = tr("Transactions with higher priority are more likely to get included into a block.") + "<br /><br />";
     toolTip2 += tr("This label turns red, if the priority is smaller than \"medium\".") + "<br /><br />";
+<<<<<<< HEAD
     toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CWallet::minTxFee.GetFeePerK()));
 
     QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, ::minRelayTxFee.GetFee(546)));
@@ -698,6 +722,16 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     else
         dFeeVary = (double)std::max(CWallet::minTxFee.GetFeePerK(), mempool.estimateFee(nTxConfirmTarget).GetFeePerK()) / 1000;
     QString toolTip4 = tr("Can vary +/- %1 duff(s) per input.").arg(dFeeVary);
+=======
+    toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(CrowncoinUnits::formatWithUnit(nDisplayUnit, CTransaction::nMinTxFee));
+
+    QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(CrowncoinUnits::formatWithUnit(nDisplayUnit, CENT)) + "<br /><br />";
+    toolTip3 += tr("This means a fee of at least %1 is required.").arg(CrowncoinUnits::formatWithUnit(nDisplayUnit, CTransaction::nMinTxFee)) + "<br /><br />";
+    toolTip3 += tr("Amounts below 0.546 times the minimum relay fee are shown as dust.");
+
+    QString toolTip4 = tr("This label turns red, if the change is smaller than %1.").arg(CrowncoinUnits::formatWithUnit(nDisplayUnit, CENT)) + "<br /><br />";
+    toolTip4 += tr("This means a fee of at least %1 is required.").arg(CrowncoinUnits::formatWithUnit(nDisplayUnit, CTransaction::nMinTxFee));
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     l3->setToolTip(toolTip4);
     l4->setToolTip(toolTip4);
@@ -784,9 +818,15 @@ void CoinControlDialog::updateView()
             QString sAddress = "";
             if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, outputAddress))
             {
+<<<<<<< HEAD
                 sAddress = QString::fromStdString(CBitcoinAddress(outputAddress).ToString());
 
                 // if listMode or change => show dash address. In tree mode, address is not shown again for direct wallet address outputs
+=======
+                sAddress = CCrowncoinAddress(outputAddress).ToString().c_str();
+
+                // if listMode or change => show Crowncoin address. In tree mode, address is not shown again for direct wallet address outputs
+>>>>>>> origin/dirty-merge-dash-0.11.0
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
 
@@ -814,8 +854,12 @@ void CoinControlDialog::updateView()
             }
 
             // amount
+<<<<<<< HEAD
             itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
             itemOutput->setToolTip(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
+=======
+            itemOutput->setText(COLUMN_AMOUNT, CrowncoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
+>>>>>>> origin/dirty-merge-dash-0.11.0
             itemOutput->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(out.tx->vout[out.i].nValue), 15, " ")); // padding so that sorting works correctly
 
             // date
@@ -868,8 +912,12 @@ void CoinControlDialog::updateView()
         {
             dPrioritySum = dPrioritySum / (nInputSum + 78);
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
+<<<<<<< HEAD
             itemWalletAddress->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
             itemWalletAddress->setToolTip(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
+=======
+            itemWalletAddress->setText(COLUMN_AMOUNT, CrowncoinUnits::format(nDisplayUnit, nSum));
+>>>>>>> origin/dirty-merge-dash-0.11.0
             itemWalletAddress->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(nSum), 15, " "));
             itemWalletAddress->setText(COLUMN_PRIORITY, CoinControlDialog::getPriorityLabel(dPrioritySum, mempoolEstimatePriority));
             itemWalletAddress->setText(COLUMN_PRIORITY_INT64, strPad(QString::number((int64_t)dPrioritySum), 20, " "));

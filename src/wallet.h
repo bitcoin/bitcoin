@@ -1,4 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
@@ -6,6 +7,13 @@
 
 #ifndef BITCOIN_WALLET_H
 #define BITCOIN_WALLET_H
+=======
+// Copyright (c) 2009-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef CROWNCOIN_WALLET_H
+#define CROWNCOIN_WALLET_H
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include "amount.h"
 #include "primitives/block.h"
@@ -75,6 +83,13 @@ enum AvailableCoinsType
     ONLY_NONDENOMINATED_NOT1000IFMN = 4
 };
 
+enum AvailableCoinsType
+{
+    ALL_COINS = 1,
+    ONLY_DENOMINATED = 2,
+    ONLY_NONDENOMINATED = 3,
+    ONLY_NONDENOMINATED_NOTMN = 4 // ONLY_NONDENOMINATED and not 1000 DASH at the same time
+};
 
 /** A key pool entry */
 class CKeyPool
@@ -120,8 +135,11 @@ public:
 class CWallet : public CCryptoKeyStore, public CValidationInterface
 {
 private:
+<<<<<<< HEAD
     bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = true) const;
 //it was public bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = true) const;
+=======
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     CWalletDB *pwalletdbEncryption;
 
@@ -147,15 +165,24 @@ private:
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
 public:
+<<<<<<< HEAD
 //    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = true) const;
     bool SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const;
     bool SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax);
     bool SelectCoinsDarkDenominated(int64_t nTargetValue, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet) const;
     bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
+=======
+    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = true) const;
+    bool SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const;
+    bool SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax);
+    bool SelectCoinsDarkDenominated(int64_t nTargetValue, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet) const;
+    bool HasCollateralInputs() const;
+>>>>>>> origin/dirty-merge-dash-0.11.0
     bool IsCollateralAmount(int64_t nInputAmount) const;
     int  CountInputsWithAmount(int64_t nInputAmount);
 
     bool SelectCoinsCollateral(std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet) const ;
+<<<<<<< HEAD
 
     /*
      * Main wallet lock.
@@ -164,6 +191,16 @@ public:
      *      fFileBacked (immutable after instantiation)
      *      strWalletFile (immutable after instantiation)
      */
+=======
+    bool SelectCoinsWithoutDenomination(int64_t nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+    bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
+
+    /// Main wallet lock.
+    /// This lock protects all the fields added by CWallet
+    ///   except for:
+    ///      fFileBacked (immutable after instantiation)
+    ///      strWalletFile (immutable after instantiation)
+>>>>>>> origin/dirty-merge-dash-0.11.0
     mutable CCriticalSection cs_wallet;
 
     bool fFileBacked;
@@ -176,6 +213,9 @@ public:
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
+
+    std::map<std::string, CAdrenalineNodeConfig> mapMyAdrenalineNodes;
+    bool AddAdrenalineNodeConfig(CAdrenalineNodeConfig nodeConfig);
 
     CWallet()
     {
@@ -228,7 +268,11 @@ public:
     bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX = false) const;
+<<<<<<< HEAD
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
+=======
+    bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     bool IsSpent(const uint256& hash, unsigned int n) const;
 
@@ -269,12 +313,15 @@ public:
     //! Look up a destination data tuple in the store, return true if found false otherwise
     bool GetDestData(const CTxDestination &dest, const std::string &key, std::string *value) const;
 
+<<<<<<< HEAD
     //! Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript &dest);
     bool RemoveWatchOnly(const CScript &dest);
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
 
+=======
+>>>>>>> origin/dirty-merge-dash-0.11.0
     bool Unlock(const SecureString& strWalletPassphrase, bool anonimizeOnly = false);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
@@ -305,6 +352,7 @@ public:
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
+<<<<<<< HEAD
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
@@ -328,6 +376,28 @@ public:
 
     static CFeeRate minTxFee;
     static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool);
+=======
+    int64_t GetBalance() const;
+    int64_t GetUnconfirmedBalance() const;
+    int64_t GetImmatureBalance() const;
+    int64_t GetAnonymizedBalance() const;
+    double GetAverageAnonymizedRounds() const;
+    int64_t GetNormalizedAnonymizedBalance() const;
+    int64_t GetDenominatedBalance(bool onlyDenom=true, bool onlyUnconfirmed=false) const;
+
+    bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
+                           CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, AvailableCoinsType coin_type=ALL_COINS, bool useIX=false);
+
+    bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
+                           CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, std::string strCommand="tx");
+    std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS);
+    std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS);
+    std::string PrepareDarksendDenominate(int minRounds, int maxRounds);
+    int GenerateDarksendOutputs(int nTotalValue, std::vector<CTxOut>& vout);
+    bool CreateCollateralTransaction(CTransaction& txCollateral, std::string strReason);
+    bool ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
@@ -343,6 +413,7 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
+<<<<<<< HEAD
     bool GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool useIX);
     bool GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useIX);
 
@@ -359,6 +430,30 @@ public:
     isminetype IsMine(const CTxIn& txin) const;
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     isminetype IsMine(const CTxOut& txout) const
+=======
+    bool IsDenominated(const CTxIn &txin) const;
+
+    bool IsDenominated(const CTransaction& tx) const
+    {
+        /*
+            Return false if ANY inputs are non-denom
+        */
+        bool ret = true;
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            if(!IsDenominated(txin)) {
+                ret = false;
+            }
+        }
+        return ret;
+    }
+
+    bool IsDenominatedAmount(int64_t nInputAmount) const;
+
+    bool IsMine(const CTxIn& txin) const;
+    int64_t GetDebit(const CTxIn& txin) const;
+    bool IsMine(const CTxOut& txout) const
+>>>>>>> origin/dirty-merge-dash-0.11.0
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
@@ -803,7 +898,18 @@ public:
         return debit;
     }
 
+<<<<<<< HEAD
     CAmount GetCredit(const isminefilter& filter) const
+=======
+    int64_t IsDenominated() const
+    {
+        if (vin.empty())
+            return 0;
+        return pwallet->IsDenominated(*this);
+    }
+
+    int64_t GetCredit(bool fUseCache=true) const
+>>>>>>> origin/dirty-merge-dash-0.11.0
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
@@ -1117,8 +1223,25 @@ public:
             if(tx->vout[i].nValue == d) return 10000;
         if(tx->vout[i].nValue < 1*COIN) return 20000;
 
+<<<<<<< HEAD
         //nondenom return largest first
         return -(tx->vout[i].nValue/COIN);
+=======
+    //Used with Darksend. Will return largest nondenom, then denominations, then very small inputs
+    int Priority() const
+    {
+        BOOST_FOREACH(int64_t d, darkSendDenominations)
+            if(tx->vout[i].nValue == d) return 10000;
+        if(tx->vout[i].nValue < 1*COIN) return 20000;
+
+        //nondenom return largest first
+        return -(tx->vout[i].nValue/COIN);
+    }
+
+    void print() const
+    {
+        LogPrintf("%s\n", ToString().c_str());
+>>>>>>> origin/dirty-merge-dash-0.11.0
     }
 
     std::string ToString() const;

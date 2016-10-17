@@ -1,7 +1,12 @@
 // Copyright (c) 2010 Satoshi Nakamoto
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
+=======
+// Copyright (c) 2009-2014 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
@@ -96,7 +101,7 @@ static inline int64_t roundint64(double d)
 CAmount AmountFromValue(const Value& value)
 {
     double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
+    if (dAmount <= 0.0 || dAmount > 42000000.0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     CAmount nAmount = roundint64(dAmount * COIN);
     if (!MoneyRange(nAmount))
@@ -229,10 +234,17 @@ Value stop(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
+<<<<<<< HEAD
             "\nStop Dash server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
     return "Dash server stopping";
+=======
+            "\nStop Crowncoin server.");
+    // Shutdown will take long enough that the response should get back
+    StartShutdown();
+    return "Crowncoin server stopping";
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 
@@ -297,6 +309,7 @@ static const CRPCCommand vRPCCommands[] =
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
 
     /* Utility functions */
+<<<<<<< HEAD
     { "util",               "createmultisig",         &createmultisig,         true,      true ,      false },
     { "util",               "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "util",               "verifymessage",          &verifymessage,          true,      false,      false },
@@ -317,10 +330,32 @@ static const CRPCCommand vRPCCommands[] =
     { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
     { "dash",               "mnsync",                 &mnsync,                 true,      true,       false },
     { "dash",               "spork",                  &spork,                  true,      true,       false },
+=======
+    { "createmultisig",         &createmultisig,         true,      true ,      false },
+    { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+    { "verifymessage",          &verifymessage,          false,     false,      false },
+
+    /* Dash features */
+    { "spork",                  &spork,                  true,      false,      false },
+    { "throne",             &throne,             true,      false,      true  },
+    { "thronelist",         &thronelist,         true,      false,      false },
+#ifdef ENABLE_WALLET
+    { "darksend",               &darksend,               false,     false,      true  },
+#endif /* ENABLE_WALLET?  */
+    /* Names */
+    { "name_getaddress",        &name_getaddress,        true,      false,      false },
+#ifdef ENABLE_WALLET
+    { "name_register",          &name_register,          false,     false,      true },
+    { "sendtoname",             &sendtoname,             false,     false,      true },
+    { "timestamp",              &timestamp,              false,     false,      true },
+#endif /* ENABLE_WALLET?  */
+
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #ifdef ENABLE_WALLET
     { "dash",               "darksend",               &darksend,               false,     false,      true  }, /* not threadSafe because of SendMoney */
 
     /* Wallet */
+<<<<<<< HEAD
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
     { "wallet",             "backupwallet",           &backupwallet,           true,      false,      true },
     { "wallet",             "dumpprivkey",            &dumpprivkey,            true,      false,      true },
@@ -362,6 +397,53 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletlock",             &walletlock,             true,      false,      true },
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
+=======
+    { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
+    { "backupwallet",           &backupwallet,           true,      false,      true },
+    { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
+    { "dumpwallet",             &dumpwallet,             true,      false,      true },
+    { "encryptwallet",          &encryptwallet,          false,     false,      true },
+    { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
+    { "getaccount",             &getaccount,             false,     false,      true },
+    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
+    { "getbalance",             &getbalance,             false,     false,      true },
+    { "getnewaddress",          &getnewaddress,          true,      false,      true },
+    { "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
+    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
+    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
+    { "gettransaction",         &gettransaction,         false,     false,      true },
+    { "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
+    { "getwalletinfo",          &getwalletinfo,          true,      false,      true },
+    { "importprivkey",          &importprivkey,          false,     false,      true },
+    { "importwallet",           &importwallet,           false,     false,      true },
+    { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
+    { "listaccounts",           &listaccounts,           false,     false,      true },
+    { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
+    { "listlockunspent",        &listlockunspent,        false,     false,      true },
+    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false,      true },
+    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false,      true },
+    { "listsinceblock",         &listsinceblock,         false,     false,      true },
+    { "listtransactions",       &listtransactions,       false,     false,      true },
+    { "listunspent",            &listunspent,            false,     false,      true },
+    { "lockunspent",            &lockunspent,            false,     false,      true },
+    { "move",                   &movecmd,                false,     false,      true },
+    { "sendfrom",               &sendfrom,               false,     false,      true },
+    { "sendmany",               &sendmany,               false,     false,      true },
+    { "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+    { "setaccount",             &setaccount,             true,      false,      true },
+    { "settxfee",               &settxfee,               false,     false,      true },
+    { "signmessage",            &signmessage,            false,     false,      true },
+    { "walletlock",             &walletlock,             true,      false,      true },
+    { "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },
+    { "walletpassphrase",       &walletpassphrase,       true,      false,      true },
+
+    /* Wallet-enabled mining */
+    { "getgenerate",            &getgenerate,            true,      false,      false },
+    { "gethashespersec",        &gethashespersec,        true,      false,      false },
+    { "getwork",                &getwork,                true,      false,      true  },
+    { "setgenerate",            &setgenerate,            true,      true,       false },
+    { "getauxblock",            &getauxblock,            true,      true,       true  },
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #endif // ENABLE_WALLET
 };
 
@@ -585,18 +667,36 @@ void StartRPCThreads()
          (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
     {
         unsigned char rand_pwd[32];
+<<<<<<< HEAD
         GetRandBytes(rand_pwd, 32);
+=======
+        RAND_bytes(rand_pwd, 32);
+        string strWhatAmI = "To use crowncoind";
+        if (mapArgs.count("-server"))
+            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
+        else if (mapArgs.count("-daemon"))
+            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
+>>>>>>> origin/dirty-merge-dash-0.11.0
         uiInterface.ThreadSafeMessageBox(strprintf(
             _("To use dashd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
+<<<<<<< HEAD
               "rpcuser=dashrpc\n"
+=======
+              "rpcuser=crowncoinrpc\n"
+>>>>>>> origin/dirty-merge-dash-0.11.0
               "rpcpassword=%s\n"
               "(you do not need to remember this password)\n"
               "The username and password MUST NOT be the same.\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"
               "It is also recommended to set alertnotify so you are notified of problems;\n"
+<<<<<<< HEAD
               "for example: alertnotify=echo %%s | mail -s \"Dash Alert\" admin@foo.com\n"),
+=======
+              "for example: alertnotify=echo %%s | mail -s \"Crowncoin Alert\" admin@foo.com\n"),
+                strWhatAmI,
+>>>>>>> origin/dirty-merge-dash-0.11.0
                 GetConfigFile().string(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
                 "", CClientUIInterface::MSG_ERROR | CClientUIInterface::SECURE);
@@ -1047,12 +1147,20 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 }
 
 std::string HelpExampleCli(string methodname, string args){
+<<<<<<< HEAD
     return "> dash-cli " + methodname + " " + args + "\n";
+=======
+    return "> crowncoin-cli " + methodname + " " + args + "\n";
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 std::string HelpExampleRpc(string methodname, string args){
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+<<<<<<< HEAD
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:9998/\n";
+=======
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:9341/\n";
+>>>>>>> origin/dirty-merge-dash-0.11.0
 }
 
 const CRPCTable tableRPC;

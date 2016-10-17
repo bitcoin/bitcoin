@@ -9,10 +9,10 @@ A small script to automate merging pull-requests securely and sign them with GPG
 
 For example:
 
-  ./github-merge.sh bitcoin/bitcoin 3077
+  ./github-merge.sh crowncoin/crowncoin 3077
 
 (in any git repository) will help you merge pull request #3077 for the
-bitcoin/bitcoin repository.
+crowncoin/crowncoin repository.
 
 What it does:
 * Fetch master and the pull request.
@@ -30,9 +30,9 @@ couldn't mess with the sources.
 
 Setup
 ---------
-Configuring the github-merge tool for the bitcoin repository is done in the following way:
+Configuring the github-merge tool for the crowncoin repository is done in the following way:
 
-    git config githubmerge.repository bitcoin/bitcoin
+    git config githubmerge.repository crowncoin/crowncoin
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
     git config --global user.signingkey mykeyid (if you want to GPG sign)
 
@@ -44,10 +44,10 @@ If you run this script from src/ it will automatically update the year on the co
 .cpp and .h files if these have a git commit from the current year.
 
 For example a file changed in 2014 (with 2014 being the current year):
-```// Copyright (c) 2009-2013 The Bitcoin developers```
+```// Copyright (c) 2009-2013 The Crowncoin developers```
 
 would be changed to:
-```// Copyright (c) 2009-2014 The Bitcoin developers```
+```// Copyright (c) 2009-2014 The Crowncoin developers```
 
 symbol-check.py
 ==================
@@ -64,10 +64,17 @@ If only supported symbols are used the return value will be 0 and the output wil
 
 If there are 'unsupported' symbols, the return value will be 1 a list like this will be printed:
 
+<<<<<<< HEAD
     .../64/test_dash: symbol memcpy from unsupported version GLIBC_2.14
     .../64/test_dash: symbol __fdelt_chk from unsupported version GLIBC_2.15
     .../64/test_dash: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
     .../64/test_dash: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
+=======
+    .../64/test_crowncoin: symbol memcpy from unsupported version GLIBC_2.14
+    .../64/test_crowncoin: symbol __fdelt_chk from unsupported version GLIBC_2.15
+    .../64/test_crowncoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
+    .../64/test_crowncoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 update-translations.py
 =======================

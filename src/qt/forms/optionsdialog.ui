@@ -28,12 +28,19 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Main">
        <item>
-        <widget class="QCheckBox" name="bitcoinAtStartup">
+        <widget class="QCheckBox" name="crowncoinAtStartup">
          <property name="toolTip">
+<<<<<<< HEAD
           <string>Automatically start Dash after logging in to the system.</string>
          </property>
          <property name="text">
           <string>&amp;Start Dash on system login</string>
+=======
+          <string>Automatically start Crowncoin after logging in to the system.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Start Crowncoin on system login</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </property>
         </widget>
        </item>
@@ -160,6 +167,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
+<<<<<<< HEAD
           <widget class="QLabel" name="label_2">
            <property name="toolTip">
             <string>This amount acts as a threshold to turn off Darksend once it's reached.</string>
@@ -180,6 +188,9 @@
             <string>Amount of Dash to keep anonymized</string>
            </property>
           </widget>
+=======
+          <widget class="CrowncoinAmountField" name="transactionFee"/>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </item>
          <item>
           <widget class="QSpinBox" name="anonymizeDarkcoin">
@@ -258,7 +269,11 @@
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
+<<<<<<< HEAD
           <string>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+=======
+          <string>Automatically open the Crowncoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </property>
          <property name="text">
           <string>Map port using &amp;UPnP</string>
@@ -278,7 +293,11 @@
        <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
+<<<<<<< HEAD
           <string>Connect to the Dash network through a SOCKS5 proxy.</string>
+=======
+          <string>Connect to the Crowncoin network through a SOCKS proxy.</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </property>
          <property name="text">
           <string>&amp;Connect through SOCKS5 proxy (default proxy):</string>
@@ -444,7 +463,11 @@
          <item>
           <widget class="QValueComboBox" name="lang">
            <property name="toolTip">
+<<<<<<< HEAD
             <string>The user interface language can be set here. This setting will take effect after restarting Dash.</string>
+=======
+            <string>The user interface language can be set here. This setting will take effect after restarting Crowncoin.</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
            </property>
           </widget>
          </item>
@@ -525,6 +548,7 @@ https://www.transifex.com/projects/p/dash/</string>
         </layout>
        </item>
        <item>
+<<<<<<< HEAD
         <layout class="QHBoxLayout" name="horizontalLayout_5_Display">
          <item>
           <widget class="QLabel" name="digitsLabel">
@@ -537,6 +561,16 @@ https://www.transifex.com/projects/p/dash/</string>
           <widget class="QValueComboBox" name="digits"/>
          </item>
         </layout>
+=======
+        <widget class="QCheckBox" name="displayAddresses">
+         <property name="toolTip">
+          <string>Whether to show Crowncoin addresses in the transaction list or not.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Display addresses in transaction list</string>
+         </property>
+        </widget>
+>>>>>>> origin/dirty-merge-dash-0.11.0
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3_Display">
@@ -720,6 +754,15 @@ https://www.transifex.com/projects/p/dash/</string>
  </widget>
  <customwidgets>
   <customwidget>
+<<<<<<< HEAD
+=======
+   <class>CrowncoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>crowncoinamountfield.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+>>>>>>> origin/dirty-merge-dash-0.11.0
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
    <header>qvalidatedlineedit.h</header>

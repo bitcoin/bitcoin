@@ -6,9 +6,14 @@
 #define BITCOIN_CLIENTVERSION_H
 
 #if defined(HAVE_CONFIG_H)
+<<<<<<< HEAD
 #include "config/dash-config.h"
+=======
+#include "crowncoin-config.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #else
 
+<<<<<<< HEAD
 /**
  * client versioning and copyright year
  */
@@ -18,14 +23,26 @@
 #define CLIENT_VERSION_MINOR 12
 #define CLIENT_VERSION_REVISION 0
 #define CLIENT_VERSION_BUILD 60
+=======
+// These need to be macros, as version.cpp's and crowncoin-qt.rc's voodoo requires it
+#define CLIENT_VERSION_MAJOR       0
+#define CLIENT_VERSION_MINOR       9
+#define CLIENT_VERSION_REVISION    4
+#define CLIENT_VERSION_BUILD       0
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 //! Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE true
 
+<<<<<<< HEAD
 /**
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
+=======
+// Copyright year (2009-this)
+// Todo: update this when changing our copyright comments in the source
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #define COPYRIGHT_YEAR 2016
 
 #endif //HAVE_CONFIG_H

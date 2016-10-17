@@ -70,7 +70,11 @@
                <cursorShape>WhatsThisCursor</cursorShape>
               </property>
               <property name="toolTip">
+<<<<<<< HEAD
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
+=======
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Crowncoin network after a connection is established, but this process has not completed yet.</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
               </property>
               <property name="styleSheet">
                <string notr="true">QLabel { color: red; }</string>
@@ -143,7 +147,11 @@
                <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
               </property>
               <property name="text">
+<<<<<<< HEAD
                <string notr="true">0.000 000 00 BTC</string>
+=======
+               <string notr="true">0 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -226,7 +234,11 @@
                <string>Mined balance that has not yet matured</string>
               </property>
               <property name="text">
+<<<<<<< HEAD
                <string notr="true">0.000 000 00 BTC</string>
+=======
+               <string notr="true">0 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -271,7 +283,11 @@
                <string>Your current total balance</string>
               </property>
               <property name="text">
+<<<<<<< HEAD
                <string notr="true">0.000 000 00 BTC</string>
+=======
+               <string notr="true">0 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -338,7 +354,11 @@
                <string>Your current spendable balance</string>
               </property>
               <property name="text">
+<<<<<<< HEAD
                <string notr="true">0.000 000 00 BTC</string>
+=======
+               <string notr="true">0 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1162,7 +1182,11 @@
                <cursorShape>WhatsThisCursor</cursorShape>
               </property>
               <property name="toolTip">
+<<<<<<< HEAD
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
+=======
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Crowncoin network after a connection is established, but this process has not completed yet.</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
               </property>
               <property name="styleSheet">
                <string notr="true">QLabel { color: red; }</string>

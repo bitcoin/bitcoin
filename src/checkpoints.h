@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -6,6 +7,14 @@
 #define BITCOIN_CHECKPOINTS_H
 
 #include "uint256.h"
+=======
+// Copyright (c) 2009-2013 The Crowncoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef CROWNCOIN_CHECKPOINT_H
+#define CROWNCOIN_CHECKPOINT_H
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include <map>
 

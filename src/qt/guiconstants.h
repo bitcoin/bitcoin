@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
+=======
+// Copyright (c) 2011-2014 The Crowncoin developers
+>>>>>>> origin/dirty-merge-dash-0.11.0
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +16,11 @@ static const int MODEL_UPDATE_DELAY = 250;
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
+<<<<<<< HEAD
 /* DarkcoinGUI -- Size of icons in status bar */
+=======
+/* CrowncoinGUI -- Size of icons in status bar */
+>>>>>>> origin/dirty-merge-dash-0.11.0
 static const int STATUSBAR_ICONSIZE = 16;
 
 /* Invalid field background style */
@@ -45,9 +53,16 @@ static const int MAX_URI_LENGTH = 255;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 35
 
+<<<<<<< HEAD
 #define QAPP_ORG_NAME "Dash"
 #define QAPP_ORG_DOMAIN "dashpay.io"
 #define QAPP_APP_NAME_DEFAULT "Dash-Qt"
 #define QAPP_APP_NAME_TESTNET "Dash-Qt-testnet"
+=======
+#define QAPP_ORG_NAME "Crowncoin"
+#define QAPP_ORG_DOMAIN "crowncoin.org"
+#define QAPP_APP_NAME_DEFAULT "Crowncoin-Qt"
+#define QAPP_APP_NAME_TESTNET "Crowncoin-Qt-testnet"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 #endif // BITCOIN_QT_GUICONSTANTS_H

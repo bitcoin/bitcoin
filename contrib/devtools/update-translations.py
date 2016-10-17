@@ -26,7 +26,11 @@ import xml.etree.ElementTree as ET
 # Name of transifex tool
 TX = 'tx'
 # Name of source language file
+<<<<<<< HEAD
 SOURCE_LANG = 'dash_en.ts'
+=======
+SOURCE_LANG = 'crowncoin_en.ts'
+>>>>>>> origin/dirty-merge-dash-0.11.0
 # Directory with locale files
 LOCALE_DIR = 'src/qt/locale'
 

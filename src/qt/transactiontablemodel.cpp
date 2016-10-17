@@ -1,10 +1,14 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "transactiontablemodel.h"
 
 #include "addresstablemodel.h"
+<<<<<<< HEAD
+=======
+#include "crowncoinunits.h"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -446,7 +450,11 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
 
 QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, BitcoinUnits::SeparatorStyle separators) const
 {
+<<<<<<< HEAD
     QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit, false, separators);
+=======
+    QString str = CrowncoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
+>>>>>>> origin/dirty-merge-dash-0.11.0
     if(showUnconfirmed)
     {
         if(!wtx->status.countsForBalance)

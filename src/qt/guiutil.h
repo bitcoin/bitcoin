@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,7 +29,11 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
+<<<<<<< HEAD
 /** Utility functions used by the Dash Qt UI.
+=======
+/** Utility functions used by the Crowncoin Qt UI.
+>>>>>>> origin/dirty-merge-dash-0.11.0
  */
 namespace GUIUtil
 {
@@ -37,17 +41,29 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
+<<<<<<< HEAD
     // Render Dash addresses in monospace font
     QFont bitcoinAddressFont();
+=======
+    // Render Crowncoin addresses in monospace font
+    QFont crowncoinAddressFont();
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Set up widgets for address and amounts
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
+<<<<<<< HEAD
     // Parse "dash:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
     QString formatBitcoinURI(const SendCoinsRecipient &info);
+=======
+    // Parse "crowncoin:" URI into recipient object, return true on successful parsing
+    bool parseCrowncoinURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseCrowncoinURI(QString uri, SendCoinsRecipient *out);
+    QString formatCrowncoinURI(const SendCoinsRecipient &info);
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);

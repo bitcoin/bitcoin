@@ -1,10 +1,15 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+<<<<<<< HEAD
 #ifndef BITCOIN_ALERT_H
 #define BITCOIN_ALERT_H
+=======
+#ifndef _CROWNCOINALERT_H_
+#define _CROWNCOINALERT_H_ 1
+>>>>>>> origin/dirty-merge-dash-0.11.0
 
 #include "serialize.h"
 #include "sync.h"

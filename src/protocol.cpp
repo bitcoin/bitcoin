@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Crowncoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,6 +22,7 @@ static const char* ppszTypeName[] =
     "tx lock request",
     "tx lock vote",
     "spork",
+<<<<<<< HEAD
     "mn winner",
     "mn scan error",
     "mn budget vote",
@@ -32,6 +33,15 @@ static const char* ppszTypeName[] =
     "mn announce",
     "mn ping",
     "dstx"
+=======
+    "throne winner",
+    "unknown",
+    "unknown",
+    "unknown",
+    "unknown",
+    "unknown",
+    "unknown"
+>>>>>>> origin/dirty-merge-dash-0.11.0
 };
 
 CMessageHeader::CMessageHeader()

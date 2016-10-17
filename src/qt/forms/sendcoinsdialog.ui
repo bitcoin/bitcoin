@@ -324,7 +324,11 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
+<<<<<<< HEAD
                   <string notr="true">0.00 DASH</string>
+=======
+                  <string notr="true">0.00 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -404,7 +408,11 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
+<<<<<<< HEAD
                   <string notr="true">0.00 DASH</string>
+=======
+                  <string notr="true">0.00 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -484,7 +492,11 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
+<<<<<<< HEAD
                   <string notr="true">0.00 DASH</string>
+=======
+                  <string notr="true">0.00 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -513,7 +525,11 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
+<<<<<<< HEAD
                   <string notr="true">0.00 DASH</string>
+=======
+                  <string notr="true">0.00 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -1258,7 +1274,11 @@
         <string>S&amp;end</string>
        </property>
        <property name="icon">
+<<<<<<< HEAD
         <iconset resource="../dash.qrc">
+=======
+        <iconset resource="../crowncoin.qrc">
+>>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
        <property name="autoDefault">
@@ -1284,7 +1304,11 @@
         <string>Clear &amp;All</string>
        </property>
        <property name="icon">
+<<<<<<< HEAD
         <iconset resource="../dash.qrc">
+=======
+        <iconset resource="../crowncoin.qrc">
+>>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -1301,7 +1325,11 @@
         <string>Add &amp;Recipient</string>
        </property>
        <property name="icon">
+<<<<<<< HEAD
         <iconset resource="../dash.qrc">
+=======
+        <iconset resource="../crowncoin.qrc">
+>>>>>>> origin/dirty-merge-dash-0.11.0
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -1378,7 +1406,11 @@
           <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
+<<<<<<< HEAD
           <string notr="true">123.456 DASH</string>
+=======
+          <string notr="true">123.456 CRW</string>
+>>>>>>> origin/dirty-merge-dash-0.11.0
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -1405,7 +1437,11 @@
   </customwidget>
  </customwidgets>
  <resources>
+<<<<<<< HEAD
   <include location="../dash.qrc"/>
+=======
+  <include location="../crowncoin.qrc"/>
+>>>>>>> origin/dirty-merge-dash-0.11.0
  </resources>
  <connections/>
  <buttongroups>
