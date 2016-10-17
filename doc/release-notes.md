@@ -173,6 +173,7 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- adlawren
 - Alexey Vesnin
 - Anders Øyvind Urke-Sætre
 - Andrew Chow
@@ -181,16 +182,23 @@ Thanks to everyone who directly contributed to this release:
 - Chris Stewart
 - Christian Barcenas
 - Cory Fields
+- crowning-
 - Dagur Valberg Johannsson
 - Ethan Heilman
+- fanquake
 - Gaurav Rana
 - Gregory Maxwell
+- instagibbs
+- isle2983
 - Jameson Lopp
 - Jeremy Rubin
+- jnewbery
 - Johnson Lau
 - Jonas Schnelli
+- jonnynewbs
 - Justin Camarena
 - Kaz Wesley
+- leijurv
 - Luke Dashjr
 - MarcoFalke
 - Marty Jones
@@ -198,18 +206,10 @@ Thanks to everyone who directly contributed to this release:
 - Michael Ford
 - Pavel Janík
 - Pieter Wuille
+- rodasmith
 - Sev
 - Suhas Daftuar
-- Wladimir J. van der Laan
-- adlawren
-- crowning-
-- fanquake
-- instagibbs
-- isle2983
-- jnewbery
-- jonnynewbs
-- leijurv
-- rodasmith
 - whythat
+- Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
