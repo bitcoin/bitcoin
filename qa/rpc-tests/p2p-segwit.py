@@ -166,6 +166,17 @@ class UTXO(object):
         self.n = n
         self.nValue = nValue
 
+# Helper for getting the script associated with a P2PKH
+def GetP2PKHScript(pubkeyhash):
+    return CScript([CScriptOp(OP_DUP), CScriptOp(OP_HASH160), pubkeyhash, CScriptOp(OP_EQUALVERIFY), CScriptOp(OP_CHECKSIG)])
+
+# Add signature for a P2PK witness program.
+def sign_P2PK_witness_input(script, txTo, inIdx, hashtype, value, key):
+    tx_hash = SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, value)
+    signature = key.sign(tx_hash) + chr(hashtype).encode('latin-1')
+    txTo.wit.vtxinwit[inIdx].scriptWitness.stack = [signature, script]
+    txTo.rehash()
+
 
 class SegWitTest(BitcoinTestFramework):
 
@@ -1323,13 +1334,6 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
         self.utxo.pop(0)
 
-        # Add signature for a P2PK witness program.
-        def sign_P2PK_witness_input(script, txTo, inIdx, hashtype, value, key):
-            tx_hash = SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, value)
-            signature = key.sign(tx_hash) + chr(hashtype).encode('latin-1')
-            txTo.wit.vtxinwit[inIdx].scriptWitness.stack = [signature, script]
-            txTo.rehash()
-
         # Test each hashtype
         prev_utxo = UTXO(tx.sha256, 0, tx.vout[0].nValue)
         for sigflag in [ 0, SIGHASH_ANYONECANPAY ]:
@@ -1443,7 +1447,7 @@ class SegWitTest(BitcoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
-        script = CScript([CScriptOp(OP_DUP), CScriptOp(OP_HASH160), pubkeyhash, CScriptOp(OP_EQUALVERIFY), CScriptOp(OP_CHECKSIG)])
+        script = GetP2PKHScript(pubkeyhash)
         sig_hash = SegwitVersion1SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign(sig_hash) + b'\x01' # 0x1 is SIGHASH_ALL
 
@@ -1706,6 +1710,211 @@ class SegWitTest(BitcoinTestFramework):
         assert(block_version & (1 << VB_WITNESS_BIT) != 0)
         self.nodes[0].setmocktime(0) # undo mocktime
 
+    # Uncompressed pubkeys are no longer supported in default relay policy,
+    # but (for now) are still valid in blocks.
+    def test_uncompressed_pubkey(self):
+        print("\tTesting uncompressed pubkeys")
+        # Segwit transactions using uncompressed pubkeys are not accepted
+        # under default policy, but should still pass consensus.
+        key = CECKey()
+        key.set_secretbytes(b"9")
+        key.set_compressed(False)
+        pubkey = CPubKey(key.get_pubkey())
+        assert_equal(len(pubkey), 65) # This should be an uncompressed pubkey
+
+        assert(len(self.utxo) > 0)
+        utxo = self.utxo.pop(0)
+
+        # Test 1: P2WPKH
+        # First create a P2WPKH output that uses an uncompressed pubkey
+        pubkeyhash = hash160(pubkey)
+        scriptPKH = CScript([OP_0, pubkeyhash])
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(utxo.sha256, utxo.n), b""))
+        tx.vout.append(CTxOut(utxo.nValue-1000, scriptPKH))
+        tx.rehash()
+
+        # Confirm it in a block.
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [tx])
+        self.test_node.test_witness_block(block, accepted=True)
+
+        # Now try to spend it. Send it to a P2WSH output, which we'll
+        # use in the next test.
+        witness_program = CScript([pubkey, CScriptOp(OP_CHECKSIG)])
+        witness_hash = sha256(witness_program)
+        scriptWSH = CScript([OP_0, witness_hash])
+
+        tx2 = CTransaction()
+        tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
+        tx2.vout.append(CTxOut(tx.vout[0].nValue-1000, scriptWSH))
+        script = GetP2PKHScript(pubkeyhash)
+        sig_hash = SegwitVersion1SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
+        signature = key.sign(sig_hash) + b'\x01' # 0x1 is SIGHASH_ALL
+        tx2.wit.vtxinwit.append(CTxInWitness())
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [ signature, pubkey ]
+        tx2.rehash()
+
+        # Should fail policy test.
+        self.test_node.test_transaction_acceptance(tx2, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        # But passes consensus.
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [tx2])
+        self.test_node.test_witness_block(block, accepted=True)
+
+        # Test 2: P2WSH
+        # Try to spend the P2WSH output created in last test.
+        # Send it to a P2SH(P2WSH) output, which we'll use in the next test.
+        p2sh_witness_hash = hash160(scriptWSH)
+        scriptP2SH = CScript([OP_HASH160, p2sh_witness_hash, OP_EQUAL])
+        scriptSig = CScript([scriptWSH])
+
+        tx3 = CTransaction()
+        tx3.vin.append(CTxIn(COutPoint(tx2.sha256, 0), b""))
+        tx3.vout.append(CTxOut(tx2.vout[0].nValue-1000, scriptP2SH))
+        tx3.wit.vtxinwit.append(CTxInWitness())
+        sign_P2PK_witness_input(witness_program, tx3, 0, SIGHASH_ALL, tx2.vout[0].nValue, key)
+
+        # Should fail policy test.
+        self.test_node.test_transaction_acceptance(tx3, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        # But passes consensus.
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [tx3])
+        self.test_node.test_witness_block(block, accepted=True)
+
+        # Test 3: P2SH(P2WSH)
+        # Try to spend the P2SH output created in the last test.
+        # Send it to a P2PKH output, which we'll use in the next test.
+        scriptPubKey = GetP2PKHScript(pubkeyhash)
+        tx4 = CTransaction()
+        tx4.vin.append(CTxIn(COutPoint(tx3.sha256, 0), scriptSig))
+        tx4.vout.append(CTxOut(tx3.vout[0].nValue-1000, scriptPubKey))
+        tx4.wit.vtxinwit.append(CTxInWitness())
+        sign_P2PK_witness_input(witness_program, tx4, 0, SIGHASH_ALL, tx3.vout[0].nValue, key)
+
+        # Should fail policy test.
+        self.test_node.test_transaction_acceptance(tx4, True, False, b'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [tx4])
+        self.test_node.test_witness_block(block, accepted=True)
+
+        # Test 4: Uncompressed pubkeys should still be valid in non-segwit
+        # transactions.
+        tx5 = CTransaction()
+        tx5.vin.append(CTxIn(COutPoint(tx4.sha256, 0), b""))
+        tx5.vout.append(CTxOut(tx4.vout[0].nValue-1000, CScript([OP_TRUE])))
+        (sig_hash, err) = SignatureHash(scriptPubKey, tx5, 0, SIGHASH_ALL)
+        signature = key.sign(sig_hash) + b'\x01' # 0x1 is SIGHASH_ALL
+        tx5.vin[0].scriptSig = CScript([signature, pubkey])
+        tx5.rehash()
+        # Should pass policy and consensus.
+        self.test_node.test_transaction_acceptance(tx5, True, True)
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [tx5])
+        self.test_node.test_witness_block(block, accepted=True)
+        self.utxo.append(UTXO(tx5.sha256, 0, tx5.vout[0].nValue))
+
+    def test_non_standard_witness(self):
+        print("\tTesting detection of non-standard P2WSH witness")
+        pad = chr(1).encode('latin-1')
+
+        # Create scripts for tests
+        scripts = []
+        scripts.append(CScript([OP_DROP] * 100))
+        scripts.append(CScript([OP_DROP] * 99))
+        scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 60))
+        scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 61))
+
+        p2wsh_scripts = []
+
+        assert(len(self.utxo))
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
+
+        # For each script, generate a pair of P2WSH and P2SH-P2WSH output.
+        outputvalue = (self.utxo[0].nValue - 1000) // (len(scripts) * 2)
+        for i in scripts:
+            p2wsh = CScript([OP_0, sha256(i)])
+            p2sh = hash160(p2wsh)
+            p2wsh_scripts.append(p2wsh)
+            tx.vout.append(CTxOut(outputvalue, p2wsh))
+            tx.vout.append(CTxOut(outputvalue, CScript([OP_HASH160, p2sh, OP_EQUAL])))
+        tx.rehash()
+        txid = tx.sha256
+        self.test_node.test_transaction_acceptance(tx, with_witness=False, accepted=True)
+
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # Creating transactions for tests
+        p2wsh_txs = []
+        p2sh_txs = []
+        for i in range(len(scripts)):
+            p2wsh_tx = CTransaction()
+            p2wsh_tx.vin.append(CTxIn(COutPoint(txid,i*2)))
+            p2wsh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(hex_str_to_bytes(""))])))
+            p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
+            p2wsh_tx.rehash()
+            p2wsh_txs.append(p2wsh_tx)
+            p2sh_tx = CTransaction()
+            p2sh_tx.vin.append(CTxIn(COutPoint(txid,i*2+1), CScript([p2wsh_scripts[i]])))
+            p2sh_tx.vout.append(CTxOut(outputvalue - 5000, CScript([OP_0, hash160(hex_str_to_bytes(""))])))
+            p2sh_tx.wit.vtxinwit.append(CTxInWitness())
+            p2sh_tx.rehash()
+            p2sh_txs.append(p2sh_tx)
+
+        # Testing native P2WSH
+        # Witness stack size, excluding witnessScript, over 100 is non-standard
+        p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
+        self.std_node.test_transaction_acceptance(p2wsh_txs[0], True, False, b'bad-witness-nonstandard')
+        # Non-standard nodes should accept
+        self.test_node.test_transaction_acceptance(p2wsh_txs[0], True, True)
+
+        # Stack element size over 80 bytes is non-standard
+        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
+        self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, False, b'bad-witness-nonstandard')
+        # Non-standard nodes should accept
+        self.test_node.test_transaction_acceptance(p2wsh_txs[1], True, True)
+        # Standard nodes should accept if element size is not over 80 bytes
+        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
+        self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, True)
+
+        # witnessScript size at 3600 bytes is standard
+        p2wsh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
+        self.test_node.test_transaction_acceptance(p2wsh_txs[2], True, True)
+        self.std_node.test_transaction_acceptance(p2wsh_txs[2], True, True)
+
+        # witnessScript size at 3601 bytes is non-standard
+        p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
+        self.std_node.test_transaction_acceptance(p2wsh_txs[3], True, False, b'bad-witness-nonstandard')
+        # Non-standard nodes should accept
+        self.test_node.test_transaction_acceptance(p2wsh_txs[3], True, True)
+
+        # Repeating the same tests with P2SH-P2WSH
+        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
+        self.std_node.test_transaction_acceptance(p2sh_txs[0], True, False, b'bad-witness-nonstandard')
+        self.test_node.test_transaction_acceptance(p2sh_txs[0], True, True)
+        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
+        self.std_node.test_transaction_acceptance(p2sh_txs[1], True, False, b'bad-witness-nonstandard')
+        self.test_node.test_transaction_acceptance(p2sh_txs[1], True, True)
+        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
+        self.std_node.test_transaction_acceptance(p2sh_txs[1], True, True)
+        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
+        self.test_node.test_transaction_acceptance(p2sh_txs[2], True, True)
+        self.std_node.test_transaction_acceptance(p2sh_txs[2], True, True)
+        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
+        self.std_node.test_transaction_acceptance(p2sh_txs[3], True, False, b'bad-witness-nonstandard')
+        self.test_node.test_transaction_acceptance(p2sh_txs[3], True, True)
+
+        self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
+        # Valid but non-standard transactions in a block should be accepted by standard node
+        sync_blocks(self.nodes)
+        assert_equal(len(self.nodes[0].getrawmempool()), 0)
+        assert_equal(len(self.nodes[1].getrawmempool()), 0)
+
+        self.utxo.pop(0)
+
+
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         self.test_node = TestNode() # sets NODE_WITNESS|NODE_NETWORK
@@ -1777,7 +1986,9 @@ class SegWitTest(BitcoinTestFramework):
         self.test_standardness_v0(segwit_activated=True)
         self.test_segwit_versions()
         self.test_premature_coinbase_witness_spend()
+        self.test_uncompressed_pubkey()
         self.test_signature_version_1()
+        self.test_non_standard_witness()
         sync_blocks(self.nodes)
         if self.test_upgrade:
             self.test_upgrade_after_activation(self.nodes[2], 2)
