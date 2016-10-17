@@ -6,7 +6,7 @@
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.siphash import siphash256
 from test_framework.script import CScript, OP_TRUE
 
@@ -123,11 +123,14 @@ class CompactBlocksTest(BitcoinTestFramework):
                  ["-debug", "-logtimemicros", "-txindex"]])
         connect_nodes(self.nodes[0], 1)
 
-    def build_block_on_tip(self, node):
+    def build_block_on_tip(self, node, segwit=False):
         height = node.getblockcount()
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
+        block.nVersion = 4
+        if segwit:
+            add_witness_commitment(block)
         block.solve()
         return block
 
@@ -380,11 +383,11 @@ class CompactBlocksTest(BitcoinTestFramework):
     # Post-segwit: upgraded nodes would only make this request of cb-version-2,
     # NODE_WITNESS peers.  Unupgraded nodes would still make this request of
     # any cb-version-1-supporting peer.
-    def test_compactblock_requests(self, node, test_node):
+    def test_compactblock_requests(self, node, test_node, version, segwit):
         # Try announcing a block with an inv or header, expect a compactblock
         # request
         for announce in ["inv", "header"]:
-            block = self.build_block_on_tip(node)
+            block = self.build_block_on_tip(node, segwit=segwit)
             with mininode_lock:
                 test_node.last_getdata = None
 
@@ -403,8 +406,11 @@ class CompactBlocksTest(BitcoinTestFramework):
             comp_block.header = CBlockHeader(block)
             comp_block.nonce = 0
             [k0, k1] = comp_block.get_siphash_keys()
+            coinbase_hash = block.vtx[0].sha256
+            if version == 2:
+                coinbase_hash = block.vtx[0].calc_sha256(True)
             comp_block.shortids = [
-                    calculate_shortid(k0, k1, block.vtx[0].sha256) ]
+                    calculate_shortid(k0, k1, coinbase_hash) ]
             test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
             assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
             # Expect a getblocktxn message.
@@ -414,7 +420,10 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert_equal(absolute_indexes, [0])  # should be a coinbase request
 
             # Send the coinbase, and verify that the tip advances.
-            msg = msg_blocktxn()
+            if version == 2:
+                msg = msg_witness_blocktxn()
+            else:
+                msg = msg_blocktxn()
             msg.block_transactions.blockhash = block.sha256
             msg.block_transactions.transactions = [block.vtx[0]]
             test_node.send_and_ping(msg)
@@ -750,9 +759,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         print("\tTesting compactblock requests... ")
-        self.test_compactblock_requests(self.nodes[0], self.test_node)
+        self.test_compactblock_requests(self.nodes[0], self.test_node, 1, False)
         sync_blocks(self.nodes)
-        self.test_compactblock_requests(self.nodes[1], self.segwit_node)
+        self.test_compactblock_requests(self.nodes[1], self.segwit_node, 2, False)
         sync_blocks(self.nodes)
 
         print("\tTesting getblocktxn requests...")
@@ -800,7 +809,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         print("\tTesting compactblock requests (unupgraded node)... ")
-        self.test_compactblock_requests(self.nodes[0], self.test_node)
+        self.test_compactblock_requests(self.nodes[0], self.test_node, 1, True)
 
         print("\tTesting getblocktxn requests (unupgraded node)...")
         self.test_getblocktxn_requests(self.nodes[0], self.test_node, 1)
@@ -815,7 +824,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
 
         print("\tTesting compactblock requests (segwit node)... ")
-        self.test_compactblock_requests(self.nodes[1], self.segwit_node)
+        self.test_compactblock_requests(self.nodes[1], self.segwit_node, 2, True)
 
         print("\tTesting getblocktxn requests (segwit node)...")
         self.test_getblocktxn_requests(self.nodes[1], self.segwit_node, 2)
