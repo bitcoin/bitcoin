@@ -1,4 +1,4 @@
-Bitcoin Core 0.13.0
+Bitcoin Core 0.13.1
 =====================
 
 Setup
