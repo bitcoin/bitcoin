@@ -130,15 +130,18 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
         switch (token.tag) {
         case Consensus::TxInPrevHash: {
             auto data = boost::get<std::vector<char> >(token.data);
+            if (data.size() != 256/8) throw std::runtime_error("PrevHash size wrong");
             inputs.push_back(CTxIn(COutPoint(uint256(&data[0]), 0)));
             break;
         }
         case Consensus::TxInPrevIndex: {
+            if (inputs.empty()) throw std::runtime_error("TxInPrevIndex before TxInPrevHash");
             int n = boost::get<int32_t>(token.data);
             inputs[inputs.size()-1].prevout.n = n;
             break;
         }
         case Consensus::TxInScript: {
+            if (inputs.empty()) throw std::runtime_error("TxInScript before TxInPrevHash");
             if (inputCount == 0) { // copy all of the input tags
                 CDataStream stream(0, 4);
                 ser_writedata32(stream, nVersion);
@@ -188,7 +191,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             inputs[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | token.longData();
             break;
         case Consensus::ScriptVersion:
-            // TODO
+            if (token.intData() != 2) throw std::runtime_error("This version doesn't support other scripting version than 2");
             break;
         default:
             if (token.tag > 19)
