@@ -63,7 +63,7 @@ git merge commit are mentioned.
 - #8937 `8b66659` Define start and end time for segwit deployment (sipa)
 
 ### RPC and other APIs
-- #8581 `526d2b0` Drop misleading option (MarcoFalke)
+- #8581 `526d2b0` Drop misleading option in importprunedfunds (MarcoFalke)
 - #8699 `a5ec248` Remove createwitnessaddress RPC command (jl2012)
 - #8780 `794b007` Deprecate getinfo (MarcoFalke)
 - #8832 `83ad563` Throw JSONRPCError when utxo set can not be read (MarcoFalke)
@@ -107,7 +107,6 @@ git merge commit are mentioned.
 - #7579 `f1c0d78` Show network/chain errors in the GUI (jonasschnelli)
 
 ### Wallet
-- #8716 `e34374e` Check legacy wallet as well (MarcoFalke)
 - #8443 `464dedd` Trivial cleanup of HD wallet changes (jonasschnelli)
 - #8539 `cb07f19` CDB: fix debug output (crowning-)
 - #8664 `091cdeb` Fix segwit-related wallet bug (sdaftuar)
@@ -116,6 +115,7 @@ git merge commit are mentioned.
 
 ### Tests and QA
 - #8713 `ae8c7df` create_cache: Delete temp dir when done (MarcoFalke)
+- #8716 `e34374e` Check legacy wallet as well (MarcoFalke)
 - #8750 `d6ebe13` Refactor RPCTestHandler to prevent TimeoutExpired (MarcoFalke)
 - #8652 `63462c2` remove root test directory for RPC tests (yurizhykin)
 - #8724 `da94272` walletbackup: Sync blocks inside the loop (MarcoFalke)
@@ -165,7 +165,7 @@ git merge commit are mentioned.
 - #8817 `bcf3806` update bitcoin-tx to output witness data (jnewbery)
 - #8513 `4e5fc31` Fix a type error that would not compile on OSX. (JeremyRubin)
 - #8392 `30eac2d` Fix several node initialization issues (sipa)
-- #8548 `305d8ac` Use __func__ to get function name for output printing (MarcoFalke)
+- #8548 `305d8ac` Use `__func__` to get function name for output printing (MarcoFalke)
 - #8291 `a987431` [util] CopyrightHolders: Check for untranslated substitution (MarcoFalke)
 
 Credits
