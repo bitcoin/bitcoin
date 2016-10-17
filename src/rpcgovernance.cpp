@@ -12,6 +12,7 @@
 #include "darksend.h"
 #include "governance.h"
 #include "darksend.h"
+#include "masternode.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeconfig.h"
@@ -107,8 +108,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strData);
 
-        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
+        if((govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) ||
+           (govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger and watchdog objects need not be prepared (however only masternodes can create them)");
         }
 
         std::string strError = "";
@@ -187,7 +189,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
              << endl; );
 
         // Attempt to sign triggers if we are a MN
-        if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+        if((govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) ||
+           (govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG)) {
             if(mnFound) {
                 govobj.SetMasternodeInfo(mn.vin);
                 govobj.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode);
@@ -773,11 +776,12 @@ UniValue getgovernanceinfo(const UniValue& params, bool fHelp)
             "Returns an object containing governance parameters.\n"
             "\nResult:\n"
             "{\n"
-            "  \"governanceminquorum\": xxxxx,  (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
-            "  \"proposalfee\": xxx.xx,         (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
-            "  \"superblockcycle\": xxxxx,      (numeric) the number of blocks between superblocks\n"
-            "  \"lastsuperblock\": xxxxx,       (numeric) the block number of the last superblock\n"
-            "  \"nextsuperblock\": xxxxx,       (numeric) the block number of the next superblock\n"
+            "  \"governanceminquorum\": xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
+            "  \"masternodewatchdogmaxseconds\": xxxxx,  (numeric) sentinel watchdog expiration time in seconds\n"
+            "  \"proposalfee\": xxx.xx,                  (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
+            "  \"superblockcycle\": xxxxx,               (numeric) the number of blocks between superblocks\n"
+            "  \"lastsuperblock\": xxxxx,                (numeric) the block number of the last superblock\n"
+            "  \"nextsuperblock\": xxxxx,                (numeric) the block number of the next superblock\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getgovernanceinfo", "")
@@ -813,6 +817,7 @@ UniValue getgovernanceinfo(const UniValue& params, bool fHelp)
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum));
+    obj.push_back(Pair("masternodewatchdogmaxseconds", MASTERNODE_WATCHDOG_MAX_SECONDS));
     obj.push_back(Pair("proposalfee", ValueFromAmount(GOVERNANCE_PROPOSAL_FEE_TX)));
     obj.push_back(Pair("superblockcycle", Params().GetConsensus().nSuperblockCycle));
     obj.push_back(Pair("lastsuperblock", nLastSuperblock));

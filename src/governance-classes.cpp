@@ -295,6 +295,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 
 bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 {
+    LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- Start nBlockHeight = %d\n", nBlockHeight);
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         return false;
     }
@@ -303,11 +304,14 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
     // GET ALL ACTIVE TRIGGERS
     std::vector<CSuperblock_sptr> vecTriggers = triggerman.GetActiveTriggers();
 
+    LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- vecTriggers.size() = %d\n", vecTriggers.size());
+
     DBG( cout << "IsSuperblockTriggered Number triggers = " << vecTriggers.size() << endl; );
 
     BOOST_FOREACH(CSuperblock_sptr pSuperblock, vecTriggers)
     {
         if(!pSuperblock) {
+            LogPrintf("CSuperblockManager::IsSuperblockTriggered -- Non-superblock found, continuing\n");
             DBG( cout << "IsSuperblockTriggered Not a superblock, continuing " << endl; );
             continue;
         }
@@ -315,27 +319,35 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
         CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
 
         if(!pObj) {
+            LogPrintf("CSuperblockManager::IsSuperblockTriggered -- pObj == NULL, continuing\n");
             DBG( cout << "IsSuperblockTriggered pObj is NULL, continuing" << endl; );
             continue;
         }
 
+        LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- data = %s\n", pObj->GetDataAsString());
+
         // note : 12.1 - is epoch calculation correct?
 
         if(nBlockHeight != pSuperblock->GetBlockStart()) {
+            LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- block height doesn't match nBlockHeight = %d, blockStart = %d, continuing\n",
+                     nBlockHeight,
+                     pSuperblock->GetBlockStart());
             DBG( cout << "IsSuperblockTriggered Not the target block, continuing"
-                      << ", nBlockHeight = " << nBlockHeight
-                      << ", superblock->GetBlockStart() = " << pSuperblock->GetBlockStart()
-                      << endl; );
+                 << ", nBlockHeight = " << nBlockHeight
+                 << ", superblock->GetBlockStart() = " << pSuperblock->GetBlockStart()
+                 << endl; );
             continue;
         }
 
         // MAKE SURE THIS TRIGGER IS ACTIVE VIA FUNDING CACHE FLAG
 
         if(pObj->fCachedFunding) {
+            LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
             DBG( cout << "IsSuperblockTriggered returning true" << endl; );
             return true;
         }
         else  {
+            LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = false, continuing\n");
             DBG( cout << "IsSuperblockTriggered No fCachedFunding, continuing" << endl; );
         }
     }
@@ -402,7 +414,7 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
 
     CSuperblock_sptr pSuperblock;
     if(!CSuperblockManager::GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        LogPrint("superblock", "CSuperblockManager::CreateSuperblock -- Can't find superblock for height %d\n", nBlockHeight);
+        LogPrint("gobject", "CSuperblockManager::CreateSuperblock -- Can't find superblock for height %d\n", nBlockHeight);
         DBG( cout << "CSuperblockManager::CreateSuperblock Failed to get superblock for height, returning" << endl; );
         return;
     }
@@ -507,6 +519,9 @@ CSuperblock(uint256& nHash)
     std::string strAmounts = obj["payment_amounts"].get_str();
     ParsePaymentSchedule(strAddresses, strAmounts);
 
+    LogPrint("gobject", "CSuperblock -- nEpochStart = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
+             nEpochStart, strAddresses, strAmounts, vecPayments.size());
+
     DBG( cout << "CSuperblock Constructor End" << endl; );
 }
 
@@ -554,13 +569,15 @@ void CSuperblock::ParsePaymentSchedule(std::string& strPaymentAddresses, std::st
 
     if (vecParsed1.size() != vecParsed2.size()) {
         std::ostringstream ostr;
-        ostr << "CSuperblock::ParsePaymentSchedule Mismatched payments and amounts";
+        ostr << "CSuperblock::ParsePaymentSchedule -- Mismatched payments and amounts";
+        LogPrintf("%s\n", ostr.str());
         throw std::runtime_error(ostr.str());
     }
 
     if (vecParsed1.size() == 0) {
         std::ostringstream ostr;
-        ostr << "CSuperblock::ParsePaymentSchedule Error no payments";
+        ostr << "CSuperblock::ParsePaymentSchedule -- Error no payments";
+        LogPrintf("%s\n", ostr.str());
         throw std::runtime_error(ostr.str());
     }
 
@@ -576,7 +593,8 @@ void CSuperblock::ParsePaymentSchedule(std::string& strPaymentAddresses, std::st
         CBitcoinAddress address(vecParsed1[i]);
         if (!address.IsValid()) {
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule Invalid Dash Address : " <<  vecParsed1[i];
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Dash Address : " <<  vecParsed1[i];
+            LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
 
@@ -594,6 +612,14 @@ void CSuperblock::ParsePaymentSchedule(std::string& strPaymentAddresses, std::st
         CGovernancePayment payment(address, nAmount);
         if(payment.IsValid()) {
             vecPayments.push_back(payment);
+        }
+        else {
+            vecPayments.clear();
+            std::ostringstream ostr;
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << address.ToString()
+                 << ", amount = " << nAmount;
+            LogPrintf("%s\n", ostr.str());
+            throw std::runtime_error(ostr.str());
         }
     }
 }
@@ -645,6 +671,9 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     int nOutputs = txNew.vout.size();
     int nPayments = CountPayments();
     int nMinerPayments = nOutputs - nPayments;
+
+    LogPrint("gobject", "CSuperblock::IsValid nOutputs = %d, nPayments = %d, strData = %s\n",
+             nOutputs, nPayments, GetGovernanceObject()->strData);
 
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block, after
@@ -716,7 +745,7 @@ std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
 
     CSuperblock_sptr pSuperblock;
     if(!GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        LogPrint("superblock", "CSuperblockManager::GetRequiredPaymentsString -- Can't find superblock for height %d\n", nBlockHeight);
+        LogPrint("gobject", "CSuperblockManager::GetRequiredPaymentsString -- Can't find superblock for height %d\n", nBlockHeight);
         return "error";
     }
 

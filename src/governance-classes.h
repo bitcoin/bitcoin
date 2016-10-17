@@ -99,27 +99,33 @@ public:
     CAmount nAmount;
 
     CGovernancePayment()
-    {
-        SetNull();
-    }
+        :fValid(false),
+         script(),
+         nAmount(0)
+    {}
 
     CGovernancePayment(CBitcoinAddress addrIn, CAmount nAmountIn)
+        :fValid(false),
+         script(),
+         nAmount(0)
     {
         try
         {
             CTxDestination dest = addrIn.Get();
             script = GetScriptForDestination(dest);
             nAmount = nAmountIn;
-        } catch(...) {
-            SetNull(); //set fValid to false
+            fValid = true;
         }
-    }
-
-    void SetNull()
-    {
-        script = CScript();
-        nAmount = 0;
-        fValid = false;
+        catch(std::exception& e)
+        {
+            LogPrintf("CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d, what = %s\n",
+                     addrIn.ToString(), nAmountIn, e.what());
+        }
+        catch(...)
+        {
+            LogPrintf("CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d\n",
+                      addrIn.ToString(), nAmountIn);
+        }
     }
 
     bool IsValid() { return fValid; }

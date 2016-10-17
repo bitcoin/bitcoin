@@ -22,9 +22,20 @@ extern CActiveMasternode activeMasternode;
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
 {
+public:
+    enum masternode_type_enum_t {
+        MASTERNODE_UNKNOWN = 0,
+        MASTERNODE_REMOTE  = 1,
+        MASTERNODE_LOCAL   = 2
+    };
+
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
+
+    masternode_type_enum_t eType;
+
+    bool fPingerEnabled;
 
     /// Ping Masternode
     bool SendMasternodePing(std::string& strErrorRet);
@@ -41,15 +52,28 @@ public:
     int nState; // should be one of ACTIVE_MASTERNODE_XXXX
     std::string strNotCapableReason;
 
-    CActiveMasternode() : nState(ACTIVE_MASTERNODE_INITIAL) {}
+    CActiveMasternode()
+        : eType(MASTERNODE_UNKNOWN),
+          fPingerEnabled(false),
+          nState(ACTIVE_MASTERNODE_INITIAL)
+    {}
 
     /// Manage state of active Masternode
     void ManageState();
 
     std::string GetStatus();
 
+    std::string GetType();
+
     /// Enable cold wallet mode (run a Masternode with no funds)
     bool EnableRemoteMasterNode(CTxIn& vinNew, CService& serviceNew);
+
+private:
+    void ManageStateInitial();
+
+    void ManageStateRemote();
+
+    void ManageStateLocal();
 };
 
 #endif

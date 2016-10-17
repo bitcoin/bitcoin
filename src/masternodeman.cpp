@@ -35,8 +35,11 @@ struct CompareScoreMN
     }
 };
 
+const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-1";
+
 CMasternodeMan::CMasternodeMan() {
     nDsqCount = 0;
+    nLastWatchdogVoteTime = 0;
 }
 
 bool CMasternodeMan::Add(CMasternode &mn)
@@ -77,6 +80,8 @@ void CMasternodeMan::AskForMN(CNode* pnode, CTxIn &vin)
 void CMasternodeMan::Check()
 {
     LOCK(cs);
+
+    LogPrint("masternode", "CMasternodeMan::Check nLastWatchdogVoteTime = %d, IsWatchdogActive() = %d\n", nLastWatchdogVoteTime, IsWatchdogActive());
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -180,10 +185,26 @@ void CMasternodeMan::Clear()
     mapSeenMasternodeBroadcast.clear();
     mapSeenMasternodePing.clear();
     nDsqCount = 0;
+    nLastWatchdogVoteTime = 0;
+}
+
+int CMasternodeMan::CountMasternodes(int protocolVersion)
+{
+    LOCK(cs);
+    int i = 0;
+    protocolVersion = protocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : protocolVersion;
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        if(mn.nProtocolVersion < protocolVersion) continue;
+        i++;
+    }
+
+    return i;
 }
 
 int CMasternodeMan::CountEnabled(int protocolVersion)
 {
+    LOCK(cs);
     int i = 0;
     protocolVersion = protocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
@@ -198,6 +219,7 @@ int CMasternodeMan::CountEnabled(int protocolVersion)
 
 int CMasternodeMan::CountByIP(int nNetworkType)
 {
+    LOCK(cs);
     int nNodeCount = 0;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
@@ -290,6 +312,37 @@ bool CMasternodeMan::Get(const CTxIn& vin, CMasternode& masternode)
     }
     masternode = *pMN;
     return true;
+}
+
+masternode_info_t CMasternodeMan::GetMasternodeInfo(const CTxIn& vin)
+{
+    masternode_info_t info;
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)  {
+        return info;
+    }
+    info = pMN->GetInfo();
+    return info;
+}
+
+masternode_info_t CMasternodeMan::GetMasternodeInfo(const CPubKey& pubKeyMasternode)
+{
+    masternode_info_t info;
+    LOCK(cs);
+    CMasternode* pMN = Find(pubKeyMasternode);
+    if(!pMN)  {
+        return info;
+    }
+    info = pMN->GetInfo();
+    return info;
+}
+
+bool CMasternodeMan::Has(const CTxIn& vin)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    return (pMN != NULL);
 }
 
 // 
@@ -544,7 +597,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    LOCK(cs_process_message);
+    LOCK(cs);
 
     if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
         CMasternodeBroadcast mnb;
@@ -707,6 +760,7 @@ int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
 }
 
 void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
+    LOCK(cs);
     mapSeenMasternodePing.insert(make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
     mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
@@ -725,6 +779,7 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
 }
 
 bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos) {
+    LOCK(cs);
     nDos = 0;
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
 
@@ -759,6 +814,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
 }
 
 void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex) {
+    LOCK(cs);
     if(fLiteMode) return;
 
     static bool IsFirstRun = true;
@@ -775,4 +831,107 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex) {
 
     // every time is like the first time if winners list is not synced
     IsFirstRun = !masternodeSync.IsWinnersListSynced();
+}
+
+void CMasternodeMan::UpdateWatchdogVoteTime(const CTxIn& vin)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)  {
+        return;
+    }
+    pMN->UpdateWatchdogVoteTime();
+    nLastWatchdogVoteTime = GetTime();
+}
+
+bool CMasternodeMan::IsWatchdogActive()
+{
+    LOCK(cs);
+    // Check if any masternodes have voted recently, otherwise return false
+    return (GetTime() - nLastWatchdogVoteTime) <= MASTERNODE_WATCHDOG_MAX_SECONDS;
+}
+
+void CMasternodeMan::AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)  {
+        return;
+    }
+    pMN->AddGovernanceVote(nGovernanceObjectHash);
+}
+
+void CMasternodeMan::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
+{
+    LOCK(cs);
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        mn.RemoveGovernanceObject(nGovernanceObjectHash);
+    }
+}
+
+void CMasternodeMan::CheckMasternode(const CTxIn& vin, bool fForce)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)  {
+        return;
+    }
+    pMN->Check(fForce);
+}
+
+void CMasternodeMan::CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(pubKeyMasternode);
+    if(!pMN)  {
+        return;
+    }
+    pMN->Check(fForce);
+}
+
+int CMasternodeMan::GetMasternodeState(const CTxIn& vin)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)  {
+        return CMasternode::MASTERNODE_REMOVE;
+    }
+    return pMN->nActiveState;
+}
+
+int CMasternodeMan::GetMasternodeState(const CPubKey& pubKeyMasternode)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(pubKeyMasternode);
+    if(!pMN)  {
+        return CMasternode::MASTERNODE_REMOVE;
+    }
+    return pMN->nActiveState;
+}
+
+bool CMasternodeMan::IsMasternodePingedWithin(const CTxIn& vin, int nSeconds, int64_t nTimeToCheckAt)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN) {
+        return false;
+    }
+    return pMN->IsPingedWithin(nSeconds, nTimeToCheckAt);
+}
+
+void CMasternodeMan::SetMasternodeLastPing(const CTxIn& vin, const CMasternodePing& mnp)
+{
+    LOCK(cs);
+    CMasternode* pMN = Find(vin);
+    if(!pMN)  {
+        return;
+    }
+    pMN->lastPing = mnp;
+    mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
+
+    CMasternodeBroadcast mnb(*pMN);
+    uint256 hash = mnb.GetHash();
+    if(mapSeenMasternodeBroadcast.count(hash)) {
+        mapSeenMasternodeBroadcast[hash].lastPing = mnp;
+    }
 }

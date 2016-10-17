@@ -36,6 +36,8 @@ CGovernanceManager::CGovernanceManager()
       mapSeenGovernanceObjects(),
       mapSeenVotes(),
       mapOrphanVotes(),
+      mapVotesByHash(),
+      mapVotesByType(),
       mapLastMasternodeTrigger(),
       cs()
 {}
@@ -186,8 +188,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         // FIND THE MASTERNODE OF THE VOTER
 
-        CMasternode* pmn = mnodeman.Find(vote.GetVinMasternode());
-        if(pmn == NULL) {
+        if(!mnodeman.Has(vote.GetVinMasternode())) {
             LogPrint("gobject", "gobject - unknown masternode - vin: %s\n", vote.GetVinMasternode().ToString());
             mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
             return;
@@ -212,7 +213,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(AddOrUpdateVote(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
-            pmn->AddGovernanceVote(vote.GetParentHash());
+            mnodeman.AddGovernanceVote(vote.GetVinMasternode(), vote.GetParentHash());
         }
 
         LogPrint("gobject", "NEW governance vote: %s\n", vote.GetHash().ToString());
@@ -267,11 +268,15 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
               << ", nObjectType = " << govobj.nObjectType
               << endl; );
 
-    if(govobj.nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
+    switch(govobj.nObjectType) {
+    case GOVERNANCE_OBJECT_TRIGGER:
         mapLastMasternodeTrigger[govobj.vinMasternode.prevout] = nCachedBlockHeight;
         DBG( cout << "CGovernanceManager::AddGovernanceObject Before AddNewTrigger" << endl; );
         triggerman.AddNewTrigger(govobj.GetHash());
         DBG( cout << "CGovernanceManager::AddGovernanceObject After AddNewTrigger" << endl; );
+        break;
+    default:
+        break;
     }
 
     DBG( cout << "CGovernanceManager::AddGovernanceObject END" << endl; );
@@ -283,7 +288,17 @@ void CGovernanceManager::UpdateCachesAndClean()
 {
     LogPrintf("CGovernanceManager::UpdateCachesAndClean \n");
 
+    std::vector<uint256> vecDirtyHashes = mnodeman.GetAndClearDirtyGovernanceObjectHashes();
+
     LOCK(cs);
+
+    for(size_t i = 0; i < vecDirtyHashes.size(); ++i) {
+        object_m_it it = mapObjects.find(vecDirtyHashes[i]);
+        if(it == mapObjects.end()) {
+            continue;
+        }
+        it->second.fDirtyCache = true;
+    }
 
     // DOUBLE CHECK THAT WE HAVE A VALID POINTER TO TIP
 
@@ -322,6 +337,7 @@ void CGovernanceManager::UpdateCachesAndClean()
 
         if(pObj->fCachedDelete || pObj->fExpired) {
             LogPrintf("UpdateCachesAndClean --- erase obj %s\n", (*it).first.ToString());
+            mnodeman.RemoveGovernanceObject(pObj->GetHash());
             mapObjects.erase(it++);
         } else {
             ++it;
@@ -561,6 +577,9 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
     {
         pGovObj->fDirtyCache = true;
         UpdateCachesAndClean();
+        if(pGovObj->GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
+            mnodeman.UpdateWatchdogVoteTime(vote.GetVinMasternode());
+        }
     } else {
         LogPrintf("Governance object not found! Can't update fDirtyCache - %s\n", vote.GetParentHash().ToString());
     }
@@ -568,15 +587,27 @@ bool CGovernanceManager::AddOrUpdateVote(const CGovernanceVote& vote, CNode* pfr
     return true;
 }
 
-bool CGovernanceManager::MasternodeRateCheck(const CTxIn& vin)
+bool CGovernanceManager::MasternodeRateCheck(const CTxIn& vin, int nObjectType)
 {
     LOCK(cs);
+
+    int mindiff = 0;
+    switch(nObjectType) {
+    case GOVERNANCE_OBJECT_TRIGGER:
+        mindiff = Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockCycle / 10;
+        break;
+    case GOVERNANCE_OBJECT_WATCHDOG:
+        mindiff = 1;
+        break;
+    default:
+        break;
+    }
+
     txout_m_it it  = mapLastMasternodeTrigger.find(vin.prevout);
     if(it == mapLastMasternodeTrigger.end()) {
         return true;
     }
     // Allow 1 trigger per mn per cycle, with a small fudge factor
-    int mindiff = Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockCycle / 10;
     if((nCachedBlockHeight - it->second) > mindiff) {
         return true;
     }
@@ -587,79 +618,73 @@ bool CGovernanceManager::MasternodeRateCheck(const CTxIn& vin)
 }
 
 CGovernanceObject::CGovernanceObject()
+    : cs(),
+      nHashParent(),
+      nRevision(0),
+      nTime(0),
+      nCollateralHash(),
+      strData(),
+      nObjectType(GOVERNANCE_OBJECT_UNKNOWN),
+      vinMasternode(),
+      vchSig(),
+      fCachedLocalValidity(false),
+      strLocalValidityError(),
+      fCachedFunding(false),
+      fCachedValid(true),
+      fCachedDelete(false),
+      fCachedEndorsed(false),
+      fDirtyCache(true),
+      fUnparsable(false),
+      fExpired(false)
 {
-    // MAIN OBJECT DATA
-
-    nTime = 0;
-    nObjectType = GOVERNANCE_OBJECT_UNKNOWN;
-
-    nHashParent = uint256(); //parent object, 0 is root
-    nRevision = 0; //object revision in the system
-    nCollateralHash = uint256(); //fee-tx
-
-    // CACHING FOR VARIOUS FLAGS
-
-    fCachedFunding = false;
-    fCachedValid = true;
-    fCachedDelete = false;
-    fCachedEndorsed = false;
-    fDirtyCache = true;
-    fUnparsable = false;
-    fExpired = false;
-
     // PARSE JSON DATA STORAGE (STRDATA)
     LoadData();
 }
 
 CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, int64_t nTimeIn, uint256 nCollateralHashIn, std::string strDataIn)
+    : cs(),
+      nHashParent(nHashParentIn),
+      nRevision(nRevisionIn),
+      nTime(nTimeIn),
+      nCollateralHash(nCollateralHashIn),
+      strData(strDataIn),
+      nObjectType(GOVERNANCE_OBJECT_UNKNOWN),
+      vinMasternode(),
+      vchSig(),
+      fCachedLocalValidity(false),
+      strLocalValidityError(),
+      fCachedFunding(false),
+      fCachedValid(true),
+      fCachedDelete(false),
+      fCachedEndorsed(false),
+      fDirtyCache(true),
+      fUnparsable(false),
+      fExpired(false)
 {
-    // MAIN OBJECT DATA
-
-    nHashParent = nHashParentIn; //parent object, 0 is root
-    nRevision = nRevisionIn; //object revision in the system
-    nTime = nTimeIn;
-    nCollateralHash = nCollateralHashIn; //fee-tx
-    nObjectType = GOVERNANCE_OBJECT_UNKNOWN; // Avoid having an uninitialized variable
-    strData = strDataIn;
-
-    // CACHING FOR VARIOUS FLAGS
-
-    fCachedFunding = false;
-    fCachedValid = true;
-    fCachedDelete = false;
-    fCachedEndorsed = false;
-    fDirtyCache = true;
-    fUnparsable = false;
-    fExpired = false;
-
     // PARSE JSON DATA STORAGE (STRDATA)
     LoadData();
 }
 
 CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
-{
-    // COPY OTHER OBJECT'S DATA INTO THIS OBJECT
-
-    nHashParent = other.nHashParent;
-    nRevision = other.nRevision;
-    nTime = other.nTime;
-    nCollateralHash = other.nCollateralHash;
-    strData = other.strData;
-    nObjectType = other.nObjectType;
-
-    fUnparsable = true;
-
-    vinMasternode = other.vinMasternode;
-    vchSig = other.vchSig;
-
-    // caching
-    fCachedFunding = other.fCachedFunding;
-    fCachedValid = other.fCachedValid;
-    fCachedDelete = other.fCachedDelete;
-    fCachedEndorsed = other.fCachedEndorsed;
-    fDirtyCache = other.fDirtyCache;
-    fExpired = other.fExpired;
-}
+    : cs(),
+      nHashParent(other.nHashParent),
+      nRevision(other.nRevision),
+      nTime(other.nTime),
+      nCollateralHash(other.nCollateralHash),
+      strData(other.strData),
+      nObjectType(other.nObjectType),
+      vinMasternode(other.vinMasternode),
+      vchSig(other.vchSig),
+      fCachedLocalValidity(other.fCachedLocalValidity),
+      strLocalValidityError(other.strLocalValidityError),
+      fCachedFunding(other.fCachedFunding),
+      fCachedValid(other.fCachedValid),
+      fCachedDelete(other.fCachedDelete),
+      fCachedEndorsed(other.fCachedEndorsed),
+      fDirtyCache(other.fDirtyCache),
+      fUnparsable(other.fUnparsable),
+      fExpired(other.fExpired)
+{}
 
 void CGovernanceObject::SetMasternodeInfo(const CTxIn& vin)
 {
@@ -789,6 +814,7 @@ void CGovernanceObject::LoadData()
         nObjectType = obj["type"].get_int();
     }
     catch(std::exception& e) {
+        fUnparsable = true;
         std::ostringstream ostr;
         ostr << "CGovernanceObject::LoadData Error parsing JSON"
              << ", e.what() = " << e.what();
@@ -797,6 +823,7 @@ void CGovernanceObject::LoadData()
         return;
     }
     catch(...) {
+        fUnparsable = true;
         std::ostringstream ostr;
         ostr << "CGovernanceObject::LoadData Unknown Error parsing JSON";
         DBG( cout << ostr.str() << endl; );
@@ -854,9 +881,14 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
         return true;
     }
 
+    if(fUnparsable) {
+        return false;
+    }
+
     switch(nObjectType) {
         case GOVERNANCE_OBJECT_PROPOSAL:
         case GOVERNANCE_OBJECT_TRIGGER:
+        case GOVERNANCE_OBJECT_WATCHDOG:
             break;
         default:
             strError = strprintf("Invalid object type %d", nObjectType);
@@ -872,29 +904,25 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
 
     // CHECK COLLATERAL IF REQUIRED (HIGH CPU USAGE)
 
-    if(fCheckCollateral) {
-        if(nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
+    if(fCheckCollateral) { 
+        if((nObjectType == GOVERNANCE_OBJECT_TRIGGER) || (nObjectType == GOVERNANCE_OBJECT_WATCHDOG)) {
             std::string strVin = vinMasternode.prevout.ToStringShort();
-            CMasternode mn;
-            if(!mnodeman.Get(vinMasternode, mn)) {
+            masternode_info_t infoMn = mnodeman.GetMasternodeInfo(vinMasternode);
+            if(!infoMn.fInfoValid) {
                 strError = "Masternode not found vin: " + strVin;
-                return false;
-            }
-            if(!mn.IsEnabled()) {
-                strError = "Masternode not enabled vin: " + strVin;
                 return false;
             }
 
             // Check that we have a valid MN signature
-            if(!CheckSignature(mn.pubKeyMasternode)) {
-                strError = "Invalid masternode signature for: " + strVin + ", pubkey id = " + mn.pubKeyMasternode.GetID().ToString();
+            if(!CheckSignature(infoMn.pubKeyMasternode)) {
+                strError = "Invalid masternode signature for: " + strVin + ", pubkey id = " + infoMn.pubKeyMasternode.GetID().ToString();
                 return false;
             }
 
             // Only perform rate check if we are synced because during syncing it is expected
             // that objects will be seen in rapid succession
             if(masternodeSync.IsSynced()) {
-                if(!governance.MasternodeRateCheck(vinMasternode)) {
+                if(!governance.MasternodeRateCheck(vinMasternode, nObjectType)) {
                     strError = "Masternode attempting to create too many objects vin: " + strVin;
                     return false;
                 }
@@ -932,6 +960,7 @@ CAmount CGovernanceObject::GetMinCollateralFee()
     switch(nObjectType) {
         case GOVERNANCE_OBJECT_PROPOSAL:    return GOVERNANCE_PROPOSAL_FEE_TX;
         case GOVERNANCE_OBJECT_TRIGGER:     return 0;
+        case GOVERNANCE_OBJECT_WATCHDOG:    return 0;
         default:                            return MAX_MONEY;
     }
 }

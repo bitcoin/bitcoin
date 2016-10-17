@@ -20,6 +20,7 @@ static const int MASTERNODE_MIN_DSEG_SECONDS      = 10 * 60;
 static const int MASTERNODE_EXPIRATION_SECONDS    = 65 * 60;
 static const int MASTERNODE_REMOVAL_SECONDS       = 75 * 60;
 static const int MASTERNODE_CHECK_SECONDS         = 5;
+static const int MASTERNODE_WATCHDOG_MAX_SECONDS  = 2 * 60 * 60;
 
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
@@ -95,6 +96,36 @@ public:
 
 };
 
+struct masternode_info_t {
+
+    masternode_info_t()
+        : vin(),
+          addr(),
+          pubKeyCollateralAddress(),
+          pubKeyMasternode(),
+          sigTime(0),
+          nLastDsq(0),
+          nTimeLastChecked(0),
+          nTimeLastPaid(0),
+          nTimeLastWatchdogVote(0),
+          nActiveState(0),
+          nProtocolVersion(0),
+          fInfoValid(false)
+        {}
+
+    CTxIn vin;
+    CService addr;
+    CPubKey pubKeyCollateralAddress;
+    CPubKey pubKeyMasternode;
+    int64_t sigTime; //mnb message time
+    int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
+    int64_t nTimeLastChecked;
+    int64_t nTimeLastPaid;
+    int64_t nTimeLastWatchdogVote;
+    int nActiveState;
+    int nProtocolVersion;
+    bool fInfoValid;
+};
 
 //
 // The Masternode Class. For managing the Darksend process. It contains the input of the 1000DRK, signature to prove
@@ -112,7 +143,8 @@ public:
         MASTERNODE_ENABLED,
         MASTERNODE_EXPIRED,
         MASTERNODE_OUTPOINT_SPENT,
-        MASTERNODE_REMOVE
+        MASTERNODE_REMOVE,
+        MASTERNODE_WATCHDOG_EXPIRED
     };
 
     CTxIn vin;
@@ -125,6 +157,7 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int64_t nTimeLastChecked;
     int64_t nTimeLastPaid;
+    int64_t nTimeLastWatchdogVote;
     int nActiveState;
     int nCacheCollateralBlock;
     int nBlockLastPaid;
@@ -133,7 +166,7 @@ public:
     bool fUnitTest;
 
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
-    std::map<uint256, int> mapGovernaceObjectsVotedOn;
+    std::map<uint256, int> mapGovernanceObjectsVotedOn;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -155,13 +188,14 @@ public:
         READWRITE(nLastDsq);
         READWRITE(nTimeLastChecked);
         READWRITE(nTimeLastPaid);
+        READWRITE(nTimeLastWatchdogVote);
         READWRITE(nActiveState);
         READWRITE(nCacheCollateralBlock);
         READWRITE(nBlockLastPaid);
         READWRITE(nProtocolVersion);
         READWRITE(fAllowMixingTx);
         READWRITE(fUnitTest);
-        READWRITE(mapGovernaceObjectsVotedOn);
+        READWRITE(mapGovernanceObjectsVotedOn);
     }
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
@@ -181,13 +215,14 @@ public:
         swap(first.nLastDsq, second.nLastDsq);
         swap(first.nTimeLastChecked, second.nTimeLastChecked);
         swap(first.nTimeLastPaid, second.nTimeLastPaid);
+        swap(first.nTimeLastWatchdogVote, second.nTimeLastWatchdogVote);
         swap(first.nActiveState, second.nActiveState);
         swap(first.nCacheCollateralBlock, second.nCacheCollateralBlock);
         swap(first.nBlockLastPaid, second.nBlockLastPaid);
         swap(first.nProtocolVersion, second.nProtocolVersion);
         swap(first.fAllowMixingTx, second.fAllowMixingTx);
         swap(first.fUnitTest, second.fUnitTest);
-        swap(first.mapGovernaceObjectsVotedOn, second.mapGovernaceObjectsVotedOn);
+        swap(first.mapGovernanceObjectsVotedOn, second.mapGovernanceObjectsVotedOn);
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
@@ -212,7 +247,11 @@ public:
     bool IsEnabled() { return nActiveState == MASTERNODE_ENABLED; }
     bool IsPreEnabled() { return nActiveState == MASTERNODE_PRE_ENABLED; }
 
+    bool IsWatchdogExpired() { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
+
     bool IsValidNetAddr();
+
+    masternode_info_t GetInfo();
 
     std::string GetStatus();
 
@@ -226,8 +265,10 @@ public:
     void AddGovernanceVote(uint256 nGovernanceObjectHash);
     // RECALCULATE CACHED STATUS FLAGS FOR ALL AFFECTED OBJECTS
     void FlagGovernanceItemsAsDirty();
-    // TODO: There probably should be some method to clean mapGovernaceObjectsVotedOn map
-    // under some conditions. We shouldn't store everything in memory forever.
+
+    void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
+
+    void UpdateWatchdogVoteTime();
 
     CMasternode& operator=(CMasternode from)
     {

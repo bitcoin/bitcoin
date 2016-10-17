@@ -169,7 +169,9 @@ void CMasternodeSync::ProcessTick()
     if(!pCurrentBlockIndex) return;
 
     //the actual count of masternodes we have currently
-    int nMnCount = mnodeman.CountEnabled();
+    int nMnCount = mnodeman.CountMasternodes();
+
+    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMnCount = %d\n", nTick, nMnCount);
 
     // RESET SYNCING INCASE OF FAILURE
     {
@@ -222,7 +224,7 @@ void CMasternodeSync::ProcessTick()
             } else if(nRequestedMasternodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode);
             } else if(nRequestedMasternodeAttempt < 6) {
-                int nMnCount = mnodeman.CountEnabled();
+                int nMnCount = mnodeman.CountMasternodes();
                 pnode->PushMessage(NetMsgType::MASTERNODEPAYMENTSYNC, nMnCount); //sync payment votes
                 uint256 n = uint256();
                 pnode->PushMessage(NetMsgType::MNGOVERNANCESYNC, n); //sync masternode votes
@@ -274,6 +276,8 @@ void CMasternodeSync::ProcessTick()
                 /* Note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
                    Surely doesn't work right for testnet currently */
                 // try to fetch data from at least two peers though
+                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMnCount %d, Estimated masternode count required: %d\n", 
+                          nTick, nMnCount, mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9);
                 if(nRequestedMasternodeAttempt > 1 && nMnCount > mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9) {
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- found enough data\n", nTick, nRequestedMasternodeAssets);
                     SwitchToNextAsset();

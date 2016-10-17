@@ -109,9 +109,9 @@ public:
 
     int64_t GetTimestamp() const { return nTime; }
 
-    vote_signal_enum_t GetSignal()  { return vote_signal_enum_t(nVoteSignal); }
+    vote_signal_enum_t GetSignal() const  { return vote_signal_enum_t(nVoteSignal); }
 
-    vote_outcome_enum_t GetOutcome()  { return vote_outcome_enum_t(nVoteOutcome); }
+    vote_outcome_enum_t GetOutcome() const  { return vote_outcome_enum_t(nVoteOutcome); }
 
     const uint256& GetParentHash() const { return nParentHash; }
 
@@ -128,6 +128,8 @@ public:
     }
 
     CTxIn& GetVinMasternode() { return vinMasternode; }
+
+    const CTxIn& GetVinMasternode() const { return vinMasternode; }
 
     /**
     *   GetHash()
@@ -148,8 +150,12 @@ public:
 
     std::string ToString()
     {
-        std::string strRet = CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) + ":" + CGovernanceVoting::ConvertSignalToString(GetSignal());
-        return strRet;
+        std::ostringstream ostr;
+        ostr << vinMasternode.ToString() << ":"
+             << nTime << ":"
+             << CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) << ":"
+             << CGovernanceVoting::ConvertSignalToString(GetSignal());
+        return ostr.str();
     }
 
     /**
