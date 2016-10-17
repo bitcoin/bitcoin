@@ -260,6 +260,8 @@ struct CNodeState {
     int nMisbehavior;
     //! Whether this peer should be disconnected and banned (unless whitelisted).
     bool fShouldBan;
+    //! NodeId of this peer (debugging/logging purposes).
+    NodeId id;
     //! String name of this peer (debugging/logging purposes).
     std::string name;
     //! List of asynchronously-determined block rejections to notify this peer about.
@@ -355,6 +357,7 @@ void InitializeNode(NodeId nodeid, const CNode *pnode) {
     CNodeState &state = mapNodeState.insert(std::make_pair(nodeid, CNodeState())).first->second;
     state.name = pnode->addrName;
     state.address = pnode->addr;
+    state.id = pnode->id;
 }
 
 void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
@@ -1844,12 +1847,12 @@ void Misbehaving(NodeId pnode, int howmuch)
 
     state->nMisbehavior += howmuch;
     int banscore = GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD);
-    if (state->nMisbehavior >= banscore && state->nMisbehavior - howmuch < banscore)
+    if (state->nMisbehavior >= banscore && !state->fShouldBan)
     {
-        LogPrintf("%s: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
+        LogPrintf("%s: peer=%d (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, state->id, state->nMisbehavior-howmuch, state->nMisbehavior);
         state->fShouldBan = true;
     } else
-        LogPrintf("%s: %s (%d -> %d)\n", __func__, state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
+        LogPrintf("%s: peer=%d (%d -> %d)\n", __func__, state->id, state->nMisbehavior-howmuch, state->nMisbehavior);
 }
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
