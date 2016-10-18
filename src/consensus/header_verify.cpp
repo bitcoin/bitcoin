@@ -11,7 +11,7 @@
 
 bool CheckProof(const Consensus::Params& consensusParams, const CBlockHeader& block)
 {
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block.GetHash(), block.proof.pow.nBits, consensusParams))
         return false;
 
     return true;
@@ -20,11 +20,11 @@ bool CheckProof(const Consensus::Params& consensusParams, const CBlockHeader& bl
 bool MaybeGenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pblock, uint64_t& nTries)
 {
     const int nInnerLoopCount = 0x10000;
-    while (nTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, consensusParams)) {
-        ++pblock->nNonce;
+    while (nTries > 0 && pblock->proof.pow.nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->proof.pow.nBits, consensusParams)) {
+        ++pblock->proof.pow.nNonce;
         --nTries;
     }
-    return CheckProofOfWork(pblock->GetHash(), pblock->nBits, consensusParams);
+    return CheckProofOfWork(pblock->GetHash(), pblock->proof.pow.nBits, consensusParams);
 }
 
 bool GenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pblock)
@@ -35,12 +35,12 @@ bool GenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pbloc
 
 void ResetProof(const Consensus::Params& consensusParams, CBlockHeader* pblock)
 {
-    pblock->nNonce = 0;
+    pblock->proof.pow.nNonce = 0;
 }
 
 bool CheckChallenge(const Consensus::Params& consensusParams, CValidationState& state, const CBlockHeader *pblock, const CBlockIndex* pindexPrev)
 {
-    if (pblock->nBits != GetNextWorkRequired(pindexPrev, pblock, consensusParams))
+    if (pblock->proof.pow.nBits != GetNextWorkRequired(pindexPrev, pblock, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
     return true;
@@ -48,5 +48,5 @@ bool CheckChallenge(const Consensus::Params& consensusParams, CValidationState& 
 
 void ResetChallenge(const Consensus::Params& consensusParams, CBlockHeader* pblock, const CBlockIndex* pindexPrev)
 {
-    pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+    pblock->proof.pow.nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
 }

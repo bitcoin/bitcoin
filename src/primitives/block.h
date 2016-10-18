@@ -10,6 +10,18 @@
 #include "serialize.h"
 #include "uint256.h"
 
+static bool fSignBlocksGlobal = false;
+
+struct PowProof {
+    uint32_t nBits;
+    uint32_t nNonce;
+};
+
+union UnionProof {
+    PowProof pow;
+    CScript* script;
+};
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -25,12 +37,17 @@ public:
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    union UnionProof proof;
 
     CBlockHeader()
     {
         SetNull();
+    }
+
+    ~CBlockHeader()
+    {
+        if (fSignBlocksGlobal)
+            delete(proof.script);
     }
 
     ADD_SERIALIZE_METHODS;
@@ -41,8 +58,14 @@ public:
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        if (fSignBlocksGlobal) {
+            // Don't try to sign the signature
+            if (!(s.GetType() & SER_GETHASH))
+                READWRITE(*(CScriptBase*)proof.script);
+        } else {
+            READWRITE(proof.pow.nBits);
+            READWRITE(proof.pow.nNonce);
+        }
     }
 
     void SetNull()
@@ -51,13 +74,13 @@ public:
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
-        nBits = 0;
-        nNonce = 0;
+        proof.pow.nBits = 0;
+        proof.pow.nNonce = 0;
     }
 
     bool IsNull() const
     {
-        return (nBits == 0);
+        return proof.pow.nBits == 0;
     }
 
     uint256 GetHash() const;
@@ -111,8 +134,7 @@ public:
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.proof          = proof;
         return block;
     }
 
