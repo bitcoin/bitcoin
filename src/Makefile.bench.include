@@ -17,7 +17,8 @@ bench_bench_bitcoin_SOURCES = \
   bench/ccoins_caching.cpp \
   bench/mempool_eviction.cpp \
   bench/verify_script.cpp \
-  bench/base58.cpp
+  bench/base58.cpp \
+  bench/lockedpool.cpp
 
 bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
