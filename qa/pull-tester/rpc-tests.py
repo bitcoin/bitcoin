@@ -151,6 +151,7 @@ testScripts = [
     'invalidtxrequest.py', # NOTE: needs dash_hash to pass
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
+    'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
 ]
