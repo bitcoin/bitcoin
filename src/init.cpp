@@ -237,7 +237,6 @@ void Shutdown()
 
 #if ENABLE_ZMQ
     if (pzmqNotificationInterface) {
-        UnregisterValidationInterface(pzmqNotificationInterface);
         delete pzmqNotificationInterface;
         pzmqNotificationInterface = NULL;
     }
@@ -1226,11 +1225,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         connman.AddOneShot(strDest);
 
 #if ENABLE_ZMQ
-    pzmqNotificationInterface = CZMQNotificationInterface::CreateWithArguments(mapArgs);
-
-    if (pzmqNotificationInterface) {
-        RegisterValidationInterface(pzmqNotificationInterface);
-    }
+    pzmqNotificationInterface = CZMQNotificationInterface::CreateWithArguments(mapArgs, &mempool);
 #endif
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;

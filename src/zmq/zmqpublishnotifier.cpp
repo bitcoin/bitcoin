@@ -6,6 +6,7 @@
 #include "zmqpublishnotifier.h"
 #include "main.h"
 #include "util.h"
+#include "crypto/common.h"
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -13,6 +14,8 @@ static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
+static const char *MSG_MEMPOOLADDED = "mempooladded";
+static const char *MSG_MEMPOOLREMOVED = "mempoolremoved";
 
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
@@ -140,27 +143,42 @@ bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* d
     return true;
 }
 
-bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
+CZMQValidationPublishNotifier::CZMQValidationPublishNotifier()
+{
+    RegisterValidationInterface(this);
+}
+
+CZMQValidationPublishNotifier::~CZMQValidationPublishNotifier()
+{
+    UnregisterValidationInterface(this);
+}
+
+/** Write 256-bit hash to buffer reversed format */
+static void ZMQWriteHash(unsigned char *ptr, const uint256 &hash)
+{
+    for (unsigned int i = 0; i < 32; i++)
+        ptr[31 - i] = hash.begin()[i];
+}
+
+void CZMQPublishHashBlockNotifier::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint("zmq", "zmq: Publish hashblock %s\n", hash.GetHex());
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
-        data[31 - i] = hash.begin()[i];
-    return SendMessage(MSG_HASHBLOCK, data, 32);
+    uint8_t data[32];
+    ZMQWriteHash(data, hash);
+    SendMessage(MSG_HASHBLOCK, data, 32);
 }
 
-bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+void CZMQPublishHashTransactionNotifier::SyncTransaction(const CTransaction& transaction, const CBlockIndex * /*pindex*/, const CBlock* /*pblock*/)
 {
     uint256 hash = transaction.GetHash();
     LogPrint("zmq", "zmq: Publish hashtx %s\n", hash.GetHex());
-    char data[32];
-    for (unsigned int i = 0; i < 32; i++)
-        data[31 - i] = hash.begin()[i];
-    return SendMessage(MSG_HASHTX, data, 32);
+    uint8_t data[32];
+    ZMQWriteHash(data, hash);
+    SendMessage(MSG_HASHTX, data, 32);
 }
 
-bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
+void CZMQPublishRawBlockNotifier::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     LogPrint("zmq", "zmq: Publish rawblock %s\n", pindex->GetBlockHash().GetHex());
 
@@ -172,20 +190,82 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
         if(!ReadBlockFromDisk(block, pindex, consensusParams))
         {
             zmqError("Can't read block from disk");
-            return false;
+            return;
         }
 
         ss << block;
     }
 
-    return SendMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
+    SendMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+void CZMQPublishRawTransactionNotifier::SyncTransaction(const CTransaction& transaction, const CBlockIndex * /*pindex*/, const CBlock* /*pblock*/)
 {
     uint256 hash = transaction.GetHash();
     LogPrint("zmq", "zmq: Publish rawtx %s\n", hash.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << transaction;
-    return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+    SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
+
+CZMQPublishMempoolNotifier::CZMQPublishMempoolNotifier(CTxMemPool *mempoolIn):
+    mempool(mempoolIn)
+{
+    mempool->NotifyEntryAdded.connect(boost::bind(&CZMQPublishMempoolNotifier::NotifyEntryAdded, this, _1));
+    mempool->NotifyEntryRemoved.connect(boost::bind(&CZMQPublishMempoolNotifier::NotifyEntryRemoved, this, _1, _2));
+}
+
+CZMQPublishMempoolNotifier::~CZMQPublishMempoolNotifier()
+{
+    mempool->NotifyEntryAdded.disconnect(boost::bind(&CZMQPublishMempoolNotifier::NotifyEntryAdded, this, _1));
+    mempool->NotifyEntryRemoved.disconnect(boost::bind(&CZMQPublishMempoolNotifier::NotifyEntryRemoved, this, _1, _2));
+}
+
+void CZMQPublishMempoolNotifier::NotifyEntryAdded(const CTxMemPoolEntry &entry)
+{
+    LogPrint("zmq", "zmq: mempool entry added: %s fee=%i size=%i\n", entry.GetTx().GetHash().ToString(),
+            entry.GetFee(), entry.GetTxSize());
+    uint8_t data[32 + 8 + 4];
+    ZMQWriteHash(&data[0], entry.GetTx().GetHash());
+    WriteLE64(&data[32], entry.GetFee());
+    WriteLE32(&data[40], entry.GetTxSize());
+    SendMessage(MSG_MEMPOOLADDED, data, sizeof(data));
+}
+
+/**
+ * Removal reason on ZMQ notification protocol.
+ * Keep this up to date with the documentation in doc/zmq.md
+ */
+enum class ZMQMempoolRemovalReason: uint8_t {
+    UNKNOWN = 0,   //! Manually removed or unknown reason
+    EXPIRY = 1,    //! Expired from mempool
+    SIZELIMIT = 2, //! Removed in size limiting
+    REORG = 3,     //! Removed for reorganization
+    BLOCK = 4,     //! Removed for block
+    REPLACED = 5   //! Removed for conflict (replaced)
+};
+
+ZMQMempoolRemovalReason MapRemovalReasonToZMQ(MemPoolRemovalReason reason)
+{
+    switch(reason)
+    {
+    case MemPoolRemovalReason::UNKNOWN: return ZMQMempoolRemovalReason::UNKNOWN;
+    case MemPoolRemovalReason::EXPIRY: return ZMQMempoolRemovalReason::EXPIRY;
+    case MemPoolRemovalReason::SIZELIMIT: return ZMQMempoolRemovalReason::SIZELIMIT;
+    case MemPoolRemovalReason::REORG: return ZMQMempoolRemovalReason::REORG;
+    case MemPoolRemovalReason::BLOCK: return ZMQMempoolRemovalReason::BLOCK;
+    case MemPoolRemovalReason::REPLACED: return ZMQMempoolRemovalReason::REPLACED;
+    // No default clause: we want a warning here if not all values are covered.
+    }
+    return ZMQMempoolRemovalReason::UNKNOWN;
+}
+
+void CZMQPublishMempoolNotifier::NotifyEntryRemoved(const CTxMemPoolEntry &entry, MemPoolRemovalReason reason)
+{
+    LogPrint("zmq", "zmq: mempool entry removed: %s, reason %i\n", entry.GetTx().GetHash().ToString(), (int)reason);
+    uint8_t data[32 + 1];
+    ZMQWriteHash(&data[0], entry.GetTx().GetHash());
+    data[32] = static_cast<uint8_t>(MapRemovalReasonToZMQ(reason));
+    SendMessage(MSG_MEMPOOLREMOVED, data, sizeof(data));
+}
+
