@@ -1317,7 +1317,7 @@ UniValue invalidateblock(const UniValue& params, bool fHelp)
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state, Params(), NULL, g_connman.get());
+        ActivateBestChain(state, Params(), NULL);
     }
 
     if (!state.IsValid()) {
@@ -1355,7 +1355,7 @@ UniValue reconsiderblock(const UniValue& params, bool fHelp)
     }
 
     CValidationState state;
-    ActivateBestChain(state, Params(), NULL, g_connman.get());
+    ActivateBestChain(state, Params(), NULL);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.GetRejectReason());
