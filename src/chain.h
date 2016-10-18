@@ -196,8 +196,7 @@ public:
     int nVersion;
     uint256 hashMerkleRoot;
     unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
+    union UnionProof proof;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
@@ -224,8 +223,8 @@ public:
         nVersion       = 0;
         hashMerkleRoot = uint256();
         nTime          = 0;
-        nBits          = 0;
-        nNonce         = 0;
+        proof.pow.nBits = 0;
+        proof.pow.nNonce = 0;
     }
 
     CBlockIndex()
@@ -240,8 +239,13 @@ public:
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
+        proof          = block.proof;
+    }
+
+    ~CBlockIndex()
+    {
+        if (fSignBlocksGlobal)
+            delete(proof.script);
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -270,8 +274,7 @@ public:
             block.hashPrevBlock = pprev->GetBlockHash();
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.proof          = proof;
         return block;
     }
 
@@ -386,8 +389,14 @@ public:
         READWRITE(hashPrev);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        if (fSignBlocksGlobal) {
+            // Don't try to sign the signature
+            if (!(s.GetType() & SER_GETHASH))
+                READWRITE(*(CScriptBase*)proof.script);
+        } else {
+            READWRITE(proof.pow.nBits);
+            READWRITE(proof.pow.nNonce);
+        }
     }
 
     uint256 GetBlockHash() const
@@ -397,8 +406,7 @@ public:
         block.hashPrevBlock   = hashPrev;
         block.hashMerkleRoot  = hashMerkleRoot;
         block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
+        block.proof           = proof;
         return block.GetHash();
     }
 
