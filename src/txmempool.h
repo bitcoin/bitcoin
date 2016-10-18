@@ -17,6 +17,7 @@
 #include "indirectmap.h"
 #include "primitives/transaction.h"
 #include "sync.h"
+#include "random.h"
 
 #undef foreach
 #include "boost/multi_index_container.hpp"
