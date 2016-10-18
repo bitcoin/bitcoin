@@ -229,7 +229,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
     return true;
 }
 
-bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
@@ -253,9 +253,15 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
+            {
+                out_reason = reason_prefix + "scriptsig-failure";
                 return false;
+            }
             if (stack.empty())
+            {
+                out_reason = reason_prefix + "scriptcheck-missing";
                 return false;
+            }
             prevScript = CScript(stack.back().begin(), stack.back().end());
             p2sh = true;
         }
@@ -265,18 +271,21 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         // Non-witness program must not be associated with any witness
         if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
+        {
+            out_reason = reason_prefix + "nonwitness-input";
             return false;
+        }
 
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
             if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
-                return false;
+                MaybeReject("script-size");
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
-                return false;
+                MaybeReject("stackitem-count");
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {
                 if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
-                    return false;
+                    MaybeReject("stackitem-size");
             }
         }
 
@@ -288,17 +297,28 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             auto stack = MakeSpan(tx.vin[i].scriptWitness.stack);
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
                 // Annexes are nonstandard as long as no semantics are defined for them.
-                return false;
+                MaybeReject("taproot-annex");
+                // If reject reason is ignored, continue as if the annex wasn't there.
+                SpanPopBack(stack);
             }
             if (stack.size() >= 2) {
                 // Script path spend (2 or more stack elements after removing optional annex)
                 const auto& control_block = SpanPopBack(stack);
                 SpanPopBack(stack); // Ignore script
-                if (control_block.empty()) return false; // Empty control block is invalid
+                if (control_block.empty()) {
+                    // Empty control block is invalid
+                    out_reason = reason_prefix + "taproot-control-missing";
+                    return false;
+                }
                 if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                     // Leaf version 0xc0 (aka Tapscript, see BIP 342)
+                    if (!ignore_rejects.count(reason_prefix + "taproot-stackitem-size")) {
                     for (const auto& item : stack) {
-                        if (item.size() > MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE) return false;
+                            if (item.size() > MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE) {
+                                out_reason = reason_prefix + "taproot-stackitem-size";
+                                return false;
+                            }
+                        }
                     }
                 }
             } else if (stack.size() == 1) {
@@ -306,6 +326,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 // (no policy rules apply)
             } else {
                 // 0 stack elements; this is already invalid by consensus rules
+                out_reason = reason_prefix + "taproot-witness-missing";
                 return false;
             }
         }
