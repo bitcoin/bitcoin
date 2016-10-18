@@ -10,13 +10,13 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/consensus.h"
+#include "consensus/header_verify.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "hash.h"
 #include "validation.h"
 #include "net.h"
 #include "policy/policy.h"
-#include "pow.h"
 #include "primitives/transaction.h"
 #include "script/standard.h"
 #include "timedata.h"
@@ -69,7 +69,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+        ResetChallenge(consensusParams, pblock, pindexPrev);
 
     return nNewTime - nOldTime;
 }
@@ -194,8 +194,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
-    pblock->nNonce         = 0;
+    ResetChallenge(chainparams.GetConsensus(), pblock, pindexPrev);
+    ResetProof(chainparams.GetConsensus(), pblock);
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     CValidationState state;
