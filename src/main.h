@@ -509,6 +509,9 @@ public:
 /** Find the last common block between the parameter chain and a locator. */
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator);
 
+/** Mark a block as precious and reorganize. */
+bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex);
+
 /** Mark a block as invalid. */
 bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex);
 
