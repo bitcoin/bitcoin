@@ -141,8 +141,8 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("timeoffset", stats.nTimeOffset));
         if (stats.dPingTime > 0.0)
             obj.push_back(Pair("pingtime", stats.dPingTime));
-        if (stats.dPingMin < std::numeric_limits<int64_t>::max()/1e6)
-            obj.push_back(Pair("minping", stats.dPingMin));
+        if (stats.dMinPing < std::numeric_limits<int64_t>::max()/1e6)
+            obj.push_back(Pair("minping", stats.dMinPing));
         if (stats.dPingWait > 0.0)
             obj.push_back(Pair("pingwait", stats.dPingWait));
         obj.push_back(Pair("version", stats.nVersion));
