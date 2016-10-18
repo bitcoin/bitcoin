@@ -6586,6 +6586,7 @@ bool SendMessages(CNode* pto, CConnman& connman)
                                 vHeaders.front().GetHash().ToString(), pto->id);
                     }
                     pto->PushMessage(NetMsgType::HEADERS, vHeaders);
+                    UpdateBlockAvailability(pto->id, vHeaders.front().GetHash());
                     state.pindexBestHeaderSent = pBestIndex;
                 } else
                     fRevertToInv = true;
@@ -6611,6 +6612,7 @@ bool SendMessages(CNode* pto, CConnman& connman)
                     // If the peer's chain has this block, don't inv it back.
                     if (!PeerHasHeader(&state, pindex)) {
                         pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
+                        UpdateBlockAvailability(pto->id, hashToAnnounce);
                         LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
                             pto->id, hashToAnnounce.ToString());
                     }
