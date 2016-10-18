@@ -3758,6 +3758,7 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, C
         bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp, &fNewBlock);
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
+            UpdateBlockAvailability(pfrom->id, pindex->GetBlockHash());
             if (fNewBlock) pfrom->nLastBlockTime = GetTime();
         }
         CheckBlockIndex(chainparams.GetConsensus());
@@ -4888,6 +4889,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pfrom->PushMessage(NetMsgType::INV, vInv);
                         pfrom->hashContinue.SetNull();
                     }
+                    UpdateBlockAvailability(pfrom->id, inv.hash);
                 }
             }
             else if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
