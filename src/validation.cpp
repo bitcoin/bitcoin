@@ -602,8 +602,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         }
 
         // Check for non-standard witness in P2WSH
-        if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, view)) {
-            MaybeRejectDbg(REJECT_NONSTANDARD, "bad-witness-nonstandard", true, "");
+        if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, view, "bad-witness-", reason, ignore_rejects)) {
+            return state.DoS(0, false, REJECT_NONSTANDARD, reason, true);
         }
 
         int64_t nSigOpsCost = GetTransactionSigOpCost(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);

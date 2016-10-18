@@ -233,7 +233,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
     return true;
 }
 
-bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
@@ -256,9 +256,15 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
+            {
+                out_reason = reason_prefix + "scriptsig-failure";
                 return false;
+            }
             if (stack.empty())
+            {
+                out_reason = reason_prefix + "scriptcheck-missing";
                 return false;
+            }
             prevScript = CScript(stack.back().begin(), stack.back().end());
         }
 
@@ -267,18 +273,27 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         // Non-witness program must not be associated with any witness
         if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
+        {
+            out_reason = reason_prefix + "nonwitness-input";
             return false;
+        }
 
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == 32) {
             if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
-                return false;
+            {
+                MaybeReject("script-size");
+            }
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
-                return false;
+            {
+                MaybeReject("stackitem-count");
+            }
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {
                 if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
-                    return false;
+                {
+                    MaybeReject("stackitem-size");
+                }
             }
         }
     }

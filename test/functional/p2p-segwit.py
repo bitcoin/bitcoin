@@ -1819,13 +1819,13 @@ class SegWitTest(BitcoinTestFramework):
         # Testing native P2WSH
         # Witness stack size, excluding witnessScript, over 100 is non-standard
         p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
-        self.std_node.test_transaction_acceptance(p2wsh_txs[0], True, False, b'bad-witness-nonstandard')
+        self.std_node.test_transaction_acceptance(p2wsh_txs[0], True, False, b'bad-witness-stackitem-count')
         # Non-standard nodes should accept
         self.test_node.test_transaction_acceptance(p2wsh_txs[0], True, True)
 
         # Stack element size over 80 bytes is non-standard
         p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
-        self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, False, b'bad-witness-nonstandard')
+        self.std_node.test_transaction_acceptance(p2wsh_txs[1], True, False, b'bad-witness-stackitem-size')
         # Non-standard nodes should accept
         self.test_node.test_transaction_acceptance(p2wsh_txs[1], True, True)
         # Standard nodes should accept if element size is not over 80 bytes
@@ -1839,16 +1839,16 @@ class SegWitTest(BitcoinTestFramework):
 
         # witnessScript size at 3601 bytes is non-standard
         p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
-        self.std_node.test_transaction_acceptance(p2wsh_txs[3], True, False, b'bad-witness-nonstandard')
+        self.std_node.test_transaction_acceptance(p2wsh_txs[3], True, False, b'bad-witness-script-size')
         # Non-standard nodes should accept
         self.test_node.test_transaction_acceptance(p2wsh_txs[3], True, True)
 
         # Repeating the same tests with P2SH-P2WSH
         p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
-        self.std_node.test_transaction_acceptance(p2sh_txs[0], True, False, b'bad-witness-nonstandard')
+        self.std_node.test_transaction_acceptance(p2sh_txs[0], True, False, b'bad-witness-stackitem-count')
         self.test_node.test_transaction_acceptance(p2sh_txs[0], True, True)
         p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
-        self.std_node.test_transaction_acceptance(p2sh_txs[1], True, False, b'bad-witness-nonstandard')
+        self.std_node.test_transaction_acceptance(p2sh_txs[1], True, False, b'bad-witness-stackitem-size')
         self.test_node.test_transaction_acceptance(p2sh_txs[1], True, True)
         p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
         self.std_node.test_transaction_acceptance(p2sh_txs[1], True, True)
@@ -1856,7 +1856,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_node.test_transaction_acceptance(p2sh_txs[2], True, True)
         self.std_node.test_transaction_acceptance(p2sh_txs[2], True, True)
         p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
-        self.std_node.test_transaction_acceptance(p2sh_txs[3], True, False, b'bad-witness-nonstandard')
+        self.std_node.test_transaction_acceptance(p2sh_txs[3], True, False, b'bad-witness-script-size')
         self.test_node.test_transaction_acceptance(p2sh_txs[3], True, True)
 
         self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
