@@ -159,6 +159,7 @@ extern json_spirit::Value getmininginfo(const json_spirit::Array& params, bool f
 extern json_spirit::Value prioritisetransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblocktemplate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value submitblock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getauxblock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value estimatefee(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value estimatepriority(const json_spirit::Array& params, bool fHelp);
 
