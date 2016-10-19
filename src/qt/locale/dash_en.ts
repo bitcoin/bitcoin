@@ -4785,8 +4785,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+6"/>
-        <source>(9999 could be used only on mainnet)</source>
-        <translation>(9999 could be used only on mainnet)</translation>
+        <source>(9340 could be used only on mainnet)</source>
+        <translation>(9340 could be used only on mainnet)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5307,8 +5307,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="-88"/>
-        <source>(must be 9999 for mainnet)</source>
-        <translation>(must be 9999 for mainnet)</translation>
+        <source>(must be 9340 for mainnet)</source>
+        <translation>(must be 9340 for mainnet)</translation>
     </message>
     <message>
         <location line="+13"/>
