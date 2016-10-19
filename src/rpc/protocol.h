@@ -77,7 +77,7 @@ enum RPCErrorCode
     RPC_WALLET_ALREADY_UNLOCKED     = -17, //!< Wallet is already unlocked
 };
 
-std::string JSONRPCRequest(const std::string& strMethod, const UniValue& params, const UniValue& id);
+UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
 UniValue JSONRPCError(int code, const std::string& message);

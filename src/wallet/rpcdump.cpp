@@ -75,12 +75,12 @@ std::string DecodeDumpString(const std::string &str) {
     return ret.str();
 }
 
-UniValue importprivkey(const UniValue& params, bool fHelp)
+UniValue importprivkey(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() < 1 || params.size() > 3)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw runtime_error(
             "importprivkey \"dashprivkey\" ( \"label\" rescan )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
@@ -105,15 +105,15 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
 
     EnsureWalletIsUnlocked();
 
-    string strSecret = params[0].get_str();
+    string strSecret = request.params[0].get_str();
     string strLabel = "";
-    if (params.size() > 1)
-        strLabel = params[1].get_str();
+    if (request.params.size() > 1)
+        strLabel = request.params[1].get_str();
 
     // Whether to perform rescan after import
     bool fRescan = true;
-    if (params.size() > 2)
-        fRescan = params[2].get_bool();
+    if (request.params.size() > 2)
+        fRescan = request.params[2].get_bool();
 
     if (fRescan && fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
@@ -185,12 +185,12 @@ void ImportAddress(const CBitcoinAddress& address, const string& strLabel)
         pwalletMain->SetAddressBook(address.Get(), strLabel, "receive");
 }
 
-UniValue importaddress(const UniValue& params, bool fHelp)
+UniValue importaddress(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() < 1 || params.size() > 4)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw runtime_error(
             "importaddress \"address\" ( \"label\" rescan p2sh )\n"
             "\nAdds a script (in hex) or address that can be watched as if it were in your wallet but cannot be used to spend.\n"
@@ -214,31 +214,31 @@ UniValue importaddress(const UniValue& params, bool fHelp)
 
 
     string strLabel = "";
-    if (params.size() > 1)
-        strLabel = params[1].get_str();
+    if (request.params.size() > 1)
+        strLabel = request.params[1].get_str();
 
     // Whether to perform rescan after import
     bool fRescan = true;
-    if (params.size() > 2)
-        fRescan = params[2].get_bool();
+    if (request.params.size() > 2)
+        fRescan = request.params[2].get_bool();
 
     if (fRescan && fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
 
     // Whether to import a p2sh version, too
     bool fP2SH = false;
-    if (params.size() > 3)
-        fP2SH = params[3].get_bool();
+    if (request.params.size() > 3)
+        fP2SH = request.params[3].get_bool();
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    CBitcoinAddress address(params[0].get_str());
+    CBitcoinAddress address(request.params[0].get_str());
     if (address.IsValid()) {
         if (fP2SH)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
         ImportAddress(address, strLabel);
-    } else if (IsHex(params[0].get_str())) {
-        std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+    } else if (IsHex(request.params[0].get_str())) {
+        std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
         ImportScript(CScript(data.begin(), data.end()), strLabel, fP2SH);
     } else {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address or script");
@@ -253,12 +253,12 @@ UniValue importaddress(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue importprunedfunds(const UniValue& params, bool fHelp)
+UniValue importprunedfunds(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() != 2)
+    if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
             "importprunedfunds\n"
             "\nImports funds without rescan. Corresponding address or script must previously be included in wallet. Aimed towards pruned wallets. The end-user is responsible to import additional transactions that subsequently spend the imported outputs or rescan after the point in the blockchain the transaction is included.\n"
@@ -268,12 +268,12 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
         );
 
     CTransaction tx;
-    if (!DecodeHexTx(tx, params[0].get_str()))
+    if (!DecodeHexTx(tx, request.params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     uint256 hashTx = tx.GetHash();
     CWalletTx wtx(pwalletMain,tx);
 
-    CDataStream ssMB(ParseHexV(params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssMB(ParseHexV(request.params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION);
     CMerkleBlock merkleBlock;
     ssMB >> merkleBlock;
 
@@ -312,12 +312,12 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No addresses in wallet correspond to included transaction");
 }
 
-UniValue removeprunedfunds(const UniValue& params, bool fHelp)
+UniValue removeprunedfunds(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "removeprunedfunds \"txid\"\n"
             "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will effect wallet balances.\n"
@@ -332,7 +332,7 @@ UniValue removeprunedfunds(const UniValue& params, bool fHelp)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     uint256 hash;
-    hash.SetHex(params[0].get_str());
+    hash.SetHex(request.params[0].get_str());
     vector<uint256> vHash;
     vHash.push_back(hash);
     vector<uint256> vHashOut;
@@ -348,12 +348,12 @@ UniValue removeprunedfunds(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue importpubkey(const UniValue& params, bool fHelp)
+UniValue importpubkey(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 1 || params.size() > 4)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw runtime_error(
             "importpubkey \"pubkey\" ( \"label\" rescan )\n"
             "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend.\n"
@@ -373,20 +373,20 @@ UniValue importpubkey(const UniValue& params, bool fHelp)
 
 
     string strLabel = "";
-    if (params.size() > 1)
-        strLabel = params[1].get_str();
+    if (request.params.size() > 1)
+        strLabel = request.params[1].get_str();
 
     // Whether to perform rescan after import
     bool fRescan = true;
-    if (params.size() > 2)
-        fRescan = params[2].get_bool();
+    if (request.params.size() > 2)
+        fRescan = request.params[2].get_bool();
 
     if (fRescan && fPruneMode)
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
 
-    if (!IsHex(params[0].get_str()))
+    if (!IsHex(request.params[0].get_str()))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey must be a hex string");
-    std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+    std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
     CPubKey pubKey(data.begin(), data.end());
     if (!pubKey.IsFullyValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
@@ -406,12 +406,12 @@ UniValue importpubkey(const UniValue& params, bool fHelp)
 }
 
 
-UniValue importwallet(const UniValue& params, bool fHelp)
+UniValue importwallet(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "importwallet \"filename\"\n"
             "\nImports keys from a wallet dump file (see dumpwallet).\n"
@@ -434,7 +434,7 @@ UniValue importwallet(const UniValue& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     ifstream file;
-    file.open(params[0].get_str().c_str(), std::ios::in | std::ios::ate);
+    file.open(request.params[0].get_str().c_str(), std::ios::in | std::ios::ate);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
@@ -513,12 +513,12 @@ UniValue importwallet(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue importelectrumwallet(const UniValue& params, bool fHelp)
+UniValue importelectrumwallet(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
             "importelectrumwallet \"filename\" index\n"
             "\nImports keys from an Electrum wallet export file (.csv or .json)\n"
@@ -542,7 +542,7 @@ UniValue importelectrumwallet(const UniValue& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     ifstream file;
-    std::string strFileName = params[0].get_str();
+    std::string strFileName = request.params[0].get_str();
     size_t nDotPos = strFileName.find_last_of(".");
     if(nDotPos == string::npos)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "File has no extension, should be .json or .csv");
@@ -628,8 +628,8 @@ UniValue importelectrumwallet(const UniValue& params, bool fHelp)
 
     // Whether to perform rescan after import
     int nStartHeight = 0;
-    if (params.size() > 1)
-        nStartHeight = params[1].get_int();
+    if (request.params.size() > 1)
+        nStartHeight = request.params[1].get_int();
     if (chainActive.Height() < nStartHeight)
         nStartHeight = chainActive.Height();
 
@@ -647,12 +647,12 @@ UniValue importelectrumwallet(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue dumpprivkey(const UniValue& params, bool fHelp)
+UniValue dumpprivkey(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "dumpprivkey \"dashaddress\"\n"
             "\nReveals the private key corresponding to 'dashaddress'.\n"
@@ -671,7 +671,7 @@ UniValue dumpprivkey(const UniValue& params, bool fHelp)
 
     EnsureWalletIsUnlocked();
 
-    string strAddress = params[0].get_str();
+    string strAddress = request.params[0].get_str();
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
@@ -684,12 +684,12 @@ UniValue dumpprivkey(const UniValue& params, bool fHelp)
     return CBitcoinSecret(vchSecret).ToString();
 }
 
-UniValue dumphdinfo(const UniValue& params, bool fHelp)
+UniValue dumphdinfo(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() != 0)
+    if (request.fHelp || request.params.size() != 0)
         throw runtime_error(
             "dumphdinfo\n"
             "Returns an object containing sensitive private info about this HD wallet.\n"
@@ -730,12 +730,12 @@ UniValue dumphdinfo(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue dumpwallet(const UniValue& params, bool fHelp)
+UniValue dumpwallet(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
+    if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "dumpwallet \"filename\"\n"
             "\nDumps all wallet keys in a human-readable format.\n"
@@ -751,7 +751,7 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     ofstream file;
-    file.open(params[0].get_str().c_str());
+    file.open(request.params[0].get_str().c_str());
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
