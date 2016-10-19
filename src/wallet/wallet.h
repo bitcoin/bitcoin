@@ -417,15 +417,21 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
-    bool fSpendable;
-    bool fSolvable;
+    bool fMaybeSpendable;
+    bool fMaybeSolvable;
 
     COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn;
+        tx = txIn; i = iIn; nDepth = nDepthIn; fMaybeSpendable = fSpendableIn; fMaybeSolvable = fSolvableIn;
     }
 
     std::string ToString() const;
+
+    bool IsMature(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const;
+    bool IsSpendableAt(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const;
+    bool IsSpendableAfter(const CBlockIndex& blockindex, const CKeyStore& keystore) const;
+    bool IsSolvableAt(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const;
+    bool IsSolvableAfter(const CBlockIndex& blockindex, const CKeyStore& keystore) const;
 };
 
 

@@ -1211,7 +1211,16 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSig), SignatureData(scriptSigCopy));
     BOOST_CHECK(combined.scriptSig == scriptSig);
 
-    // Hardest case:  Multisig 2-of-3
+    // Hardest case:  Multisig 2-of-3 with CLTV
+    scriptPubKey = GetScriptForMultisig(2, pubkeys, 0, 1455444340);
+    keystore.AddCScript(scriptPubKey);
+    SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL);
+    combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), SignatureData(scriptSig), empty);
+    BOOST_CHECK(combined.scriptSig == scriptSig);
+    combined = CombineSignatures(scriptPubKey, MutableTransactionSignatureChecker(&txTo, 0, amount), empty, SignatureData(scriptSig));
+    BOOST_CHECK(combined.scriptSig == scriptSig);
+
+    // Almost hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
     keystore.AddCScript(scriptPubKey);
     SignSignature(keystore, txFrom, txTo, 0, SIGHASH_ALL);
@@ -1441,6 +1450,27 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     expect = ScriptFromHex("03feed");
     BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
     BOOST_CHECK(s == expect);
+}
+
+BOOST_AUTO_TEST_CASE(script_multisig_cltv)
+{
+    std::string pubKey("03b0da749730dc9b4b1f4a14d6902877a92541f5368778853d9c4a0cb7802dcfb2");
+    std::vector<unsigned char> vchPubKey = ToByteVector(ParseHex(pubKey));
+    std::vector<CPubKey> pubkeys;
+    CScript script;
+
+    pubkeys.push_back(vchPubKey);
+
+    script = GetScriptForMultisig(1, pubkeys, 0, 1455444340);
+    BOOST_CHECK_EQUAL("1455444340 OP_CHECKLOCKTIMEVERIFY 1 " + pubKey + " 1 OP_CHECKMULTISIG", ScriptToAsmStr(script));
+
+    script = GetScriptForMultisig(1, pubkeys, 1234, 0);
+    BOOST_CHECK_EQUAL("1234 OP_CHECKLOCKTIMEVERIFY 1 " + pubKey + " 1 OP_CHECKMULTISIG", ScriptToAsmStr(script));
+
+    BOOST_REQUIRE_THROW(GetScriptForMultisig(1, pubkeys, 1455444340, 0), std::invalid_argument);
+    BOOST_REQUIRE_THROW(GetScriptForMultisig(1, pubkeys, 0, 1234), std::invalid_argument);
+    BOOST_REQUIRE_THROW(GetScriptForMultisig(1, pubkeys, 1234, 1455444340), std::invalid_argument);
+    BOOST_REQUIRE_THROW(GetScriptForMultisig(1, pubkeys, 0, -40), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

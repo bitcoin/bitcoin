@@ -73,9 +73,85 @@ struct CompareValueOnly
     }
 };
 
+static bool IsSimpleCLTV(CScript script, bool& failure, int64_t& cltv_height, int64_t& cltv_time, const CKeyStore& keystore)
+{
+    failure = false;
+
+    if (script.IsPayToScriptHash()) {
+        // Need to get redeem script template
+        std::vector< std::vector<unsigned char> > vSolutions;
+        txnouttype whichType;
+        if (!(Solver(script, whichType, vSolutions)) && whichType == TX_SCRIPTHASH && !vSolutions.empty()) {
+            failure = true;
+            return false;
+        }
+        const CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+        if (!keystore.GetCScript(scriptID, script)) {
+            failure = true;
+            return false;
+        }
+    }
+
+    return IsSimpleCLTV(script, cltv_height, cltv_time);
+}
+
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->vout[i].nValue));
+}
+
+bool COutput::IsMature(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const
+{
+    if (!IsFinalTx(*tx, nBlockHeight, nBlockTime)) {
+        return false;
+    }
+
+    const CScript& script = tx->vout[i].scriptPubKey;
+    bool failure;
+    int64_t cltv_height, cltv_time;
+    if (IsSimpleCLTV(script, failure, cltv_height, cltv_time, keystore)) {
+        if (cltv_height && nBlockHeight < cltv_height) {
+            return false;
+        }
+        if (cltv_time /* && nBlockTime < cltv_time */) {
+            // SelectCoins & FundTransaction need to be taught how to deal with this first
+            return false;
+        }
+    } else if (failure) {
+        return false;
+    }
+
+    return true;
+}
+
+bool COutput::IsSpendableAt(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const
+{
+    if (!fMaybeSpendable) {
+        return false;
+    }
+    if (!IsMature(nBlockHeight, nBlockTime, keystore)) {
+        return false;
+    }
+    return true;
+}
+
+bool COutput::IsSpendableAfter(const CBlockIndex& blockindex, const CKeyStore& keystore) const {
+    return IsSpendableAt(blockindex.nHeight + 1, blockindex.GetMedianTimePast(), keystore);
+}
+
+bool COutput::IsSolvableAt(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const
+{
+    if (!fMaybeSolvable) {
+        return false;
+    }
+    if (!IsMature(nBlockHeight, nBlockTime, keystore)) {
+        return false;
+    }
+    return true;
+}
+
+bool COutput::IsSolvableAfter(const CBlockIndex& blockindex, const CKeyStore& keystore) const {
+    return IsSolvableAt(blockindex.nHeight + 1, blockindex.GetMedianTimePast(), keystore);
 }
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
@@ -1962,7 +2038,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
 
     BOOST_FOREACH(const COutput &output, vCoins)
     {
-        if (!output.fSpendable)
+        if (!output.IsSpendableAfter(*chainActive.Tip(), *this))
             continue;
 
         const CWalletTx *pcoin = output.tx;
@@ -2056,7 +2132,7 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
     {
         BOOST_FOREACH(const COutput& out, vCoins)
         {
-            if (!out.fSpendable)
+            if (!out.IsSpendableAfter(*chainActive.Tip(), *this))
                  continue;
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.insert(make_pair(out.tx, out.i));
@@ -2385,8 +2461,18 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // and in the spirit of "smallest posible change from prior
                 // behavior."
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+                {
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
                                               std::numeric_limits<unsigned int>::max() - (fWalletRbf ? 2 : 1)));
+
+                    // Make sure our nLockTime satisfies inputs
+                    const CScript& script = coin.first->vout[coin.second].scriptPubKey;
+                    bool failure;
+                    int64_t cltv_height, cltv_time;
+                    if (IsSimpleCLTV(script, failure, cltv_height, cltv_time, *this)) {
+                        txNew.nLockTime = std::max(uint32_t(cltv_height), txNew.nLockTime);
+                    }
+                }
 
                 // Sign
                 int nIn = 0;

@@ -10,6 +10,8 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#include <stdexcept>
+
 #include <boost/foreach.hpp>
 
 using namespace std;
@@ -30,6 +32,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
+    case TX_MULTISIG_CLTV: return "multisig_cltv";
     case TX_NULL_DATA: return "nulldata";
     case TX_WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TX_WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
@@ -54,6 +57,9 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // Sender provides N pubkeys, receivers provides M signatures (with CLTV)
+        mTemplates.insert(make_pair(TX_MULTISIG_CLTV, CScript() << OP_U32INT << OP_CHECKLOCKTIMEVERIFY << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
     }
 
     vSolutionsRet.clear();
@@ -113,7 +119,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             {
                 // Found a match
                 typeRet = tplate.first;
-                if (typeRet == TX_MULTISIG)
+                if (typeRet == TX_MULTISIG || typeRet == TX_MULTISIG_CLTV)
                 {
                     // Additional checks for TX_MULTISIG:
                     unsigned char m = vSolutionsRet.front()[0];
@@ -165,6 +171,19 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 }
                 else
                     break;
+            }
+            else if (opcode2 == OP_U32INT)
+            {
+                CScriptNum sn(0);
+                try {
+                    sn = CScriptNum(vch1, true, 5);
+                } catch (scriptnum_error) {
+                    break;
+                }
+                // 0 CLTV is pointless, so expect at least height 1
+                if (sn < 1 || sn > std::numeric_limits<uint32_t>::max()) {
+                    break;
+                }
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
@@ -221,7 +240,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
         return false;
     }
 
-    if (typeRet == TX_MULTISIG)
+    if (typeRet == TX_MULTISIG || typeRet == TX_MULTISIG_CLTV)
     {
         nRequiredRet = vSolutions.front()[0];
         for (unsigned int i = 1; i < vSolutions.size()-1; i++)
@@ -290,9 +309,24 @@ CScript GetScriptForRawPubKey(const CPubKey& pubKey)
     return CScript() << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
 }
 
-CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
+CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys, const int64_t cltv_height, const int64_t cltv_time)
 {
     CScript script;
+
+    if (cltv_height > 0) {
+        if (cltv_time) {
+            throw std::invalid_argument("cannot lock for both height and time");
+        }
+        if (cltv_height >= LOCKTIME_THRESHOLD) {
+            throw std::invalid_argument("requested lock height is beyond locktime threshold");
+        }
+        script << cltv_height << OP_CHECKLOCKTIMEVERIFY;
+    } else if (cltv_time) {
+        if (cltv_time < LOCKTIME_THRESHOLD || cltv_time > std::numeric_limits<uint32_t>::max()) {
+            throw std::invalid_argument("requested lock time is outside of valid range");
+        }
+        script << cltv_time << OP_CHECKLOCKTIMEVERIFY;
+    }
 
     script << CScript::EncodeOP_N(nRequired);
     BOOST_FOREACH(const CPubKey& key, keys)
@@ -322,4 +356,37 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
     ret << OP_0 << ToByteVector(hash);
     return ret;
+}
+
+bool IsSimpleCLTV(const CScript& script, int64_t& cltv_height, int64_t& cltv_time)
+{
+    CScript::const_iterator pc = script.begin();
+    opcodetype opcode;
+    vector<unsigned char> vch;
+
+    cltv_height = 0;
+    cltv_time = 0;
+
+    if (!(script.GetOp(pc, opcode, vch)
+       && opcode <= OP_PUSHDATA4
+       && script.GetOp(pc, opcode)
+       && opcode != OP_CHECKLOCKTIMEVERIFY)) {
+        return false;
+    }
+
+    CScriptNum sn(0);
+    try {
+        sn = CScriptNum(vch, true, 5);
+    } catch (scriptnum_error) {
+        return false;
+    }
+    if (sn < 0 || sn > std::numeric_limits<uint32_t>::max()) {
+        return false;
+    }
+    if (sn < LOCKTIME_THRESHOLD) {
+        cltv_height = sn.getint64();
+    } else {
+        cltv_time = sn.getint64();
+    }
+    return true;
 }
