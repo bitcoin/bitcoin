@@ -25,15 +25,15 @@ static const int MIN_PEER_PROTO_VERSION = 70020;
 static const int MIN_POOL_PEER_PROTO_VERSION = 70020;
 
 //! minimum peer version for masternode budgets
-static const int MIN_BUDGET_PEER_PROTO_VERSION = 70020;
+static const int MIN_BUDGET_PEER_PROTO_VERSION = 70030;
 
 //! minimum peer version for masternode winner broadcasts
-static const int MIN_MNW_PEER_PROTO_VERSION = 70020;
+static const int MIN_MNW_PEER_PROTO_VERSION = 70030;
 
 //! minimum peer version that can receive masternode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70030;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1 = 70020;
 static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2 = 70030;
 
 //! nTime field added to CAddress, starting with this version;

@@ -860,11 +860,11 @@ Endereço: %4
         <translation>Por favor seleccione um nível de privacidade.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Usar 2 masternodes distintos para misturar os fundos até 1000DRK</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Usar 8 masternodes distintos para misturar os fundos até 1000DRK</translation>
     </message>
     <message>
@@ -872,16 +872,16 @@ Endereço: %4
         <translation>Usar 16 masternodes</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
-        <translation>Esta opção é a mais rápida e irá custar cerca de ~0.025 CRW para anonimizar 1000 CRW</translation>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
+        <translation>Esta opção é a mais rápida e irá custar cerca de ~0.025 CRW para anonimizar 10000 CRW</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
-        <translation>Esta opção é relativamente rápida e irá custar cerca de ~0.05 CRW para anonimizar 1000 CRW</translation>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 10000 CRW</source>
+        <translation>Esta opção é relativamente rápida e irá custar cerca de ~0.05 CRW para anonimizar 10000 CRW</translation>
     </message>
     <message>
-        <source>0.1 CRW per 1000 CRW you anonymize.</source>
-        <translation>0.1 CRW por cada 1000 CRW a anonimizar.</translation>
+        <source>0.1 CRW per 10000 CRW you anonymize.</source>
+        <translation>0.1 CRW por cada 10000 CRW a anonimizar.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
@@ -3374,7 +3374,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Não foi possível localizar fundos Darksend denominados suficientes para esta transacção.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 CRW.</source>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 10000 CRW.</source>
         <translation>Não foi possível localizar fundos Darksend não denominados suficientes para esta transacção que não sejam igual a 1000DRK.</translation>
     </message>
     <message>
@@ -3638,7 +3638,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no OpenSSL Toolkit &lt;https://www.openssl.org/&gt;, software criptográfico escrito por Eric Young e software UPnP escrito por Thomas Bernard.</translation>
     </message>
     <message>
-        <source>Unable to locate enough funds for this transaction that are not equal 1000 CRW.</source>
+        <source>Unable to locate enough funds for this transaction that are not equal 10000 CRW.</source>
         <translation>Não foi possível localizar fundos suficientes para esta transacção que não sejam igual a 1000DRK.</translation>
     </message>
     <message>

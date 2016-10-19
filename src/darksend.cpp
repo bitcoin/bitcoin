@@ -1711,15 +1711,15 @@ bool CDarksendPool::MakeCollateralAmounts()
 
     // try to use non-denominated and not mn-like funds
     bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOT1000IFMN);
+            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOT10000IFMN);
     if(!success){
         // if we failed (most likeky not enough funds), try to use all coins instead -
         // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
-        LogPrintf("MakeCollateralAmounts: ONLY_NONDENOMINATED_NOT1000IFMN Error - %s\n", strFail);
+        LogPrintf("MakeCollateralAmounts: ONLY_NONDENOMINATED_NOT10000IFMN Error - %s\n", strFail);
         success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-                nFeeRet, strFail, coinControl, ONLY_NOT1000IFMN);
+                nFeeRet, strFail, coinControl, ONLY_NOT10000IFMN);
         if(!success){
-            LogPrintf("MakeCollateralAmounts: ONLY_NOT1000IFMN Error - %s\n", strFail);
+            LogPrintf("MakeCollateralAmounts: ONLY_NOT10000IFMN Error - %s\n", strFail);
             reservekeyCollateral.ReturnKey();
             return false;
         }
@@ -1797,7 +1797,7 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 
     CCoinControl *coinControl=NULL;
     bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
-            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOT1000IFMN);
+            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOT10000IFMN);
     if(!success){
         LogPrintf("CreateDenominated: Error - %s\n", strFail);
         // TODO: return reservekeyDenom here
@@ -2001,10 +2001,11 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
         if(nDenomTarget != 0){
             bool fAccepted = false;
-            if((nDenomTarget & (1 << 0)) &&      v == ((100*COIN)+100000)) {fAccepted = true;}
+            if((nDenomTarget & (1 << 0)) &&      v == ((1000*COIN)+1000000)) {fAccepted = true;}
             else if((nDenomTarget & (1 << 1)) && v == ((10*COIN) +10000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 2)) && v == ((1*COIN)  +1000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 3)) && v == ((.1*COIN) +100)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 2)) && v == ((10*COIN) +10000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 3)) && v == ((1*COIN)  +1000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 4)) && v == ((.1*COIN) +100)) {fAccepted = true;}
             if(!fAccepted) continue;
         }
 
@@ -2060,7 +2061,7 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)){
         BOOST_FOREACH(CTxOut out, txVin.vout){
-            if(out.nValue == 1000*COIN){
+            if(out.nValue == 10000*COIN){
                 if(out.scriptPubKey == payee2) return true;
             }
         }

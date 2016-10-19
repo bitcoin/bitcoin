@@ -1566,6 +1566,7 @@ bool AppInit2(boost::thread_group& threadGroup)
        1DRK+1000 == (.1DRK+100)*10
        10DRK+10000 == (1DRK+1000)*10
     */
+    darkSendDenominations.push_back( (1000      * COIN)+1000000 );
     darkSendDenominations.push_back( (100      * COIN)+100000 );
     darkSendDenominations.push_back( (10       * COIN)+10000 );
     darkSendDenominations.push_back( (1        * COIN)+1000 );

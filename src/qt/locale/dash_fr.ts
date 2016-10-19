@@ -864,28 +864,28 @@ Adresse : %4
         <translation>Veuillez choisir un niveau de confidentialité.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
-        <translation>Utiliser 2 masternodes pour mélanger jusqu'à 1000 CRW</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Utiliser 2 masternodes pour mélanger jusqu'à 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
-        <translation>Utiliser 8 masternodes pour mélanger jusqu'à 1000 CRW</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Utiliser 8 masternodes pour mélanger jusqu'à 10000 CRW</translation>
     </message>
     <message>
         <source>Use 16 separate masternodes</source>
         <translation>Utiliser 16 masternodes</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
-        <translation>Cette option est la plus rapide et coûtera environ 0,025 CRW pour anonymiser 1000 CRW</translation>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
+        <translation>Cette option est la plus rapide et coûtera environ 0,025 CRW pour anonymiser 10000 CRW</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
-        <translation>Cette option est un peu moins rapide et coûtera environ 0,05 CRW pour anonymiser 1000 CRW</translation>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 10000 CRW</source>
+        <translation>Cette option est un peu moins rapide et coûtera environ 0,05 CRW pour anonymiser 10000 CRW</translation>
     </message>
     <message>
-        <source>0.1 CRW per 1000 CRW you anonymize.</source>
-        <translation>0,1 CRW par 1000 CRW anonymisés.</translation>
+        <source>0.1 CRW per 10000 CRW you anonymize.</source>
+        <translation>0,1 CRW par 10000 CRW anonymisés.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
@@ -3390,8 +3390,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Impossible de localiser suffisamment de fonds Darksend dénominés pour cette transaction.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 CRW.</source>
-        <translation>Impossible de localiser suffisamment de fonds non-dénominés Darksend pour cette transaction qui ne sont pas égaux à 1000 CRW.</translation>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 10000 CRW.</source>
+        <translation>Impossible de localiser suffisamment de fonds non-dénominés Darksend pour cette transaction qui ne sont pas égaux à 10000 CRW.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3734,8 +3734,8 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Unable to locate enough funds for this transaction that are not equal 1000 CRW.</source>
-        <translation>Impossible de localiser suffisamment de fonds pour cette transaction qui ne sont pas égaux à 1000 CRW.</translation>
+        <source>Unable to locate enough funds for this transaction that are not equal 10000 CRW.</source>
+        <translation>Impossible de localiser suffisamment de fonds pour cette transaction qui ne sont pas égaux à 10000 CRW.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

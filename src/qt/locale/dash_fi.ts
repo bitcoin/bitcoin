@@ -864,11 +864,11 @@ Osoite: %4
         <translation>Valitse yksityisyyden taso.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Käytä 2 erillistä masternodea sekoittaaksesi varoja</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>Käytä 8 erillistä masternodea sekoittaaksesi varoja</translation>
     </message>
     <message>
@@ -876,16 +876,16 @@ Osoite: %4
         <translation>Käytä 16 erillistä masternodea</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
-        <translation>Tämä vaihtoehto on nopein ja maksaa noin ~0.025 CRW kun anonymisoidaan 1000 CRW</translation>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
+        <translation>Tämä vaihtoehto on nopein ja maksaa noin ~0.025 CRW kun anonymisoidaan 10000 CRW</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
-        <translation>Tämä vaihtoehto on keskinopea ja maksaa noin ~0.05 CRW kun anonymisoidaan 1000 CRW</translation>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 10000 CRW</source>
+        <translation>Tämä vaihtoehto on keskinopea ja maksaa noin ~0.05 CRW kun anonymisoidaan 10000 CRW</translation>
     </message>
     <message>
-        <source>0.1 CRW per 1000 CRW you anonymize.</source>
-        <translation>0.1 CRW maksu per 1000 CRW jonka anonymisoit.</translation>
+        <source>0.1 CRW per 10000 CRW you anonymize.</source>
+        <translation>0.1 CRW maksu per 10000 CRW jonka anonymisoit.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
@@ -3395,8 +3395,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Ei tarpeeksi Darksend anonymisoituja varoja tälle siirtotapahtumalle.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 CRW.</source>
-        <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle, joka ei ole 1000 CRW.</translation>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 10000 CRW.</source>
+        <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle, joka ei ole 10000 CRW.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3741,8 +3741,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Unable to locate enough funds for this transaction that are not equal 1000 CRW.</source>
-        <translation>Ei tarpeeksi varoja tälle siirtotapahtumalle, joka ei ole 1000 CRW.</translation>
+        <source>Unable to locate enough funds for this transaction that are not equal 10000 CRW.</source>
+        <translation>Ei tarpeeksi varoja tälle siirtotapahtumalle, joka ei ole 10000 CRW.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

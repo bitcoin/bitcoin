@@ -864,28 +864,28 @@ Kiểu: %3
         <translation>Hãy chọn mức độ riêng tư.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
-        <translation>Sử dụng 2 masternode khác nhau để trộn số tiền lên đến 1000 CRW</translation>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Sử dụng 2 masternode khác nhau để trộn số tiền lên đến 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
-        <translation>Sử dụng 8 masternode khác nhau để trộn số tiền lên đến 1000 CRW</translation>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <translation>Sử dụng 8 masternode khác nhau để trộn số tiền lên đến 10000 CRW</translation>
     </message>
     <message>
         <source>Use 16 separate masternodes</source>
         <translation>Sử dụng 16 masternode khác nhau</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
-        <translation>Tuỳ chọn này là nhanh nhất và sẽ mất chi phí khoảng ~0.025 CRW để ẩn danh 1000 CRW</translation>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
+        <translation>Tuỳ chọn này là nhanh nhất và sẽ mất chi phí khoảng ~0.025 CRW để ẩn danh 10000 CRW</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
-        <translation>Tuỳ chọn này là tương đối nhanh và sẽ mất chi phí khoảng ~0.05 CRW để ẩn danh 1000 CRW</translation>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 10000 CRW</source>
+        <translation>Tuỳ chọn này là tương đối nhanh và sẽ mất chi phí khoảng ~0.05 CRW để ẩn danh 10000 CRW</translation>
     </message>
     <message>
-        <source>0.1 CRW per 1000 CRW you anonymize.</source>
-        <translation>0.1 CRW cho mỗi 1000 CRW bạn muốn ẩn danh.</translation>
+        <source>0.1 CRW per 10000 CRW you anonymize.</source>
+        <translation>0.1 CRW cho mỗi 10000 CRW bạn muốn ẩn danh.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
@@ -3390,8 +3390,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch này.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 CRW.</source>
-        <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch mà nó không bằng 1000 CRW</translation>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 10000 CRW.</source>
+        <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch mà nó không bằng 10000 CRW</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3734,8 +3734,8 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Unable to locate enough funds for this transaction that are not equal 1000 CRW.</source>
-        <translation>Không tìm được đủ ngân sách cho giao dịch mà nó không đủ 1000 CRW.</translation>
+        <source>Unable to locate enough funds for this transaction that are not equal 10000 CRW.</source>
+        <translation>Không tìm được đủ ngân sách cho giao dịch mà nó không đủ 10000 CRW.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

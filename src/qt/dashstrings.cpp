@@ -167,9 +167,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough Darksend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough Darksend non-denominated funds for this transaction "
-"that are not equal 1000 CRW."),
+"that are not equal 10000 CRW."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Unable to locate enough funds for this transaction that are not equal 1000 "
+"Unable to locate enough funds for this transaction that are not equal 10000 "
 "CRW."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "

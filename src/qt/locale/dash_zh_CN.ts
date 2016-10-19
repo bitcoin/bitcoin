@@ -864,11 +864,11 @@ Address: %4
         <translation>请选择隐私等级。</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
+        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>使用2个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
+        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
         <translation>使用8个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
@@ -876,15 +876,15 @@ Address: %4
         <translation>使用16个独立主节点</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
         <translation>此选项为最快速度，需要支付0.025达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 10000 CRW</source>
         <translation>此选项为一般速度，需要支付0.05达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
-        <source>0.1 CRW per 1000 CRW you anonymize.</source>
+        <source>0.1 CRW per 10000 CRW you anonymize.</source>
         <translation>0.1达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
@@ -3347,7 +3347,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法找到足够的已匿名化资金来完成交易,不足1000 CRW.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 CRW.</source>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 10000 CRW.</source>
         <translation>无法找到足够的未匿名化资金来完成交易,不足1000 CRW.</translation>
     </message>
     <message>
@@ -3591,7 +3591,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>此产品包括了由OpenSSL Project所开发的OpenSSL Toolkit 软件&lt;https://www.openssl.org/&gt;, 和由Eric Young 编写的加密软件, 以及由Thomas Bernard 编写的UPnP软件.</translation>
     </message>
     <message>
-        <source>Unable to locate enough funds for this transaction that are not equal 1000 CRW.</source>
+        <source>Unable to locate enough funds for this transaction that are not equal 10000 CRW.</source>
         <translation>无法找到足够的资金完成交易,不足1000 CRW.</translation>
     </message>
     <message>

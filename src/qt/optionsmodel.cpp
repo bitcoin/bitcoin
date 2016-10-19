@@ -75,7 +75,7 @@ void OptionsModel::Init()
         settings.setValue("nDarksendRounds", 2);
 
     if (!settings.contains("nAnonymizeDarkcoinAmount"))
-        settings.setValue("nAnonymizeDarkcoinAmount", 1000);
+        settings.setValue("nAnonymizeDarkcoinAmount", 10000);
 
     nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
     nAnonymizeDarkcoinAmount = settings.value("nAnonymizeDarkcoinAmount").toLongLong();
