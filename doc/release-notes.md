@@ -173,6 +173,8 @@ git merge commit are mentioned.
 - #8780 `794b007` Deprecate getinfo (MarcoFalke)
 - #8832 `83ad563` Throw JSONRPCError when utxo set can not be read (MarcoFalke)
 - #8884 `b987348` getblockchaininfo help: pruneheight is the lowest, not highest, block (luke-jr)
+- #8858 `3f508ed` rpc: Generate auth cookie in hex instead of base64 (laanwj)
+- #8951 `7c2bf4b` RPC/Mining: getblocktemplate: Update and fix formatting of help (luke-jr)
 
 ### Block and transaction handling
 - #8611 `a9429ca` Reduce default number of blocks to check at startup (sipa)
@@ -195,6 +197,8 @@ git merge commit are mentioned.
 - #8606 `bbf379b` Fix some locks (sipa)
 - #8594 `ab295bb` Do not add random inbound peers to addrman (gmaxwell)
 - #8940 `5b4192b` Add x9 service bit support to dnsseed.bluematt.me, seed.bitcoinstats.com (TheBlueMatt, cdecker)
+- #8944 `685e4c7` Remove bogus assert on number of oubound connections. (TheBlueMatt)
+- #8949 `0dbc48a` Be more agressive in getting connections to peers with relevant services (gmaxwell)
 
 ### Build system
 - #8293 `fa5b249` Allow building libbitcoinconsensus without any univalue (luke-jr)
@@ -292,6 +296,7 @@ Thanks to everyone who directly contributed to this release:
 - Cory Fields
 - crowning-
 - Dagur Valberg Johannsson
+- David A. Harding
 - Ethan Heilman
 - fanquake
 - Gaurav Rana
@@ -311,7 +316,9 @@ Thanks to everyone who directly contributed to this release:
 - MarcoFalke
 - Marty Jones
 - Matt Corallo
+- Micha
 - Michael Ford
+- mruddy
 - Pavel Janík
 - Pieter Wuille
 - rodasmith
