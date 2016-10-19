@@ -114,6 +114,7 @@ private:
     QAction *showBackupsAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
+    QAction *throneManagerAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -194,6 +195,8 @@ private slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+    /** Switch to throne manager page */
+    void gotoThroneManagerPage();
 
     /** Show open dialog */
     void openClicked();

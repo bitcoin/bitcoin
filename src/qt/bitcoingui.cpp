@@ -75,6 +75,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     appMenuBar(0),
     overviewAction(0),
     historyAction(0),
+    throneManagerAction(0),
     quitAction(0),
     sendCoinsAction(0),
     usedSendingAddressesAction(0),
@@ -303,6 +304,17 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
+    throneManagerAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Thrones"), this);
+    throneManagerAction->setStatusTip(tr("Show Thrones status and configure your nodes."));
+    throneManagerAction->setToolTip(historyAction->statusTip());
+    throneManagerAction->setCheckable(true);
+#ifdef Q_OS_MAC
+    receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+#else
+    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+#endif
+    tabGroup->addAction(throneManagerAction);
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -314,6 +326,8 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(throneManagerAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(throneManagerAction, SIGNAL(triggered()), this, SLOT(gotoThroneManagerPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -377,6 +391,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the Crown Core help message to get a list with possible Crown command-line options"));
+
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -467,6 +482,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(throneManagerAction);
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
@@ -556,6 +572,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    throneManagerAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
@@ -679,6 +696,12 @@ void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+}
+
+void BitcoinGUI::gotoThroneManagerPage()
+{
+    throneManagerAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoThroneManagerPage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()
