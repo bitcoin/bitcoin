@@ -25,7 +25,7 @@ class TxnMallTest(BitcoinTestFramework):
         return super(TxnMallTest, self).setup_network(True)
 
     def run_test(self):
-        # All nodes should start with 12,500 DASH:
+        # All nodes should start with 12,500 CRW:
         starting_balance = 12500
         for i in range(4):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
@@ -64,7 +64,7 @@ class TxnMallTest(BitcoinTestFramework):
         tx1 = self.nodes[0].gettransaction(txid1)
         tx2 = self.nodes[0].gettransaction(txid2)
 
-        # Node0's balance should be starting balance, plus 500 DASH for another
+        # Node0's balance should be starting balance, plus 500 CRW for another
         # matured block, minus 12460, minus 20, and minus transaction fees:
         expected = starting_balance
         if self.options.mine_block: expected += 500
@@ -103,7 +103,7 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(tx1["confirmations"], -1)
         assert_equal(tx2["confirmations"], -1)
 
-        # Node0's total balance should be starting balance, plus 1000 DASH for 
+        # Node0's total balance should be starting balance, plus 1000 CRW for 
         # two more matured blocks, minus 12460 for the double-spend:
         expected = starting_balance + 1000 - 12460
         assert_equal(self.nodes[0].getbalance(), expected)

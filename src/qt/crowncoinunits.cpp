@@ -28,9 +28,9 @@ QList<CrowncoinUnits::Unit> CrowncoinUnits::availableUnits()
 {
 <<<<<<< HEAD:src/qt/bitcoinunits.cpp
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(DASH);
-    unitlist.append(mDASH);
-    unitlist.append(uDASH);
+    unitlist.append(CRW);
+    unitlist.append(mCRW);
+    unitlist.append(uCRW);
     unitlist.append(duffs);
 =======
     QList<CrowncoinUnits::Unit> unitlist;
@@ -46,9 +46,9 @@ bool CrowncoinUnits::valid(int unit)
     switch(unit)
     {
 <<<<<<< HEAD:src/qt/bitcoinunits.cpp
-    case DASH:
-    case mDASH:
-    case uDASH:
+    case CRW:
+    case mCRW:
+    case uCRW:
     case duffs:
 =======
     case CRW:
@@ -66,9 +66,9 @@ QString BitcoinUnits::id(int unit)
 {
     switch(unit)
     {
-        case DASH: return QString("dash");
-        case mDASH: return QString("mdash");
-        case uDASH: return QString::fromUtf8("udash");
+        case CRW: return QString("dash");
+        case mCRW: return QString("mdash");
+        case uCRW: return QString::fromUtf8("udash");
         case duffs: return QString("duffs");
         default: return QString("???");
     }
@@ -95,9 +95,9 @@ QString CrowncoinUnits::description(int unit)
 <<<<<<< HEAD:src/qt/bitcoinunits.cpp
         switch(unit)
         {
-            case DASH: return QString("DASH");
-            case mDASH: return QString("mDASH");
-            case uDASH: return QString::fromUtf8("μDASH");
+            case CRW: return QString("CRW");
+            case mCRW: return QString("mCRW");
+            case uCRW: return QString::fromUtf8("μCRW");
             case duffs: return QString("duffs");
             default: return QString("???");
         }
@@ -106,9 +106,9 @@ QString CrowncoinUnits::description(int unit)
     {
         switch(unit)
         {
-            case DASH: return QString("tDASH");
-            case mDASH: return QString("mtDASH");
-            case uDASH: return QString::fromUtf8("μtDASH");
+            case CRW: return QString("tCRW");
+            case mCRW: return QString("mtCRW");
+            case uCRW: return QString::fromUtf8("μtCRW");
             case duffs: return QString("tduffs");
             default: return QString("???");
         }
@@ -142,9 +142,9 @@ qint64 CrowncoinUnits::maxAmount(int unit)
     {
         switch(unit)
         {
-            case DASH: return QString("Crown");
-            case mDASH: return QString("Milli-Crown (1 / 1" THIN_SP_UTF8 "000)");
-            case uDASH: return QString("Micro-Crown (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case CRW: return QString("Crown");
+            case mCRW: return QString("Milli-Crown (1 / 1" THIN_SP_UTF8 "000)");
+            case uCRW: return QString("Micro-Crown (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             case duffs: return QString("Ten Nano-Crown (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
@@ -154,9 +154,9 @@ qint64 CrowncoinUnits::maxAmount(int unit)
 <<<<<<< HEAD:src/qt/bitcoinunits.cpp
         switch(unit)
         {
-            case DASH: return QString("TestCrowns");
-            case mDASH: return QString("Milli-TestCrown (1 / 1" THIN_SP_UTF8 "000)");
-            case uDASH: return QString("Micro-TestCrown (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case CRW: return QString("TestCrowns");
+            case mCRW: return QString("Milli-TestCrown (1 / 1" THIN_SP_UTF8 "000)");
+            case uCRW: return QString("Micro-TestCrown (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             case duffs: return QString("Ten Nano-TestCrown (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
@@ -167,9 +167,9 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case DASH:  return 100000000;
-    case mDASH: return 100000;
-    case uDASH: return 100;
+    case CRW:  return 100000000;
+    case mCRW: return 100000;
+    case uCRW: return 100;
     case duffs: return 1;
     default:   return 100000000;
 =======
@@ -197,9 +197,9 @@ int CrowncoinUnits::decimals(int unit)
     switch(unit)
     {
 <<<<<<< HEAD:src/qt/bitcoinunits.cpp
-    case DASH: return 8;
-    case mDASH: return 5;
-    case uDASH: return 2;
+    case CRW: return 8;
+    case mCRW: return 5;
+    case uCRW: return 2;
     case duffs: return 0;
 =======
     case CRW: return 8;

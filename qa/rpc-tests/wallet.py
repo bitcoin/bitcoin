@@ -8,8 +8,8 @@
 # Does the following:
 #   a) creates 3 nodes, with an empty chain (no blocks).
 #   b) node0 mines a block
-#   c) node1 mines 101 blocks, so now nodes 0 and 1 have 500 DASH, node2 has none. 
-#   d) node0 sends 21 DASH to node2, in two transactions (11 DASH, then 10 DASH).
+#   c) node1 mines 101 blocks, so now nodes 0 and 1 have 500 CRW, node2 has none. 
+#   d) node0 sends 21 CRW to node2, in two transactions (11 CRW, then 10 CRW).
 #   e) node0 mines a block, collects the fee on the second transaction
 #   f) node1 mines 100 blocks, to mature node0's just-mined block
 #   g) check that node0 has 1000-21, node2 has 21
@@ -49,7 +49,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 500)
         assert_equal(self.nodes[2].getbalance(), 0)
 
-        # Send 21 DASH from 0 to 2 using sendtoaddress call.
+        # Send 21 CRW from 0 to 2 using sendtoaddress call.
         # Second transaction will be child of first, and will require a fee
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
@@ -62,7 +62,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[1].setgenerate(True, 100)
         self.sync_all()
 
-        # node0 should end up with 1000 DASH in block rewards plus fees, but
+        # node0 should end up with 1000 CRW in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
         assert_equal(self.nodes[0].getbalance(), 1000-21)
         assert_equal(self.nodes[2].getbalance(), 21)

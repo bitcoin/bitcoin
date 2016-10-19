@@ -109,7 +109,7 @@ public slots:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
-    /** Update selected DASH amount from transactionview */
+    /** Update selected CRW amount from transactionview */
     void trxAmount(QString amount);
 
 signals:

@@ -77,10 +77,10 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Fees (in DASH/Kb) smaller than this are considered zero fee for relaying "
+"Fees (in CRW/Kb) smaller than this are considered zero fee for relaying "
 "(default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Fees (in DASH/Kb) smaller than this are considered zero fee for transaction "
+"Fees (in CRW/Kb) smaller than this are considered zero fee for transaction "
 "creation (default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Flush database activity from memory pool to disk log every <n> megabytes "
@@ -167,10 +167,10 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough Darksend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough Darksend non-denominated funds for this transaction "
-"that are not equal 1000 DASH."),
+"that are not equal 1000 CRW."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough funds for this transaction that are not equal 1000 "
-"DASH."),
+"CRW."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
 "%s)"),
@@ -270,7 +270,7 @@ QT_TRANSLATE_NOOP("dash-core", "Error: Wallet locked, unable to create transacti
 QT_TRANSLATE_NOOP("dash-core", "Error: You already have pending entries in the Darksend pool"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("dash-core", "Failed to read block"),
-QT_TRANSLATE_NOOP("dash-core", "Fee (in DASH/kB) to add to transactions you send (default: %s)"),
+QT_TRANSLATE_NOOP("dash-core", "Fee (in CRW/kB) to add to transactions you send (default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Finalizing transaction."),
 QT_TRANSLATE_NOOP("dash-core", "Force safe mode (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Found enough users, signing ( waiting %s )"),
@@ -303,7 +303,7 @@ QT_TRANSLATE_NOOP("dash-core", "Invalid private key."),
 QT_TRANSLATE_NOOP("dash-core", "Invalid script detected."),
 QT_TRANSLATE_NOOP("dash-core", "KeePassHttp id for the established association"),
 QT_TRANSLATE_NOOP("dash-core", "KeePassHttp key for AES encrypted communication with KeePass"),
-QT_TRANSLATE_NOOP("dash-core", "Keep N DASH anonymized (default: %u)"),
+QT_TRANSLATE_NOOP("dash-core", "Keep N CRW anonymized (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Last Darksend was too recent."),
 QT_TRANSLATE_NOOP("dash-core", "Last successful Darksend action was too recent."),

@@ -82,8 +82,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     }
     
     /* Theme selector */
-    ui->theme->addItem(QString("DASH-blue"), QVariant("drkblue"));
-    ui->theme->addItem(QString("DASH-traditional"), QVariant("trad"));
+    ui->theme->addItem(QString("CRW-blue"), QVariant("drkblue"));
+    ui->theme->addItem(QString("CRW-traditional"), QVariant("trad"));
 
     
     /* Language selector */

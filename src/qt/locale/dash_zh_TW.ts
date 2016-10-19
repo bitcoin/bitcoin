@@ -176,7 +176,7 @@
         <translation>確認錢包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR CRW&lt;/b&gt;!</source>
         <translation>警告: 如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去其中所有的達世幣了&lt;/b&gt;！</translation>
     </message>
     <message>
@@ -860,11 +860,11 @@ Address: %4
         <translation>請選擇穩私級別。</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 DASH</source>
+        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
         <translation>使用2個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 DASH</source>
+        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
         <translation>使用8個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
@@ -872,15 +872,15 @@ Address: %4
         <translation>使用16個獨立的主節點</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 DASH to anonymize 1000 DASH</source>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
         <translation>這個是最快的選項，將耗費約~0.025達世幣作為匿名處理1000達世幣的費用</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 DASH to anonymize 1000 DASH</source>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
         <translation>這個是一般的選項，將耗費約0.05達世幣作為匿名處理1000達世幣的費用</translation>
     </message>
     <message>
-        <source>0.1 DASH per 1000 DASH you anonymize.</source>
+        <source>0.1 CRW per 1000 CRW you anonymize.</source>
         <translation>每1000達世幣耗費0.1達世幣作為匿名處理費用</translation>
     </message>
     <message>
@@ -1427,7 +1427,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>金額和循環次數:</translation>
     </message>
     <message>
-        <source>0 DASH / 0 Rounds</source>
+        <source>0 CRW / 0 Rounds</source>
         <translation>0 達世幣 / 0 循環次數</translation>
     </message>
     <message>
@@ -3180,8 +3180,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>付款</translation>
     </message>
     <message>
-        <source>InstantX doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation>即時到帳系統暫時並不支援這麼高的交易金額。目前的金額僅限於%1 DASH。</translation>
+        <source>InstantX doesn't support sending values that high yet. Transactions are currently limited to %1 CRW.</source>
+        <translation>即時到帳系統暫時並不支援這麼高的交易金額。目前的金額僅限於%1 CRW。</translation>
     </message>
 </context>
 <context>
@@ -3438,11 +3438,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>錯誤: 找到不再支援的 -socks 參數。現在只支援 SOCKS5 協定的代理伺服器了，因為不再能夠指定 SOCKS 協定版本。</translation>
     </message>
     <message>
-        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
+        <source>Fees (in CRW/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>當處理轉發的交易時，如果每千位元組(Kb)的手續費比這個值低，就視為沒付手續費 (預設值: %s)</translation>
     </message>
     <message>
-        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <source>Fees (in CRW/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
         <translation>當建立交易時，如果每千位元組(Kb)的手續費比這個值低，就視為沒付手續費 (預設值: %s)</translation>
     </message>
     <message>

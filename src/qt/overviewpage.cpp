@@ -31,7 +31,7 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::DASH)
+    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::CRW)
     {
 
     }
@@ -279,7 +279,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 
-    // update the display unit, to not use the default ("DASH")
+    // update the display unit, to not use the default ("CRW")
     updateDisplayUnit();
 }
 

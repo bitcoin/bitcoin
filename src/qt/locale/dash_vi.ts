@@ -176,8 +176,8 @@
         <translation>Xác nhận mã hoá ví</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>Chú ý: Nếu bạn mã hoá ví và mất mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ DASH CỦA BẠN&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR CRW&lt;/b&gt;!</source>
+        <translation>Chú ý: Nếu bạn mã hoá ví và mất mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ CRW CỦA BẠN&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -864,28 +864,28 @@ Kiểu: %3
         <translation>Hãy chọn mức độ riêng tư.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>Sử dụng 2 masternode khác nhau để trộn số tiền lên đến 1000 DASH</translation>
+        <source>Use 2 separate masternodes to mix funds up to 1000 CRW</source>
+        <translation>Sử dụng 2 masternode khác nhau để trộn số tiền lên đến 1000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>Sử dụng 8 masternode khác nhau để trộn số tiền lên đến 1000 DASH</translation>
+        <source>Use 8 separate masternodes to mix funds up to 1000 CRW</source>
+        <translation>Sử dụng 8 masternode khác nhau để trộn số tiền lên đến 1000 CRW</translation>
     </message>
     <message>
         <source>Use 16 separate masternodes</source>
         <translation>Sử dụng 16 masternode khác nhau</translation>
     </message>
     <message>
-        <source>This option is the quickest and will cost about ~0.025 DASH to anonymize 1000 DASH</source>
-        <translation>Tuỳ chọn này là nhanh nhất và sẽ mất chi phí khoảng ~0.025 DASH để ẩn danh 1000 DASH</translation>
+        <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 1000 CRW</source>
+        <translation>Tuỳ chọn này là nhanh nhất và sẽ mất chi phí khoảng ~0.025 CRW để ẩn danh 1000 CRW</translation>
     </message>
     <message>
-        <source>This option is moderately fast and will cost about 0.05 DASH to anonymize 1000 DASH</source>
-        <translation>Tuỳ chọn này là tương đối nhanh và sẽ mất chi phí khoảng ~0.05 DASH để ẩn danh 1000 DASH</translation>
+        <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 1000 CRW</source>
+        <translation>Tuỳ chọn này là tương đối nhanh và sẽ mất chi phí khoảng ~0.05 CRW để ẩn danh 1000 CRW</translation>
     </message>
     <message>
-        <source>0.1 DASH per 1000 DASH you anonymize.</source>
-        <translation>0.1 DASH cho mỗi 1000 DASH bạn muốn ẩn danh.</translation>
+        <source>0.1 CRW per 1000 CRW you anonymize.</source>
+        <translation>0.1 CRW cho mỗi 1000 CRW bạn muốn ẩn danh.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
@@ -1431,8 +1431,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số tiền và số vòng:</translation>
     </message>
     <message>
-        <source>0 DASH / 0 Rounds</source>
-        <translation>0 DASH / 0 Vòng</translation>
+        <source>0 CRW / 0 Rounds</source>
+        <translation>0 CRW / 0 Vòng</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -3276,8 +3276,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Gửi tiền</translation>
     </message>
     <message>
-        <source>InstantX doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation>InstantX không hỗ trợ để gửi giá trị lớn đến như vậy. Giới hạn giao dịch hiện tại đến %1 DASH.</translation>
+        <source>InstantX doesn't support sending values that high yet. Transactions are currently limited to %1 CRW.</source>
+        <translation>InstantX không hỗ trợ để gửi giá trị lớn đến như vậy. Giới hạn giao dịch hiện tại đến %1 CRW.</translation>
     </message>
 </context>
 <context>
@@ -3390,8 +3390,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch này.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
-        <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch mà nó không bằng 1000 DASH</translation>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 CRW.</source>
+        <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch mà nó không bằng 1000 CRW</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3634,12 +3634,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lỗi: Thấy tham số không được hỗ trợ -socks. Thiết lập phiên bản SOCKS là không thể được nữa, chỉ hỗ trợ proxy SOCKS5.</translation>
     </message>
     <message>
-        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Phí (tính theo DASH/Kb) nhỏ hơn số này được coi là không mất phí cho việc chuyển tiền (ngầm định: %s)</translation>
+        <source>Fees (in CRW/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
+        <translation>Phí (tính theo CRW/Kb) nhỏ hơn số này được coi là không mất phí cho việc chuyển tiền (ngầm định: %s)</translation>
     </message>
     <message>
-        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Phí (theo DASH/Kb) nhỏ hơn số này được coi không mất phí cho việc khởi tạo giao dịch (ngầm định: %s)</translation>
+        <source>Fees (in CRW/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Phí (theo CRW/Kb) nhỏ hơn số này được coi không mất phí cho việc khởi tạo giao dịch (ngầm định: %s)</translation>
     </message>
     <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
@@ -3734,8 +3734,8 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
-        <translation>Không tìm được đủ ngân sách cho giao dịch mà nó không đủ 1000 DASH.</translation>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 CRW.</source>
+        <translation>Không tìm được đủ ngân sách cho giao dịch mà nó không đủ 1000 CRW.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -3847,8 +3847,8 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Lỗi: Tìm thấy tham số không được hỗ trợ -tor, thay vào đó hãy sử dụng -onion</translation>
     </message>
     <message>
-        <source>Fee (in DASH/kB) to add to transactions you send (default: %s)</source>
-        <translation>Phí (theo DASH/Kb) sẽ thêm vào các giao dịch mà bạn gửi (ngầm định: %s)</translation>
+        <source>Fee (in CRW/kB) to add to transactions you send (default: %s)</source>
+        <translation>Phí (theo CRW/Kb) sẽ thêm vào các giao dịch mà bạn gửi (ngầm định: %s)</translation>
     </message>
     <message>
         <source>Finalizing transaction.</source>
@@ -4215,8 +4215,8 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Khoá KeePassHttp cho liên lạc mã hoá AES với KeePass</translation>
     </message>
     <message>
-        <source>Keep N DASH anonymized (default: %u)</source>
-        <translation>Giữ N DASH đã được ẩn danh (ngầm định: %u)</translation>
+        <source>Keep N CRW anonymized (default: %u)</source>
+        <translation>Giữ N CRW đã được ẩn danh (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>

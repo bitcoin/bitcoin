@@ -35,7 +35,7 @@ map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
 
-/* *** BEGIN DARKSEND MAGIC - DASH **********
+/* *** BEGIN DARKSEND MAGIC - CRW **********
     Copyright (c) 2014-2015, Crown Developers
         eduffield - evan@dashpay.io
         udjinm6   - udjinm6@dashpay.io

@@ -670,13 +670,13 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
             }
 
             // verify that sig time is legit in past
-            // should be at least not earlier than block when 1000 DASH tx got THRONE_MIN_CONFIRMATIONS
+            // should be at least not earlier than block when 1000 CRW tx got THRONE_MIN_CONFIRMATIONS
             uint256 hashBlock = 0;
             GetTransaction(vin.prevout.hash, tx, hashBlock, true);
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
             if (mi != mapBlockIndex.end() && (*mi).second)
             {
-                CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
+                CBlockIndex* pMNIndex = (*mi).second; // block for 1000 CRW tx -> 1 confirmation
                 CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + THRONE_MIN_CONFIRMATIONS - 1]; // block where tx got THRONE_MIN_CONFIRMATIONS
                 if(pConfIndex->GetBlockTime() > sigTime)
                 {

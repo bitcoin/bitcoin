@@ -1,4 +1,4 @@
-.TH DASHD "1" "January 2011" "dashd 3.19"
+.TH CRWD "1" "January 2011" "dashd 3.19"
 .SH NAME
 Crown \- peer-to-peer network based digital currency
 .SH SYNOPSIS
@@ -112,7 +112,7 @@ Returns the number of connections to other nodes.
 Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
 .TP
 \fBgetgenerate\fR
-Returns boolean true if server is trying to generate DASH, false otherwise.
+Returns boolean true if server is trying to generate CRW, false otherwise.
 .TP
 \fBsetgenerate 'generate' ['genproclimit']\fR
 Generation is limited to ['genproclimit'] processors, \-1 is unlimited.
@@ -183,7 +183,7 @@ Returns a list of the last ['count'] transactions for 'account' \- for all accou
 Moves funds between accounts.
 .TP
 \fBsendfrom* <'account'> <'dashaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
-Sends amount from account's balance to 'dashaddress'. This method will fail if there is less than amount DASH with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
+Sends amount from account's balance to 'dashaddress'. This method will fail if there is less than amount CRW with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
 .TP
 \fBsendtoaddress 'dashaddress' 'amount' ['comment'] ['comment-to']\fR
 Sends amount from the server's available balance to 'dashaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
