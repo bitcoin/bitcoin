@@ -107,7 +107,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Crown address (e.g. %1)").arg("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    widget->setPlaceholderText(QObject::tr("Enter a Crown address (e.g. %1)").arg("18WTcWvwrNnfqeQAn6th9QQ2EpnXMq5Th8"));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
