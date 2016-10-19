@@ -285,9 +285,76 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal(result[0]['error']['code'], -8)
         assert_equal(result[0]['error']['message'], 'Incompatibility found between watchonly and keys')
 
-        # TODO Consistency tests?
+
+        # Address + Public key + !Internal + Wrong pubkey
+        print("Should not import an address with a wrong public key")
+        address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        address2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "pubkeys": [ address2['pubkey'] ]
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -5)
+        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        address_assert = self.nodes[1].validateaddress(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], False)
 
 
+        # ScriptPubKey + Public key + internal + Wrong pubkey
+        print("Should not import a scriptPubKey with internal and with a wrong public key")
+        address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        address2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        request = [{
+            "scriptPubKey": address['scriptPubKey'],
+            "pubkeys": [ address2['pubkey'] ],
+            "internal": True
+        }];
+        result = self.nodes[1].importmulti(request)
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -5)
+        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        address_assert = self.nodes[1].validateaddress(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], False)
+
+
+        # Address + Private key + !watchonly + Wrong private key
+        print("Should not import an address with a wrong private key")
+        address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        address2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "keys": [ self.nodes[0].dumpprivkey(address2['address']) ]
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -5)
+        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        address_assert = self.nodes[1].validateaddress(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], False)
+
+
+        # ScriptPubKey + Private key + internal + Wrong private key
+        print("Should not import a scriptPubKey with internal and with a wrong private key")
+        address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        address2 = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": address['scriptPubKey'],
+            "keys": [ self.nodes[0].dumpprivkey(address2['address']) ],
+            "internal": True
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -5)
+        assert_equal(result[0]['error']['message'], 'Consistency check failed')
+        address_assert = self.nodes[1].validateaddress(address['address'])
+        assert_equal(address_assert['iswatchonly'], False)
+        assert_equal(address_assert['ismine'], False)
 
 if __name__ == '__main__':
     ImportMultiTest ().main ()
