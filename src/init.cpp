@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "coinstats.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -230,6 +231,10 @@ void Shutdown()
         pcoinscatcher = NULL;
         delete pcoinsdbview;
         pcoinsdbview = NULL;
+        delete pcoinsByScript;
+        pcoinsByScript = NULL;
+        delete pcoinsByScriptDB;
+        pcoinsByScriptDB = NULL;
         delete pblocktree;
         pblocktree = NULL;
     }
@@ -353,6 +358,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
     strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), DEFAULT_TXINDEX));
+    strUsage += HelpMessageOpt("-txoutindex", strprintf(_("Maintain an address to unspent outputs index (rpc: gettxoutsbyaddress). The index is built on first use. (default: %u)"), 0));
 
     strUsage += HelpMessageGroup(_("Connection options:"));
     strUsage += HelpMessageOpt("-addnode=<ip>", _("Add a node to connect to and attempt to keep the connection open"));
@@ -1310,6 +1316,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
+                pcoinsByScriptDB = new CCoinsViewByScriptDB(nCoinDBCache, false, false);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
@@ -1356,6 +1363,58 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                         break;
                     }
                 }
+
+                // Check -txoutindex
+                pcoinsByScriptDB->ReadFlag("txoutindex", fTxOutIndex);
+                if (mapArgs.count("-txoutindex"))
+                {
+                    if (GetBoolArg("-txoutindex", false))
+                    {
+                        // build index
+                        if (!fTxOutIndex)
+                        {
+                            if (!pcoinsByScriptDB->DeleteAllCoinsByScript())
+                            {
+                                strLoadError = _("Error deleting txoutindex");
+                                break;
+                            }
+                            if (!pcoinsByScriptDB->GenerateAllCoinsByScript(pcoinsdbview))
+                            {
+                                strLoadError = _("Error building txoutindex");
+                                break;
+                            }
+                            CCoinsStats stats;
+                            if (!GetUTXOStats(pcoinsTip, pcoinsByScriptDB, stats))
+                            {
+                                strLoadError = _("Error GetUTXOStats for txoutindex");
+                                break;
+                            }
+                            if (stats.nTransactionOutputs != stats.nAddressesOutputs)
+                            {
+                                strLoadError = _("Error compare stats for txoutindex");
+                                break;
+                            }
+                            pcoinsByScriptDB->WriteFlag("txoutindex", true);
+                            fTxOutIndex = true;
+                        }
+                    }
+                    else
+                    {
+                        if (fTxOutIndex)
+                        {
+                            // remove index
+                            pcoinsByScriptDB->DeleteAllCoinsByScript();
+                            pcoinsByScriptDB->WriteFlag("txoutindex", false);
+                            fTxOutIndex = false;
+                        }
+                    }
+                }
+                else if (fTxOutIndex)
+                    return InitError(_("You need to provide -txoutindex. Do -txoutindex=0 to delete the index."));
+
+                // Init -txoutindex
+                if (fTxOutIndex)
+                    pcoinsByScript = new CCoinsViewByScript(pcoinsByScriptDB);
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
