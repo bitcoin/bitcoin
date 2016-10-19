@@ -57,20 +57,19 @@ static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data
 static Checkpoints::MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
         ( 0, uint256("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
+        ( 500000, uint256("0xb53d68a141c9ced04eeca5624b66665a58732c48d383f81a29cf80a8a57186ff"))
         ;
 static const Checkpoints::CCheckpointData data = {
         &mapCheckpoints,
         1408905730, // * UNIX timestamp of last checkpoint block
-        0,    // * total number of transactions between genesis and last checkpoint
+        535561,    // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
-        0.0        // * estimated number of transactions per day after checkpoint
+        1540        // * estimated number of transactions per day after checkpoint
     };
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 261, uint256("00000c26026d0815a7e2ce4fa270775f61403c040647ff2c3091f99e894a4618"))
-        ( 77900, uint256("00000007e5ec67e2a626c07b7d66673c3dd8df0aed5018ca984b99fba2b71024"))
-        ( 82313, uint256("000000156a313af1d69fe855609175b276996235e8f4f7da41b10e4a7a750a19"))
+        ( 0, uint256("0x001"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
@@ -81,7 +80,7 @@ static const Checkpoints::CCheckpointData dataTestnet = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsRegtest =
         boost::assign::map_list_of
-        ( 0, uint256("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"))
+        ( 0, uint256("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"))
         ;
 static const Checkpoints::CCheckpointData dataRegtest = {
         &mapCheckpointsRegtest,
@@ -149,8 +148,8 @@ public:
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
         vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of( 0);                    // Crown addresses start with 'X'
-        base58Prefixes[SCRIPT_ADDRESS] = list_of( 5);                    // Crown script addresses start with '7'
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(  0);                    // Crown addresses start with 'X'
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(  5);                    // Crown script addresses start with '7'
         base58Prefixes[SECRET_KEY] =     list_of(128);                    // Crown private keys start with '7' or 'X'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4);
@@ -276,7 +275,7 @@ public:
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 1;
         hashGenesisBlock = genesis.GetHash();
-        nDefaultPort = 19444;
+        nDefaultPort = 19445;
         assert(hashGenesisBlock == uint256("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
