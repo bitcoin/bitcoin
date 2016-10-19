@@ -1,9 +1,9 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Dash
-Comment=Dash P2P Cryptocurrency
-Comment[fr]=Dash, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Dash, eşten eşe kriptografik sanal para birimi
+Name=Crown
+Comment=Crown P2P Cryptocurrency
+Comment[fr]=Crown, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Crown, eşten eşe kriptografik sanal para birimi
 Exec=dash-qt %u
 Terminal=false
 Type=Application

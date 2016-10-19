@@ -1,6 +1,6 @@
 <<<<<<< HEAD:src/qt/bitcoinaddressvalidator.cpp
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 =======
 // Copyright (c) 2011-2014 The Crowncoin developers
 >>>>>>> origin/dirty-merge-dash-0.11.0:src/qt/crowncoinaddressvalidator.cpp
@@ -94,7 +94,7 @@ QValidator::State CrowncoinAddressCheckValidator::validate(QString &input, int &
 {
     Q_UNUSED(pos);
 <<<<<<< HEAD:src/qt/bitcoinaddressvalidator.cpp
-    // Validate the passed Dash address
+    // Validate the passed Crown address
     CBitcoinAddress addr(input.toStdString());
 =======
     // Validate the passed Crowncoin address

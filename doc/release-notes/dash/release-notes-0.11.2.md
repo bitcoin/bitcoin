@@ -1,7 +1,7 @@
 0.11.2 Release notes
 ====================
 
-Dash Core version 0.11.2 is now available from:
+Crown Core version 0.11.2 is now available from:
 
   https://dashpay.io/downloads
 
@@ -21,10 +21,10 @@ functionality will not be available for you)
 Mining and relay policy enhancements
 ------------------------------------
 
-Dash Core's block templates are now for version 3 blocks only, and any
+Crown Core's block templates are now for version 3 blocks only, and any
 mining software relying on its `getblocktemplate` must be updated in parallel
 to use libblkmaker either version 0.4.2 or any version from 0.5.1 onward. If you
-are solo mining, this will affect you the moment you upgrade Dash Core,
+are solo mining, this will affect you the moment you upgrade Crown Core,
 which must be done prior to BIP66 achieving its 951/1001 status. If you are
 mining with the stratum mining protocol: this does not affect you. If you are
 mining with the getblocktemplate protocol to a pool: this will affect you at the
@@ -35,9 +35,9 @@ pool operator's discretion, which must be no later than BIP66 achieving its
 BIP 66: strict DER encoding for signatures
 ------------------------------------------
 
-Dash Core 0.11.2 implements BIP 66, which introduces block version 3, and a
+Crown Core 0.11.2 implements BIP 66, which introduces block version 3, and a
 new consensus rule, which prohibits non-DER signatures. Such transactions have
-been non-standard since Dash 0.8, but were technically still permitted
+been non-standard since Crown 0.8, but were technically still permitted
 inside blocks.
 
 This change breaks the dependency on OpenSSL's signature parsing, and is
@@ -63,7 +63,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
+installer (on Windows) or just copy over /Applications/Crown-Qt (on Mac) or
 dashd/dash-qt (on Linux).
 
 

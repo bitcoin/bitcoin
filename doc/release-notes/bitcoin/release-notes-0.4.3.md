@@ -17,5 +17,5 @@ Cease locking memory used by non-sensitive information (this caused a huge perfo
 Fixed some address-handling deadlocks (client freezes).
 No longer accept inbound connections over the internet when Bitcoin is being used with Tor (identity leak).
 Use the correct base transaction fee of 0.0005 BTC for accepting transactions into mined blocks (since 0.4.0, it was incorrectly accepting 0.0001 BTC which was only meant to be relayed).
-Add new DNS seeds (maintained by Pieter Wuille and Luke Dashjr).
+Add new DNS seeds (maintained by Pieter Wuille and Luke Crownjr).
 

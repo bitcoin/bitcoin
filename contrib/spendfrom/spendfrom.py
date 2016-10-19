@@ -7,7 +7,7 @@
 #  spendfrom.py  # Lists available funds
 #  spendfrom.py --from=ADDRESS --to=ADDRESS --amount=11.00
 #
-# Assumes it will talk to a dashd or Dash-Qt running
+# Assumes it will talk to a dashd or Crown-Qt running
 # on localhost.
 #
 # Depends on jsonrpc
@@ -35,9 +35,9 @@ def check_json_precision():
 def determine_db_dir():
     """Return the default location of the dash data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Dash/")
+        return os.path.expanduser("~/Library/Application Support/Crown/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Dash")
+        return os.path.join(os.environ['APPDATA'], "Crown")
     return os.path.expanduser("~/.dash")
 
 def read_bitcoin_config(dbdir):

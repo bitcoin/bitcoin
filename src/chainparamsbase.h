@@ -10,7 +10,7 @@
 
 /**
  * CBaseChainParams defines the base parameters (shared between dash-cli and dashd)
- * of a given instance of the Dash system.
+ * of a given instance of the Crown system.
  */
 class CBaseChainParams
 {

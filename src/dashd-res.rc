@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Dash"
-            VALUE "FileDescription",    "Darkcoind (OSS daemon/client for Dash)"
+            VALUE "CompanyName",        "Crown"
+            VALUE "FileDescription",    "Darkcoind (OSS daemon/client for Crown)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "dashd"
             VALUE "LegalCopyright",     COPYRIGHT_STR

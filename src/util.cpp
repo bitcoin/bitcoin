@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,7 +103,7 @@ namespace boost {
 
 using namespace std;
 
-//Dash only features
+//Crown only features
 bool fMasterNode = false;
 string strMasterNodePrivKey = "";
 string strMasterNodeAddr = "";
@@ -232,7 +232,7 @@ bool LogAcceptCategory(const char* category)
             const vector<string>& categories = mapMultiArgs["-debug"];
             ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
             // thread_specific_ptr automatically deletes the set when the thread ends.
-            // "dash" is a composite category enabling all Dash-related debug output
+            // "dash" is a composite category enabling all Crown-related debug output
             if(ptrCategory->count(string("dash"))) {
                 ptrCategory->insert(string("darksend"));
                 ptrCategory->insert(string("instantx"));
@@ -417,13 +417,13 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Dash
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Dash
-    // Mac: ~/Library/Application Support/Dash
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Crown
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Crown
+    // Mac: ~/Library/Application Support/Crown
     // Unix: ~/.dash
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dash";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Crown";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -435,7 +435,7 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "Dash";
+    return pathRet / "Crown";
 #else
     // Unix
     return pathRet / ".dash";

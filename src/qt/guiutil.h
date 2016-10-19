@@ -29,7 +29,7 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Dash Qt UI.
+/** Utility functions used by the Crown Qt UI.
  */
 namespace GUIUtil
 {
@@ -37,7 +37,7 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Render Dash addresses in monospace font
+    // Render Crown addresses in monospace font
     QFont bitcoinAddressFont();
 
     // Set up widgets for address and amounts

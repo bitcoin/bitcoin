@@ -62,11 +62,11 @@
         <translation>收款位址</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Crown addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>這些是你要付款過去的達世幣位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Crown addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>這些是你用來收款的達世幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
     </message>
     <message>
@@ -188,7 +188,7 @@
         <translation>錢包已加密</translation>
     </message>
     <message>
-        <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
+        <source>Crown will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
         <translation>達世幣軟體現在要關閉，好完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取達世幣。</translation>
     </message>
     <message>
@@ -231,7 +231,7 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Dash Core</source>
+        <source>Crown Core</source>
         <translation>達世幣核心</translation>
     </message>
     <message>
@@ -255,7 +255,7 @@
         <translation>發送(&amp;S)</translation>
     </message>
     <message>
-        <source>Send coins to a Dash address</source>
+        <source>Send coins to a Crown address</source>
         <translation>付錢給一個達世幣位址</translation>
     </message>
     <message>
@@ -283,11 +283,11 @@
         <translation>結束應用程式</translation>
     </message>
     <message>
-        <source>&amp;About Dash Core</source>
+        <source>&amp;About Crown Core</source>
         <translation>關於達世幣核心(&amp;A)</translation>
     </message>
     <message>
-        <source>Show information about Dash Core</source>
+        <source>Show information about Crown Core</source>
         <translation>顯示達世幣核心的相關資訊</translation>
     </message>
     <message>
@@ -303,7 +303,7 @@
         <translation>選項(&amp;O)...</translation>
     </message>
     <message>
-        <source>Modify configuration options for Dash</source>
+        <source>Modify configuration options for Crown</source>
         <translation>修改達世幣軟體的設定選項</translation>
     </message>
     <message>
@@ -355,7 +355,7 @@
         <translation>簽署訊息(&amp;M)...</translation>
     </message>
     <message>
-        <source>Sign messages with your Dash addresses to prove you own them</source>
+        <source>Sign messages with your Crown addresses to prove you own them</source>
         <translation>用達世幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
@@ -363,7 +363,7 @@
         <translation>驗證訊息(&amp;V)...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
+        <source>Verify messages to ensure they were signed with specified Crown addresses</source>
         <translation>驗證訊息是用來確定訊息是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
@@ -451,7 +451,7 @@
         <translation>命令列選項(&amp;C)</translation>
     </message>
     <message>
-        <source>Dash Core client</source>
+        <source>Crown Core client</source>
         <translation>達世幣核心客戶端軟體</translation>
     </message>
     <message numerus="yes">
@@ -463,7 +463,7 @@
         <translation>正在同步額外的數據: %p%</translation>
     </message>
     <message>
-        <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
+        <source>Show the Crown Core help message to get a list with possible Crown command-line options</source>
         <translation>顯示達世幣核心的說明訊息，來取得可用命令列選項的列表</translation>
     </message>
     <message>
@@ -487,7 +487,7 @@
         <translation>分頁工具列</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Dash network</source>
+        <source>%n active connection(s) to Crown network</source>
         <translation><numerusform>%n 個運作中的達世幣網路連線</numerusform></translation>
     </message>
     <message>
@@ -892,15 +892,15 @@ Address: %4
         <translation>匿名發送配置</translation>
     </message>
     <message>
-        <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash's configuration screen.</source>
+        <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Crown's configuration screen.</source>
         <translation>匿名發送已成功設置為一般(%1到2次循環)。你可以隨時打開達世幣配置窗口來修改。</translation>
     </message>
     <message>
-        <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash's configuration screen.</source>
+        <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Crown's configuration screen.</source>
         <translation>匿名發送已成功設置為高(%1到8次循環)。你可以隨時打開達世幣配置窗口來修改。</translation>
     </message>
     <message>
-        <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash's configuration screen.</source>
+        <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Crown's configuration screen.</source>
         <translation>匿名發送已成功設置為最高(%1到16次循環)。你可以隨時打開達世幣配置窗口來修改。</translation>
     </message>
 </context>
@@ -943,7 +943,7 @@ Address: %4
         <translation>編輯付款位址</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Dash address.</source>
+        <source>The entered address "%1" is not a valid Crown address.</source>
         <translation>輸入的位址 %1 並不是有效的達世幣位址。</translation>
     </message>
     <message>
@@ -985,7 +985,7 @@ Address: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Dash Core</source>
+        <source>Crown Core</source>
         <translation>達世幣核心</translation>
     </message>
     <message>
@@ -997,7 +997,7 @@ Address: %4
         <translation>(%1 位元)</translation>
     </message>
     <message>
-        <source>About Dash Core</source>
+        <source>About Crown Core</source>
         <translation>關於達世幣核心</translation>
     </message>
     <message>
@@ -1044,15 +1044,15 @@ Address: %4
         <translation>歡迎</translation>
     </message>
     <message>
-        <source>Welcome to Dash Core.</source>
+        <source>Welcome to Crown Core.</source>
         <translation>歡迎使用達世幣核心</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Dash Core will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where Crown Core will store its data.</source>
         <translation>因為這是程式第一次啓動，你可以選擇達世幣核心儲存資料的地方。</translation>
     </message>
     <message>
-        <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Crown Core will download and store a copy of the Crown block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation>達世幣核心會下載並儲存一份達世幣區塊鏈的副本。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
     </message>
     <message>
@@ -1064,7 +1064,7 @@ Address: %4
         <translation>使用自定的資料目錄:</translation>
     </message>
     <message>
-        <source>Dash Core</source>
+        <source>Crown Core</source>
         <translation>達世幣核心</translation>
     </message>
     <message>
@@ -1118,11 +1118,11 @@ Address: %4
         <translation>主要(&amp;M)</translation>
     </message>
     <message>
-        <source>Automatically start Dash after logging in to the system.</source>
+        <source>Automatically start Crown after logging in to the system.</source>
         <translation>在登入系統後自動啓動達世幣軟體。</translation>
     </message>
     <message>
-        <source>&amp;Start Dash on system login</source>
+        <source>&amp;Start Crown on system login</source>
         <translation>系統登入時啟動達世幣(&amp;S)</translation>
     </message>
     <message>
@@ -1150,7 +1150,7 @@ Address: %4
         <translation>此金額為關閉匿名發送的門檻。</translation>
     </message>
     <message>
-        <source>Amount of Dash to keep anonymized</source>
+        <source>Amount of Crown to keep anonymized</source>
         <translation>保持匿名的達世幣數量</translation>
     </message>
     <message>
@@ -1170,7 +1170,7 @@ Address: %4
         <translation>接受外來連線</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <source>Connect to the Crown network through a SOCKS5 proxy.</source>
         <translation>透過 SOCKS5 代理伺服器來連線到達世幣網路。</translation>
     </message>
     <message>
@@ -1202,7 +1202,7 @@ Address: %4
         <translation>網絡(&amp;N)</translation>
     </message>
     <message>
-        <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the Crown client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自動在路由器上開放達世幣的客戶端通訊埠。只有在你的路由器支援且開啓「通用即插即用」協定(UPnP)時才有作用。</translation>
     </message>
     <message>
@@ -1254,7 +1254,7 @@ Address: %4
         <translation>用戶界面語言:</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Dash.</source>
+        <source>The user interface language can be set here. This setting will take effect after restarting Crown.</source>
         <translation>可以在這裡設定用戶介面的語言。這個設定在重啓達世幣軟體後才會生效。</translation>
     </message>
     <message>
@@ -1343,7 +1343,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>表單</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Crown network after a connection is established, but this process has not completed yet.</source>
         <translation>顯示的資訊可能是過期的。跟達世幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
@@ -1568,7 +1568,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>無效的付款位址 %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Crown address or malformed URI parameters.</source>
         <translation>沒辦法解析 URI 位址！可能是因為達世幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
@@ -1654,7 +1654,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>金額</translation>
     </message>
     <message>
-        <source>Enter a Dash address (e.g. %1)</source>
+        <source>Enter a Crown address (e.g. %1)</source>
         <translation>輸入達世幣位址 (例如 %1)</translation>
     </message>
     <message>
@@ -1740,7 +1740,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>連線數</translation>
     </message>
     <message>
-        <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <source>Open the Crown debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>從目前的資料目錄下開啓達世幣軟體的除錯紀錄檔。當紀錄檔很大時，可能會花好幾秒的時間。</translation>
     </message>
     <message>
@@ -1944,7 +1944,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>輸出:</translation>
     </message>
     <message>
-        <source>Welcome to the Dash RPC console.</source>
+        <source>Welcome to the Crown RPC console.</source>
         <translation>歡迎使用達世幣 RPC 主控台。</translation>
     </message>
     <message>
@@ -2007,7 +2007,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>重複使用現有的收款位址(不建議)(&amp;e)</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Crown network.</source>
         <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
@@ -2019,7 +2019,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>跟新收款位址關聯的標記，可以不填。</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Crown network.</source>
         <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。&lt;br&gt;注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
@@ -2444,7 +2444,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>只付最低手續費 %1</translation>
     </message>
     <message>
-        <source>Warning: Invalid Dash address</source>
+        <source>Warning: Invalid Crown address</source>
         <translation>警告: 無效的達世幣位址</translation>
     </message>
     <message>
@@ -2467,7 +2467,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>付給:(&amp;T)</translation>
     </message>
     <message>
-        <source>The Dash address to send the payment to</source>
+        <source>The Crown address to send the payment to</source>
         <translation>接收付款的達世幣位址</translation>
     </message>
     <message>
@@ -2507,7 +2507,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>訊息:</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
         <translation>附加在達世幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到達世幣網路上。</translation>
     </message>
     <message>
@@ -2534,7 +2534,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Dash Core is shutting down...</source>
+        <source>Crown Core is shutting down...</source>
         <translation>達世幣核心正在關閉中...</translation>
     </message>
     <message>
@@ -2557,7 +2557,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>你可以用自己的位址簽署訊息，來證明你對位址的所有權。但是請小心，不要簽署語意含糊不清的內容，因為釣魚式詐騙可能會用騙你簽署的手法來冒充是你。只有在語句中的細節你都同意時才簽署。</translation>
     </message>
     <message>
-        <source>The Dash address to sign the message with</source>
+        <source>The Crown address to sign the message with</source>
         <translation>用來簽署訊息的達世幣位址</translation>
     </message>
     <message>
@@ -2589,7 +2589,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>複製目前的簽章到系統剪貼簿</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Dash address</source>
+        <source>Sign the message to prove you own this Crown address</source>
         <translation>簽署這個訊息來證明這個達世幣位址是你的</translation>
     </message>
     <message>
@@ -2613,11 +2613,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>請在下面輸入簽署的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。</translation>
     </message>
     <message>
-        <source>The Dash address the message was signed with</source>
+        <source>The Crown address the message was signed with</source>
         <translation>簽署這個訊息的達世幣位址</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <source>Verify the message to ensure it was signed with the specified Crown address</source>
         <translation>驗證這個訊息來確定是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
@@ -2684,7 +2684,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Dash Core</source>
+        <source>Crown Core</source>
         <translation>達世幣核心</translation>
     </message>
     <message>
@@ -2696,7 +2696,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>位元幣核心開發人員</translation>
     </message>
     <message>
-        <source>The Dash Core developers</source>
+        <source>The Crown Core developers</source>
         <translation>達世幣核心開發人員</translation>
     </message>
     <message>
@@ -3258,7 +3258,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>這是個還沒發表的測試版本 - 使用請自負風險 - 請不要用來開採或商業應用</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
+        <source>Unable to bind to %s on this computer. Crown Core is probably already running.</source>
         <translation>沒辦法繫結在這台電腦上的 %s 。達世幣核心可能已經在執行了。</translation>
     </message>
     <message>
@@ -3502,7 +3502,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告: -maxtxfee 設定了很高的金額！這可是一次交易就有可能付出的最高手續費。</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Dash Core will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Crown Core will not work properly.</source>
         <translation>警告: 請檢查電腦日期和時間是否正確！達世幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
     </message>
     <message>
@@ -3530,7 +3530,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>版權為位元幣核心開發人員自西元 2009 至 %i 年起所有</translation>
     </message>
     <message>
-        <source>Copyright (C) 2014-%i The Dash Core Developers</source>
+        <source>Copyright (C) 2014-%i The Crown Core Developers</source>
         <translation>版權為達世幣核心開發人員自西元 2014 至 %i 年起所有</translation>
     </message>
     <message>
@@ -3554,7 +3554,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>連接到主節點時發生錯誤。</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Dash Core</source>
+        <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
         <translation>載入 wallet.dat 檔案時發生錯誤: 這個錢包需要新版的達世幣核心</translation>
     </message>
     <message>
@@ -3738,7 +3738,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>與異常的節點斷線的臨界值 (預設: %u)</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Dash Core to complete</source>
+        <source>Wallet needed to be rewritten: restart Crown Core to complete</source>
         <translation>錢包需要重寫: 請重新啓動達世幣核心來完成</translation>
     </message>
     <message>

@@ -104,9 +104,9 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `dashd` for your own use.
 
-dashd/dash-cli binaries are not included in the Dash-Qt.app bundle.
+dashd/dash-cli binaries are not included in the Crown-Qt.app bundle.
 
-If you are building `dashd` or `Dash-Qt` for others, your build machine should be set up
+If you are building `dashd` or `Crown-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -115,7 +115,7 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
-Once dependencies are compiled, see release-process.md for how the Dash-Qt.app
+Once dependencies are compiled, see release-process.md for how the Crown-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running
@@ -127,14 +127,14 @@ directory. We have to first create the RPC configuration file, though.
 Run `./dashd` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=dashrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Dash/dash.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/Dash/dash.conf"
+    echo -e "rpcuser=dashrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crown/dash.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Crown/dash.conf"
 
 The next time you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
 you can monitor its process by looking at the debug.log file, like this:
 
-    tail -f $HOME/Library/Application\ Support/Dash/debug.log
+    tail -f $HOME/Library/Application\ Support/Crown/debug.log
 
 Other commands:
 -------

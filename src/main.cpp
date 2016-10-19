@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,7 +40,7 @@ using namespace boost;
 using namespace std;
 
 #if defined(NDEBUG)
-# error "Dash cannot be compiled without assertions."
+# error "Crown cannot be compiled without assertions."
 #endif
 
 /**

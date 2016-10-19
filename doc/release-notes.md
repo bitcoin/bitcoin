@@ -1,17 +1,17 @@
-Dash Core 0.12
+Crown Core 0.12
 ==================
 
-Dash Core tree 0.12.x release notes can be found here:
+Crown Core tree 0.12.x release notes can be found here:
 - [v0.12.0](release-notes/dash/release-notes-0.12.0.md)
 
-Dash Core tree 0.12.x is a fork of Bitcoin Core tree 0.10.2
+Crown Core tree 0.12.x is a fork of Bitcoin Core tree 0.10.2
 
 
 
 Older releases
 --------------
 
-Dash was previously known as Darkcoin.
+Crown was previously known as Darkcoin.
 
 Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
 which was first released on Jan/18/2014.
@@ -22,8 +22,8 @@ the 0.8.x tree and was first released on Mar/13/2014.
 Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
 which was released open source on Sep/25/2014.
 
-Dash Core tree 0.11.x was a fork of Bitcoin Core tree 0.9, Darkcoin was rebranded
-to Dash.
+Crown Core tree 0.11.x was a fork of Bitcoin Core tree 0.9, Darkcoin was rebranded
+to Crown.
 
 These release are considered obsolete. Old changelogs can be found here:
 

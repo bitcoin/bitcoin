@@ -52,7 +52,7 @@ Value darksend(const Array& params, bool fHelp)
 
     CCrowncoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crown address");
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
@@ -114,8 +114,8 @@ Value throne(const Array& params, bool fHelp)
                 "  list         - Print list of all known thrones (see thronelist for more info)\n"
                 "  list-conf    - Print throne.conf in JSON format\n"
                 "  winners      - Print list of throne winners\n"
-                "  vote-many    - Vote on a Dash initiative\n"
-                "  vote         - Vote on a Dash initiative\n"
+                "  vote-many    - Vote on a Crown initiative\n"
+                "  vote         - Vote on a Crown initiative\n"
                 );
 
 
@@ -703,7 +703,7 @@ Value thronelist(const Array& params, bool fHelp)
                 "  rank           - Print rank of a throne based on current block\n"
                 "  status         - Print throne status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
                 "  vin            - Print vin associated with a throne (can be additionally filtered, partial match)\n"
-                "  votes          - Print all throne votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  votes          - Print all throne votes for a Crown initiative (can be additionally filtered, partial match)\n"
                 );
     }
 

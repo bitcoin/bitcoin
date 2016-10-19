@@ -16,8 +16,8 @@ BITCOIND_USER=${BITCOIND_USER:-dash}
 BITCOIND_GROUP=${BITCOIND_GROUP:-dash}
 BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/dashd}
 
-name="Dash Core Daemon"
-description="Dash crypto-currency p2p network daemon"
+name="Crown Core Daemon"
+description="Crown crypto-currency p2p network daemon"
 
 command="/usr/bin/dashd"
 command_args="-pid=\"${BITCOIND_PIDFILE}\" \
@@ -78,7 +78,7 @@ checkconfig()
 		eerror "It is also recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Dash Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"Crown Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

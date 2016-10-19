@@ -81,7 +81,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 dash-qt
-Dash-Qt.app
+Crown-Qt.app
 
 # Unit-tests
 Makefile.test

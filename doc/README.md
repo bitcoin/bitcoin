@@ -1,4 +1,4 @@
-Dash Core 0.12.0
+Crown Core 0.12.0
 =====================
 
 Setup
@@ -7,11 +7,11 @@ Setup
 
 Running
 ---------------------
-The following are some helpful notes on how to run Dash on your native platform.
+The following are some helpful notes on how to run Crown on your native platform.
 
 ### Unix
 
-You need the Qt4 run-time libraries to run Dash-Qt. On Debian or Ubuntu:
+You need the Qt4 run-time libraries to run Crown-Qt. On Debian or Ubuntu:
 
 	sudo apt-get install libqtgui4
 
@@ -28,25 +28,25 @@ Unpack the files into a directory, and then run dash-qt.exe.
 
 ### OSX
 
-Drag Dash-Qt to your applications folder, and then run Dash-Qt.
+Drag Crown-Qt to your applications folder, and then run Crown-Qt.
 
 ### Need Help?
 
-* See the documentation at the [Dash Wiki](https://en.bitcoin.it/wiki/Main_Page) ***TODO***
+* See the documentation at the [Crown Wiki](https://en.bitcoin.it/wiki/Main_Page) ***TODO***
 for help and more information.
 * Ask for help on [#dashpay](http://webchat.freenode.net?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=dashpay).
-* Ask for help on the [DashTalk](https://dashtalk.org/) forums.
+* Ask for help on the [CrownTalk](https://dashtalk.org/) forums.
 
 Building
 ---------------------
-The following are developer notes on how to build Dash on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Crown on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [OSX Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 
 Development
 ---------------------
-The Dash repo's [root README](https://github.com/dashpay/dash/blob/master/README.md) contains relevant information on the development process and automated testing.
+The Crown repo's [root README](https://github.com/dashpay/dash/blob/master/README.md) contains relevant information on the development process and automated testing.
 
 - [Coding Guidelines](coding.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
@@ -57,7 +57,7 @@ The Dash repo's [root README](https://github.com/dashpay/dash/blob/master/README
 - [Unit Tests](unit-tests.md)
 
 ### Resources
-* Discuss on the [DashTalk](https://dashtalk.org/) forums, in the Development & Technical Discussion board.
+* Discuss on the [CrownTalk](https://dashtalk.org/) forums, in the Development & Technical Discussion board.
 * Discuss on [#dashpay](http://webchat.freenode.net/?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=dashpay).
 
 ### Miscellaneous

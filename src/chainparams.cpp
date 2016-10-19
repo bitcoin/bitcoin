@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -106,14 +106,14 @@ public:
         pchMessageStart[3] = 0xdf;
         vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
         nDefaultPort = 9340;
-        bnProofOfWorkLimit = ~uint256(0) >> 32;  // Dash starting difficulty is 1 / 2^12
+        bnProofOfWorkLimit = ~uint256(0) >> 32;  // Crown starting difficulty is 1 / 2^12
         nSubsidyHalvingInterval = 2100000;
         nEnforceBlockUpgradeMajority = 750;
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; // Dash: 1 day
-        nTargetSpacing = 1 * 60; // Dash: 2.5 minutes
+        nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 1 day
+        nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
 
 
         /**
@@ -149,12 +149,12 @@ public:
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
         vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of( 0);                    // Dash addresses start with 'X'
-        base58Prefixes[SCRIPT_ADDRESS] = list_of( 5);                    // Dash script addresses start with '7'
-        base58Prefixes[SECRET_KEY] =     list_of(128);                    // Dash private keys start with '7' or 'X'
+        base58Prefixes[PUBKEY_ADDRESS] = list_of( 0);                    // Crown addresses start with 'X'
+        base58Prefixes[SCRIPT_ADDRESS] = list_of( 5);                    // Crown script addresses start with '7'
+        base58Prefixes[SECRET_KEY] =     list_of(128);                    // Crown private keys start with '7' or 'X'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4);
-        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005);             // Dash BIP44 coin type is '5'
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005);             // Crown BIP44 coin type is '5'
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
@@ -203,8 +203,8 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; // Dash: 1 day
-        nTargetSpacing = 1 * 60; // Dash: 2.5 minutes
+        nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 1 day
+        nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1390666206;
@@ -269,8 +269,8 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
-        nTargetTimespan = 14 * 24 * 60 * 60; // Dash: 1 day
-        nTargetSpacing = 1 * 60; // Dash: 2.5 minutes
+        nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 1 day
+        nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
