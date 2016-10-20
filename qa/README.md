@@ -16,7 +16,7 @@ The python3-zmq library is required. On Ubuntu or Debian it can be installed via
 sudo apt-get install python3-zmq
 ```
 
-OS X
+macOS
 ------
 ```
 pip3 install pyzmq
