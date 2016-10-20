@@ -26,6 +26,7 @@
 #include "validationinterface.h"
 #include "version.h"
 #include "stat.h"
+#include "tweak.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -68,6 +69,7 @@ boost::posix_time::milliseconds statMinInterval(10000);
 boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
 
 CStatMap statistics __attribute__((init_priority(102)));
+CTweakMap tweaks __attribute__((init_priority(102)));
 
 vector<CNode*> vNodes __attribute__((init_priority(109)));
 CCriticalSection cs_vNodes __attribute__((init_priority(109)));
@@ -77,6 +79,43 @@ CSemaphore*  semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
 CNodeSignals g_signals __attribute__((init_priority(109)));
 CNetCleanup cnet_instance_cleanup __attribute__((init_priority(110)));  // Must construct after statistics, because CNodes use statistics.  In particular, seg fault on osx during exit because constructor/destructor order is not guaranteed between modules in clang.
 
+std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate)
+{
+  if (validate)
+    {
+      if (value < maxGeneratedBlock) 
+	{
+        std::ostringstream ret;
+        ret << "Sorry, your maximum mined block (" << maxGeneratedBlock << ") is larger than your proposed excessive size (" << value << ").  This would cause you to orphan your own blocks.";    
+        return ret.str();
+	}
+    }
+  else  // Do anything to "take" the new value
+    {
+      // nothing needed
+    }
+  return std::string();
+}
+
+CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
+CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
+CTweakRef<int> mOutConnectionsTweak("net.maxOutboundConnections","Number of outbound connections", &nMaxOutConnections);
+CTweakRef<unsigned int> triTweak("net.txRetryInterval","How long to wait in microseconds before requesting a transaction from another source", &MIN_TX_REQUEST_RETRY_INTERVAL);  // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
+CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in microseconds before requesting a block from another source", &MIN_BLK_REQUEST_RETRY_INTERVAL); // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
+
+std::string SubverValidator(const std::string& value,std::string* item,bool validate)
+{
+  if (validate)
+    {
+    if (value.size() > MAX_SUBVERSION_LENGTH) 
+    {
+      return(std::string("Subversion string is too long")); 
+    }
+  }
+  return std::string();
+}
+
+CTweakRef<std::string> subverOverrideTweak("net.subversionOveride","If set, this field will override the normal subversion field.  This is useful if you need to hide your node.",&subverOverride,&SubverValidator);
 
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
@@ -559,6 +598,8 @@ void UnlimitedSetup(void)
     blockVersion = GetArg("-blockversion", blockVersion);
     excessiveBlockSize = GetArg("-excessiveblocksize", excessiveBlockSize);
     excessiveAcceptDepth = GetArg("-excessiveacceptdepth", excessiveAcceptDepth);
+    LoadTweaks();  // The above options are deprecated so the same parameter defined as a tweak will override them
+
     settingsToUserAgentString();
     //  Init network shapers
     int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);

@@ -6,6 +6,8 @@
 #include "clientversion.h"
 
 #include "tinyformat.h"
+#include "tweak.h"
+#include "unlimited.h"
 
 #include <string>
 
@@ -15,6 +17,13 @@
  * target servers or GUI users specifically.
  */
 const std::string CLIENT_NAME("BitcoinUnlimited");
+
+// BU added
+/**
+ * Override the standard sub-version field with this information.
+ * this can be used to hide 
+ */
+std::string subverOverride("");
 
 /**
  * Client version number
@@ -97,6 +106,8 @@ std::string FormatFullVersion()
  */
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {
+    if (!subverOverride.empty()) return subverOverride;
+
     std::ostringstream ss;
     ss << "/";
     ss << name << ":" << FormatVersion(nClientVersion);

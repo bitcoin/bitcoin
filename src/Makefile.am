@@ -162,6 +162,7 @@ BITCOIN_CORE_H = \
   undo.h \
   unlimited.h \
   stat.h \
+  tweak.h \
   requestManager.h \
   util.h \
   utilmoneystr.h \
@@ -222,6 +223,7 @@ libbitcoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
+  tweak.cpp \
   unlimited.cpp \
   requestManager.cpp \
   validationinterface.cpp \

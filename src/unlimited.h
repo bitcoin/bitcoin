@@ -6,6 +6,7 @@
 #ifndef BITCOIN_UNLIMITED_H
 #define BITCOIN_UNLIMITED_H
 
+#include "tweak.h"
 #include "leakybucket.h"
 #include "net.h"
 #include "stat.h"
@@ -93,6 +94,12 @@ extern int isChainExcessive(const CBlockIndex* blk, unsigned int checkDepth = ex
 extern int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack=0);
 
 // RPC calls
+
+// RPC Get a particular tweak
+extern UniValue settweak(const UniValue& params, bool fHelp);
+// RPC Set a particular tweak
+extern UniValue gettweak(const UniValue& params, bool fHelp);
+
 extern UniValue settrafficshaping(const UniValue& params, bool fHelp);
 extern UniValue gettrafficshaping(const UniValue& params, bool fHelp);
 extern UniValue pushtx(const UniValue& params, bool fHelp);

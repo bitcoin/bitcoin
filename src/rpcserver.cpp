@@ -341,6 +341,8 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "estimatesmartpriority",  &estimatesmartpriority,  true  },
     { "util",               "getstatlist",            &getstatlist,            true  },  // BU
     { "util",               "getstat",                &getstat,                true  },  // BU
+    { "util",               "get",                    &gettweak,               true  },  // BU
+    { "util",               "set",                    &settweak,               true  },  // BU
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },
