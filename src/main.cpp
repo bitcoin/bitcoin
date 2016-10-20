@@ -5319,8 +5319,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (inv.type == MSG_TX) {
                 inv.type |= nFetchFlags;
+                pfrom->AddInventoryKnown(inv);
+                if (fBlocksOnly)
+                    LogPrint("tx", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
+                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
+                    pfrom->AskFor(inv);
             }
-
+            else
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
@@ -5348,14 +5353,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     }
                     LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                 }
-            }
-            else
-            {
-                pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly)
-                    LogPrint("net", "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->id);
-                else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload())
-                    pfrom->AskFor(inv);
             }
 
             // Track requests for our stuff
