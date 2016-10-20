@@ -717,13 +717,10 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 {
     if (modalOverlay)
     {
-        if (header) {
-            /* use clientmodels getHeaderTipHeight and getHeaderTipTime because the NotifyHeaderTip signal does not fire when updating the best header */
-            modalOverlay->setKnownBestHeight(clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(clientModel->getHeaderTipTime()));
-        }
-        else {
+        if (header)
+            modalOverlay->setKnownBestHeight(count, blockDate);
+        else
             modalOverlay->tipUpdate(count, blockDate, nVerificationProgress);
-        }
     }
     if (!clientModel)
         return;
