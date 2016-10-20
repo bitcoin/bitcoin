@@ -82,7 +82,6 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("queue",                 darkSendPool.GetQueueSize()));
     obj.push_back(Pair("state",                 darkSendPool.GetState()));
     obj.push_back(Pair("entries",               darkSendPool.GetEntriesCount()));
-    obj.push_back(Pair("entries_accepted",      darkSendPool.GetCountEntriesAccepted()));
     return obj;
 }
 

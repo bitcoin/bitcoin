@@ -10,24 +10,7 @@
 
 class CDarksendPool;
 class CDarkSendSigner;
-class CDarksendQueue;
 class CDarksendBroadcastTx;
-
-// pool states for mixing
-static const int POOL_STATE_UNKNOWN                 = 0; // waiting for initialization
-static const int POOL_STATE_IDLE                    = 1; // waiting for update
-static const int POOL_STATE_QUEUE                   = 2; // waiting in a queue
-static const int POOL_STATE_ACCEPTING_ENTRIES       = 3; // accepting entries
-static const int POOL_STATE_FINALIZE_TRANSACTION    = 4; // master node will broadcast what it accepted
-static const int POOL_STATE_SIGNING                 = 5; // check inputs/outputs, sign final tx
-static const int POOL_STATE_TRANSMISSION            = 6; // transmit transaction
-static const int POOL_STATE_ERROR                   = 7; // error
-static const int POOL_STATE_SUCCESS                 = 8; // success
-
-// status update message constants
-static const int MASTERNODE_ACCEPTED                = 1;
-static const int MASTERNODE_REJECTED                = 0;
-static const int MASTERNODE_RESET                   = -1;
 
 // timeouts
 static const int PRIVATESEND_AUTO_TIMEOUT_MIN       = 5;
@@ -273,7 +256,8 @@ public:
 class CDarksendPool
 {
 private:
-    enum messages {
+    // pool responses
+    enum PoolMessage {
         ERR_ALREADY_HAVE,
         ERR_DENOM,
         ERR_ENTRIES_FULL,
@@ -295,7 +279,31 @@ private:
         ERR_VERSION,
         MSG_NOERR,
         MSG_SUCCESS,
-        MSG_ENTRIES_ADDED
+        MSG_ENTRIES_ADDED,
+        MSG_POOL_MIN = ERR_ALREADY_HAVE,
+        MSG_POOL_MAX = MSG_ENTRIES_ADDED
+    };
+
+    // pool states
+    enum PoolState {
+        POOL_STATE_UNKNOWN,
+        POOL_STATE_IDLE,
+        POOL_STATE_QUEUE,
+        POOL_STATE_ACCEPTING_ENTRIES,
+        POOL_STATE_FINALIZE_TRANSACTION,
+        POOL_STATE_SIGNING,
+        POOL_STATE_TRANSMISSION,
+        POOL_STATE_ERROR,
+        POOL_STATE_SUCCESS,
+        POOL_STATE_MIN = POOL_STATE_UNKNOWN,
+        POOL_STATE_MAX = POOL_STATE_SUCCESS
+    };
+
+    // status update message constants
+    enum PoolStatusUpdate {
+        STATUS_SET_STATE        = -1,
+        STATUS_REJECTED         = 0,
+        STATUS_ACCEPTED         = 1
     };
 
     mutable CCriticalSection cs_darksend;
@@ -312,7 +320,7 @@ private:
     std::vector<CTransaction> vecSessionCollateral;
     std::vector<CDarkSendEntry> vecEntries; // Masternode/clients entries
 
-    unsigned int nState; // should be one of the POOL_STATE_XXX values
+    PoolState nState; // should be one of the POOL_STATE_XXX values
     int64_t nLastTimeChanged; // last time the 'state' changed, in UTC milliseconds
 
     int nCachedLastSuccessBlock;
@@ -325,7 +333,6 @@ private:
 
     unsigned int nEntriesCount;
     bool fLastEntryAccepted;
-    unsigned int nAcceptedEntriesCount;
 
     std::string strLastMessage;
     std::string strAutoDenomResult;
@@ -336,7 +343,7 @@ private:
     CMutableTransaction finalMutableTransaction; // the finalized transaction ready for signing
 
     /// Add a clients entry to the pool
-    bool AddEntry(const CDarkSendEntry& entryNew, int& nErrorIDRet);
+    bool AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessageIDRet);
     /// Add signature to a txin
     bool AddScriptSig(const CTxIn& txin);
 
@@ -350,12 +357,12 @@ private:
 
     void CheckFinalTransaction();
 
-    void CompletedTransaction(bool fError, int nErrorID);
+    void CompletedTransaction(bool fError, PoolMessage nMessageID);
 
     /// Get the denominations for a specific amount of dash.
     int GetDenominationsByAmounts(const std::vector<CAmount>& vecAmount);
 
-    std::string GetMessageByID(int nMessageID);
+    std::string GetMessageByID(PoolMessage nMessageID);
 
     /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions() { return Params().PoolMaxTransactions(); }
@@ -363,7 +370,7 @@ private:
     /// Are these outputs compatible with other client in the pool?
     bool IsOutputsCompatibleWithSessionDenom(const std::vector<CTxDSOut>& vecTxDSOut);
     /// Is this nDenom compatible with other client in the pool?
-    bool IsDenomCompatibleWithSession(int nDenom, CTransaction txCollateral, int &nErrorID);
+    bool IsDenomCompatibleWithSession(int nDenom, CTransaction txCollateral, PoolMessage &nMessageIDRet);
 
     /// If the collateral is valid given by a client
     bool IsCollateralValid(const CTransaction& txCollateral);
@@ -394,9 +401,9 @@ private:
     bool SendDenominate(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut);
 
     /// Get Masternode updates about the progress of mixing
-    bool UpdatePoolStateOnClient(int nStateNew, int nEntriesCountNew, int nAcceptedEntriesCountNew, int &nErrorID, int nSessionIDNew=0);
+    bool UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew=0);
     // Set the 'state' value, with some logging and capturing when the state changed
-    void SetState(unsigned int nStateNew);
+    void SetState(PoolState nStateNew);
 
     /// As a client, check and sign the final transaction
     bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* node);
@@ -406,8 +413,9 @@ private:
     void RelaySignaturesAnon(std::vector<CTxIn>& vin);
     void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
     void RelayIn(const CDarkSendEntry& entry);
-    void RelayStatus(int nErrorID=MSG_NOERR);
-    void RelayCompletedTransaction(bool fError, int nErrorID);
+    void PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID);
+    void RelayStatus(PoolStatusUpdate nStatusUpdate = STATUS_SET_STATE, PoolMessage nMessageID = MSG_NOERR);
+    void RelayCompletedTransaction(bool fError, PoolMessage nMessageID);
 
 public:
     CMasternode* pSubmittedToMasternode;
@@ -460,8 +468,6 @@ public:
     std::string GetStatus();
 
     int GetEntriesCount() const { return vecEntries.size(); }
-    /// Get the count of the accepted entries
-    int GetCountEntriesAccepted() const { return nAcceptedEntriesCount; }
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(bool fDryRun=false);
@@ -470,7 +476,6 @@ public:
     void CheckForCompleteQueue();
     /// Do we have enough users to take entries?
     bool IsSessionReady(){ return nSessionUsers >= GetMaxPoolTransactions(); }
-
 
     /// Process a new block
     void NewBlock();
