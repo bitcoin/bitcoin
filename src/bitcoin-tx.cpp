@@ -76,7 +76,9 @@ static bool AppInitRawTx(int argc, char* argv[])
         strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
         strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
         strUsage += HelpMessageOpt("outdata=[VALUE:]DATA", _("Add data-based output to TX"));
-        strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
+        strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT(:\"SEGWIT\")(:\"P2SH\")", _("Add raw script output to TX") + ". " +
+            _("Optionally add the \"SEGWIT\" flag to produce a segwit output") + ". " +
+            _("Optionally add the \"P2SH\" flag to wrap the script in a P2SH output."));
         strUsage += HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
             _("This command requires JSON registers:") +
             _("prevtxs=JSON object") + ", " +
@@ -273,21 +275,29 @@ static void MutateTxAddOutData(CMutableTransaction& tx, const string& strInput)
 
 static void MutateTxAddOutScript(CMutableTransaction& tx, const string& strInput)
 {
-    // separate VALUE:SCRIPT in string
-    size_t pos = strInput.find(':');
-    if ((pos == string::npos) ||
-        (pos == 0))
+    // separate VALUE:SCRIPT(:SEGWIT)(:P2SH)
+    std::vector<std::string> vStrInput;
+    boost::split(vStrInput, strInput, boost::is_any_of(":"));
+    if (vStrInput.size() < 2)
         throw runtime_error("TX output missing separator");
 
     // extract and validate VALUE
-    string strValue = strInput.substr(0, pos);
+    string strValue = vStrInput[0];
     CAmount value;
     if (!ParseMoney(strValue, value))
         throw runtime_error("invalid TX output value");
 
     // extract and validate script
-    string strScript = strInput.substr(pos + 1, string::npos);
+    string strScript = vStrInput[1];
     CScript scriptPubKey = ParseScript(strScript); // throws on err
+
+    if (std::find(vStrInput.begin(), vStrInput.end(), "SEGWIT") != vStrInput.end()) {
+      scriptPubKey = GetScriptForWitness(scriptPubKey);
+    }
+    if (std::find(vStrInput.begin(), vStrInput.end(), "P2SH") != vStrInput.end()) {
+      CBitcoinAddress addr(scriptPubKey);
+      scriptPubKey = GetScriptForDestination(addr.Get());
+    }
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
