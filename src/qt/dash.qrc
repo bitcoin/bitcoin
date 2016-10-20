@@ -57,7 +57,8 @@
         <file alias="browse">res/icons/browse.png</file>
     </qresource>
     <qresource prefix="/css">
-        <file alias="drkblue">res/css/drkblue.css</file>
+        <file alias="crown">res/css/crown.css</file>
+        <file alias="logo">res/css/logo.png</file>
     </qresource>	    
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
