@@ -748,13 +748,22 @@ UniValue setexcessiveblock(const UniValue& params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("getexcessiveblock", "") + HelpExampleRpc("getexcessiveblock", ""));
 
+    unsigned int ebs=0;
     if (params[0].isNum())
-        excessiveBlockSize = params[0].get_int64();
+        ebs = params[0].get_int64();
     else {
         string temp = params[0].get_str();
         if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
-        excessiveBlockSize = boost::lexical_cast<unsigned int>(temp);
+        ebs = boost::lexical_cast<unsigned int>(temp);
     }
+
+    if (ebs < maxGeneratedBlock) 
+      {
+      std::ostringstream ret;
+      ret << "Sorry, your maximum mined block (" << maxGeneratedBlock << ") is larger than your proposed excessive size (" << ebs << ").  This would cause you to orphan your own blocks.";    
+      throw runtime_error(ret.str());
+      }
+    excessiveBlockSize = ebs;
 
     if (params[1].isNum())
         excessiveAcceptDepth = params[1].get_int64();
@@ -765,7 +774,9 @@ UniValue setexcessiveblock(const UniValue& params, bool fHelp)
     }
 
     settingsToUserAgentString();
-    return NullUniValue;
+    std::ostringstream ret;
+    ret << "Excessive Block set to " << excessiveBlockSize << " bytes.  Accept Depth set to " << excessiveAcceptDepth << " blocks.";    
+    return UniValue(ret.str());
 }
 
 
