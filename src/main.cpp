@@ -3755,11 +3755,12 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, C
         bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp, &fNewBlock);
         if (pfrom) {
             if (pindex) {
-                LogPrint("block", "recv block %s (%d) peer=%d\n", pblock->GetHash().ToString(), pindex->nHeight, pfrom->id);
+                LogPrint("block", "recv block %s (%d) size=%d peer=%d\n", pblock->GetHash().ToString(), pindex->nHeight,
+                    pfrom->nBlockSize, pfrom->id);
                 mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
                 if (fNewBlock) pfrom->nLastBlockTime = GetTime();
             } else
-                LogPrint("block", "recv block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->id);
+                LogPrint("block", "recv block %s size=%d peer=%d\n", pblock->GetHash().ToString(), pfrom->nBlockSize, pfrom->id);
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret)
@@ -6023,6 +6024,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;
+        pfrom->nBlockSize = vRecv.size(); // Used by ProcessNewBlock() debug
         vRecv >> block;
 
         CValidationState state;
