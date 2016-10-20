@@ -287,6 +287,8 @@ struct CNodeState {
     int64_t nDownloadingSince;
     int nBlocksInFlight;
     int nBlocksInFlightValidHeaders;
+    //! Whether we have requested headers.
+    bool fExpectingHeaders;
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload;
     //! Whether this peer wants invs or headers (when possible) for block announcements.
@@ -323,6 +325,7 @@ struct CNodeState {
         nDownloadingSince = 0;
         nBlocksInFlight = 0;
         nBlocksInFlightValidHeaders = 0;
+        fExpectingHeaders = false;
         fPreferredDownload = false;
         fPreferHeaders = false;
         fPreferHeaderAndIDs = false;
@@ -5334,6 +5337,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     // not a direct successor.
                     pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
                     CNodeState *nodestate = State(pfrom->GetId());
+                    nodestate->fExpectingHeaders = true;
                     if (CanDirectFetch(chainparams.GetConsensus()) &&
                         nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER &&
                         (!IsWitnessEnabled(chainActive.Tip(), chainparams.GetConsensus()) || State(pfrom->GetId())->fHaveWitness)) {
@@ -5697,8 +5701,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (mapBlockIndex.find(cmpctblock.header.hashPrevBlock) == mapBlockIndex.end()) {
             // Doesn't connect (or is genesis), instead of DoSing in AcceptBlockHeader, request deeper headers
-            if (!IsInitialBlockDownload())
+            if (!IsInitialBlockDownload()) {
                 pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), uint256());
+                State(pfrom->id)->fExpectingHeaders = true;
+            }
             return true;
         }
 
@@ -5911,6 +5917,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     headers[0].hashPrevBlock.ToString(),
                     pindexBestHeader->nHeight,
                     pfrom->id, nodestate->nUnconnectingHeaders);
+            nodestate->fExpectingHeaders = true;
             // Set hashLastUnknownBlock for this peer, so that if we
             // eventually get the headers - even from a different peer -
             // we can use this peer to download.
@@ -5937,7 +5944,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     return error("invalid header received");
                 }
             }
+            LogPrint(nodestate->fExpectingHeaders ? "block2" : "block", "recv header %s (%d) peer=%d\n", header.GetHash().ToString(), pindexLast->nHeight, pfrom->id);
         }
+        nodestate->fExpectingHeaders = false;
 
         if (nodestate->nUnconnectingHeaders > 0) {
             LogPrint("net", "peer=%d: resetting nUnconnectingHeaders (%d -> 0)\n", pfrom->id, nodestate->nUnconnectingHeaders);
@@ -5953,6 +5962,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // from there instead.
             LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
             pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
+            nodestate->fExpectingHeaders = true;
         }
 
         bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
@@ -6542,6 +6552,7 @@ bool SendMessages(CNode* pto, CConnman& connman)
                     pindexStart = pindexStart->pprev;
                 LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
                 pto->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexStart), uint256());
+                state.fExpectingHeaders = true;
             }
         }
 
