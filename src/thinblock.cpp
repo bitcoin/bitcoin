@@ -163,7 +163,19 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, std::string strComma
     std::map<uint64_t, uint256> mapPartialTxHash;
     std::vector<uint256> memPoolHashes;
 
+    // Do the orphans first before taking the mempool.cs lock, so that we maintain correct locking order.
     {
+    LOCK(cs_orphancache);
+    for (std::map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
+        uint64_t cheapHash = (*mi).first.GetCheapHash();
+        if (mapPartialTxHash.count(cheapHash)) //Check for collisions
+            collision = true;
+        mapPartialTxHash[cheapHash] = (*mi).first;
+    }
+    }
+    {
+    // We don't have to keep the lock on mempool.cs here to do mempool.queryHashes 
+    // but we take the lock anyway so we don't have to re-lock again later.
     LOCK2(mempool.cs, cs_xval);
     mempool.queryHashes(memPoolHashes);
 
@@ -172,15 +184,6 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, std::string strComma
         if (mapPartialTxHash.count(cheapHash)) //Check for collisions
             collision = true;
         mapPartialTxHash[cheapHash] = memPoolHashes[i];
-    }
-    {
-        LOCK(cs_orphancache);
-        for (std::map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
-            uint64_t cheapHash = (*mi).first.GetCheapHash();
-            if (mapPartialTxHash.count(cheapHash)) //Check for collisions
-                collision = true;
-	    mapPartialTxHash[cheapHash] = (*mi).first;
-        }
     }
     for (std::map<uint256, CTransaction>::iterator mi = mapMissingTx.begin(); mi != mapMissingTx.end(); ++mi) {
 	uint64_t cheapHash = (*mi).first.GetCheapHash();

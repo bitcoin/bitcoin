@@ -127,7 +127,8 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-
+      
+        LOCK(cs_orphancache);
         AddOrphanTx(tx, i);
     }
 
@@ -145,6 +146,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         SignSignature(keystore, txPrev, tx, 0);
 
+        LOCK(cs_orphancache);
         AddOrphanTx(tx, i);
     }
 
@@ -169,6 +171,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
+        LOCK(cs_orphancache);
         BOOST_CHECK(AddOrphanTx(tx, i));  // BU, we keep orphans up to the configured memory limit to help xthin compression so this should succeed whereas it fails in other clients
     }
 
@@ -176,11 +179,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     for (NodeId i = 0; i < 3; i++)
     {
         size_t sizeBefore = mapOrphanTransactions.size();
+        LOCK(cs_orphancache);
         EraseOrphansFor(i);
         BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
     }
 
     // Test LimitOrphanTxSize() function:
+    LOCK(cs_orphancache);
     LimitOrphanTxSize(40);
     BOOST_CHECK(mapOrphanTransactions.size() <= 40);
     LimitOrphanTxSize(10);
