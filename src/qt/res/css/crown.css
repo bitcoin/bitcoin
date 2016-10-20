@@ -1,0 +1,115 @@
+QMainWindow
+{
+background-color: #ffffff;
+}
+
+
+QWidget
+{
+color: #2f2f2f;
+background-color: #ffffff;
+}
+
+
+
+QMenuBar
+{
+color: #a1a1a1;
+background-color: #f2f2f2;
+padding-top: 5px;
+padding-bottom: 5px;
+spacing: 6px;
+}
+
+QMenuBar::item
+{
+color: #a1a1a1;
+background-color: #f2f2f2;
+spacing: 6px;
+}
+
+QMenuBar::item:selected 
+{
+color: #555555;
+background-color: #f2f2f2;
+}
+
+QMenu
+{
+color: #a1a1a1;
+background-color: #f2f2f2;
+}
+
+QMenu::selected
+{
+color: #555555;
+background-color: #f2f2f2;
+}
+
+
+
+
+QToolBar
+{
+color: #a1a1a1;
+background-color: #ffffff;
+/*spacing: 20px;*/
+text-align: left;
+padding-top:20px;
+min-width:200px;
+max-width:200px;
+}
+
+QMainWindow QToolBar#toolbar QToolButton
+{
+text-align: left;
+min-width:200px;
+max-width:200px;
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+QToolButton:hover 
+{
+text-align: left;
+min-width:200px;
+max-width:200px;
+color: #555555;
+background-color: #f2f2f2;
+} 
+
+QToolButton:!hover 
+{
+text-align: left;
+min-width:200px;
+max-width:200px;
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+QToolButton:checked
+{ 
+text-align: left;
+min-width:200px;
+max-width:200px;
+color: #555555;
+background-color: #f2f2f2;
+}
+
+QToolButton:!checked
+{
+text-align: left;
+min-width:200px;
+max-width:200px;
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#spacer2
+{
+background-color: #f2f2f2;
+}
+
+
+
+

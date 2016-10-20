@@ -18,6 +18,7 @@
 #include <QPoint>
 #include <QPushButton>
 #include <QSystemTrayIcon>
+#include <QWidget>
 
 class ClientModel;
 class NetworkStyle;
@@ -115,6 +116,11 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *throneManagerAction;
+
+    QLabel *labelLogo;
+    QWidget *spacer1;
+    QWidget *spacer2;
+    //QLabel *labelVD;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
