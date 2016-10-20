@@ -14,14 +14,15 @@ class CMasternode;
 class CMasternodeBroadcast;
 class CMasternodePing;
 
-static const int MASTERNODE_MIN_MNP_SECONDS       = 10 * 60;
-static const int MASTERNODE_MIN_MNB_SECONDS       =  5 * 60;
-static const int MASTERNODE_MIN_DSEG_SECONDS      = 10 * 60;
-static const int MASTERNODE_EXPIRATION_SECONDS    = 65 * 60;
-static const int MASTERNODE_REMOVAL_SECONDS       = 75 * 60;
-static const int MASTERNODE_CHECK_SECONDS         = 5;
-static const int MASTERNODE_WATCHDOG_MAX_SECONDS  = 2 * 60 * 60;
+static const int MASTERNODE_MIN_MNP_SECONDS         = 10 * 60;
+static const int MASTERNODE_MIN_MNB_SECONDS         =  5 * 60;
+static const int MASTERNODE_EXPIRATION_SECONDS      = 65 * 60;
+static const int MASTERNODE_REMOVAL_SECONDS         = 75 * 60;
+static const int MASTERNODE_CHECK_SECONDS           = 5;
+static const int MASTERNODE_WATCHDOG_MAX_SECONDS    = 2 * 60 * 60;
 
+static const int MASTERNODE_POSE_BAN_SECONDS        = 24 * 60 * 60;
+static const int MASTERNODE_POSE_BAN_MAX_SCORE      = 5;
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
@@ -144,7 +145,8 @@ public:
         MASTERNODE_EXPIRED,
         MASTERNODE_OUTPOINT_SPENT,
         MASTERNODE_REMOVE,
-        MASTERNODE_WATCHDOG_EXPIRED
+        MASTERNODE_WATCHDOG_EXPIRED,
+        MASTERNODE_POSE_BAN
     };
 
     CTxIn vin;
@@ -162,6 +164,7 @@ public:
     int nCacheCollateralBlock;
     int nBlockLastPaid;
     int nProtocolVersion;
+    int nPoSeBanScore;
     bool fAllowMixingTx;
     bool fUnitTest;
 
@@ -193,6 +196,7 @@ public:
         READWRITE(nCacheCollateralBlock);
         READWRITE(nBlockLastPaid);
         READWRITE(nProtocolVersion);
+        READWRITE(nPoSeBanScore);
         READWRITE(fAllowMixingTx);
         READWRITE(fUnitTest);
         READWRITE(mapGovernanceObjectsVotedOn);
@@ -220,6 +224,7 @@ public:
         swap(first.nCacheCollateralBlock, second.nCacheCollateralBlock);
         swap(first.nBlockLastPaid, second.nBlockLastPaid);
         swap(first.nProtocolVersion, second.nProtocolVersion);
+        swap(first.nPoSeBanScore, second.nPoSeBanScore);
         swap(first.fAllowMixingTx, second.fAllowMixingTx);
         swap(first.fUnitTest, second.fUnitTest);
         swap(first.mapGovernanceObjectsVotedOn, second.mapGovernanceObjectsVotedOn);
@@ -246,6 +251,8 @@ public:
 
     bool IsEnabled() { return nActiveState == MASTERNODE_ENABLED; }
     bool IsPreEnabled() { return nActiveState == MASTERNODE_PRE_ENABLED; }
+    bool IsPoSeBanned() { return nActiveState == MASTERNODE_POSE_BAN; }
+    bool IsPoSeVerified() { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
 
     bool IsWatchdogExpired() { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
 
@@ -339,12 +346,75 @@ public:
     static bool Create(CTxIn vin, CService service, CKey keyCollateralAddressNew, CPubKey pubKeyCollateralAddressNew, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet);
     static bool Create(std::string strService, std::string strKey, std::string strTxHash, std::string strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline = false);
 
-    bool CheckAndUpdate(int& nDos);
-    bool CheckInputsAndAdd(int& nDos);
+    bool SimpleCheck(int& nDos);
+    bool Update(CMasternode* pmn, int& nDos);
+    bool CheckOutpoint(int& nDos);
 
     bool Sign(CKey& keyCollateralAddress);
     bool CheckSignature(int& nDos);
     void Relay();
+};
+
+class CMasternodeVerification
+{
+public:
+    CTxIn vin1;
+    CTxIn vin2;
+    CService addr;
+    int nonce;
+    int nBlockHeight;
+    std::vector<unsigned char> vchSig1;
+    std::vector<unsigned char> vchSig2;
+
+    CMasternodeVerification() :
+        vin1(),
+        vin2(),
+        addr(),
+        nonce(0),
+        nBlockHeight(0),
+        vchSig1(),
+        vchSig2()
+        {}
+
+    CMasternodeVerification(CService addr, int nonce, int nBlockHeight) :
+        vin1(),
+        vin2(),
+        addr(addr),
+        nonce(nonce),
+        nBlockHeight(nBlockHeight),
+        vchSig1(),
+        vchSig2()
+        {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin1);
+        READWRITE(vin2);
+        READWRITE(addr);
+        READWRITE(nonce);
+        READWRITE(nBlockHeight);
+        READWRITE(vchSig1);
+        READWRITE(vchSig2);
+    }
+
+    uint256 GetHash() const
+    {
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin1;
+        ss << vin2;
+        ss << addr;
+        ss << nonce;
+        ss << nBlockHeight;
+        return ss.GetHash();
+    }
+
+    void Relay() const
+    {
+        CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
+        RelayInv(inv);
+    }
 };
 
 #endif

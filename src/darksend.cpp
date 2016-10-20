@@ -1578,6 +1578,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- error connecting\n");
                 strAutoDenomResult = _("Error connecting to Masternode.");
                 dsq.nTime = 0; //remove node
+                pmn->nPoSeBanScore++;
                 continue;
             }
         }
@@ -1624,6 +1625,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         } else {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect %s\n", pmn->vin.ToString());
             nTries++;
+            pmn->nPoSeBanScore++;
             continue;
         }
     }

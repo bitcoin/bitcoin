@@ -1880,6 +1880,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // force UpdatedBlockTip to initialize pCurrentBlockIndex for DS, MN payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
+    mnodeman.UpdatedBlockTip(chainActive.Tip());
     darkSendPool.UpdatedBlockTip(chainActive.Tip());
     mnpayments.UpdatedBlockTip(chainActive.Tip());
     masternodeSync.UpdatedBlockTip(chainActive.Tip());

@@ -5,20 +5,13 @@
 #ifndef MASTERNODEMAN_H
 #define MASTERNODEMAN_H
 
-#include "sync.h"
-#include "net.h"
-#include "key.h"
-#include "util.h"
-#include "base58.h"
-#include "main.h"
 #include "masternode.h"
-
-#define MASTERNODES_DUMP_SECONDS               (15*60)
-#define MASTERNODES_DSEG_SECONDS               (3*60*60)
+#include "sync.h"
 
 using namespace std;
 
 class CMasternodeMan;
+
 extern CMasternodeMan mnodeman;
 
 class CMasternodeMan
@@ -26,13 +19,20 @@ class CMasternodeMan
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    static const int MASTERNODES_LAST_PAID_SCAN_BLOCKS  = 100;
+    static const int DSEG_UPDATE_SECONDS        = 3 * 60 * 60;
+
+    static const int LAST_PAID_SCAN_BLOCKS      = 100;
+
+    static const int MIN_POSE_PROTO_VERSION     = 70203;
+    static const int MAX_POSE_RANK              = 10;
+    static const int MAX_POSE_BLOCKS            = 10;
+
 
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
-    // critical section to protect the inner data structures specifically on messaging
-    mutable CCriticalSection cs_process_message;
+    // Keep track of current block index
+    const CBlockIndex *pCurrentBlockIndex;
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
@@ -42,6 +42,8 @@ private:
     std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
     // which Masternodes we've asked for
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
+    // who we asked for the masternode verification
+    std::map<CNetAddr, CMasternodeVerification> mWeAskedForVerification;
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
 
@@ -49,15 +51,18 @@ private:
 
 public:
     // Keep track of all broadcasts I've seen
-    map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+    std::map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
     // Keep track of all pings I've seen
-    map<uint256, CMasternodePing> mapSeenMasternodePing;
-
+    std::map<uint256, CMasternodePing> mapSeenMasternodePing;
+    // Keep track of all verifications I've seen
+    std::map<uint256, CMasternodeVerification> mapSeenMasternodeVerification;
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
     // dummy script pubkey to test masternodes' vins against mempool
     CScript dummyScriptPubkey;
+
+    CMasternodeMan() : nLastWatchdogVoteTime(0), nDsqCount(0) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -83,13 +88,9 @@ public:
         READWRITE(mapSeenMasternodeBroadcast);
         READWRITE(mapSeenMasternodePing);
         if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
-            LogPrintf("CMasternodeMan::SerializationOp - Incompatible format detected, resetting data\n");
             Clear();
         }
     }
-
-    CMasternodeMan();
-    CMasternodeMan(CMasternodeMan& other);
 
     /// Add an entry
     bool Add(CMasternode &mn);
@@ -148,6 +149,13 @@ public:
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
+    void DoFullVerificationStep();
+    void CheckSameAddr();
+    bool SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr);
+    void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
+    void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
+    void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);
+
     /// Return the number of (unique) Masternodes
     int size() { return vMasternodes.size(); }
 
@@ -179,24 +187,20 @@ public:
     }
 
     bool IsWatchdogActive();
-
     void UpdateWatchdogVoteTime(const CTxIn& vin);
-
     void AddGovernanceVote(const CTxIn& vin, uint256 nGovernanceObjectHash);
-
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
     void CheckMasternode(const CTxIn& vin, bool fForce = false);
-
     void CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce = false);
 
     int GetMasternodeState(const CTxIn& vin);
-
     int GetMasternodeState(const CPubKey& pubKeyMasternode);
 
     bool IsMasternodePingedWithin(const CTxIn& vin, int nSeconds, int64_t nTimeToCheckAt = -1);
-
     void SetMasternodeLastPing(const CTxIn& vin, const CMasternodePing& mnp);
+
+    void UpdatedBlockTip(const CBlockIndex *pindex);
 };
 
 #endif

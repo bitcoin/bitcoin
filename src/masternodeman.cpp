@@ -8,6 +8,7 @@
 #include "masternode.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
+#include "netfulfilledman.h"
 #include "util.h"
 #include "addrman.h"
 #include "spork.h"
@@ -16,6 +17,8 @@
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
+
+const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-1";
 
 struct CompareLastPaidBlock
 {
@@ -35,12 +38,14 @@ struct CompareScoreMN
     }
 };
 
-const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-1";
-
-CMasternodeMan::CMasternodeMan() {
-    nDsqCount = 0;
-    nLastWatchdogVoteTime = 0;
-}
+struct CompareByAddr
+{
+    bool operator()(const CMasternode* t1,
+                    const CMasternode* t2) const
+    {
+        return t1->addr < t2->addr;
+    }
+};
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
@@ -151,6 +156,15 @@ void CMasternodeMan::CheckAndRemove(bool fForceExpiredRemoval)
         }
     }
 
+    std::map<CNetAddr, CMasternodeVerification>::iterator itv1 = mWeAskedForVerification.begin();
+    while(itv1 != mWeAskedForVerification.end()){
+        if(itv1->second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS) {
+            mWeAskedForVerification.erase(itv1++);
+        } else {
+            ++itv1;
+        }
+    }
+
     // remove expired mapSeenMasternodeBroadcast
     map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
     while(it3 != mapSeenMasternodeBroadcast.end()){
@@ -173,6 +187,16 @@ void CMasternodeMan::CheckAndRemove(bool fForceExpiredRemoval)
         }
     }
 
+    // remove expired mapSeenMasternodeVerification
+    std::map<uint256, CMasternodeVerification>::iterator itv2 = mapSeenMasternodeVerification.begin();
+    while(itv2 != mapSeenMasternodeVerification.end()){
+        if((*itv2).second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS){
+            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode verification: hash=%s\n", (*itv2).first.ToString());
+            mapSeenMasternodeVerification.erase(itv2++);
+        } else {
+            ++itv2;
+        }
+    }
 }
 
 void CMasternodeMan::Clear()
@@ -250,7 +274,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
     }
     
     pnode->PushMessage(NetMsgType::DSEG, CTxIn());
-    int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
+    int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
 }
 
@@ -670,7 +694,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                         return;
                     }
                 }
-                int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
+                int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
                 mAskedUsForMasternodeList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
@@ -705,6 +729,420 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
         // smth weird happen - someone asked us for vin we have no idea about?
         LogPrint("masternode", "CMasternodeMan::ProcessMessage -- DSEG -- No invs sent to peer %d\n", pfrom->id);
+
+    } else if (strCommand == NetMsgType::MNVERIFY) { // Masternode Verify
+
+        CMasternodeVerification mnv;
+        vRecv >> mnv;
+
+        if(mnv.vchSig1.empty()) {
+            // CASE 1: someone asked me to verify myself /IP we are using/
+            SendVerifyReply(pfrom, mnv);
+        } else if (mnv.vchSig2.empty()) {
+            // CASE 2: we _probably_ got verification we requested from some masternode
+            ProcessVerifyReply(pfrom, mnv);
+        } else {
+            // CASE 3: we _probably_ got verification broadcast signed by some masternode which verified another one
+            ProcessVerifyBroadcast(pfrom, mnv);
+        }
+    }
+}
+
+void CMasternodeMan::DoFullVerificationStep()
+{
+    if(activeMasternode.vin == CTxIn()) return;
+
+    std::vector<std::pair<int, CMasternode> > vecMasternodeRanks = GetMasternodeRanks(pCurrentBlockIndex->nHeight - 1, MIN_POSE_PROTO_VERSION);
+
+    LOCK(cs);
+
+    int nCount = 0;
+    int nCountMax = std::max(10, (int)vMasternodes.size() / 100); // verify at least 10 masternode at once but at most 1% of all known masternodes
+
+    int nMyRank = -1;
+    int nRanksTotal = (int)vecMasternodeRanks.size();
+
+    // send verify requests only if we are in top MAX_POSE_RANK
+    std::vector<std::pair<int, CMasternode> >::iterator it = vecMasternodeRanks.begin();
+    while(it != vecMasternodeRanks.end()) {
+        if(it->first > MAX_POSE_RANK) {
+            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Must be in top %d to send verify request\n",
+                        (int)MAX_POSE_RANK);
+            return;
+        }
+        if(it->second.vin == activeMasternode.vin) {
+            nMyRank = it->first;
+            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Found self at rank %d/%d, verifying up to %d masternodes\n",
+                        nMyRank, nRanksTotal, nCountMax);
+            break;
+        }
+        ++it;
+    }
+
+    // edge case: list is too short and this masternode is not enabled
+    if(nMyRank == -1) return;
+
+    // send verify requests to up to nCountMax masternodes starting from
+    // (MAX_POSE_RANK + nCountMax * (nMyRank - 1) + 1)
+    int nOffset = MAX_POSE_RANK + nCountMax * (nMyRank - 1);
+    if(nOffset >= (int)vecMasternodeRanks.size()) return;
+
+    std::vector<CMasternode*> vSortedByAddr;
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        vSortedByAddr.push_back(&mn);
+    }
+
+    sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
+
+    it = vecMasternodeRanks.begin() + nOffset;
+    while(it != vecMasternodeRanks.end()) {
+        if(it->second.IsPoSeVerified() || it->second.IsPoSeBanned()) {
+            LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Already %s%s%s masternode %s address %s, skipping...\n",
+                        it->second.IsPoSeVerified() ? "verified" : "",
+                        it->second.IsPoSeVerified() && it->second.IsPoSeBanned() ? " and " : "",
+                        it->second.IsPoSeBanned() ? "banned" : "",
+                        it->second.vin.prevout.ToStringShort(), it->second.addr.ToString());
+            ++it;
+            continue;
+        }
+        LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
+                    it->second.vin.prevout.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
+        if(SendVerifyRequest((CAddress)it->second.addr, vSortedByAddr)) {
+            nCount++;
+            if(nCount >= nCountMax) break;
+        }
+        ++it;
+    }
+
+    LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Sent verification requests to %d masternodes\n", nCount);
+}
+
+void CMasternodeMan::CheckSameAddr()
+{
+    if(!masternodeSync.IsSynced() || vMasternodes.empty()) return;
+
+    std::vector<CMasternode*> vBan;
+    std::vector<CMasternode*> vSortedByAddr;
+
+    {
+        LOCK(cs);
+
+        CMasternode* pprevMasternode = NULL;
+        CMasternode* pverifiedMasternode = NULL;
+
+        BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+            vSortedByAddr.push_back(&mn);
+        }
+
+        sort(vSortedByAddr.begin(), vSortedByAddr.end(), CompareByAddr());
+
+        BOOST_FOREACH(CMasternode* pmn, vSortedByAddr) {
+            // check only (pre)enabled masternodes
+            if(!pmn->IsEnabled() && !pmn->IsPreEnabled()) continue;
+            // initial step
+            if(!pprevMasternode) {
+                pprevMasternode = pmn;
+                pverifiedMasternode = pmn->IsPoSeVerified() ? pmn : NULL;
+                continue;
+            }
+            // second+ step
+            if(pmn->addr == pprevMasternode->addr) {
+                if(pverifiedMasternode) {
+                    // another masternode with the same ip is verified, ban this one
+                    vBan.push_back(pmn);
+                } else if(pmn->IsPoSeVerified()) {
+                    // this masternode with the same ip is verified, ban previous one
+                    vBan.push_back(pprevMasternode);
+                    // and keep a reference to be able to ban following masternodes with the same ip
+                    pverifiedMasternode = pmn;
+                }
+            } else {
+                pverifiedMasternode = pmn->IsPoSeVerified() ? pmn : NULL;
+            }
+            pprevMasternode = pmn;
+        }
+    }
+
+    // ban duplicates
+    BOOST_FOREACH(CMasternode* pmn, vBan) {
+        pmn->nPoSeBanScore++;
+    }
+}
+
+bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr)
+{
+    if(netfulfilledman.HasFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
+        // we already asked for verification, not a good idea to do this too often, skip it
+        LogPrint("masternode", "CMasternodeMan::SendVerifyRequest -- too many requests, skipping... addr=%s\n", addr.ToString());
+        return false;
+    }
+
+    CNode* pnode = ConnectNode(addr, NULL, true);
+    if(pnode != NULL) {
+        netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
+        // use random nonce, store it and require node to reply with correct one later
+        CMasternodeVerification mnv(addr, GetInsecureRand(999999), pCurrentBlockIndex->nHeight - 1);
+        mWeAskedForVerification[addr] = mnv;
+        LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
+        pnode->PushMessage(NetMsgType::MNVERIFY, mnv);
+        return true;
+    } else {
+        // can't connect, add some PoSe "ban score" to all masternodes with given addr
+        bool fFound = false;
+        BOOST_FOREACH(CMasternode* pmn, vSortedByAddr) {
+            if(pmn->addr != addr) {
+                if(fFound) break;
+                continue;
+            }
+            fFound = true;
+            pmn->nPoSeBanScore++;
+        }
+        return false;
+    }
+}
+
+void CMasternodeMan::SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv)
+{
+    // only masternodes can sign this, why would someone ask regular node?
+    if(!fMasterNode) {
+        // do not ban, malicious node might be using my IP
+        // and trying to confuse the node which tries to verify it
+        return;
+    }
+
+    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply")) {
+        // peer should not ask us that often
+        LogPrintf("MasternodeMan::SendVerifyReply -- ERROR: peer already asked me recently, peer=%d\n", pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+        LogPrintf("MasternodeMan::SendVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->id);
+        return;
+    }
+
+    std::string strMessage = strprintf("%s%d%s", activeMasternode.service.ToString(false), mnv.nonce, blockHash.ToString());
+
+    if(!darkSendSigner.SignMessage(strMessage, mnv.vchSig1, activeMasternode.keyMasternode)) {
+        LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
+        return;
+    }
+
+    std::string strError;
+
+    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig1, strMessage, strError)) {
+        LogPrintf("MasternodeMan::SendVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
+        return;
+    }
+
+    pnode->PushMessage(NetMsgType::MNVERIFY, mnv);
+    netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply");
+}
+
+void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv)
+{
+    std::string strError;
+
+    // did we even ask for it? if that's the case we should have matching fulfilled request
+    if(!netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: we didn't ask for verification of %s, peer=%d\n", pnode->addr.ToString(), pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    // Received nonce for a known address must match the one we sent
+    if(mWeAskedForVerification[pnode->addr].nonce != mnv.nonce) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: wrong nounce: requested=%d, received=%d, peer=%d\n",
+                    mWeAskedForVerification[pnode->addr].nonce, mnv.nonce, pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    // Received nBlockHeight for a known address must match the one we sent
+    if(mWeAskedForVerification[pnode->addr].nBlockHeight != mnv.nBlockHeight) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: wrong nBlockHeight: requested=%d, received=%d, peer=%d\n",
+                    mWeAskedForVerification[pnode->addr].nBlockHeight, mnv.nBlockHeight, pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+        // this shouldn't happen...
+        LogPrintf("MasternodeMan::ProcessVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->id);
+        return;
+    }
+
+    // we already verified this address, why node is spamming?
+    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-done")) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: already verified %s recently\n", pnode->addr.ToString());
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    {
+        LOCK(cs);
+
+        CMasternode* prealMasternode = NULL;
+        std::vector<CMasternode*> vpMasternodesToBan;
+        std::vector<CMasternode>::iterator it = vMasternodes.begin();
+        std::string strMessage1 = strprintf("%s%d%s", pnode->addr.ToString(false), mnv.nonce, blockHash.ToString());
+        while(it != vMasternodes.end()) {
+            if((CAddress)it->addr == pnode->addr) {
+                if(darkSendSigner.VerifyMessage(it->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
+                    // found it!
+                    prealMasternode = &(*it);
+                    if(!it->IsPoSeVerified()) {
+                            it->nPoSeBanScore--;
+                    }
+                    netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-done");
+
+                    // we can only broadcast it if we are an activated masternode
+                    if(activeMasternode.vin == CTxIn()) continue;
+                    // update ...
+                    mnv.addr = it->addr;
+                    mnv.vin1 = it->vin;
+                    mnv.vin2 = activeMasternode.vin;
+                    std::string strMessage2 = strprintf("%s%d%s%s%s", mnv.addr.ToString(false), mnv.nonce, blockHash.ToString(),
+                                            mnv.vin1.prevout.ToStringShort(), mnv.vin2.prevout.ToStringShort());
+                    // ... and sign it
+                    if(!darkSendSigner.SignMessage(strMessage2, mnv.vchSig2, activeMasternode.keyMasternode)) {
+                        LogPrintf("MasternodeMan::ProcessVerifyReply -- SignMessage() failed\n");
+                        return;
+                    }
+
+                    std::string strError;
+
+                    if(!darkSendSigner.VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig2, strMessage2, strError)) {
+                        LogPrintf("MasternodeMan::ProcessVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
+                        return;
+                    }
+
+                    mWeAskedForVerification[pnode->addr] = mnv;
+                    mnv.Relay();
+
+                } else {
+                    vpMasternodesToBan.push_back(&(*it));
+                }
+            }
+            ++it;
+        }
+        // no real masternode found?...
+        if(!prealMasternode) {
+            // this should never be the case normally,
+            // only if someone is trying to game the system in some way or smth like that
+            LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: no real masternode found for addr %s\n", pnode->addr.ToString());
+            Misbehaving(pnode->id, 20);
+            return;
+        }
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- verified real masternode %s for addr %s\n",
+                    prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString());
+        // increase ban score for everyone else
+        BOOST_FOREACH(CMasternode* pmn, vpMasternodesToBan) {
+            pmn->nPoSeBanScore++;
+            LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- increased PoSe ban score for %s addr %s, new score %d\n",
+                        prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString(), pmn->nPoSeBanScore);
+        }
+        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score incresed for %d fake masternodes, addr %s\n",
+                    (int)vpMasternodesToBan.size(), pnode->addr.ToString());
+    }
+}
+
+void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv)
+{
+    std::string strError;
+
+    if(mapSeenMasternodeVerification.find(mnv.GetHash()) != mapSeenMasternodeVerification.end()) {
+        // we already have one
+        return;
+    }
+    mapSeenMasternodeVerification[mnv.GetHash()] = mnv;
+
+    // we don't care about history
+    if(mnv.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS) {
+        LogPrint("masternode", "MasternodeMan::ProcessVerifyBroadcast -- Outdated: current block %d, verification block %d, peer=%d\n",
+                    pCurrentBlockIndex->nHeight, mnv.nBlockHeight, pnode->id);
+        return;
+    }
+
+    if(mnv.vin1.prevout == mnv.vin2.prevout) {
+        LogPrint("masternode", "MasternodeMan::ProcessVerifyBroadcast -- ERROR: same vins %s, peer=%d\n",
+                    mnv.vin1.prevout.ToStringShort(), pnode->id);
+        // that was NOT a good idea to cheat and verify itself,
+        // ban the node we received such message from
+        Misbehaving(pnode->id, 100);
+        return;
+    }
+
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+        // this shouldn't happen...
+        LogPrintf("MasternodeMan::ProcessVerifyBroadcast -- Can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->id);
+        return;
+    }
+
+    int nRank = GetMasternodeRank(mnv.vin2, mnv.nBlockHeight, MIN_POSE_PROTO_VERSION);
+    if(nRank < MAX_POSE_RANK) {
+        LogPrint("masternode", "MasternodeMan::ProcessVerifyBroadcast -- Mastrernode is not in top %d, current rank %d, peer=%d\n",
+                    (int)MAX_POSE_RANK, nRank, pnode->id);
+        return;
+    }
+
+    {
+        LOCK(cs);
+
+        std::string strMessage1 = strprintf("%s%d%s", mnv.addr.ToString(false), mnv.nonce, blockHash.ToString());
+        std::string strMessage2 = strprintf("%s%d%s%s%s", mnv.addr.ToString(false), mnv.nonce, blockHash.ToString(),
+                                mnv.vin1.prevout.ToStringShort(), mnv.vin2.prevout.ToStringShort());
+
+        CMasternode* pmn1 = Find(mnv.vin1);
+        if(!pmn1) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- can't find masternode1 %s\n", mnv.vin1.prevout.ToStringShort());
+            return;
+        }
+
+        CMasternode* pmn2 = Find(mnv.vin2);
+        if(!pmn2) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- can't find masternode2 %s\n", mnv.vin2.prevout.ToStringShort());
+            return;
+        }
+
+        if(pmn1->addr != mnv.addr) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- addr %s do not match %s\n", mnv.addr.ToString(), pnode->addr.ToString());
+            return;
+        }
+
+        if(darkSendSigner.VerifyMessage(pmn1->pubKeyMasternode, mnv.vchSig1, strMessage1, strError)) {
+            LogPrintf("MasternodeMan::ProcessVerifyBroadcast -- VerifyMessage() for masternode1 failed, error: %s\n", strError);
+            return;
+        }
+
+        if(darkSendSigner.VerifyMessage(pmn2->pubKeyMasternode, mnv.vchSig2, strMessage2, strError)) {
+            LogPrintf("MasternodeMan::ProcessVerifyBroadcast -- VerifyMessage() for masternode2 failed, error: %s\n", strError);
+            return;
+        }
+
+        if(!pmn1->IsPoSeVerified()) {
+            pmn1->nPoSeBanScore--;
+        }
+        mnv.Relay();
+
+        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- verified masternode %s for addr %s\n",
+                    pmn1->vin.prevout.ToStringShort(), pnode->addr.ToString());
+
+        // increase ban score for everyone else with the same addr
+        int nCount = 0;
+        BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+            if(mn.addr != mnv.addr || mn.vin.prevout == mnv.vin1.prevout) continue;
+            mn.nPoSeBanScore++;
+            nCount++;
+            LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- increased PoSe ban score for %s addr %s, new score %d\n",
+                        mn.vin.prevout.ToStringShort(), mn.addr.ToString(), mn.nPoSeBanScore);
+        }
+        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score incresed for %d fake masternodes, addr %s\n",
+                    nCount, pnode->addr.ToString());
     }
 }
 
@@ -778,49 +1216,71 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
     }
 }
 
-bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos) {
+bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos)
+{
     LOCK(cs);
+
     nDos = 0;
-    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.vin.prevout.ToStringShort());
 
     if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
         return true;
     }
-    mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+    mapSeenMasternodeBroadcast.insert(std::make_pair(mnb.GetHash(), mnb));
 
-    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
-    // We check addr before both initial mnb and update
-    if(!mnb.IsValidNetAddr()) {
-        LogPrintf("CMasternodeBroadcast::CheckMnbAndUpdateMasternodeList -- Invalid addr, rejected: masternode=%s  sigTime=%lld  addr=%s\n",
-                    mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s new\n", mnb.vin.prevout.ToStringShort());
+
+    if(!mnb.SimpleCheck(nDos)) {
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- SimpleCheck() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
         return false;
     }
 
-    if(!mnb.CheckAndUpdate(nDos)){
-        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
-        return false;
-    }
-
-    // make sure it's still unspent
-    //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-    if(mnb.CheckInputsAndAdd(nDos)) {
-        masternodeSync.AddedMasternodeList();
+    // search Masternode list
+    CMasternode* pmn = Find(mnb.vin);
+    if(pmn) {
+        if(!mnb.Update(pmn, nDos)) {
+            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
+            return false;
+        }
     } else {
-        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Rejected Masternode entry %s\n", mnb.addr.ToString());
-        return false;
+        if(mnb.CheckOutpoint(nDos)) {
+            Add(mnb);
+            masternodeSync.AddedMasternodeList();
+            // if it matches our Masternode privkey...
+            if(fMasterNode && mnb.pubKeyMasternode == activeMasternode.pubKeyMasternode) {
+                mnb.nPoSeBanScore = -MASTERNODE_POSE_BAN_MAX_SCORE;
+                if(mnb.nProtocolVersion == PROTOCOL_VERSION) {
+                    // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+                    LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Got NEW Masternode entry: masternode=%s  sigTime=%lld  addr=%s\n",
+                                mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
+                    activeMasternode.ManageState();
+                } else {
+                    // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
+                    // but also do not ban the node we get this message from
+                    LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, PROTOCOL_VERSION);
+                    return false;
+                }
+            }
+            mnb.Relay();
+        } else {
+            LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Rejected Masternode entry: %s  addr=%s\n", mnb.vin.prevout.ToStringShort(), mnb.addr.ToString());
+            return false;
+        }
     }
 
     return true;
 }
 
-void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex) {
+void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex)
+{
     LOCK(cs);
+
     if(fLiteMode) return;
 
     static bool IsFirstRun = true;
     // Do full scan on first run or if we are not a masternode
     // (MNs should update this info on every block, so limited scan should be enough for them)
-    int nMaxBlocksToScanBack = (IsFirstRun || !fMasterNode) ? mnpayments.GetStorageLimit() : MASTERNODES_LAST_PAID_SCAN_BLOCKS;
+    int nMaxBlocksToScanBack = (IsFirstRun || !fMasterNode) ? mnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
 
     // LogPrint("mnpayments", "CMasternodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
     //                         pindex->nHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
@@ -933,5 +1393,19 @@ void CMasternodeMan::SetMasternodeLastPing(const CTxIn& vin, const CMasternodePi
     uint256 hash = mnb.GetHash();
     if(mapSeenMasternodeBroadcast.count(hash)) {
         mapSeenMasternodeBroadcast[hash].lastPing = mnp;
+    }
+}
+
+void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
+{
+    pCurrentBlockIndex = pindex;
+    LogPrint("masternode", "CMasternodeMan::UpdatedBlockTip -- pCurrentBlockIndex->nHeight=%d\n", pCurrentBlockIndex->nHeight);
+
+    CheckSameAddr();
+
+    if(fMasterNode) {
+        DoFullVerificationStep();
+        // normal wallet does not need to update this every block, doing update on rpc call should be enough
+        UpdateLastPaid(pindex);
     }
 }
