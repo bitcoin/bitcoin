@@ -1125,8 +1125,17 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     }
 
     extern boost::atomic<bool> flexTransActive;
-    if (flexTransActive && txTo.nVersion == 4)
-        return txTo.GetHash();
+    if (flexTransActive && txTo.nVersion == 4) {
+        CHashWriter ss(SER_GETHASH, 0);
+        ss << txTo.GetHash();
+        ss << txTo.vin[nIn].prevout;
+        ss << static_cast<const CScriptBase&>(scriptCode);
+        // ss << amount;
+        ss << txTo.vin[nIn].nSequence;
+        ss << nHashType;
+        return ss.GetHash();
+    }
+
     // Wrapper to serialize only the necessary parts of the transaction being signed
     CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
 
