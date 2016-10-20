@@ -759,6 +759,23 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
         return false;
     }
 
+    {
+        LOCK(cs_main);
+        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+        if (mi == mapBlockIndex.end()) {
+            LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, unknown block hash: masternode=%s blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
+            // maybe we stuck or forked so we shouldn't ban this node, just fail to accept this ping
+            // TODO: or should we also request this block?
+            return false;
+        }
+        if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
+            LogPrintf("CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
+            // Do nothing here (no Masternode update, no mnping relay)
+            // Let this node to be visible but fail to accept mnping
+            return false;
+        }
+    }
+
     if (fCheckSigTimeOnly) {
         CMasternode* pmn = mnodeman.Find(vin);
         if (pmn) return CheckSignature(pmn->pubKeyMasternode, nDos);
@@ -787,23 +804,6 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
     }
 
     if (!CheckSignature(pmn->pubKeyMasternode, nDos)) return false;
-
-    {
-        LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if (mi == mapBlockIndex.end()) {
-            LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Masternode is unknown: masternode=%s blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
-            // maybe we stuck so we shouldn't ban this node, just fail to accept it
-            // TODO: or should we also request this block?
-            return false;
-        }
-        if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
-            LogPrintf("CMasternodePing::CheckAndUpdate -- Masternode is too old: masternode=%s  blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
-            // Do nothing here (no Masternode update, no mnping relay)
-            // Let this node to be visible but fail to accept mnping
-            return false;
-        }
-    }
 
     // so, ping seems to be ok, let's store it
     LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Masternode ping accepted, masternode=%s\n", vin.prevout.ToStringShort());
