@@ -297,6 +297,7 @@ Thanks to everyone who directly contributed to this release:
 - crowning-
 - Dagur Valberg Johannsson
 - David A. Harding
+- Eric Lombrozo
 - Ethan Heilman
 - fanquake
 - Gaurav Rana
