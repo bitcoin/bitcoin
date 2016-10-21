@@ -846,15 +846,15 @@ Indirizzo: %4
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
-        <translation>Questa opzione è la più veloce e ti costerà ~0.025DRK circa per anonimizzare 1000DRK</translation>
+        <translation>Questa opzione è la più veloce e ti costerà ~0.025 CRW circa per anonimizzare 1000 CRW</translation>
     </message>
     <message>
         <source>This option is moderately fast and will cost about 0.05 CRW to anonymize 10000 CRW</source>
-        <translation>Questa opzione è moderatamente veloce e costerà 0.05DRK circa per anonimizzare 1000DRK</translation>
+        <translation>Questa opzione è moderatamente veloce e costerà 0.05 CRW circa per anonimizzare 1000 CRW</translation>
     </message>
     <message>
         <source>0.1 CRW per 10000 CRW you anonymize.</source>
-        <translation>0.1DRK ogni 1000DRK anonimizzati.</translation>
+        <translation>0.1 CRW ogni 1000 CRW anonimizzati.</translation>
     </message>
     <message>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>

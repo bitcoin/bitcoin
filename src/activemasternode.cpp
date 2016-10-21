@@ -8,7 +8,7 @@
 #include "spork.h"
 
 //
-// Bootup the Masternode, look for a 1000DRK input and register on the network
+// Bootup the Masternode, look for a 10000 CRW input and register on the network
 //
 void CActiveMasternode::ManageStatus()
 {    
