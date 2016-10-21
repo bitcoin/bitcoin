@@ -13,7 +13,7 @@
 #include "txmempool.h"
 #include "walletmodel.h"
 
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include "init.h"
 #include "main.h" // For minRelayTxFee
 #include "wallet/wallet.h"
