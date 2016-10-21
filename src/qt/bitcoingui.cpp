@@ -306,7 +306,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    throneManagerAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Thrones"), this);
+    throneManagerAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
     throneManagerAction->setStatusTip(tr("Show Thrones status and configure your nodes."));
     throneManagerAction->setToolTip(historyAction->statusTip());
     throneManagerAction->setCheckable(true);

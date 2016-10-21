@@ -60,13 +60,14 @@ min-width:200px;
 max-width:200px;
 }
 
-QMainWindow QToolBar#toolbar QToolButton
+QToolButton
 {
 text-align: left;
 min-width:200px;
 max-width:200px;
 color: #a1a1a1;
 background-color: #ffffff;
+border: none;
 }
 
 QToolButton:hover 
@@ -76,6 +77,7 @@ min-width:200px;
 max-width:200px;
 color: #555555;
 background-color: #f2f2f2;
+border: none;
 } 
 
 QToolButton:!hover 
@@ -85,7 +87,9 @@ min-width:200px;
 max-width:200px;
 color: #a1a1a1;
 background-color: #ffffff;
+border: none;
 }
+
 
 QToolButton:checked
 { 
@@ -94,7 +98,9 @@ min-width:200px;
 max-width:200px;
 color: #555555;
 background-color: #f2f2f2;
+border: none;
 }
+
 
 QToolButton:!checked
 {
@@ -103,13 +109,7 @@ min-width:200px;
 max-width:200px;
 color: #a1a1a1;
 background-color: #ffffff;
+border: none;
 }
-
-#spacer2
-{
-background-color: #f2f2f2;
-}
-
-
 
 
