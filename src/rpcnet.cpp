@@ -81,9 +81,9 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
 
 UniValue getpeerinfo(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getpeerinfo\n"
+            "getpeerinfo [peer IP address]\n"
             "\nReturns data about each connected network node as a json array of objects.\n"
             "\nResult:\n"
             "[\n"
@@ -125,8 +125,17 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
     CopyNodeStats(vstats);
 
     UniValue ret(UniValue::VARR);
+    CNode* node = NULL;
+    if (params.size() > 0)  // BU allow params to this RPC call
+      {
+	string nodeName = params[0].get_str();
+        node = FindLikelyNode(nodeName);
+        if (!node) throw runtime_error("Unknown node");        
+      }
 
     BOOST_FOREACH(const CNodeStats& stats, vstats) {
+      if (!node || (node->id == stats.nodeid))
+	{
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
@@ -166,6 +175,7 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("whitelisted", stats.fWhitelisted));
 
         ret.push_back(obj);
+	}
     }
 
     return ret;

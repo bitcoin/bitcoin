@@ -61,6 +61,11 @@ static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 // Replace Core's ComputeBlockVersion
 int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime);
 
+// This API finds a near match to the specified IP address, for example you can
+// leave the port off and it will find the first match to that IP.  This is
+// useful for the RPC calls.
+CNode* FindLikelyNode(const std::string& addrName);
+
 // process incoming unsolicited block
 void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
 
