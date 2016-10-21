@@ -14,6 +14,8 @@ from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.script import CScript, OP_TRUE
 
+VB_TOP_BITS = 0x20000000
+
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
 class TestNode(NodeConnCB):
     def __init__(self):
@@ -106,7 +108,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
-        block.nVersion = 4
+        block.nVersion = VB_TOP_BITS
         if segwit:
             add_witness_commitment(block)
         block.solve()
