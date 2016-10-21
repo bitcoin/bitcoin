@@ -5828,29 +5828,34 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         BlockTransactions resp;
         vRecv >> resp;
 
-        LOCK(cs_main);
-
-        map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator it = mapBlocksInFlight.find(resp.blockhash);
-        if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock ||
-                it->second.first != pfrom->GetId()) {
-            LogPrint("net", "Peer %d sent us block transactions for block we weren't expecting\n", pfrom->id);
-            return true;
-        }
-
-        PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
         CBlock block;
-        ReadStatus status = partialBlock.FillBlock(block, resp.txn);
-        if (status == READ_STATUS_INVALID) {
-            MarkBlockAsReceived(resp.blockhash); // Reset in-flight state in case of whitelist
-            Misbehaving(pfrom->GetId(), 100);
-            LogPrintf("Peer %d sent us invalid compact block/non-matching block transactions\n", pfrom->id);
-            return true;
-        } else if (status == READ_STATUS_FAILED) {
-            // Might have collided, fall back to getdata now :(
-            std::vector<CInv> invs;
-            invs.push_back(CInv(MSG_BLOCK | GetFetchFlags(pfrom, chainActive.Tip(), chainparams.GetConsensus()), resp.blockhash));
-            pfrom->PushMessage(NetMsgType::GETDATA, invs);
-        } else {
+        bool fBlockRead = false;
+        {
+            LOCK(cs_main);
+
+            map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator it = mapBlocksInFlight.find(resp.blockhash);
+            if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock ||
+                    it->second.first != pfrom->GetId()) {
+                LogPrint("net", "Peer %d sent us block transactions for block we weren't expecting\n", pfrom->id);
+                return true;
+            }
+
+            PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
+            ReadStatus status = partialBlock.FillBlock(block, resp.txn);
+            if (status == READ_STATUS_INVALID) {
+                MarkBlockAsReceived(resp.blockhash); // Reset in-flight state in case of whitelist
+                Misbehaving(pfrom->GetId(), 100);
+                LogPrintf("Peer %d sent us invalid compact block/non-matching block transactions\n", pfrom->id);
+                return true;
+            } else if (status == READ_STATUS_FAILED) {
+                // Might have collided, fall back to getdata now :(
+                std::vector<CInv> invs;
+                invs.push_back(CInv(MSG_BLOCK | GetFetchFlags(pfrom, chainActive.Tip(), chainparams.GetConsensus()), resp.blockhash));
+                pfrom->PushMessage(NetMsgType::GETDATA, invs);
+            } else
+                fBlockRead = true;
+        } // Don't hold cs_main when we call into ProcessNewBlock
+        if (fBlockRead) {
             CValidationState state;
             ProcessNewBlock(state, chainparams, pfrom, &block, false, NULL);
             int nDoS;
