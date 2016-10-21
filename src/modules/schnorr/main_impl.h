@@ -24,6 +24,7 @@ int secp256k1_schnorr_sign(const secp256k1_context* ctx, unsigned char *sig64, c
     secp256k1_scalar sec, non;
     int ret = 0;
     int overflow = 0;
+    unsigned char nonce32[32];
     unsigned int count = 0;
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
@@ -36,13 +37,11 @@ int secp256k1_schnorr_sign(const secp256k1_context* ctx, unsigned char *sig64, c
 
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
     while (1) {
-        unsigned char nonce32[32];
         ret = noncefp(nonce32, msg32, seckey, secp256k1_schnorr_algo16, (void*)noncedata, count);
         if (!ret) {
             break;
         }
         secp256k1_scalar_set_b32(&non, nonce32, &overflow);
-        memset(nonce32, 0, 32);
         if (!secp256k1_scalar_is_zero(&non) && !overflow) {
             if (secp256k1_schnorr_sig_sign(&ctx->ecmult_gen_ctx, sig64, &sec, &non, NULL, secp256k1_schnorr_msghash_sha256, msg32)) {
                 break;
@@ -53,6 +52,7 @@ int secp256k1_schnorr_sign(const secp256k1_context* ctx, unsigned char *sig64, c
     if (!ret) {
         memset(sig64, 0, 64);
     }
+    memset(nonce32, 0, 32);
     secp256k1_scalar_clear(&non);
     secp256k1_scalar_clear(&sec);
     return ret;
