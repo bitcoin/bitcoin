@@ -101,13 +101,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     spinnerFrame(0)
 {
     /* Open CSS when configured */
-    //this->setStyleSheet(GUIUtil::loadStyleSheet());
-
-    // load stylesheet
-    QFile qss(":css/crown");
-    qss.open(QFile::ReadOnly);
-    qApp->setStyleSheet(qss.readAll());
-    qss.close();
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
@@ -145,28 +139,10 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 #ifdef ENABLE_WALLET
     if(enableWallet)
     {
-        //create spacer between toolbar and walletframe
-        //QLabel *labelVD = new QLabel(this);
-        //labelVD->move(200, 30);
-        //labelVD->setFixedWidth(10);
-        //labelVD->setFixedHeight(300);
-        //labelVD->setObjectName("lVD");
-        //labelVD->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-        QWidget* spacer2 = new QWidget(this);
-        spacer2->move(200, 30);
-        spacer2->setFixedWidth(10);
-        spacer2->setMinimumHeight(900);
-        spacer2->setObjectName("spacer2");
-        spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-
         /** Create wallet frame and make it the centralish widget */
         walletFrame = new WalletFrame(this);
-        //setCentralWidget(walletFrame);
-        walletFrame->setFixedWidth(650);
-        walletFrame->setFixedHeight(500);
-        walletFrame->move(210,30); 
+        walletFrame->setMinimumWidth(700);
+        walletFrame->setMinimumHeight(500);
     } else
 #endif // ENABLE_WALLET
     {
@@ -512,12 +488,13 @@ void BitcoinGUI::createToolBars()
         //labelLogo->setPixmap(QPixmap(":css/logo"));
         //labelLogo->setObjectName("labelLogo");
         //labelLogo->move(0,30);
-        
-        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+
+        QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
         toolbar->setObjectName("toolbar");
-        addToolBar(Qt::LeftToolBarArea, toolbar); 
-        toolbar->setMovable(false);  
+        addToolBar(Qt::LeftToolBarArea, toolbar);
+        toolbar->setMovable(false);
         toolbar->setFixedWidth(200);
+        toolbar->setMinimumHeight(500);
 
         QLabel *labelLogo = new QLabel(toolbar);
         labelLogo->setFixedWidth(200);
@@ -528,8 +505,7 @@ void BitcoinGUI::createToolBars()
         QWidget* spacer1 = new QWidget(toolbar);
         spacer1->setFixedWidth(200);
         spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        
-    
+
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addWidget(labelLogo);
         toolbar->addAction(overviewAction);
@@ -537,6 +513,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
         toolbar->addAction(throneManagerAction);
+        toolbar->setMovable(false); // remove unused icon in upper left corner
         toolbar->addWidget(spacer1);
         overviewAction->setChecked(true);
 
@@ -554,14 +531,14 @@ void BitcoinGUI::createToolBars()
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
         */
-        //QVBoxLayout *layout = new QVBoxLayout;
-        //layout->addWidget(toolbar);
-        //layout->addWidget(walletFrame);
-        //layout->setSpacing(0);
-        //layout->setContentsMargins(QMargins());
-        //QWidget *containerWidget = new QWidget();
-        //containerWidget->setLayout(layout);
-        //setCentralWidget(containerWidget);
+        QWidget *containerWidget = new QWidget();
+        QBoxLayout *layout = new QBoxLayout(QBoxLayout::LeftToRight, containerWidget);
+        layout->addWidget(toolbar);
+        layout->addWidget(walletFrame);
+        layout->setSpacing(0);
+        layout->setContentsMargins(QMargins());
+        containerWidget->setLayout(layout);
+        setCentralWidget(containerWidget);
     }
 }
 
