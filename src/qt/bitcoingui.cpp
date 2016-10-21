@@ -262,7 +262,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
+    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Dashboard"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
@@ -495,6 +495,8 @@ void BitcoinGUI::createToolBars()
         toolbar->setMovable(false);
         toolbar->setFixedWidth(200);
         toolbar->setMinimumHeight(500);
+
+        toolbar->setIconSize(QSize(16, 16));
 
         QLabel *labelLogo = new QLabel(toolbar);
         labelLogo->setFixedWidth(200);

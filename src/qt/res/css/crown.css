@@ -65,6 +65,8 @@ QToolButton
 text-align: left;
 min-width:200px;
 max-width:200px;
+min-height:40px;
+max-height:40px;
 color: #a1a1a1;
 background-color: #ffffff;
 border: none;
