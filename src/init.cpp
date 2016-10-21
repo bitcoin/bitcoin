@@ -338,6 +338,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
+    strUsage += "  -auxminingaddr           " + _("Address for getauxblock coinbase") + "\n";
     strUsage += "  -createwalletbackups=<n> " + _("Number of automatic wallet backups (default: 10)") + "\n";
     strUsage += "  -disablewallet           " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
     strUsage += "  -keepass                 " + strprintf(_("Use KeePass 2 integration using KeePassHttp plugin (default: %u)"), 0) + "\n";
@@ -1563,8 +1564,8 @@ bool AppInit2(boost::thread_group& threadGroup)
        is convertable to another.
 
        For example:
-       1DRK+1000 == (.1DRK+100)*10
-       10DRK+10000 == (1DRK+1000)*10
+       1 CRW+1000 == (.1 CRW+100)*10
+       10 CRW+10000 == (1 CRW+1000)*10
     */
     darkSendDenominations.push_back( (1000      * COIN)+1000000 );
     darkSendDenominations.push_back( (100      * COIN)+100000 );

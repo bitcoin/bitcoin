@@ -768,7 +768,7 @@ void CDarksendPool::ChargeRandomFees(){
                 with using it to stop abuse. Otherwise it could serve as an attack vector and
                 allow endless transaction that would bloat Crown and make it unusable. To
                 stop these kinds of attacks 1 in 10 successful transactions are charged. This
-                adds up to a cost of 0.001DRK per transaction on average.
+                adds up to a cost of 0.001 CRW per transaction on average.
             */
             if(r <= 10)
             {
@@ -1898,10 +1898,10 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
 void CDarksendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
     // Function returns as follows:
     //
-    // bit 0 - 100DRK+1 ( bit on if present )
-    // bit 1 - 10DRK+1
-    // bit 2 - 1DRK+1
-    // bit 3 - .1DRK+1
+    // bit 0 - 100 CRW+1 ( bit on if present )
+    // bit 1 - 10 CRW+1
+    // bit 2 - 1 CRW+1
+    // bit 3 - .1 CRW+1
     // bit 3 - non-denom
 
 
@@ -1909,20 +1909,25 @@ void CDarksendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
 
     if(nDenom & (1 << 0)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "100";
+        strDenom += "1000";
     }
 
-    if(nDenom & (1 << 1)) {
+    if(nDenom & (1 << 0)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "10";
+        strDenom += "100";
     }
 
     if(nDenom & (1 << 2)) {
         if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "1";
+        strDenom += "10";
     }
 
     if(nDenom & (1 << 3)) {
+        if(strDenom.size() > 0) strDenom += "+";
+        strDenom += "1";
+    }
+
+    if(nDenom & (1 << 4)) {
         if(strDenom.size() > 0) strDenom += "+";
         strDenom += "0.1";
     }
@@ -1969,10 +1974,10 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fSingl
 
     // Function returns as follows:
     //
-    // bit 0 - 100DRK+1 ( bit on if present )
-    // bit 1 - 10DRK+1
-    // bit 2 - 1DRK+1
-    // bit 3 - .1DRK+1
+    // bit 0 - 100 CRW+1 ( bit on if present )
+    // bit 1 - 10 CRW+1
+    // bit 2 - 1 CRW+1
+    // bit 3 - .1 CRW+1
 
     return denom;
 }

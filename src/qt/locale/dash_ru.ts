@@ -3735,7 +3735,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Unable to locate enough funds for this transaction that are not equal 10000 CRW.</source>
-        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции средств, отличающихся от 1000DRK.</translation>
+        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции средств, отличающихся от 1000 CRW.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
