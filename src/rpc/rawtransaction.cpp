@@ -206,8 +206,8 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     CTransaction tx;
     uint256 hashBlock;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction. Use `gettransaction` for wallet transactions, or enable -txindex to use getrawtransaction on confirmed transactions.");
 
     string strHex = EncodeHexTx(tx);
 
@@ -276,7 +276,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     if (pblockindex == NULL)
     {
         CTransaction tx;
-        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
+        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         if (!mapBlockIndex.count(hashBlock))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");

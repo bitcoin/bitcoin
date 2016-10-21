@@ -13,7 +13,7 @@ Supported API
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
 
-For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
+This works only on unconfirmed transaction unless the transaction index is enabled via "txindex=1" command line / configuration option.
 
 ####Blocks
 `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
