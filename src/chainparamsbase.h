@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#define CHAINPARAMS_CONF_FILENAME "chainparams.conf"
+
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
  * of a given instance of the Bitcoin system.
@@ -20,6 +22,7 @@ public:
     static const std::string MAIN;
     static const std::string TESTNET;
     static const std::string REGTEST;
+    static const std::string CUSTOM;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }

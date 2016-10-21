@@ -21,7 +21,7 @@ CMD_GREP_DOCS = r"egrep -r -I 'HelpMessageOpt\(\"\-[^\"=]+?(=|\")' %s" % (CMD_RO
 REGEX_ARG = re.compile(r'(?:map(?:Multi)?Args(?:\.count\(|\[)|Get(?:Bool)?Arg\()\"(\-[^\"]+?)\"')
 REGEX_DOC = re.compile(r'HelpMessageOpt\(\"(\-[^\"=]+?)(?:=|\")')
 # list unsupported, deprecated and duplicate args as they need no documentation
-SET_DOC_OPTIONAL = set(['-rpcssl', '-benchmark', '-h', '-help', '-socks', '-tor', '-debugnet', '-whitelistalwaysrelay', '-prematurewitness', '-walletprematurewitness', '-promiscuousmempoolflags', '-blockminsize'])
+SET_DOC_OPTIONAL = set(['-rpcssl', '-benchmark', '-h', '-help', '-socks', '-tor', '-debugnet', '-whitelistalwaysrelay', '-prematurewitness', '-walletprematurewitness', '-promiscuousmempoolflags', '-blockminsize', '-con_fpowallowmindifficultyblocks', '-con_fpownoretargeting', '-con_nsubsidyhalvinginterval', '-con_bip34height', '-con_bip65height', '-con_bip66height', '-con_npowtargettimespan', '-con_npowtargetspacing', '-con_nrulechangeactivationthreshold', '-con_nminerconfirmationwindow', '-con_powlimit', '-con_bip34hash', '-con_nminimumchainwork', '-ndefaultport', '-npruneafterheight', '-fminingrequirespeers', '-fdefaultconsistencychecks', '-frequirestandard', '-fmineblocksondemand'])
 
 def main():
   used = check_output(CMD_GREP_ARGS, shell=True)

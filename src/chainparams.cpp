@@ -335,6 +335,73 @@ public:
     }
 };
 
+/**
+ * Regression test
+ */
+class CCustomParams : public CChainParams {
+
+    void UpdateFromArgs()
+    {
+        strNetworkID = GetArg("-chainpetname", "custom");
+
+        consensus.fPowAllowMinDifficultyBlocks = GetBoolArg("-con_fpowallowmindifficultyblocks", true);
+        consensus.fPowNoRetargeting = GetBoolArg("-con_fpownoretargeting", true);
+        consensus.nSubsidyHalvingInterval = GetArg("-con_nsubsidyhalvinginterval", 150);
+        consensus.BIP34Height = GetArg("-con_bip34height", 100000000);
+        consensus.BIP65Height = GetArg("-con_bip65height", 1351);
+        consensus.BIP66Height = GetArg("-con_bip66height", 1251);
+        consensus.nPowTargetTimespan = GetArg("-con_npowtargettimespan", 14 * 24 * 60 * 60); // two weeks
+        consensus.nPowTargetSpacing = GetArg("-con_npowtargetspacing", 10 * 60);
+        consensus.nRuleChangeActivationThreshold = GetArg("-con_nrulechangeactivationthreshold", 108); // 75% for testchains
+        consensus.nMinerConfirmationWindow = GetArg("-con_nminerconfirmationwindow", 144); // Faster than normal for custom (144 instead of 2016)
+        consensus.powLimit = uint256S(GetArg("-con_powlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        consensus.BIP34Hash = uint256S(GetArg("-con_bip34hash", "0x0"));
+        consensus.nMinimumChainWork = uint256S(GetArg("-con_nminimumchainwork", "0x0"));
+
+        nDefaultPort = GetArg("-ndefaultport", 18444);
+        nPruneAfterHeight = GetArg("-npruneafterheight", 1000);
+        fMiningRequiresPeers = GetBoolArg("-fminingrequirespeers", false);
+        fDefaultConsistencyChecks = GetBoolArg("-fdefaultconsistencychecks", true);
+        fRequireStandard = GetBoolArg("-frequirestandard", false);
+        fMineBlocksOnDemand = GetBoolArg("-fmineblocksondemand", true);
+    }
+
+public:
+    CCustomParams()
+    {
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
+
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xbf;
+        pchMessageStart[2] = 0xb5;
+        pchMessageStart[3] = 0xda;
+        vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
+        vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
+        chainTxData = ChainTxData{
+            0,
+            0,
+            0
+        };
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+
+        UpdateFromArgs();
+        genesis = CreateGenesisBlock(strNetworkID.c_str(), CScript(OP_TRUE), 1296688602, 2, 0x207fffff, 1, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+    }
+};
+
 static std::unique_ptr<CChainParams> globalChainParams;
 
 const CChainParams &Params() {
@@ -350,6 +417,9 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
+    else if (chain == CBaseChainParams::CUSTOM) {
+        return std::unique_ptr<CChainParams>(new CCustomParams());
+    }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
