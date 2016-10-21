@@ -97,9 +97,36 @@ std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item
   return std::string();
 }
 
+std::string OutboundConnectionValidator(const int& value,int* item,bool validate)
+{
+  if (validate)
+    {
+      if ((value < 0)||(value > 10000))  // sanity check
+	{
+        return "Invalid Value";
+	}
+      if (value < *item)
+	{
+	  return "This field cannot be reduced at run time since that would kick out existing connections";
+	}
+    }
+  else  // Do anything to "take" the new value
+    {
+      if (value < *item)  // note that now value is the old value and *item has been set to the new.
+        {
+	  int diff = *item - value;
+          if (semOutboundAddNode)  // Add the additional slots to the outbound semaphore
+            for (int i=0; i<diff; i++)
+              semOutboundAddNode->post();
+	}
+    }
+  return std::string();
+}
+
 CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
-CTweakRef<int> mOutConnectionsTweak("net.maxOutboundConnections","Number of outbound connections", &nMaxOutConnections);
+CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections","Maximum number of outbound connections", &nMaxOutConnections,&OutboundConnectionValidator);
+CTweakRef<int> maxConnectionsTweak("net.maxConnections","Maximum number of connections connections",&nMaxConnections);
 CTweakRef<unsigned int> triTweak("net.txRetryInterval","How long to wait in microseconds before requesting a transaction from another source", &MIN_TX_REQUEST_RETRY_INTERVAL);  // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
 CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in microseconds before requesting a block from another source", &MIN_BLK_REQUEST_RETRY_INTERVAL); // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
 
@@ -859,8 +886,8 @@ UniValue setminingmaxblock(const UniValue& params, bool fHelp)
     }
 
     // I don't want to waste time testing edge conditions where no txns can fit in a block, so limit the minimum block size
-    if (arg < 100000)
-        throw runtime_error("max generated block size must be greater than 100KB");
+    if (arg < 1000)
+        throw runtime_error("max generated block size must be greater than 1KB");
 
     maxGeneratedBlock = arg;
 

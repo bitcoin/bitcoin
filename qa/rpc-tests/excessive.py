@@ -32,6 +32,10 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 	  self.sync_all()
         
  	# Set the accept depth at 1, 2, and 3 and watch each nodes resist the chain for that long
+        self.nodes[1].setminingmaxblock(1000, 1)
+        self.nodes[2].setminingmaxblock(1000, 2)
+        self.nodes[3].setminingmaxblock(1000, 3)
+
         self.nodes[1].setexcessiveblock(1000, 1)
         self.nodes[2].setexcessiveblock(1000, 2)
         self.nodes[3].setexcessiveblock(1000, 3)
@@ -113,6 +117,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         self.sync_all()
 
         counts = [ x.getblockcount() for x in self.nodes ]
+        self.nodes[1].setminingmaxblock(100000)  # not sure how big the txns will be but smaller than this 
         self.nodes[1].setexcessiveblock(100000, 1)  # not sure how big the txns will be but smaller than this 
         for i in range(0,40):
           self.nodes[0].sendtoaddress(addr, 1.0)
@@ -129,7 +134,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         for i in range(0,2):
           print "round ", i,
           for n in self.nodes:
-            n.setexcessiveblock(random.randint(1,1000)*1000, random.randint(0,10))
+            size = random.randint(1,1000)*1000
+            n.setminingmaxblock(size)
+            n.setexcessiveblock(size, random.randint(0,10))
           addrs = [x.getnewaddress() for x in self.nodes]
           ntxs=0
           for i in range(0,random.randint(1,1000)):
