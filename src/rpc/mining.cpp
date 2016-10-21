@@ -439,7 +439,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             CValidationState state;
-            TestBlockValidity(state, Params(), block, pindexPrev, Params().GetConsensus().powLimit, false, true);
+            uint32_t nBits = GetNextWorkRequired(pindexPrev, &block, Params().GetConsensus());
+            TestBlockValidity(state, Params(), block, pindexPrev, Params().GetConsensus().powLimit, nBits, false, true);
             return BIP22ValidationResult(state);
         }
 
