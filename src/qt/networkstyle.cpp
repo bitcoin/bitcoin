@@ -91,5 +91,5 @@ const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
                     titleAddText.c_str());
         }
     }
-    return nullptr;
+    return new NetworkStyle(strprintf("%s-%s", QAPP_APP_NAME_CUSTOM, networkId).c_str(), 250, 30, titleAddText.c_str());
 }
