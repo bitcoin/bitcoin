@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "privatesend-client.h"
 
-#include "coincontrol.h"
+#include "wallet/coincontrol.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
