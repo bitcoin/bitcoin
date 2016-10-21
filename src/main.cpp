@@ -5442,6 +5442,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         BlockTransactionsRequest req;
         vRecv >> req;
 
+        LOCK(cs_main);
+
         BlockMap::iterator it = mapBlockIndex.find(req.blockhash);
         if (it == mapBlockIndex.end() || !(it->second->nStatus & BLOCK_HAVE_DATA)) {
             LogPrintf("Peer %d sent us a getblocktxn for a block we don't have", pfrom->id);
