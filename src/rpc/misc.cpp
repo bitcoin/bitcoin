@@ -135,6 +135,16 @@ public:
             int nRequired;
             ExtractDestinations(subscript, whichType, addresses, nRequired);
             obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+            if (whichType == TX_WITNESS_V0_KEYHASH) {
+                int witnessversion;
+                std::vector<unsigned char> witnessprogram;
+                subscript.IsWitnessProgram(witnessversion, witnessprogram);
+                CPubKey vchPubKey;
+                if (pwalletMain->GetPubKey(CKeyID(uint160(witnessprogram)), vchPubKey)) {
+                    obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
+                    obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+                }
+            }
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
             BOOST_FOREACH(const CTxDestination& addr, addresses)
