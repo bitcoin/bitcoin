@@ -16,8 +16,8 @@ QMenuBar
 {
 color: #a1a1a1;
 background-color: #f2f2f2;
-padding-top: 5px;
-padding-bottom: 5px;
+padding-top: 9px;
+padding-bottom: 9px;
 spacing: 6px;
 }
 
@@ -112,6 +112,30 @@ max-width:200px;
 color: #a1a1a1;
 background-color: #ffffff;
 border: none;
+}
+
+#spacer1
+{
+background-color: #f2f2f2;
+min-width: 20px;
+max-width: 20px;
+
+}
+
+#label_Wallet
+{
+color: #9c8b46;
+}
+
+#label_RecentTransactions
+{
+color: #9c8b46;
+}
+
+#label_Dashboard
+{
+color: #f2f2f2;
+background-color: #a1a1a1;
 }
 
 

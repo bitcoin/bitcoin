@@ -504,9 +504,10 @@ void BitcoinGUI::createToolBars()
         labelLogo->setPixmap(QPixmap(":css/logo"));
         labelLogo->setObjectName("labelLogo");
 
-        QWidget* spacer1 = new QWidget(toolbar);
-        spacer1->setFixedWidth(200);
-        spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        QWidget* spacer1 = new QWidget();
+        spacer1->setFixedWidth(20);
+        spacer1->setObjectName("spacer1");
+        spacer1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
 
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addWidget(labelLogo);
@@ -516,7 +517,6 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         toolbar->addAction(throneManagerAction);
         toolbar->setMovable(false); // remove unused icon in upper left corner
-        toolbar->addWidget(spacer1);
         overviewAction->setChecked(true);
 
 
@@ -536,6 +536,7 @@ void BitcoinGUI::createToolBars()
         QWidget *containerWidget = new QWidget();
         QBoxLayout *layout = new QBoxLayout(QBoxLayout::LeftToRight, containerWidget);
         layout->addWidget(toolbar);
+        layout->addWidget(spacer1);
         layout->addWidget(walletFrame);
         layout->setSpacing(0);
         layout->setContentsMargins(QMargins());
