@@ -86,7 +86,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         CBlockIndex* pindex = NULL;
         {
             LOCK(cs_main);
-            CBlockIndex* pindex = chainActive.Tip();
+            pindex = chainActive.Tip();
         }
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
@@ -163,7 +163,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         CBlockIndex* pindex = NULL;
         {
             LOCK(cs_main);
-            CBlockIndex* pindex = chainActive.Tip();
+            pindex = chainActive.Tip();
         }
 
         uint256 txidFee;
