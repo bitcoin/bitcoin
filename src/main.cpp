@@ -488,6 +488,8 @@ void MaybeSetPeerAsAnnouncingHeaderAndIDs(const CNodeState* nodestate, CNode* pf
         // Never ask from peers who can't provide witnesses.
         return;
     }
+    if (!fRelayTxes) // Compact blocks are inefficient in blocks only mode
+        return;
     if (nodestate->fProvidesHeaderAndIDs) {
         for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
             if (*it == pfrom->GetId()) {
@@ -5192,7 +5194,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // nodes)
             pfrom->PushMessage(NetMsgType::SENDHEADERS);
         }
-        if (pfrom->nVersion >= SHORT_IDS_BLOCKS_VERSION) {
+        if (pfrom->nVersion >= SHORT_IDS_BLOCKS_VERSION && fRelayTxes) {
             // Tell our peer we are willing to provide version 1 or 2 cmpctblocks
             // However, we do not request new block announcements using
             // cmpctblock messages.
