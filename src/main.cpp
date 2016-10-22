@@ -3754,6 +3754,7 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, C
         bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp, &fNewBlock);
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
+            UpdateBlockAvailability(pfrom->id, pindex->GetBlockHash());
             if (fNewBlock) pfrom->nLastBlockTime = GetTime();
         }
         CheckBlockIndex(chainparams.GetConsensus());
@@ -4938,6 +4939,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pfrom->PushMessage(NetMsgType::INV, vInv);
                         pfrom->hashContinue.SetNull();
                     }
+                    UpdateBlockAvailability(pfrom->id, inv.hash);
                 }
             }
             else if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
@@ -6647,6 +6649,7 @@ bool SendMessages(CNode* pto, CConnman& connman)
                                 vHeaders.front().GetHash().ToString(), pto->id);
                     }
                     pto->PushMessage(NetMsgType::HEADERS, vHeaders);
+                    UpdateBlockAvailability(pto->id, vHeaders.front().GetHash());
                     state.pindexBestHeaderSent = pBestIndex;
                 } else
                     fRevertToInv = true;
@@ -6672,6 +6675,7 @@ bool SendMessages(CNode* pto, CConnman& connman)
                     // If the peer's chain has this block, don't inv it back.
                     if (!PeerHasHeader(&state, pindex)) {
                         pto->PushInventory(CInv(MSG_BLOCK, hashToAnnounce));
+                        UpdateBlockAvailability(pto->id, hashToAnnounce);
                         LogPrint("net", "%s: sending inv peer=%d hash=%s\n", __func__,
                             pto->id, hashToAnnounce.ToString());
                     }
