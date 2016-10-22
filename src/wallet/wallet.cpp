@@ -2701,9 +2701,6 @@ bool CWallet::GetMasternodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& 
     if (fImporting || fReindex) return false;
 
     // Find possible candidates
-    TRY_LOCK(cs_wallet, fWallet);
-    if(!fWallet) return false;
-
     std::vector<COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
     if(vPossibleCoins.empty()) {

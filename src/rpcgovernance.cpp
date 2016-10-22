@@ -83,8 +83,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
-        LOCK(cs_main);
-        CBlockIndex* pindex = chainActive.Tip();
+        CBlockIndex* pindex = NULL;
+        {
+            LOCK(cs_main);
+            CBlockIndex* pindex = chainActive.Tip();
+        }
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
@@ -157,8 +160,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
-        LOCK(cs_main);
-        CBlockIndex* pindex = chainActive.Tip();
+        CBlockIndex* pindex = NULL;
+        {
+            LOCK(cs_main);
+            CBlockIndex* pindex = chainActive.Tip();
+        }
 
         uint256 txidFee;
 
@@ -547,7 +553,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // SETUP BLOCK INDEX VARIABLE / RESULTS VARIABLE
 
-        CBlockIndex* pindex;
+        CBlockIndex* pindex = NULL;
         {
             LOCK(cs_main);
             pindex = chainActive.Tip();
