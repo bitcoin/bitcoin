@@ -188,7 +188,7 @@ Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spur
 
 - Announce the release:
 
-  - Release sticky on dashtalk: https://dashtalk.org/index.php?board=1.0 ***TODO***
+  - Release on Dash forum: https://www.dash.org/forum/topic/official-announcements.54/
 
   - Dash-development mailing list
 

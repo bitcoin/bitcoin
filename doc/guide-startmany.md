@@ -135,7 +135,7 @@ You can confirm that remote server is on the correct block by issuing
 
 ```dash-cli getinfo```
 
-and comparing with the official explorer at http://explorer.dash.org/chain/Dash
+and comparing with the official explorer at https://explorer.dash.org/chain/Dash
 
 ### Local
 

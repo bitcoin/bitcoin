@@ -43,7 +43,6 @@ const char *GETSPORKS="getsporks";
 const char *MASTERNODEPAYMENTVOTE="mnw";
 const char *MASTERNODEPAYMENTBLOCK="mnwb";
 const char *MASTERNODEPAYMENTSYNC="mnget";
-const char *MNSCANERROR="mn scan error"; // not implemented
 const char *MNBUDGETSYNC="mnvs"; // depreciated since 12.1
 const char *MNBUDGETVOTE="mvote"; // depreciated since 12.1
 const char *MNBUDGETPROPOSAL="mprop"; // depreciated since 12.1

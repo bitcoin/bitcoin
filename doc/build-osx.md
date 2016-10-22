@@ -36,7 +36,7 @@ Instructions: Homebrew
 
 NOTE: Building with Qt4 is still supported, however, could result in a broken UI. As such, building with Qt5 is recommended.
 
-### Building `Dash Core`
+### Building Dash Core
 
 1. Clone the GitHub tree to get the source code and go into the directory.
 

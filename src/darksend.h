@@ -406,7 +406,7 @@ private:
     void SetState(PoolState nStateNew);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* node);
+    bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode);
 
     /// Relay mixing Messages
     void RelayFinalTransaction(const CTransaction& txFinal);

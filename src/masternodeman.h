@@ -59,8 +59,6 @@ public:
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
-    // dummy script pubkey to test masternodes' vins against mempool
-    CScript dummyScriptPubkey;
 
     CMasternodeMan() : nLastWatchdogVoteTime(0), nDsqCount(0) {}
 
@@ -107,12 +105,15 @@ public:
     /// Clear Masternode vector
     void Clear();
 
-    int CountMasternodes(int protocolVersion = -1);
-
-    int CountEnabled(int protocolVersion = -1);
+    /// Count Masternodes filtered by nProtocolVersion.
+    /// Masternode nProtocolVersion should match or be above the one specified in param here.
+    int CountMasternodes(int nProtocolVersion = -1);
+    /// Count enabled Masternodes filtered by nProtocolVersion.
+    /// Masternode nProtocolVersion should match or be above the one specified in param here.
+    int CountEnabled(int nProtocolVersion = -1);
 
     /// Count Masternodes by network type - NET_IPV4, NET_IPV6, NET_TOR
-    int CountByIP(int nNetworkType);
+    // int CountByIP(int nNetworkType);
 
     void DsegUpdate(CNode* pnode);
 
@@ -135,15 +136,13 @@ public:
     CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
-    CMasternode* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int nProtocolVersion = -1);
+    CMasternode* FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion = -1);
 
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
-    std::vector<pair<int, CMasternode> > GetMasternodeRanks(int64_t nBlockHeight, int minProtocol=0);
-    int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
-    CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
-
-    void InitDummyScriptPubkey();
+    std::vector<std::pair<int, CMasternode> > GetMasternodeRanks(int nBlockHeight = -1, int nMinProtocol=0);
+    int GetMasternodeRank(const CTxIn &vin, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
+    CMasternode* GetMasternodeByRank(int nRank, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
 
     void ProcessMasternodeConnections();
 

@@ -953,10 +953,10 @@ int GetInputAge(CTxIn& txin)
 
         if (coins) {
             if(coins->nHeight < 0) return 0;
-            return (chainActive.Tip()->nHeight + 1) - coins->nHeight;
-        }
-        else
+            return chainActive.Height() - coins->nHeight + 1;
+        } else {
             return -1;
+        }
     }
 }
 
@@ -1089,13 +1089,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     // ----------- InstantSend transaction scanning -----------
 
-    BOOST_FOREACH(const CTxIn& in, tx.vin){
-        if(mapLockedInputs.count(in.prevout)){
-            if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                return state.DoS(0,
-                                 error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
-                                 REJECT_INVALID, "tx-lock-conflict");
-            }
+    BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+        if(mapLockedInputs.count(txin.prevout) && mapLockedInputs[txin.prevout] != tx.GetHash()) {
+            return state.DoS(0,
+                             error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
+                             REJECT_INVALID, "tx-lock-conflict");
         }
     }
 
@@ -3731,18 +3729,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // DASH : CHECK TRANSACTIONS FOR INSTANT SEND
 
     if(sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
-        BOOST_FOREACH(const CTransaction& tx, block.vtx){
-            if (!tx.IsCoinBase()){
-                // LOOK FOR TRANSACTION LOCK IN OUR MAP OF INPUTS
-                BOOST_FOREACH(const CTxIn& in, tx.vin){
-                    if(mapLockedInputs.count(in.prevout)){
-                        if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                            mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                            LogPrintf("CheckBlock(DASH) : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString(), tx.GetHash().ToString());
-                            return state.DoS(0, error("CheckBlock(DASH) : found conflicting transaction with transaction lock"),
-                                             REJECT_INVALID, "conflicting-tx-ix");
-                        }
-                    }
+        BOOST_FOREACH(const CTransaction& tx, block.vtx) {
+            // skip coinbase, it has no inputs
+            if (tx.IsCoinBase()) continue;
+            // LOOK FOR TRANSACTION LOCK IN OUR MAP OF INPUTS
+            BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+                if(mapLockedInputs.count(txin.prevout) && mapLockedInputs[txin.prevout] != tx.GetHash()) {
+                    mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
+                    LogPrintf("CheckBlock(DASH): found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[txin.prevout].ToString(), tx.GetHash().ToString());
+                    return state.DoS(0, error("CheckBlock(DASH): found conflicting transaction with transaction lock"),
+                                     REJECT_INVALID, "conflicting-tx-ix");
                 }
             }
         }
@@ -5181,12 +5177,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     {
                         if(governance.HaveObjectForHash(inv.hash)) {
                             ss.reserve(1000);
-                            if(governance.SerializeObjectForHash(inv.hash, ss))  {
+                            if(governance.SerializeObjectForHash(inv.hash, ss)) {
                                 topush = true;
                             }
                         }
                     }
-                    if(topush)  {
+                    if(topush) {
                         pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECT, ss);
                         pushed = true;
                     }
@@ -5198,12 +5194,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     {
                         if(governance.HaveVoteForHash(inv.hash)) {
                             ss.reserve(1000);
-                            if(governance.SerializeVoteForHash(inv.hash, ss))  {
+                            if(governance.SerializeVoteForHash(inv.hash, ss)) {
                                 topush = true;
                             }
                         }
                     }
-                    if(topush)  {
+                    if(topush) {
                         pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss);
                         pushed = true;
                     }
@@ -5718,13 +5714,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             {
                 if(!pmn->fAllowMixingTx) {
                     //multiple peers can send us a valid masternode transaction
-                    LogPrint("privatesend", "dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString());
+                    LogPrint("privatesend", "DSTX -- Masternode sending too many transactions %s\n", tx.GetHash().ToString());
                     return true;
                 }
 
                 if(!dstx.CheckSignature()) return false;
 
-                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString());
+                LogPrintf("DSTX -- Got Masternode transaction %s\n", tx.GetHash().ToString());
 
                 pmn->fAllowMixingTx = false;
 

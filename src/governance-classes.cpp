@@ -30,12 +30,7 @@
 CGovernanceTriggerManager triggerman;
 
 // SPLIT UP STRING BY DELIMITER
-
-/*  
-    NOTE : SplitBy can be simplified via:
-    http://www.boost.org/doc/libs/1_58_0/doc/html/boost/algorithm/split_idp202406848.html
-*/
-
+// http://www.boost.org/doc/libs/1_58_0/doc/html/boost/algorithm/split_idp202406848.html
 std::vector<std::string> SplitBy(std::string strCommand, std::string strDelimit)
 {
     std::vector<std::string> vParts;
@@ -721,7 +716,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
             CTxDestination address1;
             ExtractDestination(payment.script, address1);
             CBitcoinAddress address2(address1);
-            LogPrintf("CSuperblock::IsValid -- WARNING: Block invalid: output n %d payment %d to %s\n", nVoutIndex, payment.nAmount, address2.ToString());
+            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: output n %d payment %d to %s\n", nVoutIndex, payment.nAmount, address2.ToString());
 
             return false;
         }

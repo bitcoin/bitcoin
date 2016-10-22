@@ -178,20 +178,20 @@ bool IsInstantSendTxValid(const CTransaction& txCandidate)
 
     int64_t nValueIn = 0;
     int64_t nValueOut = 0;
-    bool missingTx = false;
+    bool fMissingInputs = false;
 
-    BOOST_FOREACH(const CTxOut txout, txCandidate.vout) {
+    BOOST_FOREACH(const CTxOut& txout, txCandidate.vout) {
         nValueOut += txout.nValue;
     }
 
-    BOOST_FOREACH(const CTxIn txin, txCandidate.vin) {
+    BOOST_FOREACH(const CTxIn& txin, txCandidate.vin) {
         CTransaction tx2;
         uint256 hash;
         if(GetTransaction(txin.prevout.hash, tx2, Params().GetConsensus(), hash, true)) {
             if(tx2.vout.size() > txin.prevout.n)
                 nValueIn += tx2.vout[txin.prevout.n].nValue;
         } else {
-            missingTx = true;
+            fMissingInputs = true;
         }
     }
 
@@ -200,8 +200,8 @@ bool IsInstantSendTxValid(const CTransaction& txCandidate)
         return false;
     }
 
-    if(missingTx) {
-        LogPrint("instantsend", "IsInstantSendTxValid -- Unknown inputs in IX transaction: txCandidate=%s", txCandidate.ToString());
+    if(fMissingInputs) {
+        LogPrint("instantsend", "IsInstantSendTxValid -- Unknown inputs in transaction: txCandidate=%s", txCandidate.ToString());
         /*
             This happens sometimes for an unknown reason, so we'll return that it's a valid transaction.
             If someone submits an invalid transaction it will be rejected by the network anyway and this isn't
@@ -273,7 +273,7 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
     int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTSEND_PROTO_VERSION);
 
     if(n == -1) {
-        LogPrint("instantsend", "DoConsensusVote -- Unknown Masternode %s\n", activeMasternode.vin.ToString());
+        LogPrint("instantsend", "DoConsensusVote -- Unknown Masternode %s\n", activeMasternode.vin.prevout.ToStringShort());
         return;
     }
 
@@ -324,9 +324,11 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& vote)
         mnodeman.AskForMN(pnode, vote.vinMasternode);
         return false;
     }
+    LogPrint("instantsend", "ProcessConsensusVote -- Masternode %s, rank=%d\n", vote.vinMasternode.prevout.ToStringShort(), n);
 
     if(n > INSTANTSEND_SIGNATURES_TOTAL) {
-        LogPrint("instantsend", "ProcessConsensusVote -- Masternode not in the top %d (%d): vote hash %s\n", INSTANTSEND_SIGNATURES_TOTAL, n, vote.GetHash().ToString());
+        LogPrint("instantsend", "ProcessConsensusVote -- Masternode %s is not in the top %d (%d), vote hash %s\n",
+                vote.vinMasternode.prevout.ToStringShort(), INSTANTSEND_SIGNATURES_TOTAL, n, vote.GetHash().ToString());
         return false;
     }
 
@@ -435,7 +437,7 @@ bool FindConflictingLocks(CTransaction& tx)
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
         if(mapLockedInputs.count(txin.prevout)) {
             if(mapLockedInputs[txin.prevout] != tx.GetHash()) {
-                LogPrintf("FindConflictingLocks -- found two complete conflicting locks, removing both: txid=%s, txin=%s", tx.GetHash().ToString(), mapLockedInputs[txin.prevout].ToString());
+                LogPrintf("FindConflictingLocks -- found two complete conflicting Transaction Locks, removing both: txid=%s, txin=%s", tx.GetHash().ToString(), mapLockedInputs[txin.prevout].ToString());
 
                 if(mapTxLocks.count(tx.GetHash()))
                     mapTxLocks[tx.GetHash()].nLockExpirationBlock = -1;
@@ -455,7 +457,7 @@ void ResolveConflicts(CTransaction& tx)
 {
     // resolve conflicts
     if (IsLockedInstandSendTransaction(tx.GetHash()) && !FindConflictingLocks(tx)) { //?????
-        LogPrintf("ResolveConflicts -- Found Existing Complete IX Lock, resolving...\n");
+        LogPrintf("ResolveConflicts -- Found existing complete Transaction Lock, resolving...\n");
 
         //reprocess the last nInstantSendReprocessBlocks blocks
         ReprocessBlocks(Params().GetConsensus().nInstantSendReprocessBlocks);
@@ -553,7 +555,6 @@ bool CConsensusVote::CheckSignature()
 {
     std::string strError;
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
-    //LogPrintf("verify strMessage %s \n", strMessage);
 
     CMasternode* pmn = mnodeman.Find(vinMasternode);
 

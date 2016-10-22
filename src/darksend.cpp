@@ -1015,7 +1015,7 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
 
 bool CDarksendPool::AddScriptSig(const CTxIn& txinNew)
 {
-    LogPrint("privatesend", "CDarksendPool::AddScriptSig -- new sig, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
+    LogPrint("privatesend", "CDarksendPool::AddScriptSig -- scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
 
     BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
         BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
@@ -1031,7 +1031,7 @@ bool CDarksendPool::AddScriptSig(const CTxIn& txinNew)
         return false;
     }
 
-    LogPrint("privatesend", "CDarksendPool::AddScriptSig -- scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig));
+    LogPrint("privatesend", "CDarksendPool::AddScriptSig -- scriptSig=%s new\n", ScriptToAsmStr(txinNew.scriptSig).substr(0,24));
 
     BOOST_FOREACH(CTxIn& txin, finalMutableTransaction.vin) {
         if(txinNew.prevout == txin.prevout && txin.nSequence == txinNew.nSequence) {
@@ -1194,7 +1194,7 @@ bool CDarksendPool::UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCou
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
-bool CDarksendPool::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* node)
+bool CDarksendPool::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode)
 {
     if(fMasterNode) return false;
 
@@ -1265,8 +1265,8 @@ bool CDarksendPool::SignFinalTransaction(const CTransaction& finalTransactionNew
     }
 
     // push all of our signatures to the Masternode
-    if(sigs.size() > 0 && node != NULL)
-        node->PushMessage(NetMsgType::DSSIGNFINALTX, sigs);
+    if(!sigs.empty() && pnode != NULL)
+        pnode->PushMessage(NetMsgType::DSSIGNFINALTX, sigs);
 
     return true;
 }
@@ -1568,13 +1568,13 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             std::vector<COutput> vCoinsTmp;
             // Try to match their denominations if possible
             if(!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, nBalanceNeedsAnonymized, vecTxInTmp, vCoinsTmp, nValueIn, 0, nPrivateSendRounds)) {
-                LogPrintf("CDarksendPool::DoAutomaticDenominating -- Couldn't match denominations %d\n", dsq.nDenom);
+                LogPrintf("CDarksendPool::DoAutomaticDenominating -- Couldn't match denominations %d (%s)\n", dsq.nDenom, GetDenominationsToString(dsq.nDenom));
                 continue;
             }
 
             CMasternode* pmn = mnodeman.Find(dsq.vin);
             if(pmn == NULL) {
-                LogPrintf("CDarksendPool::DoAutomaticDenominating -- dsq masternode is not in masternode list! vin=%s\n", dsq.vin.ToString());
+                LogPrintf("CDarksendPool::DoAutomaticDenominating -- dsq masternode is not in masternode list, masternode=%s\n", dsq.vin.prevout.ToStringShort());
                 continue;
             }
             vecMasternodesUsed.push_back(dsq.vin);
@@ -1588,12 +1588,13 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 nSessionDenom = dsq.nDenom;
 
                 pnode->PushMessage(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
-                LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected (from queue), sending dsa: nSessionDenom: %d, addr=%s\n", nSessionDenom, pnode->addr.ToString());
+                LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
+                        nSessionDenom, GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
                 strAutoDenomResult = _("Mixing in progress...");
                 dsq.nTime = 0; //remove node
                 return true;
             } else {
-                LogPrintf("CDarksendPool::DoAutomaticDenominating -- error connecting\n");
+                LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
                 strAutoDenomResult = _("Error connecting to Masternode.");
                 dsq.nTime = 0; //remove node
                 pmn->nPoSeBanScore++;
@@ -1631,7 +1632,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         LogPrintf("CDarksendPool::DoAutomaticDenominating -- attempt %d connection to Masternode %s\n", nTries, pmn->addr.ToString());
         CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
         if(pnode) {
-            LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected %s\n", pmn->vin.ToString());
+            LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected, addr=%s\n", pmn->addr.ToString());
             pSubmittedToMasternode = pmn;
 
             std::vector<CAmount> vecAmounts;
@@ -1642,11 +1643,12 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             }
 
             pnode->PushMessage(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
-            LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected, sending DSACCEPT, nSessionDenom: %d\n", nSessionDenom);
+            LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
+                    nSessionDenom, GetDenominationsToString(nSessionDenom));
             strAutoDenomResult = _("Mixing in progress...");
             return true;
         } else {
-            LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect %s\n", pmn->vin.ToString());
+            LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
             nTries++;
             pmn->nPoSeBanScore++;
             continue;
@@ -2041,7 +2043,8 @@ bool CDarksendPool::IsDenomCompatibleWithSession(int nDenom, CTransaction txColl
         return false;
     }
 
-    LogPrintf("CDarksendPool::IsDenomCompatibleWithSession -- nSessionDenom: %d nSessionUsers: %d\n", nSessionDenom, nSessionUsers);
+    LogPrintf("CDarksendPool::IsDenomCompatibleWithSession -- nSessionDenom: %d (%s) nSessionUsers: %d\n",
+            nSessionDenom, GetDenominationsToString(nSessionDenom), nSessionUsers);
 
     if(!fUnitTest && !IsCollateralValid(txCollateral)) {
         LogPrint("privatesend", "CDarksendPool::IsDenomCompatibleWithSession -- collateral not valid!\n");

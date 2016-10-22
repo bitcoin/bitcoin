@@ -387,7 +387,7 @@ void OverviewPage::updatePrivateSendProgress()
     float denomPart = 0;
     // mixing progress of denominated balance
     float anonNormPart = 0;
-    // completeness of full amount anonimization
+    // completeness of full amount anonymization
     float anonFullPart = 0;
 
     CAmount denominatedBalance = nDenominatedConfirmedBalance + nDenominatedUnconfirmedBalance;

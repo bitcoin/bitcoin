@@ -20,7 +20,7 @@ Unpack the files into a directory, and then run dash-qt.exe.
 
 ### OS X
 
-Drag Dash-Core to your applications folder, and then run Dash-Core.
+Drag Dash-Qt to your applications folder, and then run Dash-Qt.
 
 ### Need Help?
 

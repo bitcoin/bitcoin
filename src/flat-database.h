@@ -1,7 +1,7 @@
 // Copyright (c) 2014-2016 The Dash Core developers
-
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef FLAT_DATABASE_H
 #define FLAT_DATABASE_H
 
@@ -55,14 +55,14 @@ private:
         FILE *file = fopen(pathDB.string().c_str(), "wb");
         CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
         if (fileout.IsNull())
-            return error("%s : Failed to open file %s", __func__, pathDB.string());
+            return error("%s: Failed to open file %s", __func__, pathDB.string());
 
         // Write and commit header, data
         try {
             fileout << ssObj;
         }
         catch (std::exception &e) {
-            return error("%s : Serialize or I/O error - %s", __func__, e.what());
+            return error("%s: Serialize or I/O error - %s", __func__, e.what());
         }
         fileout.fclose();
 
@@ -82,7 +82,7 @@ private:
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
         if (filein.IsNull())
         {
-            error("%s : Failed to open file %s", __func__, pathDB.string());
+            error("%s: Failed to open file %s", __func__, pathDB.string());
             return FileError;
         }
 
@@ -102,7 +102,7 @@ private:
             filein >> hashIn;
         }
         catch (std::exception &e) {
-            error("%s : Deserialize or I/O error - %s", __func__, e.what());
+            error("%s: Deserialize or I/O error - %s", __func__, e.what());
             return HashReadError;
         }
         filein.fclose();
@@ -113,7 +113,7 @@ private:
         uint256 hashTmp = Hash(ssObj.begin(), ssObj.end());
         if (hashIn != hashTmp)
         {
-            error("%s : Checksum mismatch, data corrupted", __func__);
+            error("%s: Checksum mismatch, data corrupted", __func__);
             return IncorrectHash;
         }
 
@@ -127,7 +127,7 @@ private:
             // ... verify the message matches predefined one
             if (strMagicMessage != strMagicMessageTmp)
             {
-                error("%s : Invalid magic message", __func__);
+                error("%s: Invalid magic message", __func__);
                 return IncorrectMagicMessage;
             }
 
@@ -138,7 +138,7 @@ private:
             // ... verify the network matches ours
             if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
             {
-                error("%s : Invalid network magic number", __func__);
+                error("%s: Invalid network magic number", __func__);
                 return IncorrectMagicNumber;
             }
 
@@ -147,16 +147,16 @@ private:
         }
         catch (std::exception &e) {
             objToLoad.Clear();
-            error("%s : Deserialize or I/O error - %s", __func__, e.what());
+            error("%s: Deserialize or I/O error - %s", __func__, e.what());
             return IncorrectFormat;
         }
 
         LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
         if(!fDryRun) {
-            LogPrintf("CFlatDB - cleaning....\n");
+            LogPrintf("%s: Cleaning....\n", __func__);
             objToLoad.CheckAndRemove();
-            LogPrintf("CFlatDB - %s\n", objToLoad.ToString());
+            LogPrintf("     %s\n", objToLoad.ToString());
         }
 
         return Ok;
@@ -176,16 +176,16 @@ public:
         LogPrintf("Reading info from %s...\n", strFilename);
         ReadResult readResult = Read(objToLoad);
         if (readResult == FileError)
-            LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
+            LogPrintf("Missing file %s, will try to recreate\n", strFilename);
         else if (readResult != Ok)
         {
             LogPrintf("Error reading %s: ", strFilename);
             if(readResult == IncorrectFormat)
             {
-                LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+                LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
             }
             else {
-                LogPrintf("file format is unknown or invalid, please fix it manually\n");
+                LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
                 // program should exit with an error
                 return false;
             }
@@ -197,41 +197,21 @@ public:
     {
         int64_t nStart = GetTimeMillis();
 
-
-        // LOAD SERIALIZED FILE TO DETERMINE SAFETY OF SAVING INTO THAT FILE
-
-        /*
-
-
-            2016-06-02 21:23:55     dash-shutoff |      Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:23:55     dash-shutoff |      Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:29:17            dashd |      Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:29:17            dashd | CFlatDB - Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:29:25     dash-shutoff |      Governance Objects: 1, Seen Budgets: 0, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:30:07     dash-shutoff |      Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:30:16            dashd |      Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
-            2016-06-02 21:30:16            dashd | CFlatDB - Governance Objects: 1, Seen Budgets: 1, Seen Budget Votes: 0, Vote Count: 0
-
-            
-            This fact can be demonstrated by adding a governance item, then stopping and starting the client. 
-            With the code enabled, "Seen Budgets" will equal 0, whereas the object should have one entry. 
-        */
-
         LogPrintf("Verifying %s format...\n", strFilename);
         T tmpObjToLoad;
         ReadResult readResult = Read(tmpObjToLoad, true);
 
         // there was an error and it was not an error on file opening => do not proceed
         if (readResult == FileError)
-            LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
+            LogPrintf("Missing file %s, will try to recreate\n", strFilename);
         else if (readResult != Ok)
         {
             LogPrintf("Error reading %s: ", strFilename);
             if(readResult == IncorrectFormat)
-                LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+                LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
             else
             {
-                LogPrintf("file format is unknown or invalid, please fix it manually\n");
+                LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
                 return false;
             }
         }

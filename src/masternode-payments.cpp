@@ -864,6 +864,4 @@ void CMasternodePayments::UpdatedBlockTip(const CBlockIndex *pindex)
     LogPrint("mnpayments", "CMasternodePayments::UpdatedBlockTip -- pCurrentBlockIndex->nHeight=%d\n", pCurrentBlockIndex->nHeight);
 
     ProcessBlock(pindex->nHeight + 10);
-    // normal wallet does not need to update this every block, doing update on rpc call should be enough
-    if(fMasterNode) mnodeman.UpdateLastPaid(pindex);
 }

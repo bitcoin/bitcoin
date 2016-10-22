@@ -255,8 +255,8 @@ public:
     // Signature related functions
 
     void SetMasternodeInfo(const CTxIn& vin);
-    bool Sign(CKey& keyMasternode, CPubKey& pubkeyMasternode);
-    bool CheckSignature(CPubKey& pubkeyMasternode);
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool CheckSignature(CPubKey& pubKeyMasternode);
 
     // CORE OBJECT FUNCTIONS
 

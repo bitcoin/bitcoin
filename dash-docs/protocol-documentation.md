@@ -117,8 +117,8 @@ Mixing pool status update
 | 4 | nMsgSessionID | int | Session ID
 | 4 | nMsgState | int | Current state of mixing process
 | 4 | nMsgEntriesCount | int | Number of entries in the mixing pool
-| 4 | nMsgAccepted | int | Was entries accepted or not
-| 4 | nMsgErrorID | int | Error ID if any
+| 4 | nMsgStatusUpdate | int | Update state and/or signal if entry was accepted or not
+| 4 | nMsgMessageID | int | ID of the typical masternode reply message
 
 ### DSQUEUE - "dsq"
 

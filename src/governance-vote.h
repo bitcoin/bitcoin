@@ -123,10 +123,6 @@ public:
     bool IsValid(bool fSignatureCheck);
     void Relay();
 
-    std::string GetVoteString() {
-        return CGovernanceVoting::ConvertOutcomeToString(GetOutcome());
-    }
-
     CTxIn& GetVinMasternode() { return vinMasternode; }
 
     const CTxIn& GetVinMasternode() const { return vinMasternode; }
