@@ -12,6 +12,7 @@ Before every minor and major release:
 * Update [bips.md](bips.md) to account for changes since the last release.
 * Update version in sources (see below)
 * Write release notes (see below)
+* Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 
 Before every major release:
 
