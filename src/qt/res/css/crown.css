@@ -10,7 +10,10 @@ color: #2f2f2f;
 background-color: #ffffff;
 }
 
-
+QTableView
+{
+alternate-background-color: #f2f2f2;
+}
 
 QMenuBar
 {
@@ -111,9 +114,71 @@ QComboBox QAbstractItemView::item
 margin:4px; 
 }
 
+QProgressBar
+{
+border: 1px solid #a1a1a1;
+text-align: center;
+}
 
+QProgressBar::chunk
+{
+background-color: #f2f2f2;
+}
 
+QTabBar::tab {
+color: #555555;
+border: 1px solid #f2f2f2;
+border-bottom-style: none;
+background-color: #f2f2f2;
+padding-left: 10px;
+padding-right: 10px;
+padding-top: 3px;
+padding-bottom: 2px;
+margin-right: -1px;
+}
 
+QTabWidget::pane {
+/*border: 1px solid #f2f2f2;*/
+
+}
+
+QTabBar::tab:last
+{
+margin-right: 0; /* the last selected tab has nothing to overlap with on the right */
+border-top-right-radius: 3px;
+}
+
+QTabBar::tab:first:!selected
+{
+margin-left: 0px; /* the last selected tab has nothing to overlap with on the right */
+border-top-left-radius: 3px;
+}
+
+QTabBar::tab:!selected
+{
+color: #b1b1b1;
+border-bottom-style: solid;
+margin-top: 3px;
+/*background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #aaaaaa, stop:.4 #343434);*/
+background-color: #f2f2f2;
+}
+
+QTabBar::tab:selected
+{
+color: #555555;
+border-top-left-radius: 3px;
+border-top-right-radius: 3px;
+margin-bottom: 0px;
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
+}
+
+QTabBar::tab:!selected:hover
+{
+color: #555555;
+border-top-left-radius: 3px;
+border-top-right-radius: 3px;
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
+}
 
 #spacer1
 {
