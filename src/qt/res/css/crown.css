@@ -201,9 +201,10 @@ color: #a1a1a1;
 subcontrol-origin: padding;
 subcontrol-position: top right;
 width: 15px;
-border-left-width: 0px;
-border-left-color: darkgray;
-border-left-style: solid; 
+border: 1px solid #a1a1a1;
+/*border-left-width: 0px;
+border-left-color: #a1a1a1;
+border-left-style: solid; */
 }
 
 QComboBox::down-arrow
