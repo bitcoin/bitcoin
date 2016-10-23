@@ -227,8 +227,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
         if(!fMasterNode)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "You must set masternode=1 in the configuration");
 
-        LOCK(pwalletMain->cs_wallet);
-        EnsureWalletIsUnlocked();
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
 
         if(activeMasternode.nState != ACTIVE_MASTERNODE_STARTED){
             activeMasternode.nState = ACTIVE_MASTERNODE_INITIAL; // TODO: consider better way
@@ -243,8 +245,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
         if (params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
 
-        LOCK(pwalletMain->cs_wallet);
-        EnsureWalletIsUnlocked();
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
 
         std::string strAlias = params[1].get_str();
 
@@ -283,8 +287,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
-        LOCK(pwalletMain->cs_wallet);
-        EnsureWalletIsUnlocked();
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") && !masternodeSync.IsMasternodeListSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
@@ -597,8 +603,10 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         if (params.size() < 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Please specify an alias");
 
-        LOCK(pwalletMain->cs_wallet);
-        EnsureWalletIsUnlocked();
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
 
         bool fFound = false;
         std::string strAlias = params[1].get_str();
@@ -644,8 +652,10 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         if (fImporting || fReindex)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wait for reindex and/or import to finish");
 
-        LOCK(pwalletMain->cs_wallet);
-        EnsureWalletIsUnlocked();
+        {
+            LOCK(pwalletMain->cs_wallet);
+            EnsureWalletIsUnlocked();
+        }
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
