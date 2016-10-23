@@ -3,7 +3,6 @@ QMainWindow
 background-color: #ffffff;
 }
 
-
 QWidget
 {
 color: #2f2f2f;
@@ -48,9 +47,6 @@ QMenu::selected
 color: #555555;
 background-color: #f2f2f2;
 }
-
-
-
 
 QToolBar
 {
@@ -122,7 +118,7 @@ text-align: center;
 
 QProgressBar::chunk
 {
-background-color: #f2f2f2;
+background-color: #9c8b46;
 }
 
 QTabBar::tab {
@@ -179,6 +175,57 @@ border-top-left-radius: 3px;
 border-top-right-radius: 3px;
 background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
 }
+
+
+
+
+QComboBox
+{
+padding: 0px 0px 0px 0px;
+background-color: #ffffff;
+selection-background-color: #ffffff;
+color: #a1a1a1;
+}
+
+QComboBox QAbstractItemView
+{
+selection-background-color: #ffffff;
+background-color: #ffffff;
+color: #a1a1a1;
+}
+
+QComboBox::drop-down
+{
+background-color: #ffffff;
+color: #a1a1a1;
+subcontrol-origin: padding;
+subcontrol-position: top right;
+width: 15px;
+border-left-width: 0px;
+border-left-color: darkgray;
+border-left-style: solid; 
+}
+
+QComboBox::down-arrow
+{
+image: url(':css/down_arrow');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #spacer1
 {

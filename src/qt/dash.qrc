@@ -59,6 +59,7 @@
     </qresource>
     <qresource prefix="/css">
         <file alias="crown">res/css/crown.css</file>
+        <file alias="down_arrow">res/css/down_arrow.png</file>
         <file alias="logo">res/css/logo.png</file>
     </qresource>	    
     <qresource prefix="/images">
