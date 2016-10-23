@@ -74,45 +74,46 @@ border: none;
 
 QToolButton:hover 
 {
-text-align: left;
-min-width:200px;
-max-width:200px;
 color: #555555;
 background-color: #f2f2f2;
-border: none;
 } 
-
-QToolButton:!hover 
-{
-text-align: left;
-min-width:200px;
-max-width:200px;
-color: #a1a1a1;
-background-color: #ffffff;
-border: none;
-}
-
 
 QToolButton:checked
 { 
-text-align: left;
-min-width:200px;
-max-width:200px;
 color: #555555;
 background-color: #f2f2f2;
-border: none;
 }
 
-
-QToolButton:!checked
+QPushButton
 {
-text-align: left;
-min-width:200px;
-max-width:200px;
+border: 1px solid #9c8b46;
 color: #a1a1a1;
-background-color: #ffffff;
-border: none;
+background-color: #f2f2f2;
+padding: 2px;
 }
+
+QPushButton:hover
+{
+border: 1px solid #9c8b46;
+color: #555555;
+background-color: #f2f2f2;
+padding: 2px;
+}
+
+QLabel
+{
+color: #555555;
+background-color: #ffffff;
+}
+
+QComboBox QAbstractItemView::item 
+{
+margin:4px; 
+}
+
+
+
+
 
 #spacer1
 {
@@ -132,10 +133,16 @@ color: #9c8b46;
 color: #9c8b46;
 }
 
-#label_Dashboard
+#frame_ovp_Wallet
 {
-color: #f2f2f2;
-background-color: #a1a1a1;
+border: 1px solid #f2f2f2;
 }
 
+#label_Dashboard
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
 

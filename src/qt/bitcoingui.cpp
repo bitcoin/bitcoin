@@ -141,7 +141,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     {
         /** Create wallet frame and make it the centralish widget */
         walletFrame = new WalletFrame(this);
-        walletFrame->setMinimumWidth(700);
+        walletFrame->setMinimumWidth(650);
         walletFrame->setMinimumHeight(500);
     } else
 #endif // ENABLE_WALLET
@@ -481,21 +481,12 @@ void BitcoinGUI::createToolBars()
 {
     if(walletFrame)
     {
-
-        //QLabel *labelLogo = new QLabel(toolbar);
-        //labelLogo->setFixedWidth(200);
-        //labelLogo->setFixedHeight(110);
-        //labelLogo->setPixmap(QPixmap(":css/logo"));
-        //labelLogo->setObjectName("labelLogo");
-        //labelLogo->move(0,30);
-
         QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
         toolbar->setObjectName("toolbar");
         addToolBar(Qt::LeftToolBarArea, toolbar);
         toolbar->setMovable(false);
         toolbar->setFixedWidth(200);
         toolbar->setMinimumHeight(500);
-
         toolbar->setIconSize(QSize(16, 16));
 
         QLabel *labelLogo = new QLabel(toolbar);
@@ -518,17 +509,6 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(throneManagerAction);
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
-
-
-        //QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
-        //toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        //toolbar->addAction(overviewAction);
-        //toolbar->addAction(sendCoinsAction);
-        //toolbar->addAction(receiveCoinsAction);
-        //toolbar->addAction(historyAction);
-        //toolbar->addAction(throneManagerAction);
-        //toolbar->setMovable(false); // remove unused icon in upper left corner
-        //overviewAction->setChecked(true);
 
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
