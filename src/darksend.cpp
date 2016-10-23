@@ -881,7 +881,7 @@ bool CDarksendPool::IsInputScriptSigValid(const CTxIn& txin)
         BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
             txNew.vin.push_back(txdsin);
 
-            if(txdsin == txin) {
+            if(txdsin.prevout == txin.prevout) {
                 nTxInIndex = i;
                 sigPubKey = txdsin.prevPubKey;
             }
@@ -995,7 +995,7 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
         LogPrint("privatesend", "looking for txin -- %s\n", txin.ToString());
         BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
             BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
-                if((CTxIn)txdsin == txin) {
+                if(txdsin.prevout == txin.prevout) {
                     LogPrint("privatesend", "CDarksendPool::AddEntry -- found in txin\n");
                     nMessageIDRet = ERR_ALREADY_HAVE;
                     nSessionUsers--;

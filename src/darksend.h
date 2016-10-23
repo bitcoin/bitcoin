@@ -103,7 +103,7 @@ public:
         vecTxDSOut(std::vector<CTxDSOut>()),
         txCollateral(CTransaction()),
         nAmount(0),
-        nTimeAdded(0)
+        nTimeAdded(GetTime())
         {}
 
     CDarkSendEntry(const std::vector<CTxIn>& vecTxIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
