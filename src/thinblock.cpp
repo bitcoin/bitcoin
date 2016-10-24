@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+CCriticalSection cs_thinblockstats;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
 std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
@@ -287,6 +288,8 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, std::string strComma
 
 void CThinBlockStats::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
 {
+    LOCK(cs_thinblockstats);
+
     // Update InBound thinblock tracking information
     CThinBlockStats::nOriginalSize += nOriginalBlockSize;
     CThinBlockStats::nThinSize += nThinBlockSize;
@@ -303,6 +306,8 @@ void CThinBlockStats::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalB
 
 void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
 {
+    LOCK(cs_thinblockstats);
+
     CThinBlockStats::nOriginalSize += nOriginalBlockSize;
     CThinBlockStats::nThinSize += nThinBlockSize;
     CThinBlockStats::nBlocks += 1;
@@ -318,6 +323,8 @@ void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginal
 
 void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
 {
+    LOCK(cs_thinblockstats);
+
     CThinBlockStats::mapBloomFiltersOutBound[GetTimeMillis()] = nBloomFilterSize;
     CThinBlockStats::nTotalBloomFilterBytes += nBloomFilterSize;
 
@@ -331,6 +338,8 @@ void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
 
 void CThinBlockStats::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
 {
+    LOCK(cs_thinblockstats);
+
     CThinBlockStats::mapBloomFiltersInBound[GetTimeMillis()] = nBloomFilterSize;
     CThinBlockStats::nTotalBloomFilterBytes += nBloomFilterSize;
 
@@ -344,6 +353,8 @@ void CThinBlockStats::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
 
 void CThinBlockStats::UpdateResponseTime(double nResponseTime)
 {
+    LOCK(cs_thinblockstats);
+
     // only update stats if IBD is complete
     if (IsChainNearlySyncd() && IsThinBlocksEnabled()) {
         CThinBlockStats::mapThinBlockResponseTime[GetTimeMillis()] = nResponseTime;
@@ -359,6 +370,8 @@ void CThinBlockStats::UpdateResponseTime(double nResponseTime)
 
 void CThinBlockStats::UpdateValidationTime(double nValidationTime)
 {
+    LOCK(cs_thinblockstats);
+
     // only update stats if IBD is complete
     if (IsChainNearlySyncd() && IsThinBlocksEnabled()) {
         CThinBlockStats::mapThinBlockValidationTime[GetTimeMillis()] = nValidationTime;
@@ -374,6 +387,8 @@ void CThinBlockStats::UpdateValidationTime(double nValidationTime)
 
 void CThinBlockStats::UpdateInBoundReRequestedTx(int nReRequestedTx)
 {
+    LOCK(cs_thinblockstats);
+
     // Update InBound thinblock tracking information
     CThinBlockStats::mapThinBlocksInBoundReRequestedTx[GetTimeMillis()] = nReRequestedTx;
 
@@ -387,11 +402,14 @@ void CThinBlockStats::UpdateInBoundReRequestedTx(int nReRequestedTx)
 
 void CThinBlockStats::UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved)
 {
+    LOCK(cs_thinblockstats);
     CThinBlockStats::nMempoolLimiterBytesSaved += nBytesSaved;
 }
 
 std::string CThinBlockStats::ToString()
 {
+    LOCK(cs_thinblockstats);
+
     static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     int i = 0;
     double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() - CThinBlockStats::nTotalBloomFilterBytes());
@@ -409,6 +427,8 @@ std::string CThinBlockStats::ToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::InBoundPercentToString()
 {
+    LOCK(cs_thinblockstats);
+
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
     for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
@@ -442,6 +462,8 @@ std::string CThinBlockStats::InBoundPercentToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::OutBoundPercentToString()
 {
+    LOCK(cs_thinblockstats);
+
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
     for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
@@ -474,6 +496,8 @@ std::string CThinBlockStats::OutBoundPercentToString()
 // Calculate the average inbound xthin bloom filter size
 std::string CThinBlockStats::InBoundBloomFiltersToString()
 {
+    LOCK(cs_thinblockstats);
+
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
     for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
@@ -507,6 +531,8 @@ std::string CThinBlockStats::InBoundBloomFiltersToString()
 // Calculate the average inbound xthin bloom filter size
 std::string CThinBlockStats::OutBoundBloomFiltersToString()
 {
+    LOCK(cs_thinblockstats);
+
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
     for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
@@ -539,6 +565,8 @@ std::string CThinBlockStats::OutBoundBloomFiltersToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::ResponseTimeToString()
 {
+    LOCK(cs_thinblockstats);
+
     std::vector<double> vResponseTime;
 
     double nResponseTimeAverage = 0;
@@ -569,6 +597,8 @@ std::string CThinBlockStats::ResponseTimeToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::ValidationTimeToString()
 {
+    LOCK(cs_thinblockstats);
+
     std::vector<double> vValidationTime;
 
     double nValidationTimeAverage = 0;
@@ -599,6 +629,8 @@ std::string CThinBlockStats::ValidationTimeToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::ReRequestedTxToString()
 {
+    LOCK(cs_thinblockstats);
+
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
     for (std::map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
@@ -625,6 +657,8 @@ std::string CThinBlockStats::ReRequestedTxToString()
 
 std::string CThinBlockStats::MempoolLimiterBytesSavedToString()
 {
+    LOCK(cs_thinblockstats);
+
     static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     int i = 0;
     double size = (double)CThinBlockStats::nMempoolLimiterBytesSaved();
