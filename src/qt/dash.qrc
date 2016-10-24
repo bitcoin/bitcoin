@@ -54,10 +54,12 @@
         <file alias="drkblue_address-book">res/icons/drkblue_address-book.png</file>
         <file alias="drkblue_editcopy">res/icons/drkblue_editcopy.png</file>
         <file alias="drkblue_remove">res/icons/drkblue_remove.png</file>
+        <file alias="throne">res/icons/throne.png</file>
         <file alias="browse">res/icons/browse.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="crown">res/css/crown.css</file>
+        <file alias="down_arrow">res/css/down_arrow.png</file>
         <file alias="logo">res/css/logo.png</file>
     </qresource>	    
     <qresource prefix="/images">

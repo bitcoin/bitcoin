@@ -141,7 +141,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     {
         /** Create wallet frame and make it the centralish widget */
         walletFrame = new WalletFrame(this);
-        walletFrame->setMinimumWidth(700);
+        walletFrame->setMinimumWidth(650);
         walletFrame->setMinimumHeight(500);
     } else
 #endif // ENABLE_WALLET
@@ -262,7 +262,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
+    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Dashboard"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
@@ -306,7 +306,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    throneManagerAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Thrones"), this);
+    throneManagerAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
     throneManagerAction->setStatusTip(tr("Show Thrones status and configure your nodes."));
     throneManagerAction->setToolTip(historyAction->statusTip());
     throneManagerAction->setCheckable(true);
@@ -481,20 +481,13 @@ void BitcoinGUI::createToolBars()
 {
     if(walletFrame)
     {
-
-        //QLabel *labelLogo = new QLabel(toolbar);
-        //labelLogo->setFixedWidth(200);
-        //labelLogo->setFixedHeight(110);
-        //labelLogo->setPixmap(QPixmap(":css/logo"));
-        //labelLogo->setObjectName("labelLogo");
-        //labelLogo->move(0,30);
-
         QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
         toolbar->setObjectName("toolbar");
         addToolBar(Qt::LeftToolBarArea, toolbar);
         toolbar->setMovable(false);
         toolbar->setFixedWidth(200);
         toolbar->setMinimumHeight(500);
+        toolbar->setIconSize(QSize(16, 16));
 
         QLabel *labelLogo = new QLabel(toolbar);
         labelLogo->setFixedWidth(200);
@@ -502,9 +495,10 @@ void BitcoinGUI::createToolBars()
         labelLogo->setPixmap(QPixmap(":css/logo"));
         labelLogo->setObjectName("labelLogo");
 
-        QWidget* spacer1 = new QWidget(toolbar);
-        spacer1->setFixedWidth(200);
-        spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        QWidget* spacer1 = new QWidget();
+        spacer1->setFixedWidth(20);
+        spacer1->setObjectName("spacer1");
+        spacer1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
 
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addWidget(labelLogo);
@@ -514,19 +508,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         toolbar->addAction(throneManagerAction);
         toolbar->setMovable(false); // remove unused icon in upper left corner
-        toolbar->addWidget(spacer1);
         overviewAction->setChecked(true);
-
-
-        //QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
-        //toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        //toolbar->addAction(overviewAction);
-        //toolbar->addAction(sendCoinsAction);
-        //toolbar->addAction(receiveCoinsAction);
-        //toolbar->addAction(historyAction);
-        //toolbar->addAction(throneManagerAction);
-        //toolbar->setMovable(false); // remove unused icon in upper left corner
-        //overviewAction->setChecked(true);
 
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
@@ -534,6 +516,7 @@ void BitcoinGUI::createToolBars()
         QWidget *containerWidget = new QWidget();
         QBoxLayout *layout = new QBoxLayout(QBoxLayout::LeftToRight, containerWidget);
         layout->addWidget(toolbar);
+        layout->addWidget(spacer1);
         layout->addWidget(walletFrame);
         layout->setSpacing(0);
         layout->setContentsMargins(QMargins());

@@ -3,21 +3,24 @@ QMainWindow
 background-color: #ffffff;
 }
 
-
 QWidget
 {
 color: #2f2f2f;
 background-color: #ffffff;
 }
 
-
+QTableView
+{
+color: #555555;
+alternate-background-color: #f2f2f2;
+}
 
 QMenuBar
 {
 color: #a1a1a1;
 background-color: #f2f2f2;
-padding-top: 5px;
-padding-bottom: 5px;
+padding-top: 9px;
+padding-bottom: 9px;
 spacing: 6px;
 }
 
@@ -46,9 +49,6 @@ color: #555555;
 background-color: #f2f2f2;
 }
 
-
-
-
 QToolBar
 {
 color: #a1a1a1;
@@ -60,56 +60,260 @@ min-width:200px;
 max-width:200px;
 }
 
-QMainWindow QToolBar#toolbar QToolButton
+QToolButton
 {
 text-align: left;
 min-width:200px;
 max-width:200px;
+min-height:40px;
+max-height:40px;
 color: #a1a1a1;
 background-color: #ffffff;
+border: none;
 }
 
 QToolButton:hover 
 {
-text-align: left;
-min-width:200px;
-max-width:200px;
 color: #555555;
 background-color: #f2f2f2;
 } 
 
-QToolButton:!hover 
-{
-text-align: left;
-min-width:200px;
-max-width:200px;
-color: #a1a1a1;
-background-color: #ffffff;
-}
-
 QToolButton:checked
 { 
-text-align: left;
-min-width:200px;
-max-width:200px;
 color: #555555;
 background-color: #f2f2f2;
 }
 
-QToolButton:!checked
+QPushButton
 {
-text-align: left;
-min-width:200px;
-max-width:200px;
+border: 1px solid #9c8b46;
+color: #a1a1a1;
+background-color: #f2f2f2;
+padding: 2px;
+}
+
+QPushButton:hover
+{
+border: 1px solid #9c8b46;
+color: #555555;
+background-color: #9c8b46;
+padding: 2px;
+}
+
+QLabel
+{
+color: #555555;
+background-color: #ffffff;
+}
+
+QLineEdit
+{
 color: #a1a1a1;
 background-color: #ffffff;
 }
 
-#spacer2
+QValidatedLineEdit
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+QComboBox QAbstractItemView::item 
+{
+margin:4px; 
+}
+
+QProgressBar
+{
+color: #555555;
+border: 1px solid #a1a1a1;
+text-align: center;
+}
+
+QProgressBar::chunk
+{
+background-color: #9c8b46;
+}
+
+QTabBar::tab {
+color: #555555;
+border: 1px solid #f2f2f2;
+border-bottom-style: none;
+background-color: #f2f2f2;
+padding-left: 10px;
+padding-right: 10px;
+padding-top: 3px;
+padding-bottom: 2px;
+margin-right: -1px;
+}
+
+QTabWidget::pane {
+/*border: 1px solid #f2f2f2;*/
+
+}
+
+QTabBar::tab:last
+{
+margin-right: 0; /* the last selected tab has nothing to overlap with on the right */
+border-top-right-radius: 3px;
+}
+
+QTabBar::tab:first:!selected
+{
+margin-left: 0px; /* the last selected tab has nothing to overlap with on the right */
+border-top-left-radius: 3px;
+}
+
+QTabBar::tab:!selected
+{
+color: #b1b1b1;
+border-bottom-style: solid;
+margin-top: 3px;
+/*background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #aaaaaa, stop:.4 #343434);*/
+background-color: #f2f2f2;
+}
+
+QTabBar::tab:selected
+{
+color: #555555;
+border-top-left-radius: 3px;
+border-top-right-radius: 3px;
+margin-bottom: 0px;
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
+}
+
+QTabBar::tab:!selected:hover
+{
+color: #555555;
+border-top-left-radius: 3px;
+border-top-right-radius: 3px;
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
+}
+
+QHeaderView::section
 {
 background-color: #f2f2f2;
+color: #555555;
+/*padding-left: 4px;*/
+/*border: 1px solid #6c6c6c;*/
+padding: 6px;
+border: 1px solid #f2f2f2;
+}
+
+
+QComboBox
+{
+padding: 0px 0px 0px 0px;
+background-color: #ffffff;
+selection-background-color: #ffffff;
+color: #a1a1a1;
+}
+
+QComboBox QAbstractItemView
+{
+selection-background-color: #ffffff;
+background-color: #ffffff;
+color: #a1a1a1;
+}
+
+QComboBox::drop-down
+{
+background-color: #ffffff;
+color: #a1a1a1;
+subcontrol-origin: padding;
+subcontrol-position: top right;
+width: 15px;
+border: 1px solid #a1a1a1;
+/*border-left-width: 0px;
+border-left-color: #a1a1a1;
+border-left-style: solid; */
+}
+
+QComboBox::down-arrow
+{
+image: url(':css/down_arrow');
+}
+
+QAbstractSpinBox
+{
+background: #ffffff;
+color: #555555;
 }
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+#spacer1
+{
+background-color: #f2f2f2;
+min-width: 20px;
+max-width: 20px;
+
+}
+
+#label_Wallet
+{
+color: #9c8b46;
+}
+
+#label_RecentTransactions
+{
+color: #9c8b46;
+}
+
+#frame_ovp_Wallet
+{
+border: 1px solid #f2f2f2;
+}
+
+#label_Dashboard
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+
+#label_Send_CRW
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+#label_Receive_CRW
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+#label_Thrones
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+#label_TX
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
