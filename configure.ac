@@ -186,7 +186,7 @@ fi
 ##       compatibility with the legacy buildsystem.
 ##
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign"
+  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 fi
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
@@ -447,12 +447,14 @@ if test x$use_hardening != xno; then
   AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
   AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
-  AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
-    AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
-      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
-    ])
-    HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
-  ])
+  if test "x$enable_debug" = xno; then
+      AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
+        AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
+          HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
+        ])
+        HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
+      ])
+  fi
 
   AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
   AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
