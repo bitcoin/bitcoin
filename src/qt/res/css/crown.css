@@ -251,6 +251,17 @@ background: #ffffff;
 color: #555555;
 }
 
+QStackedWidget#SendCoinsEntry .QToolButton 
+{
+background-color:transparent;
+padding-left:5px;
+padding-right:5px;
+border: 0;
+outline: 0;
+min-width: 30px;
+max-width: 30px;
+}
+
 #spacer1
 {
 background-color: #f2f2f2;
