@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tabMain">
       <attribute name="title">
@@ -507,13 +507,32 @@ https://www.transifex.com/projects/p/dash/</string>
         <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
          <item>
           <widget class="QLabel" name="themeLabel">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="text">
             <string>User Interface Theme:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QValueComboBox" name="theme"/>
+          <widget class="QValueComboBox" name="theme">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
