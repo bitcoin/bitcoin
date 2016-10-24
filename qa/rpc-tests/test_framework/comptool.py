@@ -222,7 +222,7 @@ class TestManager(object):
                 blockhash in node.block_request_map and node.block_request_map[blockhash]
                 for node in self.test_nodes
             )
-        time.sleep(22)  # The BU xthin preferential thinblock timer will delay sync so we need to wait longer for sync
+        time.sleep(1)  # The BU xthin preferential thinblock timer will delay sync so we need to wait longer for sync
         # --> error if not requested
         if not wait_until(blocks_requested, attempts=20*num_blocks):
             # print [ c.cb.block_request_map for c in self.connections ]
