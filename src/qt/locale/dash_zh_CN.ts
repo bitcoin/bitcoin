@@ -2277,15 +2277,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>最小化</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then "per kilobyte" only pays 250 crowns in fee,&lt;br /&gt;while "at least" pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>
-如果自定手续费设定为1000 duffs,而交易信息只有250字节的话,那么选择"每千位字节"就只会支付250 duffs的手续费,&lt;br /&gt;而"至少"会支付1000 duffs.
+如果自定手续费设定为1000 crowns,而交易信息只有250字节的话,那么选择"每千位字节"就只会支付250 crowns的手续费,&lt;br /&gt;而"至少"会支付1000 crowns.
 但如果交易信息大于一千字节,那么两者都要支付千字节费用.</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then "per kilobyte" only pays 250 crowns in fee,&lt;br /&gt;while "total at least" pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>
-如果自定手续费设定为1000 duffs,而交易信息只有250字节的话,那么选择"每千位字节"就只会支付250 duffs的手续费,&lt;br /&gt;而"总共至少"会支付1000 duffs.
+如果自定手续费设定为1000 crowns,而交易信息只有250字节的话,那么选择"每千位字节"就只会支付250 crowns的手续费,&lt;br /&gt;而"总共至少"会支付1000 crowns.
 但如果交易信息大于一千字节,那么两者都要支付千字节费用.</translation>
     </message>
     <message>

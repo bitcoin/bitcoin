@@ -60,7 +60,7 @@ public:
         CRW,
         mCRW,
         uCRW,
-        duffs
+        crowns
     };
 
     enum SeparatorStyle
