@@ -130,7 +130,7 @@ TransactionView::TransactionView(QWidget *parent) :
     vlayout->addWidget(label_TX);
 
     QWidget* spacer3 = new QWidget();
-    spacer3->setFixedHeight(10);
+    spacer3->setFixedHeight(5);
     spacer3->setObjectName("spacer3");
     spacer3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     vlayout->addWidget(spacer3);
