@@ -255,7 +255,7 @@ Q_SIGNALS:
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
-    void encryptionStatusChanged(int status);
+    void encryptionStatusChanged();
 
     // Signal emitted when wallet needs to be unlocked
     // It is valid behaviour for listeners to keep the wallet locked after this signal;
