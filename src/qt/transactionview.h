@@ -9,6 +9,7 @@
 
 #include <QWidget>
 #include <QKeyEvent>
+#include <QLabel>
 
 class TransactionFilterProxy;
 class WalletModel;
@@ -67,6 +68,9 @@ private:
     QComboBox *watchOnlyWidget;
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
+
+    QLabel *label_TX;
+    QWidget *spacer3;
 
     QMenu *contextMenu;
     QSignalMapper *mapperThirdPartyTxUrls;

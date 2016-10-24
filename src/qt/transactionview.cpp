@@ -51,7 +51,7 @@ TransactionView::TransactionView(QWidget *parent) :
 #else
     hlayout->setSpacing(0);
     hlayout->addSpacing(23);
-#endif
+#endif  
 
     watchOnlyWidget = new QComboBox(this);
     watchOnlyWidget->setFixedWidth(24);
@@ -122,6 +122,18 @@ TransactionView::TransactionView(QWidget *parent) :
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
+
+    // header label
+    QLabel *label_TX = new QLabel(this);
+    label_TX->setText(tr("   Transaction History"));
+    label_TX->setObjectName("label_TX");
+    vlayout->addWidget(label_TX);
+
+    QWidget* spacer3 = new QWidget();
+    spacer3->setFixedHeight(10);
+    spacer3->setObjectName("spacer3");
+    spacer3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    vlayout->addWidget(spacer3);
 
     QTableView *view = new QTableView(this);
     vlayout->addLayout(hlayout);
