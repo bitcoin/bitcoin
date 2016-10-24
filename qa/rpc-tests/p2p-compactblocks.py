@@ -300,8 +300,8 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert(segwit_tx_generated) # check that our test is not broken
 
         # Wait until we've seen the block announcement for the resulting tip
-        tip = int(self.nodes[0].getbestblockhash(), 16)
-        assert(self.test_node.wait_for_block_announcement(tip))
+        tip = int(node.getbestblockhash(), 16)
+        assert(test_node.wait_for_block_announcement(tip))
 
         # Now mine a block, and look at the resulting compact block.
         test_node.clear_block_announcement()
