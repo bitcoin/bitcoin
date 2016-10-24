@@ -95,13 +95,13 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         connect(this, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
 
         // Pass through encryption status changed signals
-        connect(this, SIGNAL(encryptionStatusChanged(int)), gui, SLOT(setEncryptionStatus(int)));
+        connect(this, SIGNAL(encryptionStatusChanged(int)), gui, SLOT(updateWalletStatus()));
 
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
 
         // Connect HD enabled state signal 
-        connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
+        connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(updateWalletStatus()));
     }
 }
 
