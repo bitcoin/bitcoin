@@ -119,8 +119,9 @@ void WalletModel::updateStatus()
 {
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
 
-    if(cachedEncryptionStatus != newEncryptionStatus)
-        Q_EMIT encryptionStatusChanged(newEncryptionStatus);
+    if(cachedEncryptionStatus != newEncryptionStatus) {
+        Q_EMIT encryptionStatusChanged();
+    }
 }
 
 void WalletModel::pollBalanceChanged()

@@ -23,6 +23,7 @@
 #ifdef ENABLE_WALLET
 #include <qt/walletframe.h>
 #include <qt/walletmodel.h>
+#include <qt/walletview.h>
 #endif // ENABLE_WALLET
 
 #ifdef Q_OS_MAC
@@ -1334,6 +1335,20 @@ void BitcoinGUI::setEncryptionStatus(int status)
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
     }
+}
+
+void BitcoinGUI::updateWalletStatus()
+{
+    if (!walletFrame) {
+        return;
+    }
+    WalletView * const walletView = walletFrame->currentWalletView();
+    if (!walletView) {
+        return;
+    }
+    WalletModel * const walletModel = walletView->getWalletModel();
+    setEncryptionStatus(walletModel->getEncryptionStatus());
+    setHDStatus(walletModel->hdEnabled());
 }
 #endif // ENABLE_WALLET
 
