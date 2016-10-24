@@ -140,9 +140,8 @@ public:
                 std::vector<unsigned char> witnessprogram;
                 subscript.IsWitnessProgram(witnessversion, witnessprogram);
                 CPubKey vchPubKey;
-                if (pwalletMain->GetPubKey(CKeyID(uint160(witnessprogram)), vchPubKey)) {
+                if (pwalletMain->GetPubKey(CKeyID(uint160(witnessprogram)), vchPubKey) && vchPubKey.IsCompressed()) {
                     obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
-                    obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
                 }
             }
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
