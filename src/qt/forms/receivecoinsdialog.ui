@@ -10,7 +10,14 @@
     <height>364</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1">
+   <item>
+    <widget class="QLabel" name="label_Receive_CRW">
+     <property name="text">
+      <string>   Receive CRW</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QFrame" name="frame2">
      <property name="sizePolicy">

@@ -11,6 +11,7 @@ background-color: #ffffff;
 
 QTableView
 {
+color: #555555;
 alternate-background-color: #f2f2f2;
 }
 
@@ -95,13 +96,25 @@ QPushButton:hover
 {
 border: 1px solid #9c8b46;
 color: #555555;
-background-color: #f2f2f2;
+background-color: #9c8b46;
 padding: 2px;
 }
 
 QLabel
 {
 color: #555555;
+background-color: #ffffff;
+}
+
+QLineEdit
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+QValidatedLineEdit
+{
+color: #a1a1a1;
 background-color: #ffffff;
 }
 
@@ -112,6 +125,7 @@ margin:4px;
 
 QProgressBar
 {
+color: #555555;
 border: 1px solid #a1a1a1;
 text-align: center;
 }
@@ -176,7 +190,15 @@ border-top-right-radius: 3px;
 background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
 }
 
-
+QHeaderView::section
+{
+background-color: #f2f2f2;
+color: #555555;
+/*padding-left: 4px;*/
+/*border: 1px solid #6c6c6c;*/
+padding: 6px;
+border: 1px solid #f2f2f2;
+}
 
 
 QComboBox
@@ -212,7 +234,11 @@ QComboBox::down-arrow
 image: url(':css/down_arrow');
 }
 
-
+QAbstractSpinBox
+{
+background: #ffffff;
+color: #555555;
+}
 
 
 
@@ -259,3 +285,35 @@ min-height: 30px;
 max-height: 30px;
 }
 
+
+#label_Send_CRW
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+#label_Receive_CRW
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+#label_Thrones
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
+
+#label_TX
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 30px;
+max-height: 30px;
+}
