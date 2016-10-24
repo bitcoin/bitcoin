@@ -1201,9 +1201,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         unsigned int nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
 
-        if(mapDarksendBroadcastTxes.count(hash))
-           mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
-
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
@@ -5700,37 +5697,46 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
         CTransaction tx;
+        CDarksendBroadcastTx dstx;
+        int nInvType = MSG_TX;
 
         if(strCommand == NetMsgType::TX) {
             vRecv >> tx;
         } else if (strCommand == NetMsgType::DSTX) {
-            //these allow masternodes to publish a limited amount of free transactions
-            CDarksendBroadcastTx dstx;
             vRecv >> dstx;
             tx = dstx.tx;
+            uint256 hashTx = tx.GetHash();
+            nInvType = MSG_DSTX;
+
+            if(mapDarksendBroadcastTxes.count(hashTx)) {
+                LogPrint("privatesend", "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
+                return true; // not an error
+            }
 
             CMasternode* pmn = mnodeman.Find(dstx.vin);
-            if(pmn != NULL)
-            {
-                if(!pmn->fAllowMixingTx) {
-                    //multiple peers can send us a valid masternode transaction
-                    LogPrint("privatesend", "DSTX -- Masternode sending too many transactions %s\n", tx.GetHash().ToString());
-                    return true;
-                }
-
-                if(!dstx.CheckSignature()) return false;
-
-                LogPrintf("DSTX -- Got Masternode transaction %s\n", tx.GetHash().ToString());
-
-                pmn->fAllowMixingTx = false;
-
-                if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
-                    mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
-                }
+            if(pmn == NULL) {
+                LogPrint("privatesend", "DSTX -- Can't find masternode %s to verify %s\n", dstx.vin.prevout.ToStringShort(), hashTx.ToString());
+                return false;
             }
+
+            if(!pmn->fAllowMixingTx) {
+                LogPrint("privatesend", "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.vin.prevout.ToStringShort(), hashTx.ToString());
+                return true;
+                // TODO: Not an error? Could it be that someone is relaying old DSTXes
+                // we have no idea about (e.g we were offline)? How to handle them?
+            }
+
+            if(!dstx.CheckSignature()) {
+                LogPrint("privatesend", "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
+                return false;
+            }
+
+            LogPrintf("DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
+            mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
+            pmn->fAllowMixingTx = false;
         }
 
-        CInv inv(MSG_TX, tx.GetHash());
+        CInv inv(nInvType, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
         LOCK(cs_main);
@@ -5743,6 +5749,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
+            if (strCommand == NetMsgType::DSTX) {
+                mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
+            }
+
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
