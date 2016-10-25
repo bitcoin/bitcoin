@@ -251,7 +251,8 @@ CScript _createmultisig_redeemScript(const UniValue& params)
         if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
-            if (!address.GetKeyID(keyID))
+            CScriptID scriptID;
+            if (!address.GetKeyID(keyID) && (!address.GetScriptID(scriptID) || !GetWitnessKeyID(pwalletMain, scriptID, keyID)))
                 throw runtime_error(
                     strprintf("%s does not refer to a key",ks));
             CPubKey vchPubKey;
