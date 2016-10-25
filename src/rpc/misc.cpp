@@ -364,7 +364,8 @@ UniValue verifymessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKeyID keyID;
-    if (!addr.GetKeyID(keyID))
+    CScriptID scriptID;
+    if (!addr.GetKeyID(keyID) && !addr.GetScriptID(scriptID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
     bool fInvalid = false;
@@ -380,6 +381,15 @@ UniValue verifymessage(const JSONRPCRequest& request)
     CPubKey pubkey;
     if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
         return false;
+
+    //Possibly p2sh-p2wpkh
+    if (scriptID != CScriptID()) {
+        CScriptID nestedScriptID = CScriptID(CScript() << OP_0 << ToByteVector(pubkey.GetID()));
+        //Failure here could mean address is any other type of p2sh
+        if (scriptID != nestedScriptID) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Given P2SH address does not match the signature.");
+        }
+    }
 
     return (pubkey.GetID() == keyID);
 }
