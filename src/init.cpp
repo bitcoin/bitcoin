@@ -788,10 +788,17 @@ void InitLogging()
     LogPrintf("Bitcoin version %s\n", FormatFullVersion());
 }
 
-/** Initialize bitcoin.
- *  @pre Parameters should be parsed and config file should be read.
- */
-bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+namespace { // Variables internal to initialization process only
+
+ServiceFlags nRelevantServices = NODE_NETWORK;
+int nMaxConnections;
+int nUserMaxConnections;
+int nFD;
+ServiceFlags nLocalServices = NODE_NETWORK;
+
+}
+
+bool AppInitBasicSetup()
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -843,9 +850,13 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Ignore SIGPIPE, otherwise it will bring the daemon down if the client closes unexpectedly
     signal(SIGPIPE, SIG_IGN);
 #endif
+    return true;
+}
 
-    // ********************************************************* Step 2: parameter interactions
+bool AppInitParameterInteraction()
+{
     const CChainParams& chainparams = Params();
+    // ********************************************************* Step 2: parameter interactions
 
     // also see: InitParameterInteraction()
 
@@ -857,12 +868,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Make sure enough file descriptors are available
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
-    int nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
-    int nMaxConnections = std::max(nUserMaxConnections, 0);
+    nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    nMaxConnections = std::max(nUserMaxConnections, 0);
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
-    int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
+    nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
         return InitError(_("Not enough file descriptors available."));
     nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS, nMaxConnections);
@@ -977,9 +988,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 
-    ServiceFlags nLocalServices = NODE_NETWORK;
-    ServiceFlags nRelevantServices = NODE_NETWORK;
-
     if (GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
@@ -1028,8 +1036,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             }
         }
     }
+    return true;
+}
 
-    // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+bool AppInitSanityChecks()
+{
+    // ********************************************************* Step 4: sanity checks
 
     // Initialize elliptic curve code
     ECC_Start();
@@ -1048,11 +1060,19 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     try {
         static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
-        if (!lock.try_lock())
+        if (!lock.try_lock()) {
             return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), strDataDir, _(PACKAGE_NAME)));
+        }
     } catch(const boost::interprocess::interprocess_exception& e) {
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running.") + " %s.", strDataDir, _(PACKAGE_NAME), e.what()));
     }
+    return true;
+}
+
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
+{
+    const CChainParams& chainparams = Params();
+    // ********************************************************* Step 4a: application initialization
 
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
@@ -1066,7 +1086,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!fLogTimestamps)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
-    LogPrintf("Using data directory %s\n", strDataDir);
+    LogPrintf("Using data directory %s\n", GetDataDir().string());
     LogPrintf("Using config file %s\n", GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
