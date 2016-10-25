@@ -253,13 +253,13 @@ color: #555555;
 
 QStackedWidget#SendCoinsEntry .QToolButton 
 {
-background-color:transparent;
+background-color:#ffffff;
 padding-left:5px;
 padding-right:5px;
 border: 0;
 outline: 0;
-min-width: 30px;
-max-width: 30px;
+min-width: 20px;
+max-width: 20px;
 }
 
 #spacer1
@@ -267,7 +267,6 @@ max-width: 30px;
 background-color: #f2f2f2;
 min-width: 20px;
 max-width: 20px;
-
 }
 
 #label_Wallet
