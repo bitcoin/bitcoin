@@ -1102,7 +1102,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         nMaxAddNodeOutbound = std::min((int)vAddedNodes.size(), nMaxOutConnections);
     }
     int nMaxInbound = nMaxConnections - (nMaxOutConnections + MAX_FEELER_CONNECTIONS) - nMaxAddNodeOutbound;
-    assert(nMaxInbound > 0);
+
     //REVISIT: a. This doesn't take into account RPC "addnode <node> onetry" outbound connections as those aren't tracked
     //         b. This also doesn't take into account whether or not the tracked vAddedNodes are valid or connected
     //         c. There is also an edge case where if less than nMaxOutConnections entries exist in vAddedNodes
