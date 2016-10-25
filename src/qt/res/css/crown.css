@@ -190,16 +190,27 @@ border-top-right-radius: 3px;
 background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
 }
 
+QHeaderView
+{
+background-color: #f2f2f2;
+color: #555555;
+}
+
 QHeaderView::section
 {
 background-color: #f2f2f2;
 color: #555555;
-/*padding-left: 4px;*/
-/*border: 1px solid #6c6c6c;*/
 padding: 6px;
 border: 1px solid #f2f2f2;
 }
 
+QHeaderView::section:hover
+{
+background-color: #f2f2f2;
+color: #555555;
+padding: 6px;
+border: 1px solid #f2f2f2;
+}
 
 QComboBox
 {
@@ -240,19 +251,16 @@ background: #ffffff;
 color: #555555;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+QStackedWidget#SendCoinsEntry .QToolButton 
+{
+background-color:transparent;
+padding-left:5px;
+padding-right:5px;
+border: 0;
+outline: 0;
+min-width: 30px;
+max-width: 30px;
+}
 
 #spacer1
 {
@@ -284,7 +292,6 @@ background-color: #f2f2f2;
 min-height: 30px;
 max-height: 30px;
 }
-
 
 #label_Send_CRW
 {

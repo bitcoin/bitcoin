@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tabMain">
       <attribute name="title">
@@ -134,6 +134,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout_4_Main">
          <item>
           <widget class="QLabel" name="label">
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="toolTip">
             <string>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
@@ -144,6 +150,12 @@
          </item>
          <item>
           <widget class="QSpinBox" name="darksendRounds">
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>2</number>
            </property>
@@ -161,6 +173,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QLabel" name="label_2">
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="toolTip">
             <string>This amount acts as a threshold to turn off Darksend once it's reached.</string>
            </property>
@@ -183,6 +201,12 @@
          </item>
          <item>
           <widget class="QSpinBox" name="anonymizeDarkcoin">
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>2</number>
            </property>
@@ -483,13 +507,32 @@ https://www.transifex.com/projects/p/dash/</string>
         <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
          <item>
           <widget class="QLabel" name="themeLabel">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="text">
             <string>User Interface Theme:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QValueComboBox" name="theme"/>
+          <widget class="QValueComboBox" name="theme">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

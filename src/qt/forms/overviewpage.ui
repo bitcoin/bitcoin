@@ -1256,7 +1256,7 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>60</width>
+           <width>20</width>
            <height>100</height>
           </size>
          </property>
