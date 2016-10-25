@@ -118,8 +118,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& strErrorRet)
 
 void CActiveMasternode::ManageStateInitial()
 {
-    LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- Start status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetType(), fPingerEnabled);
-
+    LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetType(), fPingerEnabled);
     // Check that our local network configuration is correct
     if(!GetLocal(service)) {
         strNotCapableReason = "Can't detect external address. Please consider using the externalip configuration option if problem persists.";
@@ -184,7 +183,12 @@ void CActiveMasternode::ManageStateInitial()
 
 void CActiveMasternode::ManageStateRemote()
 {
-    LogPrint("masternode", "CActiveMasternode::ManageStateRemote -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetType(), fPingerEnabled);
+    LogPrint("masternode", "CActiveMasternode::ManageStateRemote -- Start status = %s, type = %s, pinger enabled = %d, pubKeyMasternode.GetID() = %s\n", 
+             GetStatus(),
+             GetType(),
+             fPingerEnabled,
+             pubKeyMasternode.GetID().ToString());
+
     mnodeman.CheckMasternode(pubKeyMasternode);
     masternode_info_t infoMn = mnodeman.GetMasternodeInfo(pubKeyMasternode);
     if(infoMn.fInfoValid) {

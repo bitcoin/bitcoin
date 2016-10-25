@@ -393,6 +393,11 @@ bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollater
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
+    LogPrint("masternode", "CMasternodeBroadcast::Create -- pubKeyCollateralAddressNew = %s, pubKeyMasternodeNew.GetID() = %s\n",
+             CBitcoinAddress(pubKeyCollateralAddressNew.GetID()).ToString(),
+             pubKeyMasternodeNew.GetID().ToString());
+
+
     CMasternodePing mnp(txin);
     if(!mnp.Sign(keyMasternodeNew, pubKeyMasternodeNew)) {
         strErrorRet = strprintf("Failed to sign ping, masternode=%s", txin.prevout.ToStringShort());
@@ -509,9 +514,6 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
         return false;
     }
 
-    // masternode is not enabled yet/already, nothing to update
-    if(!pmn->IsEnabled()) return false;
-
     // IsVnAssociatedWithPubkey is validated once in CheckOutpoint, after that they just need to match
     if(pmn->pubKeyCollateralAddress != pubKeyCollateralAddress) {
         LogPrintf("CMasternodeMan::Update -- Got mismatched pubKeyCollateralAddress and vin\n");
@@ -525,10 +527,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
         LogPrintf("CMasternodeBroadcast::Update -- Got UPDATED Masternode entry: addr=%s\n", addr.ToString());
         if(pmn->UpdateFromNewBroadcast((*this))) {
             pmn->Check();
-            // normally masternode should be in pre-enabled status after update, if not - do not relay
-            if(pmn->IsPreEnabled()) {
-                Relay();
-            }
+            Relay();
         }
         masternodeSync.AddedMasternodeList();
     }
