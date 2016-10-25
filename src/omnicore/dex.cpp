@@ -285,7 +285,7 @@ int DEx_acceptCreate(const std::string& addressBuyer, const std::string& address
 
     // the older accept is the valid one: do not accept any new ones!
     if (DEx_acceptExists(addressSeller, propertyId, addressBuyer)) {
-        PrintToLog("%s: rejected: an accept order from this same seller for this same offer is already exists\n", __func__);
+        PrintToLog("%s: rejected: an accept order from this same seller for this same offer already exists\n", __func__);
         return DEX_ERROR_ACCEPT -205;
     }
 
@@ -295,23 +295,28 @@ int DEx_acceptCreate(const std::string& addressBuyer, const std::string& address
         return DEX_ERROR_ACCEPT -105;
     }
 
-    int64_t nActualAmount = getMPbalance(addressSeller, propertyId, SELLOFFER_RESERVE);
+    int64_t amountReserved = 0;
+    int64_t amountRemainingForSale = getMPbalance(addressSeller, propertyId, SELLOFFER_RESERVE);
 
-    if (nActualAmount > amountAccepted) {
-        nActualAmount = amountAccepted;
-
-        if (nAmended) *nAmended = nActualAmount;
+    // ensure the buyer only can reserve the amount that is still available
+    if (amountRemainingForSale >= amountAccepted) {
+        amountReserved = amountAccepted;
+    } else {
+        amountReserved = amountRemainingForSale;
+        PrintToLog("%s: buyer wants to reserve %d tokens, but only %d tokens are available\n", __func__, amountAccepted, amountRemainingForSale);
     }
 
-    if (nActualAmount > 0) {
-        assert(update_tally_map(addressSeller, propertyId, -nActualAmount, SELLOFFER_RESERVE));
-        assert(update_tally_map(addressSeller, propertyId, nActualAmount, ACCEPT_RESERVE));
+    if (amountReserved > 0) {
+        assert(update_tally_map(addressSeller, propertyId, -amountReserved, SELLOFFER_RESERVE));
+        assert(update_tally_map(addressSeller, propertyId, amountReserved, ACCEPT_RESERVE));
 
-        CMPAccept acceptOffer(nActualAmount, block, offer.getBlockTimeLimit(), offer.getProperty(), offer.getOfferAmountOriginal(), offer.getBTCDesiredOriginal(), offer.getHash());
+        CMPAccept acceptOffer(amountReserved, block, offer.getBlockTimeLimit(), offer.getProperty(), offer.getOfferAmountOriginal(), offer.getBTCDesiredOriginal(), offer.getHash());
         my_accepts.insert(std::make_pair(keyAcceptOrder, acceptOffer));
 
         rc = 0;
     }
+
+    if (nAmended) *nAmended = amountReserved;
 
     return rc;
 }
