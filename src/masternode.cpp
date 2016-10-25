@@ -439,7 +439,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
         return false;
     }
 
-    // incorrect ping or its sigTime
+    // empty ping or incorrect sigTime/blockhash
     if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true)) {
         return false;
     }
@@ -745,7 +745,7 @@ bool CMasternodePing::CheckSignature(CPubKey& pubKeyMasternode, int &nDos)
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSigTimeOnly)
+bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fSimpleCheck)
 {
     if (sigTime > GetAdjustedTime() + 60 * 60) {
         LogPrintf("CMasternodePing::CheckAndUpdate -- Signature rejected, too far into the future, masternode=%s\n", vin.prevout.ToStringShort());
@@ -776,9 +776,8 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
         }
     }
 
-    if (fCheckSigTimeOnly) {
-        CMasternode* pmn = mnodeman.Find(vin);
-        if (pmn) return CheckSignature(pmn->pubKeyMasternode, nDos);
+    if (fSimpleCheck) {
+        LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- ping verified in fSimpleCheck mode: masternode=%s  blockHash=%s  sigTime=%d\n", vin.prevout.ToStringShort(), blockHash.ToString(), sigTime);
         return true;
     }
 
