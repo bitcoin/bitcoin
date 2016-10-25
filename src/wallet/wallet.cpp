@@ -2672,7 +2672,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
     return false;
 }
 
-bool CWallet::SelectCoinsCollateral(std::vector<CTxIn>& vecTxInRet, CAmount& nValueRet) const
+bool CWallet::GetCollateralTxIn(CTxIn& txinRet, CAmount& nValueRet) const
 {
     vector<COutput> vCoins;
 
@@ -2680,14 +2680,11 @@ bool CWallet::SelectCoinsCollateral(std::vector<CTxIn>& vecTxInRet, CAmount& nVa
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        // collateral inputs will always be a multiple of DARSEND_COLLATERAL, up to five
         if(IsCollateralAmount(out.tx->vout[out.i].nValue))
         {
-            CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
-
-            txin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
-            nValueRet += out.tx->vout[out.i].nValue;
-            vecTxInRet.push_back(txin);
+            txinRet = CTxIn(out.tx->GetHash(), out.i);
+            txinRet.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
+            nValueRet = out.tx->vout[out.i].nValue;
             return true;
         }
     }
@@ -2785,34 +2782,30 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
     vector<COutput> vCoins;
     AvailableCoins(vCoins, fOnlyConfirmed);
 
-    int nFound = 0;
     BOOST_FOREACH(const COutput& out, vCoins)
-        if(IsCollateralAmount(out.tx->vout[out.i].nValue)) nFound++;
+        if(IsCollateralAmount(out.tx->vout[out.i].nValue)) return true;
 
-    return nFound > 0;
+    return false;
 }
 
 bool CWallet::IsCollateralAmount(CAmount nInputAmount) const
 {
-    return  nInputAmount != 0 && nInputAmount % PRIVATESEND_COLLATERAL == 0 && nInputAmount < PRIVATESEND_COLLATERAL * 5 && nInputAmount > PRIVATESEND_COLLATERAL;
+    // collateral inputs should always be a 2x..4x of PRIVATESEND_COLLATERAL
+    return  nInputAmount >= PRIVATESEND_COLLATERAL * 2 &&
+            nInputAmount <= PRIVATESEND_COLLATERAL * 4 &&
+            nInputAmount %  PRIVATESEND_COLLATERAL == 0;
 }
 
 bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
 {
-    /*
-        To doublespend a collateral transaction, it will require a fee higher than this. So there's
-        still a significant cost.
-    */
-    CAmount nFeeRet = 0.001*COIN;
-
     txCollateral.vin.clear();
     txCollateral.vout.clear();
 
     CReserveKey reservekey(this);
     CAmount nValue = 0;
-    std::vector<CTxIn> vecTxInCollateral;
+    CTxIn txinCollateral;
 
-    if (!SelectCoinsCollateral(vecTxInCollateral, nValue)) {
+    if (!GetCollateralTxIn(txinCollateral, nValue)) {
         strReason = "PrivateSend requires a collateral transaction and could not locate an acceptable input!";
         return false;
     }
@@ -2824,27 +2817,15 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
     scriptChange = GetScriptForDestination(vchPubKey.GetID());
     reservekey.KeepKey();
 
-    BOOST_FOREACH(CTxIn txin, vecTxInCollateral) {
-        txCollateral.vin.push_back(txin);
-    }
+    txCollateral.vin.push_back(txinCollateral);
 
-    if(nValue - PRIVATESEND_COLLATERAL - nFeeRet > 0) {
-        //pay collateral charge in fees
-        CTxOut vout3 = CTxOut(nValue - PRIVATESEND_COLLATERAL, scriptChange);
-        txCollateral.vout.push_back(vout3);
-    }
+    //pay collateral charge in fees
+    CTxOut txout = CTxOut(nValue - PRIVATESEND_COLLATERAL, scriptChange);
+    txCollateral.vout.push_back(txout);
 
-    int txinIndex = 0;
-    BOOST_FOREACH(CTxIn txin, txCollateral.vin) {
-        if(!SignSignature(*this, txin.prevPubKey, txCollateral, txinIndex, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) {
-            BOOST_FOREACH(CTxIn txin2, vecTxInCollateral) {
-                UnlockCoin(txin2.prevout);
-            }
-
-            strReason = "Unable to sign collateral transaction!";
-            return false;
-        }
-        txinIndex++;
+    if(!SignSignature(*this, txinCollateral.prevPubKey, txCollateral, 0, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) {
+        strReason = "Unable to sign collateral transaction!";
+        return false;
     }
 
     return true;
