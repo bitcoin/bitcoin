@@ -293,9 +293,11 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
         CBitcoinAddress address(ks);
         if (pwallet && address.IsValid()) {
             CKeyID keyID;
-            if (!address.GetKeyID(keyID))
+            CScriptID scriptID;
+            if (!address.GetKeyID(keyID) && (!address.GetScriptID(scriptID) || !GetWitnessKeyID(pwallet, scriptID, keyID))) {
                 throw std::runtime_error(
                     strprintf("%s does not refer to a key",ks));
+            }
             CPubKey vchPubKey;
             if (!pwallet->GetPubKey(keyID, vchPubKey)) {
                 throw std::runtime_error(
