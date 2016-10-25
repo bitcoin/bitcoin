@@ -37,31 +37,6 @@ ifeq ($(PLATFORM), IOS)
 AR=xcrun ar
 endif
 
-TESTS = \
-	arena_test \
-	autocompact_test \
-	bloom_test \
-	c_test \
-	cache_test \
-	coding_test \
-	corruption_test \
-	crc32c_test \
-	db_test \
-	dbformat_test \
-	env_test \
-	filename_test \
-	filter_block_test \
-	hash_test \
-	issue178_test \
-	issue200_test \
-	log_test \
-	memenv_test \
-	skiplist_test \
-	table_test \
-	version_edit_test \
-	version_set_test \
-	write_batch_test
-
 PROGRAMS = db_bench leveldbutil $(TESTS)
 BENCHMARKS = db_bench_sqlite3 db_bench_tree_db
 
