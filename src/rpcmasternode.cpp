@@ -227,7 +227,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL || !masternodeSync.IsSynced())
+        if(activeMasternode.status != ACTIVE_THRONE_INITIAL || !masternodeSync.IsSynced())
             return activeMasternode.GetStatus();
 
         CTxIn vin = CTxIn();
@@ -265,8 +265,8 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
-        if(activeMasternode.status != ACTIVE_MASTERNODE_STARTED){
-            activeMasternode.status = ACTIVE_MASTERNODE_INITIAL; // TODO: consider better way
+        if(activeMasternode.status != ACTIVE_THRONE_STARTED){
+            activeMasternode.status = ACTIVE_THRONE_INITIAL; // TODO: consider better way
             activeMasternode.ManageStatus();
             pwalletMain->Lock();
         }
@@ -349,8 +349,8 @@ Value masternode(const Array& params, bool fHelp)
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-         (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
-          masternodeSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED)) {
+         (masternodeSync.RequestedMasternodeAssets <= THRONE_SYNC_LIST ||
+          masternodeSync.RequestedMasternodeAssets == THRONE_SYNC_FAILED)) {
             throw runtime_error("You can't use this command until masternode list is synced\n");
         }
 

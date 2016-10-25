@@ -2,8 +2,8 @@
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef MASTERNODE_BUDGET_H
-#define MASTERNODE_BUDGET_H
+#ifndef THRONE_BUDGET_H
+#define THRONE_BUDGET_H
 
 #include "main.h"
 #include "sync.h"

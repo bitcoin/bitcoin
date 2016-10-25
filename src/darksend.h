@@ -34,9 +34,9 @@ class CActiveMasternode;
 #define POOL_STATUS_SUCCESS                    8 // success
 
 // status update message constants
-#define MASTERNODE_ACCEPTED                    1
-#define MASTERNODE_REJECTED                    0
-#define MASTERNODE_RESET                       -1
+#define THRONE_ACCEPTED                    1
+#define THRONE_REJECTED                    0
+#define THRONE_RESET                       -1
 
 #define DARKSEND_QUEUE_TIMEOUT                 30
 #define DARKSEND_SIGNING_TIMEOUT               15
@@ -413,7 +413,7 @@ public:
         if(state != newState){
             lastTimeChanged = GetTimeMillis();
             if(fMasterNode) {
-                RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+                RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
             }
         }
         state = newState;

@@ -2,21 +2,21 @@
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef MASTERNODE_SYNC_H
-#define MASTERNODE_SYNC_H
+#ifndef THRONE_SYNC_H
+#define THRONE_SYNC_H
 
-#define MASTERNODE_SYNC_INITIAL           0
-#define MASTERNODE_SYNC_SPORKS            1
-#define MASTERNODE_SYNC_LIST              2
-#define MASTERNODE_SYNC_MNW               3
-#define MASTERNODE_SYNC_BUDGET            4
-#define MASTERNODE_SYNC_BUDGET_PROP       10
-#define MASTERNODE_SYNC_BUDGET_FIN        11
-#define MASTERNODE_SYNC_FAILED            998
-#define MASTERNODE_SYNC_FINISHED          999
+#define THRONE_SYNC_INITIAL           0
+#define THRONE_SYNC_SPORKS            1
+#define THRONE_SYNC_LIST              2
+#define THRONE_SYNC_MNW               3
+#define THRONE_SYNC_BUDGET            4
+#define THRONE_SYNC_BUDGET_PROP       10
+#define THRONE_SYNC_BUDGET_FIN        11
+#define THRONE_SYNC_FAILED            998
+#define THRONE_SYNC_FINISHED          999
 
-#define MASTERNODE_SYNC_TIMEOUT           5
-#define MASTERNODE_SYNC_THRESHOLD         2
+#define THRONE_SYNC_TIMEOUT           5
+#define THRONE_SYNC_THRESHOLD         2
 
 class CMasternodeSync;
 extern CMasternodeSync masternodeSync;
