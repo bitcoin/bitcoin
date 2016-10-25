@@ -241,6 +241,8 @@ static bool InitRPCAuthentication()
     return true;
 }
 
+void JSONRPCRequestWalletResolver(JSONRPCRequest&, const HTTPRequest&);
+
 bool StartHTTPRPC()
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
@@ -251,6 +253,8 @@ bool StartHTTPRPC()
 #ifdef ENABLE_WALLET
     // ifdef can be removed once we switch to better endpoint support and API versioning
     RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
+
+    RegisterJSONRPCRequestPreparer(JSONRPCRequestWalletResolver);
 #endif
     assert(EventBase());
     httpRPCTimerInterface = MakeUnique<HTTPRPCTimerInterface>(EventBase());
@@ -269,6 +273,8 @@ void StopHTTPRPC()
     UnregisterHTTPHandler("/", true);
 #ifdef ENABLE_WALLET
     UnregisterHTTPHandler("/wallet/", false);
+
+    UnregisterJSONRPCRequestPreparer(JSONRPCRequestWalletResolver);
 #endif
     if (httpRPCTimerInterface) {
         RPCUnsetTimerInterface(httpRPCTimerInterface.get());
