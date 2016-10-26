@@ -648,6 +648,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         node.generate(1)
         wait_until(test_node.received_block_announcement, timeout=30)
         test_node.clear_block_announcement()
+        with mininode_lock:
+            test_node.last_block = None
         test_node.send_message(msg_getdata([CInv(4, int(new_blocks[0], 16))]))
         success = wait_until(lambda: test_node.last_block is not None, timeout=30)
         assert(success)
