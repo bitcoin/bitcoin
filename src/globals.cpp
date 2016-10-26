@@ -69,6 +69,8 @@ const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
 int operateSampleCount[] = { 30,       12,   24,  30 };
 int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
 
+CTxMemPool mempool(::minRelayTxFee);
+
 boost::posix_time::milliseconds statMinInterval(10000);
 boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
 
@@ -81,6 +83,12 @@ list<CNode*> vNodesDisconnected __attribute__((init_priority(109)));
 CSemaphore*  semOutbound = NULL;
 CSemaphore*  semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
 CNodeSignals g_signals __attribute__((init_priority(109)));
+
+// BU: change locking of orphan map from using cs_main to cs_orphancache.  There is too much dependance on cs_main locks which
+//     are generally too broad in scope.
+CCriticalSection cs_orphancache;
+map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
+map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 
 CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
@@ -102,6 +110,16 @@ CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM |
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nTotalBloomFilterBytes("nSizeBloom", STAT_OP_SUM | STAT_KEEP);
+CCriticalSection cs_thinblockstats;
+std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
+std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
+std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
+std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersInBound;
+std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersOutBound;
+std::map<int64_t, double> CThinBlockStats::mapThinBlockResponseTime;
+std::map<int64_t, double> CThinBlockStats::mapThinBlockValidationTime;
+
+
 
 // Expedited blocks
 std::vector<CNode*> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us

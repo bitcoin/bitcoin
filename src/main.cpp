@@ -86,13 +86,17 @@ bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
-CTxMemPool mempool(::minRelayTxFee);
+// BU: Move global objects to a single file
+extern CTxMemPool mempool;
 
-// BU: change locking of orphan map from using cs_main to cs_orphancache.  There is too much dependance on cs_main locks which
-//     are generally too broad in scope.
-CCriticalSection cs_orphancache;
-map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
-map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
+// BU: change locking of orphan map from using cs_main to cs_orphancache.  
+// There is too much dependance on cs_main locks which are generally too 
+// broad in scope.
+// Move globals to a single file
+extern CCriticalSection cs_orphancache;
+extern map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
+extern map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
+
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
 
 // BU: start block download at low numbers in case our peers are slow when we start  
