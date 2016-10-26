@@ -103,7 +103,7 @@ static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge
     /* Compute the odd multiples in Jacobian form. */
     secp256k1_ecmult_odd_multiples_table(n, prej, zr, a);
     /* Convert them in batch to affine coordinates. */
-    secp256k1_ge_set_table_gej_var(n, prea, prej, zr);
+    secp256k1_ge_set_table_gej_var(prea, prej, zr, n);
     /* Convert them to compact storage form. */
     for (i = 0; i < n; i++) {
         secp256k1_ge_to_storage(&pre[i], &prea[i]);
