@@ -1,12 +1,12 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/zetacoin
+src/zetacoind
+src/zetacoin-cli
+src/zetacoin-tx
+src/test/test_zetacoin
+src/qt/test/test_zetacoin-qt
 
 # autoreconf
 Makefile.in
@@ -29,8 +29,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/zetacoin-config.h
+src/config/zetacoin-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -55,7 +55,7 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.bitcoin
+.zetacoin
 *.a
 *.pb.cc
 *.pb.h
@@ -74,12 +74,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+zetacoin-qt
+Zetacoin-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+zetacoin-qt_test
 src/test/buildenv.py
 
 # Resources cpp
@@ -93,7 +93,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_zetacoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -101,7 +101,7 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcoind-for-test.sh
+qa/pull-tester/run-zetacoind-for-test.sh
 qa/pull-tester/tests_config.py
 qa/cache/*
 
@@ -109,5 +109,5 @@ qa/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libzetacoinconsensus.pc
 contrib/devtools/split-debug.sh
