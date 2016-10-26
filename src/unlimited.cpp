@@ -39,9 +39,7 @@ using namespace std;
 
 extern CTxMemPool mempool; // from main.cpp
 
-
 bool IsTrafficShapingEnabled();
-
 
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate)
 {
@@ -1124,7 +1122,7 @@ bool CanThinBlockBeDownloaded(CNode* pto)
 // This way we avoid having to lock cs_main so often which tends to be a bottleneck.
 void IsChainNearlySyncdInit() 
 {
-    LOCK(cs_main);
+    LOCK2(cs_main, cs_ischainnearlysyncd);
     if (!pindexBestHeader) fIsChainNearlySyncd = false;  // Not nearly synced if we don't have any blocks!
     else
       {
@@ -1136,6 +1134,7 @@ void IsChainNearlySyncdInit()
 }
 bool IsChainNearlySyncd()
 {
+    LOCK(cs_ischainnearlysyncd);
     return fIsChainNearlySyncd;
 }
 

@@ -153,6 +153,9 @@ extern std::set<uint256> setUnVerifiedOrphanTxHash;
 extern CCriticalSection cs_xval;
 // Xpress Validation: end
 
+extern bool fIsChainNearlySyncd;
+extern CCriticalSection cs_ischainnearlysyncd;
+
 extern bool HaveConnectThinblockNodes();
 extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(uint256 hash);
