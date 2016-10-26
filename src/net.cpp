@@ -117,7 +117,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 extern CSemaphore *semOutbound;
-static CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
+extern CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
 // BU  Connection Slot mitigation - used to determine how many connection attempts over time
@@ -2280,12 +2280,12 @@ CNetCleanup::~CNetCleanup()
         vNodes.clear();
         vNodesDisconnected.clear();
         vhListenSocket.clear();
-        delete semOutbound;
+        if (semOutbound) delete semOutbound;
         semOutbound = NULL;
         //BU: clean up the "-addnode" semaphore
-        delete semOutboundAddNode;
+        if (semOutboundAddNode) delete semOutboundAddNode;
         semOutboundAddNode = NULL;
-        delete pnodeLocalHost;
+        if (pnodeLocalHost) delete pnodeLocalHost;
         pnodeLocalHost = NULL;
 
 #ifdef WIN32

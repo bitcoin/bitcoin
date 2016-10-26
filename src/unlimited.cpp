@@ -37,47 +37,11 @@
 
 using namespace std;
 
-set<uint256> setPreVerifiedTxHash;
-set<uint256> setUnVerifiedOrphanTxHash;
-CCriticalSection cs_xval;
-
 extern CTxMemPool mempool; // from main.cpp
 
-uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
-unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
-unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
-unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
-int nMaxOutConnections = DEFAULT_MAX_OUTBOUND_CONNECTIONS;
 
-uint32_t blockVersion = 0;  // Overrides the mined block version if non-zero
-
-std::vector<std::string> BUComments = std::vector<std::string>();
-std::string minerComment;
-
-// Variables for traffic shaping
-CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
-CLeakyBucket sendShaper(DEFAULT_MAX_SEND_BURST, DEFAULT_AVE_SEND);
-boost::chrono::steady_clock CLeakyBucket::clock;
 bool IsTrafficShapingEnabled();
 
-// Variables for statistics tracking, must be before the "requester" singleton instantiation
-const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
-int operateSampleCount[] = { 30,       12,   24,  30 };
-int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
-
-boost::posix_time::milliseconds statMinInterval(10000);
-boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
-
-CStatMap statistics __attribute__((init_priority(102)));
-CTweakMap tweaks __attribute__((init_priority(102)));
-
-vector<CNode*> vNodes __attribute__((init_priority(109)));
-CCriticalSection cs_vNodes __attribute__((init_priority(109)));
-list<CNode*> vNodesDisconnected __attribute__((init_priority(109)));
-CSemaphore*  semOutbound = NULL;
-CSemaphore*  semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
-CNodeSignals g_signals __attribute__((init_priority(109)));
-CNetCleanup cnet_instance_cleanup __attribute__((init_priority(110)));  // Must construct after statistics, because CNodes use statistics.  In particular, seg fault on osx during exit because constructor/destructor order is not guaranteed between modules in clang.
 
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate)
 {
@@ -123,13 +87,6 @@ std::string OutboundConnectionValidator(const int& value,int* item,bool validate
   return std::string();
 }
 
-CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
-CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
-CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections","Maximum number of outbound connections", &nMaxOutConnections,&OutboundConnectionValidator);
-CTweakRef<int> maxConnectionsTweak("net.maxConnections","Maximum number of connections connections",&nMaxConnections);
-CTweakRef<unsigned int> triTweak("net.txRetryInterval","How long to wait in microseconds before requesting a transaction from another source", &MIN_TX_REQUEST_RETRY_INTERVAL);  // When should I request a tx from someone else (in microseconds). cmdline/bitcoin.conf: -txretryinterval
-CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in microseconds before requesting a block from another source", &MIN_BLK_REQUEST_RETRY_INTERVAL); // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
-
 std::string SubverValidator(const std::string& value,std::string* item,bool validate)
 {
   if (validate)
@@ -142,37 +99,14 @@ std::string SubverValidator(const std::string& value,std::string* item,bool vali
   return std::string();
 }
 
-CTweakRef<std::string> subverOverrideTweak("net.subversionOveride","If set, this field will override the normal subversion field.  This is useful if you need to hide your node.",&subverOverride,&SubverValidator);
-
-CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
-CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
-CStatHistory<uint64_t > recvAmt; 
-CStatHistory<uint64_t > sendAmt; 
-
-// Thin block statistics need to be located here to ensure that the "statistics" global variable is constructed first
-CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nTotalBloomFilterBytes("nSizeBloom", STAT_OP_SUM | STAT_KEEP);
-
-// Expedited blocks
-std::vector<CNode*> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us
-std::vector<CNode*> xpeditedBlkUp; //(256,(CNode*)NULL);  // Who we requested expedited blocks from
-std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);  
 
 #define NUM_XPEDITED_STORE 10
 uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];  // Just save the last few expedited sent blocks so we don't resend (uint256 zeros on construction)
 int xpeditedBlkSendPos=0;
 
+// Push all transactions in the mempool to another node
 void UnlimitedPushTxns(CNode* dest);
 
-// BUIP010 Xtreme Thinblocks Variables
-std::map<uint256, uint64_t> mapThinBlockTimer;
-bool fIsChainNearlySyncd;
-
-//! The largest block size that we have seen since startup
-uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
 
 int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime)
 {

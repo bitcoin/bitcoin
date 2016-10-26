@@ -179,6 +179,13 @@ extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
 // BUIP010 Xtreme Thinblocks: end
 
+extern CSemaphore*  semOutboundAddNode;
+extern std::vector<CNode*> xpeditedBlk; // Who requested expedited blocks from us
+extern std::vector<CNode*> xpeditedBlkUp; // Who we requested expedited blocks from
+extern std::vector<CNode*> xpeditedTxn;
+extern CStatHistory<uint64_t > recvAmt; 
+extern CStatHistory<uint64_t > sendAmt; 
+
 // Connection Slot mitigation - used to track connection attempts and evictions
 struct ConnectionHistory
 {
@@ -199,6 +206,10 @@ void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, i
 extern CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded;
 extern CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize;
 
+// Configuration variable validators
+std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate);
+std::string OutboundConnectionValidator(const int& value,int* item,bool validate);
+std::string SubverValidator(const std::string& value,std::string* item,bool validate);
 
 // Protocol changes:
 
