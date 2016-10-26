@@ -260,7 +260,9 @@ public:
 
     masternode_info_t GetInfo();
 
-    std::string GetStatus();
+    static std::string StateToString(int nStateIn);
+    std::string GetStateString() const;
+    std::string GetStatus() const;
 
     int GetCollateralAge();
 

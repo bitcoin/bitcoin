@@ -270,9 +270,9 @@ masternode_info_t CMasternode::GetInfo()
     return info;
 }
 
-std::string CMasternode::GetStatus()
+std::string CMasternode::StateToString(int nStateIn)
 {
-    switch(nActiveState) {
+    switch(nStateIn) {
         case CMasternode::MASTERNODE_PRE_ENABLED:       return "PRE_ENABLED";
         case CMasternode::MASTERNODE_ENABLED:           return "ENABLED";
         case CMasternode::MASTERNODE_EXPIRED:           return "EXPIRED";
@@ -282,6 +282,17 @@ std::string CMasternode::GetStatus()
         case CMasternode::MASTERNODE_POSE_BAN:          return "POSE_BAN";
         default:                                        return "UNKNOWN";
     }
+}
+
+std::string CMasternode::GetStateString() const
+{
+    return StateToString(nActiveState);
+}
+
+std::string CMasternode::GetStatus() const
+{
+    // TODO: return smth a bit more human readable here
+    return GetStateString();
 }
 
 int CMasternode::GetCollateralAge()

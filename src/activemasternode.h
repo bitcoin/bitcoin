@@ -38,7 +38,7 @@ private:
     bool fPingerEnabled;
 
     /// Ping Masternode
-    bool SendMasternodePing(std::string& strErrorRet);
+    bool SendMasternodePing();
 
 public:
     // Keys for the active Masternode
@@ -61,8 +61,9 @@ public:
     /// Manage state of active Masternode
     void ManageState();
 
-    std::string GetStatus();
-    std::string GetType();
+    std::string GetStateString() const;
+    std::string GetStatus() const;
+    std::string GetTypeString() const;
 
 private:
     void ManageStateInitial();
