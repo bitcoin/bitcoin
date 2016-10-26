@@ -177,6 +177,7 @@ class BitcoinTestFramework(object):
                 os.rmdir(self.options.root)
         else:
             print("Not cleaning up dir %s" % self.options.tmpdir)
+            os.system("find '%s' -name 'debug.log' | xargs more | cat" % self.options.tmpdir)
 
         if success:
             print("Tests successful")

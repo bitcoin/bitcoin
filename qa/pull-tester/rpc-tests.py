@@ -193,6 +193,9 @@ def runtests():
 
     coverage = None
 
+    ENABLE_COVERAGE = False
+    test_list = ['p2p-compactblocks.py']
+
     if ENABLE_COVERAGE:
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)

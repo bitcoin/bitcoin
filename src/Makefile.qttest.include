@@ -3,7 +3,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 bin_PROGRAMS += qt/test/test_bitcoin-qt
-TESTS += qt/test/test_bitcoin-qt
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_rpcnestedtests.cpp \
