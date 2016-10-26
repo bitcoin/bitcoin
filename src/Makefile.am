@@ -65,11 +65,11 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+  bin_PROGRAMS += zetcoind
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += bitcoin-cli bitcoin-tx
+  bin_PROGRAMS += zetcoin-cli zetcoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
