@@ -257,7 +257,7 @@ struct CBlockReject {
  */
 struct CNodeState {
     //! The peer's address
-    CService address;
+    const CService address;
     //! Whether we have a fully established connection.
     bool fCurrentlyConnected;
     //! Accumulated misbehaviour score for this peer.
@@ -265,7 +265,7 @@ struct CNodeState {
     //! Whether this peer should be disconnected and banned (unless whitelisted).
     bool fShouldBan;
     //! String name of this peer (debugging/logging purposes).
-    std::string name;
+    const std::string name;
     //! List of asynchronously-determined block rejections to notify this peer about.
     std::vector<CBlockReject> rejects;
     //! The best known block we know this peer has announced.
@@ -309,7 +309,7 @@ struct CNodeState {
      */
     bool fSupportsDesiredCmpctVersion;
 
-    CNodeState() {
+    CNodeState(CAddress addrIn, std::string addrNameIn) : address(addrIn), name(addrNameIn) {
         fCurrentlyConnected = false;
         nMisbehavior = 0;
         fShouldBan = false;
@@ -355,10 +355,10 @@ void UpdatePreferredDownload(CNode* node, CNodeState* state)
 }
 
 void InitializeNode(NodeId nodeid, const CNode *pnode) {
+    CAddress addr = pnode->addr;
+    std::string addrName = pnode->addrName;
     LOCK(cs_main);
-    CNodeState &state = mapNodeState.insert(std::make_pair(nodeid, CNodeState())).first->second;
-    state.name = pnode->addrName;
-    state.address = pnode->addr;
+    mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName)));
 }
 
 void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
