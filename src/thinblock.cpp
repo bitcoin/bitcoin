@@ -18,15 +18,7 @@
 #include <string>
 #include <vector>
 
-CCriticalSection cs_thinblockstats;
-std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
-std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
-std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
-std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersInBound;
-std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersOutBound;
-std::map<int64_t, double> CThinBlockStats::mapThinBlockResponseTime;
-std::map<int64_t, double> CThinBlockStats::mapThinBlockValidationTime;
-
+extern CCriticalSection cs_thinblockstats;
 extern CCriticalSection cs_orphancache;
 extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 
