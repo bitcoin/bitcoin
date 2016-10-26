@@ -75,7 +75,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 zetacoin-qt
-zetacoin-Qt.app
+Zetacoin-Qt.app
 
 # Unit-tests
 Makefile.test
