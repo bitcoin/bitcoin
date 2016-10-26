@@ -589,8 +589,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def test_getblocktxn_handler(self, node, test_node, version):
-        # bitcoind won't respond for blocks whose height is more than 15 blocks
-        # deep.
+        # bitcoind will not send blocktxn responses for blocks whose height is
+        # more than 10 blocks deep.
         MAX_GETBLOCKTXN_DEPTH = 10
         chain_height = node.getblockcount()
         current_height = chain_height
@@ -623,11 +623,17 @@ class CompactBlocksTest(BitcoinTestFramework):
                 test_node.last_blocktxn = None
             current_height -= 1
 
-        # Next request should be ignored, as we're past the allowed depth.
+        # Next request should send a full block response, as we're past the
+        # allowed depth for a blocktxn response.
         block_hash = node.getblockhash(current_height)
         msg.block_txn_request = BlockTransactionsRequest(int(block_hash, 16), [0])
+        with mininode_lock:
+            test_node.last_block = None
+            test_node.last_blocktxn = None
         test_node.send_and_ping(msg)
         with mininode_lock:
+            test_node.last_block.block.calc_sha256()
+            assert_equal(test_node.last_block.block.sha256, int(block_hash, 16))
             assert_equal(test_node.last_blocktxn, None)
 
     def test_compactblocks_not_at_tip(self, node, test_node):
