@@ -6,6 +6,15 @@ import subprocess
 import os
 import json
 import sys
+import binascii
+
+def parse_output(a, fmt):
+	if fmt == 'json': # json: compare parsed data
+		return json.loads(a)
+	elif fmt == 'hex': # hex: parse and compare binary data
+		return binascii.a2b_hex(a.strip())
+	else:
+		raise NotImplementedError("Don't know how to compare %s" % fmt)
 
 def bctest(testDir, testObj, exeext):
 
@@ -23,6 +32,7 @@ def bctest(testDir, testObj, exeext):
 	outputData = None
 	if "output_cmp" in testObj:
 		outputFn = testObj['output_cmp']
+		outputType = os.path.splitext(outputFn)[1][1:] # output type from file extension (determines how to compare)
 		outputData = open(testDir + "/" + outputFn).read()
 		if not outputData:
 			print("Output data missing for " + outputFn)
@@ -34,9 +44,23 @@ def bctest(testDir, testObj, exeext):
 		print("OSError, Failed to execute " + execprog)
 		sys.exit(1)
 
-	if outputData and (outs[0] != outputData):
-		print("Output data mismatch for " + outputFn)
-		sys.exit(1)
+	if outputData:
+		try:
+			a_parsed = parse_output(outs[0], outputType)
+		except Exception as e:
+			print('Error parsing command output as %s: %s' % (outputType,e))
+			sys.exit(1)
+		try:
+			b_parsed = parse_output(outputData, outputType)
+		except Exception as e:
+			print('Error parsing expected output %s as %s: %s' % (outputFn,outputType,e))
+			sys.exit(1)
+		if a_parsed != b_parsed:
+			print("Output data mismatch for " + outputFn + " (format " + outputType + ")")
+			sys.exit(1)
+		if outs[0] != outputData:
+			print("Output formatting mismatch for " + outputFn + " (format " + outputType + ")")
+			sys.exit(1)
 
 	wantRC = 0
 	if "return_code" in testObj:
