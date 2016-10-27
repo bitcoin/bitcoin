@@ -1471,34 +1471,34 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    fMasterNode = GetBoolArg("-masternode", false);
+    fThroNe = GetBoolArg("-masternode", false);
 
-    if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
+    if((fThroNe || masternodeConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    if(fMasterNode) {
+    if(fThroNe) {
         LogPrintf("IS DARKSEND MASTER NODE\n");
-        strMasterNodeAddr = GetArg("-masternodeaddr", "");
+        strThroNeAddr = GetArg("-masternodeaddr", "");
 
-        LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
+        LogPrintf(" addr %s\n", strThroNeAddr.c_str());
 
-        if(!strMasterNodeAddr.empty()){
-            CService addrTest = CService(strMasterNodeAddr);
+        if(!strThroNeAddr.empty()){
+            CService addrTest = CService(strThroNeAddr);
             if (!addrTest.IsValid()) {
-                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
+                return InitError("Invalid -masternodeaddr address: " + strThroNeAddr);
             }
         }
 
-        strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
-        if(!strMasterNodePrivKey.empty()){
+        strThroNePrivKey = GetArg("-masternodeprivkey", "");
+        if(!strThroNePrivKey.empty()){
             std::string errorMessage;
 
             CKey key;
             CPubKey pubkey;
 
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
+            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key, pubkey))
             {
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
             }
@@ -1548,7 +1548,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     //lite mode disables all Masternode and Darksend related functionality
     fLiteMode = GetBoolArg("-litemode", false);
-    if(fMasterNode && fLiteMode){
+    if(fThroNe && fLiteMode){
         return InitError("You can not start a masternode in litemode");
     }
 

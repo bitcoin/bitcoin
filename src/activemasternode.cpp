@@ -14,7 +14,7 @@ void CActiveMasternode::ManageStatus()
 {    
     std::string errorMessage;
 
-    if(!fMasterNode) return;
+    if(!fThroNe) return;
 
     if (fDebug) LogPrintf("CActiveMasternode::ManageStatus() - Begin\n");
 
@@ -32,7 +32,7 @@ void CActiveMasternode::ManageStatus()
         pmn = mnodeman.Find(pubKeyMasternode);
         if(pmn != NULL) {
             pmn->Check();
-            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdMasterNode(pmn->vin, pmn->addr);
+            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdThroNe(pmn->vin, pmn->addr);
         }
     }
 
@@ -54,14 +54,14 @@ void CActiveMasternode::ManageStatus()
             return;
         }
 
-        if(strMasterNodeAddr.empty()) {
+        if(strThroNeAddr.empty()) {
             if(!GetLocal(service)) {
                 notCapableReason = "Can't detect external address. Please use the masternodeaddr configuration option.";
                 LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
         } else {
-            service = CService(strMasterNodeAddr);
+            service = CService(strThroNeAddr);
         }
 
         if(Params().NetworkID() == CBaseChainParams::MAIN) {
@@ -90,7 +90,7 @@ void CActiveMasternode::ManageStatus()
         CPubKey pubKeyCollateralAddress;
         CKey keyCollateralAddress;
 
-        if(GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
+        if(GetThroNeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
                 status = ACTIVE_THRONE_INPUT_TOO_NEW;
@@ -106,7 +106,7 @@ void CActiveMasternode::ManageStatus()
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
@@ -161,7 +161,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
     CPubKey pubKeyMasternode;
     CKey keyMasternode;
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
@@ -229,7 +229,7 @@ bool CActiveMasternode::CreateBroadcast(std::string strService, std::string strK
         return false;
     }
 
-    if(!GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
+    if(!GetThroNeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
         errorMessage = strprintf("Could not allocate vin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
         LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
         return false;
@@ -277,11 +277,11 @@ bool CActiveMasternode::CreateBroadcast(CTxIn vin, CService service, CKey keyCol
     return true;
 }
 
-bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
-    return GetMasterNodeVin(vin, pubkey, secretKey, "", "");
+bool CActiveMasternode::GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
+    return GetThroNeVin(vin, pubkey, secretKey, "", "");
 }
 
-bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
+bool CActiveMasternode::GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
 
@@ -307,7 +307,7 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
             }
         }
         if(!found) {
-            LogPrintf("CActiveMasternode::GetMasterNodeVin - Could not locate valid vin\n");
+            LogPrintf("CActiveMasternode::GetThroNeVin - Could not locate valid vin\n");
             return false;
         }
     } else {
@@ -315,7 +315,7 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
         if(possibleCoins.size() > 0) {
             selectedOutput = &possibleCoins[0];
         } else {
-            LogPrintf("CActiveMasternode::GetMasterNodeVin - Could not locate specified vin from possible list\n");
+            LogPrintf("CActiveMasternode::GetThroNeVin - Could not locate specified vin from possible list\n");
             return false;
         }
     }
@@ -341,12 +341,12 @@ bool CActiveMasternode::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubke
 
     CKeyID keyID;
     if (!address2.GetKeyID(keyID)) {
-        LogPrintf("CActiveMasternode::GetMasterNodeVin - Address does not refer to a key\n");
+        LogPrintf("CActiveMasternode::GetThroNeVin - Address does not refer to a key\n");
         return false;
     }
 
     if (!pwalletMain->GetKey(keyID, secretKey)) {
-        LogPrintf ("CActiveMasternode::GetMasterNodeVin - Private key for address is not known\n");
+        LogPrintf ("CActiveMasternode::GetThroNeVin - Private key for address is not known\n");
         return false;
     }
 
@@ -392,9 +392,9 @@ vector<COutput> CActiveMasternode::SelectCoinsMasternode()
 }
 
 // when starting a Masternode, this can enable to run as a hot wallet with no funds
-bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
+bool CActiveMasternode::EnableHotColdThroNe(CTxIn& newVin, CService& newService)
 {
-    if(!fMasterNode) return false;
+    if(!fThroNe) return false;
 
     status = ACTIVE_THRONE_STARTED;
 
@@ -402,7 +402,7 @@ bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newServ
     vin = newVin;
     service = newService;
 
-    LogPrintf("CActiveMasternode::EnableHotColdMasterNode() - Enabled! You may shut down the cold daemon.\n");
+    LogPrintf("CActiveMasternode::EnableHotColdThroNe() - Enabled! You may shut down the cold daemon.\n");
 
     return true;
 }

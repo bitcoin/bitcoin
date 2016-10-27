@@ -473,7 +473,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 {
     // we are a masternode with the same vin (i.e. already activated) and this mnb is ours (matches our Masternode privkey)
     // so nothing to do here for us
-    if(fMasterNode && vin.prevout == activeMasternode.vin.prevout && pubkey2 == activeMasternode.pubKeyMasternode)
+    if(fThroNe && vin.prevout == activeMasternode.vin.prevout && pubkey2 == activeMasternode.pubKeyMasternode)
         return true;
 
     // incorrect ping or its sigTime
@@ -546,7 +546,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     // if it matches our Masternode privkey, then we've been remotely activated
     if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
-        activeMasternode.EnableHotColdMasterNode(vin, addr);
+        activeMasternode.EnableHotColdThroNe(vin, addr);
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
@@ -619,7 +619,7 @@ CMasternodePing::CMasternodePing(CTxIn& newVin)
 bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
     std::string errorMessage;
-    std::string strMasterNodeSignMessage;
+    std::string strThroNeSignMessage;
 
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);

@@ -16,7 +16,7 @@
 class CTxIn;
 class CDarksendPool;
 class CDarkSendSigner;
-class CMasterNodeVote;
+class CThroNeVote;
 class CBitcoinAddress;
 class CDarksendQueue;
 class CDarksendBroadcastTx;
@@ -52,7 +52,7 @@ static const int64_t DARKSEND_POOL_MAX = (9999.99*COIN);
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
 extern std::vector<CDarksendQueue> vecDarksendQueue;
-extern std::string strMasterNodePrivKey;
+extern std::string strThroNePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 extern CActiveMasternode activeMasternode;
 
@@ -404,7 +404,7 @@ public:
     // Set the 'state' value, with some logging and capturing when the state changed
     void UpdateState(unsigned int newState)
     {
-        if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
+        if (fThroNe && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
             LogPrint("darksend", "CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
             return;
         }
@@ -412,7 +412,7 @@ public:
         LogPrintf("CDarksendPool::UpdateState() == %d | %d \n", state, newState);
         if(state != newState){
             lastTimeChanged = GetTimeMillis();
-            if(fMasterNode) {
+            if(fThroNe) {
                 RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), THRONE_RESET);
             }
         }

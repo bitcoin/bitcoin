@@ -68,7 +68,7 @@ public:
     CTxIn vinMasternode;
     uint256 txHash;
     int nBlockHeight;
-    std::vector<unsigned char> vchMasterNodeSignature;
+    std::vector<unsigned char> vchThroNeSignature;
 
     uint256 GetHash() const;
 
@@ -81,7 +81,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(txHash);
         READWRITE(vinMasternode);
-        READWRITE(vchMasterNodeSignature);
+        READWRITE(vchThroNeSignature);
         READWRITE(nBlockHeight);
     }
 };

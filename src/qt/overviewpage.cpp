@@ -149,7 +149,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);
     } else {
-        if(fMasterNode){
+        if(fThroNe){
             ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
             ui->darksendAuto->setText("(" + tr("Disabled") + ")");
             ui->darksendReset->setText("(" + tr("Disabled") + ")");
@@ -178,7 +178,7 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 
 OverviewPage::~OverviewPage()
 {
-    if(!fLiteMode && !fMasterNode) disconnect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+    if(!fLiteMode && !fThroNe) disconnect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
     delete ui;
 }
 

@@ -58,7 +58,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-        if(!fMasterNode){
+        if(!fThroNe){
             errorID = ERR_NOT_A_MN;
             LogPrintf("dsa -- not a Masternode! \n");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, errorID);
@@ -164,7 +164,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-        if(!fMasterNode){
+        if(!fThroNe){
             LogPrintf("dsi -- not a Masternode! \n");
             errorID = ERR_NOT_A_MN;
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), THRONE_REJECTED, errorID);
@@ -502,10 +502,10 @@ std::string CDarksendPool::GetStatus()
 //
 void CDarksendPool::Check()
 {
-    if(fMasterNode) LogPrint("darksend", "CDarksendPool::Check() - entries count %lu\n", entries.size());
+    if(fThroNe) LogPrint("darksend", "CDarksendPool::Check() - entries count %lu\n", entries.size());
     //printf("CDarksendPool::Check() %d - %d - %d\n", state, anonTx.CountEntries(), GetTimeMillis()-lastTimeChanged);
 
-    if(fMasterNode) {
+    if(fThroNe) {
         LogPrint("darksend", "CDarksendPool::Check() - entries count %lu\n", entries.size());
 
         // If entries is full, then move on to the next phase
@@ -521,7 +521,7 @@ void CDarksendPool::Check()
         LogPrint("darksend", "CDarksendPool::Check() -- FINALIZE TRANSACTIONS\n");
         UpdateState(POOL_STATUS_SIGNING);
 
-        if (fMasterNode) {
+        if (fThroNe) {
             CMutableTransaction txNew;
 
             // make our new transaction
@@ -547,7 +547,7 @@ void CDarksendPool::Check()
     }
 
     // If we have all of the signatures, try to compile the transaction
-    if(fMasterNode && state == POOL_STATUS_SIGNING && SignaturesComplete()) {
+    if(fThroNe && state == POOL_STATUS_SIGNING && SignaturesComplete()) {
         LogPrint("darksend", "CDarksendPool::Check() -- SIGNING\n");
         UpdateState(POOL_STATUS_TRANSMISSION);
 
@@ -559,13 +559,13 @@ void CDarksendPool::Check()
         LogPrint("darksend", "CDarksendPool::Check() -- timeout, RESETTING\n");
         UnlockCoins();
         SetNull();
-        if(fMasterNode) RelayStatus(sessionID, GetState(), GetEntriesCount(), THRONE_RESET);
+        if(fThroNe) RelayStatus(sessionID, GetState(), GetEntriesCount(), THRONE_RESET);
     }
 }
 
 void CDarksendPool::CheckFinalTransaction()
 {
-    if (!fMasterNode) return; // check and relay final tx only on masternode
+    if (!fThroNe) return; // check and relay final tx only on masternode
 
     CWalletTx txNew = CWalletTx(pwalletMain, finalTransaction);
 
@@ -596,7 +596,7 @@ void CDarksendPool::CheckFinalTransaction()
         CKey key2;
         CPubKey pubkey2;
 
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
+        if(!darkSendSigner.SetKey(strThroNePrivKey, strError, key2, pubkey2))
         {
             LogPrintf("CDarksendPool::Check() - ERROR: Invalid Masternodeprivkey: '%s'\n", strError);
             return;
@@ -651,7 +651,7 @@ void CDarksendPool::CheckFinalTransaction()
 // until the transaction is either complete or fails.
 //
 void CDarksendPool::ChargeFees(){
-    if(!fMasterNode) return;
+    if(!fThroNe) return;
 
     //we don't need to charge collateral for every offence.
     int offences = 0;
@@ -755,7 +755,7 @@ void CDarksendPool::ChargeFees(){
 // charge the collateral randomly
 //  - Darksend is completely free, to pay miners we randomly pay the collateral of users.
 void CDarksendPool::ChargeRandomFees(){
-    if(fMasterNode) {
+    if(fThroNe) {
         int i = 0;
 
         BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
@@ -792,10 +792,10 @@ void CDarksendPool::ChargeRandomFees(){
 // Check for various timeouts (queue objects, Darksend, etc)
 //
 void CDarksendPool::CheckTimeout(){
-    if(!fEnableDarksend && !fMasterNode) return;
+    if(!fEnableDarksend && !fThroNe) return;
 
     // catching hanging sessions
-    if(!fMasterNode) {
+    if(!fThroNe) {
         switch(state) {
             case POOL_STATUS_TRANSMISSION:
                 LogPrint("darksend", "CDarksendPool::CheckTimeout() -- Session complete -- Running Check()\n");
@@ -824,7 +824,7 @@ void CDarksendPool::CheckTimeout(){
     }
 
     int addLagTime = 0;
-    if(!fMasterNode) addLagTime = 10000; //if we're the client, give the server a few extra seconds before resetting.
+    if(!fThroNe) addLagTime = 10000; //if we're the client, give the server a few extra seconds before resetting.
 
     if(state == POOL_STATUS_ACCEPTING_ENTRIES || state == POOL_STATUS_QUEUE){
         c = 0;
@@ -839,7 +839,7 @@ void CDarksendPool::CheckTimeout(){
                     UnlockCoins();
                     SetNull();
                 }
-                if(fMasterNode){
+                if(fThroNe){
                     RelayStatus(sessionID, GetState(), GetEntriesCount(), THRONE_RESET);
                 }
             } else ++it2;
@@ -874,7 +874,7 @@ void CDarksendPool::CheckTimeout(){
 // Check for complete queue
 //
 void CDarksendPool::CheckForCompleteQueue(){
-    if(!fEnableDarksend && !fMasterNode) return;
+    if(!fEnableDarksend && !fThroNe) return;
 
     /* Check to see if we're ready for submissions from clients */
     //
@@ -993,7 +993,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
 // Add a clients transaction to the pool
 //
 bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID){
-    if (!fMasterNode) return false;
+    if (!fThroNe) return false;
 
     BOOST_FOREACH(CTxIn in, newInput) {
         if (in.prevout.IsNull() || nAmount < 0) {
@@ -1096,7 +1096,7 @@ bool CDarksendPool::SignaturesComplete(){
 //
 void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount){
 
-    if(fMasterNode) {
+    if(fThroNe) {
         LogPrintf("CDarksendPool::SendDarksendDenominate() - Darksend from a Masternode is not supported currently.\n");
         return;
     }
@@ -1187,7 +1187,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 //                  1 means transaction was accepted
 
 bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccepted, int& errorID, int newSessionID){
-    if(fMasterNode) return false;
+    if(fThroNe) return false;
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
 
     UpdateState(newState);
@@ -1234,7 +1234,7 @@ bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
 // If we refuse to sign, it's possible we'll be charged collateral
 //
 bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNode* node){
-    if(fMasterNode) return false;
+    if(fThroNe) return false;
 
     finalTransaction = finalTransactionNew;
     LogPrintf("CDarksendPool::SignFinalTransaction %s", finalTransaction.ToString());
@@ -1324,7 +1324,7 @@ void CDarksendPool::NewBlock()
 // Darksend transaction was completed (failed or successful)
 void CDarksendPool::CompletedTransaction(bool error, int errorID)
 {
-    if(fMasterNode) return;
+    if(fThroNe) return;
 
     if(error){
         LogPrintf("CompletedTransaction -- error \n");
@@ -1359,7 +1359,7 @@ void CDarksendPool::ClearLastMessage()
 bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnableDarksend) return false;
-    if(fMasterNode) return false;
+    if(fThroNe) return false;
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
     if(GetEntriesCount() > 0) {
         strAutoDenomResult = _("Mixing in progress...");
@@ -2128,7 +2128,7 @@ bool CDarkSendSigner::VerifyMessage(CPubKey pubkey, vector<unsigned char>& vchSi
 
 bool CDarksendQueue::Sign()
 {
-    if(!fMasterNode) return false;
+    if(!fThroNe) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(time) + boost::lexical_cast<std::string>(ready);
 
@@ -2136,7 +2136,7 @@ bool CDarksendQueue::Sign()
     CPubKey pubkey2;
     std::string errorMessage = "";
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
+    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CDarksendQueue():Relay - ERROR: Invalid Masternodeprivkey: '%s'\n", errorMessage);
         return false;

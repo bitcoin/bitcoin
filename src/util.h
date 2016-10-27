@@ -30,7 +30,7 @@
 
 //Crown only features
 
-extern bool fMasterNode;
+extern bool fThroNe;
 extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
@@ -39,7 +39,7 @@ extern int nAnonymizeDarkcoinAmount;
 extern int nLiquidityProvider;
 extern bool fEnableDarksend;
 extern int64_t enforceMasternodePaymentsTime;
-extern std::string strMasterNodeAddr;
+extern std::string strThroNeAddr;
 extern int keysLoaded;
 extern bool fSucessfullyLoaded;
 extern std::vector<int64_t> darkSendDenominations;

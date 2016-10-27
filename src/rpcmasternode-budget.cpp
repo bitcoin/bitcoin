@@ -228,8 +228,8 @@ Value mnbudget(const Array& params, bool fHelp)
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
+            std::vector<unsigned char> vchThroNeSignature;
+            std::string strThroNeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
@@ -307,7 +307,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CKey keyMasternode;
         std::string errorMessage;
 
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return "Error upon calling SetKey";
 
         CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
@@ -593,8 +593,8 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
+            std::vector<unsigned char> vchThroNeSignature;
+            std::string strThroNeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
@@ -667,7 +667,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         CKey keyMasternode;
         std::string errorMessage;
 
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return "Error upon calling SetKey";
 
         CMasternode* pmn = mnodeman.Find(activeMasternode.vin);

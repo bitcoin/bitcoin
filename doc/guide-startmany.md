@@ -10,11 +10,11 @@ There are many ways to setup a wallet to support start-many. This guide will wal
 
 This is the way to go if you are consolidating multiple wallets into one that supports start-many. 
 
-### From your single-instance MasterNode Wallet
+### From your single-instance ThroNe Wallet
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
-Dump the private key from your MasterNode's pulic key.
+Dump the private key from your ThroNe's pulic key.
 
 ```
 walletpassphrase [your_wallet_passphrase] 600
@@ -23,7 +23,7 @@ dumpprivkey [mn_public_key]
 
 Copy the resulting priviate key. You'll use it in the next step.
 
-### From your multi-instance MasterNode Wallet
+### From your multi-instance ThroNe Wallet
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
@@ -52,7 +52,7 @@ The wallet will re-scan and you will see your available balance increase by the 
     * Click *Request payment*
 5. Click the *Copy Address* button
 
-Create a new wallet address for each MasterNode.
+Create a new wallet address for each ThroNe.
 
 Close your QT Wallet.
 
@@ -68,7 +68,7 @@ Issue the following:
 
 ```masternode genkey```
 
-*Note: A masternode private key will need to be created for each MasterNode you run. You should not use the same masternode private key for multiple MasterNodes.*
+*Note: A masternode private key will need to be created for each ThroNe you run. You should not use the same masternode private key for multiple ThroNes.*
 
 Close your QT Wallet.
 
@@ -94,7 +94,7 @@ Issue the following:
 
 Make note of the hash (which is your collaterla_output) and index.
 
-### Enter your MasterNode details into your masternode.conf file
+### Enter your ThroNe details into your masternode.conf file
 [From the dash github repo](https://github.com/darkcoin/darkcoin/blob/master/doc/masternode_conf.md)
 
 The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id and collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
@@ -127,7 +127,7 @@ Shut down the daemon and then edit the file.
 ### Edit the masternodeprivkey
 If you generated a new masternode private key, you will need to update the masternodeprivkey value in your remote dash.conf file.
 
-## Start your MasterNodes
+## Start your ThroNes
 
 ### Remote
 
@@ -147,7 +147,7 @@ Finally... time to start from local.
 
 From the menu select Tools => Debug Console
 
-If you want to review your masternode.conf setting before starting the MasterNodes, issue the following in the Debug Console:
+If you want to review your masternode.conf setting before starting the ThroNes, issue the following in the Debug Console:
 
 ```masternode list-conf```
 

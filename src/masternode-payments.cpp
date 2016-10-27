@@ -299,7 +299,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
     //spork
     if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
         //no masternode detected
-        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+        CMasternode* winningNode = mnodeman.GetCurrentThroNe(1);
         if(winningNode){
             payee = GetScriptForDestination(winningNode->pubkey.GetID());
         } else {
@@ -421,7 +421,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 bool CMasternodePaymentWinner::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
     std::string errorMessage;
-    std::string strMasterNodeSignMessage;
+    std::string strThroNeSignMessage;
 
     std::string strMessage =  vinMasternode.prevout.ToStringShort() +
                 boost::lexical_cast<std::string>(nBlockHeight) +
@@ -680,7 +680,7 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
-    if(!fMasterNode) return false;
+    if(!fThroNe) return false;
 
     //reference node - hybrid mode
 
@@ -737,7 +737,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     CPubKey pubKeyMasternode;
     CKey keyMasternode;
 
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
     {
         LogPrintf("CMasternodePayments::ProcessBlock() - Error upon calling SetKey: %s\n", errorMessage.c_str());
         return false;

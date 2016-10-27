@@ -64,7 +64,7 @@ Value darksend(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     if(params[0].get_str() == "auto"){
-        if(fMasterNode)
+        if(fThroNe)
             return "DarkSend is not supported from masternodes";
 
         return "DoAutomaticDenominating " + (darkSendPool.DoAutomaticDenominating() ? "successful" : ("failed: " + darkSendPool.GetStatus()));
@@ -108,7 +108,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
             "Returns an object containing anonymous pool-related information.");
 
     Object obj;
-    obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentMasterNode()->addr.ToString()));
+    obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentThroNe()->addr.ToString()));
     obj.push_back(Pair("state",        darkSendPool.GetState()));
     obj.push_back(Pair("entries",      darkSendPool.GetEntriesCount()));
     obj.push_back(Pair("entries_accepted",      darkSendPool.GetCountEntriesAccepted()));
@@ -207,7 +207,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "current")
     {
-        CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
+        CMasternode* winner = mnodeman.GetCurrentThroNe(1);
         if(winner) {
             Object obj;
 
@@ -233,7 +233,7 @@ Value masternode(const Array& params, bool fHelp)
         CTxIn vin = CTxIn();
         CPubKey pubkey = CScript();
         CKey key;
-        bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
+        bool found = activeMasternode.GetThroNeVin(vin, pubkey, key);
         if(!found){
             throw runtime_error("Missing masternode input, please look at the documentation for instructions on masternode creation\n");
         } else {
@@ -248,7 +248,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "start")
     {
-        if(!fMasterNode) throw runtime_error("you must set masternode=1 in the configuration\n");
+        if(!fThroNe) throw runtime_error("you must set masternode=1 in the configuration\n");
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -453,7 +453,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "status")
     {
-        if(!fMasterNode) throw runtime_error("This is not a masternode\n");
+        if(!fThroNe) throw runtime_error("This is not a masternode\n");
 
         Object mnObj;
         CMasternode *pmn = mnodeman.Find(activeMasternode.vin);
