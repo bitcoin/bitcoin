@@ -37,6 +37,12 @@ static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEM_SIZE = 80;
 /** The maximum size of a standard witnessScript */
 static const unsigned int MAX_STANDARD_P2WSH_SCRIPT_SIZE = 3600;
 /**
+ *  Maximum standard signature hashing per transaction weight (byte hashed per weight)
+ *  This is equivalent to 36MB for an 100kB non-segwit transaction.
+ *  All transactions below 100kB with legitimate use of CHECK(MULTI)SIG should remain standard with this limit.
+ */
+static const unsigned int MAX_STANDARD_HASH_PER_WEIGHT = 90;
+/**
  * Standard script verification flags that standard transactions will comply
  * with. However scripts violating these flags may still be present in valid
  * blocks and we must accept those blocks.

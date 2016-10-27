@@ -201,6 +201,75 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+unsigned int CScript::GetSigHashOpCount() const
+{
+    unsigned int n = 0;
+    const_iterator pc = begin();
+    std::vector<opcodetype> pushOpcodes;
+    while (pc < end())
+    {
+        opcodetype opcode;
+        if (!GetOp(pc, opcode))
+            break; // The script is invalid anyway so we just return the current value
+        if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
+            n++;
+        else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY) {
+            // The number of keys must be k = 1 to 16 denoted by OP_k
+            if (!pushOpcodes.empty() && pushOpcodes.back() >= OP_1 && pushOpcodes.back() <= OP_16) {
+                unsigned int nKeys = DecodeOP_N(pushOpcodes.back());
+                // We assume sigHashOp is k, unless the the number of signature is canonical
+                n += nKeys;
+                // If all the k + 2 opcodes before the CHECKMULTISIG are push only, and the number of signature
+                // is denoted as OP_s with s = 1 to 16, and s < k, we count it as s sigHashOp
+                if (pushOpcodes.size() >= nKeys + 2) {
+                    opcodetype nSigsCode = pushOpcodes.at(pushOpcodes.size() - nKeys - 2);
+                    if (nSigsCode >= OP_1 && nSigsCode <= OP_16) {
+                        unsigned int nSigs = DecodeOP_N(nSigsCode);
+                        if (nSigs < nKeys)
+                            n = n - nKeys + nSigs;
+                    }
+                }
+            }
+            // If key count is not canonical, we assume it has 3 sigHashOp
+            else
+                return 3;
+        }
+        // It can't be more than 3 in total
+        if (n >= 3)
+            return 3;
+
+        if (opcode <= OP_16)
+            pushOpcodes.push_back(opcode);
+        else
+            pushOpcodes.clear();
+    }
+    return n;
+}
+
+unsigned int CScript::GetSigHashOpCount(const CScript& scriptSig) const
+{
+    if (!IsPayToScriptHash())
+        return GetSigHashOpCount();
+
+    // This is a pay-to-script-hash scriptPubKey;
+    // get the last item that the scriptSig
+    // pushes onto the stack:
+    const_iterator pc = scriptSig.begin();
+    vector<unsigned char> data;
+    while (pc < scriptSig.end())
+    {
+        opcodetype opcode;
+        if (!scriptSig.GetOp(pc, opcode, data))
+            return 0;
+        if (opcode > OP_16)
+            return 0;
+    }
+
+    /// ... and return its hash opcount:
+    CScript subscript(data.begin(), data.end());
+    return subscript.GetSigHashOpCount();
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:

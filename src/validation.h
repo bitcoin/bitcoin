@@ -351,6 +351,12 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
 int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
 
 /**
+ * Compute total signature hashing operation of a transaction.
+ * Parameters same as GetTransactionSigOpCost
+ */
+int GetTransactionBaseSigHashOpCount(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
+
+/**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
  * instead of being performed inline.
