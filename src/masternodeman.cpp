@@ -376,7 +376,8 @@ bool CMasternodeMan::Has(const CTxIn& vin)
 //
 CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
 {
-    LOCK(cs);
+    // Need LOCK2 here to ensure consistent locking order because the GetBlockHash call below locks cs_main
+    LOCK2(cs_main,cs);
 
     CMasternode *pBestMasternode = NULL;
     std::vector<std::pair<int, CMasternode*> > vecMasternodeLastPaid;
