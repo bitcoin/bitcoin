@@ -1538,9 +1538,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         nDarksendRounds = 93409;
     }
 
-    nAnonymizeDarkcoinAmount = GetArg("-anonymizedashamount", 0);
-    if(nAnonymizeDarkcoinAmount > 934099) nAnonymizeDarkcoinAmount = 934099;
-    if(nAnonymizeDarkcoinAmount < 2) nAnonymizeDarkcoinAmount = 2;
+    nAnonymizeCrownAmount = GetArg("-anonymizedashamount", 0);
+    if(nAnonymizeCrownAmount > 934099) nAnonymizeCrownAmount = 934099;
+    if(nAnonymizeCrownAmount < 2) nAnonymizeCrownAmount = 2;
 
     fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
@@ -1555,7 +1555,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Darksend rounds %d\n", nDarksendRounds);
-    LogPrintf("Anonymize Crown Amount %d\n", nAnonymizeDarkcoinAmount);
+    LogPrintf("Anonymize Crown Amount %d\n", nAnonymizeCrownAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
     /* Denominations

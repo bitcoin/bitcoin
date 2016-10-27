@@ -35,7 +35,7 @@ extern bool fLiteMode;
 extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int nDarksendRounds;
-extern int nAnonymizeDarkcoinAmount;
+extern int nAnonymizeCrownAmount;
 extern int nLiquidityProvider;
 extern bool fEnableDarksend;
 extern int64_t enforceThronePaymentsTime;

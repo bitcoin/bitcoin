@@ -1,9 +1,9 @@
 0.11.1 Release notes
 ====================
 
-Darkcoin Core 0.11.1 supports a full implementation of InstantX, Darksend improvements
+Crown Core 0.11.1 supports a full implementation of InstantX, Darksend improvements
 and a new version of enforcement compatible with the newer Bitcoin architechure.
-Latest release in 0.11.1.x tree is v0.11.1.26, which is rebranding Darkcoin to Crown.
+Latest release in 0.11.1.x tree is v0.11.1.26, which is rebranding Crown to Crown.
 
 - Fully implemented IX
 - Added support for DSTX messages, as a result DS should be much faster

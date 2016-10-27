@@ -111,7 +111,7 @@ bool fLiteMode = false;
 bool fEnableInstantX = true;
 int nInstantXDepth = 5;
 int nDarksendRounds = 2;
-int nAnonymizeDarkcoinAmount = 10000;
+int nAnonymizeCrownAmount = 10000;
 int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
 int64_t enforceThronePaymentsTime = 4085657524;

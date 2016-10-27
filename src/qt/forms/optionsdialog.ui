@@ -200,7 +200,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="anonymizeDarkcoin">
+          <widget class="QSpinBox" name="anonymizeCrown">
            <property name="maximumSize">
             <size>
              <width>0</width>

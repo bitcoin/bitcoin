@@ -1,16 +1,16 @@
 0.11.0 Release notes
 ====================
 
-Darkcoin Core 0.11.0 is forked off the Bitcoin Core 0.9.3. The old darkcoin
+Crown Core 0.11.0 is forked off the Bitcoin Core 0.9.3. The old darkcoin
 versions 0.10.x were forked from the Litecoin 0.8 tree. The following changes
 are introduced in this major release. This list is compiled from the release
 notes of Bitcoin Core  0.9.0, 0.9.1, 0.9.2, 0.9.2.1, 0.9.3 and was completed
-with the introduced changes to the Darkcoin Core 0.11.0.
+with the introduced changes to the Crown Core 0.11.0.
 
 
-Darkcoin Core:
+Crown Core:
 
-- Rebrand to `Darkcoin Core`
+- Rebrand to `Crown Core`
 - Version bumped to 0.11 to indicate a new major release
 - Renamed client to identify with network from `Satoshi` to `Core`
 - Bumped protocol version to 70052
@@ -20,7 +20,7 @@ Darkcoin Core:
   `n`, this affects public keys only, old wallets remain valid and usable!)
 - Defined BIP32 (HD) address versions to start with `drkp`/`drkv` (`DRKP`/`DRKV`
   for testnet)
-- Adapted BIP44 coin type `5` for Darkcoin (0x80000005) as defined in SLIP-0044
+- Adapted BIP44 coin type `5` for Crown (0x80000005) as defined in SLIP-0044
 - Added new units: `duffs` (1 / 100.000.000 DRK)
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
 - Added new DNS seed from masternode.io
