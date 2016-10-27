@@ -18,48 +18,48 @@
 #define THRONE_SYNC_TIMEOUT           5
 #define THRONE_SYNC_THRESHOLD         2
 
-class CMasternodeSync;
-extern CMasternodeSync masternodeSync;
+class CThroneSync;
+extern CThroneSync masternodeSync;
 
 //
-// CMasternodeSync : Sync masternode assets in stages
+// CThroneSync : Sync masternode assets in stages
 //
 
-class CMasternodeSync
+class CThroneSync
 {
 public:
     std::map<uint256, int> mapSeenSyncMNB;
     std::map<uint256, int> mapSeenSyncMNW;
     std::map<uint256, int> mapSeenSyncBudget;
 
-    int64_t lastMasternodeList;
-    int64_t lastMasternodeWinner;
+    int64_t lastThroneList;
+    int64_t lastThroneWinner;
     int64_t lastBudgetItem;
     int64_t lastFailure;
     int nCountFailures;
 
     // sum of all counts
-    int sumMasternodeList;
-    int sumMasternodeWinner;
+    int sumThroneList;
+    int sumThroneWinner;
     int sumBudgetItemProp;
     int sumBudgetItemFin;
     // peers that reported counts
-    int countMasternodeList;
-    int countMasternodeWinner;
+    int countThroneList;
+    int countThroneWinner;
     int countBudgetItemProp;
     int countBudgetItemFin;
 
     // Count peers we've requested the list from
-    int RequestedMasternodeAssets;
-    int RequestedMasternodeAttempt;
+    int RequestedThroneAssets;
+    int RequestedThroneAttempt;
 
     // Time when current masternode asset sync started
     int64_t nAssetSyncStarted;
 
-    CMasternodeSync();
+    CThroneSync();
 
-    void AddedMasternodeList(uint256 hash);
-    void AddedMasternodeWinner(uint256 hash);
+    void AddedThroneList(uint256 hash);
+    void AddedThroneWinner(uint256 hash);
     void AddedBudgetItem(uint256 hash);
     void GetNextAsset();
     std::string GetSyncStatus();

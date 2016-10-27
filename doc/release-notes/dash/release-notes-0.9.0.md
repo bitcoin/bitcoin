@@ -298,7 +298,7 @@ http://test.explorer.darkcoin.fr/tx/6de2c5204abdea451da930f61bae0f954eef13188a3a
   session on a random masternode, then repeat until they get any kind of error
   or run out of funds that need to be processed.
 - Fixed a change address reuse issue
-- Fixed an issue with the compatible join algorithm (Masternodes will only join
+- Fixed an issue with the compatible join algorithm (Thrones will only join
   the same denominations, this wasn't always the case before)
 - Inc protocol to kick old users odd again
 
@@ -377,7 +377,7 @@ anonymity improvements:
   the Darksend process.
 - Client will only submit 1 transaction into the pool fixing possible
   anonymity issues
-- Masternodes will only merge compatible transactions using the same
+- Thrones will only merge compatible transactions using the same
   denominations. For example (500,500,100) would be able to merge
   with (500,100), (10,1) with (10,1,1), but not (500,1) with (10,1).
   This improves the anonmity by not allowing someone to follow transactions by
@@ -420,7 +420,7 @@ DS+ seems to be pretty stable now :-)
 
 - Fixed a few issues with input selection causing the
   "Insufficent Funds 2" error
-- Masternodes now reset themselves when they give "entries is full".
+- Thrones now reset themselves when they give "entries is full".
   Not sure what's causing it but a client will just try again
 - Improved the split up function
 - Fixed issues with AutoDenom in wallets larger than a few hundred
@@ -473,7 +473,7 @@ and even disable darksend auto-denom if wanted:
 
 - Fixed AutoDenominate. It seems to work pretty well now.
 - Inputs that are large will be broken up automatically for denomination
-- Masternodes should change every block now (missed a mod=10 last time)
+- Thrones should change every block now (missed a mod=10 last time)
 - Mixing requires 5 clients to merge now, should improve anonymity.
 - Mixing rounds are limited to 1000DRK, per block
 
@@ -481,7 +481,7 @@ and even disable darksend auto-denom if wanted:
 0.9.12.5 Release notes
 ----------------------
 
-- Masternodes should change every block now
+- Thrones should change every block now
 - DoAutomaticDenomination should happen every block now
 - DarkSendRounds had a bug that I fixed, should calculate correctly now
 
@@ -508,7 +508,7 @@ This is a pretty large update to the RC client.
 ----------------------
 
 - Fixed payout issues (masternode consessus was paying out to vout(0) by default)
-- Improved DarksendInput add entry verification. Masternodes will now reject
+- Improved DarksendInput add entry verification. Thrones will now reject
   transactions that look like fees are too low, too high, have spent inputs, etc.
 - Incremented protocol version to kick off clients with vout(0) payment bug
 - DoAutomaticDenominations 100DRK limit changed to 500DRK (we should see a bunch

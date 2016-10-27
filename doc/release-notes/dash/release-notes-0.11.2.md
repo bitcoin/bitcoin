@@ -10,7 +10,7 @@ Please report bugs using the issue tracker at github:
   https://github.com/darkcoin/darkcoin/issues
 
 
-Masternode enhancements
+Throne enhancements
 -----------------------
 
 When restarting the client the masternodes will be stored in the datadir in
@@ -73,8 +73,8 @@ dashd/dash-qt (on Linux).
 - BIP 66 integration
 - Strict DER signatures
 - Bump block header version to 3 (see notes above)
-- Masternode caching
-- Masternode payment scheduler
+- Throne caching
+- Throne payment scheduler
 - Better protection from cheating masternodes
 - Extended functionality for `masternode list` RPC command
 - Live Darksend and InstantX fee calculations in CoinControl

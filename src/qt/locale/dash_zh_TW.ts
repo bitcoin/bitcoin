@@ -1451,7 +1451,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>啟動/停止混合</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>你提交到主節點的面額。&lt;br&gt;為了混合，其他用戶必須提交完全一樣的面額。</translation>
     </message>
     <message>
@@ -1788,7 +1788,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>區塊鏈</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Thrones</source>
         <translation>主節點數目</translation>
     </message>
     <message>
@@ -3550,7 +3550,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>未完成匿名發送請求:</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
+        <source>Error connecting to Throne.</source>
         <translation>連接到主節點時發生錯誤。</translation>
     </message>
     <message>
@@ -3630,15 +3630,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在進行混合...</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Thrones detected.</source>
         <translation>沒有檢測到主節點。</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Throne found.</source>
         <translation>沒有找到相容的主節點。</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Throne list.</source>
         <translation>不在主節點列表中。</translation>
     </message>
     <message>
@@ -3730,7 +3730,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在跟主節點網絡進行同步...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
+        <source>This is not a Throne.</source>
         <translation>這並不是一個主節點。</translation>
     </message>
     <message>
@@ -3770,7 +3770,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在載入錢包資料...</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Throne:</source>
         <translation>主節點:</translation>
     </message>
     <message>

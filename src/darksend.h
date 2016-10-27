@@ -20,7 +20,7 @@ class CThroNeVote;
 class CBitcoinAddress;
 class CDarksendQueue;
 class CDarksendBroadcastTx;
-class CActiveMasternode;
+class CActiveThrone;
 
 // pool states for mixing
 #define POOL_STATUS_UNKNOWN                    0 // waiting for update
@@ -54,7 +54,7 @@ extern CDarkSendSigner darkSendSigner;
 extern std::vector<CDarksendQueue> vecDarksendQueue;
 extern std::string strThroNePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
-extern CActiveMasternode activeMasternode;
+extern CActiveThrone activeThrone;
 
 /** Holds an Darksend input
  */
@@ -186,7 +186,7 @@ public:
 
     bool GetAddress(CService &addr)
     {
-        CMasternode* pmn = mnodeman.Find(vin);
+        CThrone* pmn = mnodeman.Find(vin);
         if(pmn != NULL)
         {
             addr = pmn->addr;
@@ -198,7 +198,7 @@ public:
     /// Get the protocol version
     bool GetProtocolVersion(int &protocolVersion)
     {
-        CMasternode* pmn = mnodeman.Find(vin);
+        CThrone* pmn = mnodeman.Find(vin);
         if(pmn != NULL)
         {
             protocolVersion = pmn->protocolVersion;
@@ -209,8 +209,8 @@ public:
 
     /** Sign this Darksend transaction
      *  \return true if all conditions are met:
-     *     1) we have an active Masternode,
-     *     2) we have a valid Masternode private key,
+     *     1) we have an active Throne,
+     *     2) we have a valid Throne private key,
      *     3) we signed the message successfully, and
      *     4) we verified the message successfully
      */
@@ -224,7 +224,7 @@ public:
         return (GetTime() - time) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
     }
 
-    /// Check if we have a valid Masternode address
+    /// Check if we have a valid Throne address
     bool CheckSignature();
 
 };
@@ -262,7 +262,7 @@ class CDarksendPool
 private:
     mutable CCriticalSection cs_darksend;
 
-    std::vector<CDarkSendEntry> entries; // Masternode/clients entries
+    std::vector<CDarkSendEntry> entries; // Throne/clients entries
     CMutableTransaction finalTransaction; // the finalized transaction ready for signing
 
     int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
@@ -280,7 +280,7 @@ private:
     int sessionID;
 
     int sessionUsers; //N Users have said they'll join
-    bool sessionFoundMasternode; //If we've found a compatible Masternode
+    bool sessionFoundThrone; //If we've found a compatible Throne
     std::vector<CTransaction> vecSessionCollateral;
 
     int cachedLastSuccess;
@@ -322,7 +322,7 @@ public:
     // where collateral should be made out to
     CScript collateralPubKey;
 
-    CMasternode* pSubmittedToMasternode;
+    CThrone* pSubmittedToThrone;
     int sessionDenom; //Users must submit an denom matching this
     int cachedNumBlocks; //used for the overview screen
 
@@ -405,7 +405,7 @@ public:
     void UpdateState(unsigned int newState)
     {
         if (fThroNe && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrint("darksend", "CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
+            LogPrint("darksend", "CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Throne. \n");
             return;
         }
 
@@ -459,9 +459,9 @@ public:
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
-    /// As a client, send a transaction to a Masternode to start the denomination process
+    /// As a client, send a transaction to a Throne to start the denomination process
     void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount);
-    /// Get Masternode updates about the progress of Darksend
+    /// Get Throne updates about the progress of Darksend
     bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, int &errorID, int newSessionID=0);
 
     /// As a client, check and sign the final transaction

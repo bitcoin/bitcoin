@@ -64,7 +64,7 @@ void AddEditThrone::on_okButton_clicked()
     {
         std::string sAlias = ui->aliasLineEdit->text().toStdString();
         std::string sAddress = ui->addressLineEdit->text().toStdString();
-        std::string sMasternodePrivKey = ui->privkeyLineEdit->text().toStdString();
+        std::string sThronePrivKey = ui->privkeyLineEdit->text().toStdString();
         std::string sTxHash = ui->txhashLineEdit->text().toStdString();
         std::string sOutputIndex = ui->outputindexLineEdit->text().toStdString();
 
@@ -72,10 +72,10 @@ void AddEditThrone::on_okButton_clicked()
         boost::filesystem::ofstream stream (pathConfigFile.string(), std::ios::out | std::ios::app);
         if (stream.is_open())
         {
-            stream << sAlias << " " << sAddress << " " << sMasternodePrivKey << " " << sTxHash << " " << sOutputIndex << std::endl;
+            stream << sAlias << " " << sAddress << " " << sThronePrivKey << " " << sTxHash << " " << sOutputIndex << std::endl;
             stream.close();
         }
-        masternodeConfig.add(sAlias, sAddress, sMasternodePrivKey, sTxHash, sOutputIndex);
+        masternodeConfig.add(sAlias, sAddress, sThronePrivKey, sTxHash, sOutputIndex);
         accept();
     }
 }

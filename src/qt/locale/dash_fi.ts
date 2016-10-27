@@ -1456,8 +1456,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Käynnistä/Lopeta Sekoitus</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Masternodelle lähetetyt denominoinnit.&lt;br&gt;Jotta sekoitus onnistuisi, täytyy muiden käyttäjien käyttää saman arvoisia denominointeja.</translation>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Thronelle lähetetyt denominoinnit.&lt;br&gt;Jotta sekoitus onnistuisi, täytyy muiden käyttäjien käyttää saman arvoisia denominointeja.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1813,8 +1813,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lohkoketju</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Masternodet määrä</translation>
+        <source>Number of Thrones</source>
+        <translation>Thronet määrä</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3619,8 +3619,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Poista kaikki lompakon siirtotapahtumat ja palauta vain nuo osat lohkoketjusta -rescan valinnan avulla käynnistyksessä</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Kytke pois käytöstä kaikki Crown:in erityistoiminnot (Masternodet, Darksend, InstantX, Budjetointi) (0-1, oletus: %u)</translation>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Kytke pois käytöstä kaikki Crown:in erityistoiminnot (Thronet, Darksend, InstantX, Budjetointi) (0-1, oletus: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3835,7 +3835,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>Aktivoi asiakasohjelman käyttö masternode:na (0-1, oletus: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
+        <source>Error connecting to Throne.</source>
         <translation>Virhe masternode:en kytkeytymisessä.</translation>
     </message>
     <message>
@@ -4011,16 +4011,16 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>Tarvitaan määritellä portti -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Masternodeja ei havaittu.</translation>
+        <source>No Thrones detected.</source>
+        <translation>Throneja ei havaittu.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Yhteensopivaa Masternodea ei löytynyt.</translation>
+        <source>No compatible Throne found.</source>
+        <translation>Yhteensopivaa Thronea ei löytynyt.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Ei ole Masternode listassa.</translation>
+        <source>Not in the Throne list.</source>
+        <translation>Ei ole Throne listassa.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4143,8 +4143,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>Synkronoidaan sporkit...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
-        <translation>Tämä ei ole Masternode.</translation>
+        <source>This is not a Throne.</source>
+        <translation>Tämä ei ole Throne.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4187,8 +4187,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>(oltava 9340 pääverkossa)</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Satunnaista Masternodea ei löydy.</translation>
+        <source>Can't find random Throne.</source>
+        <translation>Satunnaista Thronea ei löydy.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4255,16 +4255,16 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>Ladataan lompakkoa...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Masternode valinnat:</translation>
+        <source>Throne options:</source>
+        <translation>Throne valinnat:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode jono on täysi.</translation>
+        <source>Throne queue is full.</source>
+        <translation>Throne jono on täysi.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Throne:</source>
+        <translation>Throne:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

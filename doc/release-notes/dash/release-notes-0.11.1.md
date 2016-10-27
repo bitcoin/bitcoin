@@ -20,7 +20,7 @@ Latest release in 0.11.1.x tree is v0.11.1.26, which is rebranding Darkcoin to C
 - New languages supported Portuguese, German, Russian, Polish, Spanish, Vietnamese, French,
 Italian, Catalan, Chinese, Danish, Finnish, Swedish, Czech, Turkish and Bavarian (and many more)
 - Full implementation of spork. Currently this includes 4 different sporks, InstantX, InstantX block enforcement, masternode payments enforcement, and reconverge. This uses the inventory system, so it's super efficient and very powerful for future development. Reconverge will put the blockchain into a mode where it will attempt to reprocess any forks without restarting the client, this means if we even had a fork in the future this can be triggered to fix it without any damage to the network.
-- Masternode payments now uses the inventory system, which will result in much lower bandwidth usage
+- Throne payments now uses the inventory system, which will result in much lower bandwidth usage
 - Improved caching
 - use wallet db ds flag in rpc
 - update tx types in UI / fix tx decomposition / use wallet db ds flag

@@ -123,21 +123,21 @@ Value mnsync(const Array& params, bool fHelp)
         Object obj;
 
         obj.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
-        obj.push_back(Pair("lastMasternodeList", masternodeSync.lastMasternodeList));
-        obj.push_back(Pair("lastMasternodeWinner", masternodeSync.lastMasternodeWinner));
+        obj.push_back(Pair("lastThroneList", masternodeSync.lastThroneList));
+        obj.push_back(Pair("lastThroneWinner", masternodeSync.lastThroneWinner));
         obj.push_back(Pair("lastBudgetItem", masternodeSync.lastBudgetItem));
         obj.push_back(Pair("lastFailure", masternodeSync.lastFailure));
         obj.push_back(Pair("nCountFailures", masternodeSync.nCountFailures));
-        obj.push_back(Pair("sumMasternodeList", masternodeSync.sumMasternodeList));
-        obj.push_back(Pair("sumMasternodeWinner", masternodeSync.sumMasternodeWinner));
+        obj.push_back(Pair("sumThroneList", masternodeSync.sumThroneList));
+        obj.push_back(Pair("sumThroneWinner", masternodeSync.sumThroneWinner));
         obj.push_back(Pair("sumBudgetItemProp", masternodeSync.sumBudgetItemProp));
         obj.push_back(Pair("sumBudgetItemFin", masternodeSync.sumBudgetItemFin));
-        obj.push_back(Pair("countMasternodeList", masternodeSync.countMasternodeList));
-        obj.push_back(Pair("countMasternodeWinner", masternodeSync.countMasternodeWinner));
+        obj.push_back(Pair("countThroneList", masternodeSync.countThroneList));
+        obj.push_back(Pair("countThroneWinner", masternodeSync.countThroneWinner));
         obj.push_back(Pair("countBudgetItemProp", masternodeSync.countBudgetItemProp));
         obj.push_back(Pair("countBudgetItemFin", masternodeSync.countBudgetItemFin));
-        obj.push_back(Pair("RequestedMasternodeAssets", masternodeSync.RequestedMasternodeAssets));
-        obj.push_back(Pair("RequestedMasternodeAttempt", masternodeSync.RequestedMasternodeAttempt));
+        obj.push_back(Pair("RequestedThroneAssets", masternodeSync.RequestedThroneAssets));
+        obj.push_back(Pair("RequestedThroneAttempt", masternodeSync.RequestedThroneAttempt));
 
 
         return obj;

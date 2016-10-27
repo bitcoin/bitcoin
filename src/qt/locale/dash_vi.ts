@@ -1455,8 +1455,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bắt đầu/Tắt việc trộn</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Mệnh giá mà bạn gửi cho Masternode. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Mệnh giá mà bạn gửi cho Throne. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -1812,8 +1812,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Số lượng Masternodes</translation>
+        <source>Number of Thrones</source>
+        <translation>Số lượng Thrones</translation>
     </message>
     <message>
         <source>&amp;Console</source>
@@ -3614,8 +3614,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Xoá hết tất cả các giao dịch ví và chỉ phục hồi những phần đó của blockchain qua -rescan khi khởi động</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Tắt tất cả các chức năng đặc trưng của Crown (Masternode, Darksend, InstantX, Lập ngân sách) (0-1, ngầm định: %u)</translation>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Tắt tất cả các chức năng đặc trưng của Crown (Throne, Darksend, InstantX, Lập ngân sách) (0-1, ngầm định: %u)</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
@@ -3827,8 +3827,8 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Cho phép phần mềm hoạt động như là masternode (0-1, ngầm định: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
-        <translation>Lỗi kết nối tới Masternode.</translation>
+        <source>Error connecting to Throne.</source>
+        <translation>Lỗi kết nối tới Throne.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -4003,16 +4003,16 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Cần chỉ rõ một cổng với -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Thrones detected.</source>
         <translation>Không tìm thấy các Master node.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Không tìm thấy Masternode tương thích.</translation>
+        <source>No compatible Throne found.</source>
+        <translation>Không tìm thấy Throne tương thích.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Không có trong danh sách Masternode.</translation>
+        <source>Not in the Throne list.</source>
+        <translation>Không có trong danh sách Throne.</translation>
     </message>
     <message>
         <source>Number of automatic wallet backups (default: 10)</source>
@@ -4135,8 +4135,8 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Đang đồng bộ các sporks...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
-        <translation>Đây không phải là một Masternode.</translation>
+        <source>This is not a Throne.</source>
+        <translation>Đây không phải là một Throne.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4172,15 +4172,15 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
     </message>
     <message>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Masternodeprivkey không hợp lệ. Hãy xem lại tài liệu.</translation>
+        <translation>Throneprivkey không hợp lệ. Hãy xem lại tài liệu.</translation>
     </message>
     <message>
         <source>(must be 9340 for mainnet)</source>
         <translation>(phải là 9340 cho mạng chính thức)</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Không tìm thấy Masternode ngẫu nhiên.</translation>
+        <source>Can't find random Throne.</source>
+        <translation>Không tìm thấy Throne ngẫu nhiên.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4247,16 +4247,16 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Đang tải ví...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Tuỳ chọn Masternode:</translation>
+        <source>Throne options:</source>
+        <translation>Tuỳ chọn Throne:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Danh sách hàng đợi Masternode đã đầy.</translation>
+        <source>Throne queue is full.</source>
+        <translation>Danh sách hàng đợi Throne đã đầy.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Throne:</source>
+        <translation>Throne:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

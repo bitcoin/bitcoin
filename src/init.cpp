@@ -171,9 +171,9 @@ void PrepareShutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
-    DumpMasternodes();
+    DumpThrones();
     DumpBudgets();
-    DumpMasternodePayments();
+    DumpThronePayments();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -410,9 +410,9 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
-    strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
+    strUsage += "  -litemode=<n>          " + strprintf(_("Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)"), 0) + "\n";
 
-    strUsage += "\n" + _("Masternode options:") + "\n";
+    strUsage += "\n" + _("Throne options:") + "\n";
     strUsage += "  -masternode=<n>            " + strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0) + "\n";
     strUsage += "  -mnconf=<file>             " + strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf") + "\n";
     strUsage += "  -mnconflock=<n>            " + strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1) + "\n";
@@ -1421,14 +1421,14 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     uiInterface.InitMessage(_("Loading masternode cache..."));
 
-    CMasternodeDB mndb;
-    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
-    if (readResult == CMasternodeDB::FileError)
+    CThroneDB mndb;
+    CThroneDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CThroneDB::FileError)
         LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
-    else if (readResult != CMasternodeDB::Ok)
+    else if (readResult != CThroneDB::Ok)
     {
         LogPrintf("Error reading mncache.dat: ");
-        if(readResult == CMasternodeDB::IncorrectFormat)
+        if(readResult == CThroneDB::IncorrectFormat)
             LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
@@ -1457,15 +1457,15 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     uiInterface.InitMessage(_("Loading masternode payment cache..."));
 
-    CMasternodePaymentDB mnpayments;
-    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
+    CThronePaymentDB mnpayments;
+    CThronePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
     
-    if (readResult3 == CMasternodePaymentDB::FileError)
+    if (readResult3 == CThronePaymentDB::FileError)
         LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
-    else if (readResult3 != CMasternodePaymentDB::Ok)
+    else if (readResult3 != CThronePaymentDB::Ok)
     {
         LogPrintf("Error reading mnpayments.dat: ");
-        if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
+        if(readResult3 == CThronePaymentDB::IncorrectFormat)
             LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
@@ -1474,7 +1474,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     fThroNe = GetBoolArg("-masternode", false);
 
     if((fThroNe || masternodeConfig.getCount() > -1) && fTxIndex == false) {
-        return InitError("Enabling Masternode support requires turning on transaction indexing."
+        return InitError("Enabling Throne support requires turning on transaction indexing."
                   "Please add txindex=1 to your configuration and start with -reindex");
     }
 
@@ -1503,7 +1503,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
             }
 
-            activeMasternode.pubKeyMasternode = pubkey;
+            activeThrone.pubKeyThrone = pubkey;
 
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
@@ -1515,9 +1515,9 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     if(GetBoolArg("-mnconflock", true) && pwalletMain) {
         LOCK(pwalletMain->cs_wallet);
-        LogPrintf("Locking Masternodes:\n");
+        LogPrintf("Locking Thrones:\n");
         uint256 mnTxHash;
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
             LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
             mnTxHash.SetHex(mne.getTxHash());
             COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
@@ -1546,7 +1546,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
     nInstantXDepth = std::min(std::max(nInstantXDepth, 0), 60);
 
-    //lite mode disables all Masternode and Darksend related functionality
+    //lite mode disables all Throne and Darksend related functionality
     fLiteMode = GetBoolArg("-litemode", false);
     if(fThroNe && fLiteMode){
         return InitError("You can not start a masternode in litemode");

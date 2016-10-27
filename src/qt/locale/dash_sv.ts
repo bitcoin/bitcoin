@@ -3022,16 +3022,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Laddar plånbok...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Masternode-alternativ:</translation>
+        <source>Throne options:</source>
+        <translation>Throne-alternativ:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode-kön är uppfylld.</translation>
+        <source>Throne queue is full.</source>
+        <translation>Throne-kön är uppfylld.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Throne:</source>
+        <translation>Throne:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>

@@ -103,8 +103,8 @@ void ThroneManager::updateNodeList()
     ui->countLabel->setText("Updating...");
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
-    std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
-    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
+    BOOST_FOREACH(CThrone& mn, vThrones)
     {
         int mnRow = 0;
         ui->tableWidget->insertRow(0);
@@ -113,7 +113,7 @@ void ThroneManager::updateNodeList()
         // Address, Rank, Active, Active Seconds, Last Ping, Pub Key
         QTableWidgetItem *activeItem = new QTableWidgetItem(QString::number(mn.IsEnabled()));
         QTableWidgetItem *addressItem = new QTableWidgetItem(QString::fromStdString(mn.addr.ToString()));
-        QString Rank = QString::number(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight));
+        QString Rank = QString::number(mnodeman.GetThroneRank(mn.vin, chainActive.Tip()->nHeight));
         QTableWidgetItem *rankItem = new QTableWidgetItem(Rank.rightJustified(2, '0', false));
         QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(seconds_to_DHMS((qint64)(mn.lastPing.sigTime - mn.sigTime)));
         QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%H:%M", mn.lastPing.sigTime)));
@@ -158,17 +158,17 @@ void ThroneManager::on_removeButton_clicked()
     boost::filesystem::path pathTempConfigFile = GetDataDir() / "temp.conf";
     boost::filesystem::ifstream stream (pathConfigFile.string());
     boost::filesystem::ofstream tempstream (pathConfigFile.string(), ios::out | ios::app);
-    string sAlias, sAddress, sMasternodePrivKey, sTxHash, sOutputIndex, privKey;
+    string sAlias, sAddress, sThronePrivKey, sTxHash, sOutputIndex, privKey;
     int x=0, linenumber=1;
 
     for(std::string line; std::getline(stream, line); linenumber++)
     {
         if(line.empty()) continue;
         std::istringstream iss(line);
-        if (!(iss >> sAlias >> sAddress >> sMasternodePrivKey >> sTxHash >> sOutputIndex)) {
+        if (!(iss >> sAlias >> sAddress >> sThronePrivKey >> sTxHash >> sOutputIndex)) {
             iss.str(line);
             iss.clear();
-            if (!(iss >> sAlias >> sAddress >> sMasternodePrivKey >> sTxHash >> sOutputIndex)) {
+            if (!(iss >> sAlias >> sAddress >> sThronePrivKey >> sTxHash >> sOutputIndex)) {
                 QMessageBox msg;
                 std::string strErr;
                 strErr = _("Could not parse masternode.conf") + "\n" +
@@ -179,10 +179,10 @@ void ThroneManager::on_removeButton_clicked()
                 return;
             }
         }
-        if(privKey!=sMasternodePrivKey){ // if there are students with different name, input their data into temp file
-            tempstream << sAlias << " " << sAddress << " " << sMasternodePrivKey << " " << sTxHash << " " << sOutputIndex << std::endl;
+        if(privKey!=sThronePrivKey){ // if there are students with different name, input their data into temp file
+            tempstream << sAlias << " " << sAddress << " " << sThronePrivKey << " " << sTxHash << " " << sOutputIndex << std::endl;
         }
-        if(privKey==sMasternodePrivKey){ // if user entered correct name, x=1 for later output message that the user data has been deleted
+        if(privKey==sThronePrivKey){ // if user entered correct name, x=1 for later output message that the user data has been deleted
             x=1;
         }
     }
@@ -213,12 +213,12 @@ void ThroneManager::on_startButton_clicked()
     std::string statusObj;
     statusObj += "<center>Alias: " + sAlias;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
         if(mne.getAlias() == sAlias) {
             std::string errorMessage;
-            CMasternodeBroadcast mnb;
+            CThroneBroadcast mnb;
 
-            bool result = activeMasternode.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+            bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
             if(result) {
                 statusObj += "<br>Successfully started throne." ;
@@ -242,20 +242,20 @@ void ThroneManager::on_startAllButton_clicked()
     if(pwalletMain->IsLocked()) {
     }
 
-    std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+    std::vector<CThroneConfig::CThroneEntry> mnEntries;
 
     int total = 0;
     int successful = 0;
     int fail = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
         total++;
 
         std::string errorMessage;
-        CMasternodeBroadcast mnb;
+        CThroneBroadcast mnb;
 
-        bool result = activeMasternode.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
+        bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb);
 
         if(result) {
             successful++;
@@ -279,10 +279,10 @@ void ThroneManager::on_startAllButton_clicked()
 
 void ThroneManager::on_UpdateButton_clicked()
 {
-    BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
         std::string errorMessage;
 
-        std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
+        std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
         if (errorMessage == ""){
             updateThrone(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
                 QString::fromStdString(mne.getOutputIndex()), QString::fromStdString("Not in the throne list."));
@@ -292,7 +292,7 @@ void ThroneManager::on_UpdateButton_clicked()
                 QString::fromStdString(mne.getOutputIndex()), QString::fromStdString(errorMessage));
         }
 
-        BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        BOOST_FOREACH(CThrone& mn, vThrones) {
             if (mn.addr.ToString().c_str() == mne.getIp()){
                 updateThrone(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
                 QString::fromStdString(mne.getOutputIndex()), QString::fromStdString("Throne is Running."));

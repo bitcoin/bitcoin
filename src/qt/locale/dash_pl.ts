@@ -1455,7 +1455,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Start/Stop Mieszanie</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Denominacje, które wysłałeś do Masternoda.&lt;br&gt;Aby zostały one wymieszane, inni użytkownicy muszą wysłać dokładnie takie same denominacje. </translation>
     </message>
     <message>
@@ -1812,7 +1812,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ciąg bloków</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Thrones</source>
         <translation>Liczba masternodów</translation>
     </message>
     <message>
@@ -3614,7 +3614,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Usuń wszystkie transakcje portfela i odzyskaj tylko te części blockchainu - zeskanuj powonie na starcie.</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>Wyłącz wszystkie dodatkowe funckje Crown (Masternody, Darksend, InstanX, Budżetowanie) (0-1, domyślnie: %u)</translation>
     </message>
     <message>
@@ -3827,8 +3827,8 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Upoważnia klienta aby działał jako masternode (0-1, domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
-        <translation>Błąd w połączeniu z Masternodem.</translation>
+        <source>Error connecting to Throne.</source>
+        <translation>Błąd w połączeniu z Thronem.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -4003,15 +4003,15 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Musisz wyznaczyć port z -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Thrones detected.</source>
         <translation>Nie wykryto żadnego Masternoda.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Throne found.</source>
         <translation>Nie znalezione zadnego kompatybilnego Masternoda.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Throne list.</source>
         <translation>Nie istnieje na liście masternodów.</translation>
     </message>
     <message>
@@ -4135,8 +4135,8 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Synchronizuję sporki...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
-        <translation>To nie jest Masternode.</translation>
+        <source>This is not a Throne.</source>
+        <translation>To nie jest Throne.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4179,7 +4179,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>(musi być 9340 dla głównej sieci)</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Throne.</source>
         <translation>Nie można znaleźć przypadkowego masternoda.</translation>
     </message>
     <message>
@@ -4247,15 +4247,15 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ładuje portfel...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Throne options:</source>
         <translation>Opcje masternodów:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Throne queue is full.</source>
         <translation>Kolejka masternodów jest pełna.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Throne:</source>
         <translation>Masternod:</translation>
     </message>
     <message>

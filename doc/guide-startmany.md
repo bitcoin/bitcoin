@@ -60,7 +60,7 @@ Close your QT Wallet.
 
 Just like setting up a standard MN. Send exactly 1,000 CRW to each new address created above.
 
-### Create New Masternode Private Keys
+### Create New Throne Private Keys
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 

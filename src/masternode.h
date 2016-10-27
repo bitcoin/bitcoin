@@ -23,19 +23,19 @@
 
 using namespace std;
 
-class CMasternode;
-class CMasternodeBroadcast;
-class CMasternodePing;
+class CThrone;
+class CThroneBroadcast;
+class CThronePing;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
 bool GetBlockHash(uint256& hash, int nBlockHeight);
 
 
 //
-// The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
+// The Throne Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
 
-class CMasternodePing
+class CThronePing
 {
 public:
 
@@ -45,8 +45,8 @@ public:
     std::vector<unsigned char> vchSig;
     //removed stop
 
-    CMasternodePing();
-    CMasternodePing(CTxIn& newVin);
+    CThronePing();
+    CThronePing(CTxIn& newVin);
 
     ADD_SERIALIZE_METHODS;
 
@@ -59,8 +59,8 @@ public:
     }
 
     bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false);
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool VerifySignature(CPubKey& pubKeyMasternode, int &nDos);
+    bool Sign(CKey& keyThrone, CPubKey& pubKeyThrone);
+    bool VerifySignature(CPubKey& pubKeyThrone, int &nDos);
     void Relay();
 
     uint256 GetHash(){
@@ -70,7 +70,7 @@ public:
         return ss.GetHash();
     }
 
-    void swap(CMasternodePing& first, CMasternodePing& second) // nothrow
+    void swap(CThronePing& first, CThronePing& second) // nothrow
     {
         // enable ADL (not necessary in our case, but good practice)
         using std::swap;
@@ -83,16 +83,16 @@ public:
         swap(first.vchSig, second.vchSig);
     }
 
-    CMasternodePing& operator=(CMasternodePing from)
+    CThronePing& operator=(CThronePing from)
     {
         swap(*this, from);
         return *this;
     }
-    friend bool operator==(const CMasternodePing& a, const CMasternodePing& b)
+    friend bool operator==(const CThronePing& a, const CThronePing& b)
     {
         return a.vin == b.vin && a.blockHash == b.blockHash;
     }
-    friend bool operator!=(const CMasternodePing& a, const CMasternodePing& b)
+    friend bool operator!=(const CThronePing& a, const CThronePing& b)
     {
         return !(a == b);
     }
@@ -101,10 +101,10 @@ public:
 
 
 //
-// The Masternode Class. For managing the Darksend process. It contains the input of the 1000DRK, signature to prove
+// The Throne Class. For managing the Darksend process. It contains the input of the 1000DRK, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
 //
-class CMasternode
+class CThrone
 {
 private:
     // critical section to protect the inner data structures
@@ -134,14 +134,14 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
-    CMasternodePing lastPing;
+    CThronePing lastPing;
 
-    CMasternode();
-    CMasternode(const CMasternode& other);
-    CMasternode(const CMasternodeBroadcast& mnb);
+    CThrone();
+    CThrone(const CThrone& other);
+    CThrone(const CThroneBroadcast& mnb);
 
 
-    void swap(CMasternode& first, CMasternode& second) // nothrow
+    void swap(CThrone& first, CThrone& second) // nothrow
     {
         // enable ADL (not necessary in our case, but good practice)
         using std::swap;
@@ -166,16 +166,16 @@ public:
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
     }
 
-    CMasternode& operator=(CMasternode from)
+    CThrone& operator=(CThrone from)
     {
         swap(*this, from);
         return *this;
     }
-    friend bool operator==(const CMasternode& a, const CMasternode& b)
+    friend bool operator==(const CThrone& a, const CThrone& b)
     {
         return a.vin == b.vin;
     }
-    friend bool operator!=(const CMasternode& a, const CMasternode& b)
+    friend bool operator!=(const CThrone& a, const CThrone& b)
     {
         return !(a.vin == b.vin);
     }
@@ -208,7 +208,7 @@ public:
 
     int64_t SecondsSincePayment();
 
-    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
+    bool UpdateFromNewBroadcast(CThroneBroadcast& mnb);
 
     inline uint64_t SliceHash(uint256& hash, int slice)
     {
@@ -228,7 +228,7 @@ public:
     {
         now == -1 ? now = GetAdjustedTime() : now;
 
-        return (lastPing == CMasternodePing())
+        return (lastPing == CThronePing())
                 ? false
                 : now - lastPing.sigTime < seconds;
     }
@@ -236,7 +236,7 @@ public:
     void Disable()
     {
         sigTime = 0;
-        lastPing = CMasternodePing();
+        lastPing = CThronePing();
     }
 
     bool IsEnabled()
@@ -244,7 +244,7 @@ public:
         return activeState == THRONE_ENABLED;
     }
 
-    int GetMasternodeInputAge()
+    int GetThroneInputAge()
     {
         if(chainActive.Tip() == NULL) return 0;
 
@@ -259,11 +259,11 @@ public:
     std::string Status() {
         std::string strStatus = "ACTIVE";
 
-        if(activeState == CMasternode::THRONE_ENABLED) strStatus   = "ENABLED";
-        if(activeState == CMasternode::THRONE_EXPIRED) strStatus   = "EXPIRED";
-        if(activeState == CMasternode::THRONE_VIN_SPENT) strStatus = "VIN_SPENT";
-        if(activeState == CMasternode::THRONE_REMOVE) strStatus    = "REMOVE";
-        if(activeState == CMasternode::THRONE_POS_ERROR) strStatus = "POS_ERROR";
+        if(activeState == CThrone::THRONE_ENABLED) strStatus   = "ENABLED";
+        if(activeState == CThrone::THRONE_EXPIRED) strStatus   = "EXPIRED";
+        if(activeState == CThrone::THRONE_VIN_SPENT) strStatus = "VIN_SPENT";
+        if(activeState == CThrone::THRONE_REMOVE) strStatus    = "REMOVE";
+        if(activeState == CThrone::THRONE_POS_ERROR) strStatus = "POS_ERROR";
 
         return strStatus;
     }
@@ -274,15 +274,15 @@ public:
 
 
 //
-// The Masternode Broadcast Class : Contains a different serialize method for sending masternodes through the network
+// The Throne Broadcast Class : Contains a different serialize method for sending masternodes through the network
 //
 
-class CMasternodeBroadcast : public CMasternode
+class CThroneBroadcast : public CThrone
 {
 public:
-    CMasternodeBroadcast();
-    CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
-    CMasternodeBroadcast(const CMasternode& mn);
+    CThroneBroadcast();
+    CThroneBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
+    CThroneBroadcast(const CThrone& mn);
 
     bool CheckAndUpdate(int& nDoS);
     bool CheckInputsAndAdd(int& nDos);

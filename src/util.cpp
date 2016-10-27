@@ -114,7 +114,7 @@ int nDarksendRounds = 2;
 int nAnonymizeDarkcoinAmount = 10000;
 int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
-int64_t enforceMasternodePaymentsTime = 4085657524;
+int64_t enforceThronePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
 bool fEnableDarksend = false;
 /** All denominations used by darksend */
@@ -492,7 +492,7 @@ boost::filesystem::path GetConfigFile()
     return pathConfigFile;
 }
 
-boost::filesystem::path GetMasternodeConfigFile()
+boost::filesystem::path GetThroneConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;

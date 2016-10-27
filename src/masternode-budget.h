@@ -90,9 +90,9 @@ public:
     map<uint256, CBudgetProposal> mapProposals;
     map<uint256, CFinalizedBudget> mapFinalizedBudgets;
 
-    std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
-    std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
-    std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
+    std::map<uint256, CBudgetProposalBroadcast> mapSeenThroneBudgetProposals;
+    std::map<uint256, CBudgetVote> mapSeenThroneBudgetVotes;
+    std::map<uint256, CBudgetVote> mapOrphanThroneBudgetVotes;
     std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
     std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
     std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
@@ -103,8 +103,8 @@ public:
     }
 
     void ClearSeen() {
-        mapSeenMasternodeBudgetProposals.clear();
-        mapSeenMasternodeBudgetVotes.clear();
+        mapSeenThroneBudgetProposals.clear();
+        mapSeenThroneBudgetVotes.clear();
         mapSeenFinalizedBudgets.clear();
         mapSeenFinalizedBudgetVotes.clear();
     }
@@ -148,11 +148,11 @@ public:
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();
         mapFinalizedBudgets.clear();
-        mapSeenMasternodeBudgetProposals.clear();
-        mapSeenMasternodeBudgetVotes.clear();
+        mapSeenThroneBudgetProposals.clear();
+        mapSeenThroneBudgetVotes.clear();
         mapSeenFinalizedBudgets.clear();
         mapSeenFinalizedBudgetVotes.clear();
-        mapOrphanMasternodeBudgetVotes.clear();
+        mapOrphanThroneBudgetVotes.clear();
         mapOrphanFinalizedBudgetVotes.clear();
     }
     void CheckAndRemove();
@@ -163,11 +163,11 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(mapSeenMasternodeBudgetProposals);
-        READWRITE(mapSeenMasternodeBudgetVotes);
+        READWRITE(mapSeenThroneBudgetProposals);
+        READWRITE(mapSeenThroneBudgetVotes);
         READWRITE(mapSeenFinalizedBudgets);
         READWRITE(mapSeenFinalizedBudgetVotes);
-        READWRITE(mapOrphanMasternodeBudgetVotes);
+        READWRITE(mapOrphanThroneBudgetVotes);
         READWRITE(mapOrphanFinalizedBudgetVotes);
 
         READWRITE(mapProposals);
@@ -359,7 +359,7 @@ public:
     CFinalizedBudgetVote();
     CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn);
 
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool Sign(CKey& keyThrone, CPubKey& pubKeyThrone);
     bool SignatureValid(bool fSignatureCheck);
     void Relay();
 
@@ -555,7 +555,7 @@ public:
     CBudgetVote();
     CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
 
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool Sign(CKey& keyThrone, CPubKey& pubKeyThrone);
     bool SignatureValid(bool fSignatureCheck);
     void Relay();
 

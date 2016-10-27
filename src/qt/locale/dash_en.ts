@@ -1834,8 +1834,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="-469"/>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
     </message>
     <message>
         <location line="+501"/>
@@ -2319,8 +2319,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+289"/>
-        <source>Number of Masternodes</source>
-        <translation>Number of Masternodes</translation>
+        <source>Number of Thrones</source>
+        <translation>Number of Thrones</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -4610,8 +4610,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</translation>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4872,8 +4872,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+2"/>
-        <source>Error connecting to Masternode.</source>
-        <translation>Error connecting to Masternode.</translation>
+        <source>Error connecting to Throne.</source>
+        <translation>Error connecting to Throne.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -5092,18 +5092,18 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>No Masternodes detected.</source>
-        <translation>No Masternodes detected.</translation>
+        <source>No Thrones detected.</source>
+        <translation>No Thrones detected.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>No compatible Masternode found.</source>
-        <translation>No compatible Masternode found.</translation>
+        <source>No compatible Throne found.</source>
+        <translation>No compatible Throne found.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Not in the Masternode list.</source>
-        <translation>Not in the Masternode list.</translation>
+        <source>Not in the Throne list.</source>
+        <translation>Not in the Throne list.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5257,8 +5257,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+4"/>
-        <source>This is not a Masternode.</source>
-        <translation>This is not a Masternode.</translation>
+        <source>This is not a Throne.</source>
+        <translation>This is not a Throne.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5312,8 +5312,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+13"/>
-        <source>Can&apos;t find random Masternode.</source>
-        <translation>Can&apos;t find random Masternode.</translation>
+        <source>Can&apos;t find random Throne.</source>
+        <translation>Can&apos;t find random Throne.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5397,18 +5397,18 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+4"/>
-        <source>Masternode options:</source>
-        <translation>Masternode options:</translation>
+        <source>Throne options:</source>
+        <translation>Throne options:</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode queue is full.</translation>
+        <source>Throne queue is full.</source>
+        <translation>Throne queue is full.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Throne:</source>
+        <translation>Throne:</translation>
     </message>
     <message>
         <location line="+3"/>

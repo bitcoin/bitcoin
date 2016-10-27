@@ -1409,7 +1409,7 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Start/Stop Mixing</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Il valore che hai richiesto al Mastermode. &lt;br&gt; Per mixare, gli altri utenti devono richiedere esattamente gli stessi valori.</translation>
     </message>
     <message>
@@ -3453,7 +3453,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Darksend is idle.</source>
-        <translation>Nessun Masternode trovato.</translation>
+        <translation>Nessun Throne trovato.</translation>
     </message>
     <message>
         <source>Darksend request complete:</source>
@@ -3464,8 +3464,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Richiesta di Darksend incompleta:</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
-        <translation>Errore di connessione al Masternode</translation>
+        <source>Error connecting to Throne.</source>
+        <translation>Errore di connessione al Throne</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3552,16 +3552,16 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Mixing in corso...</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Nessun Masternode trovato.</translation>
+        <source>No Thrones detected.</source>
+        <translation>Nessun Throne trovato.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Nessun compatibile Masternode trovato.</translation>
+        <source>No compatible Throne found.</source>
+        <translation>Nessun compatibile Throne trovato.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Non si trova in lista di Masternode.</translation>
+        <source>Not in the Throne list.</source>
+        <translation>Non si trova in lista di Throne.</translation>
     </message>
     <message>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
@@ -3608,16 +3608,16 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Caricamento portafoglio...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Throne options:</source>
         <translation>Opzioni masternode:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Throne queue is full.</source>
         <translation>La lista di masternode e' piena.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode: </translation>
+        <source>Throne:</source>
+        <translation>Throne: </translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -3699,7 +3699,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Set the masternode private key</source>
-        <translation>Configura la chiave privata del Masternode</translation>
+        <translation>Configura la chiave privata del Throne</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

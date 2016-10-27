@@ -1455,7 +1455,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Comenzar/Parar Mezclado</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Las denominaciones que envió al Nodo Maestro.&lt;br&gt;Para poder mezclar, otros usuarios deben enviar exactamente las mismas denominaciones.</translation>
     </message>
     <message>
@@ -1812,7 +1812,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cadena de bloques</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Thrones</source>
         <translation>Número de Nodos Maestros</translation>
     </message>
     <message>
@@ -3615,7 +3615,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Borrar todas las transacciones del monedero y recuperar únicamente aquellas partes de la cadena de bloques a través de -rescan en el inicio</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>Desactivar todas las funciones asociadas a Crown (Nodos Maestros, Darksend, InstantX, Presupuesto) (0-1, predeterminado: %u)</translation>
     </message>
     <message>
@@ -3829,7 +3829,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Activar el cliente para que se comporte como un nodo maestro (0-1, predeterminado: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
+        <source>Error connecting to Throne.</source>
         <translation>Error al conectar al Nodo Maestro.</translation>
     </message>
     <message>
@@ -4005,15 +4005,15 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Ha de indicar un puerto con -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Thrones detected.</source>
         <translation>No se detectaron Nodos Maestros.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Throne found.</source>
         <translation>No se encontró un Nodo Maestro compatible.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Throne list.</source>
         <translation>Ausente de la lista de Nodos Maestros.</translation>
     </message>
     <message>
@@ -4137,7 +4137,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Sincronizando sporks...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
+        <source>This is not a Throne.</source>
         <translation>Esto no es un Nodo Maestro.</translation>
     </message>
     <message>
@@ -4181,7 +4181,7 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>(debe ser 9340 para la red principal)</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Throne.</source>
         <translation>No se pudo encontrar un Nodo Maestro aleatorio.</translation>
     </message>
     <message>
@@ -4249,15 +4249,15 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Cargando monedero...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Throne options:</source>
         <translation>Opciones del Nodo Maestro:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Throne queue is full.</source>
         <translation>La cola del nodo maestro está llena.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Throne:</source>
         <translation>Nodo Maestro:</translation>
     </message>
     <message>
