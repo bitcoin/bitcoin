@@ -48,6 +48,9 @@ set<uint256> setPreVerifiedTxHash;
 set<uint256> setUnVerifiedOrphanTxHash;
 CCriticalSection cs_xval;
 
+bool fIsChainNearlySyncd;
+CCriticalSection cs_ischainnearlysyncd;
+
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
@@ -128,7 +131,6 @@ std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);
 
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
-bool fIsChainNearlySyncd;
 
 //! The largest block size that we have seen since startup
 uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
