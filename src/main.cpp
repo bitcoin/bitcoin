@@ -1382,7 +1382,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         LogPrint("mempool",
                  "MempoolBytes:%d  LimitFreeRelay:%.5g  FeeCutOff:%.4g  FeesSatoshiPerByte:%.4g  TxBytes:%d  TxFees:%d\n",
                   poolBytes, nFreeLimit, ((double)::minRelayTxFee.GetFee(nSize)) / nSize, ((double)nFees) / nSize, nSize, nFees);
-        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize) && !fSpendsCoinbase && dPriority < 150000000)
+        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize) && !fSpendsCoinbase)
         {
             static double dFreeCount;
 
