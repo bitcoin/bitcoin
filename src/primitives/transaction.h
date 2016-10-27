@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -470,5 +470,8 @@ struct CMutableTransaction
 
 /** Compute the weight of a transaction, as defined by BIP 141 */
 int64_t GetTransactionWeight(const CTransaction &tx);
+
+/** Compute the signature hashable size = transaction size - scriptSig size */
+int64_t GetTransactionHashableSize(const CTransaction& tx);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

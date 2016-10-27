@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -619,6 +619,13 @@ public:
      * pay-to-script-hash transactions:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
+
+    /**
+     * Count the maximum number of sighashing-equivalent operations in a non-witness script.
+     * It assumes that SignatureHash is performed once only for each signature within a CHECKMULTISIG.
+     */
+    unsigned int GetSigHashOpCount() const;
+    unsigned int GetSigHashOpCount(const CScript& scriptSig) const;
 
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
