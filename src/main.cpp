@@ -5421,7 +5421,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;
-        vRecv >> block;
+        try {
+            vRecv >> block;
+        } catch (std::exception &e) {
+            LogPrint("net", "ProcessMessage/block failed to parse message and got error: %s\n", e.what());
+            pfrom->fDisconnect = true;
+            return true;
+        }
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
