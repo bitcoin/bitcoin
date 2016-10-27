@@ -113,6 +113,7 @@ testScripts = [
     'p2p-segwit.py',
     'wallet-dump.py',
     'listtransactions.py',
+    'sighashlimit.py',
     # vv Tests less than 60s vv
     'sendheaders.py',
     'zapwallettxes.py',
