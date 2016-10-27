@@ -13,6 +13,8 @@
 
 #include <vector>
 
+CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward);
+
 struct CDNSSeedData {
     std::string name, host;
     CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost) {}
@@ -103,7 +105,7 @@ protected:
 const CChainParams &Params();
 
 /**
- * @returns CChainParams for the given BIP70 chain name.
+ * @returns CChainParams for the given chain name.
  */
 CChainParams& Params(const std::string& chain);
 

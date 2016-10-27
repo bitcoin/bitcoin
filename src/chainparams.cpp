@@ -14,13 +14,14 @@
 
 #include <boost/assign/list_of.hpp>
 #include <boost/atomic.hpp>
+#include <consensus/validation.h>
 
 #include "chainparamsseeds.h"
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
-    txNew.nVersion = 1;
+    txNew.nVersion = nVersion;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -49,7 +50,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
@@ -241,6 +242,36 @@ public:
 static CTestNetParams testNetParams;
 
 /**
+ * Testnet (FlexTrans)
+ */
+class CFTTestNetParams : public CTestNetParams {
+public:
+    CFTTestNetParams() {
+        strNetworkID = "fttest";
+        consensus.BIP34Height = 1;
+        nDefaultPort = 18335;
+        genesis = CreateGenesisBlock(1476619325, 1143028154, 0x1d00ffff, 4, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+
+        extern boost::atomic<bool> flexTransActive; // genesis block has one TX, which is a FlexTrans transaction.
+        assert(flexTransActive.load());
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000f2cebdbbdbb942240b2c1e93f33c15261e0d86a410034bdf0d268adb"));
+        assert(genesis.hashMerkleRoot == uint256S("0xd9d22f3fd9eac96b3bfc14f5f1e13152c01f0ea516745fa6b783bbcdb7d140ab"));
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+
+        checkpointData = CCheckpointData();
+
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+    }
+};
+static CFTTestNetParams *fttestNetParams = nullptr;
+
+/**
  * Regression test
  */
 class CRegTestParams : public CChainParams {
@@ -318,11 +349,16 @@ const CChainParams &Params() {
 CChainParams& Params(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-            return mainParams;
+        return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
-            return testNetParams;
+        return testNetParams;
     else if (chain == CBaseChainParams::REGTEST)
-            return regTestParams;
+        return regTestParams;
+    else if (chain == CBaseChainParams::FLEXTRANSTESTNET) {
+        if (fttestNetParams == nullptr)
+            fttestNetParams = new CFTTestNetParams(); // yes, this leaks on exit, but as we are not a library thats ok.
+        return *fttestNetParams;
+    }
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
@@ -331,7 +367,7 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
-    if (network == CBaseChainParams::REGTEST) {
+    if (network == CBaseChainParams::REGTEST || network == CBaseChainParams::FLEXTRANSTESTNET) {
         extern boost::atomic<bool> flexTransActive;
         flexTransActive = true;
     }

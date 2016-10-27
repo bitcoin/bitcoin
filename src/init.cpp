@@ -923,9 +923,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     fServer = GetBoolArg("-server", false);
 
-    extern boost::atomic<bool> flexTransActive;
-    flexTransActive = GetBoolArg("-flextrans", false);
-
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nSignedPruneTarget = GetArg("-prune", 0) * 1024 * 1024;
     if (nSignedPruneTarget < 0) {
