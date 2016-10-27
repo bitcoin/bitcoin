@@ -8,8 +8,8 @@
 #include "base58.h"
 #include "protocol.h"
 #include "instantx.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
+#include "activethrone.h"
+#include "throneman.h"
 #include "darksend.h"
 #include "spork.h"
 #include <boost/lexical_cast.hpp>
@@ -28,15 +28,15 @@ int nCompleteTXLocks;
 //txlock - Locks transaction
 //
 //step 1.) Broadcast intention to lock transaction inputs, "txlreg", CTransaction
-//step 2.) Top INSTANTX_SIGNATURES_TOTAL masternodes, open connect to top 1 masternode.
+//step 2.) Top INSTANTX_SIGNATURES_TOTAL thrones, open connect to top 1 throne.
 //         Send "txvote", CTransaction, Signature, Approve
-//step 3.) Top 1 masternode, waits for INSTANTX_SIGNATURES_REQUIRED messages. Upon success, sends "txlock'
+//step 3.) Top 1 throne, waits for INSTANTX_SIGNATURES_REQUIRED messages. Upon success, sends "txlock'
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLiteMode) return; //disable all darksend/throne related functionality
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
-    if(!masternodeSync.IsBlockchainSynced()) return;
+    if(!throneSync.IsBlockchainSynced()) return;
 
     if (strCommand == "ix")
     {
@@ -152,7 +152,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
                 if(mapUnknownVotes[ctx.vinThrone.prevout.hash] > GetTime() &&
                     mapUnknownVotes[ctx.vinThrone.prevout.hash] - GetAverageVoteTime() > 60*10){
-                        LogPrintf("ProcessMessageInstantX::ix - masternode is spamming transaction votes: %s %s\n",
+                        LogPrintf("ProcessMessageInstantX::ix - throne is spamming transaction votes: %s %s\n",
                             ctx.vinThrone.ToString().c_str(),
                             ctx.txHash.ToString().c_str()
                         );
@@ -229,7 +229,7 @@ int64_t CreateNewLock(CTransaction tx)
 
     /*
         Use a blockheight newer than the input.
-        This prevents attackers from using transaction mallibility to predict which masternodes
+        This prevents attackers from using transaction mallibility to predict which thrones
         they'll use.
     */
     int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
@@ -321,7 +321,7 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
 
     if(!ctx.SignatureValid()) {
         LogPrintf("InstantX::ProcessConsensusVote - Signature invalid\n");
-        // don't ban, it could just be a non-synced masternode
+        // don't ban, it could just be a non-synced throne
         mnodeman.AskForMN(pnode, ctx.vinThrone);
         return false;
     }
@@ -500,7 +500,7 @@ bool CConsensusVote::Sign()
 
     if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CConsensusVote::Sign() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        LogPrintf("CConsensusVote::Sign() - ERROR: Invalid throneprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
 

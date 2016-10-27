@@ -6,11 +6,11 @@
 #include "main.h"
 #include "db.h"
 #include "init.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
-#include "masternode-payments.h"
-#include "masternode-budget.h"
-#include "masternodeconfig.h"
+#include "activethrone.h"
+#include "throneman.h"
+#include "throne-payments.h"
+#include "throne-budget.h"
+#include "throneconfig.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
 
@@ -65,7 +65,7 @@ Value darksend(const Array& params, bool fHelp)
 
     if(params[0].get_str() == "auto"){
         if(fThroNe)
-            return "DarkSend is not supported from masternodes";
+            return "DarkSend is not supported from thrones";
 
         return "DoAutomaticDenominating " + (darkSendPool.DoAutomaticDenominating() ? "successful" : ("failed: " + darkSendPool.GetStatus()));
     }
@@ -108,7 +108,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
             "Returns an object containing anonymous pool-related information.");
 
     Object obj;
-    obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentThroNe()->addr.ToString()));
+    obj.push_back(Pair("current_throne",        mnodeman.GetCurrentThroNe()->addr.ToString()));
     obj.push_back(Pair("state",        darkSendPool.GetState()));
     obj.push_back(Pair("entries",      darkSendPool.GetEntriesCount()));
     obj.push_back(Pair("entries_accepted",      darkSendPool.GetCountEntriesAccepted()));
@@ -116,7 +116,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
 }
 
 
-Value masternode(const Array& params, bool fHelp)
+Value throne(const Array& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -128,32 +128,32 @@ Value masternode(const Array& params, bool fHelp)
         strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
         strCommand != "outputs" && strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
-                "masternode \"command\"... ( \"passphrase\" )\n"
-                "Set of commands to execute masternode related actions\n"
+                "throne \"command\"... ( \"passphrase\" )\n"
+                "Set of commands to execute throne related actions\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'ds', 'enabled', 'all', 'qualify')\n"
-                "  current      - Print info on current masternode winner\n"
-                "  debug        - Print masternode status\n"
-                "  genkey       - Generate new masternodeprivkey\n"
-                "  enforce      - Enforce masternode payments\n"
-                "  outputs      - Print masternode compatible outputs\n"
-                "  start        - Start masternode configured in dash.conf\n"
-                "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
-                "  start-<mode> - Start masternodes configured in masternode.conf (<mode>: 'all', 'missing', 'disabled')\n"
-                "  status       - Print masternode status information\n"
-                "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
-                "  list-conf    - Print masternode.conf in JSON format\n"
-                "  winners      - Print list of masternode winners\n"
+                "  count        - Print number of all known thrones (optional: 'ds', 'enabled', 'all', 'qualify')\n"
+                "  current      - Print info on current throne winner\n"
+                "  debug        - Print throne status\n"
+                "  genkey       - Generate new throneprivkey\n"
+                "  enforce      - Enforce throne payments\n"
+                "  outputs      - Print throne compatible outputs\n"
+                "  start        - Start throne configured in dash.conf\n"
+                "  start-alias  - Start single throne by assigned alias configured in throne.conf\n"
+                "  start-<mode> - Start thrones configured in throne.conf (<mode>: 'all', 'missing', 'disabled')\n"
+                "  status       - Print throne status information\n"
+                "  list         - Print list of all known thrones (see thronelist for more info)\n"
+                "  list-conf    - Print throne.conf in JSON format\n"
+                "  winners      - Print list of throne winners\n"
                 );
 
     if (strCommand == "list")
     {
         Array newParams(params.size() - 1);
         std::copy(params.begin() + 1, params.end(), newParams.begin());
-        return masternodelist(newParams, fHelp);
+        return thronelist(newParams, fHelp);
     }
 
     if (strCommand == "budget")
@@ -227,7 +227,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeThrone.status != ACTIVE_THRONE_INITIAL || !masternodeSync.IsSynced())
+        if(activeThrone.status != ACTIVE_THRONE_INITIAL || !throneSync.IsSynced())
             return activeThrone.GetStatus();
 
         CTxIn vin = CTxIn();
@@ -235,7 +235,7 @@ Value masternode(const Array& params, bool fHelp)
         CKey key;
         bool found = activeThrone.GetThroNeVin(vin, pubkey, key);
         if(!found){
-            throw runtime_error("Missing masternode input, please look at the documentation for instructions on masternode creation\n");
+            throw runtime_error("Missing throne input, please look at the documentation for instructions on throne creation\n");
         } else {
             return activeThrone.GetStatus();
         }
@@ -248,7 +248,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "start")
     {
-        if(!fThroNe) throw runtime_error("you must set masternode=1 in the configuration\n");
+        if(!fThroNe) throw runtime_error("you must set throne=1 in the configuration\n");
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -302,7 +302,7 @@ Value masternode(const Array& params, bool fHelp)
         Object statusObj;
         statusObj.push_back(Pair("alias", alias));
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
@@ -349,20 +349,20 @@ Value masternode(const Array& params, bool fHelp)
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") &&
-         (masternodeSync.RequestedThroneAssets <= THRONE_SYNC_LIST ||
-          masternodeSync.RequestedThroneAssets == THRONE_SYNC_FAILED)) {
-            throw runtime_error("You can't use this command until masternode list is synced\n");
+         (throneSync.RequestedThroneAssets <= THRONE_SYNC_LIST ||
+          throneSync.RequestedThroneAssets == THRONE_SYNC_FAILED)) {
+            throw runtime_error("You can't use this command until throne list is synced\n");
         }
 
         std::vector<CThroneConfig::CThroneEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        mnEntries = throneConfig.getEntries();
 
         int successful = 0;
         int failed = 0;
 
         Object resultsObj;
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
@@ -392,7 +392,7 @@ Value masternode(const Array& params, bool fHelp)
         pwalletMain->Lock();
 
         Object returnObj;
-        returnObj.push_back(Pair("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", successful, failed, successful + failed)));
+        returnObj.push_back(Pair("overall", strprintf("Successfully started %d thrones, failed to start %d, total %d", successful, failed, successful + failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
         return returnObj;
@@ -401,7 +401,7 @@ Value masternode(const Array& params, bool fHelp)
     if (strCommand == "create")
     {
 
-        throw runtime_error("Not implemented yet, please look at the documentation for instructions on masternode creation\n");
+        throw runtime_error("Not implemented yet, please look at the documentation for instructions on throne creation\n");
     }
 
     if (strCommand == "genkey")
@@ -415,11 +415,11 @@ Value masternode(const Array& params, bool fHelp)
     if(strCommand == "list-conf")
     {
         std::vector<CThroneConfig::CThroneEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        mnEntries = throneConfig.getEntries();
 
         Object resultObj;
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CThrone *pmn = mnodeman.Find(vin);
 
@@ -432,7 +432,7 @@ Value masternode(const Array& params, bool fHelp)
             mnObj.push_back(Pair("txHash", mne.getTxHash()));
             mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
             mnObj.push_back(Pair("status", strStatus));
-            resultObj.push_back(Pair("masternode", mnObj));
+            resultObj.push_back(Pair("throne", mnObj));
         }
 
         return resultObj;
@@ -453,7 +453,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "status")
     {
-        if(!fThroNe) throw runtime_error("This is not a masternode\n");
+        if(!fThroNe) throw runtime_error("This is not a throne\n");
 
         Object mnObj;
         CThrone *pmn = mnodeman.Find(activeThrone.vin);
@@ -484,7 +484,7 @@ Value masternode(const Array& params, bool fHelp)
     }
 
     /*
-        Shows which masternode wins by score each block
+        Shows which throne wins by score each block
     */
     if (strCommand == "calcscore")
     {
@@ -517,7 +517,7 @@ Value masternode(const Array& params, bool fHelp)
     return Value::null;
 }
 
-Value masternodelist(const Array& params, bool fHelp)
+Value thronelist(const Array& params, bool fHelp)
 {
     std::string strMode = "status";
     std::string strFilter = "";
@@ -530,25 +530,25 @@ Value masternodelist(const Array& params, bool fHelp)
                 && strMode != "protocol" && strMode != "full" && strMode != "lastpaid"))
     {
         throw runtime_error(
-                "masternodelist ( \"mode\" \"filter\" )\n"
-                "Get a list of masternodes in different modes\n"
+                "thronelist ( \"mode\" \"filter\" )\n"
+                "Get a list of thrones in different modes\n"
                 "\nArguments:\n"
                 "1. \"mode\"      (string, optional/required to use filter, defaults = status) The mode to run list in\n"
                 "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes,\n"
                 "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
-                "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
-                "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
+                "  activeseconds  - Print number of seconds throne recognized by the network as enabled\n"
+                "                   (since latest issued \"throne start/start-many/start-alias\")\n"
+                "  addr           - Print ip address associated with a throne (can be additionally filtered, partial match)\n"
                 "  full           - Print info in format 'status protocol pubkey IP lastseen activeseconds lastpaid'\n"
                 "                   (can be additionally filtered, partial match)\n"
-                "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
+                "  lastseen       - Print timestamp of when a throne was last seen on the network\n"
                 "  lastpaid       - The last time a node was paid on the network\n"
-                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
-                "  pubkey         - Print public key associated with a masternode (can be additionally filtered,\n"
+                "  protocol       - Print protocol of a throne (can be additionally filtered, exact match))\n"
+                "  pubkey         - Print public key associated with a throne (can be additionally filtered,\n"
                 "                   partial match)\n"
-                "  rank           - Print rank of a masternode based on current block\n"
-                "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR\n"
+                "  rank           - Print rank of a throne based on current block\n"
+                "  status         - Print throne status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR\n"
                 "                   (can be additionally filtered, partial match)\n"
                 );
     }
@@ -635,7 +635,7 @@ bool DecodeHexVecMnb(std::vector<CThroneBroadcast>& vecMnb, std::string strHexMn
     return true;
 }
 
-Value masternodebroadcast(const Array& params, bool fHelp)
+Value thronebroadcast(const Array& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -644,16 +644,16 @@ Value masternodebroadcast(const Array& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "create-alias" && strCommand != "create-all" && strCommand != "decode" && strCommand != "relay"))
         throw runtime_error(
-                "masternodebroadcast \"command\"... ( \"passphrase\" )\n"
-                "Set of commands to create and relay masternode broadcast messages\n"
+                "thronebroadcast \"command\"... ( \"passphrase\" )\n"
+                "Set of commands to create and relay throne broadcast messages\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  create-alias  - Create single remote masternode broadcast message by assigned alias configured in masternode.conf\n"
-                "  create-all    - Create remote masternode broadcast messages for all masternodes configured in masternode.conf\n"
-                "  decode        - Decode masternode broadcast message\n"
-                "  relay         - Relay masternode broadcast message to the network\n"
+                "  create-alias  - Create single remote throne broadcast message by assigned alias configured in throne.conf\n"
+                "  create-all    - Create remote throne broadcast messages for all thrones configured in throne.conf\n"
+                "  decode        - Decode throne broadcast message\n"
+                "  relay         - Relay throne broadcast message to the network\n"
                 + HelpRequiringPassphrase());
 
     if (strCommand == "create-alias")
@@ -689,7 +689,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
 
         statusObj.push_back(Pair("alias", alias));
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
@@ -742,7 +742,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
         }
 
         std::vector<CThroneConfig::CThroneEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        mnEntries = throneConfig.getEntries();
 
         int successful = 0;
         int failed = 0;
@@ -750,7 +750,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
         Object resultsObj;
         std::vector<CThroneBroadcast> vecMnb;
 
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
 
             CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
@@ -777,7 +777,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
         CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
         ssVecMnb << vecMnb;
         Object returnObj;
-        returnObj.push_back(Pair("overall", strprintf("Successfully created broadcast messages for %d masternodes, failed to create %d, total %d", successful, failed, successful + failed)));
+        returnObj.push_back(Pair("overall", strprintf("Successfully created broadcast messages for %d thrones, failed to create %d, total %d", successful, failed, successful + failed)));
         returnObj.push_back(Pair("detail", resultsObj));
         returnObj.push_back(Pair("hex", HexStr(ssVecMnb.begin(), ssVecMnb.end())));
 
@@ -787,7 +787,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
     if (strCommand == "decode")
     {
         if (params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'masternodebroadcast decode \"hexstring\"'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'thronebroadcast decode \"hexstring\"'");
 
         int successful = 0;
         int failed = 0;
@@ -827,7 +827,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
             returnObj.push_back(Pair(mnb.GetHash().ToString(), resultObj));
         }
 
-        returnObj.push_back(Pair("overall", strprintf("Successfully decoded broadcast messages for %d masternodes, failed to decode %d, total %d", successful, failed, successful + failed)));
+        returnObj.push_back(Pair("overall", strprintf("Successfully decoded broadcast messages for %d thrones, failed to decode %d, total %d", successful, failed, successful + failed)));
 
         return returnObj;
     }
@@ -835,7 +835,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
     if (strCommand == "relay")
     {
         if (params.size() < 2 || params.size() > 3)
-            throw JSONRPCError(RPC_INVALID_PARAMETER,   "masternodebroadcast relay \"hexstring\" ( fast )\n"
+            throw JSONRPCError(RPC_INVALID_PARAMETER,   "thronebroadcast relay \"hexstring\" ( fast )\n"
                                                         "\nArguments:\n"
                                                         "1. \"hex\"      (string, required) Broadcast messages hex string\n"
                                                         "2. fast       (string, optional) If none, using safe method\n");
@@ -882,7 +882,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
             returnObj.push_back(Pair(mnb.GetHash().ToString(), resultObj));
         }
 
-        returnObj.push_back(Pair("overall", strprintf("Successfully relayed broadcast messages for %d masternodes, failed to relay %d, total %d", successful, failed, successful + failed)));
+        returnObj.push_back(Pair("overall", strprintf("Successfully relayed broadcast messages for %d thrones, failed to relay %d, total %d", successful, failed, successful + failed)));
 
         return returnObj;
     }

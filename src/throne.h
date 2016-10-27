@@ -32,7 +32,7 @@ bool GetBlockHash(uint256& hash, int nBlockHeight);
 
 
 //
-// The Throne Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
+// The Throne Ping Class : Contains a different serialize method for sending pings from thrones throughout the network
 //
 
 class CThronePing
@@ -274,7 +274,7 @@ public:
 
 
 //
-// The Throne Broadcast Class : Contains a different serialize method for sending masternodes through the network
+// The Throne Broadcast Class : Contains a different serialize method for sending thrones through the network
 //
 
 class CThroneBroadcast : public CThrone

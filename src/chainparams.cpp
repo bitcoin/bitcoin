@@ -230,7 +230,7 @@ public:
         *///legacy seeders
         //vSeeds.push_back(CDNSSeedData("darkcoin.io",  "testnet-seed.darkcoin.io"));
         //vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
-        //vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
+        //vSeeds.push_back(CDNSSeedData("throne.io", "test.dnsseed.throne.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(111);                    // Testnet dash addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);                    // Testnet dash script addresses start with '8' or '9'

@@ -11,7 +11,7 @@
 #include "init.h"
 #include "wallet.h"
 #include "darksend.h"
-#include "masternode.h"
+#include "throne.h"
 
 #define ACTIVE_THRONE_INITIAL                     0 // initial state
 #define ACTIVE_THRONE_SYNC_IN_PROCESS             1

@@ -11,7 +11,7 @@
 #include "key.h"
 #include "util.h"
 #include "base58.h"
-#include "masternode.h"
+#include "throne.h"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
@@ -210,7 +210,7 @@ class CFinalizedBudget
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
-    bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
+    bool fAutoChecked; //If it matches what we see, we'll auto vote for it (throne only)
 
 public:
     bool fValid;
@@ -263,7 +263,7 @@ public:
     void AutoCheck();
     //total dash paid out by this budget
     CAmount GetTotalPayout();
-    //vote on this finalized budget as a masternode
+    //vote on this finalized budget as a throne
     void SubmitVote();
 
     //checks the hashes to make sure we know about them
@@ -343,7 +343,7 @@ public:
 };
 
 //
-// CFinalizedBudgetVote - Allow a masternode node to vote and broadcast throughout the network
+// CFinalizedBudgetVote - Allow a throne node to vote and broadcast throughout the network
 //
 
 class CFinalizedBudgetVote
@@ -384,7 +384,7 @@ public:
 };
 
 //
-// Budget Proposal : Contains the masternode votes for each budget
+// Budget Proposal : Contains the throne votes for each budget
 //
 
 class CBudgetProposal
@@ -538,7 +538,7 @@ public:
 };
 
 //
-// CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
+// CBudgetVote - Allow a throne node to vote and broadcast throughout the network
 //
 
 class CBudgetVote

@@ -11,7 +11,7 @@
 #include "util.h"
 #include "base58.h"
 #include "main.h"
-#include "masternode.h"
+#include "throne.h"
 
 #define THRONES_DUMP_SECONDS               (15*60)
 #define THRONES_DSEG_SECONDS               (3*60*60)
@@ -70,7 +70,7 @@ public:
     // Keep track of all pings I've seen
     map<uint256, CThronePing> mapSeenThronePing;
     
-    // keep track of dsq count to prevent masternodes from gaming darksend queue
+    // keep track of dsq count to prevent thrones from gaming darksend queue
     int64_t nDsqCount;
 
     ADD_SERIALIZE_METHODS;
@@ -115,7 +115,7 @@ public:
     CThrone* Find(const CTxIn& vin);
     CThrone* Find(const CPubKey& pubKeyThrone);
 
-    /// Find an entry in the masternode list that is next to be paid
+    /// Find an entry in the throne list that is next to be paid
     CThrone* GetNextThroneInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
@@ -141,7 +141,7 @@ public:
 
     void Remove(CTxIn vin);
 
-    /// Update masternode list and maps using provided CThroneBroadcast
+    /// Update throne list and maps using provided CThroneBroadcast
     void UpdateThroneList(CThroneBroadcast mnb);
     /// Perform complete check and only then update list and maps
     bool CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos);

@@ -310,9 +310,9 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* Crown features */
-    { "dash",               "masternode",             &masternode,             true,      true,       false },
-    { "dash",               "masternodelist",         &masternodelist,         true,      true,       false },
-    { "dash",               "masternodebroadcast",    &masternodebroadcast,    true,      true,       false },
+    { "dash",               "throne",             &throne,             true,      true,       false },
+    { "dash",               "thronelist",         &thronelist,         true,      true,       false },
+    { "dash",               "thronebroadcast",    &thronebroadcast,    true,      true,       false },
     { "dash",               "mnbudget",               &mnbudget,               true,      true,       false },
     { "dash",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true,      true,       false },
     { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },

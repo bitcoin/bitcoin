@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode.h"
-#include "masternodeman.h"
+#include "throne.h"
+#include "throneman.h"
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
@@ -120,7 +120,7 @@ CThrone::CThrone(const CThroneBroadcast& mnb)
 }
 
 //
-// When a new masternode broadcast is sent, update our information
+// When a new throne broadcast is sent, update our information
 //
 bool CThrone::UpdateFromNewBroadcast(CThroneBroadcast& mnb)
 {
@@ -260,12 +260,12 @@ int64_t CThrone::GetLastPaid() {
         }
         n++;
 
-        if(masternodePayments.mapThroneBlocks.count(BlockReading->nHeight)){
+        if(thronePayments.mapThroneBlocks.count(BlockReading->nHeight)){
             /*
                 Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
                 to converge on the same payees quickly, then keep the same schedule.
             */
-            if(masternodePayments.mapThroneBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
+            if(thronePayments.mapThroneBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
                 return BlockReading->nTime + nOffset;
             }
         }
@@ -348,7 +348,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    if(protocolVersion < masternodePayments.GetMinThronePaymentsProto()) {
+    if(protocolVersion < thronePayments.GetMinThronePaymentsProto()) {
         LogPrintf("mnb - ignoring outdated Throne %s protocol version %d\n", vin.ToString(), protocolVersion);
         return false;
     }
@@ -389,7 +389,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
         strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
                         vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-        LogPrint("masternode", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+        LogPrint("throne", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
             SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
             EncodeBase64(&sig[0], sig.size()));
 
@@ -400,7 +400,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
                 strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) +
                                 vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-                LogPrint("masternode", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+                LogPrint("throne", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
                     SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
                     EncodeBase64(&sig[0], sig.size()));
 
@@ -422,7 +422,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
                         pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
                         boost::lexical_cast<std::string>(protocolVersion);
 
-        LogPrint("masternode", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n",
+        LogPrint("throne", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n",
             strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
 
         if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
@@ -439,7 +439,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
     //search existing Throne list, this is where we update existing Thrones with new mnb broadcasts
     CThrone* pmn = mnodeman.Find(vin);
 
-    // no such masternode, nothing to update
+    // no such throne, nothing to update
     if(pmn == NULL) return true;
 
     // this broadcast is older or equal than the one that we already have - it's bad and should never happen
@@ -451,7 +451,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    // masternode is not enabled yet/already, nothing to update
+    // throne is not enabled yet/already, nothing to update
     if(!pmn->IsEnabled()) return true;
 
     // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
@@ -463,7 +463,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
             pmn->Check();
             if(pmn->IsEnabled()) Relay();
         }
-        masternodeSync.AddedThroneList(GetHash());
+        throneSync.AddedThroneList(GetHash());
     }
 
     return true;
@@ -471,7 +471,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
 
 bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 {
-    // we are a masternode with the same vin (i.e. already activated) and this mnb is ours (matches our Throne privkey)
+    // we are a throne with the same vin (i.e. already activated) and this mnb is ours (matches our Throne privkey)
     // so nothing to do here for us
     if(fThroNe && vin.prevout == activeThrone.vin.prevout && pubkey2 == activeThrone.pubKeyThrone)
         return true;
@@ -484,7 +484,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
     CThrone* pmn = mnodeman.Find(vin);
 
     if(pmn != NULL) {
-        // nothing to do here if we already know about this masternode and it's enabled
+        // nothing to do here if we already know about this throne and it's enabled
         if(pmn->IsEnabled()) return true;
         // if it's not enabled, remove old MN first and continue
         else mnodeman.Remove(pmn->vin);
@@ -501,7 +501,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
         if(!lockMain) {
             // not mnb fault, let it to be checked again later
             mnodeman.mapSeenThroneBroadcast.erase(GetHash());
-            masternodeSync.mapSeenSyncMNB.erase(GetHash());
+            throneSync.mapSeenSyncMNB.erase(GetHash());
             return false;
         }
 
@@ -512,13 +512,13 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
         }
     }
 
-    LogPrint("masternode", "mnb - Accepted Throne entry\n");
+    LogPrint("throne", "mnb - Accepted Throne entry\n");
 
     if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
         LogPrintf("mnb - Input must have at least %d confirmations\n", THRONE_MIN_CONFIRMATIONS);
         // maybe we miss few blocks, let this mnb to be checked again later
         mnodeman.mapSeenThroneBroadcast.erase(GetHash());
-        masternodeSync.mapSeenSyncMNB.erase(GetHash());
+        throneSync.mapSeenSyncMNB.erase(GetHash());
         return false;
     }
 
@@ -670,16 +670,16 @@ bool CThronePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSig
         return true;
     }
 
-    LogPrint("masternode", "CThronePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
+    LogPrint("throne", "CThronePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
 
     // see if we have this Throne
     CThrone* pmn = mnodeman.Find(vin);
-    if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinThronePaymentsProto())
+    if(pmn != NULL && pmn->protocolVersion >= thronePayments.GetMinThronePaymentsProto())
     {
         if (fRequireEnabled && !pmn->IsEnabled()) return false;
 
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString());
-        // update only if there is no known ping for this masternode or
+        // update only if there is no known ping for this throne or
         // last ping was more then THRONE_MIN_MNP_SECONDS-60 ago comparing to this one
         if(!pmn->IsPingedWithin(THRONE_MIN_MNP_SECONDS - 60, sigTime))
         {
@@ -717,16 +717,16 @@ bool CThronePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSig
             pmn->Check(true);
             if(!pmn->IsEnabled()) return false;
 
-            LogPrint("masternode", "CThronePing::CheckAndUpdate - Throne ping accepted, vin: %s\n", vin.ToString());
+            LogPrint("throne", "CThronePing::CheckAndUpdate - Throne ping accepted, vin: %s\n", vin.ToString());
 
             Relay();
             return true;
         }
-        LogPrint("masternode", "CThronePing::CheckAndUpdate - Throne ping arrived too early, vin: %s\n", vin.ToString());
+        LogPrint("throne", "CThronePing::CheckAndUpdate - Throne ping arrived too early, vin: %s\n", vin.ToString());
         //nDos = 1; //disable, this is happening frequently and causing banned peers
         return false;
     }
-    LogPrint("masternode", "CThronePing::CheckAndUpdate - Couldn't find compatible Throne entry, vin: %s\n", vin.ToString());
+    LogPrint("throne", "CThronePing::CheckAndUpdate - Couldn't find compatible Throne entry, vin: %s\n", vin.ToString());
 
     return false;
 }

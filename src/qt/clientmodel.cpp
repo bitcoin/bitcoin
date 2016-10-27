@@ -15,8 +15,8 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
-#include "masternodeman.h"
-#include "masternode-sync.h"
+#include "throneman.h"
+#include "throne-sync.h"
 #include "util.h"
 
 #include <stdint.h>
@@ -130,13 +130,13 @@ void ClientModel::updateTimer()
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
     if (cachedNumBlocks != newNumBlocks ||
         cachedReindexing != fReindex || cachedImporting != fImporting ||
-            masternodeSync.RequestedThroneAttempt != prevAttempt || masternodeSync.RequestedThroneAssets != prevAssets)
+            throneSync.RequestedThroneAttempt != prevAttempt || throneSync.RequestedThroneAssets != prevAssets)
     {
         cachedNumBlocks = newNumBlocks;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
-        prevAttempt = masternodeSync.RequestedThroneAttempt;
-        prevAssets = masternodeSync.RequestedThroneAssets;
+        prevAttempt = throneSync.RequestedThroneAttempt;
+        prevAssets = throneSync.RequestedThroneAssets;
 
         emit numBlocksChanged(newNumBlocks);
     }

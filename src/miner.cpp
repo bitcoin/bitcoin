@@ -19,7 +19,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
-#include "masternode-payments.h"
+#include "throne-payments.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>

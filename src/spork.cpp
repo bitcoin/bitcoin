@@ -9,7 +9,7 @@
 #include "protocol.h"
 #include "spork.h"
 #include "main.h"
-#include "masternode-budget.h"
+#include "throne-budget.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -26,7 +26,7 @@ std::map<int, CSporkMessage> mapSporksActive;
 
 void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLiteMode) return; //disable all darksend/throne related functionality
 
     if (strCommand == "spork")
     {
@@ -195,7 +195,7 @@ bool CSporkManager::Sign(CSporkMessage& spork)
 
     if(!darkSendSigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CThronePayments::Sign - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage);
+        LogPrintf("CThronePayments::Sign - ERROR: Invalid throneprivkey: '%s'\n", errorMessage);
         return false;
     }
 

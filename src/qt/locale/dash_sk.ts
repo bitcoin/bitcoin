@@ -863,16 +863,16 @@ Adresa: %4</translation>
         <translation>Prosím vyberte úroveň súkromia.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
-        <translation>Použiť 2 rozdielne masternode pre fixovanie prostriedkov až do 10000 CRW</translation>
+        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
+        <translation>Použiť 2 rozdielne throne pre fixovanie prostriedkov až do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
-        <translation>Použiť 8 rozdielnych masternode pre fixovanie prostriedkov až do 10000 CRW</translation>
+        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
+        <translation>Použiť 8 rozdielnych throne pre fixovanie prostriedkov až do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate masternodes</source>
-        <translation>Použiť 16 rozdielnych masternode</translation>
+        <source>Use 16 separate thrones</source>
+        <translation>Použiť 16 rozdielnych throne</translation>
     </message>
     <message>
         <source>This option is the quickest and will cost about ~0.025 CRW to anonymize 10000 CRW</source>
@@ -1185,8 +1185,8 @@ Adresa: %4</translation>
         <translation>Expert</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Toto nastavenie určuje množstvo rozličných masternode cez ktoré sa bude anonymizovať vstup.&lt;br/&gt; Viac kôl anonymizácie dáva väčšiu úroveň súkromia, ale tiež stojí viac na poplatkoch.</translation>
+        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Toto nastavenie určuje množstvo rozličných throne cez ktoré sa bude anonymizovať vstup.&lt;br/&gt; Viac kôl anonymizácie dáva väčšiu úroveň súkromia, ale tiež stojí viac na poplatkoch.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -3413,8 +3413,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Upozornenie: wallet.dat poškodený, údaje zachránené! Pôvodný wallet.dat bol uložený ako wallet.{timestamp}.bak v %s; ak váš zostatok alebo transakcie nie sú správne, mali by ste obnoviť zo zálohy.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>V konfigurácii musíte špecifikovať masternodeprivkey. Pre pomoc sa prosím pozrite do dokumentácie.</translation>
+        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
+        <translation>V konfigurácii musíte špecifikovať throneprivkey. Pre pomoc sa prosím pozrite do dokumentácie.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3823,8 +3823,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Vypnúť núdzový režim, prepísať skutočnú udalosť núdzového režimu (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Povoliť klientovi aby vystupoval ako masternode (0-1, predvolené: %u)</translation>
+        <source>Enable the client to act as a throne (0-1, default: %u)</source>
+        <translation>Povoliť klientovi aby vystupoval ako throne (0-1, predvolené: %u)</translation>
     </message>
     <message>
         <source>Error connecting to Throne.</source>
@@ -3967,20 +3967,20 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Načíta sa vyrovnávacia pamäť rozpočtu...</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
-        <translation>Načíta sa vyrovnávacia pamäť masternode...</translation>
+        <source>Loading throne cache...</source>
+        <translation>Načíta sa vyrovnávacia pamäť throne...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Načíta sa vyrovnávacia pamäť platieb masternode...</translation>
+        <source>Loading throne payment cache...</source>
+        <translation>Načíta sa vyrovnávacia pamäť platieb throne...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
         <translation>Zámok je už na mieste.</translation>
     </message>
     <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Zamknúť masternody z konfiguračného súboru masternode (predvolené: %u)</translation>
+        <source>Lock thrones from throne configuration file (default: %u)</source>
+        <translation>Zamknúť masternody z konfiguračného súboru throne (predvolené: %u)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
@@ -4051,8 +4051,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Privátny kľúč servera (predvolené: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this masternode (example: %s)</source>
-        <translation>Nastaviť externú adresu:port ktorý sa dostane sa k tomuto masternode (príklad: %s)</translation>
+        <source>Set external address:port to get to this throne (example: %s)</source>
+        <translation>Nastaviť externú adresu:port ktorý sa dostane sa k tomuto throne (príklad: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -4083,8 +4083,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Zadajte časový limit pripojenia v milisekundách (minimum: 1, predvolené: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Zadať konfiguračný súbor masternode (predvolené: %s)</translation>
+        <source>Specify throne configuration file (default: %s)</source>
+        <translation>Zadať konfiguračný súbor throne (predvolené: %s)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -4099,16 +4099,16 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Ukončiť činnosť po importovaní blokov z disku (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Položky odoslané na masternode: %u / %d</translation>
+        <source>Submitted following entries to throne: %u / %d</source>
+        <translation>Položky odoslané na throne: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Odoslané na masternode, čaká na viac položiek ( %u / %d ) %s</translation>
+        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
+        <translation>Odoslané na throne, čaká na viac položiek ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to masternode, waiting in queue %s</source>
-        <translation>Odoslané na masternode, čaká vo fronte %s</translation>
+        <source>Submitted to throne, waiting in queue %s</source>
+        <translation>Odoslané na throne, čaká vo fronte %s</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4123,12 +4123,12 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Synchronizujú sa rozpočty...</translation>
     </message>
     <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Synchronizujú sa masternode víťazi...</translation>
+        <source>Synchronizing throne winners...</source>
+        <translation>Synchronizujú sa throne víťazi...</translation>
     </message>
     <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronizujú sa masternode...</translation>
+        <source>Synchronizing thrones...</source>
+        <translation>Synchronizujú sa throne...</translation>
     </message>
     <message>
         <source>Synchronizing sporks...</source>
@@ -4147,8 +4147,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Použiť integráciu KeePass 2 s využitím doplnku KeePassHttp (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
-        <translation>Použiť N rozdielnych masternode na anonymizovanie zdrojov (2-8, predvolené: %u)</translation>
+        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
+        <translation>Použiť N rozdielnych throne na anonymizovanie zdrojov (2-8, predvolené: %u)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -4171,8 +4171,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Skúsime znovu...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Neplatný masternodeprivkey. Prosím pozrite do dokumentácie.</translation>
+        <source>Invalid throneprivkey. Please see documenation.</source>
+        <translation>Neplatný throneprivkey. Prosím pozrite do dokumentácie.</translation>
     </message>
     <message>
         <source>(must be 9340 for mainnet)</source>
@@ -4187,16 +4187,16 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Miešanie nefunguje počas synchronizácie.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>Nedá sa analyzovať masternode.conf</translation>
+        <source>Could not parse throne.conf</source>
+        <translation>Nedá sa analyzovať throne.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Nadaná neplatná netmask vo -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Zistený neplatný port v masternode.conf</translation>
+        <source>Invalid port detected in throne.conf</source>
+        <translation>Zistený neplatný port v throne.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4359,8 +4359,8 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Nastaviť maximálnu veľkosť v bajtoch (predvolené: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>Nastaviť súkromný kľúč masternode</translation>
+        <source>Set the throne private key</source>
+        <translation>Nastaviť súkromný kľúč throne</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

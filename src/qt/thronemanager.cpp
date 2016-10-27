@@ -2,11 +2,11 @@
 #include "ui_thronemanager.h"
 
 #include "addeditthrone.h"
-#include "activemasternode.h"
+#include "activethrone.h"
 #include "guiutil.h"
-#include "masternodeconfig.h"
-#include "masternodeman.h"
-#include "masternode.h"
+#include "throneconfig.h"
+#include "throneman.h"
+#include "throne.h"
 #include "walletmodel.h"
 
 #include <boost/lexical_cast.hpp>
@@ -171,7 +171,7 @@ void ThroneManager::on_removeButton_clicked()
             if (!(iss >> sAlias >> sAddress >> sThronePrivKey >> sTxHash >> sOutputIndex)) {
                 QMessageBox msg;
                 std::string strErr;
-                strErr = _("Could not parse masternode.conf") + "\n" +
+                strErr = _("Could not parse throne.conf") + "\n" +
                         strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"";
                 msg.setText(QString::fromStdString(strErr));
                 msg.exec();
@@ -213,7 +213,7 @@ void ThroneManager::on_startButton_clicked()
     std::string statusObj;
     statusObj += "<center>Alias: " + sAlias;
 
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
         if(mne.getAlias() == sAlias) {
             std::string errorMessage;
             CThroneBroadcast mnb;
@@ -249,7 +249,7 @@ void ThroneManager::on_startAllButton_clicked()
     int fail = 0;
     std::string statusObj;
 
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
         total++;
 
         std::string errorMessage;
@@ -279,7 +279,7 @@ void ThroneManager::on_startAllButton_clicked()
 
 void ThroneManager::on_UpdateButton_clicked()
 {
-    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+    BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
         std::string errorMessage;
 
         std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();

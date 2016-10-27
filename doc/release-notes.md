@@ -16,7 +16,7 @@ Crown was previously known as Crown.
 Crown tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
 which was first released on Jan/18/2014.
 
-Crown tree 0.9.x was the open source implementation of masternodes based on
+Crown tree 0.9.x was the open source implementation of thrones based on
 the 0.8.x tree and was first released on Mar/13/2014.
 
 Crown tree 0.10.x used to be the closed source implementation of Darksend

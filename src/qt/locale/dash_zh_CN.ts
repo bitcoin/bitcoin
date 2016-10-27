@@ -864,15 +864,15 @@ Address: %4
         <translation>请选择隐私等级。</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
         <translation>使用2个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
         <translation>使用8个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
-        <source>Use 16 separate masternodes</source>
+        <source>Use 16 separate thrones</source>
         <translation>使用16个独立主节点</translation>
     </message>
     <message>
@@ -1187,7 +1187,7 @@ Address: %4
         <translation>专家</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>此选项用以调整进行匿名化操作的主节点数量。&lt;br/&gt;越多的循环次数提供了更高级别的匿名性，同时也会花费更多的手续费</translation>
     </message>
     <message>
@@ -3371,7 +3371,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告: 钱包档wallet.dat 损坏，但资料被拯救回来了！原来的wallet.dat 会改储存在%s, 档名是wallet.{timestamp}.bak. 如果余额或交易资料有误，你应该要用备份资料复原回来。</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
         <translation>您必须在配置中指定一个主节点密钥。请参阅文档以获得帮助。</translation>
     </message>
     <message>
@@ -3677,7 +3677,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>未激活安全模式，重新写入真正安全模式项目(默认: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
+        <source>Enable the client to act as a throne (0-1, default: %u)</source>
         <translation>激活客户端,使其作为主节点(0-1, 默认: %u)</translation>
     </message>
     <message>
@@ -3802,11 +3802,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在读取预算缓存...</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
+        <source>Loading throne cache...</source>
         <translation>正在读取主节点缓存...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
+        <source>Loading throne payment cache...</source>
         <translation>正在读取主节点奖励缓存...</translation>
     </message>
     <message>
@@ -3890,7 +3890,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>指定连接超时毫秒数 (最小值: 1, 默认: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
+        <source>Specify throne configuration file (default: %s)</source>
         <translation>指定主节点配置文件 (默认: %s)</translation>
     </message>
     <message>
@@ -3918,11 +3918,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在同步预算...</translation>
     </message>
     <message>
-        <source>Synchronizing masternode winners...</source>
+        <source>Synchronizing throne winners...</source>
         <translation>正在同步获得奖励的主节点...</translation>
     </message>
     <message>
-        <source>Synchronizing masternodes...</source>
+        <source>Synchronizing thrones...</source>
         <translation>正在同步主节点...</translation>
     </message>
     <message>
@@ -3955,7 +3955,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>即将重试...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <source>Invalid throneprivkey. Please see documenation.</source>
         <translation>无效主节点私钥。请查阅文件材料。</translation>
     </message>
     <message>
@@ -3971,11 +3971,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法在同步过程中进行混淆.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
+        <source>Could not parse throne.conf</source>
         <translation>无法解析主节点配置文件</translation>
     </message>
     <message>
-        <source>Invalid port detected in masternode.conf</source>
+        <source>Invalid port detected in throne.conf</source>
         <translation>在主节点配置文件中检测到无效端口</translation>
     </message>
     <message>
@@ -4103,7 +4103,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>以字节为单位设置最大的块(默认： %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
+        <source>Set the throne private key</source>
         <translation>设置主节点私钥</translation>
     </message>
     <message>

@@ -804,12 +804,12 @@ void BitcoinGUI::setNumBlocks(int count)
 
     // Set icon state: spinning if catching up, tick otherwise
 //    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
-    if(masternodeSync.IsBlockchainSynced())
+    if(throneSync.IsBlockchainSynced())
     {
         QString strSyncStatus;
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
 
-        if(masternodeSync.IsSynced()) {
+        if(throneSync.IsSynced()) {
             progressBarLabel->setVisible(false);
             progressBar->setVisible(false);
             labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
@@ -828,15 +828,15 @@ void BitcoinGUI::setNumBlocks(int count)
                 walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-            nAttempt = masternodeSync.RequestedThroneAttempt < THRONE_SYNC_THRESHOLD ?
-                        masternodeSync.RequestedThroneAttempt + 1 : THRONE_SYNC_THRESHOLD;
-            progress = nAttempt + (masternodeSync.RequestedThroneAssets - 1) * THRONE_SYNC_THRESHOLD;
+            nAttempt = throneSync.RequestedThroneAttempt < THRONE_SYNC_THRESHOLD ?
+                        throneSync.RequestedThroneAttempt + 1 : THRONE_SYNC_THRESHOLD;
+            progress = nAttempt + (throneSync.RequestedThroneAssets - 1) * THRONE_SYNC_THRESHOLD;
             progressBar->setMaximum(4 * THRONE_SYNC_THRESHOLD);
             progressBar->setFormat(tr("Synchronizing additional data: %p%"));
             progressBar->setValue(progress);
         }
 
-        strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
+        strSyncStatus = QString(throneSync.GetSyncStatus().c_str());
         progressBarLabel->setText(strSyncStatus);
         tooltip = strSyncStatus + QString("<br>") + tooltip;
     }

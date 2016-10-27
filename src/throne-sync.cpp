@@ -3,18 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "activemasternode.h"
-#include "masternode-sync.h"
-#include "masternode-payments.h"
-#include "masternode-budget.h"
-#include "masternode.h"
-#include "masternodeman.h"
+#include "activethrone.h"
+#include "throne-sync.h"
+#include "throne-payments.h"
+#include "throne-budget.h"
+#include "throne.h"
+#include "throneman.h"
 #include "spork.h"
 #include "util.h"
 #include "addrman.h"
 
 class CThroneSync;
-CThroneSync masternodeSync;
+CThroneSync throneSync;
 
 CThroneSync::CThroneSync()
 {
@@ -95,7 +95,7 @@ void CThroneSync::AddedThroneList(uint256 hash)
 
 void CThroneSync::AddedThroneWinner(uint256 hash)
 {
-    if(masternodePayments.mapThronePayeeVotes.count(hash)) {
+    if(thronePayments.mapThronePayeeVotes.count(hash)) {
         if(mapSeenSyncMNW[hash] < THRONE_SYNC_THRESHOLD) {
             lastThroneWinner = GetTime();
             mapSeenSyncMNW[hash]++;
@@ -159,11 +159,11 @@ void CThroneSync::GetNextAsset()
 
 std::string CThroneSync::GetSyncStatus()
 {
-    switch (masternodeSync.RequestedThroneAssets) {
+    switch (throneSync.RequestedThroneAssets) {
         case THRONE_SYNC_INITIAL: return _("Synchronization pending...");
         case THRONE_SYNC_SPORKS: return _("Synchronizing sporks...");
-        case THRONE_SYNC_LIST: return _("Synchronizing masternodes...");
-        case THRONE_SYNC_MNW: return _("Synchronizing masternode winners...");
+        case THRONE_SYNC_LIST: return _("Synchronizing thrones...");
+        case THRONE_SYNC_MNW: return _("Synchronizing throne winners...");
         case THRONE_SYNC_BUDGET: return _("Synchronizing budgets...");
         case THRONE_SYNC_FAILED: return _("Synchronization failed");
         case THRONE_SYNC_FINISHED: return _("Synchronization finished");
@@ -231,7 +231,7 @@ void CThroneSync::Process()
 
     if(IsSynced()) {
         /* 
-            Resync if we lose all masternodes from sleep/wake or failure to sync originally
+            Resync if we lose all thrones from sleep/wake or failure to sync originally
         */
         if(mnodeman.CountEnabled() == 0) {
             Reset();
@@ -268,7 +268,7 @@ void CThroneSync::Process()
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 uint256 n = 0;
-                pnode->PushMessage("mnvs", n); //sync masternode votes
+                pnode->PushMessage("mnvs", n); //sync throne votes
             } else {
                 RequestedThroneAssets = THRONE_SYNC_FINISHED;
             }
@@ -288,7 +288,7 @@ void CThroneSync::Process()
             return;
         }
 
-        if (pnode->nVersion >= masternodePayments.GetMinThronePaymentsProto()) {
+        if (pnode->nVersion >= thronePayments.GetMinThronePaymentsProto()) {
 
             if(RequestedThroneAssets == THRONE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CThroneSync::Process() - lastThroneList %lld (GetTime() - THRONE_SYNC_TIMEOUT) %lld\n", lastThroneList, GetTime() - THRONE_SYNC_TIMEOUT);
@@ -368,7 +368,7 @@ void CThroneSync::Process()
                     //if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
                         GetNextAsset();
 
-                        //try to activate our masternode if possible
+                        //try to activate our throne if possible
                         activeThrone.ManageStatus();
                     // } else { //we've failed to sync, this state will reject the next budget block
                     //     LogPrintf("CThroneSync::Process - ERROR - Sync has failed, will retry later\n");
@@ -395,7 +395,7 @@ void CThroneSync::Process()
                 if(RequestedThroneAttempt >= THRONE_SYNC_THRESHOLD*3) return;
 
                 uint256 n = 0;
-                pnode->PushMessage("mnvs", n); //sync masternode votes
+                pnode->PushMessage("mnvs", n); //sync throne votes
                 RequestedThroneAttempt++;
                 
                 return;

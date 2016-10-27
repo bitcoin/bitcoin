@@ -1,10 +1,10 @@
 
 #include "addrman.h"
 #include "protocol.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
-#include "masternode.h"
-#include "masternodeconfig.h"
+#include "activethrone.h"
+#include "throneman.h"
+#include "throne.h"
+#include "throneconfig.h"
 #include "spork.h"
 
 //
@@ -19,7 +19,7 @@ void CActiveThrone::ManageStatus()
     if (fDebug) LogPrintf("CActiveThrone::ManageStatus() - Begin\n");
 
     //need correct blocks to send ping
-    if(Params().NetworkID() != CBaseChainParams::REGTEST && !masternodeSync.IsBlockchainSynced()) {
+    if(Params().NetworkID() != CBaseChainParams::REGTEST && !throneSync.IsBlockchainSynced()) {
         status = ACTIVE_THRONE_SYNC_IN_PROCESS;
         LogPrintf("CActiveThrone::ManageStatus() - %s\n", GetStatus());
         return;
@@ -56,7 +56,7 @@ void CActiveThrone::ManageStatus()
 
         if(strThroNeAddr.empty()) {
             if(!GetLocal(service)) {
-                notCapableReason = "Can't detect external address. Please use the masternodeaddr configuration option.";
+                notCapableReason = "Can't detect external address. Please use the throneaddr configuration option.";
                 LogPrintf("CActiveThrone::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
@@ -146,7 +146,7 @@ std::string CActiveThrone::GetStatus() {
     case ACTIVE_THRONE_INITIAL: return "Node just started, not yet activated";
     case ACTIVE_THRONE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Throne";
     case ACTIVE_THRONE_INPUT_TOO_NEW: return strprintf("Throne input must have at least %d confirmations", THRONE_MIN_CONFIRMATIONS);
-    case ACTIVE_THRONE_NOT_CAPABLE: return "Not capable masternode: " + notCapableReason;
+    case ACTIVE_THRONE_NOT_CAPABLE: return "Not capable throne: " + notCapableReason;
     case ACTIVE_THRONE_STARTED: return "Throne successfully started";
     default: return "unknown";
     }
@@ -176,7 +176,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
         return false;
     }
 
-    // Update lastPing for our masternode in Throne list
+    // Update lastPing for our throne in Throne list
     CThrone* pmn = mnodeman.Find(vin);
     if(pmn != NULL)
     {
@@ -216,7 +216,7 @@ bool CActiveThrone::CreateBroadcast(std::string strService, std::string strKeyTh
     CKey keyThrone;
 
     //need correct blocks to send ping
-    if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
+    if(!fOffline && !throneSync.IsBlockchainSynced()) {
         errorMessage = "Sync in progress. Must wait until sync is complete to start Throne";
         LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
         return false;
@@ -224,13 +224,13 @@ bool CActiveThrone::CreateBroadcast(std::string strService, std::string strKeyTh
 
     if(!darkSendSigner.SetKey(strKeyThrone, errorMessage, keyThrone, pubKeyThrone))
     {
-        errorMessage = strprintf("Can't find keys for masternode %s - %s", strService, errorMessage);
+        errorMessage = strprintf("Can't find keys for throne %s - %s", strService, errorMessage);
         LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
 
     if(!GetThroNeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
-        errorMessage = strprintf("Could not allocate vin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
+        errorMessage = strprintf("Could not allocate vin %s:%s for throne %s", strTxHash, strOutputIndex, strService);
         LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
@@ -238,12 +238,12 @@ bool CActiveThrone::CreateBroadcast(std::string strService, std::string strKeyTh
     CService service = CService(strService);
     if(Params().NetworkID() == CBaseChainParams::MAIN) {
         if(service.GetPort() != 9340) {
-            errorMessage = strprintf("Invalid port %u for masternode %s - only 9340 is supported on mainnet.", service.GetPort(), strService);
+            errorMessage = strprintf("Invalid port %u for throne %s - only 9340 is supported on mainnet.", service.GetPort(), strService);
             LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
             return false;
         }
     } else if(service.GetPort() == 9340) {
-        errorMessage = strprintf("Invalid port %u for masternode %s - 9340 is only supported on mainnet.", service.GetPort(), strService);
+        errorMessage = strprintf("Invalid port %u for throne %s - 9340 is only supported on mainnet.", service.GetPort(), strService);
         LogPrintf("CActiveThrone::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
@@ -361,10 +361,10 @@ vector<COutput> CActiveThrone::SelectCoinsThrone()
     vector<COutput> filteredCoins;
     vector<COutPoint> confLockedCoins;
 
-    // Temporary unlock MN coins from masternode.conf
+    // Temporary unlock MN coins from throne.conf
     if(GetBoolArg("-mnconflock", true)) {
         uint256 mnTxHash;
-        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, masternodeConfig.getEntries()) {
+        BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             mnTxHash.SetHex(mne.getTxHash());
             COutPoint outpoint = COutPoint(mnTxHash, atoi(mne.getOutputIndex().c_str()));
             confLockedCoins.push_back(outpoint);
@@ -375,7 +375,7 @@ vector<COutput> CActiveThrone::SelectCoinsThrone()
     // Retrieve all possible outputs
     pwalletMain->AvailableCoins(vCoins);
 
-    // Lock MN coins from masternode.conf back if they where temporary unlocked
+    // Lock MN coins from throne.conf back if they where temporary unlocked
     if(!confLockedCoins.empty()) {
         BOOST_FOREACH(COutPoint outpoint, confLockedCoins)
             pwalletMain->LockCoin(outpoint);

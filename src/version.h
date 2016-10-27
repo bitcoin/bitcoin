@@ -24,13 +24,13 @@ static const int MIN_PEER_PROTO_VERSION = 70020;
 //! minimum peer version accepted by DarksendPool
 static const int MIN_POOL_PEER_PROTO_VERSION = 70020;
 
-//! minimum peer version for masternode budgets
+//! minimum peer version for throne budgets
 static const int MIN_BUDGET_PEER_PROTO_VERSION = 70030;
 
-//! minimum peer version for masternode winner broadcasts
+//! minimum peer version for throne winner broadcasts
 static const int MIN_MNW_PEER_PROTO_VERSION = 70030;
 
-//! minimum peer version that can receive masternode payments
+//! minimum peer version that can receive throne payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
 static const int MIN_THRONE_PAYMENT_PROTO_VERSION_1 = 70020;

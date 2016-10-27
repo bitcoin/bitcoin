@@ -487,7 +487,7 @@ void RPCConsole::setNumBlocks(int count)
 
 void RPCConsole::setThroneCount(const QString &strThrones)
 {
-    ui->masternodeCount->setText(strThrones);
+    ui->throneCount->setText(strThrones);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()

@@ -230,9 +230,9 @@ extern json_spirit::Value invalidateblock(const json_spirit::Array& params, bool
 extern json_spirit::Value reconsiderblock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value darksend(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value spork(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value masternode(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value masternodelist(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value masternodebroadcast(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value throne(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value thronelist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value thronebroadcast(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnbudget(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnbudgetvoteraw(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mnfinalbudget(const json_spirit::Array& params, bool fHelp);

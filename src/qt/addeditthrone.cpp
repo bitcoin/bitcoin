@@ -1,6 +1,6 @@
 #include "addeditthrone.h"
 #include "ui_addeditthrone.h"
-#include "masternodeconfig.h"
+#include "throneconfig.h"
 #include "thronemanager.h"
 #include "ui_thronemanager.h"
 
@@ -75,7 +75,7 @@ void AddEditThrone::on_okButton_clicked()
             stream << sAlias << " " << sAddress << " " << sThronePrivKey << " " << sTxHash << " " << sOutputIndex << std::endl;
             stream.close();
         }
-        masternodeConfig.add(sAlias, sAddress, sThronePrivKey, sTxHash, sOutputIndex);
+        throneConfig.add(sAlias, sAddress, sThronePrivKey, sTxHash, sOutputIndex);
         accept();
     }
 }

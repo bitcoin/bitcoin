@@ -6,7 +6,7 @@
 #include "main.h"
 #include "init.h"
 #include "util.h"
-#include "masternodeman.h"
+#include "throneman.h"
 #include "script/sign.h"
 #include "instantx.h"
 #include "ui_interface.h"
@@ -44,7 +44,7 @@ CActiveThrone activeThrone;
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all Darksend/Throne related functionality
-    if(!masternodeSync.IsBlockchainSynced()) return;
+    if(!throneSync.IsBlockchainSynced()) return;
 
     if (strCommand == "dsa") { //Darksend Accept Into Pool
 
@@ -449,7 +449,7 @@ std::string CDarksendPool::GetStatus()
     showingDarkSendMessage += 10;
     std::string suffix = "";
 
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing || !masternodeSync.IsBlockchainSynced()) {
+    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing || !throneSync.IsBlockchainSynced()) {
         return strAutoDenomResult;
     }
     switch(state) {
@@ -467,11 +467,11 @@ std::string CDarksendPool::GetStatus()
                 return _("Darksend request complete:") + " " + _("Your transaction was accepted into the pool!");
             } else {
                 std::string suffix = "";
-                if(     showingDarkSendMessage % 70 <= 40) return strprintf(_("Submitted following entries to masternode: %u / %d"), entriesCount, GetMaxPoolTransactions());
+                if(     showingDarkSendMessage % 70 <= 40) return strprintf(_("Submitted following entries to throne: %u / %d"), entriesCount, GetMaxPoolTransactions());
                 else if(showingDarkSendMessage % 70 <= 50) suffix = ".";
                 else if(showingDarkSendMessage % 70 <= 60) suffix = "..";
                 else if(showingDarkSendMessage % 70 <= 70) suffix = "...";
-                return strprintf(_("Submitted to masternode, waiting for more entries ( %u / %d ) %s"), entriesCount, GetMaxPoolTransactions(), suffix);
+                return strprintf(_("Submitted to throne, waiting for more entries ( %u / %d ) %s"), entriesCount, GetMaxPoolTransactions(), suffix);
             }
         case POOL_STATUS_SIGNING:
             if(     showingDarkSendMessage % 70 <= 40) return _("Found enough users, signing ...");
@@ -491,7 +491,7 @@ std::string CDarksendPool::GetStatus()
             if(     showingDarkSendMessage % 70 <= 30) suffix = ".";
             else if(showingDarkSendMessage % 70 <= 50) suffix = "..";
             else if(showingDarkSendMessage % 70 <= 70) suffix = "...";
-            return strprintf(_("Submitted to masternode, waiting in queue %s"), suffix);;
+            return strprintf(_("Submitted to throne, waiting in queue %s"), suffix);;
        default:
             return strprintf(_("Unknown state: id = %u"), state);
     }
@@ -565,7 +565,7 @@ void CDarksendPool::Check()
 
 void CDarksendPool::CheckFinalTransaction()
 {
-    if (!fThroNe) return; // check and relay final tx only on masternode
+    if (!fThroNe) return; // check and relay final tx only on throne
 
     CWalletTx txNew = CWalletTx(pwalletMain, finalTransaction);
 
@@ -1372,7 +1372,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    if(!masternodeSync.IsBlockchainSynced()) {
+    if(!throneSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -1546,11 +1546,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 CThrone* pmn = mnodeman.Find(dsq.vin);
                 if(pmn == NULL)
                 {
-                    LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
+                    LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in throne list!", dsq.vin.ToString());
                     continue;
                 }
 
-                LogPrintf("DoAutomaticDenominating --- attempt to connect to masternode from queue %s\n", pmn->addr.ToString());
+                LogPrintf("DoAutomaticDenominating --- attempt to connect to throne from queue %s\n", pmn->addr.ToString());
                 lastTimeChanged = GetTimeMillis();
                 // connect to Throne and submit the queue request
                 CNode* pnode = ConnectNode((CAddress)addr, NULL, true);
@@ -1585,7 +1585,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             CThrone* pmn = mnodeman.FindRandomNotInVec(vecThronesUsed, MIN_POOL_PEER_PROTO_VERSION);
             if(pmn == NULL)
             {
-                LogPrintf("DoAutomaticDenominating --- Can't find random masternode!\n");
+                LogPrintf("DoAutomaticDenominating --- Can't find random throne!\n");
                 strAutoDenomResult = _("Can't find random Throne.");
                 return false;
             }
@@ -2246,9 +2246,9 @@ void ThreadCheckDarkSendPool()
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
 
         // try to sync from all available nodes, one step at a time
-        masternodeSync.Process();
+        throneSync.Process();
 
-        if(masternodeSync.IsBlockchainSynced()) {
+        if(throneSync.IsBlockchainSynced()) {
 
             c++;
 
@@ -2260,7 +2260,7 @@ void ThreadCheckDarkSendPool()
             {
                 mnodeman.CheckAndRemove();
                 mnodeman.ProcessThroneConnections();
-                masternodePayments.CleanPaymentList();
+                thronePayments.CleanPaymentList();
                 CleanTransactionLocksList();
             }
 

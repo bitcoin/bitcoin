@@ -8,7 +8,7 @@
 
 #include "key.h"
 #include "main.h"
-#include "masternode.h"
+#include "throne.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -21,7 +21,7 @@ class CThronePayments;
 class CThronePaymentWinner;
 class CThroneBlockPayees;
 
-extern CThronePayments masternodePayments;
+extern CThronePayments thronePayments;
 
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
@@ -83,7 +83,7 @@ public:
      }
 };
 
-// Keep track of votes for payees from masternodes
+// Keep track of votes for payees from thrones
 class CThroneBlockPayees
 {
 public:
@@ -260,7 +260,7 @@ public:
             }
         }
 
-        //record this masternode voted
+        //record this throne voted
         mapThronesLastVote[outThrone.hash + outThrone.n] = nBlockHeight;
         return true;
     }

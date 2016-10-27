@@ -13,7 +13,7 @@
 #include <boost/filesystem/fstream.hpp>
 
 class CThroneConfig;
-extern CThroneConfig masternodeConfig;
+extern CThroneConfig throneConfig;
 
 class CThroneConfig
 {

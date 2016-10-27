@@ -236,7 +236,7 @@ bool LogAcceptCategory(const char* category)
             if(ptrCategory->count(string("dash"))) {
                 ptrCategory->insert(string("darksend"));
                 ptrCategory->insert(string("instantx"));
-                ptrCategory->insert(string("masternode"));
+                ptrCategory->insert(string("throne"));
                 ptrCategory->insert(string("keepass"));
                 ptrCategory->insert(string("mnpayments"));
                 ptrCategory->insert(string("mnbudget"));
@@ -494,7 +494,7 @@ boost::filesystem::path GetConfigFile()
 
 boost::filesystem::path GetThroneConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "masternode.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "throne.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }

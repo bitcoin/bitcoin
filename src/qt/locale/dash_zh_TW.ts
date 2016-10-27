@@ -860,15 +860,15 @@ Address: %4
         <translation>請選擇穩私級別。</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
         <translation>使用2個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
         <translation>使用8個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
-        <source>Use 16 separate masternodes</source>
+        <source>Use 16 separate thrones</source>
         <translation>使用16個獨立的主節點</translation>
     </message>
     <message>
@@ -1182,7 +1182,7 @@ Address: %4
         <translation>專家</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>這項設置決定輸入的資金將會經過多少個主節點進,行匿名處理。&lt;br/&gt;多輪的匿名化處理提供了更高程度的隱私，但也花費更多的費用。</translation>
     </message>
     <message>
@@ -3282,8 +3282,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告: 錢包檔 wallet.dat 壞掉，但資料被拯救回來了！原來的 wallet.dat 會改儲存在 %s, 檔名是 wallet.{timestamp}.bak. 如果餘額或交易資料有誤，你應該要用備份資料復原回來。</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>您必須在配置文件中指定一個masternodeprivkey。請參閱文檔以獲得幫助。</translation>
+        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
+        <translation>您必須在配置文件中指定一個throneprivkey。請參閱文檔以獲得幫助。</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3622,7 +3622,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>在通訊埠 &lt;port&gt; 聽候 JSON-RPC 連線(預設值: %u, 或若為測試網路: %u)</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
+        <source>Loading throne cache...</source>
         <translation>正在載入主節點緩存...</translation>
     </message>
     <message>
@@ -3698,7 +3698,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>指定連線在幾毫秒後逾時 (最少值: 1, 預設值: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
+        <source>Specify throne configuration file (default: %s)</source>
         <translation>指定主節點配置文件(預設值: %s)</translation>
     </message>
     <message>
@@ -3726,7 +3726,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在跟預算案進行同步...</translation>
     </message>
     <message>
-        <source>Synchronizing masternodes...</source>
+        <source>Synchronizing thrones...</source>
         <translation>正在跟主節點網絡進行同步...</translation>
     </message>
     <message>

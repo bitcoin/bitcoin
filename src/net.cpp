@@ -391,7 +391,7 @@ CNode* FindNode(const CService& addr)
 CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaster)
 {
     if (pszDest == NULL) {
-        // we clean masternode connections in CThroneMan::ProcessThroneConnections()
+        // we clean throne connections in CThroneMan::ProcessThroneConnections()
         // so should be safe to skip this and connect to local Hot MN on CActiveThrone::ManageStatus()
         if (IsLocal(addrConnect) && !darkSendMaster)
             return NULL;

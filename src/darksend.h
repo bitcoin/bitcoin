@@ -7,11 +7,11 @@
 
 #include "main.h"
 #include "sync.h"
-#include "activemasternode.h"
-#include "masternodeman.h"
-#include "masternode-payments.h"
+#include "activethrone.h"
+#include "throneman.h"
+#include "throne-payments.h"
 #include "darksend-relay.h"
-#include "masternode-sync.h"
+#include "throne-sync.h"
 
 class CTxIn;
 class CDarksendPool;
@@ -245,7 +245,7 @@ public:
 class CDarkSendSigner
 {
 public:
-    /// Is the inputs associated with this public key? (and there is 10000 CRW - checking if valid masternode)
+    /// Is the inputs associated with this public key? (and there is 10000 CRW - checking if valid throne)
     bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
     /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
