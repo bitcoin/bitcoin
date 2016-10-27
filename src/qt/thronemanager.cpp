@@ -222,6 +222,8 @@ void ThroneManager::on_startButton_clicked()
 
             if(result) {
                 statusObj += "<br>Successfully started throne." ;
+                mnodeman.UpdateThroneList(mnb);
+                mnb.Relay();
             } else {
                 statusObj += "<br>Failed to start throne.<br>Error: " + errorMessage;
             }
@@ -259,6 +261,8 @@ void ThroneManager::on_startAllButton_clicked()
 
         if(result) {
             successful++;
+            mnodeman.UpdateThroneList(mnb);
+            mnb.Relay();
         } else {
             fail++;
             statusObj += "\nFailed to start " + mne.getAlias() + ". Error: " + errorMessage;
