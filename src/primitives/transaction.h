@@ -387,8 +387,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        SerializeTransaction(*this, s, ser_action, nType, nVersion);
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int _nVersion) {
+        SerializeTransaction(*this, s, ser_action, nType, _nVersion);
         if (ser_action.ForRead()) {
             UpdateHash();
         }
@@ -458,8 +458,8 @@ struct CMutableTransaction
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        SerializeTransaction(*this, s, ser_action, nType, nVersion);
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int _nVersion) {
+        SerializeTransaction(*this, s, ser_action, nType, _nVersion);
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the

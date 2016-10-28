@@ -168,18 +168,18 @@ enum
  * added as members. 
  */
 #define ADD_SERIALIZE_METHODS                                                          \
-    size_t GetSerializeSize(int nType, int nVersion) const {                         \
-        CSizeComputer s(nType, nVersion);                                            \
-        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, nVersion);\
+    size_t GetSerializeSize(int nType, int _nVersion) const {                         \
+        CSizeComputer s(nType, _nVersion);                                            \
+        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, _nVersion);\
         return s.size();                                                             \
     }                                                                                \
     template<typename Stream>                                                        \
-    void Serialize(Stream& s, int nType, int nVersion) const {                       \
-        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, nVersion);\
+    void Serialize(Stream& s, int nType, int _nVersion) const {                       \
+        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, _nVersion);\
     }                                                                                \
     template<typename Stream>                                                        \
-    void Unserialize(Stream& s, int nType, int nVersion) {                           \
-        SerializationOp(s, CSerActionUnserialize(), nType, nVersion);                \
+    void Unserialize(Stream& s, int nType, int _nVersion) {                           \
+        SerializationOp(s, CSerActionUnserialize(), nType, _nVersion);                \
     }
 
 /*
@@ -471,7 +471,7 @@ class LimitedString
 protected:
     std::string& string;
 public:
-    LimitedString(std::string& string) : string(string) {}
+    LimitedString(std::string& _string) : string(_string) {}
 
     template<typename Stream>
     void Unserialize(Stream& s, int, int=0)
@@ -942,9 +942,9 @@ public:
 
     CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
 
-    CSizeComputer& write(const char *psz, size_t nSize)
+    CSizeComputer& write(const char *psz, size_t _nSize)
     {
-        this->nSize += nSize;
+        this->nSize += _nSize;
         return *this;
     }
 
