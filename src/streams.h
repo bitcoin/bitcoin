@@ -39,7 +39,7 @@ public:
     OverrideStream<Stream>& operator<<(const T& obj)
     {
         // Serialize to this stream
-        ::Serialize(*this->stream, obj, nType, nVersion);
+        ::Serialize(*this, obj);
         return (*this);
     }
 
@@ -47,9 +47,22 @@ public:
     OverrideStream<Stream>& operator>>(T& obj)
     {
         // Unserialize from this stream
-        ::Unserialize(*this->stream, obj, nType, nVersion);
+        ::Unserialize(*this, obj);
         return (*this);
     }
+
+    void write(const char* pch, size_t nSize)
+    {
+        stream->write(pch, nSize);
+    }
+
+    void read(char* pch, size_t nSize)
+    {
+        stream->read(pch, nSize);
+    }
+
+    int GetVersion() const { return nVersion; }
+    int GetType() const { return nType; }
 };
 
 template<typename S>
@@ -114,6 +127,13 @@ public:
     CDataStream(const std::vector<unsigned char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
         Init(nTypeIn, nVersionIn);
+    }
+
+    template <typename... Args>
+    CDataStream(int nTypeIn, int nVersionIn, Args&&... args)
+    {
+        Init(nTypeIn, nVersionIn);
+        ::SerializeMany(*this, std::forward<Args>(args)...);
     }
 
     void Init(int nTypeIn, int nVersionIn)
@@ -294,7 +314,7 @@ public:
     }
 
     template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s) const
     {
         // Special case: stream << stream concatenates like stream += stream
         if (!vch.empty())
@@ -305,7 +325,7 @@ public:
     CDataStream& operator<<(const T& obj)
     {
         // Serialize to this stream
-        ::Serialize(*this, obj, nType, nVersion);
+        ::Serialize(*this, obj);
         return (*this);
     }
 
@@ -313,7 +333,7 @@ public:
     CDataStream& operator>>(T& obj)
     {
         // Unserialize from this stream
-        ::Unserialize(*this, obj, nType, nVersion);
+        ::Unserialize(*this, obj);
         return (*this);
     }
 
@@ -449,7 +469,7 @@ public:
         // Serialize to this stream
         if (!file)
             throw std::ios_base::failure("CAutoFile::operator<<: file handle is NULL");
-        ::Serialize(*this, obj, nType, nVersion);
+        ::Serialize(*this, obj);
         return (*this);
     }
 
@@ -459,7 +479,7 @@ public:
         // Unserialize from this stream
         if (!file)
             throw std::ios_base::failure("CAutoFile::operator>>: file handle is NULL");
-        ::Unserialize(*this, obj, nType, nVersion);
+        ::Unserialize(*this, obj);
         return (*this);
     }
 };
@@ -518,6 +538,9 @@ public:
     {
         fclose();
     }
+
+    int GetVersion() const { return nVersion; }
+    int GetType() const { return nType; }
 
     void fclose()
     {
@@ -606,7 +629,7 @@ public:
     template<typename T>
     CBufferedFile& operator>>(T& obj) {
         // Unserialize from this stream
-        ::Unserialize(*this, obj, nType, nVersion);
+        ::Unserialize(*this, obj);
         return (*this);
     }
 
