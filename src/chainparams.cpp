@@ -250,6 +250,7 @@ public:
         strNetworkID = "fttest";
         consensus.BIP34Height = 1;
         nDefaultPort = 18335;
+        consensus.powLimit = uint256S("000284ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         genesis = CreateGenesisBlock(1476619325, 1143028154, 0x1d00ffff, 4, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
