@@ -1646,8 +1646,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     scheduler.scheduleEvery(f, nPowTargetSpacing);
 
     // Generate coins in the background
-    Mining::GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS),
-                             chainparams, GetArg("-gencoinbase", ""));
+    try {
+        Mining::GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS),
+                                 chainparams, GetArg("-gencoinbase", ""));
+    } catch (const std::exception &e) {
+        LogPrintf("Mining could not be activated. Reason: %s\n", e.what());
+    }
 
     // ********************************************************* Step 12: finished
 

@@ -33,6 +33,12 @@
 #include <queue>
 #include <script/standard.cpp>
 
+#ifdef ENABLE_WALLET
+# include <wallet/wallet.h>
+# include <init.h>
+# include <boost/algorithm/hex.hpp>
+#endif
+
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -556,7 +562,7 @@ CScript Mining::ScriptForCoinbase(const string &coinbase)
     throw std::runtime_error("pubkey not in recognized format");
 }
 
-void Mining::GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, const string &coinbase)
+void Mining::GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, const string &coinbase_)
 {
     if (nThreads < 0)
         nThreads = GetNumCores();
@@ -572,6 +578,24 @@ void Mining::GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& 
 
     if (nThreads == 0 || !fGenerate)
         return;
+
+    std::string coinbase(coinbase_);
+#ifdef ENABLE_WALLET
+    if (coinbase.empty()) {
+        // try to get it from the wallet
+        boost::shared_ptr<CReserveScript> coinbaseScript;
+        GetMainSignals().ScriptForMining(coinbaseScript);
+
+        if (pwalletMain) {
+            boost::shared_ptr<CReserveKey> rKey(new CReserveKey(pwalletMain));
+            CPubKey pubkey;
+            if (rKey->GetReservedKey(pubkey)) {
+                std::vector<unsigned char> v = ToByteVector(pubkey);
+                boost::algorithm::hex(v.begin(), v.end(), back_inserter(coinbase));
+            }
+        }
+    }
+#endif
 
     miningInstance->SetCoinbase(ScriptForCoinbase(coinbase));
     miningInstance->m_minerThreads = new boost::thread_group();

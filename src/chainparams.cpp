@@ -366,9 +366,9 @@ CChainParams& Params(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    pCurrentParams = &Params(network);
     if (network == CBaseChainParams::REGTEST || network == CBaseChainParams::FLEXTRANSTESTNET) {
         extern boost::atomic<bool> flexTransActive;
         flexTransActive = true;
     }
+    pCurrentParams = &Params(network);
 }
