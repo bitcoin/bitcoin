@@ -177,7 +177,7 @@ public:
         if (scriptPubKey.IsUnspendable())
             return 0;
 
-        size_t nSize = GetSerializeSize(SER_DISK, 0);
+        size_t nSize = GetSerializeSize(*this, SER_DISK, 0);
         int witnessversion = 0;
         std::vector<unsigned char> witnessprogram;
 

@@ -153,29 +153,6 @@ public:
         return fCoinBase;
     }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const {
-        unsigned int nSize = 0;
-        unsigned int nMaskSize = 0, nMaskCode = 0;
-        CalcMaskSize(nMaskSize, nMaskCode);
-        bool fFirst = vout.size() > 0 && !vout[0].IsNull();
-        bool fSecond = vout.size() > 1 && !vout[1].IsNull();
-        assert(fFirst || fSecond || nMaskCode);
-        unsigned int nCode = 8*(nMaskCode - (fFirst || fSecond ? 0 : 1)) + (fCoinBase ? 1 : 0) + (fFirst ? 2 : 0) + (fSecond ? 4 : 0);
-        // version
-        nSize += ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion);
-        // size of header code
-        nSize += ::GetSerializeSize(VARINT(nCode), nType, nVersion);
-        // spentness bitmask
-        nSize += nMaskSize;
-        // txouts themself
-        for (unsigned int i = 0; i < vout.size(); i++)
-            if (!vout[i].IsNull())
-                nSize += ::GetSerializeSize(CTxOutCompressor(REF(vout[i])), nType, nVersion);
-        // height
-        nSize += ::GetSerializeSize(VARINT(nHeight), nType, nVersion);
-        return nSize;
-    }
-
     template<typename Stream>
     void Serialize(Stream &s, int nType, int nVersion) const {
         unsigned int nMaskSize = 0, nMaskCode = 0;
