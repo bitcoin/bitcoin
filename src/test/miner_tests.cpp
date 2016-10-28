@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         BOOST_CHECK(pblocktemplate);
         BOOST_CHECK(pblocktemplate->block.fExcessive == false);
         BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
-        unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+        unsigned int blockSize = ::GetSerializeSize(pblocktemplate->block, SER_NETWORK, CBlock::CURRENT_VERSION);
         BOOST_CHECK(blockSize <= maxGeneratedBlock);
         // printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int)
         // pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         BOOST_CHECK(pblocktemplate);
         BOOST_CHECK(pblocktemplate->block.fExcessive == false);
         BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 4);
-        unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+        unsigned int blockSize = ::GetSerializeSize(pblocktemplate->block, SER_NETWORK, CBlock::CURRENT_VERSION);
         BOOST_CHECK(blockSize <= maxGeneratedBlock - 4);
         minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
         // printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int)
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         BOOST_CHECK(pblocktemplate);
         BOOST_CHECK(pblocktemplate->block.fExcessive == false);
         BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock - 2);
-        unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+        unsigned int blockSize = ::GetSerializeSize(pblocktemplate->block, SER_NETWORK, CBlock::CURRENT_VERSION);
         BOOST_CHECK(blockSize <= maxGeneratedBlock - 2);
         minRoom = std::min(minRoom, maxGeneratedBlock - blockSize);
         // printf("%lu %lu (miner comment is %d) <= %lu\n", (long unsigned int) blockSize, (long unsigned int)
