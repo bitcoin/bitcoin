@@ -7,6 +7,7 @@
 #include "amount.h"
 #include "base58.h"
 #include "chain.h"
+#include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
 #include "instantx.h"
@@ -371,8 +372,11 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
-    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get(), fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of the wallet and coins were spent in the copy but not marked as spent here.");
+    CValidationState state;
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get(), state, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX)) {
+        strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
 }
 
 UniValue sendtoaddress(const JSONRPCRequest& request)
@@ -1050,8 +1054,11 @@ UniValue sendmany(const JSONRPCRequest& request)
                                                    NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
-    if (!pwalletMain->CommitTransaction(wtx, keyChange, g_connman.get(), fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+    CValidationState state;
+    if (!pwalletMain->CommitTransaction(wtx, keyChange, g_connman.get(), state, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX)) {
+        strFailReason = strprintf("Transaction commit failed:: %s", state.GetRejectReason());
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    }
 
     return wtx.GetHash().GetHex();
 }
