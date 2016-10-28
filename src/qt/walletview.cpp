@@ -9,12 +9,12 @@
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
+#include "throneconfig.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
 #include "receivecoinsdialog.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
-#include "thronemanager.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "walletmodel.h"
@@ -68,13 +68,17 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    throneManagerPage = new ThroneManager();
+    if (throneConfig.getCount()) {
+        throneListPage = new ThroneList();
+    }
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    addWidget(throneManagerPage);
+    if (throneConfig.getCount()) {
+        addWidget(throneListPage);
+    }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -122,6 +126,9 @@ void WalletView::setClientModel(ClientModel *clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendCoinsPage->setClientModel(clientModel);
+    if (throneConfig.getCount()) {
+        throneListPage->setClientModel(clientModel);
+    }
 }
 
 void WalletView::setWalletModel(WalletModel *walletModel)
@@ -133,6 +140,9 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
+    if (throneConfig.getCount()) {
+        throneListPage->setWalletModel(walletModel);
+    }
 
     if (walletModel)
     {
@@ -196,9 +206,11 @@ void WalletView::gotoSendCoinsPage(QString addr)
         sendCoinsPage->setAddress(addr);
 }
 
-void WalletView::gotoThroneManagerPage()
+void WalletView::gotoThronePage()
 {
-    setCurrentWidget(throneManagerPage);
+    if (throneConfig.getCount()) {
+        setCurrentWidget(throneListPage);
+    }
 }
 
 void WalletView::gotoSignMessageTab(QString addr)

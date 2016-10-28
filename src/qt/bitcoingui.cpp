@@ -16,6 +16,8 @@
 #include "optionsmodel.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
+#include "throneconfig.h"
+#include "thronelist.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
@@ -75,7 +77,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     appMenuBar(0),
     overviewAction(0),
     historyAction(0),
-    throneManagerAction(0),
+    throneAction(0),
     quitAction(0),
     sendCoinsAction(0),
     usedSendingAddressesAction(0),
@@ -306,16 +308,26 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    throneManagerAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
-    throneManagerAction->setStatusTip(tr("Show Thrones status and configure your nodes."));
-    throneManagerAction->setToolTip(historyAction->statusTip());
-    throneManagerAction->setCheckable(true);
+    if (throneConfig.getCount()) {
+        throneAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
+        throneAction->setStatusTip(tr("Browse thrones"));
+        throneAction->setToolTip(throneAction->statusTip());
+        throneAction->setCheckable(true);
+#ifdef Q_OS_MAC
+        throneAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+#else
+        throneAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+#endif
+        tabGroup->addAction(throneAction);
+        connect(throneAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(throneAction, SIGNAL(triggered()), this, SLOT(gotoThronePage()));
+    }
+
 #ifdef Q_OS_MAC
     receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
 #endif
-    tabGroup->addAction(throneManagerAction);
 
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
@@ -328,8 +340,6 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
-    connect(throneManagerAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(throneManagerAction, SIGNAL(triggered()), this, SLOT(gotoThroneManagerPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -506,7 +516,10 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
-        toolbar->addAction(throneManagerAction);
+        if (throneConfig.getCount())
+        {
+            toolbar->addAction(throneAction);
+        }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
@@ -597,7 +610,9 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    throneManagerAction->setEnabled(enabled);
+    if (throneConfig.getCount()) {
+        throneAction->setEnabled(enabled);
+    }
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
@@ -723,10 +738,12 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-void BitcoinGUI::gotoThroneManagerPage()
+void BitcoinGUI::gotoThronePage()
 {
-    throneManagerAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoThroneManagerPage();
+    if (throneConfig.getCount()) {
+        throneAction->setChecked(true);
+        if (walletFrame) walletFrame->gotoThronePage();
+    }
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

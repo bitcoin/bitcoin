@@ -6,6 +6,7 @@
 #define BITCOIN_QT_WALLETVIEW_H
 
 #include "amount.h"
+#include "thronelist.h"
 
 #include <QStackedWidget>
 
@@ -15,7 +16,6 @@ class OverviewPage;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendCoinsRecipient;
-class ThroneManager;
 class TransactionView;
 class WalletModel;
 
@@ -62,7 +62,7 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    ThroneManager *throneManagerPage;
+    ThroneList *throneListPage;
 
     TransactionView *transactionView;
 
@@ -79,7 +79,7 @@ public slots:
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to receive coins page */
-    void gotoThroneManagerPage();
+    void gotoThronePage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
