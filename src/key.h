@@ -162,7 +162,7 @@ struct CExtKey {
     CExtPubKey Neuter() const;
     void SetMaster(const unsigned char* seed, unsigned int nSeedLen);
     template <typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s) const
     {
         unsigned int len = BIP32_EXTKEY_SIZE;
         ::WriteCompactSize(s, len);
@@ -171,7 +171,7 @@ struct CExtKey {
         s.write((const char *)&code[0], len);
     }
     template <typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
+    void Unserialize(Stream& s)
     {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
