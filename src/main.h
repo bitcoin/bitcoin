@@ -578,4 +578,13 @@ extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED
 void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
 // BU: end
 
+class CMainCleanup
+{
+public:
+    CMainCleanup() {}
+    ~CMainCleanup();
+};
+
+
+
 #endif // BITCOIN_MAIN_H

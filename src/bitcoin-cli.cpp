@@ -9,9 +9,11 @@
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "util.h"
+#include "sync.h"
 #include "utilstrencodings.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/thread.hpp>
 #include <stdio.h>
 
 #include <event2/event.h>
@@ -22,6 +24,12 @@
 #include <univalue.h>
 
 using namespace std;
+
+// BU add lockstack stuff here for bitcoin-cli, because I need to carefully
+// order it in globals.cpp for bitcoind and bitcoin-qt
+boost::mutex dd_mutex;
+std::map<std::pair<void*, void*>, LockStack> lockorders;
+boost::thread_specific_ptr<LockStack> lockstack;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;

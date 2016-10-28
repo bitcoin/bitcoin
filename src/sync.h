@@ -79,6 +79,16 @@ public:
  * TODO: We should move away from using the recursive lock by default.
  */
 typedef AnnotatedMixin<boost::recursive_mutex> CCriticalSection;
+#if 0  // BU convenient for debugging
+class CCriticalSection:public AnnotatedMixin<boost::recursive_mutex>
+{
+public:
+  const char* name;
+  CCriticalSection(const char* name);
+  CCriticalSection();
+  ~CCriticalSection();
+};
+#endif
 
 /** Wrapped boost mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<boost::mutex> CWaitableCriticalSection;
@@ -306,5 +316,21 @@ public:
         return fHaveGrant;
     }
 };
+
+// BU move from sync.c because I need to create these in globals.cpp
+struct CLockLocation 
+{
+    CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn);
+    std::string ToString() const;
+    std::string MutexName() const;
+
+    bool fTry;
+private:
+    std::string mutexName;
+    std::string sourceFile;
+    int sourceLine;
+};
+
+typedef std::vector<std::pair<void*, CLockLocation> > LockStack;
 
 #endif // BITCOIN_SYNC_H

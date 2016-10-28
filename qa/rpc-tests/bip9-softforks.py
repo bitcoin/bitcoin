@@ -4,7 +4,7 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-
+from test_framework.util import sync_blocks
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, NetworkThread
@@ -173,7 +173,6 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         block.solve()
         self.last_block_time += 1
         yield TestInstance([[block, False]])
-
         # Restart all
         stop_nodes(self.nodes)
         wait_bitcoinds()

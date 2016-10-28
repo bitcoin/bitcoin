@@ -35,7 +35,7 @@ using namespace std;
 extern CCriticalSection cs_orphancache; // from main.h
 
 // Request management
-CRequestManager requester;
+extern CRequestManager requester;
 
 unsigned int MIN_TX_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request an object from someone else (in microseconds)
 unsigned int MIN_BLK_REQUEST_RETRY_INTERVAL = 5*1000*1000;  // When should I request a block from someone else (in microseconds)
