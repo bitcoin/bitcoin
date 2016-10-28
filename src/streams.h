@@ -9,6 +9,7 @@
 
 #include "support/allocators/zeroafterfree.h"
 #include "serialize.h"
+#include "util.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -23,7 +24,39 @@
 #include <utility>
 #include <vector>
 
-#include "util.h"
+template<typename Stream>
+class OverrideStream
+{
+    Stream* stream;
+
+    const int nType;
+    const int nVersion;
+
+public:
+    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
+
+    template<typename T>
+    OverrideStream<Stream>& operator<<(const T& obj)
+    {
+        // Serialize to this stream
+        ::Serialize(*this->stream, obj, nType, nVersion);
+        return (*this);
+    }
+
+    template<typename T>
+    OverrideStream<Stream>& operator>>(T& obj)
+    {
+        // Unserialize from this stream
+        ::Unserialize(*this->stream, obj, nType, nVersion);
+        return (*this);
+    }
+};
+
+template<typename S>
+OverrideStream<S> WithOrVersion(S* s, int nVersionFlag)
+{
+    return OverrideStream<S>(s, s->GetType(), s->GetVersion() | nVersionFlag);
+}
 
 /** Double ended buffer combining vector and stream-like interfaces.
  *
@@ -36,9 +69,10 @@ protected:
     typedef CSerializeData vector_type;
     vector_type vch;
     unsigned int nReadPos;
-public:
+
     int nType;
     int nVersion;
+public:
 
     typedef vector_type::allocator_type   allocator_type;
     typedef vector_type::size_type        size_type;
@@ -214,9 +248,9 @@ public:
     int in_avail()               { return size(); }
 
     void SetType(int n)          { nType = n; }
-    int GetType()                { return nType; }
+    int GetType() const          { return nType; }
     void SetVersion(int n)       { nVersion = n; }
-    int GetVersion()             { return nVersion; }
+    int GetVersion() const       { return nVersion; }
 
     void read(char* pch, size_t nSize)
     {
@@ -341,17 +375,15 @@ private:
     CAutoFile(const CAutoFile&);
     CAutoFile& operator=(const CAutoFile&);
 
-    int nType;
-    int nVersion;
+    const int nType;
+    const int nVersion;
 
-    FILE* file;
+    FILE* file;	
 
 public:
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
+    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn)
     {
         file = filenew;
-        nType = nTypeIn;
-        nVersion = nVersionIn;
     }
 
     ~CAutoFile()
@@ -386,10 +418,8 @@ public:
     //
     // Stream subset
     //
-    void SetType(int n)          { nType = n; }
-    int GetType()                { return nType; }
-    void SetVersion(int n)       { nVersion = n; }
-    int GetVersion()             { return nVersion; }
+    int GetType() const          { return nType; }
+    int GetVersion() const       { return nVersion; }
 
     void read(char* pch, size_t nSize)
     {
@@ -462,8 +492,8 @@ private:
     CBufferedFile(const CBufferedFile&);
     CBufferedFile& operator=(const CBufferedFile&);
 
-    int nType;
-    int nVersion;
+    const int nType;
+    const int nVersion;
 
     FILE *src;            // source file
     uint64_t nSrcPos;     // how many bytes have been read from source
@@ -493,11 +523,9 @@ protected:
 
 public:
     CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
-    nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
+        nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
     {
         src = fileIn;
-        nType = nTypeIn;
-        nVersion = nVersionIn;
     }
 
     ~CBufferedFile()
