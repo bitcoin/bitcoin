@@ -218,6 +218,8 @@ public:
 
     bool hdEnabled() const;
 
+    int getDefaultConfirmTarget() const;
+
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
