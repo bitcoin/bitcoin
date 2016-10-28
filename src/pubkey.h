@@ -117,14 +117,14 @@ public:
 
     //! Implement serialization, as if this was a byte vector.
     template <typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s) const
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
         s.write((char*)vch, len);
     }
     template <typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
+    void Unserialize(Stream& s)
     {
         unsigned int len = ::ReadCompactSize(s);
         if (len <= 65) {
@@ -211,7 +211,7 @@ struct CExtPubKey {
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
 
     template <typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s) const
     {
         unsigned int len = BIP32_EXTKEY_SIZE;
         ::WriteCompactSize(s, len);
@@ -220,7 +220,7 @@ struct CExtPubKey {
         s.write((const char *)&code[0], len);
     }
     template <typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
+    void Unserialize(Stream& s)
     {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];

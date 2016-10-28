@@ -42,10 +42,12 @@ public:
     template<typename T>
     TxInputStream& operator>>(T& obj)
     {
-        ::Unserialize(*this, obj, m_type, m_version);
+        ::Unserialize(*this, obj);
         return *this;
     }
 
+    int GetVersion() const { return m_version; }
+    int GetType() const { return m_type; }
 private:
     const int m_type;
     const int m_version;
