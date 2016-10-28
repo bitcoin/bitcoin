@@ -14,6 +14,7 @@
 #include "script/sign.h"
 #include <univalue.h>
 #include "util.h"
+#include "sync.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
@@ -21,8 +22,15 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
+
+// BU add lockstack stuff here for bitcoin-cli, because I need to carefully
+// order it in globals.cpp for bitcoind and bitcoin-qt
+boost::mutex dd_mutex;
+std::map<std::pair<void*, void*>, LockStack> lockorders;
+boost::thread_specific_ptr<LockStack> lockstack;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;

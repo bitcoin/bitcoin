@@ -30,6 +30,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "validationinterface.h"
+#include "alert.h"
 #include "version.h"
 #include "stat.h"
 #include "tweak.h"
@@ -44,12 +45,40 @@
 
 using namespace std;
 
+boost::mutex dd_mutex;
+std::map<std::pair<void*, void*>, LockStack> lockorders;
+boost::thread_specific_ptr<LockStack> lockstack;
+
+proxyType proxyInfo[NET_MAX];
+proxyType nameProxy;
+CCriticalSection cs_proxyInfos;
+
+map<uint256, CAlert> mapAlerts;
+CCriticalSection cs_mapAlerts;
+
 set<uint256> setPreVerifiedTxHash;
 set<uint256> setUnVerifiedOrphanTxHash;
 CCriticalSection cs_xval;
+CCriticalSection cs_vNodes;
+CCriticalSection cs_mapLocalHost;
+map<CNetAddr, LocalServiceInfo> mapLocalHost;
 
 bool fIsChainNearlySyncd;
 CCriticalSection cs_ischainnearlysyncd;
+
+// critical sections from net.cpp
+CCriticalSection cs_setservAddNodeAddresses;
+CCriticalSection cs_vAddedNodes;
+CCriticalSection cs_vUseDNSSeeds;
+CCriticalSection cs_nLastNodeId;
+CCriticalSection cs_mapInboundConnectionTracker;
+CCriticalSection cs_vOneShots;
+
+deque<string> vOneShots;
+std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
+vector<std::string> vUseDNSSeeds;
+vector<std::string> vAddedNodes;
+set<CNetAddr> setservAddNodeAddresses;
 
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
@@ -75,17 +104,21 @@ int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
 CTxMemPool mempool(::minRelayTxFee);
 
 boost::posix_time::milliseconds statMinInterval(10000);
-boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
+boost::asio::io_service stat_io_service;
 
-CStatMap statistics __attribute__((init_priority(102)));
-CTweakMap tweaks __attribute__((init_priority(102)));
+CStatMap statistics;
+CTweakMap tweaks;
 
-vector<CNode*> vNodes __attribute__((init_priority(109)));
-CCriticalSection cs_vNodes __attribute__((init_priority(109)));
-list<CNode*> vNodesDisconnected __attribute__((init_priority(109)));
+map<CInv, CDataStream> mapRelay;
+deque<pair<int64_t, CInv> > vRelayExpiration;
+CCriticalSection cs_mapRelay;
+limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+
+vector<CNode*> vNodes;
+list<CNode*> vNodesDisconnected;
 CSemaphore*  semOutbound = NULL;
 CSemaphore*  semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
-CNodeSignals g_signals __attribute__((init_priority(109)));
+CNodeSignals g_signals;
 
 // BU: change locking of orphan map from using cs_main to cs_orphancache.  There is too much dependance on cs_main locks which
 //     are generally too broad in scope.
@@ -101,6 +134,8 @@ CTweakRef<unsigned int> triTweak("net.txRetryInterval","How long to wait in micr
 CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in microseconds before requesting a block from another source", &MIN_BLK_REQUEST_RETRY_INTERVAL); // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
 
 CTweakRef<std::string> subverOverrideTweak("net.subversionOveride","If set, this field will override the normal subversion field.  This is useful if you need to hide your node.",&subverOverride,&SubverValidator);
+
+CRequestManager requester;  // after the maps nodes and tweaks
 
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
@@ -135,4 +170,7 @@ std::map<uint256, uint64_t> mapThinBlockTimer;
 //! The largest block size that we have seen since startup
 uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
 
-CNetCleanup cnet_instance_cleanup __attribute__((init_priority(1000)));  // Must construct after statistics, because CNodes use statistics.  In particular, seg fault on osx during exit because constructor/destructor order is not guaranteed between modules in clang.
+CMainCleanup instance_of_cmaincleanup;
+CNetCleanup cnet_instance_cleanup;  // Must construct after statistics, because CNodes use statistics.  In particular, seg fault on osx during exit because constructor/destructor order is not guaranteed between modules in clang.
+
+ 

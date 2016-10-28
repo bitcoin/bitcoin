@@ -33,8 +33,9 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 // Complain if any thread tries to lock in a different order.
 //
 
-struct CLockLocation {
-    CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn)
+// BU move to sync.h because I need to create these in globals.cpp
+//struct CLockLocation {
+CLockLocation::CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn)
     {
         mutexName = pszName;
         sourceFile = pszFile;
@@ -42,25 +43,28 @@ struct CLockLocation {
         fTry = fTryIn;
     }
 
-    std::string ToString() const
+std::string CLockLocation::ToString() const
     {
         return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
     }
 
-    std::string MutexName() const { return mutexName; }
+std::string CLockLocation::MutexName() const { return mutexName; }
 
+#if 0
     bool fTry;
 private:
     std::string mutexName;
     std::string sourceFile;
     int sourceLine;
 };
+#endif
 
-typedef std::vector<std::pair<void*, CLockLocation> > LockStack;
+// BU move to .h: typedef std::vector<std::pair<void*, CLockLocation> > LockStack;
 
-static boost::mutex dd_mutex;
-static std::map<std::pair<void*, void*>, LockStack> lockorders;
-static boost::thread_specific_ptr<LockStack> lockstack;
+// BU control the ctor/dtor ordering
+extern boost::mutex dd_mutex;
+extern std::map<std::pair<void*, void*>, LockStack> lockorders;
+extern boost::thread_specific_ptr<LockStack> lockstack;
 
 
 static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)

@@ -80,8 +80,6 @@ namespace {
 bool fDiscover = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
-CCriticalSection cs_mapLocalHost;
-map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfReachable[NET_MAX] = {};
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
@@ -92,37 +90,38 @@ int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 bool fAddressesInitialized = false;
 std::string strSubVersion;
 
-extern vector<CNode*> vNodes;
-extern CCriticalSection cs_vNodes;
-map<CInv, CDataStream> mapRelay;
-deque<pair<int64_t, CInv> > vRelayExpiration;
-CCriticalSection cs_mapRelay;
-limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+// BU moved to global.cpp 
+// extern vector<CNode*> vNodes;
+// extern CCriticalSection cs_vNodes;
+// map<CInv, CDataStream> mapRelay;
+// deque<pair<int64_t, CInv> > vRelayExpiration;
+// CCriticalSection cs_mapRelay;
+// limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
-static deque<string> vOneShots;
-CCriticalSection cs_vOneShots;
+extern deque<string> vOneShots;
+extern CCriticalSection cs_vOneShots;
 
-set<CNetAddr> setservAddNodeAddresses;
-CCriticalSection cs_setservAddNodeAddresses;
+extern set<CNetAddr> setservAddNodeAddresses;
+extern CCriticalSection cs_setservAddNodeAddresses;
 
-vector<std::string> vAddedNodes;
-CCriticalSection cs_vAddedNodes;
+extern vector<std::string> vAddedNodes;
+extern CCriticalSection cs_vAddedNodes;
 
 // BITCOINUNLIMITED START
-vector<std::string> vUseDNSSeeds;
-CCriticalSection cs_vUseDNSSeeds;
+extern vector<std::string> vUseDNSSeeds;
+extern CCriticalSection cs_vUseDNSSeeds;
 // BITCOINUNLIMITED END
 
 NodeId nLastNodeId = 0;
-CCriticalSection cs_nLastNodeId;
+extern CCriticalSection cs_nLastNodeId;
 
 extern CSemaphore *semOutbound;
 extern CSemaphore *semOutboundAddNode; // BU: separate semaphore for -addnodes
 boost::condition_variable messageHandlerCondition;
 
 // BU  Connection Slot mitigation - used to determine how many connection attempts over time
-std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
-CCriticalSection cs_mapInboundConnectionTracker;
+extern std::map<CNetAddr, ConnectionHistory> mapInboundConnectionTracker;
+extern CCriticalSection cs_mapInboundConnectionTracker;
 
 // Signals for message handling
 extern CNodeSignals g_signals;
@@ -1255,6 +1254,7 @@ void ThreadSocketHandler()
                     }
                     if (fDelete) {
                         vNodesDisconnected.remove(pnode);
+                        assert(std::find(vNodes.begin(),vNodes.end(), pnode) == vNodes.end());  // make sure it has been removed
                         delete pnode;
                     }
                 }
@@ -2263,6 +2263,8 @@ bool StopNode()
 
 CNetCleanup::~CNetCleanup()
     {
+        LOCK(cs_vNodes);
+
         // Close sockets
         BOOST_FOREACH (CNode* pnode, vNodes)
             if (pnode->hSocket != INVALID_SOCKET)
