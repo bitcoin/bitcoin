@@ -411,7 +411,7 @@
                  </property>
                 </widget>
                </item>
-             </layout>
+              </layout>
              </item>
              <item>
               <layout class="QFormLayout" name="formLayoutCoinControl4">
@@ -1031,7 +1031,7 @@
                    <item>
                     <widget class="QLabel" name="labelSmartFee3">
                      <property name="text">
-                      <string>Confirmation time:</string>
+                      <string>Confirmation time target:</string>
                      </property>
                      <property name="margin">
                       <number>2</number>
@@ -1092,6 +1092,26 @@
                       <widget class="QLabel" name="labelSmartFeeNormal">
                        <property name="text">
                         <string>normal</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_7">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="confirmationTargetLabel">
+                       <property name="text">
+                        <string>(count)</string>
                        </property>
                       </widget>
                      </item>

@@ -22,6 +22,8 @@ public:
     bool fOverrideFeeRate;
     //! Feerate to use if overrideFeeRate is true
     CFeeRate nFeeRate;
+    //! Override the default confirmation target, 0 = use default
+    int nConfirmTarget;
 
     CCoinControl()
     {
@@ -37,6 +39,7 @@ public:
         nMinimumTotalFee = 0;
         nFeeRate = CFeeRate(0);
         fOverrideFeeRate = false;
+        nConfirmTarget = 0;
     }
 
     bool HasSelected() const
