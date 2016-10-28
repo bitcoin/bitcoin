@@ -217,8 +217,6 @@ public:
     int GetType()                { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion()             { return nVersion; }
-    void ReadVersion()           { *this >> nVersion; }
-    void WriteVersion()          { *this << nVersion; }
 
     CDataStream& read(char* pch, size_t nSize)
     {
@@ -395,8 +393,6 @@ public:
     int GetType()                { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion()             { return nVersion; }
-    void ReadVersion()           { *this >> nVersion; }
-    void WriteVersion()          { *this << nVersion; }
 
     CAutoFile& read(char* pch, size_t nSize)
     {
