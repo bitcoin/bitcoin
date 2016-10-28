@@ -7,7 +7,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mininode import CTransaction, CTxOut, CTxIn, COutPoint, CTxInWitness
 from test_framework.util import hex_str_to_bytes, start_node, bytes_to_hex_str
 from test_framework.key import CECKey, CPubKey
-from test_framework.script import CScript, OP_0, OP_1, OP_12, OP_14, OP_CHECKSIG, OP_CHECKMULTISIG, OP_CODESEPARATOR, OP_CHECKMULTISIGVERIFY, OP_CHECKSIGVERIFY, OP_HASH160, OP_EQUAL, SignatureHash, SIGHASH_ALL, hash160, sha256, SegwitVersion1SignatureHash
+from test_framework.script import CScript, OP_0, OP_1, OP_12, OP_14, OP_CHECKSIG, OP_CHECKMULTISIG, OP_CODESEPARATOR, OP_CHECKMULTISIGVERIFY, OP_CHECKSIGVERIFY, OP_HASH160, OP_EQUAL, SignatureHash, SIGHASH_ALL, hash160, sha256, SegwitVersion1SignatureHash, FindAndDelete
 import time
 from random import randint
 
@@ -32,6 +32,28 @@ default_outputsize = 22200 // speedup
 default_amount = 200000
 time_assertion = False # compare validation time with benchmarking test
 verbose = False # print validation details
+
+def recoverkey(sig, hash):
+    r_size = sig[3]
+    s_size = sig[5 + r_size]
+    r_val = sig[4:4+r_size]
+    s_val = sig[6+r_size:6+r_size+s_size]
+    while (len(r_val) != 32):
+        if (len(r_val) > 32):
+            assert (r_val[0] == 0)
+            r_val = r_val[1:]
+        else:
+            r_val = b'\x00' + r_val
+    while (len(s_val) != 32):
+        if (len(s_val) > 32):
+            assert (s_val[0] == 0)
+            s_val = s_val[1:]
+        else:
+            s_val = b'\x00' + s_val
+    key = CECKey()
+    key.set_compressed(True)
+    key.recover(r_val, s_val, hash, len(hash), 0, 0)
+    return key.get_pubkey()
 
 class SigHashCacheTest(BitcoinTestFramework):
 
@@ -82,6 +104,9 @@ class SigHashCacheTest(BitcoinTestFramework):
         self.key = CECKey()
         self.key.set_secretbytes(b"9")
         self.key.set_compressed(1)
+        self.dummysig = []
+        self.dummysig.append(self.key.sign(sha256(b'\x01')) + b'\x01')
+        self.dummysig.append(self.key.sign(sha256(b'\x02')) + b'\x01')
         pubkey = CPubKey(self.key.get_pubkey())
         self.script = []
         scriptpubkey = []
@@ -92,6 +117,7 @@ class SigHashCacheTest(BitcoinTestFramework):
         self.script.append(CScript([pubkey, OP_CHECKSIGVERIFY, OP_CODESEPARATOR] * 13 + [pubkey, OP_CHECKSIG])) # 2000, 2250
         self.script.append(CScript([pubkey, OP_CHECKSIG])) # 2500, 2750
         self.script.append(CScript([pubkey, OP_CHECKSIGVERIFY] * 136 + [pubkey, OP_CHECKSIG])) # 3000, 3250 (Not valid for P2SH due to too big)
+        self.script.append(CScript([OP_CHECKSIGVERIFY] * 14 + [self.dummysig[0]])) # 3500, 3750
 
         for i in self.script:
             scriptpubkey.append(CScript([OP_HASH160, hash160(i), OP_EQUAL])) # P2SH
@@ -105,15 +131,21 @@ class SigHashCacheTest(BitcoinTestFramework):
 
         # Add bare outputs
         for i in range(250):
-            tx.vout.append(CTxOut(default_amount,self.script[5])) # 3500-3749: 250 bare P2PK
+            tx.vout.append(CTxOut(default_amount,self.script[5])) # 4000-4249: 250 bare P2PK
         for i in range(25):
-            # 3750-3774: 25 bare scriptPubKey with 137 CHECKSIGs. Pay more so it could pay enough fee when spending
+            # 4250-4274: 25 bare scriptPubKey with 137 CHECKSIGs. Pay more so it could pay enough fee when spending
             tx.vout.append(CTxOut(default_amount * 10,self.script[6]))
+        for i in range(10):
+            # 4275-4284: 10 bare FindAndDelete test
+            tx.vout.append(CTxOut(default_amount, self.script[7]))
 
         # subScript for CODESEPERATOR tests
         self.csscript = []
         for i in range(14):
             self.csscript.append(CScript([pubkey, OP_CHECKSIGVERIFY, OP_CODESEPARATOR] * i + [pubkey, OP_CHECKSIG]))
+
+        # subScript for FindAndDelete tests
+        self.findanddeletescript = FindAndDelete(self.script[7], CScript([self.dummysig[0]]))
 
         signresult = self.nodes[0].signrawtransaction(bytes_to_hex_str(tx.serialize_without_witness()))['hex']
         self.txid = int("0x" + self.nodes[0].sendrawtransaction(signresult, True), 0)
@@ -239,7 +271,7 @@ class SigHashCacheTest(BitcoinTestFramework):
     def P2PK_ALL(self):
         script = self.script[5]
         print ("Test: Bare/segwit P2PK inputs with SIGHASH_ALL")
-        txpair = self.generate_txpair(3500,-750,250//speedup,250//speedup,350//speedup)
+        txpair = self.generate_txpair(4000,-1250,250//speedup,250//speedup,350//speedup)
         for i in range(250//speedup):
             [sig, wsig] = self.signtx([script], txpair, i, [SIGHASH_ALL])
             txpair[0].vin[i].scriptSig = CScript(sig)
@@ -251,7 +283,7 @@ class SigHashCacheTest(BitcoinTestFramework):
     def many_CHECKSIG_random_flag(self):
         script = self.script[6]
         print ("Test: Bare/P2WSH inputs with 137 CHECKSIG with random SIGHASH")
-        txpair = self.generate_txpair(3750,-500,24//speedup,12//speedup,1000//speedup)
+        txpair = self.generate_txpair(4250,-1000,24//speedup,12//speedup,1000//speedup)
         # 24 inputs with only 12 outputs, so some SIGHASH_SINGLE will be unmatched
         for i in range(24//speedup):
             flags = []
@@ -261,6 +293,80 @@ class SigHashCacheTest(BitcoinTestFramework):
             txpair[0].vin[i].scriptSig = CScript(sig)
             txpair[1].wit.vtxinwit[i].scriptWitness.stack = wsig + [script]
         self.validation_time(txpair)
+
+    def FindAndDelete_reset(self):
+        script = self.script[7]
+        print ("Test: FindAndDelete in P2SH with sighash reset")
+        '''
+        The sighash cache is reset after every CHECKSIGVERIFY due to FindAndDelete.
+        It should be as slow as no sighash cache.
+        '''
+        txpair = self.generate_txpair(3500)
+        for i in range(default_nIn):
+            sighash0 = SignatureHash(self.findanddeletescript, txpair[0], i, 1)[0]
+            key0 = recoverkey(self.dummysig[0], sighash0)
+            sighash1 = SignatureHash(script, txpair[0], i, 1)[0]
+            key1 = recoverkey(self.dummysig[1], sighash1)
+            assert (sighash0 != sighash1)
+            wsighash = SegwitVersion1SignatureHash(script, txpair[1], i, 1, default_amount)
+            wkey0 = recoverkey(self.dummysig[0], wsighash)
+            wkey1 = recoverkey(self.dummysig[1], wsighash)
+
+            txpair[0].vin[i].scriptSig = CScript([self.dummysig[1], key1, self.dummysig[0], key0] * 7 + [script])
+            txpair[1].wit.vtxinwit[i].scriptWitness.stack = [self.dummysig[1], wkey1, self.dummysig[0], wkey0] *7 + [script]
+        [t, wt] = self.validation_time(txpair)
+        if (time_assertion):
+            assert(self.banchmark / t < 3)
+            assert(t / self.banchmark < 3)
+            assert(self.banchmark / wt > 4)
+
+    def FindAndDelete_noreset(self):
+        script = self.script[7]
+        print ("Test: FindAndDelete in P2SH without sighash reset")
+        # No sighash reset due to FindAndDelete.
+        txpair = self.generate_txpair(3550)
+        for i in range(default_nIn // 2):
+            sighash = SignatureHash(self.findanddeletescript, txpair[0], i, 1)[0]
+            key = recoverkey(self.dummysig[0], sighash)
+            wsighash = SegwitVersion1SignatureHash(script, txpair[1], i, 1, default_amount)
+            wkey = recoverkey(self.dummysig[0], wsighash)
+            txpair[0].vin[i].scriptSig = CScript([self.dummysig[0], key] * 14 + [script])
+            txpair[1].wit.vtxinwit[i].scriptWitness.stack = [self.dummysig[0], wkey] * 14 + [script]
+        for i in range(default_nIn // 2, default_nIn):
+            sighash = SignatureHash(script, txpair[0], i, 1)[0]
+            key = recoverkey(self.dummysig[1], sighash)
+            wsighash = SegwitVersion1SignatureHash(script, txpair[1], i, 1, default_amount)
+            wkey = recoverkey(self.dummysig[1], wsighash)
+            txpair[0].vin[i].scriptSig = CScript([self.dummysig[1], key] * 14 + [script])
+            txpair[1].wit.vtxinwit[i].scriptWitness.stack = [self.dummysig[1], wkey] * 14 + [script]
+        [t, wt] = self.validation_time(txpair)
+        if (time_assertion):
+            assert(self.banchmark / t > 4)
+            assert(self.banchmark / wt > 4)
+
+    def FindAndDelete_bare(self):
+        script = self.script[7]
+        print ("Test: FindAndDelete in bare outputs")
+        txpair = self.generate_txpair(4275, -300, 10, 10, 1)
+        for i in range(5):
+            sighash0 = SignatureHash(self.findanddeletescript, txpair[0], i, 1)[0]
+            key0 = recoverkey(self.dummysig[0], sighash0)
+            sighash1 = SignatureHash(script, txpair[0], i, 1)[0]
+            key1 = recoverkey(self.dummysig[1], sighash1)
+            assert (sighash0 != sighash1)
+            wsighash = SegwitVersion1SignatureHash(script, txpair[1], i, 1, default_amount)
+            wkey0 = recoverkey(self.dummysig[0], wsighash)
+            wkey1 = recoverkey(self.dummysig[1], wsighash)
+            txpair[0].vin[i].scriptSig = CScript([self.dummysig[1], key1, self.dummysig[0], key0] * 7)
+            txpair[1].wit.vtxinwit[i].scriptWitness.stack = [self.dummysig[1], wkey1, self.dummysig[0], wkey0] * 7 + [script]
+        for i in range(5, 10):
+            sighash = SignatureHash(self.findanddeletescript, txpair[0], i, 1)[0]
+            key = recoverkey(self.dummysig[0], sighash)
+            wsighash = SegwitVersion1SignatureHash(script, txpair[1], i, 1, default_amount)
+            wkey = recoverkey(self.dummysig[0], wsighash)
+            txpair[0].vin[i].scriptSig = CScript([self.dummysig[0], key] * 14)
+            txpair[1].wit.vtxinwit[i].scriptWitness.stack = [self.dummysig[0], wkey] * 14 + [script]
+        [t, wt] = self.validation_time(txpair)
 
     def signing_test(self):
         print ("Test: signrawtransaction with different SIGHASH types")
@@ -300,6 +406,9 @@ class SigHashCacheTest(BitcoinTestFramework):
         self.many_CHECKSIG_CODESEPERATOR_different_ALL()
         self.P2PK_ALL()
         self.many_CHECKSIG_random_flag()
+        self.FindAndDelete_reset()
+        self.FindAndDelete_noreset()
+        self.FindAndDelete_bare()
         self.signing_test()
 
 if __name__ == '__main__':
