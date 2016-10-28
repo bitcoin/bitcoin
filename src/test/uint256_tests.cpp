@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     BOOST_CHECK(OneL.begin() + 32 == OneL.end());
     BOOST_CHECK(MaxL.begin() + 32 == MaxL.end());
     BOOST_CHECK(TmpL.begin() + 32 == TmpL.end());
-    BOOST_CHECK(R1L.GetSerializeSize(0,PROTOCOL_VERSION) == 32);
-    BOOST_CHECK(ZeroL.GetSerializeSize(0,PROTOCOL_VERSION) == 32);
+    BOOST_CHECK(GetSerializeSize(R1L, 0, PROTOCOL_VERSION) == 32);
+    BOOST_CHECK(GetSerializeSize(ZeroL, 0, PROTOCOL_VERSION) == 32);
 
     std::stringstream ss;
     R1L.Serialize(ss,0,PROTOCOL_VERSION);
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     BOOST_CHECK(OneS.begin() + 20 == OneS.end());
     BOOST_CHECK(MaxS.begin() + 20 == MaxS.end());
     BOOST_CHECK(TmpS.begin() + 20 == TmpS.end());
-    BOOST_CHECK(R1S.GetSerializeSize(0,PROTOCOL_VERSION) == 20);
-    BOOST_CHECK(ZeroS.GetSerializeSize(0,PROTOCOL_VERSION) == 20);
+    BOOST_CHECK(GetSerializeSize(R1S, 0, PROTOCOL_VERSION) == 20);
+    BOOST_CHECK(GetSerializeSize(ZeroS, 0, PROTOCOL_VERSION) == 20);
 
     R1S.Serialize(ss,0,PROTOCOL_VERSION);
     BOOST_CHECK(ss.str() == std::string(R1Array,R1Array+20));

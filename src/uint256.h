@@ -78,11 +78,6 @@ public:
         return sizeof(data);
     }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const
-    {
-        return sizeof(data);
-    }
-
     uint64_t GetUint64(int pos) const
     {
         const uint8_t* ptr = data + pos * 8;
