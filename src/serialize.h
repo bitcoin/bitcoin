@@ -773,11 +773,11 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m)
  */
 struct CSerActionSerialize
 {
-    bool ForRead() const { return false; }
+    constexpr bool ForRead() const { return false; }
 };
 struct CSerActionUnserialize
 {
-    bool ForRead() const { return true; }
+    constexpr bool ForRead() const { return true; }
 };
 
 template<typename Stream, typename T>
