@@ -23,7 +23,7 @@ public:
     m_remaining(txToLen)
     {}
 
-    TxInputStream& read(char* pch, size_t nSize)
+    void read(char* pch, size_t nSize)
     {
         if (nSize > m_remaining)
             throw std::ios_base::failure(std::string(__func__) + ": end of data");
@@ -37,7 +37,6 @@ public:
         memcpy(pch, m_data, nSize);
         m_remaining -= nSize;
         m_data += nSize;
-        return *this;
     }
 
     template<typename T>
