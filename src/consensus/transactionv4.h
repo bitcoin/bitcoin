@@ -15,6 +15,7 @@ enum TxMessageFields {
     TxOutScript,        // bytearray
     LockByBlock,        // PositiveNumber
     LockByTime,         // PositiveNumber
+    CoinbaseMessage,    // Bytearray. Max 100 bytes.
     ScriptVersion       // PositiveNumber
 };
 }

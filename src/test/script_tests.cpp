@@ -1044,6 +1044,7 @@ BOOST_AUTO_TEST_CASE(transactionV4)
     TransactionSignatureChecker dummy(&txTo, 0);
     ok = VerifyScript(to.vin[0].scriptSig, from.vout[0].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, dummy, 0);
     BOOST_CHECK(ok);
+    TxUtils::disallowNewTransactions();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

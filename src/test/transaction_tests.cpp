@@ -410,12 +410,22 @@ BOOST_AUTO_TEST_CASE(test_version4)
 {
     TxUtils::allowNewTransactions();
     // 10 random transactions, make sure that save/load works.
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 12; ++i) {
         CMutableTransaction tx1;
-        TxUtils::RandomTransaction(tx1, true);
-        // clean them a little because nSequence has some double meanings.
-        for (unsigned int in = 1; in < tx1.vin.size(); ++in) { // only keep the sequenc on the first one.
-            tx1.vin[in].nSequence = CTxIn::SEQUENCE_FINAL;
+        if (i < 2) {
+            tx1.vin.push_back(CTxIn()); // do what a coinbase tx does, empty input.
+            if (i == 1)
+                tx1.vin[0].scriptSig = (CScript() << 101 << CScriptNum(12512)) + COINBASE_FLAGS;
+            tx1.vout.push_back(CTxOut());
+            CTxOut &txout = tx1.vout.back();
+            txout.nValue = 10000;
+            TxUtils::RandomScript(txout.scriptPubKey);
+        } else {
+            TxUtils::RandomTransaction(tx1, true);
+            // clean them a little because nSequence has some double meanings.
+            for (unsigned int in = 1; in < tx1.vin.size(); ++in) { // only keep the sequenc on the first one.
+                tx1.vin[in].nSequence = CTxIn::SEQUENCE_FINAL;
+            }
         }
         tx1.nVersion = 4;
         CDataStream ds1(0, 0);
@@ -459,6 +469,10 @@ BOOST_AUTO_TEST_CASE(test_version4)
             BOOST_CHECK(tx1.vin.at(i).scriptSig == tx3.vin.at(i).scriptSig);
             BOOST_CHECK(tx1.vin.at(i).scriptSig == tx4.vin.at(i).scriptSig);
         }
+
+        BOOST_CHECK(tx1.vin.at(0).prevout.IsNull() == tx2.vin.at(0).prevout.IsNull());
+        BOOST_CHECK(tx1.vin.at(0).prevout.IsNull() == tx3.vin.at(0).prevout.IsNull());
+        BOOST_CHECK(tx1.vin.at(0).prevout.IsNull() == tx4.vin.at(0).prevout.IsNull());
     }
 
     // load an existing transaction to check some properties.
@@ -474,6 +488,7 @@ BOOST_AUTO_TEST_CASE(test_version4)
             "a8191b284e8cc79e9e9b14f6f5bb3a6395f1c704"), 0, 0);
         stream >> tx;
     }
+    TxUtils::disallowNewTransactions();
 
     BOOST_CHECK_EQUAL(tx.vin.size(), 1);
     BOOST_CHECK_EQUAL(tx.vin.front().prevout.n, 1);

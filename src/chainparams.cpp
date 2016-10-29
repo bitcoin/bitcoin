@@ -251,23 +251,18 @@ public:
         consensus.BIP34Height = 1;
         nDefaultPort = 18335;
         consensus.powLimit = uint256S("000284ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        genesis = CreateGenesisBlock(1476619325, 1143028154, 0x1d00ffff, 4, 50 * COIN);
+        genesis = CreateGenesisBlock(1478001604, 286592391, 0x1d00ffff, 4, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         extern boost::atomic<bool> flexTransActive; // genesis block has one TX, which is a FlexTrans transaction.
         assert(flexTransActive.load());
-        assert(consensus.hashGenesisBlock == uint256S("0x00000000f2cebdbbdbb942240b2c1e93f33c15261e0d86a410034bdf0d268adb"));
-        assert(genesis.hashMerkleRoot == uint256S("0xd9d22f3fd9eac96b3bfc14f5f1e13152c01f0ea516745fa6b783bbcdb7d140ab"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000580d0391811aba91ffc46f69755789b3b18c3ace72165db452778d2c"));
+        assert(genesis.hashMerkleRoot == uint256S("0x495e4445d86821ff6b5da463ad597d9ee8c588a6965c6ae0c57ac2444b886a9b"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
 
         checkpointData = CCheckpointData();
-
-        fMiningRequiresPeers = false;
-        fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        fMineBlocksOnDemand = false;
     }
 };
 static CFTTestNetParams *fttestNetParams = nullptr;
@@ -367,7 +362,7 @@ CChainParams& Params(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    if (network == CBaseChainParams::REGTEST || network == CBaseChainParams::FLEXTRANSTESTNET) {
+    if (network == CBaseChainParams::FLEXTRANSTESTNET) {
         extern boost::atomic<bool> flexTransActive;
         flexTransActive = true;
     }

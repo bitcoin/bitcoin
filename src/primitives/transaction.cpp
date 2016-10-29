@@ -136,8 +136,14 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
         }
         case Consensus::TxInPrevIndex: {
             if (inputs.empty()) throw std::runtime_error("TxInPrevIndex before TxInPrevHash");
-            int n = boost::get<int32_t>(token.data);
-            inputs[inputs.size()-1].prevout.n = n;
+            inputs[inputs.size()-1].prevout.n = (uint32_t) token.longData();
+            break;
+        }
+        case Consensus::CoinbaseMessage: {
+            if (!inputs.empty()) throw std::runtime_error("CoinbaseMessage not allowed when there are inputs");
+            inputs.push_back(CTxIn());
+            auto data = token.unsignedByteArray();
+            inputs[0].scriptSig = CScript(data.begin(), data.end());
             break;
         }
         case Consensus::TxInScript: {

@@ -13,6 +13,7 @@ namespace TxUtils {
     void RandomTransaction(CMutableTransaction &tx, bool single);
 
     void allowNewTransactions();
+    void disallowNewTransactions();
 }
 
 #endif

@@ -166,7 +166,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     int txWithDetachableSigsCount = 0;
     for (size_t s = 0; s < size; s++) {
         leaves[s] = block.vtx[s].GetHash();
-        if (block.vtx[s].nVersion == 4)
+        if (s != 0 && block.vtx[s].nVersion == 4)
             ++txWithDetachableSigsCount;
     }
 
@@ -179,7 +179,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     if (flexTransActive) {
         leaves.resize(size + txWithDetachableSigsCount);
         unsigned int pos = size;
-        for (size_t s = 0; s < size; s++) {
+        for (size_t s = 1; s < size; s++) {
             if (block.vtx[s].nVersion == 4)
                 leaves[pos++] = block.vtx[s].CalculateSignaturesHash();
         }

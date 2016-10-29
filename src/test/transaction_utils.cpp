@@ -42,5 +42,10 @@ void TxUtils::RandomTransaction(CMutableTransaction &tx, bool fSingle) {
 extern boost::atomic<bool> flexTransActive;
 void TxUtils::allowNewTransactions()
 {
-    flexTransActive = true;
+    flexTransActive.store(true);
+}
+
+void TxUtils::disallowNewTransactions()
+{
+    flexTransActive.store(false);
 }
