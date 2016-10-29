@@ -107,6 +107,7 @@ testScripts = [
     'fundrawtransaction.py',
     'p2p-compactblocks.py',
     'segwit.py',
+    'sighashcache.py',
     # vv Tests less than 2m vv
     'wallet.py',
     'wallet-accounts.py',
