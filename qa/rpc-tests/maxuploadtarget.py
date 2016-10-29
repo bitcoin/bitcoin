@@ -32,9 +32,11 @@ print "running with -excessiveblocksize = %s bytes" % EXCESSIVE_BLOCKSIZE
 
 # sync_with_ping() timeouts also need to scale with block size
 # (this has been determined empirically)
-# The formula below works out to the original 30s timeout for the case of
-# 1MB blocks, and scales up sufficiently to allow the test to pass even
-# with 16MB blocks (tested on a reasonably fast machine).
+# The formula below allows a sync timeout to scale up sufficiently to pass
+# even with 16MB blocks (tested on a reasonably fast machine).
+# The baseline has been increased from 30s to 60s which enables the test
+# to pass with 1MB on a slow i686 machine. Raising the baseline timeout
+# does not increase the test duration on faster machines.
 SYNC_WITH_PING_TIMEOUT = 60 + 20 * int((max(1000000, EXCESSIVE_BLOCKSIZE)-1000000) / 1000000)  # seconds
 print "sync_with_ping timeout =  %s sec" % SYNC_WITH_PING_TIMEOUT
 
