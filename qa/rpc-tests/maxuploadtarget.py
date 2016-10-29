@@ -35,7 +35,7 @@ print "running with -excessiveblocksize = %s bytes" % EXCESSIVE_BLOCKSIZE
 # The formula below works out to the original 30s timeout for the case of
 # 1MB blocks, and scales up sufficiently to allow the test to pass even
 # with 16MB blocks (tested on a reasonably fast machine).
-SYNC_WITH_PING_TIMEOUT = 30 + 20 * int((max(1000000, EXCESSIVE_BLOCKSIZE)-1000000) / 1000000)  # seconds
+SYNC_WITH_PING_TIMEOUT = 60 + 20 * int((max(1000000, EXCESSIVE_BLOCKSIZE)-1000000) / 1000000)  # seconds
 print "sync_with_ping timeout =  %s sec" % SYNC_WITH_PING_TIMEOUT
 
 
