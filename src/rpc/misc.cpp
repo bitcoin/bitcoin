@@ -39,12 +39,12 @@ using namespace std;
  *
  * Or alternatively, create a specific query method for the information.
  **/
-UniValue getinfo(const UniValue& params, bool fHelp)
+UniValue getinfo(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 0)
+    if (request.fHelp || request.params.size() != 0)
         throw runtime_error(
             "getinfo\n"
-            "Returns an object containing various state info.\n"
+            "\nDEPRECATED. Returns an object containing various state info.\n"
             "\nResult:\n"
             "{\n"
             "  \"version\": xxxxx,           (numeric) the server version\n"
@@ -89,10 +89,11 @@ UniValue getinfo(const UniValue& params, bool fHelp)
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    if(g_connman)
+        obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
     obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       Params().TestnetToBeDeprecatedFieldRPC()));
+    obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
@@ -147,9 +148,9 @@ public:
 };
 #endif
 
-UniValue validateaddress(const UniValue& params, bool fHelp)
+UniValue validateaddress(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "validateaddress \"bitcoinaddress\"\n"
             "\nReturn information about the given bitcoin address.\n"
@@ -180,7 +181,7 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 #endif
 
-    CBitcoinAddress address(params[0].get_str());
+    CBitcoinAddress address(request.params[0].get_str());
     bool isValid = address.IsValid();
 
     UniValue ret(UniValue::VOBJ);
@@ -277,9 +278,9 @@ CScript _createmultisig_redeemScript(const UniValue& params)
     return result;
 }
 
-UniValue createmultisig(const UniValue& params, bool fHelp)
+UniValue createmultisig(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() < 2 || params.size() > 2)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
     {
         string msg = "createmultisig nrequired [\"key\",...]\n"
             "\nCreates a multi-signature address with n signature of m keys required.\n"
@@ -309,7 +310,7 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     }
 
     // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig_redeemScript(params);
+    CScript inner = _createmultisig_redeemScript(request.params);
     CScriptID innerID(inner);
     CBitcoinAddress address(innerID);
 
@@ -320,46 +321,9 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     return result;
 }
 
-UniValue createwitnessaddress(const UniValue& params, bool fHelp)
+UniValue verifymessage(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() < 1 || params.size() > 1)
-    {
-        string msg = "createwitnessaddress \"script\"\n"
-            "\nCreates a witness address for a particular script.\n"
-            "It returns a json object with the address and witness script.\n"
-
-            "\nArguments:\n"
-            "1. \"script\"       (string, required) A hex encoded script\n"
-
-            "\nResult:\n"
-            "{\n"
-            "  \"address\":\"multisigaddress\",  (string) The value of the new address (P2SH of witness script).\n"
-            "  \"witnessScript\":\"script\"      (string) The string value of the hex-encoded witness script.\n"
-            "}\n"
-        ;
-        throw runtime_error(msg);
-    }
-
-    if (!IsHex(params[0].get_str())) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Script must be hex-encoded");
-    }
-
-    std::vector<unsigned char> code = ParseHex(params[0].get_str());
-    CScript script(code.begin(), code.end());
-    CScript witscript = GetScriptForWitness(script);
-    CScriptID witscriptid(witscript);
-    CBitcoinAddress address(witscriptid);
-
-    UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToString()));
-    result.push_back(Pair("witnessScript", HexStr(witscript.begin(), witscript.end())));
-
-    return result;
-}
-
-UniValue verifymessage(const UniValue& params, bool fHelp)
-{
-    if (fHelp || params.size() != 3)
+    if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
             "verifymessage \"bitcoinaddress\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
@@ -382,9 +346,9 @@ UniValue verifymessage(const UniValue& params, bool fHelp)
 
     LOCK(cs_main);
 
-    string strAddress  = params[0].get_str();
-    string strSign     = params[1].get_str();
-    string strMessage  = params[2].get_str();
+    string strAddress  = request.params[0].get_str();
+    string strSign     = request.params[1].get_str();
+    string strMessage  = request.params[2].get_str();
 
     CBitcoinAddress addr(strAddress);
     if (!addr.IsValid())
@@ -411,9 +375,9 @@ UniValue verifymessage(const UniValue& params, bool fHelp)
     return (pubkey.GetID() == keyID);
 }
 
-UniValue signmessagewithprivkey(const UniValue& params, bool fHelp)
+UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 2)
+    if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
             "signmessagewithprivkey \"privkey\" \"message\"\n"
             "\nSign a message with the private key of an address\n"
@@ -431,8 +395,8 @@ UniValue signmessagewithprivkey(const UniValue& params, bool fHelp)
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
         );
 
-    string strPrivkey = params[0].get_str();
-    string strMessage = params[1].get_str();
+    string strPrivkey = request.params[0].get_str();
+    string strMessage = request.params[1].get_str();
 
     CBitcoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strPrivkey);
@@ -453,9 +417,9 @@ UniValue signmessagewithprivkey(const UniValue& params, bool fHelp)
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
-UniValue setmocktime(const UniValue& params, bool fHelp)
+UniValue setmocktime(const JSONRPCRequest& request)
 {
-    if (fHelp || params.size() != 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "setmocktime timestamp\n"
             "\nSet the local time to given timestamp (-regtest only)\n"
@@ -471,14 +435,16 @@ UniValue setmocktime(const UniValue& params, bool fHelp)
     // atomically with the time change to prevent peers from being
     // disconnected because we think we haven't communicated with them
     // in a long time.
-    LOCK2(cs_main, cs_vNodes);
+    LOCK(cs_main);
 
-    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
-    SetMockTime(params[0].get_int64());
+    RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM));
+    SetMockTime(request.params[0].get_int64());
 
     uint64_t t = GetTime();
-    BOOST_FOREACH(CNode* pnode, vNodes) {
-        pnode->nLastSend = pnode->nLastRecv = t;
+    if(g_connman) {
+        g_connman->ForEachNode([t](CNode* pnode) {
+            pnode->nLastSend = pnode->nLastRecv = t;
+        });
     }
 
     return NullUniValue;
@@ -490,7 +456,6 @@ static const CRPCCommand commands[] =
     { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
     { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
     { "util",               "createmultisig",         &createmultisig,         true  },
-    { "util",               "createwitnessaddress",   &createwitnessaddress,   true  },
     { "util",               "verifymessage",          &verifymessage,          true  },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true  },
 
@@ -498,8 +463,8 @@ static const CRPCCommand commands[] =
     { "hidden",             "setmocktime",            &setmocktime,            true  },
 };
 
-void RegisterMiscRPCCommands(CRPCTable &tableRPC)
+void RegisterMiscRPCCommands(CRPCTable &t)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

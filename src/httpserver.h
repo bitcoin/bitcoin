@@ -7,9 +7,7 @@
 
 #include <string>
 #include <stdint.h>
-#include <boost/thread.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/function.hpp>
+#include <functional>
 
 static const int DEFAULT_HTTP_THREADS=4;
 static const int DEFAULT_HTTP_WORKQUEUE=16;
@@ -35,7 +33,7 @@ void InterruptHTTPServer();
 void StopHTTPServer();
 
 /** Handler for requests to a certain HTTP path */
-typedef boost::function<void(HTTPRequest* req, const std::string &)> HTTPRequestHandler;
+typedef std::function<bool(HTTPRequest* req, const std::string &)> HTTPRequestHandler;
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
  * be invoked.
@@ -132,7 +130,7 @@ public:
      * deleteWhenTriggered deletes this event object after the event is triggered (and the handler called)
      * handler is the handler to call when the event is triggered.
      */
-    HTTPEvent(struct event_base* base, bool deleteWhenTriggered, const boost::function<void(void)>& handler);
+    HTTPEvent(struct event_base* base, bool deleteWhenTriggered, const std::function<void(void)>& handler);
     ~HTTPEvent();
 
     /** Trigger the event. If tv is 0, trigger it immediately. Otherwise trigger it after
@@ -141,7 +139,7 @@ public:
     void trigger(struct timeval* tv);
 
     bool deleteWhenTriggered;
-    boost::function<void(void)> handler;
+    std::function<void(void)> handler;
 private:
     struct event* ev;
 };

@@ -107,7 +107,6 @@ map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
-bool fDaemon = false;
 bool fServer = false;
 string strMiscWarning;
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
@@ -519,19 +518,20 @@ void ClearDatadirCache()
     pathCachedNetSpecific = boost::filesystem::path();
 }
 
-boost::filesystem::path GetConfigFile()
+boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+    boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
     return pathConfigFile;
 }
 
-void ReadConfigFile(map<string, string>& mapSettingsRet,
+void ReadConfigFile(const std::string& confPath,
+                    map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    boost::filesystem::ifstream streamConfig(GetConfigFile());
+    boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
         return; // No bitcoin.conf file is OK
 
@@ -601,19 +601,19 @@ bool TryCreateDirectory(const boost::filesystem::path& p)
     return false;
 }
 
-void FileCommit(FILE *fileout)
+void FileCommit(FILE *file)
 {
-    fflush(fileout); // harmless if redundantly called
+    fflush(file); // harmless if redundantly called
 #ifdef WIN32
-    HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(fileout));
+    HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     FlushFileBuffers(hFile);
 #else
     #if defined(__linux__) || defined(__NetBSD__)
-    fdatasync(fileno(fileout));
+    fdatasync(fileno(file));
     #elif defined(__APPLE__) && defined(F_FULLFSYNC)
-    fcntl(fileno(fileout), F_FULLFSYNC, 0);
+    fcntl(fileno(file), F_FULLFSYNC, 0);
     #else
-    fsync(fileno(fileout));
+    fsync(fileno(file));
     #endif
 #endif
 }
@@ -801,11 +801,10 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-    std::string strCopyrightHolders = strPrefix + _(COPYRIGHT_HOLDERS);
-    if (strCopyrightHolders.find("%s") != strCopyrightHolders.npos) {
-        strCopyrightHolders = strprintf(strCopyrightHolders, _(COPYRIGHT_HOLDERS_SUBSTITUTION));
-    }
-    if (strCopyrightHolders.find("Bitcoin Core developers") == strCopyrightHolders.npos) {
+    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+
+    // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
+    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;

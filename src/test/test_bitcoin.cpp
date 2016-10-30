@@ -22,9 +22,14 @@
 
 #include "test/testutil.h"
 
+#include <memory>
+
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
+
+std::unique_ptr<CConnman> g_connman;
+FastRandomContext insecure_rand_ctx(true);
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -43,6 +48,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 BasicTestingSetup::~BasicTestingSetup()
 {
         ECC_Stop();
+        g_connman.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
@@ -50,6 +56,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
+
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
@@ -60,9 +67,16 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex(chainparams);
+        {
+            CValidationState state;
+            bool ok = ActivateBestChain(state, chainparams);
+            BOOST_CHECK(ok);
+        }
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
+        g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
+        connman = g_connman.get();
         RegisterNodeSignals(GetNodeSignals());
 }
 
@@ -99,7 +113,7 @@ CBlock
 TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    CBlockTemplate *pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
@@ -116,7 +130,6 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     ProcessNewBlock(state, chainparams, NULL, &block, true, NULL);
 
     CBlock result = block;
-    delete pblocktemplate;
     return result;
 }
 

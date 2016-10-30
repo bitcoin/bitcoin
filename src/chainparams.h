@@ -67,8 +67,6 @@ public:
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    /** In the future use NetworkIDString() for RPC fields */
-    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
@@ -91,7 +89,6 @@ protected:
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
-    bool fTestnetToBeDeprecatedFieldRPC;
     CCheckpointData checkpointData;
 };
 
@@ -111,5 +108,10 @@ CChainParams& Params(const std::string& chain);
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
+
+/**
+ * Allows modifying the BIP9 regtest parameters.
+ */
+void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
 #endif // BITCOIN_CHAINPARAMS_H

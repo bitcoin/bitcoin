@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
     // Do a simple ShortTxIDs RT
     {
-        CBlockHeaderAndShortTxIDs shortIDs(block);
+        CBlockHeaderAndShortTxIDs shortIDs(block, true);
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << shortIDs;
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
         BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2].GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
-        std::list<CTransaction> removed;
-        pool.removeRecursive(block.vtx[2], removed);
+        std::vector<std::shared_ptr<const CTransaction>> removed;
+        pool.removeRecursive(block.vtx[2], &removed);
         BOOST_CHECK_EQUAL(removed.size(), 1);
 
         CBlock block2;
@@ -116,7 +116,7 @@ public:
         stream >> *this;
     }
     TestHeaderAndShortIDs(const CBlock& block) :
-        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block)) {}
+        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block, true)) {}
 
     uint64_t GetShortID(const uint256& txhash) const {
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
     // Test simple header round-trip with only coinbase
     {
-        CBlockHeaderAndShortTxIDs shortIDs(block);
+        CBlockHeaderAndShortTxIDs shortIDs(block, false);
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << shortIDs;
@@ -283,7 +283,6 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         std::vector<CTransaction> vtx_missing;
         BOOST_CHECK(partialBlock.FillBlock(block2, vtx_missing) == READ_STATUS_OK);
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
-        bool mutated;
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
         BOOST_CHECK(!mutated);
     }

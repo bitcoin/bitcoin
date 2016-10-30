@@ -6,7 +6,7 @@
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
-#include "netbase.h"
+#include "netaddress.h"
 #include "protocol.h"
 #include "random.h"
 #include "sync.h"
@@ -210,6 +210,9 @@ private:
 protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
+
+    //! Source of random numbers for randomization in inner loops
+    FastRandomContext insecure_rand;
 
     //! Find an entry.
     CAddrInfo* Find(const CNetAddr& addr, int *pnId = NULL);

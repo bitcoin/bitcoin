@@ -1,3 +1,7 @@
+# Copyright (c) 2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 LIBLEVELDB_INT = leveldb/libleveldb.a
 LIBMEMENV_INT  = leveldb/libmemenv.a
 
@@ -113,7 +117,6 @@ leveldb_libleveldb_a_SOURCES += leveldb/util/comparator.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
-leveldb_libleveldb_a_SOURCES += leveldb/util/env_win.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/filter_policy.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/hash.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/histogram.cc

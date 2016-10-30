@@ -274,7 +274,7 @@ static bool rest_block_notxdetails(HTTPRequest* req, const std::string& strURIPa
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
-UniValue getblockchaininfo(const UniValue& params, bool fHelp);
+UniValue getblockchaininfo(const JSONRPCRequest& request);
 
 static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
 {
@@ -285,8 +285,9 @@ static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
 
     switch (rf) {
     case RF_JSON: {
-        UniValue rpcParams(UniValue::VARR);
-        UniValue chainInfoObject = getblockchaininfo(rpcParams, false);
+        JSONRPCRequest jsonRequest;
+        jsonRequest.params = UniValue(UniValue::VARR);
+        UniValue chainInfoObject = getblockchaininfo(jsonRequest);
         string strJSON = chainInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -420,7 +421,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     // throw exception in case of a empty request
     std::string strRequestMutable = req->ReadBody();
     if (strRequestMutable.length() == 0 && uriParts.size() == 0)
-        return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+        return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
 
     bool fInputParsed = false;
     bool fCheckMemPool = false;
@@ -444,7 +445,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             std::string strOutput = uriParts[i].substr(uriParts[i].find("-")+1);
 
             if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
-                return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+                return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
 
             txid.SetHex(strTxid);
             vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
@@ -453,7 +454,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         if (vOutPoints.size() > 0)
             fInputParsed = true;
         else
-            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
     }
 
     switch (rf) {
@@ -469,7 +470,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             if (strRequestMutable.size() > 0)
             {
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
-                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Combination of URI scheme inputs and raw post data is not allowed");
+                    return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
 
                 CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
                 oss << strRequestMutable;
@@ -478,14 +479,14 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
             }
         } catch (const std::ios_base::failure& e) {
             // abort in case of unreadable binary data
-            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+            return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
         }
         break;
     }
 
     case RF_JSON: {
         if (!fInputParsed)
-            return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
         break;
     }
     default: {
@@ -495,7 +496,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
 
     // limit max outpoints
     if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
-        return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
 
     // check spentness and form a bitmap (as well as a JSON capable human-readable string representation)
     vector<unsigned char> bitmap;

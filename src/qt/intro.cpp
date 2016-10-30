@@ -63,9 +63,9 @@ private:
 
 #include "intro.moc"
 
-FreespaceChecker::FreespaceChecker(Intro *intro)
+FreespaceChecker::FreespaceChecker(Intro *_intro)
 {
-    this->intro = intro;
+    this->intro = _intro;
 }
 
 void FreespaceChecker::check()
@@ -165,20 +165,20 @@ QString Intro::getDefaultDataDirectory()
     return GUIUtil::boostPathToQString(GetDefaultDataDir());
 }
 
-void Intro::pickDataDirectory()
+bool Intro::pickDataDirectory()
 {
     namespace fs = boost::filesystem;
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
     if(!GetArg("-datadir", "").empty())
-        return;
+        return true;
     /* 1) Default data directory for operating system */
     QString dataDir = getDefaultDataDirectory();
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR))
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || GetBoolArg("-resetguisettings", false))
     {
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
@@ -190,7 +190,7 @@ void Intro::pickDataDirectory()
             if(!intro.exec())
             {
                 /* Cancel clicked */
-                exit(0);
+                return false;
             }
             dataDir = intro.getDataDirectory();
             try {
@@ -204,6 +204,7 @@ void Intro::pickDataDirectory()
         }
 
         settings.setValue("strDataDir", dataDir);
+        settings.setValue("fReset", false);
     }
     /* Only override -datadir if different from the default, to make it possible to
      * override -datadir in the bitcoin.conf file in the default data directory
@@ -211,6 +212,7 @@ void Intro::pickDataDirectory()
      */
     if(dataDir != getDefaultDataDirectory())
         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+    return true;
 }
 
 void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)

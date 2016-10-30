@@ -18,29 +18,20 @@
 
 using namespace std;
 
-UniValue
-createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
-{
-    UniValue result(UniValue::VARR);
-    result.push_back(nRequired);
-    UniValue addresses(UniValue::VARR);
-    if (address1) addresses.push_back(address1);
-    if (address2) addresses.push_back(address2);
-    result.push_back(addresses);
-    return result;
-}
-
 UniValue CallRPC(string args)
 {
     vector<string> vArgs;
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    UniValue params = RPCConvertValues(strMethod, vArgs);
+    JSONRPCRequest request;
+    request.strMethod = strMethod;
+    request.params = RPCConvertValues(strMethod, vArgs);
+    request.fHelp = false;
     BOOST_CHECK(tableRPC[strMethod]);
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
-        UniValue result = (*method)(params, false);
+        UniValue result = (*method)(request);
         return result;
     }
     catch (const UniValue& objError) {

@@ -27,10 +27,12 @@ struct BasicTestingSetup {
 /** Testing setup that configures a complete environment.
  * Included are data directory, coins database, script check threads setup.
  */
+class CConnman;
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
+    CConnman* connman;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();

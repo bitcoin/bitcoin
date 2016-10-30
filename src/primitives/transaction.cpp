@@ -100,7 +100,7 @@ CAmount CTransaction::GetValueOut() const
     {
         nValueOut += it->nValue;
         if (!MoneyRange(it->nValue) || !MoneyRange(nValueOut))
-            throw std::runtime_error("CTransaction::GetValueOut(): value out of range");
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
     return nValueOut;
 }
@@ -129,6 +129,11 @@ unsigned int CTransaction::CalculateModifiedSize(unsigned int nTxSize) const
             nTxSize -= offset;
     }
     return nTxSize;
+}
+
+unsigned int CTransaction::GetTotalSize() const
+{
+    return ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
 }
 
 std::string CTransaction::ToString() const

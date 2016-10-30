@@ -1,11 +1,3 @@
-Wallet Tools
----------------------
-
-### [SpendFrom](/contrib/spendfrom) ###
-
-Use the raw transactions API to send coins received on a particular
-address (or addresses).
-
 Repository Tools
 ---------------------
 
@@ -44,6 +36,9 @@ Scripts and notes for Mac builds.
 
 ### [RPM](/contrib/rpm) ###
 RPM spec file for building bitcoin-core on RPM based distributions
+
+### [Gitian-build](/contrib/gitian-build.sh) ###
+Script for running full gitian builds.
 
 Test and Verify Tools 
 ---------------------

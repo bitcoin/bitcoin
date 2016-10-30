@@ -22,39 +22,42 @@
 #include <QScrollBar>
 #include <QTextDocument>
 
-ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent) :
+ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ReceiveCoinsDialog),
     model(0),
-    platformStyle(platformStyle)
+    platformStyle(_platformStyle)
 {
     ui->setupUi(this);
 
-    if (!platformStyle->getImagesOnButtons()) {
+    if (!_platformStyle->getImagesOnButtons()) {
         ui->clearButton->setIcon(QIcon());
         ui->receiveButton->setIcon(QIcon());
         ui->showRequestButton->setIcon(QIcon());
         ui->removeRequestButton->setIcon(QIcon());
     } else {
-        ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-        ui->receiveButton->setIcon(platformStyle->SingleColorIcon(":/icons/receiving_addresses"));
-        ui->showRequestButton->setIcon(platformStyle->SingleColorIcon(":/icons/edit"));
-        ui->removeRequestButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+        ui->clearButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
+        ui->receiveButton->setIcon(_platformStyle->SingleColorIcon(":/icons/receiving_addresses"));
+        ui->showRequestButton->setIcon(_platformStyle->SingleColorIcon(":/icons/edit"));
+        ui->removeRequestButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
     }
 
     // context menu actions
+    QAction *copyURIAction = new QAction(tr("Copy URI"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyMessageAction = new QAction(tr("Copy message"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
 
     // context menu
     contextMenu = new QMenu();
+    contextMenu->addAction(copyURIAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyMessageAction);
     contextMenu->addAction(copyAmountAction);
 
     // context menu signals
     connect(ui->recentRequestsView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showMenu(QPoint)));
+    connect(copyURIAction, SIGNAL(triggered()), this, SLOT(copyURI()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyMessageAction, SIGNAL(triggered()), this, SLOT(copyMessage()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
@@ -62,21 +65,21 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidg
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 }
 
-void ReceiveCoinsDialog::setModel(WalletModel *model)
+void ReceiveCoinsDialog::setModel(WalletModel *_model)
 {
-    this->model = model;
+    this->model = _model;
 
-    if(model && model->getOptionsModel())
+    if(_model && _model->getOptionsModel())
     {
-        model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        _model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
+        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         updateDisplayUnit();
 
         QTableView* tableView = ui->recentRequestsView;
 
         tableView->verticalHeader()->hide();
         tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        tableView->setModel(model->getRecentRequestsTableModel());
+        tableView->setModel(_model->getRecentRequestsTableModel());
         tableView->setAlternatingRowColors(true);
         tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
@@ -228,28 +231,48 @@ void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
     this->QDialog::keyPressEvent(event);
 }
 
+QModelIndex ReceiveCoinsDialog::selectedRow()
+{
+    if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
+        return QModelIndex();
+    QModelIndexList selection = ui->recentRequestsView->selectionModel()->selectedRows();
+    if(selection.empty())
+        return QModelIndex();
+    // correct for selection mode ContiguousSelection
+    QModelIndex firstIndex = selection.at(0);
+    return firstIndex;
+}
+
 // copy column of selected row to clipboard
 void ReceiveCoinsDialog::copyColumnToClipboard(int column)
 {
-    if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
+    QModelIndex firstIndex = selectedRow();
+    if (!firstIndex.isValid()) {
         return;
-    QModelIndexList selection = ui->recentRequestsView->selectionModel()->selectedRows();
-    if(selection.empty())
-        return;
-    // correct for selection mode ContiguousSelection
-    QModelIndex firstIndex = selection.at(0);
+    }
     GUIUtil::setClipboard(model->getRecentRequestsTableModel()->data(firstIndex.child(firstIndex.row(), column), Qt::EditRole).toString());
 }
 
 // context menu
 void ReceiveCoinsDialog::showMenu(const QPoint &point)
 {
-    if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
+    if (!selectedRow().isValid()) {
         return;
-    QModelIndexList selection = ui->recentRequestsView->selectionModel()->selectedRows();
-    if(selection.empty())
-        return;
+    }
     contextMenu->exec(QCursor::pos());
+}
+
+// context menu action: copy URI
+void ReceiveCoinsDialog::copyURI()
+{
+    QModelIndex sel = selectedRow();
+    if (!sel.isValid()) {
+        return;
+    }
+
+    const RecentRequestsTableModel * const submodel = model->getRecentRequestsTableModel();
+    const QString uri = GUIUtil::formatBitcoinURI(submodel->entry(sel.row()).recipient);
+    GUIUtil::setClipboard(uri);
 }
 
 // context menu action: copy label

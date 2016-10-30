@@ -57,6 +57,9 @@ case $host in
 esac
 dnl Require C++11 compiler (no GNU extensions)
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
+dnl Check if -latomic is required for <std::atomic>
+CHECK_ATOMIC
+
 dnl Libtool init checks.
 LT_INIT([pic-only])
 
@@ -66,8 +69,8 @@ AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
-AC_PATH_PROG(JAVA, java)
-AC_PATH_PROGS([PYTHON], [python3 python2.7 python2 python])
+dnl Python 3.x is supported from 3.4 on (see https://github.com/bitcoin/bitcoin/issues/7893)
+AC_PATH_PROGS([PYTHON], [python3.6 python3.5 python3.4 python3 python2.7 python2 python])
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
@@ -112,16 +115,6 @@ AC_ARG_ENABLE(bench,
     AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
     [use_bench=$enableval],
     [use_bench=yes])
-
-AC_ARG_WITH([comparison-tool],
-    AS_HELP_STRING([--with-comparison-tool],[path to java comparison tool (requires --enable-tests)]),
-    [use_comparison_tool=$withval],
-    [use_comparison_tool=no])
-
-AC_ARG_ENABLE([comparison-tool-reorg-tests],
-    AS_HELP_STRING([--enable-comparison-tool-reorg-tests],[enable expensive reorg tests in the comparison tool (default no)]),
-    [use_comparison_tool_reorg_tests=$enableval],
-    [use_comparison_tool_reorg_tests=no])
 
 AC_ARG_ENABLE([extended-rpc-tests],
     AS_HELP_STRING([--enable-extended-rpc-tests],[enable expensive RPC tests when using lcov (default no)]),
@@ -177,6 +170,12 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=yes])
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
+
+AC_ARG_ENABLE(man,
+    [AS_HELP_STRING([--disable-man],
+                    [do not install man pages (default is to install)])],,
+    enable_man=yes)
+AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
 
 # Enable debug
 AC_ARG_ENABLE([debug],
@@ -366,8 +365,15 @@ case $host in
      TARGET_OS=linux
      LEVELDB_TARGET_FLAGS="-DOS_LINUX"
      ;;
+   *freebsd*)
+     LEVELDB_TARGET_FLAGS="-DOS_FREEBSD"
+     ;;
+   *openbsd*)
+     LEVELDB_TARGET_FLAGS="-DOS_OPENBSD"
+     ;;
    *)
      OTHER_OS=`echo ${host_os} | awk '{print toupper($0)}'`
+     AC_MSG_WARN([Guessing LevelDB OS as OS_${OTHER_OS}, please check whether this is correct, if not add an entry to configure.ac.])
      LEVELDB_TARGET_FLAGS="-DOS_${OTHER_OS}"
      ;;
 esac
@@ -382,19 +388,6 @@ if test x$use_pkgconfig = xyes; then
   ])
 fi
 
-if test x$use_comparison_tool != xno; then
-  AC_SUBST(JAVA_COMPARISON_TOOL, $use_comparison_tool)
-fi
-
-if test x$use_comparison_tool_reorg_tests != xno; then
-  if test x$use_comparison_tool = x; then
-    AC_MSG_ERROR("comparison tool reorg tests but comparison tool was not specified")
-  fi
-  AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 1)
-else
-  AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 0)
-fi
-
 if test x$use_extended_rpc_tests != xno; then
   AC_SUBST(EXTENDED_RPC_TESTS, -extended)
 fi
@@ -406,17 +399,11 @@ if test x$use_lcov = xyes; then
   if test x$GCOV = x; then
     AC_MSG_ERROR("lcov testing requested but gcov not found")
   fi
-  if test x$JAVA = x; then
-    AC_MSG_ERROR("lcov testing requested but java not found")
-  fi
   if test x$PYTHON = x; then
     AC_MSG_ERROR("lcov testing requested but python not found")
   fi
   if test x$GENHTML = x; then
     AC_MSG_ERROR("lcov testing requested but genhtml not found")
-  fi
-  if test x$use_comparison_tool = x; then
-    AC_MSG_ERROR("lcov testing requested but comparison tool was not specified")
   fi
   LCOV="$LCOV --gcov-tool=$GCOV"
   AX_CHECK_COMPILE_FLAG([--coverage],[CXXFLAGS="$CXXFLAGS --coverage"],
@@ -495,6 +482,7 @@ if test x$use_hardening != xno; then
 
   AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
   AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
+  AX_CHECK_LINK_FLAG([[-Wl,--high-entropy-va]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"])
   AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"])
   AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
 
@@ -520,6 +508,9 @@ AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE(HAVE_GETADDRINFO_A, 1, [Define
 AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE(HAVE_INET_PTON, 1, [Define this symbol if you have inet_pton])])
 
 AC_CHECK_DECLS([strnlen])
+
+# Check for daemon(3), unrelated to --with-daemon (although used by it)
+AC_CHECK_DECLS([daemon])
 
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
 		[#if HAVE_ENDIAN_H
@@ -598,8 +589,11 @@ fi
 
 if test x$use_boost = xyes; then
 
+dnl Minimum required Boost version
+define(MINIMUM_REQUIRED_BOOST, 1.47.0)
+
 dnl Check for boost libs
-AX_BOOST_BASE
+AX_BOOST_BASE([MINIMUM_REQUIRED_BOOST])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_PROGRAM_OPTIONS
@@ -816,6 +810,15 @@ else
     AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
   fi
 
+  if test "x$use_zmq" = "xyes"; then
+    dnl Assume libzmq was built for static linking
+    case $host in
+      *mingw*)
+        ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
+      ;;
+    esac
+  fi
+
   BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
   if test x$use_qr != xno; then
     BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
@@ -824,6 +827,12 @@ else
 fi
 
 dnl univalue check
+
+need_bundled_univalue=yes
+
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
+  need_bundled_univalue=no
+else
 
 if test x$system_univalue != xno ; then
   found_univalue=no
@@ -846,6 +855,7 @@ if test x$system_univalue != xno ; then
 
   if test x$found_univalue = xyes ; then
     system_univalue=yes
+    need_bundled_univalue=no
   elif test x$system_univalue = xyes ; then
     AC_MSG_ERROR([univalue not found])
   else
@@ -853,21 +863,16 @@ if test x$system_univalue != xno ; then
   fi
 fi
 
-if test x$system_univalue = xno ; then
+if test x$need_bundled_univalue = xyes ; then
   UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
   UNIVALUE_LIBS='univalue/libunivalue.la'
 fi
-AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$system_univalue = xno])
+
+fi
+
+AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$need_bundled_univalue = xyes])
 AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
-
-CXXFLAGS_TEMP="$CXXFLAGS"
-LIBS_TEMP="$LIBS"
-CXXFLAGS="$CXXFLAGS $SSL_CFLAGS $CRYPTO_CFLAGS"
-LIBS="$LIBS $SSL_LIBS $CRYPTO_LIBS"
-AC_CHECK_HEADER([openssl/ec.h],, AC_MSG_ERROR(OpenSSL ec header missing),)
-CXXFLAGS="$CXXFLAGS_TEMP"
-LIBS="$LIBS_TEMP"
 
 BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
@@ -1003,8 +1008,8 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_tests = xnonononono; then
-  AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui or --enable-tests])
+if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononono; then
+  AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
@@ -1017,8 +1022,6 @@ AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
-AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
-AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 
@@ -1067,7 +1070,7 @@ AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
-AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
+AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests_config.py],[chmod +x qa/pull-tester/tests_config.py])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
@@ -1096,7 +1099,7 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
-if test x$system_univalue = xno; then
+if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 

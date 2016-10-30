@@ -15,7 +15,9 @@
 #include "init.h"
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
+#include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
+#include "intro.h" 
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -42,6 +44,8 @@ void OptionsModel::Init(bool resetSettings)
 {
     if (resetSettings)
         Reset();
+
+    checkAndMigrate();
 
     QSettings settings;
 
@@ -96,6 +100,9 @@ void OptionsModel::Init(bool resetSettings)
     if (!SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
 
+    if (!settings.contains("strDataDir"))
+        settings.setValue("strDataDir", Intro::getDefaultDataDirectory());
+
     // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("bSpendZeroConfChange"))
@@ -148,8 +155,18 @@ void OptionsModel::Reset()
 {
     QSettings settings;
 
+    // Save the strDataDir setting
+    QString dataDir = Intro::getDefaultDataDirectory();
+    dataDir = settings.value("strDataDir", dataDir).toString();
+
     // Remove all entries from our QSettings object
     settings.clear();
+
+    // Set strDataDir
+    settings.setValue("strDataDir", dataDir);
+
+    // Set that this was reset
+    settings.setValue("fReset", true);
 
     // default setting for OptionsModel::StartAtStartup - disabled
     if (GUIUtil::GetStartOnSystemStartup())
@@ -428,4 +445,23 @@ bool OptionsModel::isRestartRequired()
 {
     QSettings settings;
     return settings.value("fRestartRequired", false).toBool();
+}
+
+void OptionsModel::checkAndMigrate()
+{
+    // Migration of default values
+    // Check if the QSettings container was already loaded with this client version
+    QSettings settings;
+    static const char strSettingsVersionKey[] = "nSettingsVersion";
+    int settingsVersion = settings.contains(strSettingsVersionKey) ? settings.value(strSettingsVersionKey).toInt() : 0;
+    if (settingsVersion < CLIENT_VERSION)
+    {
+        // -dbcache was bumped from 100 to 300 in 0.13
+        // see https://github.com/bitcoin/bitcoin/pull/8273
+        // force people to upgrade to the new value if they are using 100MB
+        if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
+            settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
+
+        settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
+    }
 }

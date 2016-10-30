@@ -40,6 +40,12 @@ would be changed to:
 
 ```// Copyright (c) 2009-2015 The Bitcoin Core developers```
 
+gen-manpages.sh
+===============
+
+A small script to automatically create manpages in ../../doc/man by running the release binaries with the -help option.
+This requires help2man which can be found at: https://www.gnu.org/software/help2man/
+
 git-subtree-check.sh
 ====================
 
@@ -51,8 +57,9 @@ maintained:
 * for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
 * for `src/leveldb`: https://github.com/bitcoin-core/leveldb.git (branch bitcoin-fork)
 * for `src/univalue`: https://github.com/bitcoin-core/univalue.git (branch master)
+* for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
 
-Usage: `git-subtree-check.sh DIR COMMIT`
+Usage: `git-subtree-check.sh DIR (COMMIT)`
 
 `COMMIT` may be omitted, in which case `HEAD` is used.
 

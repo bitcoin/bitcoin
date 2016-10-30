@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 # BlockStore: a helper class that keeps a map of blocks and implements
 #             helper functions for responding to getheaders and getdata,
 #             and for constructing a getheaders message
@@ -6,11 +9,11 @@
 
 from .mininode import *
 from io import BytesIO
-import dbm.ndbm
+import dbm.dumb as dbmd
 
 class BlockStore(object):
     def __init__(self, datadir):
-        self.blockDB = dbm.ndbm.open(datadir + "/blocks", 'c')
+        self.blockDB = dbmd.open(datadir + "/blocks", 'c')
         self.currentBlock = 0
         self.headers_map = dict()
 
@@ -120,7 +123,7 @@ class BlockStore(object):
 
 class TxStore(object):
     def __init__(self, datadir):
-        self.txDB = dbm.ndbm.open(datadir + "/transactions", 'c')
+        self.txDB = dbmd.open(datadir + "/transactions", 'c')
 
     def close(self):
         self.txDB.close()

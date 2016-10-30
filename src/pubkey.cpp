@@ -264,12 +264,12 @@ void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
 }
 
-bool CExtPubKey::Derive(CExtPubKey &out, unsigned int nChild) const {
+bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
     memcpy(&out.vchFingerprint[0], &id, 4);
-    out.nChild = nChild;
-    return pubkey.Derive(out.pubkey, out.chaincode, nChild, chaincode);
+    out.nChild = _nChild;
+    return pubkey.Derive(out.pubkey, out.chaincode, _nChild, chaincode);
 }
 
 /* static */ bool CPubKey::CheckLowS(const std::vector<unsigned char>& vchSig) {

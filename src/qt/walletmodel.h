@@ -38,8 +38,8 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
+        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -75,7 +75,6 @@ public:
         std::string sAuthenticatedMerchant = authenticatedMerchant.toStdString();
 
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(sAddress);
         READWRITE(sLabel);
         READWRITE(amount);
@@ -145,8 +144,8 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode status = OK):
-            status(status) {}
+        SendCoinsReturn(StatusCode _status = OK):
+            status(_status) {}
         StatusCode status;
     };
 
@@ -188,6 +187,7 @@ public:
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     bool havePrivKey(const CKeyID &address) const;
+    bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
@@ -202,6 +202,12 @@ public:
 
     bool transactionCanBeAbandoned(uint256 hash) const;
     bool abandonTransaction(uint256 hash) const;
+
+    static bool isWalletEnabled();
+
+    bool hdEnabled() const;
+
+    int getDefaultConfirmTarget() const;
 
 private:
     CWallet *wallet;

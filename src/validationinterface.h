@@ -13,6 +13,7 @@ class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
 class CBlockIndex;
+class CConnman;
 class CReserveScript;
 class CTransaction;
 class CValidationInterface;
@@ -27,17 +28,15 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn);
 void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
 void UnregisterAllValidationInterfaces();
-/** Push an updated transaction to all registered wallets */
-void SyncWithWallets(const CTransaction& tx, const CBlockIndex *pindex, const CBlock* pblock = NULL);
 
 class CValidationInterface {
 protected:
-    virtual void UpdatedBlockTip(const CBlockIndex *pindex) {}
-    virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, const CBlock *pblock) {}
+    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void UpdatedTransaction(const uint256 &hash) {}
     virtual void Inventory(const uint256 &hash) {}
-    virtual void ResendWalletTransactions(int64_t nBestBlockTime) {}
+    virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
     virtual void GetScriptForMining(boost::shared_ptr<CReserveScript>&) {};
     virtual void ResetRequestCount(const uint256 &hash) {};
@@ -48,9 +47,11 @@ protected:
 
 struct CMainSignals {
     /** Notifies listeners of updated block chain tip */
-    boost::signals2::signal<void (const CBlockIndex *)> UpdatedBlockTip;
+    boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> UpdatedBlockTip;
+    /** A posInBlock value for SyncTransaction which indicates the transaction was conflicted, disconnected, or not in a block */
+    static const int SYNC_TRANSACTION_NOT_IN_BLOCK = -1;
     /** Notifies listeners of updated transaction data (transaction, and optionally the block it is found in. */
-    boost::signals2::signal<void (const CTransaction &, const CBlockIndex *pindex, const CBlock *)> SyncTransaction;
+    boost::signals2::signal<void (const CTransaction &, const CBlockIndex *pindex, int posInBlock)> SyncTransaction;
     /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */
@@ -58,7 +59,7 @@ struct CMainSignals {
     /** Notifies listeners about an inventory item being seen on the network. */
     boost::signals2::signal<void (const uint256 &)> Inventory;
     /** Tells listeners to broadcast their data. */
-    boost::signals2::signal<void (int64_t nBestBlockTime)> Broadcast;
+    boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
     /** Notifies listeners of a block validation result */
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     /** Notifies listeners that a key for mining is required (coinbase) */

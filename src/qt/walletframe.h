@@ -19,6 +19,13 @@ QT_BEGIN_NAMESPACE
 class QStackedWidget;
 QT_END_NAMESPACE
 
+/**
+ * A container for embedding all wallet-related
+ * controls into BitcoinGUI. The purpose of this class is to allow future
+ * refinements of the wallet controls with minimal need for further
+ * modifications to BitcoinGUI, thus greatly simplifying merges while
+ * reducing the risk of breaking top-level stuff.
+ */
 class WalletFrame : public QFrame
 {
     Q_OBJECT
@@ -37,6 +44,10 @@ public:
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
+
+Q_SIGNALS:
+    /** Notify that the user has requested more information about the out-of-sync warning */
+    void requestedSyncWarningInfo();
 
 private:
     QStackedWidget *walletStack;
@@ -78,6 +89,8 @@ public Q_SLOTS:
     void usedSendingAddresses();
     /** Show used receiving addresses */
     void usedReceivingAddresses();
+    /** Pass on signal over requested out-of-sync-warning information */
+    void outOfSyncWarningClicked();
 };
 
 #endif // BITCOIN_QT_WALLETFRAME_H

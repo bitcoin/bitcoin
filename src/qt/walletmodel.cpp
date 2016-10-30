@@ -5,6 +5,7 @@
 #include "walletmodel.h"
 
 #include "addresstablemodel.h"
+#include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "paymentserver.h"
@@ -27,8 +28,8 @@
 
 #include <boost/foreach.hpp>
 
-WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
+WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
+    QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
@@ -328,7 +329,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if(!wallet->CommitTransaction(*newTx, *keyChange))
+        CValidationState state;
+        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;
@@ -531,10 +533,10 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     return UnlockContext(this, valid, was_locked);
 }
 
-WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock):
-        wallet(wallet),
-        valid(valid),
-        relock(relock)
+WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock):
+        wallet(_wallet),
+        valid(_valid),
+        relock(_relock)
 {
 }
 
@@ -561,6 +563,11 @@ bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 bool WalletModel::havePrivKey(const CKeyID &address) const
 {
     return wallet->HaveKey(address);
+}
+
+bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
+{
+    return wallet->GetKey(address, vchPrivKeyOut);
 }
 
 // returns a list of COutputs from COutPoints
@@ -682,4 +689,19 @@ bool WalletModel::abandonTransaction(uint256 hash) const
 {
     LOCK2(cs_main, wallet->cs_wallet);
     return wallet->AbandonTransaction(hash);
+}
+
+bool WalletModel::isWalletEnabled()
+{
+   return !GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
+}
+
+bool WalletModel::hdEnabled() const
+{
+    return wallet->IsHDEnabled();
+}
+
+int WalletModel::getDefaultConfirmTarget() const
+{
+    return nTxConfirmTarget;
 }

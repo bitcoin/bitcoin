@@ -31,7 +31,7 @@ libraries such as Qt are no longer being tested on XP.
 
 We do not have time nor resources to provide support for an OS that is
 end-of-life. From 0.13.0 on, Windows XP is no longer supported. Users are
-suggested to upgrade to a newer verion of Windows, or install an alternative OS
+suggested to upgrade to a newer version of Windows, or install an alternative OS
 that is supported.
 
 No attempt is made to prevent installing or running the software on Windows XP,
@@ -40,6 +40,14 @@ report issues about Windows XP to the issue tracker.
 
 Notable changes
 ===============
+
+Low-level RPC changes
+----------------------
+
+- `importprunedfunds` only accepts two required arguments. Some versions accept
+  an optional third arg, which was always ignored. Make sure to never pass more
+  than two arguments.
+
 
 0.14.0 Change log
 =================
@@ -50,6 +58,14 @@ the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
 ### RPC and REST
+
+UTXO set query (`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>/.../<txid>-<n>.<bin|hex|json>`) responses
+were changed to return status code HTTP_BAD_REQUEST (400) instead of HTTP_INTERNAL_SERVER_ERROR (500) when requests
+contain invalid parameters.
+
+The first boolean argument to `getaddednodeinfo` has been removed. This is an incompatible change.
+
+Call "getmininginfo" loses the "testnet" field in favor of the more generic "chain" (which has been present for years).
 
 ### Configuration and command-line options
 

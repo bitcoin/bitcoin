@@ -29,6 +29,7 @@ class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
+class ModalOverlay;
 
 class CWallet;
 
@@ -82,7 +83,8 @@ private:
     WalletFrame *walletFrame;
 
     UnitDisplayStatusBarControl *unitDisplayControl;
-    QLabel *labelEncryptionIcon;
+    QLabel *labelWalletEncryptionIcon;
+    QLabel *labelWalletHDStatusIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
@@ -117,6 +119,7 @@ private:
     Notificator *notificator;
     RPCConsole *rpcConsole;
     HelpMessageDialog *helpMessageDialog;
+    ModalOverlay *modalOverlay;
 
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
@@ -168,6 +171,12 @@ public Q_SLOTS:
        @see WalletModel::EncryptionStatus
     */
     void setEncryptionStatus(int status);
+
+    /** Set the hd-enabled status as shown in the UI.
+     @param[in] status            current hd enabled status
+     @see WalletModel::EncryptionStatus
+     */
+    void setHDStatus(int hdEnabled);
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
@@ -222,6 +231,8 @@ private Q_SLOTS:
     
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
+
+    void showModalOverlay();
 };
 
 class UnitDisplayStatusBarControl : public QLabel

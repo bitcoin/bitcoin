@@ -29,6 +29,7 @@
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <queue>
+#include <utility>
 
 using namespace std;
 
@@ -122,14 +123,14 @@ void BlockAssembler::resetBlock()
     blockFinished = false;
 }
 
-CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {
     resetBlock();
 
     pblocktemplate.reset(new CBlockTemplate());
 
     if(!pblocktemplate.get())
-        return NULL;
+        return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
     // Add dummy coinbase tx as first transaction
@@ -187,14 +188,14 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;
-    pblocktemplate->vTxSigOpsCost[0] = GetLegacySigOpCount(pblock->vtx[0]);
+    pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(pblock->vtx[0]);
 
     CValidationState state;
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
 
-    return pblocktemplate.release();
+    return std::move(pblocktemplate);
 }
 
 bool BlockAssembler::isStillDependent(CTxMemPool::txiter iter)

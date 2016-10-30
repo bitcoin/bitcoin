@@ -137,15 +137,15 @@ enum BlockStatus: uint32_t {
     BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, //! full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, //! undo data available in rev*.dat
+    BLOCK_HAVE_DATA          =    8, //!< full block available in blk*.dat
+    BLOCK_HAVE_UNDO          =   16, //!< undo data available in rev*.dat
     BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
-    BLOCK_FAILED_VALID       =   32, //! stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, //! descends from failed block
+    BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
+    BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
-    BLOCK_OPT_WITNESS       =   128, //! block data in blk*.data was received with a witness-enforcing client
+    BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -200,7 +200,7 @@ public:
     unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
-    uint32_t nSequenceId;
+    int32_t nSequenceId;
 
     void SetNull()
     {
@@ -459,6 +459,9 @@ public:
 
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
+
+    /** Find the most recent block with timestamp lower than the given. */
+    CBlockIndex* FindLatestBefore(int64_t nTime) const;
 };
 
 #endif // BITCOIN_CHAIN_H
