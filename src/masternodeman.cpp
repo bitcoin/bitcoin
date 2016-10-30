@@ -862,7 +862,8 @@ void CMasternodeMan::CheckSameAddr()
 
     // ban duplicates
     BOOST_FOREACH(CMasternode* pmn, vBan) {
-        pmn->nPoSeBanScore++;
+        LogPrintf("CMasternodeMan::CheckSameAddr -- increasing PoSe ban score for masternode %s\n", pmn->vin.prevout.ToStringShort());
+        pmn->IncreasePoSeBanScore();
     }
 }
 
@@ -892,7 +893,7 @@ bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<C
                 continue;
             }
             fFound = true;
-            pmn->nPoSeBanScore++;
+            pmn->IncreasePoSeBanScore();
         }
         return false;
     }
@@ -992,7 +993,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
                     // found it!
                     prealMasternode = &(*it);
                     if(!it->IsPoSeVerified()) {
-                            it->nPoSeBanScore--;
+                        it->DecreasePoSeBanScore();
                     }
                     netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-done");
 
@@ -1038,7 +1039,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
                     prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString());
         // increase ban score for everyone else
         BOOST_FOREACH(CMasternode* pmn, vpMasternodesToBan) {
-            pmn->nPoSeBanScore++;
+            pmn->IncreasePoSeBanScore();
             LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- increased PoSe ban score for %s addr %s, new score %d\n",
                         prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString(), pmn->nPoSeBanScore);
         }
@@ -1122,7 +1123,7 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
         }
 
         if(!pmn1->IsPoSeVerified()) {
-            pmn1->nPoSeBanScore--;
+            pmn1->DecreasePoSeBanScore();
         }
         mnv.Relay();
 
@@ -1133,7 +1134,7 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
         int nCount = 0;
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
             if(mn.addr != mnv.addr || mn.vin.prevout == mnv.vin1.prevout) continue;
-            mn.nPoSeBanScore++;
+            mn.IncreasePoSeBanScore();
             nCount++;
             LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- increased PoSe ban score for %s addr %s, new score %d\n",
                         mn.vin.prevout.ToStringShort(), mn.addr.ToString(), mn.nPoSeBanScore);

@@ -33,6 +33,7 @@ CMasternode::CMasternode() :
     nBlockLastPaid(0),
     nProtocolVersion(PROTOCOL_VERSION),
     nPoSeBanScore(0),
+    nPoSeBanHeight(0),
     fAllowMixingTx(true),
     fUnitTest(false)
 {}
@@ -54,6 +55,7 @@ CMasternode::CMasternode(CService addrNew, CTxIn vinNew, CPubKey pubKeyCollatera
     nBlockLastPaid(0),
     nProtocolVersion(nProtocolVersionIn),
     nPoSeBanScore(0),
+    nPoSeBanHeight(0),
     fAllowMixingTx(true),
     fUnitTest(false)
 {}
@@ -75,6 +77,7 @@ CMasternode::CMasternode(const CMasternode& other) :
     nBlockLastPaid(other.nBlockLastPaid),
     nProtocolVersion(other.nProtocolVersion),
     nPoSeBanScore(other.nPoSeBanScore),
+    nPoSeBanHeight(other.nPoSeBanHeight),
     fAllowMixingTx(other.fAllowMixingTx),
     fUnitTest(other.fUnitTest)
 {}
@@ -96,6 +99,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     nBlockLastPaid(0),
     nProtocolVersion(mnb.nProtocolVersion),
     nPoSeBanScore(0),
+    nPoSeBanHeight(0),
     fAllowMixingTx(true),
     fUnitTest(false)
 {}
@@ -113,6 +117,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     nProtocolVersion = mnb.nProtocolVersion;
     addr = mnb.addr;
     nPoSeBanScore = 0;
+    nPoSeBanHeight = 0;
     nTimeLastChecked = 0;
     nTimeLastWatchdogVote = mnb.sigTime;
     int nDos = 0;
@@ -173,6 +178,7 @@ void CMasternode::Check(bool fForce)
     if(!fForce && (GetTime() - nTimeLastChecked < MASTERNODE_CHECK_SECONDS)) return;
     nTimeLastChecked = GetTime();
 
+    int nHeight = 0;
     if(!fUnitTest) {
         TRY_LOCK(cs_main, lockMain);
         if(!lockMain) return;
@@ -185,30 +191,33 @@ void CMasternode::Check(bool fForce)
             LogPrint("masternode", "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", vin.prevout.ToStringShort());
             return;
         }
-    }
 
-                   // masternode doesn't meet payment protocol requirements ...
-    bool fRemove = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
-                   // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
-                   (pubKeyMasternode == activeMasternode.pubKeyMasternode && nProtocolVersion < PROTOCOL_VERSION);
+        nHeight = chainActive.Height();
+    }
 
     // keep old masternodes on start, give them a chance to receive an updated ping without removal/expiry
     if(!masternodeSync.IsMasternodeListSynced()) nTimeStart = GetTime();
     bool fWaitForPing = (GetTime() - nTimeStart < MASTERNODE_MIN_MNP_SECONDS);
 
     if(nActiveState == MASTERNODE_POSE_BAN) {
-        if(IsPingedWithin(MASTERNODE_POSE_BAN_SECONDS)) {
-            // Still alive? Good luck with that.
-            return;
-        } else {
-            // It's finally dead, good...
-            // or did we just start our node and it's too early to decide?
-            fRemove = !fWaitForPing;
-        }
+        if(nHeight < nPoSeBanHeight) return; // too early?
+        // Otherwise give it a chance to proceed further to do all the usual checks and to change its state.
+        // Masternode still will be on the edge and can be banned back easily if it keeps ignoring mnverify
+        // or connect attempts. Will require few mnverify messages to strengthen its position in mn list.
+        LogPrintf("CMasternode::Check -- Masternode %s is unbanned and back in list now\n", vin.prevout.ToStringShort());
+        DecreasePoSeBanScore();
     } else if(nPoSeBanScore >= MASTERNODE_POSE_BAN_MAX_SCORE) {
         nActiveState = MASTERNODE_POSE_BAN;
+        // ban for the whole payment cycle
+        nPoSeBanHeight = nHeight + mnodeman.size();
+        LogPrintf("CMasternode::Check -- Masternode %s is banned till block %d now\n", vin.prevout.ToStringShort(), nPoSeBanHeight);
         return;
     }
+
+                   // masternode doesn't meet payment protocol requirements ...
+    bool fRemove = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
+                   // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
+                   (pubKeyMasternode == activeMasternode.pubKeyMasternode && nProtocolVersion < PROTOCOL_VERSION);
 
     if(fRemove) {
         // it should be removed from the list

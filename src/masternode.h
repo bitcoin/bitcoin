@@ -21,7 +21,6 @@ static const int MASTERNODE_REMOVAL_SECONDS         = 75 * 60;
 static const int MASTERNODE_CHECK_SECONDS           = 5;
 static const int MASTERNODE_WATCHDOG_MAX_SECONDS    = 2 * 60 * 60;
 
-static const int MASTERNODE_POSE_BAN_SECONDS        = 24 * 60 * 60;
 static const int MASTERNODE_POSE_BAN_MAX_SCORE      = 5;
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
@@ -165,6 +164,7 @@ public:
     int nBlockLastPaid;
     int nProtocolVersion;
     int nPoSeBanScore;
+    int nPoSeBanHeight;
     bool fAllowMixingTx;
     bool fUnitTest;
 
@@ -197,6 +197,7 @@ public:
         READWRITE(nBlockLastPaid);
         READWRITE(nProtocolVersion);
         READWRITE(nPoSeBanScore);
+        READWRITE(nPoSeBanHeight);
         READWRITE(fAllowMixingTx);
         READWRITE(fUnitTest);
         READWRITE(mapGovernanceObjectsVotedOn);
@@ -225,6 +226,7 @@ public:
         swap(first.nBlockLastPaid, second.nBlockLastPaid);
         swap(first.nProtocolVersion, second.nProtocolVersion);
         swap(first.nPoSeBanScore, second.nPoSeBanScore);
+        swap(first.nPoSeBanHeight, second.nPoSeBanHeight);
         swap(first.fAllowMixingTx, second.fAllowMixingTx);
         swap(first.fUnitTest, second.fUnitTest);
         swap(first.mapGovernanceObjectsVotedOn, second.mapGovernanceObjectsVotedOn);
@@ -257,6 +259,9 @@ public:
     bool IsWatchdogExpired() { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
 
     bool IsValidNetAddr();
+
+    void IncreasePoSeBanScore() { if(nPoSeBanScore < MASTERNODE_POSE_BAN_MAX_SCORE) nPoSeBanScore++; }
+    void DecreasePoSeBanScore() { if(nPoSeBanScore > -MASTERNODE_POSE_BAN_MAX_SCORE) nPoSeBanScore--; }
 
     masternode_info_t GetInfo();
 
