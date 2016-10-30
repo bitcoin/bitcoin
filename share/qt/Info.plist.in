@@ -38,7 +38,7 @@
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>io.dashpay.Dash-Qt</string>
+  <string>org.dash.Dash-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
