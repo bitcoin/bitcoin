@@ -211,10 +211,9 @@ void CGovernanceTriggerManager::CleanAndRemove()
                 break;
             case SEEN_OBJECT_IS_VALID:
                 {
-                    // Rough approximation: 30 days per month * 576 blocks per day
-                    static const int nMonthlyBlocks = 30*576;
                     int nTriggerBlock = pSuperblock->GetBlockStart();
-                    int nExpirationBlock = nTriggerBlock + nMonthlyBlocks;
+                    // Rough approximation: a cycle of superblock ++
+                    int nExpirationBlock = nTriggerBlock + Params().GetConsensus().nSuperblockCycle + GOVERNANCE_FEE_CONFIRMATIONS; 
                     if(governance.GetCachedBlockHeight() > nExpirationBlock) {
                         remove = true;
                         CGovernanceObject* pgovobj = pSuperblock->GetGovernanceObject();
