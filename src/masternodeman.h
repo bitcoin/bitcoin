@@ -49,6 +49,8 @@ private:
 
     int64_t nLastWatchdogVoteTime;
 
+    friend class CMasternodeSync;
+
 public:
     // Keep track of all broadcasts I've seen
     std::map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;

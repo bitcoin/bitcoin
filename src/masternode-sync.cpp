@@ -210,8 +210,7 @@ void CMasternodeSync::ProcessTick()
         return;
     }
 
-    TRY_LOCK(cs_vNodes, lockRecv);
-    if(!lockRecv) return;
+    LOCK2(mnodeman.cs, cs_vNodes);
 
     if(nRequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL ||
         (nRequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS && IsBlockchainSynced()))

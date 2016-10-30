@@ -608,8 +608,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if(fLiteMode) return; // disable all Dash specific functionality
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    LOCK(cs);
-
     if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
 
         CMasternodeBroadcast mnb;
@@ -633,6 +631,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> mnp;
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s\n", mnp.vin.prevout.ToStringShort());
+
+        LOCK(cs);
 
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
@@ -667,6 +667,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> vin;
 
         LogPrint("masternode", "DSEG -- Masternode list, masternode=%s\n", vin.prevout.ToStringShort());
+
+        LOCK(cs);
 
         if(vin == CTxIn()) { //only should ask for this once
             //local network
