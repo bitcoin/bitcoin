@@ -215,21 +215,24 @@ border: 1px solid #f2f2f2;
 QComboBox
 {
 padding: 0px 0px 0px 0px;
-background-color: #ffffff;
-selection-background-color: #ffffff;
+background-color: #f2f2f2;
+selection-background-color: #f2f2f2;
+selection-color: #555555;
 color: #a1a1a1;
 }
 
 QComboBox QAbstractItemView
 {
-selection-background-color: #ffffff;
-background-color: #ffffff;
+selection-background-color: #f2f2f2;
+background-color: #f2f2f2;
 color: #a1a1a1;
 }
 
+
+
 QComboBox::drop-down
 {
-background-color: #ffffff;
+background-color: #f2f2f2;
 color: #a1a1a1;
 subcontrol-origin: padding;
 subcontrol-position: top right;
@@ -247,7 +250,7 @@ image: url(':css/down_arrow');
 
 QAbstractSpinBox
 {
-background: #ffffff;
+background: #f2f2f2;
 color: #555555;
 }
 
@@ -260,6 +263,21 @@ border: 0;
 outline: 0;
 min-width: 20px;
 max-width: 20px;
+min-height: 20px;
+max-height: 20px;
+}
+
+QStackedWidget#SendCoinsEntry .QToolButton:hover 
+{
+background-color:#9c8b46;
+padding-left:5px;
+padding-right:5px;
+border: 0;
+outline: 0;
+min-width: 20px;
+max-width: 20px;
+min-height: 20px;
+max-height: 20px;
 }
 
 #spacer1
@@ -323,3 +341,145 @@ background-color: #f2f2f2;
 min-height: 30px;
 max-height: 30px;
 }
+
+/* Send Page items */
+#frameCoinControl
+{
+border: 1px solid #f2f2f2;
+}
+
+#frameFee
+{
+border: 1px solid #f2f2f2;
+}
+
+#frameFeeSelection
+{
+border: 1px solid #f2f2f2;
+}
+
+#payTo
+{
+color: #555555;
+background-color: #f2f2f2;
+}
+
+#addAsLabel
+{
+color: #555555;
+background-color: #f2f2f2;
+}
+
+#lineEditCoinControlChange
+{
+color: #555555;
+background-color: #f2f2f2;
+}
+
+#labelCoinControlFeatures
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#labelCoinControlAutomaticallySelected
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#checkBoxCoinControlChange
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#labelFeeHeadline
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#checkInstantX
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#payToLabel
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#labellLabel
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#amountLabel
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#labelSPBalance
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+
+
+/*
+#addressBookButton
+{
+border: 1px solid #9c8b46;
+color: #a1a1a1;
+background-color: #f2f2f2;
+padding: 2px;
+}
+
+#addressBookButton:hover
+{
+border: 1px solid #9c8b46;
+color: #555555;
+background-color: #9c8b46;
+padding: 2px;
+}
+
+#deleteButton
+{
+border: 1px solid #9c8b46;
+color: #a1a1a1;
+background-color: #f2f2f2;
+padding: 2px;
+}
+
+#deleteButton:hover
+{
+border: 1px solid #9c8b46;
+color: #555555;
+background-color: #9c8b46;
+padding: 2px;
+}
+
+#pasteButton
+{
+border: 1px solid #9c8b46;
+color: #a1a1a1;
+background-color: #f2f2f2;
+padding: 2px;
+}
+
+#pasteButton:hover
+{
+border: 1px solid #9c8b46;
+color: #555555;
+background-color: #9c8b46;
+padding: 2px;
+}
+
+
+*/
