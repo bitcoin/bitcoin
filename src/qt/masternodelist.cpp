@@ -60,6 +60,8 @@ MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *pare
     connect(timer, SIGNAL(timeout()), this, SLOT(updateMyNodeList()));
     timer->start(1000);
 
+    fFilterUpdated = false;
+    nTimeFilterUpdated = GetTime();
     updateNodeList();
 }
 
