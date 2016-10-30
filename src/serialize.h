@@ -448,7 +448,7 @@ class LimitedString
 protected:
     std::string& string;
 public:
-    LimitedString(std::string& string) : string(string) {}
+    LimitedString(std::string& _string) : string(_string) {}
 
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -831,9 +831,9 @@ protected:
 public:
     CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
 
-    void write(const char *psz, size_t nSize)
+    void write(const char *psz, size_t _nSize)
     {
-        this->nSize += nSize;
+        this->nSize += _nSize;
     }
 
     /** Pretend _nSize bytes are written, without specifying them. */
