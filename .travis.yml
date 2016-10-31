@@ -72,7 +72,7 @@ matrix:
             - wine
             - bc
     - compiler: ": dashd"
-      env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER" PYZMQ=true
+      env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports" CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG" PYZMQ=true
       addons:
         apt:
           packages:
