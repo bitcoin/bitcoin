@@ -533,6 +533,12 @@ static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
 /** Transaction conflicts with a transaction already known */
 static const unsigned int REJECT_CONFLICT = 0x102;
 
+/** Dump the mempool to disk. */
+void DumpMempool();
+
+/** Load the mempool from disk. */
+bool LoadMempool();
+
 // The following things handle network-processing logic
 // (and should be moved to a separate file)
 
