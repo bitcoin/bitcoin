@@ -1125,12 +1125,13 @@ int CGovernanceManager::CountMatchingVotes(CGovernanceObject& govobj, vote_signa
     LOCK(cs);
     int nCount = 0;
 
+    uint256 hash = govobj.GetHash();
     std::map<uint256, CGovernanceVote>::iterator it = mapVotesByType.begin();
     while(it != mapVotesByType.end())  {
         if(it->second.IsValid() &&
            it->second.GetSignal() == eVoteSignalIn &&
            it->second.GetOutcome() == eVoteOutcomeIn &&
-           it->second.GetParentHash() == govobj.GetHash()) {
+           it->second.GetParentHash() == hash) {
             ++nCount;
         }
         ++it;
