@@ -167,7 +167,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         // check its own merkle root and cache that check.
         if (state.CorruptionPossible())
             return READ_STATUS_FAILED; // Possible Short ID collision
-        return READ_STATUS_INVALID;
+        return READ_STATUS_CHECKBLOCK_FAILED;
     }
 
     LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool and %lu txn requested\n", header.GetHash().ToString(), prefilled_count, mempool_count, vtx_missing.size());
