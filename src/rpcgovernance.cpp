@@ -154,7 +154,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         bool mnFound = mnodeman.Get(activeMasternode.vin, mn);
 
         DBG( cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
-             << ", vin = " << vin.prevout.ToStringShort()
+             << ", vin = " << activeMasternode.vin.prevout.ToStringShort()
              << ", params.size() = " << params.size()
              << ", mnFound = " << mnFound << endl; );
 

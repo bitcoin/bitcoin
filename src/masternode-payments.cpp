@@ -808,7 +808,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode)
             // Let's see why this failed
             BOOST_FOREACH(CMasternodePayee& payee, it->second.vecPayees) {
                 CTxDestination address1;
-                ExtractDestination(payee.scriptPubKey, address1);
+                ExtractDestination(payee.GetPayee(), address1);
                 CBitcoinAddress address2(address1);
                 printf("payee %s votes %d\n", address2.ToString().c_str(), payee.GetVoteCount());
             }
