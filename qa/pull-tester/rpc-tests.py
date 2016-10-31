@@ -256,7 +256,7 @@ def runtests():
     if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
         rpcTestDir = RPC_TESTS_DIR
         buildDir   = BUILDDIR
-        run_extended = option_passed('extended') or run_only_extended
+        run_extended = '-extended' in opts
         cov_flag = coverage.flag if coverage else ''
         flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
 
