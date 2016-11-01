@@ -3,7 +3,7 @@ Reduce Traffic
 
 Some node operators need to deal with bandwidth caps imposed by their ISPs.
 
-By default, bitcoin-core allows up to 125 connections to different peers, 8 of
+By default, litecoin-core allows up to 125 connections to different peers, 8 of
 which are outbound. You can therefore, have at most 117 inbound connections.
 
 The default settings can result in relatively significant traffic consumption.
@@ -33,5 +33,5 @@ blocks and transactions to fewer nodes.
 ## 3. Reduce maximum connections (`-maxconnections=<num>`)
 
 Reducing the maximum connected nodes to a minimum could be desirable if traffic
-limits are tiny. Keep in mind that bitcoin's trustless model works best if you are
+limits are tiny. Keep in mind that litecoin's trustless model works best if you are
 connected to a handful of nodes.
