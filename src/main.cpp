@@ -59,14 +59,15 @@ using namespace std;
  * Global state
  */
 
-CCriticalSection cs_main;
+// BU variables moved to globals.cpp
+// BU moved CCriticalSection cs_main;
 
-BlockMap mapBlockIndex;
-CChain chainActive;
+// BU moved BlockMap mapBlockIndex;
+// BU movedCChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
-CWaitableCriticalSection csBestBlock;
-CConditionVariable cvBlockChange;
+// BU moved CWaitableCriticalSection csBestBlock;
+// BU moved CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
