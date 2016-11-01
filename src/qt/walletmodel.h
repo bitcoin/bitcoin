@@ -153,9 +153,13 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode _status = OK):
-            status(_status) {}
+        SendCoinsReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
+            : status(_status),
+              reasonCommitFailed(_reasonCommitFailed)
+        {
+        }
         StatusCode status;
+        QString reasonCommitFailed;
     };
 
     // prepare transaction for getting txfee before sending coins
