@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/litecoin
+src/litecoind
+src/litecoin-cli
+src/litecoin-tx
+src/test/test_litecoin
+src/test/test_litecoin_fuzzy
+src/qt/test/test_litecoin-qt
 
 # autoreconf
 Makefile.in
@@ -80,17 +80,16 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+litecoin-qt
+litecoin-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+litecoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
-
 # Mac specific
 .DS_Store
 build
@@ -99,7 +98,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_litecoin.coverage/
 total.coverage/
 coverage_percent.txt
 

@@ -39,7 +39,7 @@ def main():
         password = generate_password()
     password_hmac = password_to_hmac(salt, password)
 
-    print('String to be appended to bitcoin.conf:')
+    print('String to be appended to litecoin.conf:')
     print('rpcauth={0}:{1}${2}'.format(username, salt, password_hmac))
     print('Your password:\n{0}'.format(password))
 

@@ -1,5 +1,5 @@
-Building Bitcoin
+Building Litecoin
 ================
 
 See doc/build-*.md for instructions on building the various
-elements of the Bitcoin Core reference implementation of Bitcoin.
+elements of the Litecoin Core reference implementation of Litecoin.

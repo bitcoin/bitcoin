@@ -16,14 +16,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoind (Bitcoin node with a JSON-RPC server)"
+            VALUE "CompanyName",        "Litecoin"
+            VALUE "FileDescription",    "litecoind (Litecoin node with a JSON-RPC server)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcoind"
+            VALUE "InternalName",       "litecoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoind.exe"
-            VALUE "ProductName",        "bitcoind"
+            VALUE "OriginalFilename",   "litecoind.exe"
+            VALUE "ProductName",        "litecoind"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END
