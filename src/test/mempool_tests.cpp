@@ -546,7 +546,6 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     pool.addUnchecked(tx7.GetHash(), entry.Fee(9000LL).FromTx(tx7, &pool));
 
     std::vector<CTransaction> vtx;
-    std::vector<std::shared_ptr<const CTransaction>> conflicts;
     SetMockTime(42);
     SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
