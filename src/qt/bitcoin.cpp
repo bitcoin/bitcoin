@@ -573,7 +573,7 @@ int main(int argc, char *argv[])
     {
         HelpMessageDialog help(NULL, mapArgs.count("-version"));
         help.showOrPrint();
-        return 1;
+        return 0;
     }
 
     /// 5. Now that settings and translations are available, ask user for data directory
@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
     } catch (const std::exception& e) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
-        return false;
+        return 1;
     }
 
     /// 7. Determine network (and switch to network specific options)
