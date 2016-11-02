@@ -276,6 +276,11 @@ LockedPool::~LockedPool()
 void* LockedPool::alloc(size_t size)
 {
     std::lock_guard<std::mutex> lock(mutex);
+
+    // Don't handle impossible sizes
+    if (size == 0 || size > ARENA_SIZE)
+        return nullptr;
+
     // Try allocating from each current arena
     for (auto &arena: arenas) {
         void *addr = arena.alloc(size);
