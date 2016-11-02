@@ -5472,15 +5472,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     else if (strCommand == NetMsgType::GETHEADERS)
     {
+        const CChainParams& chainParams = Params();
+        if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints())) {
+            LogPrintf("net", "Ignoring getheaders from peer=%d because we have not yet passed all checkpoints\n", pfrom->id);
+            return true;
+        }
+
         CBlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
         LOCK(cs_main);
-        if (IsInitialBlockDownload() && !pfrom->fWhitelisted) {
-            LogPrint("net", "Ignoring getheaders from peer=%d because node is in initial block download\n", pfrom->id);
-            return true;
-        }
 
         CNodeState *nodestate = State(pfrom->GetId());
         CBlockIndex* pindex = NULL;
