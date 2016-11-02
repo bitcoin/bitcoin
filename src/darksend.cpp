@@ -636,9 +636,9 @@ void CDarksendPool::ChargeFees()
     if(!fMasterNode) return;
 
     //we don't need to charge collateral for every offence.
-    int nOffences = 0;
-    int r = insecure_rand()%100;
-    if(r > 33) return;
+    if(GetInsecureRand(100) > 33) return;
+
+    std::vector<CTransaction> vecOffendersCollaterals;
 
     if(nState == POOL_STATE_ACCEPTING_ENTRIES) {
         BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
@@ -649,8 +649,8 @@ void CDarksendPool::ChargeFees()
 
             // This queue entry didn't send us the promised transaction
             if(!fFound) {
-                LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't send transaction). Found offence.\n");
-                nOffences++;
+                LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't send transaction), found offence\n");
+                vecOffendersCollaterals.push_back(txCollateral);
             }
         }
     }
@@ -660,69 +660,36 @@ void CDarksendPool::ChargeFees()
         BOOST_FOREACH(const CDarkSendEntry entry, vecEntries) {
             BOOST_FOREACH(const CTxDSIn txdsin, entry.vecTxDSIn) {
                 if(!txdsin.fHasSig) {
-                    LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't sign). Found offence\n");
-                    nOffences++;
+                    LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't sign), found offence\n");
+                    vecOffendersCollaterals.push_back(entry.txCollateral);
                 }
             }
         }
     }
 
-    //pick random client to charge
-    r = insecure_rand()%100;
-    int nTarget = 0;
+    // no offences found
+    if(vecOffendersCollaterals.empty()) return;
 
-    //mostly offending?
-    if(nOffences >= Params().PoolMaxTransactions() - 1 && r > 33) return;
+    //mostly offending? Charge sometimes
+    if((int)vecOffendersCollaterals.size() >= Params().PoolMaxTransactions() - 1 && GetInsecureRand(100) > 33) return;
 
     //everyone is an offender? That's not right
-    if(nOffences >= Params().PoolMaxTransactions()) return;
+    if((int)vecOffendersCollaterals.size() >= Params().PoolMaxTransactions()) return;
 
     //charge one of the offenders randomly
-    if(nOffences > 1) nTarget = 50;
+    std::random_shuffle(vecOffendersCollaterals.begin(), vecOffendersCollaterals.end());
 
-    if(nState == POOL_STATE_ACCEPTING_ENTRIES) {
-        BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
-            bool fFound = false;
-            BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries)
-                if(entry.txCollateral == txCollateral)
-                    fFound = true;
+    if(nState == POOL_STATE_ACCEPTING_ENTRIES || nState == POOL_STATE_SIGNING) {
+        LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
+                (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0].ToString());
 
-            // This queue entry didn't send us the promised transaction
-            if(!fFound && r > nTarget) {
-                LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't send transaction). charging fees.\n");
-
-                CWalletTx wtxCollateral = CWalletTx(pwalletMain, txCollateral);
-
-                // Broadcast
-                // This must not fail. The transaction has already been signed and recorded.
-                if(!wtxCollateral.AcceptToMemoryPool(true)) {
-                    LogPrintf("CDarksendPool::ChargeFees -- Error: Transaction not valid\n");
-                    return;
-                }
-                wtxCollateral.RelayWalletTransaction();
-                return;
-            }
-        }
-    }
-
-    if(nState == POOL_STATE_SIGNING) {
-        // who didn't sign?
-        BOOST_FOREACH(const CDarkSendEntry& entry, vecEntries) {
-            BOOST_FOREACH(const CTxDSIn& txdsin, entry.vecTxDSIn) {
-                if(!txdsin.fHasSig && r > nTarget) {
-                    LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't sign). charging fees.\n");
-
-                    CWalletTx wtxCollateral = CWalletTx(pwalletMain, entry.txCollateral);
-
-                    // Broadcast
-                    if(!wtxCollateral.AcceptToMemoryPool(false)) {
-                        // This must not fail. The transaction has already been signed and recorded.
-                        LogPrintf("CDarksendPool::ChargeFees -- Error: Transaction not valid\n");
-                    }
-                    wtxCollateral.RelayWalletTransaction();
-                    return;
-                }
-            }
+        CValidationState state;
+        bool fMissingInputs;
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, true)) {
+            // should never really happen
+            LogPrintf("CDarksendPool::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            RelayTransaction(vecOffendersCollaterals[0]);
         }
     }
 }
@@ -744,22 +711,19 @@ void CDarksendPool::ChargeRandomFees()
     if(!fMasterNode) return;
 
     BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
-        int r = insecure_rand()%100;
 
-        if(r > 10) return;
+        if(GetInsecureRand(100) > 10) return;
 
-        LogPrintf("CDarksendPool::ChargeRandomFees -- charging random fees, collateral, txCollateral=%s", txCollateral.ToString());
+        LogPrintf("CDarksendPool::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral.ToString());
 
-        CWalletTx wtxCollateral = CWalletTx(pwalletMain, txCollateral);
-
-        // This must not fail. The transaction has already been signed and recorded.
-        if(!wtxCollateral.AcceptToMemoryPool(true)) {
-            LogPrintf("CDarksendPool::ChargeRandomFees -- Error: Transaction not valid, txCollateral=%s", txCollateral.ToString());
-            return;
+        CValidationState state;
+        bool fMissingInputs;
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, &fMissingInputs, false, true)) {
+            // should never really happen
+            LogPrintf("CDarksendPool::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
+        } else {
+            RelayTransaction(txCollateral);
         }
-
-        // Broadcast
-        wtxCollateral.RelayWalletTransaction();
     }
 }
 
