@@ -3549,6 +3549,16 @@ bool CWallet::InitLoadWallet()
     return true;
 }
 
+void CWallet::postInitProcess(boost::thread_group& threadGroup)
+{
+    // Add wallet transactions that aren't already in a block to mempool
+    // Do this here as mempool requires genesis block to be loaded
+    ReacceptWalletTransactions();
+
+    // Run a thread to flush wallet periodically
+    threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(this->strWalletFile)));
+}
+
 bool CWallet::ParameterInteraction()
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET))
