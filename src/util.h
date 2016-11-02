@@ -30,6 +30,7 @@
 #include <boost/thread/exceptions.hpp>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
+static const bool DEFAULT_LOGTIMEMILLIS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 
@@ -50,6 +51,7 @@ extern bool fServer;
 extern std::string strMiscWarning;
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
+extern bool fLogTimeMillis;
 extern bool fLogIPs;
 extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;

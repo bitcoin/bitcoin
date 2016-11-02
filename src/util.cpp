@@ -111,6 +111,7 @@ bool fServer = false;
 string strMiscWarning;
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
 bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
+bool fLogTimeMillis = DEFAULT_LOGTIMEMILLIS;
 bool fLogIPs = DEFAULT_LOGIPS;
 std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
@@ -271,6 +272,8 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
         strStamped = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTimeMicros/1000000);
         if (fLogTimeMicros)
             strStamped += strprintf(".%06d", nTimeMicros%1000000);
+        else if (fLogTimeMillis)
+            strStamped += strprintf(".%03d", (nTimeMicros/1000)%1000);
         strStamped += ' ' + str;
     } else
         strStamped = str;
