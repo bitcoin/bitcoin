@@ -305,7 +305,7 @@ Clone the git repositories for bitcoin and Gitian.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/bitcoin/bitcoin
+git clone https://github.com/BitcoinUnlimited/BitcoinUnlimited
 ```
 
 Setting up the Gitian image
@@ -360,7 +360,7 @@ Output from `gbuild` will look something like
     remote: Total 57959 (delta 0), reused 0 (delta 0), pack-reused 57958
     Receiving objects: 100% (57959/57959), 53.76 MiB | 484.00 KiB/s, done.
     Resolving deltas: 100% (41590/41590), done.
-    From https://github.com/bitcoin/bitcoin
+    From https://github.com/BitcoinUnlimited/BitcoinUnlimited
     ... (new tags, new branch etc)
     --- Building for precise amd64 ---
     Stopping target if it is up
@@ -436,7 +436,7 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 ```bash
 
 cd /some/root/path/
-git clone https://github.com/bitcoin/bitcoin-detached-sigs.git
+git clone https://github.com/BitcoinUnlimited/BitcoinUnlimited-detached-sigs.git
 
 BTCPATH=/some/root/path/bitcoin.git
 SIGPATH=/some/root/path/bitcoin-detached-sigs.git
