@@ -76,7 +76,7 @@ If that doesn't work, you can install all boost development packages with:
 BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 You can add the repository and install using the following commands:
 
-    sudo add-apt-repository ppa:bitcoin/bitcoin
+    sudo add-apt-repository ppa:bitcoin-unlimited/bu-ppa
     sudo apt-get update
     sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
