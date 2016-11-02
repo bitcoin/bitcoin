@@ -337,7 +337,6 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(IsStandardTx(t, reason));
 
     // Check dust with default relay fee:
-    minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
     CAmount nDustThreshold = 182 * minRelayTxFee.GetFeePerK()/1000 * 3;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
     // dust:
