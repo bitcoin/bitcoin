@@ -172,9 +172,6 @@ public:
         READWRITE(vchSig);
     }
 
-    bool GetAddress(CService &addrRet);
-    bool GetProtocolVersion(int &nProtocolVersionRet);
-
     /** Sign this mixing transaction
      *  \return true if all conditions are met:
      *     1) we have an active Masternode,
@@ -184,7 +181,7 @@ public:
      */
     bool Sign();
     /// Check if we have a valid Masternode address
-    bool CheckSignature();
+    bool CheckSignature(const CPubKey& pubKeyMasternode);
 
     bool Relay();
 
@@ -233,7 +230,7 @@ public:
     }
 
     bool Sign();
-    bool CheckSignature();
+    bool CheckSignature(const CPubKey& pubKeyMasternode);
 };
 
 /** Helper object for signing and checking signatures
@@ -317,7 +314,7 @@ private:
     std::vector<COutPoint> vecOutPointLocked;
     // Mixing uses collateral transactions to trust parties entering the pool
     // to behave honestly. If they don't it takes their money.
-    std::vector<CTransaction> vecSessionCollateral;
+    std::vector<CTransaction> vecSessionCollaterals;
     std::vector<CDarkSendEntry> vecEntries; // Masternode/clients entries
 
     PoolState nState; // should be one of the POOL_STATE_XXX values
@@ -331,7 +328,7 @@ private:
     int nSessionUsers; //N Users have said they'll join
     bool fSessionFoundMasternode; //If we've found a compatible Masternode
 
-    unsigned int nEntriesCount;
+    int nEntriesCount;
     bool fLastEntryAccepted;
 
     std::string strLastMessage;
@@ -355,7 +352,8 @@ private:
     /// Check for process
     void CheckPool();
 
-    void CheckFinalTransaction();
+    void CreateFinalTransaction();
+    void CommitFinalTransaction();
 
     void CompletedTransaction(bool fError, PoolMessage nMessageID);
 
