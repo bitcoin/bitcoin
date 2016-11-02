@@ -391,6 +391,21 @@ CNode* FindNode(const CService& addr)
     return NULL;
 }
 
+int DisconnectSubNetNodes(const CSubNet& subNet)
+{
+    int nDisconnected = 0;
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        if (subNet.Match((CNetAddr)pnode->addr)) {
+            pnode->fDisconnect = true;
+            nDisconnected++;
+        }
+
+    //return the number of nodes in this subnet marked for disconnection
+    return nDisconnected;
+}
+
+
 CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
 {
     if (pszDest == NULL) {
