@@ -64,14 +64,14 @@ void* Arena::alloc(size_t size)
 
     for (auto& chunk: chunks) {
         if (!chunk.second.isInUse() && size <= chunk.second.getSize()) {
-            char* base = chunk.first;
+            char* _base = chunk.first;
             size_t leftover = chunk.second.getSize() - size;
             if (leftover > 0) { // Split chunk
-                chunks.emplace(base + size, Chunk(leftover, false));
+                chunks.emplace(_base + size, Chunk(leftover, false));
                 chunk.second.setSize(size);
             }
             chunk.second.setInUse(true);
-            return reinterpret_cast<void*>(base);
+            return reinterpret_cast<void*>(_base);
         }
     }
     return nullptr;
@@ -224,6 +224,13 @@ PosixLockedPageAllocator::PosixLockedPageAllocator()
     page_size = sysconf(_SC_PAGESIZE);
 #endif
 }
+
+// Some systems (at least OS X) do not define MAP_ANONYMOUS yet and define
+// MAP_ANON which is deprecated
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 void *PosixLockedPageAllocator::AllocateLocked(size_t len, bool *lockingSuccess)
 {
     void *addr;
