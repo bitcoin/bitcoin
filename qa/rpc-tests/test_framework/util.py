@@ -341,7 +341,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
     return proxy
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
     Start multiple bitcoinds, return RPC connections to them
     """
@@ -350,7 +350,7 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     rpcs = []
     try:
         for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]))
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
     except: # If one node failed to start, stop the others
         stop_nodes(rpcs)
         raise
