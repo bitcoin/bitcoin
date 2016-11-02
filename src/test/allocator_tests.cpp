@@ -166,6 +166,16 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
     BOOST_CHECK(pool.stats().total == 0);
     BOOST_CHECK(pool.stats().locked == 0);
 
+    // Ensure unreasonable requests are refused without allocating anything
+    void *invalid_toosmall = pool.alloc(0);
+    BOOST_CHECK(invalid_toosmall == nullptr);
+    BOOST_CHECK(pool.stats().used == 0);
+    BOOST_CHECK(pool.stats().free == 0);
+    void *invalid_toobig = pool.alloc(LockedPool::ARENA_SIZE+1);
+    BOOST_CHECK(invalid_toobig == nullptr);
+    BOOST_CHECK(pool.stats().used == 0);
+    BOOST_CHECK(pool.stats().free == 0);
+
     void *a0 = pool.alloc(LockedPool::ARENA_SIZE / 2);
     BOOST_CHECK(a0);
     BOOST_CHECK(pool.stats().locked == LockedPool::ARENA_SIZE);
