@@ -1,7 +1,5 @@
-Omni Core v0.0.11.2
+Omni Core v0.0.11.1
 ===================
-
-v0.0.11.2 is a bugfix release which resolves an issue where, in the case where a buyer accepts more than available for sale on the traditional distributed exchange, the RPC API reported an amount higher than available. This release also disables the alert system as per default.
 
 v0.0.11.1 is a bugfix release which resolves a critical bug in the RPC API whereby under certain circumstances retrieving data about a sell offer may trigger a failsafe and cause the automatic shutdown of the client.
 
@@ -14,7 +12,7 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.0.11.2](#omni-core-v00112)
+- [Omni Core v0.0.11.1](#omni-core-v00111)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
@@ -211,11 +209,6 @@ The following list includes relevant pull requests merged into this release:
 - #404 Bump version to Omni Core 0.0.11-rel
 - #409 Protect uint256 plain integer math
 - #411 Bump version to Omni Core 0.0.11.1-rel
-- #419 Add consensus hash for block 430,000
-- #420 Add seed blocks for 420,000 to 430,000
-- #421 Fix edge case of DEx 1 over-accepts
-- #422 Disable alert system as per default
-- #423 Bump version to Omni Core 0.0.11.2-rel
 ```
 
 Credits
