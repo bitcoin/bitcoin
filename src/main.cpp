@@ -3088,8 +3088,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         // Remove orphan transactions with cs_main
         {
             LOCK(cs_main);
-            std::vector<uint256> vOrphanErase;
             for(unsigned int i = 0; i < txChanged.size(); i++) {
+                std::vector<uint256> vOrphanErase;
                 const CTransaction& tx = std::get<0>(txChanged[i]);
                 // Which orphan pool entries must we evict?
                 for (size_t j = 0; j < tx.vin.size(); j++) {
@@ -3101,14 +3101,15 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
                         vOrphanErase.push_back(orphanHash);
                     }
                 }
-            }
-            // Erase orphan transactions include or precluded by this block
-            if (vOrphanErase.size()) {
-                int nErased = 0;
-                BOOST_FOREACH(uint256 &orphanHash, vOrphanErase) {
-                    nErased += EraseOrphanTx(orphanHash);
+
+                // Erase orphan transactions include or precluded by this block
+                if (vOrphanErase.size()) {
+                    int nErased = 0;
+                    BOOST_FOREACH(uint256 &orphanHash, vOrphanErase) {
+                        nErased += EraseOrphanTx(orphanHash);
+                    }
+                    LogPrint("mempool", "Erased %d orphan tx included or conflicted by block\n", nErased);
                 }
-                LogPrint("mempool", "Erased %d orphan tx included or conflicted by block\n", nErased);
             }
         }
 
