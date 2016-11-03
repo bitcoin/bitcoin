@@ -864,15 +864,15 @@ Adres: %4
         <translation>Proszę wybrać poziom bezpieczeństwa.</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
         <translation>Użyj 2 oddzielnych masternodów aby wymieszać środki max. do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
         <translation>Użyj 8 oddzielnych masternodów aby wymieszać środki max. do 10000 CRW</translation>
     </message>
     <message>
-        <source>Use 16 separate masternodes</source>
+        <source>Use 16 separate thrones</source>
         <translation>Użyj 16 oddzielnych masternodów</translation>
     </message>
     <message>
@@ -1186,7 +1186,7 @@ Adres: %4
         <translation>Ekspert</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>Tutaj możesz ustawić liczbę masternodów, przez które transakcja zostanie przepuszczona.&lt;br/&gt;Im większa liczba masternodów tym większy poziom anonimowości, ale opłata jest również wyższa.</translation>
     </message>
     <message>
@@ -1207,7 +1207,7 @@ Adres: %4
     </message>
     <message>
         <source>Automatically open the Crown client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatycznie uruchamiaj port klienta Darkcoina na ruterze. To działa tylko jeśli twój ruter wspiera  i ma włączone UPnP.</translation>
+        <translation>Automatycznie uruchamiaj port klienta Crowna na ruterze. To działa tylko jeśli twój ruter wspiera  i ma włączone UPnP.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1455,7 +1455,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Start/Stop Mieszanie</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Denominacje, które wysłałeś do Masternoda.&lt;br&gt;Aby zostały one wymieszane, inni użytkownicy muszą wysłać dokładnie takie same denominacje. </translation>
     </message>
     <message>
@@ -1765,7 +1765,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Open the Crown debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Otwiera plik z zapisami debugowania Darkcoina z obecnego katalogu. Może to potrfać kilka sekund w zależności od rozmiaru pliku.</translation>
+        <translation>Otwiera plik z zapisami debugowania Crowna z obecnego katalogu. Może to potrfać kilka sekund w zależności od rozmiaru pliku.</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -1812,7 +1812,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ciąg bloków</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Thrones</source>
         <translation>Liczba masternodów</translation>
     </message>
     <message>
@@ -1973,7 +1973,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Welcome to the Crown RPC console.</source>
-        <translation>Witaj w konsoli RPC Darkcoina</translation>
+        <translation>Witaj w konsoli RPC Crowna</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -2284,11 +2284,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Zminimalizuj</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then "per kilobyte" only pays 250 crowns in fee,&lt;br /&gt;while "at least" pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Jeśli ręcznie ustalona opłata wynosi 1000 Duffów a sama transakcja ma tylko 250 bajtów, to opłata jako "za kilobajt" wynosi tylko 250 duffów. &lt;br/&gt;Dzieje się tak dla każdej transakcji poniżej 1000 duffów. W przypadku transakcji większych niż jedn kilobajt opłata jest naliczana od kilobajta. </translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then "per kilobyte" only pays 250 crowns in fee,&lt;br /&gt;while "total at least" pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Jeśli ręcznie ustalona opłata wynosi 1000 Duffów a sama transakcja ma tylko 250 bitów, to opłata jako "za kilobajt" wynosi tylko 250 duffów.&lt;br/&gt; Dzieje się tak dla każdej transakcji poniżej 1000 duffów. W przypadku transakcji większych niż jedn kilobajt opłata jest naliczana od kilobajta.</translation>
     </message>
     <message>
@@ -2560,7 +2560,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
-        <translation>Wiadomość, która została dołączona do dash: Link, który zostanie zapisany wraz z transakcją do wglądu w przyszłości. Zauważ. że sama wiadomość nie zostanie wysłana przez sieć Darkcoina.</translation>
+        <translation>Wiadomość, która została dołączona do dash: Link, który zostanie zapisany wraz z transakcją do wglądu w przyszłości. Zauważ. że sama wiadomość nie zostanie wysłana przez sieć Crowna.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
@@ -3414,8 +3414,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Uwaga: plik wallet.dat jest uszkodzony, ale dane zostały odzyskane! Oryginalny plik wallet.dat został zapisany jako wallet.{timestamp}.bak w %s; jeżeli twoje saldo lub transakcje są nieprawidłowe powinieneś przwyrócić ten plik z kopi zapasowej.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Musisz sprecyzować masternodeprivkey w konfiguracji. Proszę przeglądnij dokumentacje w celu pomocy.</translation>
+        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Musisz sprecyzować throneprivkey w konfiguracji. Proszę przeglądnij dokumentacje w celu pomocy.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3614,7 +3614,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Usuń wszystkie transakcje portfela i odzyskaj tylko te części blockchainu - zeskanuj powonie na starcie.</translation>
     </message>
     <message>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
         <translation>Wyłącz wszystkie dodatkowe funckje Crown (Masternody, Darksend, InstanX, Budżetowanie) (0-1, domyślnie: %u)</translation>
     </message>
     <message>
@@ -3823,12 +3823,12 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Wyłącz tryb awaryjny, nadpisz prawdziwy tryb awaryjny (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Upoważnia klienta aby działał jako masternode (0-1, domyślnie: %u)</translation>
+        <source>Enable the client to act as a throne (0-1, default: %u)</source>
+        <translation>Upoważnia klienta aby działał jako throne (0-1, domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
-        <translation>Błąd w połączeniu z Masternodem.</translation>
+        <source>Error connecting to Throne.</source>
+        <translation>Błąd w połączeniu z Thronem.</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Crown Core</source>
@@ -3967,11 +3967,11 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ładuje pamięć podręczną budżetu...</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
+        <source>Loading throne cache...</source>
         <translation>Ładuję pamięć podręczną masternoda...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
+        <source>Loading throne payment cache...</source>
         <translation>Ładuję pamięć podręczną płatności masternodów...</translation>
     </message>
     <message>
@@ -3979,7 +3979,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Transakcja została już zamknięta.</translation>
     </message>
     <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
+        <source>Lock thrones from throne configuration file (default: %u)</source>
         <translation>Zamknij masternody z pliku konfiguracji (domyślnie: %u)</translation>
     </message>
     <message>
@@ -4003,15 +4003,15 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Musisz wyznaczyć port z -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Thrones detected.</source>
         <translation>Nie wykryto żadnego Masternoda.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Throne found.</source>
         <translation>Nie znalezione zadnego kompatybilnego Masternoda.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Throne list.</source>
         <translation>Nie istnieje na liście masternodów.</translation>
     </message>
     <message>
@@ -4051,8 +4051,8 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Klucz prywatny serwera (domyślnie: %s)</translation>
     </message>
     <message>
-        <source>Set external address:port to get to this masternode (example: %s)</source>
-        <translation>Ustaw zewnętrzny address:port aby połączyć się z tym masternodem (na przykład: %s)</translation>
+        <source>Set external address:port to get to this throne (example: %s)</source>
+        <translation>Ustaw zewnętrzny address:port aby połączyć się z tym thronem (na przykład: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
@@ -4083,7 +4083,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>ustaw limit czasu połączenia w milisekundach (minimum: 1, domyślnie: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
+        <source>Specify throne configuration file (default: %s)</source>
         <translation>Ustaw plik konfiguracji masternoda (domyślnie: %s)</translation>
     </message>
     <message>
@@ -4099,15 +4099,15 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Zamknij program po zaimportowaniu wszystkich bloków z dysku (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
+        <source>Submitted following entries to throne: %u / %d</source>
         <translation>Następujące wpisy zostały przesłane do masternoda: %u / %d</translation>
     </message>
     <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
+        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
         <translation>Zapisano do masternoda, czekam na więcej wejść ( %u / %d ) %s</translation>
     </message>
     <message>
-        <source>Submitted to masternode, waiting in queue %s</source>
+        <source>Submitted to throne, waiting in queue %s</source>
         <translation>Przesłano do masterdnoda, czekaj na swoją kolej %s</translation>
     </message>
     <message>
@@ -4123,11 +4123,11 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Synchronizuję budżet...</translation>
     </message>
     <message>
-        <source>Synchronizing masternode winners...</source>
+        <source>Synchronizing throne winners...</source>
         <translation>Synchronizuję zwycięskie masternody...</translation>
     </message>
     <message>
-        <source>Synchronizing masternodes...</source>
+        <source>Synchronizing thrones...</source>
         <translation>Synchronizuję masternody...</translation>
     </message>
     <message>
@@ -4135,8 +4135,8 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Synchronizuję sporki...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
-        <translation>To nie jest Masternode.</translation>
+        <source>This is not a Throne.</source>
+        <translation>To nie jest Throne.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4147,7 +4147,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Użyj integracji KeePass 2 z wtyczką KeePass Http (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
+        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Użyj N oddzielnych masternodów aby zanonimizować fundusze (2-8, domyślnie: %u)</translation>
     </message>
     <message>
@@ -4171,7 +4171,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Spróbuje ponownie...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <source>Invalid throneprivkey. Please see documenation.</source>
         <translation>Nieprawidłowy klucz prywatny masternoda. Przeczytaj dokumentację.</translation>
     </message>
     <message>
@@ -4179,7 +4179,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>(musi być 9340 dla głównej sieci)</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Throne.</source>
         <translation>Nie można znaleźć przypadkowego masternoda.</translation>
     </message>
     <message>
@@ -4187,16 +4187,16 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Nie możesz miksować w trakcie  synchronizacji.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>Nie można analizować masternode.conf</translation>
+        <source>Could not parse throne.conf</source>
+        <translation>Nie można analizować throne.conf</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Niewłaściwa maska sieci w -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Wykryto niewłaściwy port w masternode.conf</translation>
+        <source>Invalid port detected in throne.conf</source>
+        <translation>Wykryto niewłaściwy port w throne.conf</translation>
     </message>
     <message>
         <source>Invalid private key.</source>
@@ -4247,15 +4247,15 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ładuje portfel...</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Throne options:</source>
         <translation>Opcje masternodów:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Throne queue is full.</source>
         <translation>Kolejka masternodów jest pełna.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Throne:</source>
         <translation>Masternod:</translation>
     </message>
     <message>
@@ -4359,7 +4359,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ustaw maksymalny rozmiar bloku w bajtach (domyślny: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
+        <source>Set the throne private key</source>
         <translation>Ustaw klucz prywatny masternoda</translation>
     </message>
     <message>

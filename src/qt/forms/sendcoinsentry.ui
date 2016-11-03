@@ -51,7 +51,7 @@
       <item>
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
-         <string>The Dash address to send the payment to</string>
+         <string>The Crown address to send the payment to</string>
         </property>
        </widget>
       </item>

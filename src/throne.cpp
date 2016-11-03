@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode.h"
-#include "masternodeman.h"
+#include "throne.h"
+#include "throneman.h"
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
@@ -11,7 +11,7 @@
 #include <boost/lexical_cast.hpp>
 
 // keep track of the scanning errors I've seen
-map<uint256, int> mapSeenMasternodeScanningErrors;
+map<uint256, int> mapSeenThroneScanningErrors;
 // cache block hashes as we calculate them
 std::map<int64_t, uint256> mapCacheBlockHashes;
 
@@ -53,7 +53,7 @@ bool GetBlockHash(uint256& hash, int nBlockHeight)
     return false;
 }
 
-CMasternode::CMasternode()
+CThrone::CThrone()
 {
     LOCK(cs);
     vin = CTxIn();
@@ -61,9 +61,9 @@ CMasternode::CMasternode()
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
-    activeState = MASTERNODE_ENABLED;
+    activeState = THRONE_ENABLED;
     sigTime = GetAdjustedTime();
-    lastPing = CMasternodePing();
+    lastPing = CThronePing();
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -75,7 +75,7 @@ CMasternode::CMasternode()
     lastTimeChecked = 0;
 }
 
-CMasternode::CMasternode(const CMasternode& other)
+CThrone::CThrone(const CThrone& other)
 {
     LOCK(cs);
     vin = other.vin;
@@ -97,7 +97,7 @@ CMasternode::CMasternode(const CMasternode& other)
     lastTimeChecked = 0;
 }
 
-CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
+CThrone::CThrone(const CThroneBroadcast& mnb)
 {
     LOCK(cs);
     vin = mnb.vin;
@@ -105,7 +105,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     pubkey = mnb.pubkey;
     pubkey2 = mnb.pubkey2;
     sig = mnb.sig;
-    activeState = MASTERNODE_ENABLED;
+    activeState = THRONE_ENABLED;
     sigTime = mnb.sigTime;
     lastPing = mnb.lastPing;
     cacheInputAge = 0;
@@ -120,9 +120,9 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
 }
 
 //
-// When a new masternode broadcast is sent, update our information
+// When a new throne broadcast is sent, update our information
 //
-bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
+bool CThrone::UpdateFromNewBroadcast(CThroneBroadcast& mnb)
 {
     if(mnb.sigTime > sigTime) {    
         pubkey2 = mnb.pubkey2;
@@ -132,9 +132,9 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
         addr = mnb.addr;
         lastTimeChecked = 0;
         int nDoS = 0;
-        if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
+        if(mnb.lastPing == CThronePing() || (mnb.lastPing != CThronePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
             lastPing = mnb.lastPing;
-            mnodeman.mapSeenMasternodePing.insert(make_pair(lastPing.GetHash(), lastPing));
+            mnodeman.mapSeenThronePing.insert(make_pair(lastPing.GetHash(), lastPing));
         }
         return true;
     }
@@ -142,11 +142,11 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 }
 
 //
-// Deterministically calculate a given "score" for a Masternode depending on how close it's hash is to
+// Deterministically calculate a given "score" for a Throne depending on how close it's hash is to
 // the proof of work for that block. The further away they are the better, the furthest will win the election
 // and get paid this block
 //
-uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
+uint256 CThrone::CalculateScore(int mod, int64_t nBlockHeight)
 {
     if(chainActive.Tip() == NULL) return 0;
 
@@ -172,25 +172,25 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
     return r;
 }
 
-void CMasternode::Check(bool forceCheck)
+void CThrone::Check(bool forceCheck)
 {
     if(ShutdownRequested()) return;
 
-    if(!forceCheck && (GetTime() - lastTimeChecked < MASTERNODE_CHECK_SECONDS)) return;
+    if(!forceCheck && (GetTime() - lastTimeChecked < THRONE_CHECK_SECONDS)) return;
     lastTimeChecked = GetTime();
 
 
     //once spent, stop doing the checks
-    if(activeState == MASTERNODE_VIN_SPENT) return;
+    if(activeState == THRONE_VIN_SPENT) return;
 
 
-    if(!IsPingedWithin(MASTERNODE_REMOVAL_SECONDS)){
-        activeState = MASTERNODE_REMOVE;
+    if(!IsPingedWithin(THRONE_REMOVAL_SECONDS)){
+        activeState = THRONE_REMOVE;
         return;
     }
 
-    if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)){
-        activeState = MASTERNODE_EXPIRED;
+    if(!IsPingedWithin(THRONE_EXPIRATION_SECONDS)){
+        activeState = THRONE_EXPIRED;
         return;
     }
 
@@ -206,17 +206,17 @@ void CMasternode::Check(bool forceCheck)
             if(!lockMain) return;
 
             if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
-                activeState = MASTERNODE_VIN_SPENT;
+                activeState = THRONE_VIN_SPENT;
                 return;
 
             }
         }
     }
 
-    activeState = MASTERNODE_ENABLED; // OK
+    activeState = THRONE_ENABLED; // OK
 }
 
-int64_t CMasternode::SecondsSincePayment() {
+int64_t CThrone::SecondsSincePayment() {
     CScript pubkeyScript;
     pubkeyScript = GetScriptForDestination(pubkey.GetID());
 
@@ -233,7 +233,7 @@ int64_t CMasternode::SecondsSincePayment() {
     return month + hash.GetCompact(false);
 }
 
-int64_t CMasternode::GetLastPaid() {
+int64_t CThrone::GetLastPaid() {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
 
@@ -260,12 +260,12 @@ int64_t CMasternode::GetLastPaid() {
         }
         n++;
 
-        if(masternodePayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
+        if(thronePayments.mapThroneBlocks.count(BlockReading->nHeight)){
             /*
                 Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
                 to converge on the same payees quickly, then keep the same schedule.
             */
-            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
+            if(thronePayments.mapThroneBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
                 return BlockReading->nTime + nOffset;
             }
         }
@@ -277,16 +277,16 @@ int64_t CMasternode::GetLastPaid() {
     return 0;
 }
 
-CMasternodeBroadcast::CMasternodeBroadcast()
+CThroneBroadcast::CThroneBroadcast()
 {
     vin = CTxIn();
     addr = CService();
     pubkey = CPubKey();
     pubkey2 = CPubKey();
     sig = std::vector<unsigned char>();
-    activeState = MASTERNODE_ENABLED;
+    activeState = THRONE_ENABLED;
     sigTime = GetAdjustedTime();
-    lastPing = CMasternodePing();
+    lastPing = CThronePing();
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -297,16 +297,16 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     nLastScanningErrorBlockHeight = 0;
 }
 
-CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn)
+CThroneBroadcast::CThroneBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn)
 {
     vin = newVin;
     addr = newAddr;
     pubkey = newPubkey;
     pubkey2 = newPubkey2;
     sig = std::vector<unsigned char>();
-    activeState = MASTERNODE_ENABLED;
+    activeState = THRONE_ENABLED;
     sigTime = GetAdjustedTime();
-    lastPing = CMasternodePing();
+    lastPing = CThronePing();
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -317,7 +317,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     nLastScanningErrorBlockHeight = 0;
 }
 
-CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
+CThroneBroadcast::CThroneBroadcast(const CThrone& mn)
 {
     vin = mn.vin;
     addr = mn.addr;
@@ -337,7 +337,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     nLastScanningErrorBlockHeight = mn.nLastScanningErrorBlockHeight;
 }
 
-bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
+bool CThroneBroadcast::CheckAndUpdate(int& nDos)
 {
     nDos = 0;
 
@@ -348,8 +348,8 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    if(protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
-        LogPrintf("mnb - ignoring outdated Masternode %s protocol version %d\n", vin.ToString(), protocolVersion);
+    if(protocolVersion < thronePayments.GetMinThronePaymentsProto()) {
+        LogPrintf("mnb - ignoring outdated Throne %s protocol version %d\n", vin.ToString(), protocolVersion);
         return false;
     }
 
@@ -377,7 +377,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     }
 
     // incorrect ping or its sigTime
-    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true))
+    if(lastPing == CThronePing() || !lastPing.CheckAndUpdate(nDos, false, true))
         return false;
 
     std::string strMessage;
@@ -389,7 +389,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
                         vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-        LogPrint("masternode", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+        LogPrint("throne", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
             SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
             EncodeBase64(&sig[0], sig.size()));
 
@@ -400,19 +400,19 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
                 strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) +
                                 vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-                LogPrint("masternode", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
+                LogPrint("throne", "mnb - sanitized strMessage: %s, pubkey address: %s, sig: %s\n",
                     SanitizeString(strMessage), CBitcoinAddress(pubkey.GetID()).ToString(),
                     EncodeBase64(&sig[0], sig.size()));
 
                 if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
                     // didn't work either
-                    LogPrintf("mnb - Got bad Masternode address signature, sanitized error: %s\n", SanitizeString(errorMessage));
+                    LogPrintf("mnb - Got bad Throne address signature, sanitized error: %s\n", SanitizeString(errorMessage));
                     // there is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
                     return false;
                 }
             } else {
                 // nope, sig is actually wrong
-                LogPrintf("mnb - Got bad Masternode address signature, sanitized error: %s\n", SanitizeString(errorMessage));
+                LogPrintf("mnb - Got bad Throne address signature, sanitized error: %s\n", SanitizeString(errorMessage));
                 // there is a bug in old MN signatures, ignore such MN but do not ban the peer we got this from
                 return false;
             }
@@ -422,11 +422,11 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
                         pubkey.GetID().ToString() + pubkey2.GetID().ToString() +
                         boost::lexical_cast<std::string>(protocolVersion);
 
-        LogPrint("masternode", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n",
+        LogPrint("throne", "mnb - strMessage: %s, pubkey address: %s, sig: %s\n",
             strMessage, CBitcoinAddress(pubkey.GetID()).ToString(), EncodeBase64(&sig[0], sig.size()));
 
         if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
-            LogPrintf("mnb - Got bad Masternode address signature, error: %s\n", errorMessage);
+            LogPrintf("mnb - Got bad Throne address signature, error: %s\n", errorMessage);
             nDos = 100;
             return false;
         }
@@ -436,55 +436,55 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         if(addr.GetPort() != 9340) return false;
     } else if(addr.GetPort() == 9340) return false;
 
-    //search existing Masternode list, this is where we update existing Masternodes with new mnb broadcasts
-    CMasternode* pmn = mnodeman.Find(vin);
+    //search existing Throne list, this is where we update existing Thrones with new mnb broadcasts
+    CThrone* pmn = mnodeman.Find(vin);
 
-    // no such masternode, nothing to update
+    // no such throne, nothing to update
     if(pmn == NULL) return true;
 
     // this broadcast is older or equal than the one that we already have - it's bad and should never happen
     // unless someone is doing something fishy
-    // (mapSeenMasternodeBroadcast in CMasternodeMan::ProcessMessage should filter legit duplicates)
+    // (mapSeenThroneBroadcast in CThroneMan::ProcessMessage should filter legit duplicates)
     if(pmn->sigTime >= sigTime) {
-        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Bad sigTime %d for Masternode %20s %105s (existing broadcast is at %d)\n",
+        LogPrintf("CThroneBroadcast::CheckAndUpdate - Bad sigTime %d for Throne %20s %105s (existing broadcast is at %d)\n",
                       sigTime, addr.ToString(), vin.ToString(), pmn->sigTime);
         return false;
     }
 
-    // masternode is not enabled yet/already, nothing to update
+    // throne is not enabled yet/already, nothing to update
     if(!pmn->IsEnabled()) return true;
 
     // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
     //   after that they just need to match
-    if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS)) {
+    if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(THRONE_MIN_MNB_SECONDS)) {
         //take the newest entry
         LogPrintf("mnb - Got updated entry for %s\n", addr.ToString());
         if(pmn->UpdateFromNewBroadcast((*this))){
             pmn->Check();
             if(pmn->IsEnabled()) Relay();
         }
-        masternodeSync.AddedMasternodeList(GetHash());
+        throneSync.AddedThroneList(GetHash());
     }
 
     return true;
 }
 
-bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
+bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 {
-    // we are a masternode with the same vin (i.e. already activated) and this mnb is ours (matches our Masternode privkey)
+    // we are a throne with the same vin (i.e. already activated) and this mnb is ours (matches our Throne privkey)
     // so nothing to do here for us
-    if(fMasterNode && vin.prevout == activeMasternode.vin.prevout && pubkey2 == activeMasternode.pubKeyMasternode)
+    if(fThroNe && vin.prevout == activeThrone.vin.prevout && pubkey2 == activeThrone.pubKeyThrone)
         return true;
 
     // incorrect ping or its sigTime
-    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDoS, false, true))
+    if(lastPing == CThronePing() || !lastPing.CheckAndUpdate(nDoS, false, true))
         return false;
 
-    // search existing Masternode list
-    CMasternode* pmn = mnodeman.Find(vin);
+    // search existing Throne list
+    CThrone* pmn = mnodeman.Find(vin);
 
     if(pmn != NULL) {
-        // nothing to do here if we already know about this masternode and it's enabled
+        // nothing to do here if we already know about this throne and it's enabled
         if(pmn->IsEnabled()) return true;
         // if it's not enabled, remove old MN first and continue
         else mnodeman.Remove(pmn->vin);
@@ -500,8 +500,8 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
         TRY_LOCK(cs_main, lockMain);
         if(!lockMain) {
             // not mnb fault, let it to be checked again later
-            mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
-            masternodeSync.mapSeenSyncMNB.erase(GetHash());
+            mnodeman.mapSeenThroneBroadcast.erase(GetHash());
+            throneSync.mapSeenSyncMNB.erase(GetHash());
             return false;
         }
 
@@ -512,18 +512,18 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
         }
     }
 
-    LogPrint("masternode", "mnb - Accepted Masternode entry\n");
+    LogPrint("throne", "mnb - Accepted Throne entry\n");
 
-    if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-        LogPrintf("mnb - Input must have at least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+    if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
+        LogPrintf("mnb - Input must have at least %d confirmations\n", THRONE_MIN_CONFIRMATIONS);
         // maybe we miss few blocks, let this mnb to be checked again later
-        mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
-        masternodeSync.mapSeenSyncMNB.erase(GetHash());
+        mnodeman.mapSeenThroneBroadcast.erase(GetHash());
+        throneSync.mapSeenSyncMNB.erase(GetHash());
         return false;
     }
 
     // verify that sig time is legit in past
-    // should be at least not earlier than block when 10000 CRW tx got MASTERNODE_MIN_CONFIRMATIONS
+    // should be at least not earlier than block when 10000 CRW tx got THRONE_MIN_CONFIRMATIONS
     uint256 hashBlock = 0;
     CTransaction tx2;
     GetTransaction(vin.prevout.hash, tx2, hashBlock, true);
@@ -531,22 +531,22 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     if (mi != mapBlockIndex.end() && (*mi).second)
     {
         CBlockIndex* pMNIndex = (*mi).second; // block for 10000 CRW tx -> 1 confirmation
-        CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
+        CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + THRONE_MIN_CONFIRMATIONS - 1]; // block where tx got THRONE_MIN_CONFIRMATIONS
         if(pConfIndex->GetBlockTime() > sigTime)
         {
-            LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
-                      sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
+            LogPrintf("mnb - Bad sigTime %d for Throne %20s %105s (%i conf block is at %d)\n",
+                      sigTime, addr.ToString(), vin.ToString(), THRONE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
             return false;
         }
     }
 
-    LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
-    CMasternode mn(*this);
+    LogPrintf("mnb - Got NEW Throne entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
+    CThrone mn(*this);
     mnodeman.Add(mn);
 
-    // if it matches our Masternode privkey, then we've been remotely activated
-    if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
-        activeMasternode.EnableHotColdMasterNode(vin, addr);
+    // if it matches our Throne privkey, then we've been remotely activated
+    if(pubkey2 == activeThrone.pubKeyThrone && protocolVersion == PROTOCOL_VERSION){
+        activeThrone.EnableHotColdThroNe(vin, addr);
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
@@ -557,13 +557,13 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     return true;
 }
 
-void CMasternodeBroadcast::Relay()
+void CThroneBroadcast::Relay()
 {
-    CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
+    CInv inv(MSG_THRONE_ANNOUNCE, GetHash());
     RelayInv(inv);
 }
 
-bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
+bool CThroneBroadcast::Sign(CKey& keyCollateralAddress)
 {
     std::string errorMessage;
 
@@ -575,14 +575,14 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
     std::string strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
-        LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage);
+        LogPrintf("CThroneBroadcast::Sign() - Error: %s\n", errorMessage);
         return false;
     }
 
     return true;
 }
 
-bool CMasternodeBroadcast::VerifySignature()
+bool CThroneBroadcast::VerifySignature()
 {
     std::string errorMessage;
 
@@ -592,14 +592,14 @@ bool CMasternodeBroadcast::VerifySignature()
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
     if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)) {
-        LogPrintf("CMasternodeBroadcast::VerifySignature() - Error: %s\n", errorMessage);
+        LogPrintf("CThroneBroadcast::VerifySignature() - Error: %s\n", errorMessage);
         return false;
     }
 
     return true;
 }
 
-CMasternodePing::CMasternodePing()
+CThronePing::CThronePing()
 {
     vin = CTxIn();
     blockHash = uint256(0);
@@ -607,7 +607,7 @@ CMasternodePing::CMasternodePing()
     vchSig = std::vector<unsigned char>();
 }
 
-CMasternodePing::CMasternodePing(CTxIn& newVin)
+CThronePing::CThronePing(CTxIn& newVin)
 {
     vin = newVin;
     blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
@@ -616,72 +616,72 @@ CMasternodePing::CMasternodePing(CTxIn& newVin)
 }
 
 
-bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
+bool CThronePing::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
 {
     std::string errorMessage;
-    std::string strMasterNodeSignMessage;
+    std::string strThroNeSignMessage;
 
     sigTime = GetAdjustedTime();
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
-        LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage);
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+        LogPrintf("CThronePing::Sign() - Error: %s\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage);
+    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+        LogPrintf("CThronePing::Sign() - Error: %s\n", errorMessage);
         return false;
     }
 
     return true;
 }
 
-bool CMasternodePing::VerifySignature(CPubKey& pubKeyMasternode, int &nDos) {
+bool CThronePing::VerifySignature(CPubKey& pubKeyThrone, int &nDos) {
     std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string errorMessage = "";
 
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage))
+    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage))
     {
-        LogPrintf("CMasternodePing::VerifySignature - Got bad Masternode ping signature %s Error: %s\n", vin.ToString(), errorMessage);
+        LogPrintf("CThronePing::VerifySignature - Got bad Throne ping signature %s Error: %s\n", vin.ToString(), errorMessage);
         nDos = 33;
         return false;
     }
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSigTimeOnly)
+bool CThronePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fCheckSigTimeOnly)
 {
     if (sigTime > GetAdjustedTime() + 60 * 60) {
-        LogPrintf("CMasternodePing::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString());
+        LogPrintf("CThronePing::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString());
         nDos = 1;
         return false;
     }
 
     if (sigTime <= GetAdjustedTime() - 60 * 60) {
-        LogPrintf("CMasternodePing::CheckAndUpdate - Signature rejected, too far into the past %s - %d %d \n", vin.ToString(), sigTime, GetAdjustedTime());
+        LogPrintf("CThronePing::CheckAndUpdate - Signature rejected, too far into the past %s - %d %d \n", vin.ToString(), sigTime, GetAdjustedTime());
         nDos = 1;
         return false;
     }
 
     if(fCheckSigTimeOnly) {
-        CMasternode* pmn = mnodeman.Find(vin);
+        CThrone* pmn = mnodeman.Find(vin);
         if(pmn) return VerifySignature(pmn->pubkey2, nDos);
         return true;
     }
 
-    LogPrint("masternode", "CMasternodePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
+    LogPrint("throne", "CThronePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
 
-    // see if we have this Masternode
-    CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
+    // see if we have this Throne
+    CThrone* pmn = mnodeman.Find(vin);
+    if(pmn != NULL && pmn->protocolVersion >= thronePayments.GetMinThronePaymentsProto())
     {
         if (fRequireEnabled && !pmn->IsEnabled()) return false;
 
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString());
-        // update only if there is no known ping for this masternode or
-        // last ping was more then MASTERNODE_MIN_MNP_SECONDS-60 ago comparing to this one
-        if(!pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 60, sigTime))
+        // update only if there is no known ping for this throne or
+        // last ping was more then THRONE_MIN_MNP_SECONDS-60 ago comparing to this one
+        if(!pmn->IsPingedWithin(THRONE_MIN_MNP_SECONDS - 60, sigTime))
         {
             if(!VerifySignature(pmn->pubkey2, nDos))
                 return false;
@@ -691,14 +691,14 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
             {
                 if((*mi).second->nHeight < chainActive.Height() - 24)
                 {
-                    LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
-                    // Do nothing here (no Masternode update, no mnping relay)
+                    LogPrintf("CThronePing::CheckAndUpdate - Throne %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
+                    // Do nothing here (no Throne update, no mnping relay)
                     // Let this node to be visible but fail to accept mnping
 
                     return false;
                 }
             } else {
-                if (fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
+                if (fDebug) LogPrintf("CThronePing::CheckAndUpdate - Throne %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
                 // maybe we stuck so we shouldn't ban this node, just fail to accept it
                 // TODO: or should we also request this block?
 
@@ -707,32 +707,32 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
 
             pmn->lastPing = *this;
 
-            //mnodeman.mapSeenMasternodeBroadcast.lastPing is probably outdated, so we'll update it
-            CMasternodeBroadcast mnb(*pmn);
+            //mnodeman.mapSeenThroneBroadcast.lastPing is probably outdated, so we'll update it
+            CThroneBroadcast mnb(*pmn);
             uint256 hash = mnb.GetHash();
-            if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
-                mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = *this;
+            if(mnodeman.mapSeenThroneBroadcast.count(hash)) {
+                mnodeman.mapSeenThroneBroadcast[hash].lastPing = *this;
             }
 
             pmn->Check(true);
             if(!pmn->IsEnabled()) return false;
 
-            LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Masternode ping accepted, vin: %s\n", vin.ToString());
+            LogPrint("throne", "CThronePing::CheckAndUpdate - Throne ping accepted, vin: %s\n", vin.ToString());
 
             Relay();
             return true;
         }
-        LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Masternode ping arrived too early, vin: %s\n", vin.ToString());
+        LogPrint("throne", "CThronePing::CheckAndUpdate - Throne ping arrived too early, vin: %s\n", vin.ToString());
         //nDos = 1; //disable, this is happening frequently and causing banned peers
         return false;
     }
-    LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Couldn't find compatible Masternode entry, vin: %s\n", vin.ToString());
+    LogPrint("throne", "CThronePing::CheckAndUpdate - Couldn't find compatible Throne entry, vin: %s\n", vin.ToString());
 
     return false;
 }
 
-void CMasternodePing::Relay()
+void CThronePing::Relay()
 {
-    CInv inv(MSG_MASTERNODE_PING, GetHash());
+    CInv inv(MSG_THRONE_PING, GetHash());
     RelayInv(inv);
 }

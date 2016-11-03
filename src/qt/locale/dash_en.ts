@@ -1090,18 +1090,18 @@ Address: %4
     </message>
     <message>
         <location line="+13"/>
-        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
-        <translation>Use 2 separate masternodes to mix funds up to 10000 CRW</translation>
+        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
+        <translation>Use 2 separate thrones to mix funds up to 10000 CRW</translation>
     </message>
     <message>
         <location line="+13"/>
-        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
-        <translation>Use 8 separate masternodes to mix funds up to 10000 CRW</translation>
+        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
+        <translation>Use 8 separate thrones to mix funds up to 10000 CRW</translation>
     </message>
     <message>
         <location line="+13"/>
-        <source>Use 16 separate masternodes</source>
-        <translation>Use 16 separate masternodes</translation>
+        <source>Use 16 separate thrones</source>
+        <translation>Use 16 separate thrones</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1491,8 +1491,8 @@ Address: %4
     </message>
     <message>
         <location line="-74"/>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</translation>
+        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</translation>
     </message>
     <message>
         <location line="+80"/>
@@ -1834,8 +1834,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="-469"/>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
     </message>
     <message>
         <location line="+501"/>
@@ -2319,8 +2319,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+289"/>
-        <source>Number of Masternodes</source>
-        <translation>Number of Masternodes</translation>
+        <source>Number of Thrones</source>
+        <translation>Number of Thrones</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -2914,13 +2914,13 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+78"/>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</translation>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 crowns in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 crowns in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</translation>
     </message>
     <message>
         <location line="+16"/>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</translation>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 crowns in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 crowns in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</translation>
     </message>
     <message>
         <location line="+33"/>
@@ -4360,8 +4360,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</translation>
+        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
+        <translation>You must specify a throneprivkey in the configuration. Please see documentation for help.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4610,8 +4610,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
-        <translation>Disable all Crown specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</translation>
+        <source>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Disable all Crown specific functionality (Thrones, Darksend, InstantX, Budgeting) (0-1, default: %u)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4867,13 +4867,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+5"/>
-        <source>Enable the client to act as a masternode (0-1, default: %u)</source>
-        <translation>Enable the client to act as a masternode (0-1, default: %u)</translation>
+        <source>Enable the client to act as a throne (0-1, default: %u)</source>
+        <translation>Enable the client to act as a throne (0-1, default: %u)</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Error connecting to Masternode.</source>
-        <translation>Error connecting to Masternode.</translation>
+        <source>Error connecting to Throne.</source>
+        <translation>Error connecting to Throne.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -5047,13 +5047,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>Loading masternode cache...</source>
-        <translation>Loading masternode cache...</translation>
+        <source>Loading throne cache...</source>
+        <translation>Loading throne cache...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Loading masternode payment cache...</source>
-        <translation>Loading masternode payment cache...</translation>
+        <source>Loading throne payment cache...</source>
+        <translation>Loading throne payment cache...</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5062,8 +5062,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Lock masternodes from masternode configuration file (default: %u)</translation>
+        <source>Lock thrones from throne configuration file (default: %u)</source>
+        <translation>Lock thrones from throne configuration file (default: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5092,18 +5092,18 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>No Masternodes detected.</source>
-        <translation>No Masternodes detected.</translation>
+        <source>No Thrones detected.</source>
+        <translation>No Thrones detected.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>No compatible Masternode found.</source>
-        <translation>No compatible Masternode found.</translation>
+        <source>No compatible Throne found.</source>
+        <translation>No compatible Throne found.</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Not in the Masternode list.</source>
-        <translation>Not in the Masternode list.</translation>
+        <source>Not in the Throne list.</source>
+        <translation>Not in the Throne list.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5152,8 +5152,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+4"/>
-        <source>Set external address:port to get to this masternode (example: %s)</source>
-        <translation>Set external address:port to get to this masternode (example: %s)</translation>
+        <source>Set external address:port to get to this throne (example: %s)</source>
+        <translation>Set external address:port to get to this throne (example: %s)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5192,8 +5192,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+2"/>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Specify masternode configuration file (default: %s)</translation>
+        <source>Specify throne configuration file (default: %s)</source>
+        <translation>Specify throne configuration file (default: %s)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5212,18 +5212,18 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Submitted following entries to masternode: %u / %d</translation>
+        <source>Submitted following entries to throne: %u / %d</source>
+        <translation>Submitted following entries to throne: %u / %d</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Submitted to masternode, waiting for more entries ( %u / %d ) %s</translation>
+        <source>Submitted to throne, waiting for more entries ( %u / %d ) %s</source>
+        <translation>Submitted to throne, waiting for more entries ( %u / %d ) %s</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Submitted to masternode, waiting in queue %s</source>
-        <translation>Submitted to masternode, waiting in queue %s</translation>
+        <source>Submitted to throne, waiting in queue %s</source>
+        <translation>Submitted to throne, waiting in queue %s</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5242,13 +5242,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Synchronizing masternode winners...</translation>
+        <source>Synchronizing throne winners...</source>
+        <translation>Synchronizing throne winners...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronizing masternodes...</translation>
+        <source>Synchronizing thrones...</source>
+        <translation>Synchronizing thrones...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5257,8 +5257,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+4"/>
-        <source>This is not a Masternode.</source>
-        <translation>This is not a Masternode.</translation>
+        <source>This is not a Throne.</source>
+        <translation>This is not a Throne.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5272,8 +5272,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
-        <translation>Use N separate masternodes to anonymize funds  (2-8, default: %u)</translation>
+        <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
+        <translation>Use N separate thrones to anonymize funds  (2-8, default: %u)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5302,8 +5302,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="-136"/>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Invalid masternodeprivkey. Please see documenation.</translation>
+        <source>Invalid throneprivkey. Please see documenation.</source>
+        <translation>Invalid throneprivkey. Please see documenation.</translation>
     </message>
     <message>
         <location line="-88"/>
@@ -5312,8 +5312,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+13"/>
-        <source>Can&apos;t find random Masternode.</source>
-        <translation>Can&apos;t find random Masternode.</translation>
+        <source>Can&apos;t find random Throne.</source>
+        <translation>Can&apos;t find random Throne.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5322,8 +5322,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+16"/>
-        <source>Could not parse masternode.conf</source>
-        <translation>Could not parse masternode.conf</translation>
+        <source>Could not parse throne.conf</source>
+        <translation>Could not parse throne.conf</translation>
     </message>
     <message>
         <location line="+59"/>
@@ -5332,8 +5332,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+1"/>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Invalid port detected in masternode.conf</translation>
+        <source>Invalid port detected in throne.conf</source>
+        <translation>Invalid port detected in throne.conf</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5397,18 +5397,18 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+4"/>
-        <source>Masternode options:</source>
-        <translation>Masternode options:</translation>
+        <source>Throne options:</source>
+        <translation>Throne options:</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode queue is full.</translation>
+        <source>Throne queue is full.</source>
+        <translation>Throne queue is full.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Throne:</source>
+        <translation>Throne:</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5537,8 +5537,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
     </message>
     <message>
         <location line="+2"/>
-        <source>Set the masternode private key</source>
-        <translation>Set the masternode private key</translation>
+        <source>Set the throne private key</source>
+        <translation>Set the throne private key</translation>
     </message>
     <message>
         <location line="+3"/>

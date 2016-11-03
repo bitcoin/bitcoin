@@ -15,8 +15,8 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
-#include "masternodeman.h"
-#include "masternode-sync.h"
+#include "throneman.h"
+#include "throne-sync.h"
 #include "util.h"
 
 #include <stdint.h>
@@ -32,7 +32,7 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     optionsModel(optionsModel),
     peerTableModel(0),
     cachedNumBlocks(0),
-    cachedMasternodeCountString(""),
+    cachedThroneCountString(""),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
 {
@@ -68,7 +68,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return nNum;
 }
 
-QString ClientModel::getMasternodeCountString() const
+QString ClientModel::getThroneCountString() const
 {
     return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
             .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
@@ -130,13 +130,13 @@ void ClientModel::updateTimer()
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
     if (cachedNumBlocks != newNumBlocks ||
         cachedReindexing != fReindex || cachedImporting != fImporting ||
-            masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets)
+            throneSync.RequestedThroneAttempt != prevAttempt || throneSync.RequestedThroneAssets != prevAssets)
     {
         cachedNumBlocks = newNumBlocks;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
-        prevAttempt = masternodeSync.RequestedMasternodeAttempt;
-        prevAssets = masternodeSync.RequestedMasternodeAssets;
+        prevAttempt = throneSync.RequestedThroneAttempt;
+        prevAssets = throneSync.RequestedThroneAssets;
 
         emit numBlocksChanged(newNumBlocks);
     }
@@ -152,13 +152,13 @@ void ClientModel::updateMnTimer()
     TRY_LOCK(cs_main, lockMain);
     if(!lockMain)
         return;
-    QString newMasternodeCountString = getMasternodeCountString();
+    QString newThroneCountString = getThroneCountString();
 
-    if (cachedMasternodeCountString != newMasternodeCountString)
+    if (cachedThroneCountString != newThroneCountString)
     {
-        cachedMasternodeCountString = newMasternodeCountString;
+        cachedThroneCountString = newThroneCountString;
 
-        emit strMasternodesChanged(cachedMasternodeCountString);
+        emit strThronesChanged(cachedThroneCountString);
     }
 }
 

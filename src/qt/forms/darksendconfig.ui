@@ -75,7 +75,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Use 2 separate masternodes to mix funds up to 10000 CRW</string>
+    <string>Use 2 separate thrones to mix funds up to 10000 CRW</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -88,7 +88,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Use 8 separate masternodes to mix funds up to 10000 CRW</string>
+    <string>Use 8 separate thrones to mix funds up to 10000 CRW</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_4">
@@ -101,7 +101,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Use 16 separate masternodes</string>
+    <string>Use 16 separate thrones</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_6">

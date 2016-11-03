@@ -141,7 +141,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</string>
+            <string>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
            <property name="text">
             <string>Darksend rounds to use</string>
@@ -200,7 +200,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="anonymizeDarkcoin">
+          <widget class="QSpinBox" name="anonymizeCrown">
            <property name="maximumSize">
             <size>
              <width>0</width>

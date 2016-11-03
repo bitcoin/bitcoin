@@ -15,9 +15,9 @@
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternodeman.h"
-#include "masternode-payments.h"
-#include "masternode-budget.h"
+#include "throneman.h"
+#include "throne-payments.h"
+#include "throne-budget.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "pow.h"
@@ -64,7 +64,7 @@ bool fCheckBlockIndex = false;
 unsigned int nCoinCacheSize = 5000;
 bool fAlerts = DEFAULT_ALERTS;
 
-/** Fees smaller than this (in duffs) are considered zero fee (for relaying and mining)
+/** Fees smaller than this (in crowns) are considered zero fee (for relaying and mining)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
  * so it's still 10 times lower comparing to bitcoin.
  */
@@ -1618,7 +1618,7 @@ int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
     return nSubsidy + nFees;
 }
 
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
+int64_t GetThronePayment(int nHeight, int64_t blockValue)
 {
     int64_t ret = blockValue*0.4; // start at 40%
 
@@ -2974,7 +2974,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
 
-    // ----------- masternode payments / budgets -----------
+    // ----------- throne payments / budgets -----------
 
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev != NULL)
@@ -2993,7 +2993,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             if(!IsBlockPayeeValid(block.vtx[0], nHeight))
             {
                 mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                return state.DoS(100, error("CheckBlock() : Couldn't find masternode/budget payment"));
+                return state.DoS(100, error("CheckBlock() : Couldn't find throne/budget payment"));
             }
         } else {
             LogPrintf("CheckBlock() : WARNING: Couldn't find previous block, skipping IsBlockPayeeValid()\n");
@@ -3285,9 +3285,9 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         return error("%s : ActivateBestChain failed", __func__);
 
     if(!fLiteMode){
-        if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST) {
+        if (throneSync.RequestedThroneAssets > THRONE_SYNC_LIST) {
             darkSendPool.NewBlock();
-            masternodePayments.ProcessBlock(GetHeight()+10);
+            thronePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();
         }
     }
@@ -3988,44 +3988,44 @@ bool static AlreadyHave(const CInv& inv)
         return mapTxLockVote.count(inv.hash);
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
-    case MSG_MASTERNODE_WINNER:
-        if(masternodePayments.mapMasternodePayeeVotes.count(inv.hash)) {
-            masternodeSync.AddedMasternodeWinner(inv.hash);
+    case MSG_THRONE_WINNER:
+        if(thronePayments.mapThronePayeeVotes.count(inv.hash)) {
+            throneSync.AddedThroneWinner(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_VOTE:
-        if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem(inv.hash);
+        if(budget.mapSeenThroneBudgetVotes.count(inv.hash)) {
+            throneSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_PROPOSAL:
-        if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem(inv.hash);
+        if(budget.mapSeenThroneBudgetProposals.count(inv.hash)) {
+            throneSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
         if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem(inv.hash);
+            throneSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
         if(budget.mapSeenFinalizedBudgets.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem(inv.hash);
+            throneSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
-    case MSG_MASTERNODE_ANNOUNCE:
-        if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
-            masternodeSync.AddedMasternodeList(inv.hash);
+    case MSG_THRONE_ANNOUNCE:
+        if(mnodeman.mapSeenThroneBroadcast.count(inv.hash)) {
+            throneSync.AddedThroneList(inv.hash);
             return true;
         }
         return false;
-    case MSG_MASTERNODE_PING:
-        return mnodeman.mapSeenMasternodePing.count(inv.hash);
+    case MSG_THRONE_PING:
+        return mnodeman.mapSeenThronePing.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -4163,30 +4163,30 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
-                    if(masternodePayments.mapMasternodePayeeVotes.count(inv.hash)){
+                if (!pushed && inv.type == MSG_THRONE_WINNER) {
+                    if(thronePayments.mapThronePayeeVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << masternodePayments.mapMasternodePayeeVotes[inv.hash];
+                        ss << thronePayments.mapThronePayeeVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
                         pushed = true;
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    if(budget.mapSeenThroneBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetVotes[inv.hash];
+                        ss << budget.mapSeenThroneBudgetVotes[inv.hash];
                         pfrom->PushMessage("mvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    if(budget.mapSeenThroneBudgetProposals.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetProposals[inv.hash];
+                        ss << budget.mapSeenThroneBudgetProposals[inv.hash];
                         pfrom->PushMessage("mprop", ss);
                         pushed = true;
                     }
@@ -4212,21 +4212,21 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
 
-                if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
+                if (!pushed && inv.type == MSG_THRONE_ANNOUNCE) {
+                    if(mnodeman.mapSeenThroneBroadcast.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash];
+                        ss << mnodeman.mapSeenThroneBroadcast[inv.hash];
                         pfrom->PushMessage("mnb", ss);
                         pushed = true;
                     }
                 }
 
-                if (!pushed && inv.type == MSG_MASTERNODE_PING) {
-                    if(mnodeman.mapSeenMasternodePing.count(inv.hash)){
+                if (!pushed && inv.type == MSG_THRONE_PING) {
+                    if(mnodeman.mapSeenThronePing.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenMasternodePing[inv.hash];
+                        ss << mnodeman.mapSeenThronePing[inv.hash];
                         pfrom->PushMessage("mnp", ss);
                         pushed = true;
                     }
@@ -4662,7 +4662,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<uint256> vEraseQueue;
         CTransaction tx;
 
-        //masternode signed transaction
+        //throne signed transaction
         bool ignoreFees = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
@@ -4671,15 +4671,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if(strCommand == "tx") {
             vRecv >> tx;
         } else if (strCommand == "dstx") {
-            //these allow masternodes to publish a limited amount of free transactions
+            //these allow thrones to publish a limited amount of free transactions
             vRecv >> tx >> vin >> vchSig >> sigTime;
 
-            CMasternode* pmn = mnodeman.Find(vin);
+            CThrone* pmn = mnodeman.Find(vin);
             if(pmn != NULL)
             {
                 if(!pmn->allowFreeTx){
-                    //multiple peers can send us a valid masternode transaction
-                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString());
+                    //multiple peers can send us a valid throne transaction
+                    if(fDebug) LogPrintf("dstx: Throne sending too many transactions %s\n", tx.GetHash().ToString());
                     return true;
                 }
 
@@ -4687,12 +4687,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 std::string errorMessage = "";
                 if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString());
+                    LogPrintf("dstx: Got bad throne address signature %s \n", vin.ToString());
                     //pfrom->Misbehaving(20);
                     return false;
                 }
 
-                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString());
+                LogPrintf("dstx: Got Throne transaction %s\n", tx.GetHash().ToString());
 
                 ignoreFees = true;
                 pmn->allowFreeTx = false;
@@ -5124,10 +5124,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
         mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
         budget.ProcessMessage(pfrom, strCommand, vRecv);
-        masternodePayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+        thronePayments.ProcessMessageThronePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
-        masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+        throneSync.ProcessMessage(pfrom, strCommand, vRecv);
     }
 
 

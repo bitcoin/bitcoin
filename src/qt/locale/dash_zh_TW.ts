@@ -860,15 +860,15 @@ Address: %4
         <translation>請選擇穩私級別。</translation>
     </message>
     <message>
-        <source>Use 2 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 2 separate thrones to mix funds up to 10000 CRW</source>
         <translation>使用2個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
-        <source>Use 8 separate masternodes to mix funds up to 10000 CRW</source>
+        <source>Use 8 separate thrones to mix funds up to 10000 CRW</source>
         <translation>使用8個獨立的主節點來混合最高達1000達世幣的資金</translation>
     </message>
     <message>
-        <source>Use 16 separate masternodes</source>
+        <source>Use 16 separate thrones</source>
         <translation>使用16個獨立的主節點</translation>
     </message>
     <message>
@@ -1182,7 +1182,7 @@ Address: %4
         <translation>專家</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual thrones that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>這項設置決定輸入的資金將會經過多少個主節點進,行匿名處理。&lt;br/&gt;多輪的匿名化處理提供了更高程度的隱私，但也花費更多的費用。</translation>
     </message>
     <message>
@@ -1451,7 +1451,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>啟動/停止混合</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Throne.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>你提交到主節點的面額。&lt;br&gt;為了混合，其他用戶必須提交完全一樣的面額。</translation>
     </message>
     <message>
@@ -1788,7 +1788,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>區塊鏈</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Thrones</source>
         <translation>主節點數目</translation>
     </message>
     <message>
@@ -2256,12 +2256,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>縮小</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>如果自訂手續費設定為 1000 duffs ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 duffs 的手續費，&lt;br /&gt;而「至少」會支付 1000 duffs。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then "per kilobyte" only pays 250 crowns in fee,&lt;br /&gt;while "at least" pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 crowns ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 crowns 的手續費，&lt;br /&gt;而「至少」會支付 1000 crowns。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>如果自訂手續費設定為 1000 duffs ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 duffs 的手續費，&lt;br /&gt;而「總共至少」會支付 1000 duffs。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+        <source>If the custom fee is set to 1000 crowns and the transaction is only 250 bytes, then "per kilobyte" only pays 250 crowns in fee,&lt;br /&gt;while "total at least" pays 1000 crowns. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 crowns ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 crowns 的手續費，&lt;br /&gt;而「總共至少」會支付 1000 crowns。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
@@ -3282,8 +3282,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告: 錢包檔 wallet.dat 壞掉，但資料被拯救回來了！原來的 wallet.dat 會改儲存在 %s, 檔名是 wallet.{timestamp}.bak. 如果餘額或交易資料有誤，你應該要用備份資料復原回來。</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>您必須在配置文件中指定一個masternodeprivkey。請參閱文檔以獲得幫助。</translation>
+        <source>You must specify a throneprivkey in the configuration. Please see documentation for help.</source>
+        <translation>您必須在配置文件中指定一個throneprivkey。請參閱文檔以獲得幫助。</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -3550,7 +3550,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>未完成匿名發送請求:</translation>
     </message>
     <message>
-        <source>Error connecting to Masternode.</source>
+        <source>Error connecting to Throne.</source>
         <translation>連接到主節點時發生錯誤。</translation>
     </message>
     <message>
@@ -3622,7 +3622,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>在通訊埠 &lt;port&gt; 聽候 JSON-RPC 連線(預設值: %u, 或若為測試網路: %u)</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
+        <source>Loading throne cache...</source>
         <translation>正在載入主節點緩存...</translation>
     </message>
     <message>
@@ -3630,15 +3630,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在進行混合...</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Thrones detected.</source>
         <translation>沒有檢測到主節點。</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Throne found.</source>
         <translation>沒有找到相容的主節點。</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Throne list.</source>
         <translation>不在主節點列表中。</translation>
     </message>
     <message>
@@ -3698,7 +3698,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>指定連線在幾毫秒後逾時 (最少值: 1, 預設值: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
+        <source>Specify throne configuration file (default: %s)</source>
         <translation>指定主節點配置文件(預設值: %s)</translation>
     </message>
     <message>
@@ -3726,11 +3726,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在跟預算案進行同步...</translation>
     </message>
     <message>
-        <source>Synchronizing masternodes...</source>
+        <source>Synchronizing thrones...</source>
         <translation>正在跟主節點網絡進行同步...</translation>
     </message>
     <message>
-        <source>This is not a Masternode.</source>
+        <source>This is not a Throne.</source>
         <translation>這並不是一個主節點。</translation>
     </message>
     <message>
@@ -3770,7 +3770,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在載入錢包資料...</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Throne:</source>
         <translation>主節點:</translation>
     </message>
     <message>

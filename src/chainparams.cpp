@@ -65,12 +65,15 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
         ( 600000, uint256("0x84e2277d1dc957ae41869498311937bdcedce7e48fa33f962b9b9e9c16df5410"))
         ( 700000, uint256("0x75ec82017af651ac1383b623898d6f6b57d0500137913fd000f928b8bd409146"))
         ( 800000, uint256("0x64412d45320a7f2394b009bcf00bc841e60c3e0680dbfc45176568699af5bdec"))
+        ( 900000, uint256("0xbdf0bcfe3ada671b64526854af8cb7f6f52c1489446e26268e70fbee1e72be5f"))
+        ( 1000000, uint256("0xcb324809eef485d0243d2210dd15300a941fece86a19e858383429c80cf37b0b"))
+        ( 1100000, uint256("0xf172bdb7a894b9e055eae4b1b2e8d91aba9404d24fa808985346cc7c8eea35a6"))
 
         ;
 static const Checkpoints::CCheckpointData data = {
         &mapCheckpoints,
         1408905730, // * UNIX timestamp of last checkpoint block
-        838860,    // * total number of transactions between genesis and last checkpoint
+        1152752,    // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
         1540        // * estimated number of transactions per day after checkpoint
     };
@@ -176,9 +179,9 @@ public:
 
         nPoolMaxTransactions = 3;
         strSporkKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
-        strMasternodePaymentsPubKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
+        strThronePaymentsPubKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
         strDarksendPoolDummyAddress = "18WTcWvwrNnfqeQAn6th9QQ2EpnXMq5Th8";
-        nStartMasternodePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
+        nStartThronePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const 
@@ -227,7 +230,7 @@ public:
         *///legacy seeders
         //vSeeds.push_back(CDNSSeedData("darkcoin.io",  "testnet-seed.darkcoin.io"));
         //vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
-        //vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
+        //vSeeds.push_back(CDNSSeedData("throne.io", "test.dnsseed.throne.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(111);                    // Testnet dash addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);                    // Testnet dash script addresses start with '8' or '9'
@@ -248,9 +251,9 @@ public:
 
         nPoolMaxTransactions = 2;
         strSporkKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
-        strMasternodePaymentsPubKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
+        strThronePaymentsPubKey = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
         strDarksendPoolDummyAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
-        nStartMasternodePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
+        nStartThronePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
     }
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {

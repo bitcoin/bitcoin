@@ -17,6 +17,7 @@
 
 class CBlock;
 class CBlockIndex;
+class CReserveKey;
 
 /** Header for merge-mining data in the coinbase.  */
 static const unsigned char pchMergedMiningHeader[] = { 0xfa, 0xbe, 'm', 'm' };

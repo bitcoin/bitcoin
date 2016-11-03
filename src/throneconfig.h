@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SRC_MASTERNODECONFIG_H_
-#define SRC_MASTERNODECONFIG_H_
+#ifndef SRC_THRONECONFIG_H_
+#define SRC_THRONECONFIG_H_
 
 #include <string>
 #include <vector>
@@ -12,15 +12,15 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-class CMasternodeConfig;
-extern CMasternodeConfig masternodeConfig;
+class CThroneConfig;
+extern CThroneConfig throneConfig;
 
-class CMasternodeConfig
+class CThroneConfig
 {
 
 public:
 
-    class CMasternodeEntry {
+    class CThroneEntry {
 
     private:
         std::string alias;
@@ -30,7 +30,7 @@ public:
         std::string outputIndex;
     public:
 
-        CMasternodeEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
+        CThroneEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
             this->alias = alias;
             this->ip = ip;
             this->privKey = privKey;
@@ -79,31 +79,31 @@ public:
         }
     };
 
-    CMasternodeConfig() {
-        entries = std::vector<CMasternodeEntry>();
+    CThroneConfig() {
+        entries = std::vector<CThroneEntry>();
     }
 
     void clear();
     bool read(std::string& strErr);
     void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
 
-    std::vector<CMasternodeEntry>& getEntries() {
+    std::vector<CThroneEntry>& getEntries() {
         return entries;
     }
 
     int getCount() {
         int c = -1;
-        BOOST_FOREACH(CMasternodeEntry e, entries) {
+        BOOST_FOREACH(CThroneEntry e, entries) {
             if(e.getAlias() != "") c++;
         }
         return c;
     }
 
 private:
-    std::vector<CMasternodeEntry> entries;
+    std::vector<CThroneEntry> entries;
 
 
 };
 
 
-#endif /* SRC_MASTERNODECONFIG_H_ */
+#endif /* SRC_THRONECONFIG_H_ */

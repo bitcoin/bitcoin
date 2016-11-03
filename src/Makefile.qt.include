@@ -21,7 +21,6 @@ QT_TS = \
   qt/locale/dash_zh_TW.ts
 
 QT_FORMS_UI = \
-  qt/forms/addeditthrone.ui \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
@@ -38,11 +37,10 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
-  qt/forms/thronemanager.ui \
+  qt/forms/thronelist.ui \
   qt/forms/transactiondescdialog.ui
 
 QT_MOC_CPP = \
-  qt/moc_addeditthrone.cpp \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
@@ -77,7 +75,7 @@ QT_MOC_CPP = \
   qt/moc_sendcoinsentry.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
-  qt/moc_thronemanager.cpp \
+  qt/moc_thronelist.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
@@ -110,7 +108,6 @@ PROTOBUF_H = qt/paymentrequest.pb.h
 PROTOBUF_PROTO = qt/paymentrequest.proto
 
 BITCOIN_QT_H = \
-  qt/addeditthrone.h \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
@@ -148,7 +145,7 @@ BITCOIN_QT_H = \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
-  qt/thronemanager.h \
+  qt/thronelist.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -216,11 +213,11 @@ RES_ICONS = \
   qt/res/icons/unit_dash.png \
   qt/res/icons/unit_mdash.png \
   qt/res/icons/unit_udash.png \
-  qt/res/icons/unit_duffs.png \
+  qt/res/icons/unit_crowns.png \
   qt/res/icons/unit_tdash.png \
   qt/res/icons/unit_tmdash.png \
   qt/res/icons/unit_tudash.png \
-  qt/res/icons/unit_tduffs.png
+  qt/res/icons/unit_tcrowns.png
 
 BITCOIN_QT_CPP = \
   qt/bitcoinaddressvalidator.cpp \
@@ -246,7 +243,6 @@ BITCOIN_QT_CPP = \
 
 if ENABLE_WALLET
 BITCOIN_QT_CPP += \
-  qt/addeditthrone.cpp \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
@@ -264,7 +260,7 @@ BITCOIN_QT_CPP += \
   qt/sendcoinsdialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
-  qt/thronemanager.cpp \
+  qt/thronelist.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \

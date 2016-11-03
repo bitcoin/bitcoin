@@ -26,6 +26,7 @@ class Notificator;
 class OptionsModel;
 class RPCConsole;
 class SendCoinsRecipient;
+class ThroneList;
 class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
@@ -90,6 +91,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
+    QAction *throneAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
@@ -115,7 +117,6 @@ private:
     QAction *showBackupsAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
-    QAction *throneManagerAction;
 
     QLabel *labelLogo;
     QWidget *spacer1;
@@ -202,7 +203,7 @@ private slots:
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
     /** Switch to throne manager page */
-    void gotoThroneManagerPage();
+    void gotoThronePage();
 
     /** Show open dialog */
     void openClicked();

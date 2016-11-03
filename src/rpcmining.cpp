@@ -42,8 +42,17 @@ void InitRPCMining()
     if (!pwalletMain)
         return;
 
-    // getwork/getblocktemplate mining rewards paid here:
-    pminingKey = new CReserveKey(pwalletMain);
+    CKeyID result;
+    CBitcoinAddress auxminingaddr(GetArg("-auxminingaddr", ""));
+    if (!auxminingaddr.GetKeyID(result)) {
+        pminingKey = new CReserveKey(pwalletMain);
+        CPubKey pubkey;
+        pminingKey->GetReservedKey(pubkey);
+        result = pubkey.GetID();
+    } else {
+        // getwork/getblocktemplate mining rewards paid here:
+        pminingKey = new CReserveKey(pwalletMain);
+    }
 }
 
 void ShutdownRPCMining()
@@ -305,8 +314,8 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             "1. \"txid\"       (string, required) The transaction id.\n"
             "2. priority delta (numeric, required) The priority to add or subtract.\n"
             "                  The transaction selection algorithm considers the tx as it would have a higher priority.\n"
-            "                  (priority of a transaction is calculated: coinage * value_in_duffs / txsize) \n"
-            "3. fee delta      (numeric, required) The fee value (in duffs) to add (or subtract, if negative).\n"
+            "                  (priority of a transaction is calculated: coinage * value_in_crowns / txsize) \n"
+            "3. fee delta      (numeric, required) The fee value (in crowns) to add (or subtract, if negative).\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
             "\nResult\n"
@@ -376,7 +385,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "             n                        (numeric) transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is\n"
             "             ,...\n"
             "         ],\n"
-            "         \"fee\": n,                   (numeric) difference in value between transaction inputs and outputs (in duffs); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
+            "         \"fee\": n,                   (numeric) difference in value between transaction inputs and outputs (in crowns); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
             "         \"sigops\" : n,               (numeric) total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any\n"
             "         \"required\" : true|false     (boolean) if provided and true, this transaction must be in the final block\n"
             "      }\n"
@@ -385,7 +394,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "  \"coinbaseaux\" : {                  (json object) data that should be included in the coinbase's scriptSig content\n"
             "      \"flags\" : \"flags\"            (string) \n"
             "  },\n"
-            "  \"coinbasevalue\" : n,               (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in duffs)\n"
+            "  \"coinbasevalue\" : n,               (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in crowns)\n"
             "  \"coinbasetxn\" : { ... },           (json object) information for coinbase transaction\n"
             "  \"target\" : \"xxxx\",               (string) The hash target\n"
             "  \"mintime\" : xxx,                   (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -405,8 +414,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "        { ... }                       (json object) vote candidate\n"
             "        ,...\n"
             "  ],\n"
-            "  \"masternode_payments\" : true|false,         (boolean) true, if masternode payments are enabled\n"
-            "  \"enforce_masternode_payments\" : true|false  (boolean) true, if masternode payments are enforced\n"
+            "  \"throne_payments\" : true|false,         (boolean) true, if throne payments are enabled\n"
+            "  \"enforce_throne_payments\" : true|false  (boolean) true, if throne payments are enforced\n"
             "}\n"
 
             "\nExamples:\n"
@@ -641,8 +650,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         result.push_back(Pair("payee_amount", ""));
     }
 
-    result.push_back(Pair("masternode_payments", pblock->nTime > Params().StartMasternodePayments()));
-    result.push_back(Pair("enforce_masternode_payments", true));
+    result.push_back(Pair("throne_payments", pblock->nTime > Params().StartThronePayments()));
+    result.push_back(Pair("enforce_throne_payments", true));
 
     return result;
 }
@@ -804,17 +813,6 @@ Value getauxblock(const Array& params, bool fHelp)
             nStart = GetTime();
 
             // Create new block with nonce = 0 and extraNonce = 1
-            //CKeyID keyID;
-            //CBitcoinAddress auxminingaddr(GetArg("-auxminingaddr", ""));
-            //if (!auxminingaddr.GetKeyID(keyID)) {
-            //    CReserveKey reservekey(pwalletMain);
-            //    CPubKey pubkey;
-            //    reservekey.GetReservedKey(pubkey);
-            //    keyID = pubkey.GetID();
-            //}
-            //if (GetArg("-auxminingaddr", ""))
-            //    pblocktemplate = CreateNewBlockWithKey(reservekey);
-            //else
                 pblocktemplate = CreateNewBlockWithKey(*pminingKey);
             if (!pblocktemplate)
                 throw JSONRPCError(RPC_OUT_OF_MEMORY, "out of memory");

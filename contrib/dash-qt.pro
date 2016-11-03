@@ -56,7 +56,7 @@ INCLUDEPATH += . \
                src/secp256k1/src/java
 
 # Input
-HEADERS += src/activemasternode.h \
+HEADERS += src/activethrone.h \
            src/addrman.h \
            src/alert.h \
            src/allocators.h \
@@ -91,12 +91,12 @@ HEADERS += src/activemasternode.h \
            src/leveldbwrapper.h \
            src/limitedmap.h \
            src/main.h \
-           src/masternode-budget.h \
-           src/masternode-payments.h \
-           src/masternode-sync.h \
-           src/masternode.h \
-           src/masternodeconfig.h \
-           src/masternodeman.h \
+           src/throne-budget.h \
+           src/throne-payments.h \
+           src/throne-sync.h \
+           src/throne.h \
+           src/throneconfig.h \
+           src/throneman.h \
            src/merkleblock.h \
            src/miner.h \
            src/mruset.h \
@@ -355,7 +355,7 @@ FORMS += src/qt/forms/addressbookpage.ui \
          src/qt/forms/sendcoinsentry.ui \
          src/qt/forms/signverifymessagedialog.ui \
          src/qt/forms/transactiondescdialog.ui
-SOURCES += src/activemasternode.cpp \
+SOURCES += src/activethrone.cpp \
            src/addrman.cpp \
            src/alert.cpp \
            src/allocators.cpp \
@@ -389,12 +389,12 @@ SOURCES += src/activemasternode.cpp \
            src/keystore.cpp \
            src/leveldbwrapper.cpp \
            src/main.cpp \
-           src/masternode-budget.cpp \
-           src/masternode-payments.cpp \
-           src/masternode-sync.cpp \
-           src/masternode.cpp \
-           src/masternodeconfig.cpp \
-           src/masternodeman.cpp \
+           src/throne-budget.cpp \
+           src/throne-payments.cpp \
+           src/throne-sync.cpp \
+           src/throne.cpp \
+           src/throneconfig.cpp \
+           src/throneman.cpp \
            src/merkleblock.cpp \
            src/miner.cpp \
            src/net.cpp \
@@ -408,8 +408,8 @@ SOURCES += src/activemasternode.cpp \
            src/rpcblockchain.cpp \
            src/rpcclient.cpp \
            src/rpcdump.cpp \
-           src/rpcmasternode-budget.cpp \
-           src/rpcmasternode.cpp \
+           src/rpcthrone-budget.cpp \
+           src/rpcthrone.cpp \
            src/rpcmining.cpp \
            src/rpcmisc.cpp \
            src/rpcnet.cpp \
