@@ -261,6 +261,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
+        vSeeds.push_back(CDNSSeedData("thomaszander.se", "testnet-ft-seed.bitcoin.thomaszander.se"));
 
         checkpointData = CCheckpointData();
     }
