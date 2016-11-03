@@ -2533,6 +2533,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fOneShot = false;
     fClient = false; // set by version message
     fFeeler = false;
+    nBlockSize = 0;
     fInbound = fInboundIn;
     fNetworkNode = false;
     fSuccessfullyConnected = false;
