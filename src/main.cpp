@@ -3085,34 +3085,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        // Remove orphan transactions with cs_main
-        {
-            LOCK(cs_main);
-            for(unsigned int i = 0; i < txChanged.size(); i++) {
-                std::vector<uint256> vOrphanErase;
-                const CTransaction& tx = std::get<0>(txChanged[i]);
-                // Which orphan pool entries must we evict?
-                for (size_t j = 0; j < tx.vin.size(); j++) {
-                    auto itByPrev = mapOrphanTransactionsByPrev.find(tx.vin[j].prevout);
-                    if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
-                    for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
-                        const CTransaction& orphanTx = (*mi)->second.tx;
-                        const uint256& orphanHash = orphanTx.GetHash();
-                        vOrphanErase.push_back(orphanHash);
-                    }
-                }
-
-                // Erase orphan transactions include or precluded by this block
-                if (vOrphanErase.size()) {
-                    int nErased = 0;
-                    BOOST_FOREACH(uint256 &orphanHash, vOrphanErase) {
-                        nErased += EraseOrphanTx(orphanHash);
-                    }
-                    LogPrint("mempool", "Erased %d orphan tx included or conflicted by block\n", nErased);
-                }
-            }
-        }
-
         // Notifications/callbacks that can run without cs_main
 
         // throw all transactions though the signal-interface
@@ -4750,6 +4722,34 @@ std::string GetWarnings(const std::string& strFor)
 PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn) : connman(connmanIn) {
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
+}
+
+void PeerLogicValidation::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int nPosInBlock) {
+    if (nPosInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK)
+        return;
+
+    LOCK(cs_main);
+
+    std::vector<uint256> vOrphanErase;
+    // Which orphan pool entries must we evict?
+    for (size_t j = 0; j < tx.vin.size(); j++) {
+        auto itByPrev = mapOrphanTransactionsByPrev.find(tx.vin[j].prevout);
+        if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
+        for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
+            const CTransaction& orphanTx = (*mi)->second.tx;
+            const uint256& orphanHash = orphanTx.GetHash();
+            vOrphanErase.push_back(orphanHash);
+        }
+    }
+
+    // Erase orphan transactions include or precluded by this block
+    if (vOrphanErase.size()) {
+        int nErased = 0;
+        BOOST_FOREACH(uint256 &orphanHash, vOrphanErase) {
+            nErased += EraseOrphanTx(orphanHash);
+        }
+        LogPrint("mempool", "Erased %d orphan tx included or conflicted by block\n", nErased);
+    }
 }
 
 void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
