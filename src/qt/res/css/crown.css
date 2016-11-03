@@ -11,9 +11,22 @@ background-color: #ffffff;
 
 QTableView
 {
-color: #555555;
+color: #a1a1a1;
+background-color: #ffffff;
 alternate-background-color: #f2f2f2;
+border: 1px solid #f2f2f2;
 }
+
+QTableWidget
+{
+border: 1px solid #f2f2f2;
+}
+
+QTableView::item:hover
+{
+color: #555555;
+}
+
 
 QMenuBar
 {
@@ -102,20 +115,26 @@ padding: 2px;
 
 QLabel
 {
-color: #555555;
+color: #a1a1a1;
 background-color: #ffffff;
 }
 
 QLineEdit
 {
 color: #a1a1a1;
-background-color: #ffffff;
+background-color: #f2f2f2;
+border: none;
 }
 
 QValidatedLineEdit
 {
 color: #a1a1a1;
 background-color: #ffffff;
+}
+
+QComboBox
+{
+border: 1px solid #f2f2f2;
 }
 
 QComboBox QAbstractItemView::item 
@@ -199,7 +218,7 @@ color: #555555;
 QHeaderView::section
 {
 background-color: #f2f2f2;
-color: #555555;
+color: #a1a1a1;
 padding: 6px;
 border: 1px solid #f2f2f2;
 }
@@ -210,6 +229,12 @@ background-color: #f2f2f2;
 color: #555555;
 padding: 6px;
 border: 1px solid #f2f2f2;
+}
+
+QCheckBox
+{
+color: #a1a1a1;
+background-color: #ffffff;
 }
 
 QComboBox
@@ -372,6 +397,7 @@ background-color: #f2f2f2;
 
 #lineEditCoinControlChange
 {
+border: 1px solid #f2f2f2;
 color: #555555;
 background-color: #f2f2f2;
 }
@@ -391,95 +417,66 @@ background-color: #fffff;
 #checkBoxCoinControlChange
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
 #labelFeeHeadline
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
 #checkInstantX
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
 #payToLabel
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
 #labellLabel
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
 #amountLabel
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
 #labelSPBalance
 {
 color: #a1a1a1;
-background-color: #fffff;
+background-color: #ffffff;
 }
 
-
-
-/*
-#addressBookButton
+/* receivecoinsdialog */
+#frameReceive2
 {
-border: 1px solid #9c8b46;
-color: #a1a1a1;
-background-color: #f2f2f2;
-padding: 2px;
+border: 1px solid #f2f2f2;
 }
 
-#addressBookButton:hover
+#reqLabel
 {
-border: 1px solid #9c8b46;
+border: 1px solid #f2f2f2;
 color: #555555;
-background-color: #9c8b46;
-padding: 2px;
-}
-
-#deleteButton
-{
-border: 1px solid #9c8b46;
-color: #a1a1a1;
 background-color: #f2f2f2;
-padding: 2px;
 }
 
-#deleteButton:hover
+#reqMessage
 {
-border: 1px solid #9c8b46;
+border: 1px solid #f2f2f2;
 color: #555555;
-background-color: #9c8b46;
-padding: 2px;
-}
-
-#pasteButton
-{
-border: 1px solid #9c8b46;
-color: #a1a1a1;
 background-color: #f2f2f2;
-padding: 2px;
 }
 
-#pasteButton:hover
+#frameRPH
 {
-border: 1px solid #9c8b46;
-color: #555555;
-background-color: #9c8b46;
-padding: 2px;
+border: 1px solid #f2f2f2;
 }
-
-
-*/
