@@ -187,8 +187,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
-
-    if (!CheckFinalTx(wtx))
+    status.fSPV = wtx.fSPV;
+    if (!CheckFinalTx(wtx, -1, status.fSPV))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
         {
