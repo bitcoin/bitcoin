@@ -589,7 +589,7 @@ public:
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
     bool fClient;
-    bool fInbound;
+    const bool fInbound;
     bool fNetworkNode;
     bool fSuccessfullyConnected;
     bool fDisconnect;
@@ -603,7 +603,7 @@ public:
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
     int nRefCount;
-    NodeId id;
+    const NodeId id;
 
     const uint64_t nKeyedNetGroup;
 protected:
@@ -669,7 +669,7 @@ public:
     CAmount lastSentFeeFilter;
     int64_t nextSendTimeFeeFilter;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, const std::string &addrNameIn = "", bool fInboundIn = false);
+    CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
 
 private:
@@ -677,10 +677,10 @@ private:
     void operator=(const CNode&);
 
 
-    uint64_t nLocalHostNonce;
+    const uint64_t nLocalHostNonce;
     // Services offered to this peer
-    ServiceFlags nLocalServices;
-    int nMyStartingHeight;
+    const ServiceFlags nLocalServices;
+    const int nMyStartingHeight;
 public:
 
     NodeId GetId() const {
