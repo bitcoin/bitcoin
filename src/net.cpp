@@ -71,6 +71,7 @@ constexpr const CConnman::CFullyConnectedOnly CConnman::FullyConnectedOnly;
 constexpr const CConnman::CAllNodes CConnman::AllNodes;
 
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
+static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // SHA256("localhostnonce")[0:8]
 //
 // Global state variables
 //
@@ -413,7 +414,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
-        CNode* pnode = new CNode(GetNewNodeId(), nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), pszDest ? pszDest : "", false, true);
+        NodeId id = GetNewNodeId();
+        uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
+        CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, pszDest ? pszDest : "", false, true);
 
         pnode->nServicesExpected = ServiceFlags(addrConnect.nServices & nRelevantServices);
         pnode->nTimeConnected = GetSystemTimeInSeconds();
@@ -1079,7 +1082,10 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
 
-    CNode* pnode = new CNode(GetNewNodeId(), nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), "", true);
+    NodeId id = GetNewNodeId();
+    uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
+
+    CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, "", true);
     pnode->fWhitelisted = whitelisted;
     GetNodeSignals().InitializeNode(pnode, *this);
 
@@ -2223,7 +2229,11 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     if (pnodeLocalHost == NULL) {
         CNetAddr local;
         LookupHost("127.0.0.1", local, false);
-        pnodeLocalHost = new CNode(GetNewNodeId(), nLocalServices, GetBestHeight(), INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices), 0);
+
+        NodeId id = GetNewNodeId();
+        uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
+
+        pnodeLocalHost = new CNode(id, nLocalServices, GetBestHeight(), INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices), 0, nonce);
         GetNodeSignals().InitializeNode(pnodeLocalHost, *this);
     }
 
@@ -2622,11 +2632,16 @@ int CConnman::GetBestHeight() const
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 unsigned int CConnman::GetSendBufferSize() const{ return nSendBufferMaxSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, const std::string& addrNameIn, bool fInboundIn, bool fNetworkNodeIn) :
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const std::string& addrNameIn, bool fInboundIn, bool fNetworkNodeIn) :
     addr(addrIn),
+    fInbound(fInboundIn),
+    id(idIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
     addrKnown(5000, 0.001),
     filterInventoryKnown(50000, 0.000001),
+    nLocalHostNonce(nLocalHostNonceIn),
+    nLocalServices(nLocalServicesIn),
+    nMyStartingHeight(nMyStartingHeightIn),
     nSendVersion(0)
 {
     nServices = NODE_NONE;
@@ -2648,7 +2663,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fOneShot = false;
     fClient = false; // set by version message
     fFeeler = false;
-    fInbound = fInboundIn;
     fNetworkNode = fNetworkNodeIn;
     fSuccessfullyConnected = false;
     fDisconnect = false;
@@ -2678,14 +2692,9 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
-    id = idIn;
-    nLocalServices = nLocalServicesIn;
     fPauseRecv = false;
     fPauseSend = false;
     nProcessQueueSize = 0;
-
-    GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-    nMyStartingHeight = nMyStartingHeightIn;
 
     BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
