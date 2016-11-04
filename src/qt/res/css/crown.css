@@ -398,12 +398,14 @@ border: 1px solid #f2f2f2;
 {
 color: #555555;
 background-color: #f2f2f2;
+min-height: 25px;
 }
 
 #addAsLabel
 {
 color: #555555;
 background-color: #f2f2f2;
+min-height: 25px;
 }
 
 #lineEditCoinControlChange
