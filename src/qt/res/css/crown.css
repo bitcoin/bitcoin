@@ -496,7 +496,7 @@ border: 1px solid #f2f2f2;
 }
 
 
-
+/* openuri dialog */
 #uriEdit
 {
 border: 1px solid #f2f2f2;
@@ -504,4 +504,42 @@ color: #555555;
 background-color: #f2f2f2;
 min-height: 25px;
 }
+
+
+/* sign/verify message dialog */
+#addressIn_SM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#signatureOut_SM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#addressIn_VM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#signatureIn_VM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+
+
+
 
