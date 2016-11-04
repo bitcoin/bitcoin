@@ -277,6 +277,17 @@ QAbstractSpinBox
 {
 background: #f2f2f2;
 color: #555555;
+min-height: 25px;
+}
+
+QAbstractSpinBox::down-arrow 
+{
+image: url(':css/downArrow_small');
+}
+
+QAbstractSpinBox::up-arrow 
+{
+image: url(':css/upArrow_small');
 }
 
 QStackedWidget#SendCoinsEntry .QToolButton 
