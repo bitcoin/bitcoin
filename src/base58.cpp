@@ -275,6 +275,14 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
     return true;
 }
 
+bool CBitcoinAddress::GetScriptID(CScriptID& scriptID) const
+{
+    if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
+        return false;
+    memcpy(scriptID.begin(), &vchData[0], 20);
+    return true;
+}
+
 bool CBitcoinAddress::IsScript() const
 {
     return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);

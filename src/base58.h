@@ -116,6 +116,7 @@ public:
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
+    bool GetScriptID(CScriptID &scriptID) const;
     bool IsScript() const;
 };
 
