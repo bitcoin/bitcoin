@@ -27,6 +27,17 @@ QTableView::item:hover
 color: #555555;
 }
 
+QTreeView 
+{
+color: #a1a1a1;
+background-color: #ffffff;
+alternate-background-color: #f2f2f2;
+}
+
+QTreeView::item:hover
+{
+color: #555555;
+}
 
 QMenuBar
 {

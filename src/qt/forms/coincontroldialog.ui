@@ -340,6 +340,9 @@
        <height>40</height>
       </size>
      </property>
+     <property name="styleSheet">
+      <string notr="true">border: 1px solid #f2f2f2;</string>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -360,6 +363,9 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="styleSheet">
+           <string notr="true">border: 1px solid #9c8b46; padding: 2px;</string>
+          </property>
           <property name="text">
            <string>(un)select all</string>
           </property>
@@ -375,6 +381,9 @@
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">border: 1px solid #9c8b46; padding: 2px;</string>
           </property>
           <property name="text">
            <string>toggle lock state</string>
@@ -392,6 +401,9 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="styleSheet">
+           <string notr="true">color: #a1a1a1;</string>
+          </property>
           <property name="text">
            <string>Tree mode</string>
           </property>
@@ -405,6 +417,9 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="styleSheet">
+           <string notr="true">color: #a1a1a1;</string>
+          </property>
           <property name="text">
            <string>List mode</string>
           </property>
@@ -415,6 +430,9 @@
         </item>
         <item>
          <widget class="QLabel" name="labelLocked">
+          <property name="styleSheet">
+           <string notr="true">color: #a1a1a1;</string>
+          </property>
           <property name="text">
            <string>(1 locked)</string>
           </property>
@@ -442,6 +460,9 @@
     <widget class="CoinControlTreeWidget" name="treeWidget">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border: 1px solid #f2f2f2;</string>
      </property>
      <property name="sortingEnabled">
       <bool>false</bool>
