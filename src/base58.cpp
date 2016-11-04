@@ -288,8 +288,13 @@ bool CBitcoinAddress::IsScript() const
 
 void CBitcoinSecret::SetKey(const CKey& vchSecret)
 {
+    SetKey(vchSecret, Params());
+}
+
+void CBitcoinSecret::SetKey(const CKey& vchSecret, const CChainParams& chainparams)
+{
     assert(vchSecret.IsValid());
-    SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
+    SetData(chainparams.Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
     if (vchSecret.IsCompressed())
         vchData.push_back(1);
 }
