@@ -539,7 +539,43 @@ background-color: #f2f2f2;
 min-height: 25px;
 }
 
+#messageIn_SM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
 
+#messageIn_VM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
 
+#passEdit1
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
 
+#passEdit2
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#passEdit3
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
 
