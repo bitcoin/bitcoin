@@ -1619,12 +1619,14 @@ void CConnman::ThreadOpenConnections()
         // Only connect out to one peer per network group (/16 for IPv4).
         // Do this here so we don't have to critsect vNodes inside mapAddresses critsect.
         int nOutbound = 0;
+        int nRelevant = 0;
         std::set<std::vector<unsigned char> > setConnected;
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
                 if (!pnode->fInbound) {
                     setConnected.insert(pnode->addr.GetGroup());
+                    nRelevant += pnode->fSuccessfullyConnected && ((pnode->nServices & nRelevantServices) == nRelevantServices);
                     nOutbound++;
                 }
             }
@@ -1681,8 +1683,10 @@ void CConnman::ThreadOpenConnections()
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
-            // only consider nodes missing relevant services after 40 failed attempts and only if less than half the outbound are up.
-            if ((addr.nServices & nRelevantServices) != nRelevantServices && (nTries < 40 || nOutbound >= (nMaxOutbound >> 1)))
+            // only consider nodes missing relevant services we have at least 4 already,
+            // and at least 6 once SegWit has activated
+            if ((addr.nServices & nRelevantServices) != nRelevantServices && (nTries < 40 &&
+                    nRelevant < 5) && !fFeeler)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
