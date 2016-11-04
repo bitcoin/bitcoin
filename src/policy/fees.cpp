@@ -466,13 +466,13 @@ void CBlockPolicyEstimator::Write(CAutoFile& fileout)
     feeStats.Write(fileout);
 }
 
-void CBlockPolicyEstimator::Read(CAutoFile& filein, int nVersionRequired)
+void CBlockPolicyEstimator::Read(CAutoFile& filein, int nFileVersion)
 {
     int nFileBestSeenHeight;
     filein >> nFileBestSeenHeight;
     feeStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
-    if (nVersionRequired < 139900) {
+    if (nFileVersion < 139900) {
         TxConfirmStats priStats;
         priStats.Read(filein);
     }

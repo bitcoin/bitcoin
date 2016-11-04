@@ -242,7 +242,7 @@ public:
     void Write(CAutoFile& fileout);
 
     /** Read estimation data from a file */
-    void Read(CAutoFile& filein, int nVersionRequired);
+    void Read(CAutoFile& filein, int nFileVersion);
 
 private:
     CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main
