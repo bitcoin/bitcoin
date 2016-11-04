@@ -413,6 +413,7 @@ min-height: 25px;
 border: 1px solid #f2f2f2;
 color: #555555;
 background-color: #f2f2f2;
+min-height: 25px;
 }
 
 #labelCoinControlFeatures
@@ -493,3 +494,14 @@ background-color: #f2f2f2;
 {
 border: 1px solid #f2f2f2;
 }
+
+
+
+#uriEdit
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
