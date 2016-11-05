@@ -357,7 +357,9 @@ uint64_t CNode::nMaxOutboundCycleStartTime = 0;
 
 CNode* FindNode(const CNetAddr& ip)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes)
         if ((CNetAddr)pnode->addr == ip)
             return (pnode);
@@ -366,7 +368,9 @@ CNode* FindNode(const CNetAddr& ip)
 
 CNode* FindNode(const CSubNet& subNet)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     if (subNet.Match((CNetAddr)pnode->addr))
         return (pnode);
@@ -375,7 +379,9 @@ CNode* FindNode(const CSubNet& subNet)
 
 CNode* FindNode(const std::string& addrName)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes)
         if (pnode->addrName == addrName)
             return (pnode);
@@ -384,7 +390,9 @@ CNode* FindNode(const std::string& addrName)
 
 CNode* FindNode(const CService& addr)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes)
         if ((CService)pnode->addr == addr)
             return (pnode);
@@ -412,10 +420,13 @@ CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
         if (IsLocal(addrConnect))
             return NULL;
 
+        //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+        LOCK(cs_vNodes);
         // Look for an existing connection
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
         {
+            //NOTE: Because ConnectNode adds a reference, we don't have to protect the returned CNode* like for FindNode
             pnode->AddRef();
             return pnode;
         }
@@ -1942,13 +1953,18 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOu
     // Initiate outbound network connection
     //
     boost::this_thread::interruption_point();
-    if (!pszDest) {
-        if (IsLocal(addrConnect) ||
-            FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
-            FindNode(addrConnect.ToStringIPPort()))
+    {
+        //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+        LOCK(cs_vNodes);
+        if (!pszDest) {
+            if (IsLocal(addrConnect) ||
+                FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
+                FindNode(addrConnect.ToStringIPPort()))
+                return false;
+        }
+        else if (FindNode(std::string(pszDest)))
             return false;
-    } else if (FindNode(std::string(pszDest)))
-        return false;
+    }
 
     CNode* pnode = ConnectNode(addrConnect, pszDest);
     boost::this_thread::interruption_point();

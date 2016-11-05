@@ -240,7 +240,7 @@ UniValue disconnectnode(const UniValue& params, bool fHelp)
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
         );
 
-    //BU: Add lock on cs_vNodes here to prevent the pNode returned from potentially being deleted before setting fDisconnect
+    //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
     LOCK(cs_vNodes);
     CNode* pNode = FindNode(params[0].get_str());
     if (pNode == NULL)

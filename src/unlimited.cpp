@@ -492,18 +492,33 @@ UniValue pushtx(const UniValue& params, bool fHelp)
 
     string strNode = params[0].get_str();
 
-    CNode* node = FindNode(strNode);
-    if (!node) {
+    //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+    CNode* node = NULL;
+    {
+        LOCK(cs_vNodes);
+        node = FindNode(strNode);
+
+        if (!node) {
 #if 0
-    if (strCommand == "onetry") {
-        CAddress addr;
-        OpenNetworkConnection(addr, NULL, strNode.c_str());
-        return NullUniValue;
-    }
+        if (strCommand == "onetry") {
+            CAddress addr;
+            OpenNetworkConnection(addr, NULL, strNode.c_str());
+            return NullUniValue;
+        }
 #endif
-        throw runtime_error("Unknown node");
+            throw runtime_error("Unknown node");
+        }
+
+        //BU: Since we are passing node to another function, add a ref to prevent use-after-free
+        //    This allows us to release the lock on cs_vNodes earlier while still protecting node from deletion
+        node->AddRef();
     }
+    
     UnlimitedPushTxns(node);
+
+    //BU: Remember to release the reference we took on node to protect from use-after-free
+    node->Release();
+
     return NullUniValue;
 }
 
@@ -1484,6 +1499,8 @@ bool CheckAndRequestExpeditedBlocks(CNode* pfrom)
 void CheckNodeSupportForThinBlocks()
 {
     if(IsThinBlocksEnabled()) {
+        //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+        LOCK(cs_vNodes);
         // Check that a nodes pointed to with connect-thinblock actually supports thinblocks
         BOOST_FOREACH(string& strAddr, mapMultiArgs["-connect-thinblock"]) {
             if(CNode* pnode = FindNode(strAddr)) {
