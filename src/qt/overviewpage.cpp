@@ -282,6 +282,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         connect(ui->privateSendAuto, SIGNAL(clicked()), this, SLOT(privateSendAuto()));
         connect(ui->privateSendReset, SIGNAL(clicked()), this, SLOT(privateSendReset()));
+        connect(ui->privateSendInfo, SIGNAL(clicked()), this, SLOT(privateSendInfo()));
         connect(ui->togglePrivateSend, SIGNAL(clicked()), this, SLOT(togglePrivateSend()));
         updateWatchOnlyLabels(model->haveWatchOnly());
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
@@ -441,6 +442,7 @@ void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
     ui->labelSubmittedDenom->setVisible(fShowAdvancedPSUI);
     ui->privateSendAuto->setVisible(fShowAdvancedPSUI);
     ui->privateSendReset->setVisible(fShowAdvancedPSUI);
+    ui->privateSendInfo->setVisible(true);
     ui->labelPrivateSendLastMessage->setVisible(fShowAdvancedPSUI);
 }
 
@@ -574,6 +576,44 @@ void OverviewPage::privateSendReset(){
     QMessageBox::warning(this, tr("PrivateSend"),
         tr("PrivateSend was successfully reset."),
         QMessageBox::Ok, QMessageBox::Ok);
+}
+
+void OverviewPage::privateSendInfo(){
+
+    // Artificial long boxtitle to ensure minimum width without overwriting the global CSS styles
+    QString placeHolder = "                                                                                                                                                                                    ";
+    QString infoBoxTitle = tr("PrivateSend") + placeHolder;
+    
+    QMessageBox::information(this, infoBoxTitle,
+        tr("\
+<h3>PrivateSend Basics</h3> \
+PrivateSend gives you true financial privacy by obscuring the origins of your funds. \
+All the Dash in your wallet is comprised of different \"inputs\" which you can think of as separate, discrete coins.<br> \
+PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. \
+You retain control of your money at all times..<hr> \
+<b>The PrivateSend process works like this:</b>\
+<ol type=\"1\"> \
+<li>PrivateSend begins by breaking your transaction inputs down into standard denominations. \
+These denominations are 0.1 DASH, 1 DASH, 10 DASH, and 100 DASH--sort of like the paper money you use every day.</li> \
+<li>Your wallet then sends requests to specially configured software nodes on the network, called \"masternodes.\" \
+These masternodes are informed then that you are interested in mixing a certain denomination. \
+No identifiable information is sent to the masternodes, so they never know \"who\" you are.</li> \
+<li>When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. \
+The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. \
+Your wallet pays that denomination directly to itself, but in a different address (called a change address).</li> \
+<li>In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. \
+Each time the process is completed, it's called a \"round.\" Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.</li> \
+<li>This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, \
+your funds will already be anonymized. No additional waiting is required.</li> \
+</ol> <hr>\
+<b>IMPORTANT:</b> Your wallet only contains 1000 of these \"change addresses.\" Every time a mixing event happens, up to 9 of your addresses are used up. \
+This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. \
+It can only do this, however, if you have automatic backups enabled.<br> \
+Consequently, users who have backups disabled will also have PrivateSend disabled. <hr>\
+For more info see <a href=\"https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend\">https://dashpay.atlassian.net/wiki/display/DOC/PrivateSend</a> \
+        "),
+        QMessageBox::Ok, QMessageBox::Ok);
+
 }
 
 void OverviewPage::togglePrivateSend(){
