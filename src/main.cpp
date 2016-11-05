@@ -4976,6 +4976,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             break;
 
         const CInv &inv = *it;
+        LogPrint("net", "ProcessGetData -- inv = %s\n", inv.ToString());
         {
             boost::this_thread::interruption_point();
             it++;
@@ -5169,6 +5170,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!pushed && inv.type == MSG_GOVERNANCE_OBJECT) {
+                    LogPrint("net", "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                     bool topush = false;
                     {
@@ -5179,6 +5181,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             }
                         }
                     }
+                    LogPrint("net", "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
                     if(topush) {
                         pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECT, ss);
                         pushed = true;
@@ -5197,6 +5200,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         }
                     }
                     if(topush) {
+                        LogPrint("net", "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
                         pfrom->PushMessage(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss);
                         pushed = true;
                     }

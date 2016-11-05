@@ -185,6 +185,9 @@ public:
         READWRITE(mapVotesByHash);
         READWRITE(mapVotesByType);
         READWRITE(mapLastMasternodeTrigger);
+        if(ser_action.ForRead()) {
+            AddCachedTriggers();
+        }
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
@@ -207,6 +210,9 @@ public:
     void AddSeenVote(uint256 nHash, int status);
 
     bool MasternodeRateCheck(const CTxIn& vin, int nObjectType);
+
+private:
+    void AddCachedTriggers();
 
 };
 

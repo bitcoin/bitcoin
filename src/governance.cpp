@@ -300,6 +300,8 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     if(!pCurrentBlockIndex) return;
 
+    LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- After pCurrentBlockIndex (not NULL)\n");
+
     // UPDATE CACHE FOR EACH OBJECT THAT IS FLAGGED DIRTYCACHE=TRUE
 
     object_m_it it = mapObjects.begin();
@@ -332,7 +334,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         // IF DELETE=TRUE, THEN CLEAN THE MESS UP!
 
         if(pObj->fCachedDelete || pObj->fExpired) {
-            LogPrintf("UpdateCachesAndClean -- erase obj %s\n", (*it).first.ToString());
+            LogPrintf("CGovernanceManager::UpdateCachesAndClean -- erase obj %s\n", (*it).first.ToString());
             mnodeman.RemoveGovernanceObject(pObj->GetHash());
             mapObjects.erase(it++);
         } else {
@@ -479,9 +481,14 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
        vote_m_it it2 = mapVotesByHash.begin();
        while(it2 != mapVotesByHash.end()) {
-          pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, (*it2).first));
-          nInvCount++;
-          ++it2;
+           CGovernanceVote& vote = it2->second;
+           if(!vote.IsValid(true)) {
+               // Don't relay votes that are now invalid (ie. missing MN) to avoid being banned
+               continue;
+           }
+           pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, (*it2).first));
+           nInvCount++;
+           ++it2;
        }
     }
 
@@ -611,6 +618,21 @@ bool CGovernanceManager::MasternodeRateCheck(const CTxIn& vin, int nObjectType)
     LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: vin = %s, current height = %d, last MN height = %d, minimum difference = %d\n",
               vin.prevout.ToStringShort(), nCachedBlockHeight, it->second, mindiff);
     return false;
+}
+
+void CGovernanceManager::AddCachedTriggers()
+{
+    LOCK(cs);
+
+    for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
+        CGovernanceObject& govobj = it->second;
+        
+        if(govobj.nObjectType != GOVERNANCE_OBJECT_TRIGGER) {
+            continue;
+        }
+
+        triggerman.AddNewTrigger(govobj.GetHash());
+    }    
 }
 
 CGovernanceObject::CGovernanceObject()
@@ -1106,7 +1128,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
     LOCK(cs);
     pCurrentBlockIndex = pindex;
     nCachedBlockHeight = pCurrentBlockIndex->nHeight;
-    LogPrint("gobject", "pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
+    LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
 
     // TO REPROCESS OBJECTS WE SHOULD BE SYNCED
 
