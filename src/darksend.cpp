@@ -48,6 +48,13 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
+        if(IsSessionReady()) {
+            // too many users in this session already, reject new ones
+            LogPrintf("DSACCEPT -- queue is already full!\n");
+            PushStatus(pfrom, STATUS_ACCEPTED, ERR_QUEUE_FULL);
+            return;
+        }
+
         int nDenom;
         CTransaction txCollateral;
         vRecv >> nDenom >> txCollateral;
@@ -151,15 +158,15 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
-        CDarkSendEntry entry;
-        vRecv >> entry;
-
         //do we have enough users in the current session?
         if(!IsSessionReady()) {
             LogPrintf("DSVIN -- session not complete!\n");
             PushStatus(pfrom, STATUS_REJECTED, ERR_SESSION);
             return;
         }
+
+        CDarkSendEntry entry;
+        vRecv >> entry;
 
         LogPrint("privatesend", "DSVIN -- txCollateral %s", entry.txCollateral.ToString());
 
@@ -253,6 +260,11 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
+        if(fMasterNode) {
+            // LogPrintf("DSSTATUSUPDATE -- Can't run on a Masternode!\n");
+            return;
+        }
+
         if(!pSubmittedToMasternode) return;
         if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pfrom->addr) {
             //LogPrintf("DSSTATUSUPDATE -- message doesn't match current Masternode: pSubmittedToMasternode %s addr %s\n", pSubmittedToMasternode->addr.ToString(), pfrom->addr.ToString());
@@ -300,6 +312,11 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
+        if(!fMasterNode) {
+            LogPrintf("DSSIGNFINALTX -- not a Masternode!\n");
+            return;
+        }
+
         std::vector<CTxIn> vecTxIn;
         vRecv >> vecTxIn;
 
@@ -327,6 +344,11 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
+        if(fMasterNode) {
+            // LogPrintf("DSFINALTX -- Can't run on a Masternode!\n");
+            return;
+        }
+
         if(!pSubmittedToMasternode) return;
         if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pfrom->addr) {
             //LogPrintf("DSFINALTX -- message doesn't match current Masternode: pSubmittedToMasternode %s addr %s\n", pSubmittedToMasternode->addr.ToString(), pfrom->addr.ToString());
@@ -351,6 +373,11 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
 
         if(pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrintf("DSCOMPLETE -- incompatible version! nVersion: %d\n", pfrom->nVersion);
+            return;
+        }
+
+        if(fMasterNode) {
+            // LogPrintf("DSCOMPLETE -- Can't run on a Masternode!\n");
             return;
         }
 
@@ -1222,8 +1249,14 @@ bool CDarksendPool::SignFinalTransaction(const CTransaction& finalTransactionNew
                 LogPrint("privatesend", "CDarksendPool::SignFinalTransaction -- nMyInputIndex: %d, sigs.size(): %d, scriptSig=%s\n", nMyInputIndex, (int)sigs.size(), ScriptToAsmStr(finalMutableTransaction.vin[nMyInputIndex].scriptSig));
             }
         }
+    }
 
-        LogPrint("privatesend", "CDarksendPool::SignFinalTransaction -- finalMutableTransaction=%s", finalMutableTransaction.ToString());
+    if(sigs.empty()) {
+        LogPrintf("CDarksendPool::SignFinalTransaction -- can't sign anything!\n");
+        UnlockCoins();
+        SetNull();
+
+        return false;
     }
 
     // push all of our signatures to the Masternode
@@ -1647,8 +1680,8 @@ bool CDarksendPool::PrepareDenominate(int nMinRounds, int nMaxRounds, std::strin
         return false;
     }
 
-    if (GetState() != POOL_STATE_ERROR && GetState() != POOL_STATE_SUCCESS && GetEntriesCount() > 0) {
-        strErrorRet = "You already have pending entries in the PrivateSend pool";
+    if (GetEntriesCount() > 0) {
+        strErrorRet = "Already have pending entries in the PrivateSend pool";
         return false;
     }
 
@@ -2358,7 +2391,7 @@ void CDarksendPool::RelayIn(const CDarkSendEntry& entry)
 void CDarksendPool::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
 {
     if(!pnode) return;
-    pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, nEntriesCount, (int)nStatusUpdate, (int)nMessageID);
+    pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, (int)vecEntries.size(), (int)nStatusUpdate, (int)nMessageID);
 }
 
 void CDarksendPool::RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID)
