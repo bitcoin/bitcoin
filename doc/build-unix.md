@@ -250,12 +250,12 @@ If you want to build statically linked binaries so that you could compile in one
 and deploy in same parch/platform boxes without the need of installing all the dependencies
 just follow this steps:
 
-   git clone https://gtihub.com/BitcoinUnlimtied/BitcoinUnlimited.git BU
-   cd BU/depends
-   make HOST=x86_64-pc-linux-gnu NO_QT=1 -j4
-   cd ..
-   ./configure --prefix=./depends/x86_64-pc-linux-gnu --without-gui
-   make -j4
+    git clone https://gtihub.com/BitcoinUnlimtied/BitcoinUnlimited.git BU
+    cd BU/depends
+    make HOST=x86_64-pc-linux-gnu NO_QT=1 -j4
+    cd ..
+    ./configure --prefix=./depends/x86_64-pc-linux-gnu --without-gui
+    make -j4
 
 in the above commands we are statically compiling headless 64 bit linux binaries. If you want to compile
 32 bit binaries just use `i686-pc-linux-gnu` rather than `x86_64-pc-linux-gnu`
