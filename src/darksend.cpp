@@ -1517,15 +1517,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             // incompatible denom
             if(dsq.nDenom >= (1 << vecPrivateSendDenominations.size())) continue;
 
-            bool fUsed = false;
-            //don't reuse Masternodes
-            BOOST_FOREACH(CTxIn txinUsed, vecMasternodesUsed) {
-                if(dsq.vin == txinUsed) {
-                    fUsed = true;
-                    break;
-                }
-            }
-            if(fUsed) continue;
+            // mixing rate limit i.e. nLastDsq check should already pass in DSQUEUE ProcessMessage
+            // in order for dsq to get into vecDarksendQueue, so we should be safe to mix already,
+            // no need for additional verification here
 
             LogPrint("privatesend", "CDarksendPool::DoAutomaticDenominating -- found valid queue: %s\n", dsq.ToString());
 
