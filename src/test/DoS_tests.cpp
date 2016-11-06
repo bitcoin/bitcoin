@@ -26,6 +26,7 @@
 // Tests this internal-to-main.cpp method:
 extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
+extern void EraseOrphansByTime();
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 
 CService ip(uint32_t i)
@@ -185,14 +186,70 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     }
 
     // Test LimitOrphanTxSize() function:
-    LOCK(cs_orphancache);
-    LimitOrphanTxSize(40);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
-    LimitOrphanTxSize(10);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
-    LimitOrphanTxSize(0);
-    BOOST_CHECK(mapOrphanTransactions.empty());
-    BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
+    {
+        LOCK(cs_orphancache);
+        LimitOrphanTxSize(40);
+        BOOST_CHECK(mapOrphanTransactions.size() <= 40);
+        LimitOrphanTxSize(10);
+        BOOST_CHECK(mapOrphanTransactions.size() <= 10);
+        LimitOrphanTxSize(0);
+        BOOST_CHECK(mapOrphanTransactions.empty());
+        BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
+    }
+
+    // Test EraseOrphansByTime():
+    {
+        LOCK(cs_orphancache);
+        int64_t nStartTime = GetTime();
+        SetMockTime(nStartTime); // Overrides future calls to GetTime()
+        for (int i = 0; i < 50; i++)
+        {
+            CMutableTransaction tx;
+            tx.vin.resize(1);
+            tx.vin[0].prevout.n = 0;
+            tx.vin[0].prevout.hash = GetRandHash();
+            tx.vin[0].scriptSig << OP_1;
+            tx.vout.resize(1);
+            tx.vout[0].nValue = 1*CENT;
+            tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+      
+            AddOrphanTx(tx, i);
+        }
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+
+        // Advance the clock 1 minute
+        SetMockTime(nStartTime+60);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+
+        // Advance the clock 10 minutes
+        SetMockTime(nStartTime+60*10);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+
+        // Advance the clock 1 hour
+        SetMockTime(nStartTime+60*60);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+
+        // Advance the clock 72 hours
+        SetMockTime(nStartTime+60*60*72);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+
+        /** Test the boundary where orphans should get purged. **/
+        // Advance the clock 72 hours and 4 minutes 59 seconds
+        SetMockTime(nStartTime+60*60*72 + 299);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 50);
+
+        // Advance the clock 72 hours and 5 minutes
+        SetMockTime(nStartTime+60*60*72 + 300);
+        EraseOrphansByTime();
+        BOOST_CHECK(mapOrphanTransactions.size() == 0);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
