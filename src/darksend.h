@@ -144,13 +144,16 @@ public:
     int64_t nTime;
     bool fReady; //ready for submit
     std::vector<unsigned char> vchSig;
+    // memory only
+    bool fTried;
 
     CDarksendQueue() :
         nDenom(0),
         vin(CTxIn()),
         nTime(0),
         fReady(false),
-        vchSig(std::vector<unsigned char>())
+        vchSig(std::vector<unsigned char>()),
+        fTried(false)
         {}
 
     CDarksendQueue(int nDenom, CTxIn vin, int64_t nTime, bool fReady) :
@@ -158,7 +161,8 @@ public:
         vin(vin),
         nTime(nTime),
         fReady(fReady),
-        vchSig(std::vector<unsigned char>())
+        vchSig(std::vector<unsigned char>()),
+        fTried(false)
         {}
 
     ADD_SERIALIZE_METHODS;
@@ -190,8 +194,13 @@ public:
 
     std::string ToString()
     {
-        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, masternode=%s",
-                        nDenom, nTime, fReady ? "true" : "false", vin.prevout.ToStringShort());
+        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
+                        nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", vin.prevout.ToStringShort());
+    }
+
+    friend bool operator==(const CDarksendQueue& a, const CDarksendQueue& b)
+    {
+        return a.nDenom == b.nDenom && a.vin.prevout == b.vin.prevout && a.nTime == b.nTime && a.fReady == b.fReady;
     }
 };
 

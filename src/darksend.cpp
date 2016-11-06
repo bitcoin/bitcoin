@@ -98,9 +98,17 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
         CDarksendQueue dsq;
         vRecv >> dsq;
 
+        // process every dsq only once
+        BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue) {
+            if(q == dsq) {
+                // LogPrint("privatesend", "DSQUEUE -- %s seen\n", dsq.ToString());
+                return;
+            }
+        }
+
         LogPrint("privatesend", "DSQUEUE -- %s new\n", dsq.ToString());
 
-        if(dsq.IsExpired()) return;
+        if(dsq.IsExpired() || dsq.nTime > GetTime() + PRIVATESEND_QUEUE_TIMEOUT) return;
 
         CMasternode* pmn = mnodeman.Find(dsq.vin);
         if(pmn == NULL) return;
@@ -124,8 +132,13 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
                 SubmitDenominate();
             }
         } else {
-            BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue)
-                if(q.vin == dsq.vin) return;
+            BOOST_FOREACH(CDarksendQueue q, vecDarksendQueue) {
+                if(q.vin == dsq.vin) {
+                    // no way same mn can send another "not yet ready" dsq this soon
+                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", pmn->addr.ToString());
+                    return;
+                }
+            }
 
             int nThreshold = pmn->nLastDsq + mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION)/5;
             LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", pmn->nLastDsq, nThreshold, mnodeman.nDsqCount);
@@ -139,9 +152,11 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             pmn->fAllowMixingTx = true;
 
             LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), pmn->addr.ToString());
+            if(pSubmittedToMasternode && pSubmittedToMasternode->vin.prevout == dsq.vin.prevout) {
+                dsq.fTried = true;
+            }
             vecDarksendQueue.push_back(dsq);
             dsq.Relay();
-            dsq.nTime = GetTime();
         }
 
     } else if(strCommand == NetMsgType::DSVIN) {
@@ -1536,7 +1551,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 
         // Look through the queues and see if anything matches
         BOOST_FOREACH(CDarksendQueue& dsq, vecDarksendQueue) {
-            if(dsq.nTime == 0) continue;
+            // only try each queue once
+            if(dsq.fTried) continue;
+            dsq.fTried = true;
             if(dsq.IsExpired()) continue;
 
             CMasternode* pmn = mnodeman.Find(dsq.vin);
@@ -1578,12 +1595,10 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                         nSessionDenom, GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
                 strAutoDenomResult = _("Mixing in progress...");
-                dsq.nTime = 0; //remove node
                 return true;
             } else {
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
                 strAutoDenomResult = _("Error connecting to Masternode.");
-                dsq.nTime = 0; //remove node
                 pmn->IncreasePoSeBanScore();
                 continue;
             }
