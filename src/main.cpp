@@ -108,6 +108,9 @@ static unsigned int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 1;
  *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
 static unsigned int BLOCK_DOWNLOAD_WINDOW = 8;
 
+extern CTweak<unsigned int> maxBlocksInTransitPerPeer;  // override the above
+extern CTweak<unsigned int> blockDownloadWindow;
+extern CTweak<uint64_t> reindexTypicalBlockSize;
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
@@ -412,6 +415,14 @@ bool MarkBlockAsReceived(const uint256& hash) {
 
         LogPrint("thin", "Received block %s in %.2f seconds\n", hash.ToString(), nResponseTime);
         LogPrint("thin", "Average block response time is %.2f seconds\n", avgResponseTime);
+        if (maxBlocksInTransitPerPeer.value != 0)
+	  {
+            MAX_BLOCKS_IN_TRANSIT_PER_PEER = maxBlocksInTransitPerPeer.value;
+	  }
+        if (blockDownloadWindow.value != 0)
+	  {
+            BLOCK_DOWNLOAD_WINDOW = blockDownloadWindow.value;
+	  }
         LogPrintf("BLOCK_DOWNLOAD_WINDOW is %d MAX_BLOCKS_IN_TRANSIT_PER_PEER is %d\n", BLOCK_DOWNLOAD_WINDOW, MAX_BLOCKS_IN_TRANSIT_PER_PEER);
 
         {
@@ -3505,17 +3516,17 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     return true;
 }
 
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot, bool fConservative)
+uint64_t CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot, bool fConservative)
 {
     // These are checks that are independent of context.
 
     if (block.fChecked)
-        return true;
+      return block.nBlockSize;  // nBlockSize will ALWAYS be set if fChecked is set (occurs in this function)
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, fCheckPOW))
-        return false;
+        return 0;
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -3538,10 +3549,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
-    uint64_t blockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+    if (block.nBlockSize == 0) block.nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+
     if (block.vtx.empty()) // || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, error("CheckBlock(): size limits failed"),
-                         REJECT_INVALID, "bad-blk-length");
+      return state.DoS(100, error("CheckBlock(): size limits failed"), REJECT_INVALID, "bad-blk-length");
 
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
@@ -3561,10 +3572,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     uint64_t nSigOps = 0;
     uint64_t nTx = 0;  // BU: count the number of transactions in case the CheckExcessive function wants to use this as criteria
+    uint64_t nTxSize = 0;  // BU: track the longest transaction
+    uint64_t nLargestTx = 0;  // BU: track the longest transaction
+    
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         nTx++;
         nSigOps += GetLegacySigOpCount(tx);
+        nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        if (nTxSize > nLargestTx) nLargestTx = nTxSize;
     }
 
     if (fConservative && (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS))  // BU only enforce sigops during block generation not acceptance
@@ -3574,7 +3590,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
 
-    block.fExcessive = CheckExcessive(block,blockSize, nSigOps,nTx);  // BU: Check whether this block exceeds what we want to relay.
+    block.fExcessive = CheckExcessive(block,block.nBlockSize, nSigOps,nTx,nLargestTx);  // BU: Check whether this block exceeds what we want to relay.
 
     return true;
 }
@@ -4324,7 +4340,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*BU_MAX_BLOCK_SIZE, BU_MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
+        CBufferedFile blkdat(fileIn, 2*(reindexTypicalBlockSize.value+MESSAGE_START_SIZE+sizeof(unsigned int)), reindexTypicalBlockSize.value+MESSAGE_START_SIZE+sizeof(unsigned int), SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -4332,19 +4348,27 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
             blkdat.SetPos(nRewind);
             nRewind++; // start one byte further next time, in case of failure
             blkdat.SetLimit(); // remove former limit
-            unsigned int nSize = 0;
+            unsigned int nSize = 0;  
             try {
                 // locate a header
                 unsigned char buf[MESSAGE_START_SIZE];
                 blkdat.FindByte(chainparams.MessageStart()[0]);
-                nRewind = blkdat.GetPos()+1;
+                nRewind = blkdat.GetPos()+1;  // FindByte peeks 1 ahead and locates the file pointer AT the byte, not at the next one as is typical for file ops.  So if we rewind, we want to go one further.
                 blkdat >> FLATDATA(buf);
                 if (memcmp(buf, chainparams.MessageStart(), MESSAGE_START_SIZE))
                     continue;
                 // read size
-                blkdat >> nSize;
-                if (nSize < 80 || nSize > BU_MAX_BLOCK_SIZE)
+                blkdat >> nSize; // BU NOTE: if we ever get to 4GB blocks the block size data structure will overflow since this is defined as unsigned int (32 bits)
+                if (nSize < 80) // BU allow variable block size || nSize > BU_MAX_BLOCK_SIZE)
+		  {
+                    LogPrint("reindex","Reindex error: Short block: %d\n", nSize);
                     continue;
+		  }
+                if (nSize > 256*1024*1024)
+		  {
+                  LogPrint("reindex","Reindex warning: Gigantic block: %d\n", nSize);
+		  }
+                blkdat.GrowTo(2*(nSize+MESSAGE_START_SIZE+sizeof(unsigned int)));
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
                 break;
@@ -4355,7 +4379,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 if (dbp)
                     dbp->nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
-                blkdat.SetPos(nBlockPos);
+                blkdat.SetPos(nBlockPos);  // Unnecessary, I just got the position
                 CBlock block;
                 blkdat >> block;
                 nRewind = blkdat.GetPos();
@@ -4363,7 +4387,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 // detect out of order blocks, and store them for later
                 uint256 hash = block.GetHash();
                 if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex.find(block.hashPrevBlock) == mapBlockIndex.end()) {
-                    LogPrint("reindex", "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
+		  LogPrint("reindex", "%s: Out of order block %s (created %s), parent %s not known\n", __func__, hash.ToString(), DateTimeStrFormat("%Y-%m-%d",block.nTime),
                             block.hashPrevBlock.ToString());
                     if (dbp)
                         mapBlocksUnknownParent.insert(std::make_pair(block.hashPrevBlock, *dbp));
@@ -4378,7 +4402,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     if (state.IsError())
                         break;
                 } else if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex[hash]->nHeight % 1000 == 0) {
-                    LogPrintf("Block Import: already had block %s at height %d\n", hash.ToString(), mapBlockIndex[hash]->nHeight);
+		  LogPrint("reindex", "Block Import: already had block %s at height %d\n", hash.ToString(), mapBlockIndex[hash]->nHeight);
                 }
 
                 // Recursively process earlier encountered successors of this block

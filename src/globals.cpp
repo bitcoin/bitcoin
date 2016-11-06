@@ -127,6 +127,8 @@ map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 
 CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
+CTweak<unsigned int> sigOpsPerMb("net.excessiveSigOp","Excessive signature operations in a block, denoted in sigops per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
+CTweak<unsigned int> maxTxSize("net.excessiveTxn","Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
 CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections","Maximum number of outbound connections", &nMaxOutConnections,&OutboundConnectionValidator);
 CTweakRef<int> maxConnectionsTweak("net.maxConnections","Maximum number of connections connections",&nMaxConnections);
@@ -134,6 +136,21 @@ CTweakRef<unsigned int> triTweak("net.txRetryInterval","How long to wait in micr
 CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in microseconds before requesting a block from another source", &MIN_BLK_REQUEST_RETRY_INTERVAL); // When should I request a block from someone else (in microseconds). cmdline/bitcoin.conf: -blkretryinterval
 
 CTweakRef<std::string> subverOverrideTweak("net.subversionOveride","If set, this field will override the normal subversion field.  This is useful if you need to hide your node.",&subverOverride,&SubverValidator);
+
+/** Number of blocks that can be requested at any given time from a single peer. */
+CTweak<unsigned int> maxBlocksInTransitPerPeer("net.maxBlocksInTransitPerPeer","Number of blocks that can be requested at any given time from a single peer. 0 means use algorithm.",0);
+/** Size of the "block download window": how far ahead of our current height do we fetch?
+ *  Larger windows tolerate larger download speed differences between peer, but increase the potential
+ *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
+ *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
+CTweak<unsigned int> blockDownloadWindow("net.blockDownloadWindow","How far ahead of our current height do we fetch? 0 means use algorithm.",0);
+
+/** Size of the "block download window": how far ahead of our current height do we fetch?
+ *  Larger windows tolerate larger download speed differences between peer, but increase the potential
+ *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
+ *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
+CTweak<uint64_t> reindexTypicalBlockSize("reindex.typicalBlockSize","Set larger than the typical block size.  The block data file's RAM buffer will initally be 2x this size.",TYPICAL_BLOCK_SIZE);
+
 
 CRequestManager requester;  // after the maps nodes and tweaks
 
