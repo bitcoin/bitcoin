@@ -448,11 +448,13 @@ bool MarkBlockAsReceived(const uint256& hash) {
     return false;
 }
 
+#if 0  // BU: not currently used
 // Returns time at which to timeout block request (nTime in microseconds)
 int64_t GetBlockTimeout(int64_t nTime, int nValidatedQueuedBefore, const Consensus::Params &consensusParams)
 {
     return nTime + 500000 * consensusParams.nPowTargetSpacing * (4 + nValidatedQueuedBefore);
 }
+#endif
 
   // BU MarkBlockAsInFlight moved out of anonymous namespace
 
