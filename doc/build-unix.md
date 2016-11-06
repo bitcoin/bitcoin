@@ -263,4 +263,3 @@ To build executables for ARM:
 
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
->>>>>>> 3e55b3a... [doc] added depends cross compile info
