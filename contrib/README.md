@@ -35,7 +35,7 @@ PGP keys used for signing Bitcoin Core [Gitian release](/doc/release-process.md)
 Scripts and notes for Mac builds. 
 
 ### [Gitian-build](/contrib/gitian-build.sh) ###
-Script for running full gitian builds.
+Script for running full Gitian builds.
 
 Test and Verify Tools 
 ---------------------
