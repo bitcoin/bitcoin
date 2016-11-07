@@ -31,6 +31,7 @@ import tempfile
 import re
 
 from tests_config import *
+from test_classes import RpcTest, Disabled, Skip
 
 #If imported values are not defined then set to zero (or disabled)
 if not vars().has_key('ENABLE_WALLET'):
@@ -74,70 +75,73 @@ if EXEEXT == ".exe" and "-win" not in opts:
     sys.exit(0)
 
 #Tests
-testScripts = [
-    'bip68-112-113-p2p.py',
-    'wallet.py',
-    'excessive.py',
-    'listtransactions.py',
-    'receivedby.py',
-    'mempool_resurrect_test.py',
-    'txn_doublespend.py --mineblock',
-    'txn_clone.py',
-    'getchaintips.py',
-    'rawtransactions.py',
-    'rest.py',
-    'mempool_spendcoinbase.py',
-    'mempool_reorg.py',
-#    'mempool_limit.py',  # mempool priority changes causes create_lots_of_big_transactions to fail
-    'httpbasics.py',
-    'multi_rpc.py',
-    'zapwallettxes.py',
-    'proxy_test.py',
-    'merkle_blocks.py',
-    'fundrawtransaction.py',
-    'signrawtransactions.py',
-    'walletbackup.py',
-    'nodehandling.py',
-    'reindex.py',
-    'decodescript.py',
-#    'p2p-fullblocktest.py',
-    'blockchain.py',
-    'disablewallet.py',
-#    'sendheaders.py',   # BU requests INVs not headers -- in the future we may add support for headers, at least by treating them like INVs
-    'keypool.py',
-#    'prioritise_transaction.py',
-#    'invalidblockrequest.py',
-    'invalidtxrequest.py',
-    'abandonconflict.py',
-    'p2p-versionbits-warning.py',
-]
+testScripts = [ RpcTest(t) for t in [
+    'bip68-112-113-p2p',
+    'wallet',
+    'excessive',
+    'listtransactions',
+    'receivedby',
+    'mempool_resurrect_test',
+    'txn_doublespend --mineblock',
+    'txn_clone',
+    'getchaintips',
+    'rawtransactions',
+    'rest',
+    'mempool_spendcoinbase',
+    'mempool_reorg',
+    Disabled('mempool_limit', "mempool priority changes causes create_lots_of_big_transactions to fail"),
+    'httpbasics',
+    'multi_rpc',
+    'zapwallettxes',
+    'proxy_test',
+    'merkle_blocks',
+    'fundrawtransaction',
+    'signrawtransactions',
+    'walletbackup',
+    'nodehandling',
+    'reindex',
+    'decodescript',
+    Disabled('p2p-fullblocktest', "TODO"),
+    'blockchain',
+    'disablewallet',
+    Disabled('sendheaders', "BU requests INVs not headers -- in the future we may add support for headers, at least by treating them like INVs)"),
+    'keypool',
+    Disabled('prioritise_transaction', "TODO"),
+    Disabled('invalidblockrequest', "TODO"),
+    'invalidtxrequest',
+    'abandonconflict',
+    'p2p-versionbits-warning'
+    ,
+] ]
 
-testScriptsExt = [
-    'bip9-softforks.py',
-    'bip65-cltv.py',
-    'bip65-cltv-p2p.py',
-#    'bip68-sequence.py',
-    'bipdersig-p2p.py',
-    'bipdersig.py',
-    'getblocktemplate_longpoll.py',
-    'getblocktemplate_proposals.py',
-    'txn_doublespend.py',
-    'txn_clone.py --mineblock',
-#    'pruning.py',  # too much disk
-    'forknotify.py',
-    'invalidateblock.py',
-#    'rpcbind_test.py', #temporary, bug in libevent, see #6655
-    'smartfees.py',
-    'maxblocksinflight.py',
-    'p2p-acceptblock.py',
-    'mempool_packages.py',
-    'maxuploadtarget.py',
-#    'replace-by-fee.py', # disabled while Replace By Fee is disabled in code
-]
+testScriptsExt = [ RpcTest(t) for t in [
+    'bip9-softforks',
+    'bip65-cltv',
+    'bip65-cltv-p2p',
+    Disabled('bip68-sequence', "TODO"),
+    'bipdersig-p2p',
+    'bipdersig',
+    'getblocktemplate_longpoll',
+    'getblocktemplate_proposals',
+    'txn_doublespend',
+    'txn_clone --mineblock',
+    Disabled('pruning', "too much disk"),
+    'forknotify',
+    'invalidateblock',
+    Disabled('rpcbind_test', "temporary, bug in libevent, see #6655"),
+    'smartfees',
+    'maxblocksinflight',
+    'p2p-acceptblock',
+    'mempool_packages',
+    'maxuploadtarget',
+    Disabled('replace-by-fee', "disabled while Replace By Fee is disabled in code")
+] ]
 
 #Enable ZMQ tests
 if ENABLE_ZMQ == 1:
-    testScripts.append('zmq_test.py')
+    testScripts.append(RpcTest('zmq_test'))
+
+
 
 
 def runtests():
@@ -158,33 +162,46 @@ def runtests():
             if (len(opts) == 0
                     or (len(opts) == 1 and "-win" in opts )
                     or run_extended
-                    or testScripts[i] in opts
-                    or re.sub(".py$", "", testScripts[i]) in opts ):
+                    or str(testScripts[i]) in opts
+                    or re.sub(".py$", "", str(testScripts[i])) in opts ):
 
-                print("Running testscript %s%s%s ..." % (bold[1], testScripts[i], bold[0]))
-                time0 = time.time()
-                subprocess.check_call(
-                    rpcTestDir + testScripts[i] + flags, shell=True)
-                print("Duration: %s s\n" % (int(time.time() - time0)))
+                if testScripts[i].is_disabled():
+                    print("Disabled testscript %s%s%s (reason: %s)" % (bold[1], testScripts[i], bold[0], testScripts[i].reason))
+                elif testScripts[i].is_skipped():
+                    print("Skipping testscript %s%s%s on this platform (reason: %s)" % (bold[1], testScripts[i], bold[0], testScripts[i].reason))
+                else:
+                    # not disabled or skipped - execute test
 
-                # exit if help is called so we print just one set of
-                # instructions
-                p = re.compile(" -h| --help")
-                if p.match(passOn):
-                    sys.exit(0)
+                    print("Running testscript %s%s%s ..." % (bold[1], testScripts[i], bold[0]))
+                    time0 = time.time()
+                    subprocess.check_call(
+                        rpcTestDir + repr(testScripts[i]) + flags, shell=True)
+                    print("Duration: %s s\n" % (int(time.time() - time0)))
+
+                    # exit if help is called so we print just one set of
+                    # instructions
+                    p = re.compile(" -h| --help")
+                    if p.match(passOn):
+                        sys.exit(0)
 
         # Run Extended Tests
         for i in range(len(testScriptsExt)):
-            if (run_extended or testScriptsExt[i] in opts
-                    or re.sub(".py$", "", testScriptsExt[i]) in opts):
+            if (run_extended or str(testScriptsExt[i]) in opts
+                    or re.sub(".py$", "", str(testScriptsExt[i])) in opts):
 
-                print(
-                    "Running 2nd level testscript "
-                    + "%s%s%s ..." % (bold[1], testScriptsExt[i], bold[0]))
-                time0 = time.time()
-                subprocess.check_call(
-                    rpcTestDir + testScriptsExt[i] + flags, shell=True)
-                print("Duration: %s s\n" % (int(time.time() - time0)))
+                if testScriptsExt[i].is_disabled():
+                    print("Disabled testscript %s%s%s (reason: %s)" % (bold[1], testScriptsExt[i], bold[0], testScriptsExt[i].reason))
+                elif testScripts[i].is_skipped():
+                    print("Skipping testscript %s%s%s on this platform (reason: %s)" % (bold[1], testScriptsExt[i], bold[0], testScriptsExt[i].reason))
+                else:
+                    # not disabled or skipped - execute test
+                    print(
+                        "Running 2nd level testscript "
+                        + "%s%s%s ..." % (bold[1], testScriptsExt[i], bold[0]))
+                    time0 = time.time()
+                    subprocess.check_call(
+                        rpcTestDir + str(testScriptsExt[i]) + flags, shell=True)
+                    print("Duration: %s s\n" % (int(time.time() - time0)))
 
         if coverage:
             coverage.report_rpc_coverage()
