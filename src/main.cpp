@@ -6399,7 +6399,7 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman)
 
         // Checksum
         CDataStream& vRecv = msg.vRecv;
-        uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
+        const uint256& hash = msg.GetMessageHash();
         if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0)
         {
             LogPrintf("%s(%s, %u bytes): CHECKSUM ERROR expected %s was %s\n", __func__,
