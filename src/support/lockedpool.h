@@ -50,27 +50,6 @@ public:
     Arena(void *base, size_t size, size_t alignment);
     virtual ~Arena();
 
-    /** A chunk of memory.
-     */
-    struct Chunk
-    {
-        /** Most significant bit of size_t. This is used to mark
-         * in-usedness of chunk.
-         */
-        const static size_t SIZE_MSB = 1LLU << ((sizeof(size_t)*8)-1);
-        /** Maximum size of a chunk */
-        const static size_t MAX_SIZE = SIZE_MSB - 1;
-
-        Chunk(size_t size_in, bool used_in):
-            size(size_in | (used_in ? SIZE_MSB : 0)) {}
-
-        bool isInUse() const { return size & SIZE_MSB; }
-        void setInUse(bool used_in) { size = (size & ~SIZE_MSB) | (used_in ? SIZE_MSB : 0); }
-        size_t getSize() const { return size & ~SIZE_MSB; }
-        void setSize(size_t size_in) { size = (size & SIZE_MSB) | size_in; }
-    private:
-        size_t size;
-    };
     /** Memory statistics. */
     struct Stats
     {
@@ -112,7 +91,8 @@ private:
     /** Map of chunk address to chunk information. This class makes use of the
      * sorted order to merge previous and next chunks during deallocation.
      */
-    std::map<char*, Chunk> chunks;
+    std::map<char*, size_t> chunks_free;
+    std::map<char*, size_t> chunks_used;
     /** Base address of arena */
     char* base;
     /** End address of arena */

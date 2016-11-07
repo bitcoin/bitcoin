@@ -39,7 +39,6 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     }
 
     void *a0 = b.alloc(128);
-    BOOST_CHECK(a0 == synth_base); // first allocation must start at beginning
     void *a1 = b.alloc(256);
     void *a2 = b.alloc(512);
     BOOST_CHECK(b.stats().used == 896);
@@ -63,8 +62,10 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     BOOST_CHECK(b.stats().used == 128);
     b.free(a3);
     BOOST_CHECK(b.stats().used == 0);
+    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0);
     BOOST_CHECK(b.stats().total == synth_size);
     BOOST_CHECK(b.stats().free == synth_size);
+    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1);
 
     std::vector<void*> addr;
     BOOST_CHECK(b.alloc(0) == nullptr); // allocating 0 always returns nullptr
@@ -74,7 +75,6 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     // Sweeping allocate all memory
     for (int x=0; x<1024; ++x)
         addr.push_back(b.alloc(1024));
-    BOOST_CHECK(addr[0] == synth_base); // first allocation must start at beginning
     BOOST_CHECK(b.stats().free == 0);
     BOOST_CHECK(b.alloc(1024) == nullptr); // memory is full, this must return nullptr
     BOOST_CHECK(b.alloc(0) == nullptr);
@@ -165,6 +165,16 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
     LockedPool pool(std::move(x));
     BOOST_CHECK(pool.stats().total == 0);
     BOOST_CHECK(pool.stats().locked == 0);
+
+    // Ensure unreasonable requests are refused without allocating anything
+    void *invalid_toosmall = pool.alloc(0);
+    BOOST_CHECK(invalid_toosmall == nullptr);
+    BOOST_CHECK(pool.stats().used == 0);
+    BOOST_CHECK(pool.stats().free == 0);
+    void *invalid_toobig = pool.alloc(LockedPool::ARENA_SIZE+1);
+    BOOST_CHECK(invalid_toobig == nullptr);
+    BOOST_CHECK(pool.stats().used == 0);
+    BOOST_CHECK(pool.stats().free == 0);
 
     void *a0 = pool.alloc(LockedPool::ARENA_SIZE / 2);
     BOOST_CHECK(a0);
