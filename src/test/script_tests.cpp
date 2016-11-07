@@ -1024,7 +1024,6 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
 BOOST_AUTO_TEST_CASE(transactionV4)
 {
     TxUtils::allowNewTransactions();
-    const CAmount amountZero = 0;
     CBasicKeyStore keystore;
     CKey key;
     key.MakeNewKey(true);
@@ -1046,7 +1045,7 @@ BOOST_AUTO_TEST_CASE(transactionV4)
     BOOST_CHECK(ok);
 
     CTransaction txTo(to);
-    TransactionSignatureChecker dummy(&txTo, 0, amountZero);
+    TransactionSignatureChecker dummy(&txTo, 0, from.vout[0].nValue);
     ok = VerifyScript(to.vin[0].scriptSig, from.vout[0].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, dummy, 0);
     BOOST_CHECK(ok);
     TxUtils::disallowNewTransactions();
