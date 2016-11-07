@@ -48,6 +48,15 @@ Low-level RPC changes
   an optional third arg, which was always ignored. Make sure to never pass more
   than two arguments.
 
+Removal of Priority Estimation
+------------------------------
+
+- Estimation of "priority" needed for a transaction to be included within a target
+  number of blocks has been removed.  The rpc calls are deprecated and will either
+  return -1 or 1e24 appropriately. The format for fee_estimates.dat has also
+  changed to no longer save these priority estimates. It will automatically be
+  converted to the new format which is not readable by prior versions of the
+  software.
 
 0.14.0 Change log
 =================
