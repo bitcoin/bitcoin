@@ -42,6 +42,7 @@ import base64
 import decimal
 import json
 import logging
+import socket
 try:
     import urllib.parse as urlparse
 except ImportError:
@@ -161,7 +162,15 @@ class AuthServiceProxy(object):
         return self._request('POST', self.__url.path, postdata.encode('utf-8'))
 
     def _get_response(self):
-        http_response = self.__conn.getresponse()
+        try:
+            http_response = self.__conn.getresponse()
+        except socket.timeout as e:
+            raise JSONRPCException({
+                'code': -344,
+                'message': '%r RPC took longer than %f seconds. Consider '
+                           'using larger timeout for calls that take '
+                           'longer to return.' % (self._service_name,
+                                                  self.__conn.timeout)})
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
