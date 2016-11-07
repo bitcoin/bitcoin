@@ -195,8 +195,10 @@ Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spur
 
   - Optionally reddit /r/Dashpay, ... but this will usually sort out itself
 
-- Notify flare so that he can start building [the PPAs](https://launchpad.net/~dash.org/+archive/ubuntu/dash)
+  - Notify flare so that he can start building [the PPAs](https://launchpad.net/~dash.org/+archive/ubuntu/dash)
 
-- Add release notes for the new version to the directory `doc/release-notes` in git master
+  - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
-- Celebrate
+  - Create a [new GitHub release](https://github.com/dashpay/dash/releases/new) with a link to the archived release notes.
+
+  - Celebrate
