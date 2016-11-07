@@ -944,7 +944,9 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    const uint256 block_hash = block.GetHash();
+    if (!CheckProofOfWork(block_hash, block.nBits, consensusParams) &&
+        block_hash != consensusParams.hashGenesisBlock)
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -1499,10 +1501,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
            (*pindex->phashBlock == block.GetHash()));
     int64_t nTimeStart = GetTimeMicros();
 
-    // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
-        return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
-
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
@@ -1514,6 +1512,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
+
+    // Check it again in case a previous version let a bad block in
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck))
+        return error("%s: CheckBlock: %s", __func__, FormatStateMessage(state));
 
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {
@@ -3009,8 +3011,9 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     }
     if (fNewBlock) *fNewBlock = true;
 
-    if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
+    if (chainparams.GetConsensus().hashGenesisBlock != block.GetHash() &&
+        (!CheckBlock(block, state, chainparams.GetConsensus()) ||
+         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev))) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
