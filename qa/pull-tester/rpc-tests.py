@@ -162,8 +162,8 @@ def runtests():
             if (len(opts) == 0
                     or (len(opts) == 1 and "-win" in opts )
                     or run_extended
-                    or testScripts[i] in opts
-                    or re.sub(".py$", "", testScripts[i]) in opts ):
+                    or str(testScripts[i]) in opts
+                    or re.sub(".py$", "", str(testScripts[i])) in opts ):
 
                 if testScripts[i].is_disabled():
                     print("Disabled testscript %s%s%s (reason: %s)" % (bold[1], testScripts[i], bold[0], testScripts[i].reason))
@@ -186,7 +186,7 @@ def runtests():
 
         # Run Extended Tests
         for i in range(len(testScriptsExt)):
-            if (run_extended or testScriptsExt[i] in opts
+            if (run_extended or str(testScriptsExt[i]) in opts
                     or re.sub(".py$", "", str(testScriptsExt[i])) in opts):
 
                 if testScriptsExt[i].is_disabled():
