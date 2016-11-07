@@ -1,6 +1,6 @@
 
 """
-  Copyright 2011 Jeff Garzik
+  Copyright (c) 2011 Jeff Garzik
 
   AuthServiceProxy has the following improvements over python-jsonrpc's
   ServiceProxy class:
