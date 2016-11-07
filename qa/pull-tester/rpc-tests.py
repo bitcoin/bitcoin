@@ -76,7 +76,7 @@ if EXEEXT == ".exe" and "-win" not in opts:
 
 #Tests
 testScripts = [ RpcTest(t) for t in [
-    Skip('bip68-112-113-p2p', "linux", "because we don't like Linux"),
+    'bip68-112-113-p2p',
     'wallet',
     'excessive',
     'listtransactions',
