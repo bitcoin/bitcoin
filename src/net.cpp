@@ -861,7 +861,7 @@ struct NodeEvictionCandidate
     int64_t nMinPingUsecTime;
     int64_t nLastBlockTime;
     int64_t nLastTXTime;
-    bool fNetworkNode;
+    bool fRelevantServices;
     bool fRelayTxes;
     bool fBloomFilter;
     uint64_t nKeyedNetGroup;
@@ -885,7 +885,7 @@ static bool CompareNodeBlockTime(const NodeEvictionCandidate &a, const NodeEvict
 {
     // There is a fall-through here because it is common for a node to have many peers which have not yet relayed a block.
     if (a.nLastBlockTime != b.nLastBlockTime) return a.nLastBlockTime < b.nLastBlockTime;
-    if (a.fNetworkNode != b.fNetworkNode) return b.fNetworkNode;
+    if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
     return a.nTimeConnected > b.nTimeConnected;
 }
 
@@ -920,7 +920,8 @@ bool CConnman::AttemptToEvictConnection()
             if (node->fDisconnect)
                 continue;
             NodeEvictionCandidate candidate = {node->id, node->nTimeConnected, node->nMinPingUsecTime,
-                                               node->nLastBlockTime, node->nLastTXTime, node->fNetworkNode,
+                                               node->nLastBlockTime, node->nLastTXTime,
+                                               (node->nServices & nRelevantServices) == nRelevantServices,
                                                node->fRelayTxes, node->pfilter != NULL, node->nKeyedNetGroup};
             vEvictionCandidates.push_back(candidate);
         }
