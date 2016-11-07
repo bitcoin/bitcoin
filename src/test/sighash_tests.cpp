@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     for (int i=0; i<nRandomTests; i++) {
         int nHashType = insecure_rand();
         CMutableTransaction txTo;
-        TxUtils::RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
+        TxUtils::RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE ? TxUtils::SingleOutput: TxUtils::AnyOutputCount);
         CScript scriptCode;
         TxUtils::RandomScript(scriptCode);
         int nIn = insecure_rand() % txTo.vin.size();

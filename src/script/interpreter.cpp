@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1057,6 +1058,7 @@ public:
     /** Serialize an input of txTo */
     template<typename S>
     void SerializeInput(S &s, unsigned int nInput, int nType, int nVersion) const {
+        assert(txTo.vin.size() > nInput);
         // In case of SIGHASH_ANYONECANPAY, only the input being signed is serialized
         if (fAnyoneCanPay)
             nInput = nIn;
@@ -1079,6 +1081,7 @@ public:
     /** Serialize an output of txTo */
     template<typename S>
     void SerializeOutput(S &s, unsigned int nOutput, int nType, int nVersion) const {
+        assert(txTo.vout.size() > nOutput);
         if (fHashSingle && nOutput != nIn)
             // Do not lock-in the txout payee at other indices as txin
             ::Serialize(s, CTxOut(), nType, nVersion);
@@ -1106,6 +1109,38 @@ public:
     }
 };
 
+uint256 SerializePartialTransactionv4(const CTransaction &tx, uint32_t nIn, int nHashType)
+{
+    assert(nIn < tx.vin.size());
+    assert(tx.nVersion == 4);
+    CMutableTransaction mutableTx(tx);
+    // Blank out some of the outputs
+    if ((nHashType & 0x1f) == SIGHASH_NONE) {
+        // Wildcard payee
+        mutableTx.vout.clear();
+    }
+    else if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
+        // Only lock-in the txout payee at same index as txin
+        uint32_t nOut = nIn;
+        assert(nOut < mutableTx.vout.size()); // should be checked in the SignatureHash method which calls us
+        mutableTx.vout.resize(nOut+1);
+        for (unsigned int i = 0; i < nOut; i++)
+            mutableTx.vout[i].SetNull();
+    }
+
+    // Blank out other inputs completely, not recommended for open transactions
+    if (nHashType & SIGHASH_ANYONECANPAY) {
+        if (nIn)
+            mutableTx.vin[0] = mutableTx.vin[nIn];
+        mutableTx.vin.resize(1);
+    }
+
+    // Serialize and hash
+    CHashWriter ss(SER_GETHASH, 0);
+    SerializeTransaction(mutableTx,ss, 0, 4, false);
+    return ss.GetHash();
+}
+
 } // anon namespace
 
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, CAmount amount, int nHashType)
@@ -1127,7 +1162,12 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     extern boost::atomic<bool> flexTransActive;
     if (flexTransActive && txTo.nVersion == 4) {
         CHashWriter ss(SER_GETHASH, 0);
-        ss << txTo.GetHash();
+        if (nHashType <= SIGHASH_ALL) {
+            ss << txTo.GetHash();
+        } else {
+            ss << SerializePartialTransactionv4(txTo, nIn, nHashType);
+        }
+
         ss << txTo.vin[nIn].prevout;
         ss << static_cast<const CScriptBase&>(scriptCode);
         ss << amount;

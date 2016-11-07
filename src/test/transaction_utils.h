@@ -10,7 +10,13 @@ class CMutableTransaction;
 
 namespace TxUtils {
     void RandomScript(CScript &script);
-    void RandomTransaction(CMutableTransaction &tx, bool single);
+
+    enum RandomTransactionType {
+        SingleOutput,
+        AnyOutputCount
+    };
+
+    void RandomTransaction(CMutableTransaction &tx, RandomTransactionType single);
 
     void allowNewTransactions();
     void disallowNewTransactions();

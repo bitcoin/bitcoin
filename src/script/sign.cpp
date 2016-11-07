@@ -129,12 +129,12 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
 bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, CAmount amount, int nHashType)
 {
     assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
+    CTxIn& input = txTo.vin[nIn];
 
     CTransaction txToConst(txTo);
     TransactionSignatureCreator creator(&keystore, &txToConst, nIn, amount, nHashType);
 
-    return ProduceSignature(creator, fromPubKey, txin.scriptSig);
+    return ProduceSignature(creator, fromPubKey, input.scriptSig);
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)

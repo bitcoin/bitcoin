@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(test_version4)
             txout.nValue = 10000;
             TxUtils::RandomScript(txout.scriptPubKey);
         } else {
-            TxUtils::RandomTransaction(tx1, true);
+            TxUtils::RandomTransaction(tx1, TxUtils::SingleOutput);
             // clean them a little because nSequence has some double meanings.
             for (unsigned int in = 1; in < tx1.vin.size(); ++in) { // only keep the sequenc on the first one.
                 tx1.vin[in].nSequence = CTxIn::SEQUENCE_FINAL;
@@ -499,6 +499,118 @@ BOOST_AUTO_TEST_CASE(test_version4)
     BOOST_CHECK_EQUAL(tx.vout.size(), 1);
     BOOST_CHECK_EQUAL(tx.vout.front().nValue, 37000);
     BOOST_CHECK_EQUAL(tx.vout.front().scriptPubKey.size(), 25);
+}
+
+BOOST_AUTO_TEST_CASE(test_hashtype_version4)
+{
+    /*
+     * Create various SIGHASH_SINGLE tx-es and combine them.
+     * See if it still validates.
+     *
+     * Create a TX, sign with SIGHASH_NONE and then change the output. See if it still validates.
+     */
+    TxUtils::allowNewTransactions();
+
+    CMutableTransaction tx1;
+    while (tx1.vin.size() < 2 || tx1.vout.size() < 2)
+        TxUtils::RandomTransaction(tx1, TxUtils::AnyOutputCount);
+    tx1.nVersion = 4;
+
+    int amount = 50000;
+
+    { // SIGHASH_SINGLE
+        const uint256 a = SignatureHash(tx1.vin[0].scriptSig, tx1, 0, amount, SIGHASH_SINGLE);
+        const uint256 b = SignatureHash(tx1.vin[1].scriptSig, tx1, 1, amount, SIGHASH_SINGLE);
+
+        CMutableTransaction copyOfTx1(tx1);
+        // check amount first.
+        BOOST_CHECK(SignatureHash(tx1.vin[0].scriptSig, tx1, 0, amount - 1, SIGHASH_SINGLE) != a);
+        BOOST_CHECK(SignatureHash(tx1.vin[1].scriptSig, tx1, 1, amount - 1, SIGHASH_SINGLE) != b);
+
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_SINGLE) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_SINGLE) == b);
+        // outputs are flexible
+        copyOfTx1.vout[1].nValue--; // Change 'b', not 'a'
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_SINGLE) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_SINGLE) != b);
+        copyOfTx1.vout[0].nValue--; // change output.
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_SINGLE) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_SINGLE) != b);
+        copyOfTx1 = tx1; // restore
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_SINGLE) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_SINGLE) == b);
+
+        // inputs can't be changed.
+        copyOfTx1.vin[0].prevout.n++;
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_SINGLE) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_SINGLE) != b);
+        copyOfTx1.vin[1].prevout.n++;
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_SINGLE) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_SINGLE) != b);
+    }
+
+    { // SIGHASH_ANYONECANPAY
+        const uint256 a = SignatureHash(tx1.vin[0].scriptSig, tx1, 0, amount, SIGHASH_ANYONECANPAY);
+        const uint256 b = SignatureHash(tx1.vin[1].scriptSig, tx1, 1, amount, SIGHASH_ANYONECANPAY);
+
+        CMutableTransaction copyOfTx1(tx1);
+        // check amount first.
+        BOOST_CHECK(SignatureHash(tx1.vin[0].scriptSig, tx1, 0, amount - 1, SIGHASH_ANYONECANPAY) != a);
+        BOOST_CHECK(SignatureHash(tx1.vin[1].scriptSig, tx1, 1, amount - 1, SIGHASH_ANYONECANPAY) != b);
+
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_ANYONECANPAY) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_ANYONECANPAY) == b);
+        // outputs are totally rigid
+        copyOfTx1.vout[1].nValue--; // Change 'b', not 'a'
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_ANYONECANPAY) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_ANYONECANPAY) != b);
+        copyOfTx1.vout[0].nValue--; // change output.
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_ANYONECANPAY) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_ANYONECANPAY) != b);
+        copyOfTx1 = tx1; // restore
+
+        // Input are flexible
+        copyOfTx1.vin[0].prevout.n++;
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_ANYONECANPAY) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_ANYONECANPAY) == b);
+        copyOfTx1.vin[1].prevout.n++;
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_ANYONECANPAY) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_ANYONECANPAY) != b);
+    }
+
+    { // SIGHASH_NONE
+        const uint256 a = SignatureHash(tx1.vin[0].scriptSig, tx1, 0, amount, SIGHASH_NONE);
+        const uint256 b = SignatureHash(tx1.vin[1].scriptSig, tx1, 1, amount, SIGHASH_NONE);
+
+        CMutableTransaction copyOfTx1(tx1);
+        // check amount first.
+        BOOST_CHECK(SignatureHash(tx1.vin[0].scriptSig, tx1, 0, amount - 1, SIGHASH_NONE) != a);
+        BOOST_CHECK(SignatureHash(tx1.vin[1].scriptSig, tx1, 1, amount - 1, SIGHASH_NONE) != b);
+
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_NONE) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_NONE) == b);
+        // outputs are flexible
+        copyOfTx1.vout[1].nValue--; // Change 'b', not 'a'
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_NONE) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_NONE) == b);
+        copyOfTx1.vout[0].nValue--; // change output.
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_NONE) == a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_NONE) == b);
+        copyOfTx1 = tx1; // restore
+
+        // inputs can't be changed.
+        copyOfTx1.vin[0].prevout.n++;
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_NONE) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_NONE) != b);
+        copyOfTx1.vin[1].prevout.n++;
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_NONE) != a);
+        BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_NONE) != b);
+    }
+
+
+
+
+    TxUtils::disallowNewTransactions();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

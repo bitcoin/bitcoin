@@ -16,13 +16,13 @@ void TxUtils::RandomScript(CScript &script) {
         script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
 }
 
-void TxUtils::RandomTransaction(CMutableTransaction &tx, bool fSingle) {
+void TxUtils::RandomTransaction(CMutableTransaction &tx, RandomTransactionType single) {
     tx.nVersion = 1;
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (insecure_rand() % 2) ? insecure_rand() : 0;
     int ins = (insecure_rand() % 4) + 1;
-    int outs = fSingle ? ins : (insecure_rand() % 4) + 1;
+    int outs = single == SingleOutput ? ins : (insecure_rand() % 4) + 1;
     for (int in = 0; in < ins; in++) {
         tx.vin.push_back(CTxIn());
         CTxIn &txin = tx.vin.back();
