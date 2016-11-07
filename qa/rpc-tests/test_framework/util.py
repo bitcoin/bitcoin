@@ -365,7 +365,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
     return proxy
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None, redirect_stderr=False):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, redirect_stderr=False):
     """
     Start multiple dashds, return RPC connections to them
     """
@@ -374,7 +374,7 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None, 
     rpcs = []
     try:
         for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, binary=binary[i], redirect_stderr=redirect_stderr))
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], redirect_stderr=redirect_stderr))
     except: # If one node failed to start, stop the others
         stop_nodes(rpcs)
         raise
