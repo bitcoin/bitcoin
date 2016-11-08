@@ -158,7 +158,7 @@ CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 
 /** Generate a multisig script. */
-CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys, bool fSorted=false);
 
 /**
  * Generate a pay-to-witness script for the given redeem script. If the redeem

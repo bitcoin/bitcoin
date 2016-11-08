@@ -212,7 +212,7 @@ class CWallet;
 /**
  * Used by addmultisigaddress / createmultisig:
  */
-CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& params)
+CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& params, bool fSorted)
 {
     int nRequired = params[0].get_int();
     const UniValue& keys = params[1].get_array();
@@ -263,7 +263,7 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
             throw std::runtime_error(" Invalid public key: "+ks);
         }
     }
-    CScript result = GetScriptForMultisig(nRequired, pubkeys);
+    CScript result = GetScriptForMultisig(nRequired, pubkeys, fSorted);
 
     if (result.size() > MAX_SCRIPT_ELEMENT_SIZE)
         throw std::runtime_error(
@@ -280,11 +280,12 @@ UniValue createmultisig(const JSONRPCRequest& request)
     CWallet * const pwallet = nullptr;
 #endif
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
     {
-        std::string msg = "createmultisig nrequired [\"key\",...]\n"
+        std::string msg = "createmultisig nrequired [\"key\",...] ( sort )\n"
             "\nCreates a multi-signature address with n signature of m keys required.\n"
             "It returns a json object with the address and redeemScript.\n"
+            "Public keys can be sorted according to BIP67 during the request if required.\n"
 
             "\nArguments:\n"
             "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
@@ -293,6 +294,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
             "       \"key\"    (string) bitcoin address or hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
+            "3. sort           (bool, optional) Whether to sort public keys according to BIP67. Default setting is false.\n"
 
             "\nResult:\n"
             "{\n"
@@ -309,8 +311,10 @@ UniValue createmultisig(const JSONRPCRequest& request)
         throw std::runtime_error(msg);
     }
 
+    bool fSorted = request.params.size() > 2 && request.params[2].get_bool();
+
     // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig_redeemScript(pwallet, request.params);
+    CScript inner = _createmultisig_redeemScript(pwallet, request.params, fSorted);
     CScriptID innerID(inner);
 
     UniValue result(UniValue::VOBJ);
@@ -629,7 +633,7 @@ static const CRPCCommand commands[] =
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
     { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
-    { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
+    { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys","sort"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
 
