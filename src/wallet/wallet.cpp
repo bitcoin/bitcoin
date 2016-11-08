@@ -2910,7 +2910,109 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     if (!fFileBacked)
         return DB_LOAD_OK;
     fFirstRunRet = false;
-    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    DBErrors nLoadWalletRet = DB_LOAD_OK;
+    CWalletDB walletdb(strWalletFile,"cr+");
+
+    vchDefaultKey = CPubKey();
+    CWalletScanState wss;
+    bool fNoncriticalErrors = false;
+
+    try {
+        LOCK(cs_wallet);
+        int nMinVersion = 0;
+        if (walletdb.ReadMinVersion(nMinVersion))
+        {
+            if (nMinVersion > CLIENT_VERSION)
+                return DB_TOO_NEW;
+            LoadMinVersion(nMinVersion);
+        }
+
+        // Get cursor
+        Dbc* pcursor = walletdb.GetCursor();
+        if (!pcursor)
+        {
+            LogPrintf("Error getting wallet database cursor\n");
+            return DB_CORRUPT;
+        }
+
+        while (true)
+        {
+            // Read next record
+            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+            int ret = walletdb.ReadAtCursor(pcursor, ssKey, ssValue);
+            if (ret == DB_NOTFOUND)
+                break;
+            else if (ret != 0)
+            {
+                LogPrintf("Error reading next record from wallet database\n");
+                return DB_CORRUPT;
+            }
+
+            // Try to be tolerant of single corrupt records:
+            string strType, strErr;
+            if (!LoadKeyValue(ssKey, ssValue, wss, strType, strErr))
+            {
+                // losing keys is considered a catastrophic error, anything else
+                // we assume the user can live with:
+                if (IsKeyType(strType))
+                    nLoadWalletRet = DB_CORRUPT;
+                else
+                {
+                    // Leave other errors alone, if we try to fix them we might make things worse.
+                    fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
+                    if (strType == "tx")
+                        // Rescan if there is a bad transaction record:
+                        SoftSetBoolArg("-rescan", true);
+                }
+            }
+            if (!strErr.empty())
+                LogPrintf("%s\n", strErr);
+        }
+        pcursor->close();
+    }
+    catch (const boost::thread_interrupted&) {
+        throw;
+    }
+    catch (...) {
+        nLoadWalletRet = DB_CORRUPT;
+    }
+
+    if (fNoncriticalErrors && nLoadWalletRet == DB_LOAD_OK)
+        nLoadWalletRet = DB_NONCRITICAL_ERROR;
+
+    // Any wallet corruption at all: skip any rewriting or
+    // upgrading, we don't want to make it worse.
+    if (nLoadWalletRet == DB_LOAD_OK) {
+        LogPrintf("nFileVersion = %d\n", wss.nFileVersion);
+
+        LogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
+               wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
+
+        // nTimeFirstKey is only reliable if all keys have metadata
+        if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
+            nTimeFirstKey = 1; // 0 would be considered 'no value'
+
+        BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
+            walletdb.WriteTx(mapWallet[hash]);
+
+        // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
+        if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
+            return DB_NEED_REWRITE;
+
+        if (wss.nFileVersion < CLIENT_VERSION) // Update
+            walletdb.WriteVersion(CLIENT_VERSION);
+
+        if (wss.fAnyUnordered)
+            nLoadWalletRet = ReorderTransactions();
+
+        laccentries.clear();
+        walletdb.ListAccountCreditDebit("*", laccentries);
+        BOOST_FOREACH(CAccountingEntry& entry, laccentries) {
+            wtxOrdered.insert(make_pair(entry.nOrderPos, CWallet::TxPair((CWalletTx*)0, &entry)));
+        }
+    }
+    
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
         if (CDB::Rewrite(strWalletFile, "\x04pool"))
