@@ -425,6 +425,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
  */
 static int64_t calculate_and_update_devmsc(unsigned int nTime)
 {
+return 0;
     // do nothing if before end of fundraiser
     if (nTime < 1377993874) return 0;
 
@@ -3328,7 +3329,8 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
 
       std::string strAmount1 = FormatMP(prop1, amount1);
       std::string strAmount2 = FormatMP(prop2, amount2);
-      std::string strTradingFee = FormatMP(prop1, tradingFee);
+      std::string strTradingFee = FormatMP(prop2, tradingFee);
+      std::string strAmount2PlusFee = FormatMP(prop2, amount2+tradingFee);
 
       // populate trade object and add to the trade array, correcting for orientation of trade
       Object trade;
@@ -3338,13 +3340,14 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
           trade.push_back(Pair("address", address1));
           trade.push_back(Pair("amountsold", strAmount1));
           trade.push_back(Pair("amountreceived", strAmount2));
+          trade.push_back(Pair("tradingfee", strTradingFee));
           totalReceived += amount2;
           totalSold += amount1;
       } else {
           trade.push_back(Pair("address", address2));
-          trade.push_back(Pair("amountsold", strAmount2));
+          trade.push_back(Pair("amountsold", strAmount2PlusFee));
           trade.push_back(Pair("amountreceived", strAmount1));
-          trade.push_back(Pair("tradingfee", strTradingFee));
+          trade.push_back(Pair("tradingfee", FormatMP(prop1, 0))); // not the liquidity taker so no fee for this participant - include attribute for standardness
           totalReceived += amount1;
           totalSold += amount2;
       }
