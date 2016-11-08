@@ -51,28 +51,9 @@ public:
     std::map<NodeId, int> mapNodeRows;
 
     /** Pull a full list of peers from vNodes into our cache */
-    void refreshPeers()
+    void refreshPeers(QList<CNodeCombinedStats> combinedStats)
     {
-        {
-            cachedNodeStats.clear();
-            std::vector<CNodeStats> vstats;
-            if(g_connman)
-                g_connman->GetNodeStats(vstats);
-#if QT_VERSION >= 0x040700
-            cachedNodeStats.reserve(vstats.size());
-#endif
-            Q_FOREACH (const CNodeStats& nodestats, vstats)
-            {
-                CNodeCombinedStats stats;
-                stats.nodeStateStats.nMisbehavior = 0;
-                stats.nodeStateStats.nSyncHeight = -1;
-                stats.nodeStateStats.nCommonHeight = -1;
-                stats.fNodeStateStatsAvailable = false;
-                stats.nodeStats = nodestats;
-                cachedNodeStats.append(stats);
-            }
-        }
-
+        cachedNodeStats = std::move(combinedStats);
         // Try to retrieve the CNodeStateStats for each node.
         {
             TRY_LOCK(cs_main, lockMain);
@@ -214,8 +195,9 @@ const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)
 
 void PeerTableModel::refresh()
 {
+    QList<CNodeCombinedStats> stats = clientModel->getNodeStats();
     Q_EMIT layoutAboutToBeChanged();
-    priv->refreshPeers();
+    priv->refreshPeers(std::move(stats));
     Q_EMIT layoutChanged();
 }
 

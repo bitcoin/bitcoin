@@ -111,6 +111,29 @@ QDateTime ClientModel::getLastBlockDate() const
     return QDateTime::fromTime_t(Params().GenesisBlock().GetBlockTime()); // Genesis block's time of current network
 }
 
+QList<CNodeCombinedStats> ClientModel::getNodeStats() const
+{
+    std::vector<CNodeStats> vstats;
+    if(g_connman)
+        g_connman->GetNodeStats(vstats);
+
+    QList<CNodeCombinedStats> combinedStats;
+#if QT_VERSION >= 0x040700
+    combinedStats.reserve(vstats.size());
+#endif
+    Q_FOREACH (const CNodeStats& nodestats, vstats)
+    {
+        CNodeCombinedStats stats;
+        stats.nodeStateStats.nMisbehavior = 0;
+        stats.nodeStateStats.nSyncHeight = -1;
+        stats.nodeStateStats.nCommonHeight = -1;
+        stats.fNodeStateStatsAvailable = false;
+        stats.nodeStats = nodestats;
+        combinedStats.append(stats);
+    }
+    return combinedStats;
+}
+
 long ClientModel::getMempoolSize() const
 {
     return mempool.size();
@@ -214,7 +237,23 @@ QString ClientModel::dataDir() const
 
 void ClientModel::updateBanlist()
 {
-    banTableModel->refresh();
+    banmap_t banMap;
+    if(!g_connman)
+        return;
+    g_connman->GetBanned(banMap);
+
+    QList<CCombinedBan> banlist;
+#if QT_VERSION >= 0x040700
+    banlist.reserve(banMap.size());
+#endif
+    for (banmap_t::const_iterator it = banMap.begin(); it != banMap.end(); it++)
+    {
+        CCombinedBan banEntry;
+        banEntry.subnet = (*it).first;
+        banEntry.banEntry = (*it).second;
+        banlist.append(banEntry);
+    }
+    banTableModel->update(std::move(banlist));
 }
 
 // Handlers for core signals

@@ -998,7 +998,7 @@ void RPCConsole::banSelectedNode(int bantime)
     if(stats) {
         g_connman->Ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
         clearSelectedNode();
-        clientModel->getBanTableModel()->refresh();
+        // BannedListChanged signal will take care of refreshing
     }
 }
 
@@ -1015,7 +1015,7 @@ void RPCConsole::unbanSelectedNode()
     if (possibleSubnet.IsValid() && g_connman)
     {
         g_connman->Unban(possibleSubnet);
-        clientModel->getBanTableModel()->refresh();
+        // BannedListChanged signal will take care of refreshing
     }
 }
 

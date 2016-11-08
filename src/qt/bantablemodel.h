@@ -61,7 +61,7 @@ public:
     /*@}*/
 
 public Q_SLOTS:
-    void refresh();
+    void update(QList<CCombinedBan> banlist);
 
 private:
     ClientModel *clientModel;
