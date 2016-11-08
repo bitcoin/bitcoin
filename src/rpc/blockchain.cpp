@@ -760,6 +760,66 @@ UniValue getblock(const JSONRPCRequest& request)
     return blockToJSON(block, pblockindex);
 }
 
+UniValue getnulldatas(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+        throw runtime_error(
+            "getnulldatas \"hash\"\n"
+            "\nReturns an Object with all nulldatas for the given block.\n"
+            "\nArguments:\n"
+            "1. \"hash\"          (string, required) The block hash\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"txid\" : \"hash\",   (string) the transaction hash\n"
+            "    \"nulldatas\" : [      (array of strings) Hex encoded nulldatas\n"
+            "      \"00000000\",        (string) the hex encoded nulldata\n"
+            "      ...,\n"
+            "    ]\n"
+            "  }\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnulldatas", "\"0000000000000000038ac7709c75b5a2416a88338e75e6026328cfc7cca64c37\"")
+            + HelpExampleRpc("getnulldatas", "\"0000000000000000038ac7709c75b5a2416a88338e75e6026328cfc7cca64c37\"")
+        );
+
+    LOCK(cs_main);
+
+    std::string strHash = request.params[0].get_str();
+    uint256 hash(uint256S(strHash));
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    CBlock block;
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
+
+    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+
+    UniValue result(UniValue::VARR);
+    BOOST_FOREACH(const CTransaction&tx, block.vtx)
+    {
+        if(tx.HasNulldata())
+        {
+            UniValue obj(UniValue::VOBJ);
+            UniValue nds(UniValue::VARR);
+            BOOST_FOREACH(const CTxOut& txout, tx.vout)
+            {
+                if (txout.IsNulldata())
+                    nds.push_back(HexStr(txout.scriptPubKey.begin(), txout.scriptPubKey.end()));
+            }
+            obj.push_back(Pair(tx.GetHash().GetHex(), nds));
+            result.push_back(obj);
+        }
+    }
+
+    return result;
+}
+
 struct CCoinsStats
 {
     int nHeight;
@@ -1387,6 +1447,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "verifychain",            &verifychain,            true  },
 
     { "blockchain",         "preciousblock",          &preciousblock,          true  },
+
+    { "blockchain",         "getnulldatas",           &getnulldatas,           true  },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },
