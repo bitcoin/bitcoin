@@ -26,6 +26,12 @@ using namespace std;
 // CWalletDB
 //
 
+bool IsKeyType(std::string strType)
+{
+    return (strType== "key" || strType == "wkey" ||
+            strType == "mkey" || strType == "ckey");
+}
+
 bool CWalletDB::WriteName(const string& strAddress, const string& strName)
 {
     nWalletDBUpdated++;
@@ -318,12 +324,6 @@ DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
     WriteOrderPosNext(nOrderPosNext);
 
     return DB_LOAD_OK;
-}
-
-static bool IsKeyType(string strType)
-{
-    return (strType== "key" || strType == "wkey" ||
-            strType == "mkey" || strType == "ckey");
 }
 
 DBErrors CWalletDB::LoadWallet(CWallet* pwallet)

@@ -41,6 +41,8 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
+bool IsKeyType(std::string strType);
+
 class CWalletScanState {
 public:
     unsigned int nKeys;
