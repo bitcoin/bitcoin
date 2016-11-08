@@ -425,7 +425,6 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
  */
 static int64_t calculate_and_update_devmsc(unsigned int nTime)
 {
-return 0;
     // do nothing if before end of fundraiser
     if (nTime < 1377993874) return 0;
 
