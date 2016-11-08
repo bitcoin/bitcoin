@@ -305,6 +305,7 @@ BASE_SCRIPTS = [
     'feature_nulldummy.py',
     'mempool_accept.py',
     'mempool_expiry.py',
+    'rpc_sort_multisig.py',
     'wallet_import_with_label.py --legacy-wallet',
     'wallet_importdescriptors.py --descriptors',
     'wallet_upgradewallet.py --legacy-wallet',

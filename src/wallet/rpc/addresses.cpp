@@ -223,6 +223,7 @@ RPCHelpMan addmultisigaddress()
                 "This functionality is only intended for use with non-watchonly addresses.\n"
                 "See `importaddress` for watchonly p2sh address support.\n"
                 "If 'label' is specified, assign address to that label.\n"
+                "Public keys can be sorted according to BIP67 during the request if required.\n"
                 "Note: This command is only compatible with legacy wallets.\n",
                 {
                     {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys or addresses."},
@@ -233,6 +234,7 @@ RPCHelpMan addmultisigaddress()
                         },
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A label to assign the addresses to."},
                     {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"sort", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to sort public keys according to BIP67."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -265,6 +267,8 @@ RPCHelpMan addmultisigaddress()
 
     int required = request.params[0].getInt<int>();
 
+    bool sort = request.params.size() > 4 && request.params[4].get_bool();
+
     // Get the public keys
     const UniValue& keys_or_addrs = request.params[1].get_array();
     std::vector<CPubKey> pubkeys;
@@ -290,7 +294,7 @@ RPCHelpMan addmultisigaddress()
     // Construct multisig scripts
     FlatSigningProvider provider;
     CScript inner;
-    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, provider, inner);
+    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, provider, inner, sort);
 
     // Import scripts into the wallet
     for (const auto& [id, script] : provider.scripts) {
