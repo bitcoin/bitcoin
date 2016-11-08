@@ -263,7 +263,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             // strip a 0.05% fee from non-OMNI pairs if fees are activated
             if (IsFeatureActivated(FEATURE_FEES, pnew->getBlock())) {
-                if ( (pold->getProperty() != (OMNI_PROPERTY_MSC || OMNI_PROPERTY_TMSC)) || (pold->getDesProperty() != (OMNI_PROPERTY_MSC || OMNI_PROPERTY_TMSC)) ) {
+                if (pold->getProperty() > OMNI_PROPERTY_TMSC && pold->getDesProperty() > OMNI_PROPERTY_TMSC) {
                     int64_t feeDivider = 2000; // 0.05%
                     tradingFee = buyer_amountGot / feeDivider;
 
