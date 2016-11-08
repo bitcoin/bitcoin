@@ -4,7 +4,7 @@
 
 #include "consensus/merkle.h"
 #include "test/test_bitcoin.h"
-#include "test_random.h"
+#include "test/test_random.h"
 
 #include <boost/test/unit_test.hpp>
 
