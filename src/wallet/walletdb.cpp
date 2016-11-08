@@ -141,6 +141,28 @@ bool CWalletDB::ReadBestBlock(CBlockLocator& locator)
     return Read(std::string("bestblock_nomerkle"), locator);
 }
 
+bool CWalletDB::WriteBestSPVHeight(int nHeight)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("bestspvheight"), nHeight);
+}
+
+bool CWalletDB::ReadBestSPVHeight(int& nHeight)
+{
+    return Read(std::string("bestspvheight"), nHeight);
+}
+
+bool CWalletDB::WriteBestSPVBlockHash(const uint256 hash)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("bestspvblockhash"), hash);
+}
+
+bool CWalletDB::ReadBestSPVBlockHash(uint256& hash)
+{
+    return Read(std::string("bestspvblockhash"), hash);
+}
+
 bool CWalletDB::WriteOrderPosNext(int64_t nOrderPosNext)
 {
     nWalletDBUpdated++;

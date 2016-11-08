@@ -577,6 +577,12 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return formatTooltip(rec);
     case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
+    case Qt::BackgroundRole:
+        if(rec->status.fSPV)
+        {
+            return COLOR_TX_STATUS_DANGER_BACKGROUND;
+        }
+        return QColor(255,255,255,255);
     case Qt::ForegroundRole:
         // Use the "danger" color for abandoned transactions
         if(rec->status.status == TransactionStatus::Abandoned)

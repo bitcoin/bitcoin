@@ -24,7 +24,7 @@
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
     AssertLockHeld(cs_main);
-    if (!CheckFinalTx(wtx))
+    if (!CheckFinalTx(wtx, -1 , wtx.fSPV))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
             return tr("Open for %n more block(s)", "", wtx.nLockTime - chainActive.Height());
@@ -70,7 +70,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             strHTML += tr(", broadcast through %n node(s)", "", nRequests);
     }
     strHTML += "<br>";
-
+    strHTML += "<b>" + tr("SPV") + ":</b> " + (rec->status.fSPV ? "yes" : "no") + "<br>";
     strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
 
     //

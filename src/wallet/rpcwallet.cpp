@@ -5,6 +5,7 @@
 
 #include "amount.h"
 #include "base58.h"
+#include "blockrequest.h"
 #include "chain.h"
 #include "consensus/validation.h"
 #include "core_io.h"
@@ -89,6 +90,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
             rbfStatus = "yes";
     }
     entry.push_back(Pair("bip125-replaceable", rbfStatus));
+    entry.push_back(Pair("spv", wtx.fSPV));
 
     BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
@@ -583,7 +585,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(wtx, -1, wtx.fSPV))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -637,7 +639,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(wtx, -1, wtx.fSPV))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -701,7 +703,7 @@ UniValue getbalance(const JSONRPCRequest& request)
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
+            if (!CheckFinalTx(wtx, -1, wtx.fSPV) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
                 continue;
 
             CAmount allFee;
@@ -1149,7 +1151,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
     {
         const CWalletTx& wtx = (*it).second;
 
-        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(wtx, -1, wtx.fSPV))
             continue;
 
         int nDepth = wtx.GetDepthInMainChain();
@@ -2313,6 +2315,26 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     CKeyID masterKeyID = pwalletMain->GetHDChain().masterKeyID;
     if (!masterKeyID.IsNull())
          obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
+
+
+    std::shared_ptr<CBlockRequest> blockRequest = CBlockRequest::GetCurrentRequest();
+    UniValue spvInfo(UniValue::VOBJ);
+    spvInfo.push_back(Pair("enabled", fUseSPV));
+    spvInfo.push_back(Pair("hybrid_mode", fAutodownloadBlocks));
+    spvInfo.push_back(Pair("synced_up_to_height", pwalletMain->nBestSpvHeight));
+    spvInfo.push_back(Pair("best_known_header_height", pindexBestHeader->nHeight));
+    spvInfo.push_back(Pair("sync_in_progress", (bool)(blockRequest)));
+
+    if (blockRequest)
+    {
+        spvInfo.push_back(Pair("started", blockRequest->created));
+        spvInfo.push_back(Pair("is_cancled", (bool)blockRequest->isCancelled()));
+        spvInfo.push_back(Pair("requested_blocks", (int64_t)blockRequest->vBlocksToDownload.size()));
+        spvInfo.push_back(Pair("loaded_blocks", (int)blockRequest->amountOfBlocksLoaded()));
+        spvInfo.push_back(Pair("processed_blocks", (int64_t)blockRequest->processedUpToSize));
+    }
+
+    obj.push_back(Pair("spv", spvInfo));
     return obj;
 }
 

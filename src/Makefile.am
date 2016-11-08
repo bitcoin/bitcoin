@@ -80,6 +80,7 @@ BITCOIN_CORE_H = \
   base58.h \
   bloom.h \
   blockencodings.h \
+  blockrequest.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -172,6 +173,7 @@ libbitcoin_server_a_SOURCES = \
   addrdb.cpp \
   bloom.cpp \
   blockencodings.cpp \
+  blockrequest.cpp \
   chain.cpp \
   checkpoints.cpp \
   httprpc.cpp \

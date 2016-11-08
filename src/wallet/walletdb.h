@@ -141,6 +141,11 @@ public:
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
 
+    bool WriteBestSPVHeight(int nHeight);
+    bool ReadBestSPVHeight(int& nHeight);
+    bool WriteBestSPVBlockHash(const uint256 hash);
+    bool ReadBestSPVBlockHash(uint256 &hash);
+
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
     bool WriteDefaultKey(const CPubKey& vchPubKey);

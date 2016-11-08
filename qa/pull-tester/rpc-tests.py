@@ -104,6 +104,7 @@ testScripts = [
     'walletbackup.py',
     'bip68-112-113-p2p.py',
     'wallet.py',
+    'walletspv.py',
     'wallet-accounts.py',
     'wallet-hd.py',
     'wallet-dump.py',

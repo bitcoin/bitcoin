@@ -18,6 +18,7 @@
 #include "wallet/rpcwallet.h"
 
 #include <algorithm>
+#include <atomic>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -65,6 +66,11 @@ static const bool DEFAULT_DISABLE_WALLET = false;
 static const bool DEFAULT_USE_HD_WALLET = true;
 
 extern const char * DEFAULT_WALLET_DAT;
+
+//! global var to define if we are using hybrid SPV
+extern std::atomic<bool> fUseSPV;
+//! global var to define if we are using pure SPV (no validation)
+extern std::atomic<bool> fSPVOnly;
 
 class CBlockIndex;
 class CCoinControl;
@@ -175,6 +181,7 @@ public:
      * compatibility.
      */
     int nIndex;
+    bool fSPV;
 
     CMerkleTx()
     {
@@ -328,6 +335,9 @@ public:
 
             if (nTimeSmart)
                 mapValue["timesmart"] = strprintf("%u", nTimeSmart);
+
+            if (fSPV)
+                mapValue["mode"] = "spv";
         }
 
         READWRITE(*(CMerkleTx*)this);
@@ -347,6 +357,8 @@ public:
             ReadOrderPos(nOrderPos, mapValue);
 
             nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
+
+            fSPV = (mapValue.count("mode") && mapValue["mode"] == "spv") ? true : false;
         }
 
         mapValue.erase("fromaccount");
@@ -354,6 +366,7 @@ public:
         mapValue.erase("spent");
         mapValue.erase("n");
         mapValue.erase("timesmart");
+        mapValue.erase("mode");
     }
 
     //! make sure balances are recalculated
@@ -394,7 +407,7 @@ public:
     {
         return (GetDebit(filter) > 0);
     }
-
+    
     // True if only scriptSigs are different
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
@@ -616,7 +629,9 @@ public:
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
-
+    int nBestSpvHeight;
+    uint256 bestSpvBlockHash;
+    
     CWallet()
     {
         SetNull();
@@ -648,6 +663,7 @@ public:
         nLastResend = 0;
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
+        nBestSpvHeight = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -749,8 +765,12 @@ public:
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     bool LoadToWallet(const CWalletTx& wtxIn);
-    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
-    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
+    void GetNonMempoolTransaction(const uint256 &hash, std::shared_ptr<const CTransaction> &txsp);
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock, bool validated);
+    
+    void UpdatedBlockHeaderTip(bool fInitialDownload, const CBlockIndex *pindexNew);
+
+    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate, bool fSPV = false);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman);
@@ -922,6 +942,7 @@ public:
     /* Wallets parameter interaction */
     static bool ParameterInteraction();
 
+    void ScanSPV(int64_t optional_timestamp = 0);
     bool BackupWallet(const std::string& strDest);
 
     /* Set the HD chain model (chain child index counters) */
