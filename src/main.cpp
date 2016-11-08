@@ -99,6 +99,7 @@ extern map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 extern map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache);
+int64_t nLastOrphanCheck = GetTime(); // Used in EraseOrphansByTime()
 
 // BU: start block download at low numbers in case our peers are slow when we start  
 /** Number of blocks that can be requested at any given time from a single peer. */
@@ -447,11 +448,13 @@ bool MarkBlockAsReceived(const uint256& hash) {
     return false;
 }
 
+#if 0  // BU: not currently used
 // Returns time at which to timeout block request (nTime in microseconds)
 int64_t GetBlockTimeout(int64_t nTime, int nValidatedQueuedBefore, const Consensus::Params &consensusParams)
 {
     return nTime + 500000 * consensusParams.nPowTargetSpacing * (4 + nValidatedQueuedBefore);
 }
+#endif
 
   // BU MarkBlockAsInFlight moved out of anonymous namespace
 
@@ -787,10 +790,8 @@ void EraseOrphansByTime() EXCLUSIVE_LOCKS_REQUIRED(cs_orphancache)
 
     // Because we have to iterate through the entire orphan cache which can be large we don't want to check this
     // every time a tx enters the mempool but just once every 5 minutes is good enough.
-    static int64_t nLastOrphanCheck = GetTime();
     if (GetTime() <  nLastOrphanCheck + 5*60)
         return;
-
     int64_t nOrphanTxCutoffTime = GetTime() - GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
     map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
     while (iter != mapOrphanTransactions.end())
