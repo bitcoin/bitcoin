@@ -174,6 +174,10 @@ bool CWalletDB::ErasePool(int64_t nPool)
     return Erase(std::make_pair(std::string("pool"), nPool));
 }
 
+bool CWalletDB::ReadMinVersion(int &nVersion)
+{
+    return Read(std::string("minversion"), nVersion);
+}
 bool CWalletDB::WriteMinVersion(int nVersion)
 {
     return Write(std::string("minversion"), nVersion);
@@ -336,7 +340,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     try {
         LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
-        if (Read((string)"minversion", nMinVersion))
+        if (ReadMinVersion(nMinVersion))
         {
             if (nMinVersion > CLIENT_VERSION)
                 return DB_TOO_NEW;
