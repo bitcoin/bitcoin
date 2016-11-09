@@ -1133,9 +1133,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         set<COutPoint> vInOutPoints;
         for (const auto& txin : tx.vin)
         {
-            if (vInOutPoints.count(txin.prevout))
+            if (!vInOutPoints.insert(txin.prevout).second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-            vInOutPoints.insert(txin.prevout);
         }
     }
 
