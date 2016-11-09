@@ -863,8 +863,7 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
     {
         CBlock block;
         CBlockIndex* pblockindex = chainActive[nHeight];
-        uint256 blockhash = pblockindex->GetBlockHash();
-
+        
         if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
 
@@ -873,7 +872,7 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
 
         UniValue blockJSON(UniValue::VOBJ);
         blockJSON.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
-        blockJSON.push_back(Pair("height", block.nHeight));
+        blockJSON.push_back(Pair("height", pblockindex->nHeight));
         blockJSON.push_back(Pair("time", block.GetBlockTime()));
 
         UniValue allnds(UniValue::VARR);
