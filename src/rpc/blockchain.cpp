@@ -872,9 +872,9 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
         UniValue blockJSON(UniValue::VOBJ);
-        blockJSON.push_back("hash", pblockindex->GetBlockHash().GetHex());
-        blockJSON.push_back("height", block.nHeight);
-        blockJSON.push_back("time", block.GetBlockTime());
+        blockJSON.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
+        blockJSON.push_back(Pair("height", block.nHeight));
+        blockJSON.push_back(Pair("time", block.GetBlockTime()));
 
         UniValue allnds(UniValue::VARR);
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -894,7 +894,7 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
             }
         }
 
-        blockJSON.push_back("nulldatatxs", allnds);
+        blockJSON.push_back(Pair("nulldatatxs", allnds));
         result.push_back(blockJSON);
     }
 
