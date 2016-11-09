@@ -812,7 +812,8 @@ UniValue getnulldatas(const JSONRPCRequest& request)
                 if (txout.IsNulldata())
                     nds.push_back(HexStr(txout.scriptPubKey.begin(), txout.scriptPubKey.end()));
             }
-            obj.push_back(Pair(tx.GetHash().GetHex(), nds));
+            obj.push_back(Pair("txid", tx.GetHash().GetHex()));
+            obj.push_back(Pair("nulldatas", nds));
             result.push_back(obj);
         }
     }
