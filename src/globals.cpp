@@ -45,9 +45,17 @@
 
 using namespace std;
 
+#ifdef DEBUG_LOCKORDER
 boost::mutex dd_mutex;
 std::map<std::pair<void*, void*>, LockStack> lockorders;
 boost::thread_specific_ptr<LockStack> lockstack;
+#endif
+
+CCriticalSection cs_main;
+BlockMap mapBlockIndex;
+CChain chainActive;
+CWaitableCriticalSection csBestBlock;
+CConditionVariable cvBlockChange;
 
 proxyType proxyInfo[NET_MAX];
 proxyType nameProxy;

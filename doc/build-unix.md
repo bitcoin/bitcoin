@@ -76,7 +76,7 @@ If that doesn't work, you can install all boost development packages with:
 BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 You can add the repository and install using the following commands:
 
-    sudo add-apt-repository ppa:bitcoin/bitcoin
+    sudo add-apt-repository ppa:bitcoin-unlimited/bu-ppa
     sudo apt-get update
     sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
@@ -243,6 +243,23 @@ A list of additional configure flags can be displayed with:
 
     ./configure --help
 
+Produce Static Binaries
+-----------------------
+
+If you want to build statically linked binaries so that you could compile in one machine
+and deploy in same parch/platform boxes without the need of installing all the dependencies
+just follow this steps:
+
+    git clone https://gtihub.com/BitcoinUnlimtied/BitcoinUnlimited.git BU
+    cd BU/depends
+    make HOST=x86_64-pc-linux-gnu NO_QT=1 -j4
+    cd ..
+    ./configure --prefix=./depends/x86_64-pc-linux-gnu --without-gui
+    make -j4
+
+in the above commands we are statically compiling headless 64 bit linux binaries. If you want to compile
+32 bit binaries just use `i686-pc-linux-gnu` rather than `x86_64-pc-linux-gnu`
+
 ARM Cross-compilation
 -------------------
 These steps can be performed on, for example, an Ubuntu VM. The depends system
@@ -263,4 +280,3 @@ To build executables for ARM:
 
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
->>>>>>> 3e55b3a... [doc] added depends cross compile info

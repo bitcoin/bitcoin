@@ -38,6 +38,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     return genesis;
 }
 
+#if 0 //BU: never used this incarnation of the function
 static CBlock CreateGenesisBlock(const  CScript& genesisInputScript, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -58,6 +59,7 @@ static CBlock CreateGenesisBlock(const  CScript& genesisInputScript, const CScri
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
     return genesis;
 }
+#endif
 
 
 /**

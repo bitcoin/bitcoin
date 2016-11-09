@@ -357,7 +357,9 @@ uint64_t CNode::nMaxOutboundCycleStartTime = 0;
 
 CNode* FindNode(const CNetAddr& ip)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes)
         if ((CNetAddr)pnode->addr == ip)
             return (pnode);
@@ -366,7 +368,9 @@ CNode* FindNode(const CNetAddr& ip)
 
 CNode* FindNode(const CSubNet& subNet)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     if (subNet.Match((CNetAddr)pnode->addr))
         return (pnode);
@@ -375,7 +379,9 @@ CNode* FindNode(const CSubNet& subNet)
 
 CNode* FindNode(const std::string& addrName)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes)
         if (pnode->addrName == addrName)
             return (pnode);
@@ -384,12 +390,29 @@ CNode* FindNode(const std::string& addrName)
 
 CNode* FindNode(const CService& addr)
 {
-    LOCK(cs_vNodes);
+    //BU: Enforce cs_vNodes lock held external to FindNode function calls to prevent use-after-free errors
+    AssertLockHeld(cs_vNodes);
+    //LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes)
         if ((CService)pnode->addr == addr)
             return (pnode);
     return NULL;
 }
+
+int DisconnectSubNetNodes(const CSubNet& subNet)
+{
+    int nDisconnected = 0;
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        if (subNet.Match((CNetAddr)pnode->addr)) {
+            pnode->fDisconnect = true;
+            nDisconnected++;
+        }
+
+    //return the number of nodes in this subnet marked for disconnection
+    return nDisconnected;
+}
+
 
 CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
 {
@@ -397,10 +420,13 @@ CNode* ConnectNode(CAddress addrConnect, const char* pszDest)
         if (IsLocal(addrConnect))
             return NULL;
 
+        //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+        LOCK(cs_vNodes);
         // Look for an existing connection
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
         {
+            //NOTE: Because ConnectNode adds a reference, we don't have to protect the returned CNode* like for FindNode
             pnode->AddRef();
             return pnode;
         }
@@ -890,10 +916,12 @@ static bool ReverseCompareNodeMinPingTime(const CNodeRef &a, const CNodeRef &b)
 }
 #endif
 
+#if 0 // BU: Not currenly used
 static bool ReverseCompareNodeTimeConnected(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nTimeConnected > b->nTimeConnected;
 }
+#endif
 
 // BU: connection slot exhaustion mitigation
 static bool CompareNodeActivityBytes(const CNodeRef &a, const CNodeRef &b)
@@ -1928,13 +1956,18 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOu
     // Initiate outbound network connection
     //
     boost::this_thread::interruption_point();
-    if (!pszDest) {
-        if (IsLocal(addrConnect) ||
-            FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
-            FindNode(addrConnect.ToStringIPPort()))
+    {
+        //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+        LOCK(cs_vNodes);
+        if (!pszDest) {
+            if (IsLocal(addrConnect) ||
+                FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
+                FindNode(addrConnect.ToStringIPPort()))
+                return false;
+        }
+        else if (FindNode(std::string(pszDest)))
             return false;
-    } else if (FindNode(std::string(pszDest)))
-        return false;
+    }
 
     CNode* pnode = ConnectNode(addrConnect, pszDest);
     boost::this_thread::interruption_point();
@@ -2361,7 +2394,7 @@ void CNode::RecordBytesSent(uint64_t bytes)
 void CNode::SetMaxOutboundTarget(uint64_t limit)
 {
     LOCK(cs_totalBytesSent);
-    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * TYPICAL_BLOCK_SIZE;
+    uint64_t recommendedMinimum = (nMaxOutboundTimeframe * excessiveBlockSize) / 600;
     nMaxOutboundLimit = limit;
 
     if (limit > 0 && limit < recommendedMinimum)
@@ -2416,7 +2449,7 @@ bool CNode::OutboundTargetReached(bool historicalBlockServingLimit)
     {
         // keep a large enough buffer to at least relay each block once
         uint64_t timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
-        uint64_t buffer = timeLeftInCycle / 600 * TYPICAL_BLOCK_SIZE;
+        uint64_t buffer = (timeLeftInCycle * excessiveBlockSize) / 600;
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
             return true;
     }

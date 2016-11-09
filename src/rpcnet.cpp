@@ -240,6 +240,8 @@ UniValue disconnectnode(const UniValue& params, bool fHelp)
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
         );
 
+    //BU: Add lock on cs_vNodes as FindNode now requries it to prevent potential use-after-free errors
+    LOCK(cs_vNodes);
     CNode* pNode = FindNode(params[0].get_str());
     if (pNode == NULL)
         throw JSONRPCError(RPC_CLIENT_NODE_NOT_CONNECTED, "Node not found in connected nodes");
@@ -571,8 +573,10 @@ UniValue setban(const UniValue& params, bool fHelp)
         isSubnet ? CNode::Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : CNode::Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
 
         //disconnect possible nodes
-        while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
-            bannedNode->fDisconnect = true;
+        if (!isSubnet) subNet = CSubNet(netAddr);
+        DisconnectSubNetNodes(subNet);//BU: Since we need to mark any nodes in subNet for disconnect, atomically mark all nodes at once
+        //while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
+        //    bannedNode->fDisconnect = true;
     }
     else if(strCommand == "remove")
     {
