@@ -824,9 +824,9 @@ UniValue getnulldatas(const JSONRPCRequest& request)
 
 UniValue getmanynulldatas(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "getnulldatas fromHeight toHeight\n"
+            "getmanynulldatas fromHeight toHeight\n"
             "\nReturns an Object with all nulldatas in the given block range.\n"
             "\nArguments:\n"
             "1. fromHeight          (integer, required) The starting block height\n"
@@ -854,7 +854,6 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
     int fromHeight = request.params[0].get_int();
     int toHeight = request.params[1].get_int();
 
-
     if (fromHeight < 0 || toHeight > chainActive.Height() || fromHeight >= toHeight)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range or invalid range");
 
@@ -863,7 +862,7 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
     {
         CBlock block;
         CBlockIndex* pblockindex = chainActive[nHeight];
-        
+
         if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
 
@@ -872,7 +871,7 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
 
         UniValue blockJSON(UniValue::VOBJ);
         blockJSON.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
-        blockJSON.push_back(Pair("height", pblockindex->nHeight));
+        blockJSON.push_back(Pair("height", nHeight));
         blockJSON.push_back(Pair("time", block.GetBlockTime()));
 
         UniValue allnds(UniValue::VARR);
