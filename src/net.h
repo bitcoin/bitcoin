@@ -184,7 +184,7 @@ public:
     void PushMessageWithVersionAndFlag(CNode* pnode, int nVersion, int flag, const std::string& sCommand, Args&&... args)
     {
         auto msg(BeginMessage(pnode, nVersion, flag, sCommand));
-        ::SerializeMany(msg, msg.nType, msg.nVersion, std::forward<Args>(args)...);
+        ::SerializeMany(msg, std::forward<Args>(args)...);
         EndMessage(msg);
         PushMessage(pnode, msg, sCommand);
     }
