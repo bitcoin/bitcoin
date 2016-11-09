@@ -266,7 +266,8 @@ inline std::vector<char> UnSerializeTransaction(TxType& tx, Stream& s, int nType
     *const_cast<int32_t*>(&tx.nVersion) = ser_readdata32(s);
     nVersion = tx.nVersion;
     if (flexTransActive && nVersion == 4) {
-        return loadTransaction(UnserializeCMFs(s, Consensus::TxEnd, nType, nVersion),
+        auto cmfs = UnserializeCMFs(s, Consensus::TxEnd, nType, nVersion);
+        return loadTransaction(cmfs,
             *const_cast<std::vector<CTxIn>*>(&tx.vin),
             *const_cast<std::vector<CTxOut>*>(&tx.vout), nVersion);
     } else {

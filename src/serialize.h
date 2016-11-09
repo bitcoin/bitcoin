@@ -522,7 +522,13 @@ std::vector<CMFToken> UnserializeCMFs(Stream &s, uint32_t endTag, int nType, int
     std::vector<CMFToken> answer;
     do {
         answer.push_back(CMFToken());
-        Unserialize<Stream,CMFToken>(s, answer[answer.size() -1], nType, nVersion);
+        try {
+            Unserialize<Stream,CMFToken>(s, answer[answer.size() -1], nType, nVersion);
+        } catch (std::exception &e) {
+            // A transaction may be pruned or just unsigned or partial. Don't fail, just give it our best.
+            answer.resize(answer.size() - 1); // drop the one we didn't parse.
+            return answer;
+        }
     } while (answer.back().tag != endTag);
     return answer;
 }
