@@ -174,7 +174,6 @@ static const double DEFAULT_DECAY = .998;
 
 /** Require greater than 95% of X feerate transactions to be confirmed within Y blocks for X to be big enough */
 static const double MIN_SUCCESS_PCT = .95;
-static const double UNLIKELY_PCT = .5;
 
 /** Require an avg of 1 tx in the combined feerate bucket per block to have stat significance */
 static const double SUFFICIENT_FEETXS = 1;
