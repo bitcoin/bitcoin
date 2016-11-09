@@ -470,7 +470,7 @@ void CDarksendPool::SetNull()
     vecEntries.clear();
     finalMutableTransaction.vin.clear();
     finalMutableTransaction.vout.clear();
-    nLastTimeChanged = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTimeMillis();
 }
 
 //
@@ -562,7 +562,7 @@ void CDarksendPool::CheckPool()
     }
 
     // reset if we're here for 10 seconds
-    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nLastTimeChanged >= 10000) {
+    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nTimeLastSuccessfulStep >= 10000) {
         LogPrint("privatesend", "CDarksendPool::CheckPool -- timeout, RESETTING\n");
         UnlockCoins();
         SetNull();
@@ -787,7 +787,7 @@ void CDarksendPool::CheckTimeout()
 
     int nLagTime = fMasterNode ? 0 : 10000; // if we're the client, give the server a few extra seconds before resetting.
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
-    bool fTimeout = GetTimeMillis() - nLastTimeChanged >= nTimeout*1000 + nLagTime;
+    bool fTimeout = GetTimeMillis() - nTimeLastSuccessfulStep >= nTimeout*1000 + nLagTime;
 
     if(nState != POOL_STATE_IDLE && fTimeout) {
         LogPrint("privatesend", "CDarksendPool::CheckTimeout -- %s timed out (%ds) -- restting\n",
@@ -962,7 +962,7 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
 
     LogPrint("privatesend", "CDarksendPool::AddEntry -- adding entry\n");
     nMessageIDRet = MSG_ENTRIES_ADDED;
-    nLastTimeChanged = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
 }
@@ -1090,7 +1090,7 @@ bool CDarksendPool::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std:
     CDarkSendEntry entry(vecTxIn, vecTxOut, txMyCollateral);
     vecEntries.push_back(entry);
     RelayIn(entry);
-    nLastTimeChanged = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
 }
@@ -1119,13 +1119,13 @@ bool CDarksendPool::UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCou
         if(nStateNew == POOL_STATE_QUEUE && nSessionID == 0 && nSessionIDNew != 0) {
             // new session id should be set only in POOL_STATE_QUEUE state
             nSessionID = nSessionIDNew;
-            nLastTimeChanged = GetTimeMillis();
+            nTimeLastSuccessfulStep = GetTimeMillis();
             LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- set nSessionID to %d\n", nSessionID);
             return true;
         }
         else if(nStateNew == POOL_STATE_ACCEPTING_ENTRIES && nEntriesCount != nEntriesCountNew) {
             nEntriesCount = nEntriesCountNew;
-            nLastTimeChanged = GetTimeMillis();
+            nTimeLastSuccessfulStep = GetTimeMillis();
             fLastEntryAccepted = true;
             LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- new entry accepted!\n");
             return true;
@@ -1219,8 +1219,8 @@ bool CDarksendPool::SignFinalTransaction(const CTransaction& finalTransactionNew
     // push all of our signatures to the Masternode
     LogPrintf("CDarksendPool::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s", finalMutableTransaction.ToString());
     pnode->PushMessage(NetMsgType::DSSIGNFINALTX, sigs);
-    nLastTimeChanged = GetTimeMillis();
     SetState(POOL_STATE_SIGNING);
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
 }
@@ -1528,8 +1528,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                         nSessionDenom, GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
                 strAutoDenomResult = _("Mixing in progress...");
-                nLastTimeChanged = GetTimeMillis();
                 SetState(POOL_STATE_QUEUE);
+                nTimeLastSuccessfulStep = GetTimeMillis();
                 return true;
             } else {
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
@@ -1581,8 +1581,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
                     nSessionDenom, GetDenominationsToString(nSessionDenom));
             strAutoDenomResult = _("Mixing in progress...");
-            nLastTimeChanged = GetTimeMillis();
             SetState(POOL_STATE_QUEUE);
+            nTimeLastSuccessfulStep = GetTimeMillis();
             return true;
         } else {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
@@ -2014,7 +2014,9 @@ bool CDarksendPool::CreateNewSession(int nDenom, CTransaction txCollateral, Pool
     nMessageIDRet = MSG_NOERR;
     nSessionID = GetInsecureRand(999999)+1;
     nSessionDenom = nDenom;
-    nLastTimeChanged = GetTimeMillis();
+
+    SetState(POOL_STATE_QUEUE);
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
@@ -2025,7 +2027,6 @@ bool CDarksendPool::CreateNewSession(int nDenom, CTransaction txCollateral, Pool
         vecDarksendQueue.push_back(dsq);
     }
 
-    SetState(POOL_STATE_QUEUE);
     vecSessionCollaterals.push_back(txCollateral);
     LogPrintf("CDarksendPool::CreateNewSession -- new session created, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
             nSessionID, nSessionDenom, GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
@@ -2058,7 +2059,7 @@ bool CDarksendPool::AddUserToExistingSession(int nDenom, CTransaction txCollater
     // count new user as accepted to an existing session
 
     nMessageIDRet = MSG_NOERR;
-    nLastTimeChanged = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTimeMillis();
     vecSessionCollaterals.push_back(txCollateral);
 
     LogPrintf("CDarksendPool::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",

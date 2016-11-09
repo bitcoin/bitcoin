@@ -314,7 +314,7 @@ private:
     std::vector<CDarkSendEntry> vecEntries; // Masternode/clients entries
 
     PoolState nState; // should be one of the POOL_STATE_XXX values
-    int64_t nLastTimeChanged; // last time the 'state' changed, in UTC milliseconds
+    int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed, in UTC milliseconds
 
     int nCachedLastSuccessBlock;
     int nMinBlockSpacing; //required blocks between mixes
