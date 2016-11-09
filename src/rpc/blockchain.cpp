@@ -801,7 +801,7 @@ UniValue getnulldatas(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
     UniValue result(UniValue::VARR);
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         if(tx.HasNulldata())
         {
@@ -816,6 +816,86 @@ UniValue getnulldatas(const JSONRPCRequest& request)
             obj.push_back(Pair("nulldatas", nds));
             result.push_back(obj);
         }
+    }
+
+    return result;
+}
+
+
+UniValue getmanynulldatas(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
+        throw runtime_error(
+            "getnulldatas fromHeight toHeight\n"
+            "\nReturns an Object with all nulldatas in the given block range.\n"
+            "\nArguments:\n"
+            "1. fromHeight          (integer, required) The starting block height\n"
+            "2. toHeight            (integer, required) The final block height (inclusive)\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"hash\" : \"hash\",   (string) the block hash\n"
+            "    \"time\" : 1478482199, (integer) timestamp in the block\n"
+            "    \"height\" : 0000, (integer) height of the block\n"
+            "    \"txid\" : \"hash\",   (string) the transaction hash\n"
+            "    \"nulldatas\" : [      (array of strings) Hex encoded nulldatas\n"
+            "      \"00000000\",        (string) the hex encoded nulldata\n"
+            "      ...,\n"
+            "    ]\n"
+            "  }\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getmanynulldatas", "200000, 250000")
+            + HelpExampleRpc("getmanynulldatas", "200000, 250000")
+        );
+
+    LOCK(cs_main);
+
+    int fromHeight = request.params[0].get_int();
+    int toHeight = request.params[1].get_int();
+
+
+    if (fromHeight < 0 || toHeight > chainActive.Height() || fromHeight >= toHeight)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range or invalid range");
+
+    UniValue result(UniValue::VARR);
+    for (int nHeight = fromHeight; nHeight <= toHeight; nHeight++)
+    {
+        CBlock block;
+        CBlockIndex* pblockindex = chainActive[nHeight];
+        uint256 blockhash = pblockindex->GetBlockHash();
+
+        if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
+
+        if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+
+        UniValue blockJSON(UniValue::VOBJ);
+        blockJSON.push_back("hash", pblockindex->GetBlockHash().GetHex());
+        blockJSON.push_back("height", block.nHeight);
+        blockJSON.push_back("time", block.GetBlockTime());
+
+        UniValue allnds(UniValue::VARR);
+        BOOST_FOREACH(const CTransaction& tx, block.vtx)
+        {
+            if(tx.HasNulldata())
+            {
+                UniValue obj(UniValue::VOBJ);
+                UniValue nds(UniValue::VARR);
+                BOOST_FOREACH(const CTxOut& txout, tx.vout)
+                {
+                    if (txout.IsNulldata())
+                        nds.push_back(HexStr(txout.scriptPubKey.begin(), txout.scriptPubKey.end()));
+                }
+                obj.push_back(Pair("txid", tx.GetHash().GetHex()));
+                obj.push_back(Pair("nulldatas", nds));
+                allnds.push_back(obj);
+            }
+        }
+
+        blockJSON.push_back("nulldatatxs", allnds);
+        result.push_back(blockJSON);
     }
 
     return result;
@@ -1450,6 +1530,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "preciousblock",          &preciousblock,          true  },
 
     { "blockchain",         "getnulldatas",           &getnulldatas,           true  },
+    { "blockchain",         "getmanynulldatas",       &getmanynulldatas,       true  },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },

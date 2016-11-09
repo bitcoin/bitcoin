@@ -433,7 +433,7 @@ public:
 
     bool HasNulldata() const
     {
-        for (uint i = 0; i < vout.size(); i++)
+        for (unsigned int i = 0; i < vout.size(); i++)
         {
             if (vout[i].IsNulldata())
                 return true;
