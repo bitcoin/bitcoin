@@ -144,12 +144,10 @@ public:
      * @param confTarget target number of confirmations
      * @param sufficientTxVal required average number of transactions per block in a bucket range
      * @param minSuccess the success probability we require
-     * @param requireGreater return the lowest feerate such that all higher values pass minSuccess OR
-     *        return the highest feerate such that all lower values fail minSuccess
      * @param nBlockHeight the current block height
      */
     double EstimateMedianVal(int confTarget, double sufficientTxVal,
-                             double minSuccess, bool requireGreater, unsigned int nBlockHeight);
+                             double minSuccess, unsigned int nBlockHeight);
 
     /** Return the max number of confirms we're tracking */
     unsigned int GetMaxConfirms() { return confAvg.size(); }
