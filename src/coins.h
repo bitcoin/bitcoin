@@ -376,7 +376,7 @@ public:
     friend class CCoinsViewCache;
 };
 
-/** CCoinsView that adds a memory cache for transactions to another CCoinsView */
+/** CCoinsViewCache that adds a memory cache for transactions to a CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
 {
 protected:
