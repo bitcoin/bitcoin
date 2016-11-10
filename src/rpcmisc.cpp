@@ -407,8 +407,9 @@ UniValue createaddress(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"address\" : \"bitcoinaddress\", (string) The bitcoin address\n"
+            "  \"scriptPubKey\" : \"hex\", (string) The byte-sequence to use pay to address\n"
             "  \"pubkey\"  : \"hex\",            (string) The raw (hex encoded) pubkey\n"
-            "  \"private\" : \"hex\",            (string) The hex encoded private key\n"
+            "  \"private\" : \"hex\",            (string) The base58 encoded private key\n"
             "}\n"
         );
 
@@ -417,9 +418,12 @@ UniValue createaddress(const UniValue& params, bool fHelp)
 
     // return all useful descriptions of key
     UniValue ret(UniValue::VOBJ);
-    CPubKey vchAddress = key.GetPubKey();
-    ret.push_back(Pair("address", CBitcoinAddress(vchAddress.GetID()).ToString()));
-    ret.push_back(Pair("pubkey", HexStr(vchAddress.begin(), vchAddress.end())));
+    const CPubKey pubkey = key.GetPubKey();
+    const CKeyID pubKeyId = pubkey.GetID();
+    ret.push_back(Pair("address", CBitcoinAddress(pubKeyId).ToString()));
+    const CScript scriptPubKey = GetScriptForDestination(pubKeyId);
+    ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey)));
+    ret.push_back(Pair("pubkey", HexStr(pubkey.begin(), pubkey.end())));
     ret.push_back(Pair("private", CBitcoinSecret(key).ToString()));
 
     return ret;
