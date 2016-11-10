@@ -131,33 +131,35 @@ def hex_str_to_bytes(hex_str):
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
-def sync_blocks(rpc_connections, wait=1, timeout=60):
+def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     """
     Wait until everybody has the same tip
     """
     maxheight = 0
     while timeout > 0:
-        tips = [ x.waitforblockheight(maxheight, int(wait * 1000)) for x in rpc_connections ]
-        heights = [ x["height"] for x in tips ]
-        if tips == [ tips[0] ]*len(tips):
-            return True
-        if heights == [ heights[0] ]*len(heights): #heights are the same but hashes are not
-            raise AssertionError("Block sync failed")
+        tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
+        heights = [t["height"] for t in tips]
+        if tips == [tips[0]] * len(tips):
+            return
+        if heights == [heights[0]] * len(heights):
+            raise AssertionError("Block sync failed: (Hashes don't match)")
         timeout -= wait
         maxheight = max(heights)
-    raise AssertionError("Block sync failed")
+    raise AssertionError("Block sync failed with heights: {}".format(heights))
 
-def sync_chain(rpc_connections, wait=1):
+def sync_chain(rpc_connections, *, wait=1, timeout=60):
     """
     Wait until everybody has the same best block
     """
-    while True:
-        counts = [ x.getbestblockhash() for x in rpc_connections ]
-        if counts == [ counts[0] ]*len(counts):
-            break
+    while timeout > 0:
+        best_hash = [x.getbestblockhash() for x in rpc_connections]
+        if best_hash == [best_hash[0]]*len(best_hash):
+            return
         time.sleep(wait)
+        timeout -= wait
+    raise AssertionError("Chain sync failed: Best block hashes don't match")
 
-def sync_mempools(rpc_connections, wait=1, timeout=60):
+def sync_mempools(rpc_connections, *, wait=1, timeout=60):
     """
     Wait until everybody has the same transactions in their memory
     pools
@@ -169,7 +171,7 @@ def sync_mempools(rpc_connections, wait=1, timeout=60):
             if set(rpc_connections[i].getrawmempool()) == pool:
                 num_match = num_match+1
         if num_match == len(rpc_connections):
-            return True
+            return
         time.sleep(wait)
         timeout -= wait
     raise AssertionError("Mempool sync failed")
