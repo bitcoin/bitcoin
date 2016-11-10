@@ -23,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser(usage='%(prog)s [options] <test temporary directory>', description=__doc__)
     parser.add_argument('-c', '--color', dest='color', action='store_true', help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
     parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html. Requires jinja2. pip install jinja2')
-    parser.add_argument('--chain', dest='chain', action='store_true', help='selected chain in the tests (default: regtest)', const='regtest')
+    parser.add_argument('--chain', dest='chain', action='store_true', help='selected chain in the tests (default: custom)', const='custom')
     args, unknown_args = parser.parse_known_args()
 
     if args.color and os.name != 'posix':

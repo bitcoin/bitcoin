@@ -69,7 +69,7 @@ class BitcoinTestFramework(object):
 
     # Methods to override in subclass test scripts.
     def __init__(self):
-        self.chain = "regtest"
+        self.chain = "custom"
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = None
