@@ -1017,7 +1017,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     bool fRunScan = false;
     const int64_t minimumTimestamp = 1;
-    int64_t nLowestTimestamp;
+    int64_t nLowestTimestamp = 0;
 
     if (fRescan && chainActive.Tip()) {
         nLowestTimestamp = chainActive.Tip()->GetBlockTime();
