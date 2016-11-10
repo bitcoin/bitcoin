@@ -32,7 +32,7 @@ from .authproxy import JSONRPCException
 class BitcoinTestFramework(object):
 
     def __init__(self):
-        self.chain = "regtest"
+        self.chain = "custom"
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = None
