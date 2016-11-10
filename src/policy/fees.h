@@ -212,7 +212,7 @@ public:
     void processTransaction(const CTxMemPoolEntry& entry, bool fCurrentEstimate);
 
     /** Remove a transaction from the mempool tracking stats*/
-    void removeTx(uint256 hash);
+    bool removeTx(uint256 hash);
 
     /** Return a feerate estimate */
     CFeeRate estimateFee(int confTarget);
