@@ -656,7 +656,6 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
     bool fGivenKeys = false;
     CBasicKeyStore tempKeystore;
     if (params.size() > 2 && !params[2].isNull()) {
-        fGivenKeys = true;
         UniValue keys = params[2].get_array();
         for (unsigned int idx = 0; idx < keys.size(); idx++) {
             UniValue k = keys[idx];
@@ -668,6 +667,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             if (!key.IsValid())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
             tempKeystore.AddKey(key);
+            fGivenKeys = true;
         }
     }
 #ifdef ENABLE_WALLET
