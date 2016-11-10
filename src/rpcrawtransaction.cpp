@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -568,6 +569,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             "         \"vout\":n,                  (numeric, required) The output number\n"
             "         \"scriptPubKey\": \"hex\",   (string, required) script key\n"
             "         \"redeemScript\": \"hex\"    (string, required for P2SH) redeem script\n"
+            "         \"amount\": \"value\"        (numeric, required for v4 tx) amount spent\n"
             "       }\n"
             "       ,...\n"
             "    ]\n"
@@ -691,6 +693,13 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             if (nOut < 0)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "vout must be positive");
 
+            const UniValue &amountObj = find_value(prevOut, "amount");
+            CAmount amount = 0; // we may not know the actual output value if not passed in
+            if (amountObj.isNum())
+                amount = AmountFromValue(amountObj);
+            if (amount < 0 || (!amountObj.isNull() && !amountObj.isNum()))
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be a positive number");
+
             vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
@@ -705,7 +714,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
                 if ((unsigned int)nOut >= coins->vout.size())
                     coins->vout.resize(nOut+1);
                 coins->vout[nOut].scriptPubKey = scriptPubKey;
-                coins->vout[nOut].nValue = 0; // we don't know the actual output value
+                coins->vout[nOut].nValue = amount;
             }
 
             // if redeemScript given and not using the local wallet (private keys
