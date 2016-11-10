@@ -23,6 +23,7 @@ def main():
     parser = argparse.ArgumentParser(usage='%(prog)s [options] <test temporary directory>', description=__doc__)
     parser.add_argument('-c', '--color', dest='color', action='store_true', help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
     parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html. Requires jinja2. pip install jinja2')
+    parser.add_argument('--chain', dest='chain', action='store_true', help='selected chain in the tests (default: regtest)', const='regtest')
     args, unknown_args = parser.parse_known_args()
 
     if args.color and os.name != 'posix':
@@ -38,11 +39,11 @@ def main():
         print("Unexpected arguments" + str(unknown_args))
         sys.exit(1)
 
-    log_events = read_logs(unknown_args[0])
+    log_events = read_logs(unknown_args[0], args.chain)
 
     print_logs(log_events, color=args.color, html=args.html)
 
-def read_logs(tmp_dir):
+def read_logs(tmp_dir, chain):
     """Reads log files.
 
     Delegates to generator function get_log_events() to provide individual log events
@@ -50,7 +51,7 @@ def read_logs(tmp_dir):
 
     files = [("test", "%s/test_framework.log" % tmp_dir)]
     for i in itertools.count():
-        logfile = "{}/node{}/regtest/debug.log".format(tmp_dir, i)
+        logfile = "{}/node{}/{}/debug.log".format(tmp_dir, i, chain)
         if not os.path.isfile(logfile):
             break
         files.append(("node%d" % i, logfile))

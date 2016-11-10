@@ -69,6 +69,7 @@ class BitcoinTestFramework(object):
 
     # Methods to override in subclass test scripts.
     def __init__(self):
+        self.chain = "regtest"
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.nodes = None
@@ -183,7 +184,7 @@ class BitcoinTestFramework(object):
                 # travis failures.
                 import glob
                 filenames = [self.options.tmpdir + "/test_framework.log"]
-                filenames += glob.glob(self.options.tmpdir + "/node*/regtest/debug.log")
+                filenames += glob.glob(self.options.tmpdir + "/node*/" + self.chain + "/debug.log")
                 MAX_LINES_TO_PRINT = 1000
                 for fn in filenames:
                     try:
@@ -295,7 +296,7 @@ class BitcoinTestFramework(object):
 
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
-                datadir = initialize_datadir(cachedir, i)
+                datadir = initialize_datadir(cachedir, i, self.chain)
                 args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
@@ -335,16 +336,16 @@ class BitcoinTestFramework(object):
             self.nodes = []
             disable_mocktime()
             for i in range(MAX_NODES):
-                os.remove(log_filename(cachedir, i, "debug.log"))
-                os.remove(log_filename(cachedir, i, "db.log"))
-                os.remove(log_filename(cachedir, i, "peers.dat"))
-                os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+                os.remove(log_filename(cachedir, i, self.chain, "debug.log"))
+                os.remove(log_filename(cachedir, i, self.chain, "db.log"))
+                os.remove(log_filename(cachedir, i, self.chain, "peers.dat"))
+                os.remove(log_filename(cachedir, i, self.chain, "fee_estimates.dat"))
 
         for i in range(num_nodes):
             from_dir = os.path.join(cachedir, "node" + str(i))
             to_dir = os.path.join(test_dir, "node" + str(i))
             shutil.copytree(from_dir, to_dir)
-            initialize_datadir(test_dir, i)  # Overwrite port/rpcport in bitcoin.conf
+            initialize_datadir(test_dir, i, self.chain)  # Overwrite port/rpcport in bitcoin.conf
 
     def _initialize_chain_clean(self, test_dir, num_nodes):
         """Initialize empty blockchain for use by the test.
@@ -352,7 +353,7 @@ class BitcoinTestFramework(object):
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
         for i in range(num_nodes):
-            initialize_datadir(test_dir, i)
+            initialize_datadir(test_dir, i, self.chain)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:

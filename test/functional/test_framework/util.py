@@ -177,12 +177,12 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
 
 bitcoind_processes = {}
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, chain):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("regtest=1\n")
+        f.write("chain=%s\n" % chain)
         f.write("port="+str(p2p_port(n))+"\n")
         f.write("rpcport="+str(rpc_port(n))+"\n")
         f.write("listenonion=0\n")
@@ -308,8 +308,8 @@ def _start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=Non
         raise
     return rpcs
 
-def log_filename(dirname, n_node, logname):
-    return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
+def log_filename(dirname, n_node, chain, logname):
+    return os.path.join(dirname, "node"+str(n_node), chain, logname)
 
 def _stop_node(node, i):
     """Stop a bitcoind test node
