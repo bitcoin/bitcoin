@@ -62,8 +62,8 @@ class WalletHDTest(BitcoinTestFramework):
 
         print("Restore backup ...")
         self.stop_node(1)
-        os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
-        shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
+        os.remove(self.options.tmpdir + "/node1/" + self.chain + "/wallet.dat")
+        shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/" + self.chain + "/wallet.dat")
         self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
         #connect_nodes_bi(self.nodes, 0, 1)
 
