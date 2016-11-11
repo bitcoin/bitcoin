@@ -142,8 +142,9 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
     return txn_available[index] ? true : false;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) const {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) {
     assert(!header.IsNull());
+    uint256 hash = header.GetHash();
     block = header;
     block.vtx.resize(txn_available.size());
 
@@ -154,8 +155,13 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
                 return READ_STATUS_INVALID;
             block.vtx[i] = vtx_missing[tx_missing_offset++];
         } else
-            block.vtx[i] = txn_available[i];
+            block.vtx[i] = std::move(txn_available[i]);
     }
+
+    // Make sure we can't call FillBlock again.
+    header.SetNull();
+    txn_available.clear();
+
     if (vtx_missing.size() != tx_missing_offset)
         return READ_STATUS_INVALID;
 
@@ -170,10 +176,10 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_CHECKBLOCK_FAILED;
     }
 
-    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool and %lu txn requested\n", header.GetHash().ToString(), prefilled_count, mempool_count, vtx_missing.size());
+    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, vtx_missing.size());
     if (vtx_missing.size() < 5) {
         for (const auto& tx : vtx_missing)
-            LogPrint("cmpctblock", "Reconstructed block %s required tx %s\n", header.GetHash().ToString(), tx->GetHash().ToString());
+            LogPrint("cmpctblock", "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
     }
 
     return READ_STATUS_OK;
