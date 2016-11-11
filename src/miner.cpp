@@ -462,7 +462,7 @@ void static BitcoinMiner(CWallet *pwallet)
 {
     LogPrintf("CrownMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("dash-miner");
+    RenameThread("crown-miner");
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);

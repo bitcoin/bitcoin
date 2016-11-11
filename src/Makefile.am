@@ -64,7 +64,7 @@ if BUILD_BITCOIND
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += dash-cli crown-tx
+  bin_PROGRAMS += crown-cli crown-tx
 endif
 
 .PHONY: FORCE
@@ -313,7 +313,7 @@ libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 libbitcoin_util_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-# cli: shared between dash-cli and crown-qt
+# cli: shared between crown-cli and crown-qt
 libbitcoin_cli_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_SOURCES = \
   rpcclient.cpp \
@@ -347,22 +347,22 @@ crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC
 crownd_CPPFLAGS = $(BITCOIN_INCLUDES)
 crownd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-# dash-cli binary #
-dash_cli_LDADD = \
+# crown-cli binary #
+crown_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_UTIL) \
   $(BOOST_LIBS) \
   $(SSL_LIBS) \
   $(CRYPTO_LIBS)
 
-dash_cli_SOURCES = \
-  dash-cli.cpp
+crown_cli_SOURCES = \
+  crown-cli.cpp
 
-dash_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+crown_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
 # crown-tx binary #
-dash_tx_LDADD = \
+crown_tx_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -371,15 +371,15 @@ dash_tx_LDADD = \
   $(BOOST_LIBS) \
   $(CRYPTO_LIBS)
 
-dash_tx_SOURCES = crown-tx.cpp
-dash_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
+crown_tx_SOURCES = crown-tx.cpp
+crown_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
-dash_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+crown_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dash_cli_SOURCES += dash-cli-res.rc
+crown_cli_SOURCES += crown-cli-res.rc
 endif
-dash_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+crown_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h

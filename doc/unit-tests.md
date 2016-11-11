@@ -6,7 +6,7 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with 'make check'.
 
-To run the crownd tests manually, launch src/test/test_dash .
+To run the crownd tests manually, launch src/test/test_crown .
 
 To add more crownd tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the test/ directory or add new .cpp files that

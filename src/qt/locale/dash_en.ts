@@ -4242,7 +4242,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>dash-core</name>
+    <name>crown-core</name>
     <message>
         <location filename="../dashstrings.cpp" line="+22"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -4733,7 +4733,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>To use crownd, or the -server option to crown-qt, you must set an rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
-rpcuser=dashrpc
+rpcuser=crownrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.
@@ -4744,7 +4744,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
         <translation>To use crownd, or the -server option to crown-qt, you must set an rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
-rpcuser=dashrpc
+rpcuser=crownrpc
 rpcpassword=%s
 (you do not need to remember this password)
 The username and password MUST NOT be the same.

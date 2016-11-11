@@ -16,7 +16,7 @@ With arguments, sends coins received by the `FROMADDRESS` addresses to the `TOAD
 ### Notes ###
 
 - You may explicitly specify how much fee to pay (a fee more than 1% of the amount
-will fail,  though, to prevent dash-losing accidents). Spendfrom may fail if
+will fail,  though, to prevent crown-losing accidents). Spendfrom may fail if
 it thinks the transaction would never be confirmed (if the amount being sent is
 too small, or if the transaction is too many bytes for the fee).
 

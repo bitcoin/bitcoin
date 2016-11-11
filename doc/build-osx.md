@@ -104,7 +104,7 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `crownd` for your own use.
 
-crownd/dash-cli binaries are not included in the Crown-Qt.app bundle.
+crownd/crown-cli binaries are not included in the Crown-Qt.app bundle.
 
 If you are building `crownd` or `Crown-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
@@ -127,7 +127,7 @@ directory. We have to first create the RPC configuration file, though.
 Run `./crownd` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=dashrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crown/dash.conf"
+    echo -e "rpcuser=crownrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crown/dash.conf"
     chmod 600 "/Users/${USER}/Library/Application Support/Crown/dash.conf"
 
 The next time you run it, it will start downloading the blockchain, but it won't
@@ -140,5 +140,5 @@ Other commands:
 -------
 
     ./crownd -daemon # to start the dash daemon.
-    ./dash-cli --help  # for a list of command-line options.
-    ./dash-cli help    # When the daemon is running, to get a list of RPC commands
+    ./crown-cli --help  # for a list of command-line options.
+    ./crown-cli help    # When the daemon is running, to get a list of RPC commands

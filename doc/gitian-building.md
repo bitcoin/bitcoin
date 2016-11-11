@@ -396,9 +396,9 @@ When you execute `gsign` you will get an error from GPG, which can be ignored. C
 in `gitian.sigs` to your signing machine and do
 
 ```bash
-    gpg --detach-sign ${VERSION}-linux/${SIGNER}/dash-build.assert
-    gpg --detach-sign ${VERSION}-win/${SIGNER}/dash-build.assert
-    gpg --detach-sign ${VERSION}-osx/${SIGNER}/dash-build.assert
+    gpg --detach-sign ${VERSION}-linux/${SIGNER}/crown-build.assert
+    gpg --detach-sign ${VERSION}-win/${SIGNER}/crown-build.assert
+    gpg --detach-sign ${VERSION}-osx/${SIGNER}/crown-build.assert
 ```
 
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your

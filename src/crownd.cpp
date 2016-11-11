@@ -124,7 +124,7 @@ bool AppInit(int argc, char* argv[])
 
         if (fCommandLine)
         {
-            fprintf(stderr, "Error: There is no RPC client functionality in crownd anymore. Use the dash-cli utility instead.\n");
+            fprintf(stderr, "Error: There is no RPC client functionality in crownd anymore. Use the crown-cli utility instead.\n");
             exit(1);
         }
 #ifndef WIN32

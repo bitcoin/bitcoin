@@ -40,7 +40,7 @@ Description: peer-to-peer network based digital currency - daemon
  requires 1+ GB of space, slowly growing.
  .
  This package provides the daemon, crownd, and the CLI tool
- dash-cli to interact with the daemon.
+ crown-cli to interact with the daemon.
 
 Package: crown-qt
 Architecture: any

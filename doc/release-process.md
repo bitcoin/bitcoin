@@ -62,21 +62,21 @@ Release Process
 
 	./bin/gbuild --commit dash=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-linux.yml
-	mv build/out/dash-*.tar.gz build/out/src/dash-*.tar.gz ../
+	mv build/out/crown-*.tar.gz build/out/src/crown-*.tar.gz ../
 	./bin/gbuild --commit dash=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-win.yml
-	mv build/out/dash-*.zip build/out/dash-*.exe ../
+	mv build/out/crown-*.zip build/out/crown-*.exe ../
 	./bin/gbuild --commit bitcoin=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx.yml
-	mv build/out/dash-*-unsigned.tar.gz inputs/dash-osx-unsigned.tar.gz
-	mv build/out/dash-*.tar.gz build/out/dash-*.dmg ../
+	mv build/out/crown-*-unsigned.tar.gz inputs/crown-osx-unsigned.tar.gz
+	mv build/out/crown-*.tar.gz build/out/crown-*.dmg ../
 	popd
   Build output expected:
 
-  1. source tarball (dash-${VERSION}.tar.gz)
-  2. linux 32-bit and 64-bit binaries dist tarballs (dash-${VERSION}-linux[32|64].tar.gz)
-  3. windows 32-bit and 64-bit installers and dist zips (dash-${VERSION}-win[32|64]-setup.exe, dash-${VERSION}-win[32|64].zip)
-  4. OSX unsigned installer (dash-${VERSION}-osx-unsigned.dmg)
+  1. source tarball (crown-${VERSION}.tar.gz)
+  2. linux 32-bit and 64-bit binaries dist tarballs (crown-${VERSION}-linux[32|64].tar.gz)
+  3. windows 32-bit and 64-bit installers and dist zips (crown-${VERSION}-win[32|64]-setup.exe, crown-${VERSION}-win[32|64].zip)
+  4. OSX unsigned installer (crown-${VERSION}-osx-unsigned.dmg)
   5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
 
 ###Next steps:
@@ -102,7 +102,7 @@ Commit your signature to gitian.sigs:
 	cp signature.tar.gz inputs/
 	./bin/gbuild -i ../dash/contrib/gitian-descriptors/gitian-osx-signer.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx-signer.yml
-	mv build/out/dash-osx-signed.dmg ../dash-${VERSION}-osx.dmg
+	mv build/out/crown-osx-signed.dmg ../crown-${VERSION}-osx.dmg
 	popd
 
 Commit your signature for the signed OSX binary:

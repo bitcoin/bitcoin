@@ -51,7 +51,7 @@ If you configure your Tor system accordingly, it is possible to make your node a
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
 config file):
 
-	HiddenServiceDir /var/lib/tor/dash-service/
+	HiddenServiceDir /var/lib/tor/crown-service/
 	HiddenServicePort 9340 127.0.0.1:9340
 	HiddenServicePort 19340 127.0.0.1:19340
 
@@ -61,7 +61,7 @@ your crownd's P2P listen port (9340 by default).
 	-externalip=X   You can tell dash about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
 	                configuration, you can find your onion address in
-	                /var/lib/tor/dash-service/hostname. Onion addresses are given
+	                /var/lib/tor/crown-service/hostname. Onion addresses are given
 	                preference for your node to advertize itself with, for connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
 	                Tor proxy typically runs).

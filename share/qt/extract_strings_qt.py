@@ -73,6 +73,6 @@ f.write('static const char UNUSED *dash_strings[] = {\n')
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:
-        f.write('QT_TRANSLATE_NOOP("dash-core", %s),\n' % ('\n'.join(msgid)))
+        f.write('QT_TRANSLATE_NOOP("crown-core", %s),\n' % ('\n'.join(msgid)))
 f.write('};\n')
 f.close()

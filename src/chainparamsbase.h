@@ -9,7 +9,7 @@
 #include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between dash-cli and crownd)
+ * CBaseChainParams defines the base parameters (shared between crown-cli and crownd)
  * of a given instance of the Crown system.
  */
 class CBaseChainParams

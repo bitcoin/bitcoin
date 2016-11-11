@@ -56,9 +56,9 @@ const QString BITCOIN_IPC_PREFIX("dash:");
 const char* BIP70_MESSAGE_PAYMENTACK = "PaymentACK";
 const char* BIP70_MESSAGE_PAYMENTREQUEST = "PaymentRequest";
 // BIP71 payment protocol media types
-const char* BIP71_MIMETYPE_PAYMENT = "application/dash-payment";
-const char* BIP71_MIMETYPE_PAYMENTACK = "application/dash-paymentack";
-const char* BIP71_MIMETYPE_PAYMENTREQUEST = "application/dash-paymentrequest";
+const char* BIP71_MIMETYPE_PAYMENT = "application/crown-payment";
+const char* BIP71_MIMETYPE_PAYMENTACK = "application/crown-paymentack";
+const char* BIP71_MIMETYPE_PAYMENTREQUEST = "application/crown-paymentrequest";
 // BIP70 max payment request size in bytes (DoS protection)
 const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 

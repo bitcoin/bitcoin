@@ -7,11 +7,11 @@ reset-files.bash
 
 *.exe
 src/dash
-src/dashd
-src/dash-cli
-src/dash-tx
-src/test/test_dash
-src/qt/test/test_dash-qt
+src/crownd
+src/crown-cli
+src/crown-tx
+src/test/test_crown
+src/qt/test/test_crown-qt
 
 # autoreconf
 Makefile.in
@@ -34,8 +34,8 @@ config.log
 config.status
 configure
 libtool
-src/config/dash-config.h
-src/config/dash-config.h.in
+src/config/crown-config.h
+src/config/crown-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -79,12 +79,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-dash-qt
+crown-qt
 Crown-Qt.app
 
 # Unit-tests
 Makefile.test
-dash-qt_test
+crown-qt_test
 src/test/buildenv.py
 
 # Resources cpp
@@ -100,7 +100,7 @@ build
 #lcov
 *.gcno
 /*.info
-test_dash.coverage/
+test_crown.coverage/
 total.coverage/
 coverage_percent.txt
 

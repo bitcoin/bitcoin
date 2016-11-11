@@ -78,7 +78,7 @@ HEADERS += src/activethrone.h \
            src/crypter.h \
            src/darksend-relay.h \
            src/darksend.h \
-           src/dash-config.h \
+           src/crown-config.h \
            src/db.h \
            src/eccryptoverify.h \
            src/ecwrapper.h \
@@ -131,7 +131,7 @@ HEADERS += src/activethrone.h \
            src/wallet_ismine.h \
            src/walletdb.h \
            src/compat/sanity.h \
-           src/config/dash-config.h \
+           src/config/crown-config.h \
            src/crypto/common.h \
            src/crypto/hmac_sha256.h \
            src/crypto/hmac_sha512.h \
@@ -374,7 +374,7 @@ SOURCES += src/activethrone.cpp \
            src/crypter.cpp \
            src/darksend-relay.cpp \
            src/darksend.cpp \
-           src/dash-cli.cpp \
+           src/crown-cli.cpp \
            src/crown-tx.cpp \
            src/crownd.cpp \
            src/db.cpp \
@@ -550,7 +550,7 @@ SOURCES += src/activethrone.cpp \
            src/test/sighash_tests.cpp \
            src/test/sigopcount_tests.cpp \
            src/test/skiplist_tests.cpp \
-           src/test/test_dash.cpp \
+           src/test/test_crown.cpp \
            src/test/timedata_tests.cpp \
            src/test/transaction_tests.cpp \
            src/test/uint256_tests.cpp \
