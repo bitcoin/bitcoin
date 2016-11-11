@@ -73,7 +73,7 @@ class CBlock : public CBlockHeader
 {
 public:
     // network and disk
-    std::vector<std::shared_ptr<const CTransaction>> vtx;
+    std::vector<CTransactionRef> vtx;
 
     // memory only
     mutable bool fChecked;

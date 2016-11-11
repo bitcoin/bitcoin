@@ -142,7 +142,7 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const {
     return txn_available[index] ? true : false;
 }
 
-ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<std::shared_ptr<const CTransaction>>& vtx_missing) const {
+ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) const {
     assert(!header.IsNull());
     block = header;
     block.vtx.resize(txn_available.size());
