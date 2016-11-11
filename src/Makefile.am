@@ -64,7 +64,7 @@ if BUILD_BITCOIND
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += dash-cli dash-tx
+  bin_PROGRAMS += dash-cli crown-tx
 endif
 
 .PHONY: FORCE
@@ -361,7 +361,7 @@ dash_cli_SOURCES = \
 dash_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
-# dash-tx binary #
+# crown-tx binary #
 dash_tx_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_COMMON) \
@@ -371,7 +371,7 @@ dash_tx_LDADD = \
   $(BOOST_LIBS) \
   $(CRYPTO_LIBS)
 
-dash_tx_SOURCES = dash-tx.cpp
+dash_tx_SOURCES = crown-tx.cpp
 dash_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 dash_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)

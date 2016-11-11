@@ -375,7 +375,7 @@ SOURCES += src/activethrone.cpp \
            src/darksend-relay.cpp \
            src/darksend.cpp \
            src/dash-cli.cpp \
-           src/dash-tx.cpp \
+           src/crown-tx.cpp \
            src/crownd.cpp \
            src/db.cpp \
            src/eccryptoverify.cpp \

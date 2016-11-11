@@ -1,39 +1,39 @@
 [
-  { "exec": "././dash-tx",
+  { "exec": "././crown-tx",
     "args": ["-create"],
     "output_cmp": "blanktx.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-"],
     "input": "blanktx.hex",
     "output_cmp": "blanktx.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-", "delin=1"],
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-delin1-out.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-", "delin=31"],
     "input": "tx394b54bb.hex",
     "return_code": 1
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-", "delout=1"],
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-delout1-out.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-", "delout=2"],
     "input": "tx394b54bb.hex",
     "return_code": 1
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-", "locktime=317000"],
     "input": "tx394b54bb.hex",
     "output_cmp": "tt-locktime317000-out.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -43,11 +43,11 @@
      "outaddr=4:XxppMBDQ6SiJrKcBrAy4WkkNdrxDBfzFdZ"],
     "output_cmp": "txcreate1.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args": ["-create", "outscript=0:"],
     "output_cmp": "txcreate2.hex"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./crown-tx",
     "args":
     ["-create",
      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
