@@ -2738,7 +2738,6 @@ void PruneAndFlush() {
 /** Update chainActive and related internal data structures. */
 void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     chainActive.SetTip(pindexNew);
-    statsClient.gauge("blocks.currentHeight", chainActive.Height(), 1.0f);
 
     // New best block
     nTimeBestReceived = GetTime();
@@ -3506,9 +3505,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
     statsClient.timing("CheckBlock_us", diff.total_microseconds(), 1.0f);
-    statsClient.gauge("blocks.currentSizeBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION));
-    statsClient.gauge("blocks.currentNumTransactions", block.vtx.size());
-    statsClient.gauge("blocks.currentSigOps", nSigOps);
+    statsClient.gauge("blocks.currentSizeBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION), 1.0f);
+    statsClient.gauge("blocks.currentSizeWithWitnessBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS), 1.0f);
+    statsClient.gauge("blocks.currentWeight", ::GetBlockWeight(block), 1.0f);
+    statsClient.gauge("blocks.currentHeight", chainActive.Height(), 1.0f);
+    statsClient.gauge("blocks.currentChainWork", chainActive.Tip()->nChainWork.getdouble(), 1.0f);
+    statsClient.gauge("blocks.currentVersion", block.nVersion, 1.0f);
+    statsClient.gauge("blocks.currentNumTransactions", block.vtx.size(), 1.0f);
+    statsClient.gauge("blocks.currentSigOps", nSigOps, 1.0f);
 
     return true;
 }
