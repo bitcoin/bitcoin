@@ -159,7 +159,6 @@ extern CCriticalSection cs_ischainnearlysyncd;
 extern bool HaveConnectThinblockNodes();
 extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(uint256 hash);
-extern void ClearThinblockTimer(uint256 hash);
 extern bool IsThinBlocksEnabled();
 extern bool CanThinBlockBeDownloaded(CNode* pto);
 extern bool IsChainNearlySyncd();
