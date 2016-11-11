@@ -263,7 +263,7 @@
         <translation>&amp;Recibir</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <source>Request payments (generates QR codes and crown: URIs)</source>
         <translation>Solicitar pagos (genera códigos QR y URIs de Crown)</translation>
     </message>
     <message>
@@ -443,8 +443,8 @@
         <translation>Abrir &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Abrir un dash: URI o petición de pago</translation>
+        <source>Open a crown: URI or payment request</source>
+        <translation>Abrir un crown: URI o petición de pago</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1568,8 +1568,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Error en solicitud de pago</translation>
     </message>
     <message>
-        <source>Cannot start dash: click-to-pay handler</source>
-        <translation>No se pudo iniciar dash: manejador de pago-al-clic</translation>
+        <source>Cannot start crown: click-to-pay handler</source>
+        <translation>No se pudo iniciar crown: manejador de pago-al-clic</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -2559,8 +2559,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Mensaje:</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
-        <translation>Un mensaje que se adjuntó al dash: URI que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Crown.</translation>
+        <source>A message that was attached to the crown: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
+        <translation>Un mensaje que se adjuntó al crown: URI que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Crown.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>

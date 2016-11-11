@@ -336,8 +336,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>Request payments (generates QR codes and dash: URIs)</translation>
+        <source>Request payments (generates QR codes and crown: URIs)</source>
+        <translation>Request payments (generates QR codes and crown: URIs)</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -562,8 +562,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Open a dash: URI or payment request</translation>
+        <source>Open a crown: URI or payment request</source>
+        <translation>Open a crown: URI or payment request</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1990,8 +1990,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="-400"/>
-        <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Cannot start dash: click-to-pay handler</translation>
+        <source>Cannot start crown: click-to-pay handler</source>
+        <translation>Cannot start crown: click-to-pay handler</translation>
     </message>
     <message>
         <location line="+104"/>
@@ -3268,8 +3268,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
-        <translation>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</translation>
+        <source>A message that was attached to the crown: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
+        <translation>A message that was attached to the crown: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</translation>
     </message>
     <message>
         <location line="+426"/>

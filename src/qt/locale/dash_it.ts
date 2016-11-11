@@ -263,8 +263,8 @@
         <translation>&amp;Ricevi</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>Richieste di pagamenti (genera codici QR e dash: URLs)</translation>
+        <source>Request payments (generates QR codes and crown: URIs)</source>
+        <translation>Richieste di pagamenti (genera codici QR e crown: URLs)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -435,8 +435,8 @@
         <translation>Apri &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Apri un dash: URI o una richiesta di pagamento</translation>
+        <source>Open a crown: URI or payment request</source>
+        <translation>Apri un crown: URI o una richiesta di pagamento</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1494,8 +1494,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Errore di richiesta di pagamento</translation>
     </message>
     <message>
-        <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Impossibile avviare dash: gestore click-to-pay</translation>
+        <source>Cannot start crown: click-to-pay handler</source>
+        <translation>Impossibile avviare crown: gestore click-to-pay</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -2401,7 +2401,7 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Messaggio:</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
+        <source>A message that was attached to the crown: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
         <translation>Un messaggio allegato con l'URI dash che verrà memorizzato nella transazione per il tuo referente. Nota: questo messaggio non verrà inviato attraverso il network Crown.</translation>
     </message>
     <message>

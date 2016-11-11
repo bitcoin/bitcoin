@@ -4,7 +4,7 @@ Debian
 This directory contains files used to package crownd/crown-qt
 for Debian-based Linux systems. If you compile crownd/crown-qt yourself, there are some useful files here.
 
-## dash: URI support ##
+## crown: URI support ##
 
 
 crown-qt.desktop  (Gnome / Open Desktop)

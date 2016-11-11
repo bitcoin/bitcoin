@@ -252,7 +252,7 @@
         <translation>&amp;Motta</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <source>Request payments (generates QR codes and crown: URIs)</source>
         <translation>Begär betalningar (genererar QR-koder och Crown:-URI:s)</translation>
     </message>
     <message>
@@ -404,7 +404,7 @@
         <translation>Öppna &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
+        <source>Open a crown: URI or payment request</source>
         <translation>Öppna en Crown-URI eller betalningsbegäran</translation>
     </message>
     <message>
@@ -1335,8 +1335,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Fel vid betalningsbegäran</translation>
     </message>
     <message>
-        <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Kan inte starta dash: klicka-för-att-betala hanterare</translation>
+        <source>Cannot start crown: click-to-pay handler</source>
+        <translation>Kan inte starta crown: klicka-för-att-betala hanterare</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1958,7 +1958,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Meddelande:</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
+        <source>A message that was attached to the crown: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
         <translation>Ett meddelande som bifogades till Crown: URI vilket kommer att lagras med transaktionen så att du vet. Observera: Meddelandet kommer inte att skickas över Crown-nätverket.</translation>
     </message>
     <message>

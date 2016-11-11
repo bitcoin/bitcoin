@@ -263,7 +263,7 @@
         <translation>&amp;Vastaanota</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <source>Request payments (generates QR codes and crown: URIs)</source>
         <translation>Pyydä maksuja (Luo QR koodit ja Crown: URIt)</translation>
     </message>
     <message>
@@ -443,7 +443,7 @@
         <translation>Avaa &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
+        <source>Open a crown: URI or payment request</source>
         <translation>Avaa Crown: URI tai maksupyyntö</translation>
     </message>
     <message>
@@ -1569,7 +1569,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Maksupyyntövirhe</translation>
     </message>
     <message>
-        <source>Cannot start dash: click-to-pay handler</source>
+        <source>Cannot start crown: click-to-pay handler</source>
         <translation>Ei voi käynnistää Crownia: click-to-pay handler</translation>
     </message>
     <message>
@@ -2564,7 +2564,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Viesti:</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
+        <source>A message that was attached to the crown: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Crown network.</source>
         <translation>Viesti joka liitettiin Crown: URI joka talletetaan siirtotapahtuman kanssa viitteeksi sinulle. Huomio: Tätä viestiä ei lähetetä Crown verkkoon.</translation>
     </message>
     <message>
