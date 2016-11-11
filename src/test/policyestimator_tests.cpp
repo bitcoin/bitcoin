@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CFeeRate baseRate(basefee, GetVirtualTransactionSize(tx));
 
     // Create a fake block
-    std::vector<CTransaction> block;
+    std::vector<std::shared_ptr<const CTransaction>> block;
     int blocknum = 0;
 
     // Loop through 200 blocks
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             while (txHashes[9-h].size()) {
                 std::shared_ptr<const CTransaction> ptx = mpool.get(txHashes[9-h].back());
                 if (ptx)
-                    block.push_back(*ptx);
+                    block.push_back(ptx);
                 txHashes[9-h].pop_back();
             }
         }
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         while(txHashes[j].size()) {
             std::shared_ptr<const CTransaction> ptx = mpool.get(txHashes[j].back());
             if (ptx)
-                block.push_back(*ptx);
+                block.push_back(ptx);
             txHashes[j].pop_back();
         }
     }
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 mpool.addUnchecked(hash, entry.Fee(feeV[j]).Time(GetTime()).Priority(0).Height(blocknum).FromTx(tx, &mpool));
                 std::shared_ptr<const CTransaction> ptx = mpool.get(hash);
                 if (ptx)
-                    block.push_back(*ptx);
+                    block.push_back(ptx);
 
             }
         }

@@ -77,7 +77,7 @@ bool TestSequenceLocks(const CTransaction &tx, int flags)
 // Implemented as an additional function, rather than a separate test case,
 // to allow reusing the blockchain created in CreateNewBlock_validity.
 // Note that this test assumes blockprioritysize is 0.
-void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<CTransaction *>& txFirst)
+void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey, std::vector<std::shared_ptr<const CTransaction>>& txFirst)
 {
     // Test the ancestor feerate transaction selection.
     TestMemPoolEntryHelper entry;
@@ -108,9 +108,9 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     mempool.addUnchecked(hashHighFeeTx, entry.Fee(50000).Time(GetTime()).SpendsCoinbase(false).FromTx(tx));
 
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-    BOOST_CHECK(pblocktemplate->block.vtx[1].GetHash() == hashParentTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[2].GetHash() == hashHighFeeTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[3].GetHash() == hashMediumFeeTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashParentTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashHighFeeTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashMediumFeeTx);
 
     // Test that a package below the min relay fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
@@ -130,8 +130,8 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
     // Verify that the free tx and the low fee tx didn't get selected
     for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
-        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashFreeTx);
-        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashLowFeeTx);
+        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeTx);
+        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashLowFeeTx);
     }
 
     // Test that packages above the min relay fee do get included, even if one
@@ -142,8 +142,8 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     hashLowFeeTx = tx.GetHash();
     mempool.addUnchecked(hashLowFeeTx, entry.Fee(feeToUse+2).FromTx(tx));
     pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-    BOOST_CHECK(pblocktemplate->block.vtx[4].GetHash() == hashFreeTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[5].GetHash() == hashLowFeeTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[4]->GetHash() == hashFreeTx);
+    BOOST_CHECK(pblocktemplate->block.vtx[5]->GetHash() == hashLowFeeTx);
 
     // Test that transaction selection properly updates ancestor fee
     // calculations as ancestor transactions get included in a block.
@@ -166,8 +166,8 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
 
     // Verify that this tx isn't selected.
     for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
-        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashFreeTx2);
-        BOOST_CHECK(pblocktemplate->block.vtx[i].GetHash() != hashLowFeeTx2);
+        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeTx2);
+        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashLowFeeTx2);
     }
 
     // This tx will be mineable, and should cause hashLowFeeTx2 to be selected
@@ -176,7 +176,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     tx.vout[0].nValue = 100000000 - 10000; // 10k satoshi fee
     mempool.addUnchecked(tx.GetHash(), entry.Fee(10000).FromTx(tx));
     pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-    BOOST_CHECK(pblocktemplate->block.vtx[8].GetHash() == hashLowFeeTx2);
+    BOOST_CHECK(pblocktemplate->block.vtx[8]->GetHash() == hashLowFeeTx2);
 }
 
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
@@ -203,23 +203,23 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // We can't make transactions until we have inputs
     // Therefore, load 100 blocks :)
     int baseheight = 0;
-    std::vector<CTransaction*>txFirst;
+    std::vector<std::shared_ptr<const CTransaction>> txFirst;
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
         pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
-        CMutableTransaction txCoinbase(pblock->vtx[0]);
+        CMutableTransaction txCoinbase(*pblock->vtx[0]);
         txCoinbase.nVersion = 1;
         txCoinbase.vin[0].scriptSig = CScript();
         txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
         txCoinbase.vin[0].scriptSig.push_back(chainActive.Height());
         txCoinbase.vout[0].scriptPubKey = CScript();
-        pblock->vtx[0] = CTransaction(txCoinbase);
+        pblock->vtx[0] = std::make_shared<const CTransaction>(std::move(txCoinbase));
         if (txFirst.size() == 0)
             baseheight = chainActive.Height();
         if (txFirst.size() < 4)
-            txFirst.push_back(new CTransaction(pblock->vtx[0]));
+            txFirst.push_back(pblock->vtx[0]);
         pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
         pblock->nNonce = blockinfo[i].nonce;
         BOOST_CHECK(ProcessNewBlock(chainparams, pblock, true, NULL, NULL));
@@ -484,9 +484,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     TestPackageSelection(chainparams, scriptPubKey, txFirst);
-
-    BOOST_FOREACH(CTransaction *_tx, txFirst)
-        delete _tx;
 
     fCheckpointsEnabled = true;
 }
