@@ -203,7 +203,7 @@ public:
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
-                      std::vector<CTxMemPoolEntry>& entries, bool fCurrentEstimate);
+                      std::vector<CTxMemPoolEntry>& entries);
 
     /** Process a transaction confirmed in a block*/
     void processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry);

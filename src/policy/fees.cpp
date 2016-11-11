@@ -359,7 +359,7 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
 }
 
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
-                                         std::vector<CTxMemPoolEntry>& entries, bool fCurrentEstimate)
+                                         std::vector<CTxMemPoolEntry>& entries)
 {
     if (nBlockHeight <= nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random
@@ -369,11 +369,6 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
         // transaction fees."
         return;
     }
-
-    // Only want to be updating estimates when our blockchain is synced,
-    // otherwise we'll miscalculate how many blocks its taking to get included.
-    if (!fCurrentEstimate)
-        return;
 
     // Must update nBestSeenHeight in sync with ClearCurrent so that
     // calls to removeTx (via processBlockTx) correctly calculate age
