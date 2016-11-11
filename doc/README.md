@@ -17,14 +17,14 @@ You need the Qt4 run-time libraries to run Crown-Qt. On Debian or Ubuntu:
 
 Unpack the files into a directory and run:
 
-- bin/32/dash-qt (GUI, 32-bit) or bin/32/crownd (headless, 32-bit)
-- bin/64/dash-qt (GUI, 64-bit) or bin/64/crownd (headless, 64-bit)
+- bin/32/crown-qt (GUI, 32-bit) or bin/32/crownd (headless, 32-bit)
+- bin/64/crown-qt (GUI, 64-bit) or bin/64/crownd (headless, 64-bit)
 
 
 
 ### Windows
 
-Unpack the files into a directory, and then run dash-qt.exe.
+Unpack the files into a directory, and then run crown-qt.exe.
 
 ### OSX
 

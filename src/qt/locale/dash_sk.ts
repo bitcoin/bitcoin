@@ -3709,7 +3709,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tento produkt obsahuje softvér vyvinutý projektom OpenSSL pre použitie sady nástrojov OpenSSL &lt;https://www.openssl.org/&gt; a kryptografického softvéru napísaného Eric Young a UPnP softvér napísaný Thomas Bernard.</translation>
     </message>
     <message>
-        <source>To use crownd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:
+        <source>To use crownd, or the -server option to crown-qt, you must set an rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
 rpcuser=dashrpc
@@ -3720,7 +3720,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
 </source>
-        <translation>Pre použitie možnosti -server pre dash-qt, musíte nastaviť rpcpassword v konfiguračnom súbore:
+        <translation>Pre použitie možnosti -server pre crown-qt, musíte nastaviť rpcpassword v konfiguračnom súbore:
 %s
 Doporučuje sa použiť nasledovné náhodné heslo:
 rpcuser=dashrpc

@@ -1,5 +1,5 @@
 [Protocol]
-exec=dash-qt '%u'
+exec=crown-qt '%u'
 protocol=dash
 input=none
 output=none

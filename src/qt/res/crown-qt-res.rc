@@ -22,10 +22,10 @@ BEGIN
             VALUE "CompanyName",        "Crown"
             VALUE "FileDescription",    "Crown Core (OSS GUI client for Crown)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "dash-qt"
+            VALUE "InternalName",       "crown-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "dash-qt.exe"
+            VALUE "OriginalFilename",   "crown-qt.exe"
             VALUE "ProductName",        "Crown Core"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END

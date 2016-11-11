@@ -1,21 +1,21 @@
 
 Debian
 ====================
-This directory contains files used to package crownd/dash-qt
-for Debian-based Linux systems. If you compile crownd/dash-qt yourself, there are some useful files here.
+This directory contains files used to package crownd/crown-qt
+for Debian-based Linux systems. If you compile crownd/crown-qt yourself, there are some useful files here.
 
 ## dash: URI support ##
 
 
-dash-qt.desktop  (Gnome / Open Desktop)
+crown-qt.desktop  (Gnome / Open Desktop)
 To install:
 
-	sudo desktop-file-install dash-qt.desktop
+	sudo desktop-file-install crown-qt.desktop
 	sudo update-desktop-database
 
 If you build yourself, you will either need to modify the paths in
-the .desktop file or copy or symlink your dash-qt binary to `/usr/bin`
+the .desktop file or copy or symlink your crown-qt binary to `/usr/bin`
 and the `../../share/pixmaps/dash128.png` to `/usr/share/pixmaps`
 
-dash-qt.protocol (KDE)
+crown-qt.protocol (KDE)
 

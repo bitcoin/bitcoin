@@ -149,7 +149,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
 "written by Eric Young and UPnP software written by Thomas Bernard."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"To use crownd, or the -server option to dash-qt, you must set an rpcpassword "
+"To use crownd, or the -server option to crown-qt, you must set an rpcpassword "
 "in the configuration file:\n"
 "%s\n"
 "It is recommended you use the following random password:\n"
