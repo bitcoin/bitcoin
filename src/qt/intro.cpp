@@ -185,7 +185,7 @@ void Intro::pickDataDirectory()
             if(!intro.exec())
             {
                 /* Cancel clicked */
-                exit(0);
+                exit(EXIT_SUCCESS);
             }
             dataDir = intro.getDataDirectory();
             try {
