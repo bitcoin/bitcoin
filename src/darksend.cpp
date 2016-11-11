@@ -463,6 +463,7 @@ void CDarksendPool::SetNull()
     // Client side
     nEntriesCount = 0;
     fLastEntryAccepted = false;
+    pSubmittedToMasternode = NULL;
 
     // Both sides
     nState = POOL_STATE_IDLE;
