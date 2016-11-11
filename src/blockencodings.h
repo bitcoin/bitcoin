@@ -202,7 +202,7 @@ public:
 
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock);
     bool IsTxAvailable(size_t index) const;
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) const;
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
 };
 
 #endif
