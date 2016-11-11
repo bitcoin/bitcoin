@@ -68,11 +68,14 @@ extern const char * DEFAULT_WALLET_DAT;
 
 class CBlockIndex;
 class CCoinControl;
+class CCoinsViewCursor;
 class COutput;
 class CReserveKey;
 class CScript;
 class CTxMemPool;
 class CWalletTx;
+
+typedef std::function<std::unique_ptr<CCoinsViewCursor>()> CoinsCursorCallback;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -257,6 +260,14 @@ public:
     std::string strFromAccount;
     int64_t nOrderPos; //!< position in ordered transaction list
 
+    /**
+     * True if transaction data is incomplete. Incomplete CWalletTxs do not
+     * include any information about TxIns, and should only be present in
+     * wallets that have imported external addresses while running in with a
+     * pruned block chain (-prune argument).
+     */
+    bool fIncomplete;
+
     // memory only
     mutable bool fDebitCached;
     mutable bool fCreditCached;
@@ -297,6 +308,7 @@ public:
         nTimeSmart = 0;
         fFromMe = false;
         strFromAccount.clear();
+        fIncomplete = false;
         fDebitCached = false;
         fCreditCached = false;
         fImmatureCreditCached = false;
@@ -595,6 +607,9 @@ private:
     bool fFileBacked;
 
     std::set<int64_t> setKeyPool;
+
+    CoinsCursorCallback coinsCursor;
+
 public:
     /*
      * Main wallet lock.
@@ -756,8 +771,9 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     bool LoadToWallet(const CWalletTx& wtxIn);
     void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
-    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
+    bool AddToWalletIfInvolvingMe(const CTransaction& tx, bool fIncomplete, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
+    bool ScanForWalletUTXOs();
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman);
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
@@ -917,7 +933,7 @@ public:
     static std::string GetWalletHelpString(bool showDebug);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static bool InitLoadWallet();
+    static bool InitLoadWallet(CoinsCursorCallback coinsCursor);
 
     /**
      * Wallet post-init setup
