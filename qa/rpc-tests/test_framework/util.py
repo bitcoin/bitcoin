@@ -134,9 +134,9 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     while cur_time <= start_time + timeout:
         tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
         heights = [t["height"] for t in tips]
-        if tips == [tips[0]] * len(tips):
+        if all(t == tips[0] for t in tips):
             return
-        if heights == [heights[0]] * len(heights):
+        if all(h == heights[0] for h in heights):
             raise AssertionError("Block sync failed, mismatched block hashes:{}".format(
                                  "".join("\n  {!r}".format(tip) for tip in tips)))
         maxheight = max(heights)
