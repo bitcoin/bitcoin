@@ -1,5 +1,7 @@
 [Website](http://www.bitcoinunlimited.info)  | [Download](http://www.bitcoinunlimited.info/download) | [Setup](doc/README.md)  |  [Xthin](doc/bu-xthin.md)  |  [Xpedited](doc/bu-xpedited-forwarding.md)  |   [Miner](doc/miner.md)
 
+[![Build Status](https://travis-ci.org/BitcoinUnlimited/BitcoinUnlimited.svg?branch=0.12.1bu)](https://travis-ci.org/BitcoinUnlimited/BitcoinUnlimited)
+
 What is Bitcoin?
 =====================================
 
