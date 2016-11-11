@@ -312,13 +312,14 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
 
         if(nMsgMessageID < MSG_POOL_MIN || nMsgMessageID > MSG_POOL_MAX) {
             LogPrint("privatesend", "DSSTATUSUPDATE -- nMsgMessageID is out of bounds: %d\n", nMsgMessageID);
+            if(pfrom->nVersion < 70203) nMsgMessageID = MSG_NOERR;
             return;
         }
 
         LogPrint("privatesend", "DSSTATUSUPDATE -- GetMessageByID: %s\n", GetMessageByID(PoolMessage(nMsgMessageID)));
 
-        if(!UpdatePoolStateOnClient(PoolState(nMsgState), nMsgEntriesCount, PoolStatusUpdate(nMsgStatusUpdate), PoolMessage(nMsgMessageID), nMsgSessionID)) {
-            LogPrint("privatesend", "DSSTATUSUPDATE -- can't update local state\n");
+        if(!CheckPoolStateUpdate(PoolState(nMsgState), nMsgEntriesCount, PoolStatusUpdate(nMsgStatusUpdate), PoolMessage(nMsgMessageID), nMsgSessionID)) {
+            LogPrint("privatesend", "DSSTATUSUPDATE -- CheckPoolStateUpdate failed\n");
         }
 
     } else if(strCommand == NetMsgType::DSSIGNFINALTX) {
@@ -1096,7 +1097,7 @@ bool CDarksendPool::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std:
 }
 
 // Incoming message from Masternode updating the progress of mixing
-bool CDarksendPool::UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew)
+bool CDarksendPool::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew)
 {
     if(fMasterNode) return false;
 
@@ -1107,7 +1108,7 @@ bool CDarksendPool::UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCou
 
     // if rejected at any state
     if(nStatusUpdate == STATUS_REJECTED) {
-        LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- entry is rejected by Masternode\n");
+        LogPrintf("CDarksendPool::CheckPoolStateUpdate -- entry is rejected by Masternode\n");
         UnlockCoins();
         SetNull();
         SetState(POOL_STATE_ERROR);
@@ -1120,14 +1121,14 @@ bool CDarksendPool::UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCou
             // new session id should be set only in POOL_STATE_QUEUE state
             nSessionID = nSessionIDNew;
             nTimeLastSuccessfulStep = GetTimeMillis();
-            LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- set nSessionID to %d\n", nSessionID);
+            LogPrintf("CDarksendPool::CheckPoolStateUpdate -- set nSessionID to %d\n", nSessionID);
             return true;
         }
         else if(nStateNew == POOL_STATE_ACCEPTING_ENTRIES && nEntriesCount != nEntriesCountNew) {
             nEntriesCount = nEntriesCountNew;
             nTimeLastSuccessfulStep = GetTimeMillis();
             fLastEntryAccepted = true;
-            LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- new entry accepted!\n");
+            LogPrintf("CDarksendPool::CheckPoolStateUpdate -- new entry accepted!\n");
             return true;
         }
     }
