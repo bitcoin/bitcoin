@@ -3710,7 +3710,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ce produit comprend des logiciels développés par le projet OpenSSL afin d'être utilisés dans la boîte à outils OpenSSL &lt;https://www.openssl.org/&gt;, un logiciel de chiffrement écrit par Eric Young et un logiciel UPnP développé par Thomas Bernard.</translation>
     </message>
     <message>
-        <source>To use dashd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:
+        <source>To use crownd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
 rpcuser=dashrpc
@@ -3721,7 +3721,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
 </source>
-        <translation>Pour utiliser dashd, ou le paramètre -server de dash-qt, vous devez définir un rpc mot de passe dans le fichier de configuration:
+        <translation>Pour utiliser crownd, ou le paramètre -server de dash-qt, vous devez définir un rpc mot de passe dans le fichier de configuration:
 %s
 Il est recommandé que vous utilisiez ce mot de passe aléatoire:
 rpcuser=dashrpc

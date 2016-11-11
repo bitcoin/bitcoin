@@ -26,7 +26,7 @@ Homepage: http://www.crown.tech/
 Vcs-Git: git://github.com/dashpay/dash.git
 Vcs-Browser: http://github.com/dashpay/dash
 
-Package: dashd
+Package: crownd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
@@ -39,7 +39,7 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 1+ GB of space, slowly growing.
  .
- This package provides the daemon, dashd, and the CLI tool
+ This package provides the daemon, crownd, and the CLI tool
  dash-cli to interact with the daemon.
 
 Package: dash-qt

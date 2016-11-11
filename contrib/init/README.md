@@ -1,9 +1,9 @@
 Sample configuration files for:
 
-SystemD: dashd.service
-Upstart: dashd.conf
-OpenRC:  dashd.openrc
-         dashd.openrcconf
+SystemD: crownd.service
+Upstart: crownd.conf
+OpenRC:  crownd.openrc
+         crownd.openrcconf
 
 have been made available to assist packagers in creating node packages here.
 

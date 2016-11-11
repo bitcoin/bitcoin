@@ -7,9 +7,9 @@ User=dash
 Group=dash
 
 Type=forking
-PIDFile=/var/lib/dashd/dashd.pid
-ExecStart=/usr/bin/dashd -daemon -pid=/var/lib/dashd/dashd.pid \
--conf=/etc/dash/dash.conf -datadir=/var/lib/dashd -disablewallet
+PIDFile=/var/lib/crownd/crownd.pid
+ExecStart=/usr/bin/crownd -daemon -pid=/var/lib/crownd/crownd.pid \
+-conf=/etc/dash/dash.conf -datadir=/var/lib/crownd -disablewallet
 
 Restart=always
 PrivateTmp=true

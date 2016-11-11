@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build dashd (headless client) for OSX.
+This guide will show you how to build crownd (headless client) for OSX.
 
 Notes
 -----
@@ -63,14 +63,14 @@ After exiting, you'll get a warning that the install is keg-only, which means it
     $ brew link --force berkeley-db4
 
 
-### Building `dashd`
+### Building `crownd`
 
 1. Clone the github tree to get the source code and go into the directory.
 
         git clone https://github.com/dashpay/dash.git
         cd dash
 
-2.  Build dashd:
+2.  Build crownd:
 
         ./autogen.sh
         ./configure
@@ -80,7 +80,7 @@ After exiting, you'll get a warning that the install is keg-only, which means it
 
         make check
 
-4.  (Optional) You can also install dashd to your path:
+4.  (Optional) You can also install crownd to your path:
 
         make install
 
@@ -102,11 +102,11 @@ Download Qt Creator from http://www.qt.io/download/. Download the "community edi
 
 Creating a release build
 ------------------------
-You can ignore this section if you are building `dashd` for your own use.
+You can ignore this section if you are building `crownd` for your own use.
 
-dashd/dash-cli binaries are not included in the Crown-Qt.app bundle.
+crownd/dash-cli binaries are not included in the Crown-Qt.app bundle.
 
-If you are building `dashd` or `Crown-Qt` for others, your build machine should be set up
+If you are building `crownd` or `Crown-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -121,10 +121,10 @@ bundle is packaged and signed to create the .dmg disk image that is distributed.
 Running
 -------
 
-It's now available at `./dashd`, provided that you are still in the `src`
+It's now available at `./crownd`, provided that you are still in the `src`
 directory. We have to first create the RPC configuration file, though.
 
-Run `./dashd` to get the filename where it should be put, or just try these
+Run `./crownd` to get the filename where it should be put, or just try these
 commands:
 
     echo -e "rpcuser=dashrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crown/dash.conf"
@@ -139,6 +139,6 @@ you can monitor its process by looking at the debug.log file, like this:
 Other commands:
 -------
 
-    ./dashd -daemon # to start the dash daemon.
+    ./crownd -daemon # to start the dash daemon.
     ./dash-cli --help  # for a list of command-line options.
     ./dash-cli help    # When the daemon is running, to get a list of RPC commands

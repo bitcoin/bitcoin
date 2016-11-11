@@ -376,7 +376,7 @@ SOURCES += src/activethrone.cpp \
            src/darksend.cpp \
            src/dash-cli.cpp \
            src/dash-tx.cpp \
-           src/dashd.cpp \
+           src/crownd.cpp \
            src/db.cpp \
            src/eccryptoverify.cpp \
            src/ecwrapper.cpp \

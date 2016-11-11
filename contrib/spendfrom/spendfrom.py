@@ -7,7 +7,7 @@
 #  spendfrom.py  # Lists available funds
 #  spendfrom.py --from=ADDRESS --to=ADDRESS --amount=11.00
 #
-# Assumes it will talk to a dashd or Crown-Qt running
+# Assumes it will talk to a crownd or Crown-Qt running
 # on localhost.
 #
 # Depends on jsonrpc
@@ -72,7 +72,7 @@ def connect_JSON(config):
     try:
         result = ServiceProxy(connect)
         # ServiceProxy is lazy-connect, so send an RPC command mostly to catch connection errors,
-        # but also make sure the dashd we're talking to is/isn't testnet:
+        # but also make sure the crownd we're talking to is/isn't testnet:
         if result.getmininginfo()['testnet'] != testnet:
             sys.stderr.write("RPC server at "+connect+" testnet setting mismatch\n")
             sys.exit(1)
@@ -81,32 +81,32 @@ def connect_JSON(config):
         sys.stderr.write("Error connecting to RPC server at "+connect+"\n")
         sys.exit(1)
 
-def unlock_wallet(dashd):
-    info = dashd.getinfo()
+def unlock_wallet(crownd):
+    info = crownd.getinfo()
     if 'unlocked_until' not in info:
         return True # wallet is not encrypted
     t = int(info['unlocked_until'])
     if t <= time.time():
         try:
             passphrase = getpass.getpass("Wallet is locked; enter passphrase: ")
-            dashd.walletpassphrase(passphrase, 5)
+            crownd.walletpassphrase(passphrase, 5)
         except:
             sys.stderr.write("Wrong passphrase\n")
 
-    info = dashd.getinfo()
+    info = crownd.getinfo()
     return int(info['unlocked_until']) > time.time()
 
-def list_available(dashd):
+def list_available(crownd):
     address_summary = dict()
 
     address_to_account = dict()
-    for info in dashd.listreceivedbyaddress(0):
+    for info in crownd.listreceivedbyaddress(0):
         address_to_account[info["address"]] = info["account"]
 
-    unspent = dashd.listunspent(0)
+    unspent = crownd.listunspent(0)
     for output in unspent:
         # listunspent doesn't give addresses, so:
-        rawtx = dashd.getrawtransaction(output['txid'], 1)
+        rawtx = crownd.getrawtransaction(output['txid'], 1)
         vout = rawtx["vout"][output['vout']]
         pk = vout["scriptPubKey"]
 
@@ -139,8 +139,8 @@ def select_coins(needed, inputs):
         n += 1
     return (outputs, have-needed)
 
-def create_tx(dashd, fromaddresses, toaddress, amount, fee):
-    all_coins = list_available(dashd)
+def create_tx(crownd, fromaddresses, toaddress, amount, fee):
+    all_coins = list_available(crownd)
 
     total_available = Decimal("0.0")
     needed = amount+fee
@@ -159,7 +159,7 @@ def create_tx(dashd, fromaddresses, toaddress, amount, fee):
     # Note:
     # Python's json/jsonrpc modules have inconsistent support for Decimal numbers.
     # Instead of wrestling with getting json.dumps() (used by jsonrpc) to encode
-    # Decimals, I'm casting amounts to float before sending them to dashd.
+    # Decimals, I'm casting amounts to float before sending them to crownd.
     #
     outputs = { toaddress : float(amount) }
     (inputs, change_amount) = select_coins(needed, potential_inputs)
@@ -170,8 +170,8 @@ def create_tx(dashd, fromaddresses, toaddress, amount, fee):
         else:
             outputs[change_address] = float(change_amount)
 
-    rawtx = dashd.createrawtransaction(inputs, outputs)
-    signed_rawtx = dashd.signrawtransaction(rawtx)
+    rawtx = crownd.createrawtransaction(inputs, outputs)
+    signed_rawtx = crownd.signrawtransaction(rawtx)
     if not signed_rawtx["complete"]:
         sys.stderr.write("signrawtransaction failed\n")
         sys.exit(1)
@@ -179,10 +179,10 @@ def create_tx(dashd, fromaddresses, toaddress, amount, fee):
 
     return txdata
 
-def compute_amount_in(dashd, txinfo):
+def compute_amount_in(crownd, txinfo):
     result = Decimal("0.0")
     for vin in txinfo['vin']:
-        in_info = dashd.getrawtransaction(vin['txid'], 1)
+        in_info = crownd.getrawtransaction(vin['txid'], 1)
         vout = in_info['vout'][vin['vout']]
         result = result + vout['value']
     return result
@@ -193,12 +193,12 @@ def compute_amount_out(txinfo):
         result = result + vout['value']
     return result
 
-def sanity_test_fee(dashd, txdata_hex, max_fee):
+def sanity_test_fee(crownd, txdata_hex, max_fee):
     class FeeError(RuntimeError):
         pass
     try:
-        txinfo = dashd.decoderawtransaction(txdata_hex)
-        total_in = compute_amount_in(dashd, txinfo)
+        txinfo = crownd.decoderawtransaction(txdata_hex)
+        total_in = compute_amount_in(crownd, txinfo)
         total_out = compute_amount_out(txinfo)
         if total_in-total_out > max_fee:
             raise FeeError("Rejecting transaction, unreasonable fee of "+str(total_in-total_out))
@@ -240,10 +240,10 @@ def main():
     check_json_precision()
     config = read_bitcoin_config(options.datadir)
     if options.testnet: config['testnet'] = True
-    dashd = connect_JSON(config)
+    crownd = connect_JSON(config)
 
     if options.amount is None:
-        address_summary = list_available(dashd)
+        address_summary = list_available(crownd)
         for address,info in address_summary.iteritems():
             n_transactions = len(info['outputs'])
             if n_transactions > 1:
@@ -253,14 +253,14 @@ def main():
     else:
         fee = Decimal(options.fee)
         amount = Decimal(options.amount)
-        while unlock_wallet(dashd) == False:
+        while unlock_wallet(crownd) == False:
             pass # Keep asking for passphrase until they get it right
-        txdata = create_tx(dashd, options.fromaddresses.split(","), options.to, amount, fee)
-        sanity_test_fee(dashd, txdata, amount*Decimal("0.01"))
+        txdata = create_tx(crownd, options.fromaddresses.split(","), options.to, amount, fee)
+        sanity_test_fee(crownd, txdata, amount*Decimal("0.01"))
         if options.dry_run:
             print(txdata)
         else:
-            txid = dashd.sendrawtransaction(txdata)
+            txid = crownd.sendrawtransaction(txdata)
             print(txid)
 
 if __name__ == '__main__':

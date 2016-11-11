@@ -11,6 +11,6 @@ https://github.com/dashproject/dash-binaries
 
 Always verify the signatures and checksums.
 
-See doc/build-*.md for instructions on building dashd,
+See doc/build-*.md for instructions on building crownd,
 the intended-for-services, no-graphical-interface, reference
 implementation of Crown.
