@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>850</width>
-    <height>534</height>
+    <height>555</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -615,6 +615,9 @@
    </item>
    <item>
     <widget class="QScrollArea" name="scrollArea">
+     <property name="styleSheet">
+      <string notr="true">border: 1px solid #f2f2f2;</string>
+     </property>
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
@@ -822,6 +825,9 @@
         </item>
         <item>
          <widget class="QFrame" name="frameFeeSelection">
+          <property name="styleSheet">
+           <string notr="true">border: 1px solid #f2f2f2; color: #a1a1a1;</string>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayoutFee12">
            <property name="spacing">
             <number>0</number>
@@ -1376,7 +1382,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="labelSPBalance">
          <property name="text">
           <string>Balance:</string>
          </property>
@@ -1425,7 +1431,7 @@
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="groupFee"/>
   <buttongroup name="groupCustomFee"/>
+  <buttongroup name="groupFee"/>
  </buttongroups>
 </ui>

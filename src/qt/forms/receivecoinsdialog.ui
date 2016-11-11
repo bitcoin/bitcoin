@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>776</width>
-    <height>364</height>
+    <height>377</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1">
@@ -19,7 +19,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame2">
+    <widget class="QFrame" name="frameReceive2">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -132,6 +132,9 @@
           <property name="toolTip">
            <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
           </property>
+          <property name="styleSheet">
+           <string notr="true">border: 1px solid #f2f2f2;</string>
+          </property>
          </widget>
         </item>
         <item row="8" column="2">
@@ -217,12 +220,15 @@
     </spacer>
    </item>
    <item>
-    <widget class="QFrame" name="frame">
+    <widget class="QFrame" name="frameRPH">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>

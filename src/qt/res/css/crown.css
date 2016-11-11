@@ -11,8 +11,32 @@ background-color: #ffffff;
 
 QTableView
 {
-color: #555555;
+color: #a1a1a1;
+background-color: #ffffff;
 alternate-background-color: #f2f2f2;
+border: 1px solid #f2f2f2;
+}
+
+QTableWidget
+{
+border: 1px solid #f2f2f2;
+}
+
+QTableView::item:hover
+{
+color: #555555;
+}
+
+QTreeView 
+{
+color: #a1a1a1;
+background-color: #ffffff;
+alternate-background-color: #f2f2f2;
+}
+
+QTreeView::item:hover
+{
+color: #555555;
 }
 
 QMenuBar
@@ -102,20 +126,26 @@ padding: 2px;
 
 QLabel
 {
-color: #555555;
+color: #a1a1a1;
 background-color: #ffffff;
 }
 
 QLineEdit
 {
 color: #a1a1a1;
-background-color: #ffffff;
+background-color: #f2f2f2;
+border: none;
 }
 
 QValidatedLineEdit
 {
 color: #a1a1a1;
 background-color: #ffffff;
+}
+
+QComboBox
+{
+border: 1px solid #f2f2f2;
 }
 
 QComboBox QAbstractItemView::item 
@@ -199,7 +229,7 @@ color: #555555;
 QHeaderView::section
 {
 background-color: #f2f2f2;
-color: #555555;
+color: #a1a1a1;
 padding: 6px;
 border: 1px solid #f2f2f2;
 }
@@ -212,24 +242,33 @@ padding: 6px;
 border: 1px solid #f2f2f2;
 }
 
+QCheckBox
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
 QComboBox
 {
 padding: 0px 0px 0px 0px;
-background-color: #ffffff;
-selection-background-color: #ffffff;
+background-color: #f2f2f2;
+selection-background-color: #f2f2f2;
+selection-color: #555555;
 color: #a1a1a1;
 }
 
 QComboBox QAbstractItemView
 {
-selection-background-color: #ffffff;
-background-color: #ffffff;
+selection-background-color: #f2f2f2;
+background-color: #f2f2f2;
 color: #a1a1a1;
 }
 
+
+
 QComboBox::drop-down
 {
-background-color: #ffffff;
+background-color: #f2f2f2;
 color: #a1a1a1;
 subcontrol-origin: padding;
 subcontrol-position: top right;
@@ -247,19 +286,45 @@ image: url(':css/down_arrow');
 
 QAbstractSpinBox
 {
-background: #ffffff;
+background: #f2f2f2;
 color: #555555;
+min-height: 25px;
+}
+
+QAbstractSpinBox::down-arrow 
+{
+image: url(':css/downArrow_small');
+}
+
+QAbstractSpinBox::up-arrow 
+{
+image: url(':css/upArrow_small');
 }
 
 QStackedWidget#SendCoinsEntry .QToolButton 
 {
-background-color:transparent;
+background-color:#ffffff;
 padding-left:5px;
 padding-right:5px;
 border: 0;
 outline: 0;
-min-width: 30px;
-max-width: 30px;
+min-width: 20px;
+max-width: 20px;
+min-height: 20px;
+max-height: 20px;
+}
+
+QStackedWidget#SendCoinsEntry .QToolButton:hover 
+{
+background-color:#9c8b46;
+padding-left:5px;
+padding-right:5px;
+border: 0;
+outline: 0;
+min-width: 20px;
+max-width: 20px;
+min-height: 20px;
+max-height: 20px;
 }
 
 #spacer1
@@ -267,7 +332,6 @@ max-width: 30px;
 background-color: #f2f2f2;
 min-width: 20px;
 max-width: 20px;
-
 }
 
 #label_Wallet
@@ -324,3 +388,205 @@ background-color: #f2f2f2;
 min-height: 30px;
 max-height: 30px;
 }
+
+/* Send Page items */
+#frameCoinControl
+{
+border: 1px solid #f2f2f2;
+}
+
+#frameFee
+{
+border: 1px solid #f2f2f2;
+}
+
+#frameFeeSelection
+{
+border: 1px solid #f2f2f2;
+}
+
+#payTo
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#addAsLabel
+{
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#lineEditCoinControlChange
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#labelCoinControlFeatures
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#labelCoinControlAutomaticallySelected
+{
+color: #a1a1a1;
+background-color: #fffff;
+}
+
+#checkBoxCoinControlChange
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#labelFeeHeadline
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#checkInstantX
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#payToLabel
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#labellLabel
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#amountLabel
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+#labelSPBalance
+{
+color: #a1a1a1;
+background-color: #ffffff;
+}
+
+/* receivecoinsdialog */
+#frameReceive2
+{
+border: 1px solid #f2f2f2;
+}
+
+#reqLabel
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+}
+
+#reqMessage
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+}
+
+#frameRPH
+{
+border: 1px solid #f2f2f2;
+}
+
+
+/* openuri dialog */
+#uriEdit
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+
+/* sign/verify message dialog */
+#addressIn_SM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#signatureOut_SM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#addressIn_VM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#signatureIn_VM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#messageIn_SM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#messageIn_VM
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#passEdit1
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#passEdit2
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+
+#passEdit3
+{
+border: 1px solid #f2f2f2;
+color: #555555;
+background-color: #f2f2f2;
+min-height: 25px;
+}
+

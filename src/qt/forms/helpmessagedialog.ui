@@ -20,22 +20,18 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
-    <widget class="QLabel" name="graphic">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="pixmap">
-      <pixmap resource="../dash.qrc">:/images/about</pixmap>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QScrollArea" name="scrollArea">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: 1px solid #f2f2f2; color: #a1a1a1; background-color: #ffffff;</string>
+       </property>
        <property name="verticalScrollBarPolicy">
         <enum>Qt::ScrollBarAlwaysOn</enum>
        </property>
@@ -47,8 +43,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>659</width>
-          <height>348</height>
+          <width>764</width>
+          <height>347</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
