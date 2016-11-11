@@ -5331,7 +5331,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
-        statsClient.gauge("peers.knownAddresses", vAddr.size(), 1.0f);
+        statsClient.gauge("peers.knownAddresses", connman.GetAddressCount(), 1.0f);
     }
 
     else if (strCommand == NetMsgType::SENDHEADERS)
