@@ -600,7 +600,7 @@ public:
      */
     mutable CCriticalSection cs_wallet;
 
-    std::string strWalletFile;
+    const std::string strWalletFile;
 
     void LoadKeyPool(int nIndex, const CKeyPool &keypool)
     {
@@ -625,11 +625,9 @@ public:
         SetNull();
     }
 
-    CWallet(const std::string& strWalletFileIn)
+    CWallet(const std::string& strWalletFileIn) : strWalletFile(strWalletFileIn)
     {
         SetNull();
-
-        strWalletFile = strWalletFileIn;
         fFileBacked = true;
     }
 
