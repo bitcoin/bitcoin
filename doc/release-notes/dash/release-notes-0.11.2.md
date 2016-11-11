@@ -3,7 +3,7 @@
 
 Crown Core version 0.11.2 is now available from:
 
-  https://dashpay.io/downloads
+  https://crown.tech/downloads
 
 Please report bugs using the issue tracker at github:
 

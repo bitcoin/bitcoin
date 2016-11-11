@@ -47,7 +47,7 @@ static const int MAX_URI_LENGTH = 255;
 #define SPINNER_FRAMES 35
 
 #define QAPP_ORG_NAME "Crown"
-#define QAPP_ORG_DOMAIN "dashpay.io"
+#define QAPP_ORG_DOMAIN "crown.tech"
 #define QAPP_APP_NAME_DEFAULT "Crown-Qt"
 #define QAPP_APP_NAME_TESTNET "Crown-Qt-testnet"
 

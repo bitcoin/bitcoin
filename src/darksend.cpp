@@ -37,8 +37,8 @@ CActiveThrone activeThrone;
 
 /* *** BEGIN DARKSEND MAGIC - CRW **********
     Copyright (c) 2014-2015, Crown Developers
-        eduffield - evan@dashpay.io
-        udjinm6   - udjinm6@dashpay.io
+        eduffield - evan@crown.tech
+        udjinm6   - udjinm6@crown.tech
 */
 
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
