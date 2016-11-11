@@ -294,7 +294,7 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
-    : nBestSeenHeight(0)
+    : nBestSeenHeight(0), trackedTxs(0), untrackedTxs(0)
 {
     static_assert(MIN_FEERATE > 0, "Min feerate must be nonzero");
     minTrackedFee = _minRelayFee < CFeeRate(MIN_FEERATE) ? CFeeRate(MIN_FEERATE) : _minRelayFee;
@@ -324,8 +324,11 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 
     // Only want to be updating estimates when our blockchain is synced,
     // otherwise we'll miscalculate how many blocks its taking to get included.
-    if (!validFeeEstimate)
+    if (!validFeeEstimate) {
+        untrackedTxs++;
         return;
+    }
+    trackedTxs++;
 
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
@@ -334,11 +337,11 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     mapMemPoolTxs[hash].bucketIndex = feeStats.NewTx(txHeight, (double)feeRate.GetFeePerK());
 }
 
-void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
+bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry)
 {
     if (!removeTx(entry->GetTx().GetHash())) {
         // This transaction wasn't being tracked for fee estimation
-        return;
+        return false;
     }
 
     // How many blocks did it take for miners to include this transaction?
@@ -349,13 +352,14 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         // This can't happen because we don't process transactions from a block with a height
         // lower than our greatest seen height
         LogPrint("estimatefee", "Blockpolicy error Transaction had negative blocksToConfirm\n");
-        return;
+        return false;
     }
 
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
 
     feeStats.Record(blocksToConfirm, (double)feeRate.GetFeePerK());
+    return true;
 }
 
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
@@ -378,15 +382,21 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     // Clear the current block state and update unconfirmed circular buffer
     feeStats.ClearCurrent(nBlockHeight);
 
+    unsigned int countedTxs = 0;
     // Repopulate the current block states
-    for (unsigned int i = 0; i < entries.size(); i++)
-        processBlockTx(nBlockHeight, entries[i]);
+    for (unsigned int i = 0; i < entries.size(); i++) {
+        if (processBlockTx(nBlockHeight, entries[i]))
+            countedTxs++;
+    }
 
     // Update all exponential averages with the current block state
     feeStats.UpdateMovingAverages();
 
-    LogPrint("estimatefee", "Blockpolicy after updating estimates for %u confirmed entries, new mempool map size %u\n",
-             entries.size(), mapMemPoolTxs.size());
+    LogPrint("estimatefee", "Blockpolicy after updating estimates for %u of %u txs in block, since last block %u of %u tracked, new mempool map size %u\n",
+             countedTxs, entries.size(), trackedTxs, trackedTxs + untrackedTxs, mapMemPoolTxs.size());
+
+    trackedTxs = 0;
+    untrackedTxs = 0;
 }
 
 CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)

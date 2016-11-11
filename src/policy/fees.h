@@ -206,7 +206,7 @@ public:
                       std::vector<const CTxMemPoolEntry*>& entries);
 
     /** Process a transaction confirmed in a block*/
-    void processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
 
     /** Process a transaction accepted to the mempool*/
     void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
@@ -258,6 +258,9 @@ private:
 
     /** Classes to track historical data on transaction confirmations */
     TxConfirmStats feeStats;
+
+    unsigned int trackedTxs;
+    unsigned int untrackedTxs;
 };
 
 class FeeFilterRounder
