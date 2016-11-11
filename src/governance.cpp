@@ -1113,6 +1113,14 @@ void CGovernanceObject::UpdateLocalValidity(const CBlockIndex *pCurrentBlockInde
 
 bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral)
 {
+    bool fMissingMasternode = false;
+
+    return IsValidLocally(pindex, strError, fMissingMasternode, fCheckCollateral);
+}
+
+bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool& fMissingMasternode, bool fCheckCollateral)
+{
+    fMissingMasternode = false;
     if(!pindex) {
         strError = "Tip is NULL";
         return true;
@@ -1147,6 +1155,7 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
             std::string strOutpoint = vinMasternode.prevout.ToStringShort();
             masternode_info_t infoMn = mnodeman.GetMasternodeInfo(vinMasternode);
             if(!infoMn.fInfoValid) {
+                fMissingMasternode = true;
                 strError = "Masternode not found: " + strOutpoint;
                 return false;
             }
