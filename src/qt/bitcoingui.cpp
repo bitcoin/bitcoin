@@ -713,12 +713,18 @@ void BitcoinGUI::updateNetworkState()
     default: icon = ":/icons/connect_4"; break;
     }
 
+    QString tooltip;
+
     if (clientModel->getNetworkActive()) {
-        connectionsControl->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
+        tooltip = tr("%n active connection(s) to Bitcoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
     } else {
-        connectionsControl->setToolTip(tr("Network activity disabled"));
+        tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
         icon = ":/icons/network_disabled";
     }
+
+    // Don't word-wrap this (fixed-width) tooltip
+    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
+    connectionsControl->setToolTip(tooltip);
 
     connectionsControl->setPixmap(platformStyle->SingleColorIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 }
