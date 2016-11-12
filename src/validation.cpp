@@ -984,7 +984,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 /** Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock */
-bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
+bool GetTransaction(const uint256 &hash, CTransactionRef &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
 {
     CBlockIndex *pindexSlow = NULL;
 
@@ -993,7 +993,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
     CTransactionRef ptx = mempool.get(hash);
     if (ptx)
     {
-        txOut = *ptx;
+        txOut = ptx;
         return true;
     }
 
@@ -1012,7 +1012,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
                 return error("%s: Deserialize or I/O error - %s", __func__, e.what());
             }
             hashBlock = header.GetHash();
-            if (txOut.GetHash() != hash)
+            if (txOut->GetHash() != hash)
                 return error("%s: txid mismatch", __func__);
             return true;
         }
@@ -1035,7 +1035,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
         if (ReadBlockFromDisk(block, pindexSlow, consensusParams)) {
             for (const auto& tx : block.vtx) {
                 if (tx->GetHash() == hash) {
-                    txOut = *tx;
+                    txOut = tx;
                     hashBlock = pindexSlow->GetBlockHash();
                     return true;
                 }
