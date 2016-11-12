@@ -186,8 +186,13 @@ CConsensusParams& MutableConsensusParams();
 /** Resets consensus paramters. */
 void ResetConsensusParams();
 
+
+/** Gets the display name for a feature ID */
+std::string GetFeatureName(uint16_t featureId);
 /** Activates a feature at a specific block height. */
 bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock);
+/** Deactivates a feature immediately, authorization has already been validated. */
+bool DeactivateFeature(uint16_t featureId, int transactionBlock);
 /** Checks, whether a feature is activated at the given block. */
 bool IsFeatureActivated(uint16_t featureId, int transactionBlock);
 /** Checks, if the script type is allowed as input. */
