@@ -2859,8 +2859,9 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             out.scriptPubKey[5] = 0xed;
             memcpy(&out.scriptPubKey[6], witnessroot.begin(), 32);
             commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
-            const_cast<std::vector<CTxOut>*>(&block.vtx[0]->vout)->push_back(out);
-            block.vtx[0]->UpdateHash();
+            CMutableTransaction tx(*block.vtx[0]);
+            tx.vout.push_back(out);
+            block.vtx[0] = MakeTransactionRef(std::move(tx));
         }
     }
     UpdateUncommittedBlockStructures(block, pindexPrev, consensusParams);
@@ -4090,10 +4091,9 @@ bool LoadMempool(void)
         file >> num;
         double prioritydummy = 0;
         while (num--) {
-            CTransaction tx;
             int64_t nTime;
             int64_t nFeeDelta;
-            file >> tx;
+            CTransaction tx(deserialize, file);
             file >> nTime;
             file >> nFeeDelta;
 
