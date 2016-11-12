@@ -1122,6 +1122,47 @@ Value omni_sendactivation(const Array& params, bool fHelp)
     }
 }
 
+Value omni_senddeactivation(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "omni_senddeactivation \"fromaddress\" featureid\n"
+            "\nDeactivate a protocol feature.  For Emergency Use Only.\n"
+            "\nNote: Omni Core ignores deactivations from unauthorized sources.\n"
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. featureid            (number, required) the identifier of the feature to activate\n"
+            "\nResult:\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_senddeactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
+            + HelpExampleRpc("omni_senddeactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    uint16_t featureId = params[1].get_uint64();
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_DeactivateFeature(featureId);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return txid.GetHex();
+        }
+    }
+}
+
 Value omni_sendalert(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
