@@ -3,7 +3,7 @@
  *
  * This file contains feature activation utility code.
  *
- * Note main function 'ActivateFeature()' is consensus breaking and resides in rules.cpp
+ * Note main functions 'ActivateFeature()' and 'DeactivateFeature()' are consensus breaking and reside in rules.cpp
  */
 
 #include "omnicore/activation.h"
