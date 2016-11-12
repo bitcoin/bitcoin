@@ -1968,6 +1968,14 @@ int CMPTransaction::logicMath_Deactivation()
         return (PKT_ERROR -54);
     }
 
+    // successful deactivation - did we deactivate the MetaDEx?  If so close out all trades
+    if (feature_id == FEATURE_METADEX) {
+        int closed = MetaDEx_SHUTDOWN();
+    }
+    if (feature_id == FEATURE_TRADEALLPAIRS) {
+        int closed = MetaDEx_SHUTDOWN_ALLPAIR();
+    }
+
     return 0;
 }
 

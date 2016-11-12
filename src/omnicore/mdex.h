@@ -129,6 +129,8 @@ int MetaDEx_ADD(const std::string& sender_addr, uint32_t, int64_t, int block, ui
 int MetaDEx_CANCEL_AT_PRICE(const uint256&, uint32_t, const std::string&, uint32_t, int64_t, uint32_t, int64_t);
 int MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256&, uint32_t, const std::string&, uint32_t, uint32_t);
 int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, uint32_t block, const std::string& sender_addr, unsigned char ecosystem);
+int MetaDEx_SHUTDOWN();
+int MetaDEx_SHUTDOWN_ALLPAIR();
 bool MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx);
 void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
 bool MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale = 0);
