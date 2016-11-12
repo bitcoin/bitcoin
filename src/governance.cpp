@@ -129,7 +129,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         LOCK(cs);
         // MAKE SURE WE HAVE A VALID REFERENCE TO THE TIP BEFORE CONTINUING
 
-        if(!pCurrentBlockIndex) return;
+        if(!pCurrentBlockIndex) {
+            LogPrintf("CGovernanceManager::ProcessMessage MNGOVERNANCEOBJECT -- pCurrentBlockIndex is NULL\n");
+            return;
+        }
 
         CGovernanceObject govobj;
         vRecv >> govobj;
@@ -172,7 +175,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     else if (strCommand == NetMsgType::MNGOVERNANCEOBJECTVOTE)
     {
         // Ignore such messages until masternode list is synced
-        if(!masternodeSync.IsMasternodeListSynced()) return;
+        if(!masternodeSync.IsMasternodeListSynced()) {
+            LogPrint("gobject", "CGovernanceManager::ProcessMessage MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
+            return;
+        }
 
         CGovernanceVote vote;
         vRecv >> vote;
@@ -1125,6 +1131,10 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
     // On the other hand it should be safe for us to access pindex without holding a lock
     // on cs_main because the CBlockIndex objects are dynamically allocated and
     // presumably never deleted.
+    if(!pindex) {
+        return;
+    }
+
     LOCK(cs);
     pCurrentBlockIndex = pindex;
     nCachedBlockHeight = pCurrentBlockIndex->nHeight;
