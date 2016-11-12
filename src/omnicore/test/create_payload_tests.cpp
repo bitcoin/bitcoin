@@ -382,6 +382,15 @@ BOOST_AUTO_TEST_CASE(payload_change_property_manager)
     BOOST_CHECK_EQUAL(HexStr(vch), "000000460000000d");
 }
 
+BOOST_AUTO_TEST_CASE(payload_feature_deactivation)
+{
+    // Omni Core feature activation [type 65533, version 65535]
+    std::vector<unsigned char> vch = CreatePayload_DeactivateFeature(
+        static_cast<uint16_t>(1));        // feature identifier: 1 (OP_RETURN)
+
+    BOOST_CHECK_EQUAL(HexStr(vch), "fffffffd0001");
+}
+
 BOOST_AUTO_TEST_CASE(payload_feature_activation)
 {
     // Omni Core feature activation [type 65534, version 65535]
