@@ -1536,6 +1536,7 @@ void CMasternodeMan::NotifyMasternodeUpdates()
     }
 
     if(fMasternodesAddedLocal) {
+        governance.CheckMasternodeOrphanObjects();
         governance.CheckMasternodeOrphanVotes();
     }
     if(fMasternodesRemovedLocal) {

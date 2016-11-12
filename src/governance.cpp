@@ -35,6 +35,7 @@ CGovernanceManager::CGovernanceManager()
       nCachedBlockHeight(0),
       mapObjects(),
       mapSeenGovernanceObjects(),
+      mapMasternodeOrphanObjects(),
       mapVoteToObject(MAX_CACHE_SIZE),
       mapInvalidVotes(MAX_CACHE_SIZE),
       mapOrphanVotes(MAX_CACHE_SIZE),
@@ -170,7 +171,15 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         std::string strError = "";
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
-        if(!govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
+        bool fMasternodeMissing = false;
+        bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, fMasternodeMissing, true);
+
+        if(fMasternodeMissing) {
+            mapMasternodeOrphanObjects.insert(std::make_pair(govobj.GetHash(), govobj));
+            LogPrint("gobject", "CGovernanceManager -- Missing masternode for: %s\n", strHash);
+            // fIsValid must also be false here so we will return early in the next if block
+        }
+        if(!fIsValid) {
             mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_ERROR_INVALID));
             LogPrintf("MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
             return;
@@ -652,6 +661,37 @@ void CGovernanceManager::CheckMasternodeOrphanVotes()
     LOCK(cs);
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         it->second.CheckOrphanVotes();
+    }
+}
+
+void CGovernanceManager::CheckMasternodeOrphanObjects()
+{
+    LOCK(cs);
+    object_m_it it = mapMasternodeOrphanObjects.begin();
+    while(it != mapMasternodeOrphanObjects.end()) {
+        CGovernanceObject& govobj = it->second;
+
+        string strError;
+        bool fMasternodeMissing = false;
+        bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, fMasternodeMissing, true);
+        if(!fIsValid) {
+            if(!fMasternodeMissing) {
+                mapMasternodeOrphanObjects.erase(it++);
+            }
+            else {
+                ++it;
+                continue;
+            }
+        }
+
+        if(AddGovernanceObject(govobj)) {
+            LogPrintf("CGovernanceManager::CheckMasternodeOrphanObjects -- %s new\n", govobj.GetHash().ToString());
+            govobj.Relay();
+            mapMasternodeOrphanObjects.erase(it++);
+        }
+        else {
+            ++it;
+        }
     }
 }
 
