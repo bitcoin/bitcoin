@@ -760,47 +760,21 @@ UniValue getblock(const JSONRPCRequest& request)
     return blockToJSON(block, pblockindex);
 }
 
-UniValue getnulldatas(const JSONRPCRequest& request)
+UniValue blockIndexToNulldataJSON(const CBlockIndex* pblockindex)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
-        throw runtime_error(
-            "getnulldatas \"hash\"\n"
-            "\nReturns an Object with all nulldatas for the given block.\n"
-            "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
-            "\nResult:\n"
-            "[\n"
-            "  {\n"
-            "    \"txid\" : \"hash\",   (string) the transaction hash\n"
-            "    \"nulldatas\" : [      (array of strings) Hex encoded nulldatas\n"
-            "      \"00000000\",        (string) the hex encoded nulldata\n"
-            "      ...,\n"
-            "    ]\n"
-            "  }\n"
-            "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getnulldatas", "\"0000000000000000038ac7709c75b5a2416a88338e75e6026328cfc7cca64c37\"")
-            + HelpExampleRpc("getnulldatas", "\"0000000000000000038ac7709c75b5a2416a88338e75e6026328cfc7cca64c37\"")
-        );
-
-    LOCK(cs_main);
-
-    std::string strHash = request.params[0].get_str();
-    uint256 hash(uint256S(strHash));
-
-    if (mapBlockIndex.count(hash) == 0)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-
     CBlock block;
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
-
     if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
 
     if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
-    UniValue result(UniValue::VARR);
+    UniValue blockJSON(UniValue::VOBJ);
+    blockJSON.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
+    blockJSON.push_back(Pair("height", pblockindex->nHeight));
+    blockJSON.push_back(Pair("time", block.GetBlockTime()));
+
+    UniValue allnds(UniValue::VARR);
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         if(tx.HasNulldata())
@@ -814,17 +788,58 @@ UniValue getnulldatas(const JSONRPCRequest& request)
             }
             obj.push_back(Pair("txid", tx.GetHash().GetHex()));
             obj.push_back(Pair("nulldatas", nds));
-            result.push_back(obj);
+            allnds.push_back(obj);
         }
     }
 
-    return result;
+    blockJSON.push_back(Pair("nulldatatxs", allnds));
+    return blockJSON;
 }
 
+UniValue getnulldatas(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+        throw runtime_error(
+            "getnulldatas \"hash\"\n"
+            "\nReturns an Object with all nulldatas for the given block.\n"
+            "\nArguments:\n"
+            "1. \"hash\"          (string, required) The block hash\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"hash\" : \"hash\",   (string) the block hash\n"
+            "  \"time\" : 1478482199, (integer) timestamp in the block\n"
+            "  \"height\" : 0000, (integer) height of the block\n"
+            "  \"nulldatatxs\" : [, \n"
+            "    {\n"
+            "      \"txid\" : \"hash\",   (string) the transaction hash\n"
+            "      \"nulldatas\" : [      (array of strings) Hex encoded nulldatas\n"
+            "        \"00000000\",        (string) the hex encoded nulldata\n"
+            "        ...,\n"
+            "      ]\n"
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getnulldatas", "\"0000000000000000038ac7709c75b5a2416a88338e75e6026328cfc7cca64c37\"")
+            + HelpExampleRpc("getnulldatas", "\"0000000000000000038ac7709c75b5a2416a88338e75e6026328cfc7cca64c37\"")
+        );
+
+    LOCK(cs_main);
+
+    std::string strHash = request.params[0].get_str();
+    uint256 hash(uint256S(strHash));
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    return blockIndexToNulldataJSON(pblockindex);
+}
 
 UniValue getmanynulldatas(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 2)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
             "getmanynulldatas fromHeight toHeight\n"
             "\nReturns an Object with all nulldatas in the given block range.\n"
@@ -837,10 +852,14 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
             "    \"hash\" : \"hash\",   (string) the block hash\n"
             "    \"time\" : 1478482199, (integer) timestamp in the block\n"
             "    \"height\" : 0000, (integer) height of the block\n"
-            "    \"txid\" : \"hash\",   (string) the transaction hash\n"
-            "    \"nulldatas\" : [      (array of strings) Hex encoded nulldatas\n"
-            "      \"00000000\",        (string) the hex encoded nulldata\n"
-            "      ...,\n"
+            "    \"nulldatatxs\" : [, \n"
+            "      {\n"
+            "        \"txid\" : \"hash\",   (string) the transaction hash\n"
+            "        \"nulldatas\" : [      (array of strings) Hex encoded nulldatas\n"
+            "          \"00000000\",        (string) the hex encoded nulldata\n"
+            "          ...,\n"
+            "        ]\n"
+            "      }\n"
             "    ]\n"
             "  }\n"
             "]\n"
@@ -853,6 +872,10 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
 
     int fromHeight = request.params[0].get_int();
     int toHeight = request.params[1].get_int();
+    
+    bool fOmitEmpty = false;
+    if (request.params.size() > 2)
+        fOmitEmpty = request.params[2].get_bool();
 
     if (fromHeight < 0 || toHeight > chainActive.Height() || fromHeight >= toHeight)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range or invalid range");
@@ -860,40 +883,11 @@ UniValue getmanynulldatas(const JSONRPCRequest& request)
     UniValue result(UniValue::VARR);
     for (int nHeight = fromHeight; nHeight <= toHeight; nHeight++)
     {
-        CBlock block;
         CBlockIndex* pblockindex = chainActive[nHeight];
-
-        if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
-
-        if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
-
-        UniValue blockJSON(UniValue::VOBJ);
-        blockJSON.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
-        blockJSON.push_back(Pair("height", nHeight));
-        blockJSON.push_back(Pair("time", block.GetBlockTime()));
-
-        UniValue allnds(UniValue::VARR);
-        BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        {
-            if(tx.HasNulldata())
-            {
-                UniValue obj(UniValue::VOBJ);
-                UniValue nds(UniValue::VARR);
-                BOOST_FOREACH(const CTxOut& txout, tx.vout)
-                {
-                    if (txout.IsNulldata())
-                        nds.push_back(HexStr(txout.scriptPubKey.begin(), txout.scriptPubKey.end()));
-                }
-                obj.push_back(Pair("txid", tx.GetHash().GetHex()));
-                obj.push_back(Pair("nulldatas", nds));
-                allnds.push_back(obj);
-            }
-        }
-
-        blockJSON.push_back(Pair("nulldatatxs", allnds));
-        result.push_back(blockJSON);
+        UniValue blockJSON = blockIndexToNulldataJSON(pblockindex);
+        
+        if (!(fOmitEmpty && blockJSON["nulldatatxs"].size() < 1))
+            result.push_back(blockJSON);
     }
 
     return result;
