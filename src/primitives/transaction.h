@@ -197,6 +197,11 @@ public:
         return (nValue < GetDustThreshold(minRelayTxFee));
     }
 
+    bool IsNulldata() const
+    {
+        return scriptPubKey.IsNulldata();
+    }
+
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
@@ -424,6 +429,16 @@ public:
     bool IsCoinBase() const
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
+    }
+
+    bool HasNulldata() const
+    {
+        for (unsigned int i = 0; i < vout.size(); i++)
+        {
+            if (vout[i].IsNulldata())
+                return true;
+        }
+        return false;
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
