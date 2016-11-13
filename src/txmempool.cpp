@@ -777,6 +777,20 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
     }
 }
 
+void CTxMemPool::FindScriptPubKey(const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results) {
+    LOCK(cs);
+    for (const CTxMemPoolEntry& entry : mapTx) {
+        const CTransaction& tx = entry.GetTx();
+        const uint256& hash = tx.GetHash();
+        for (size_t txo_index = tx.vout.size(); txo_index-- > 0; ) {
+            const CTxOut& txo = tx.vout[txo_index];
+            if (needles.count(txo.scriptPubKey)) {
+                out_results.emplace(COutPoint(hash, txo_index), Coin(txo, MEMPOOL_HEIGHT, false));
+            }
+        }
+    }
+}
+
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
     return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), CFeeRate(it->GetFee(), it->GetTxSize()), it->GetModifiedFee() - it->GetFee()};
 }
