@@ -844,6 +844,21 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
     return iters;
 }
 
+void CTxMemPool::FindScriptPubKey(const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results) {
+    LOCK(cs);
+    for (const CTxMemPoolEntry& entry : mapTx) {
+        const CTransaction& tx = entry.GetTx();
+        const Txid& hash = tx.GetHash();
+        for (size_t txo_index = tx.vout.size(); txo_index > 0; ) {
+            --txo_index;
+            const CTxOut& txo = tx.vout[txo_index];
+            if (needles.count(txo.scriptPubKey)) {
+                out_results.emplace(COutPoint(hash, txo_index), Coin(txo, MEMPOOL_HEIGHT, false));
+            }
+        }
+    }
+}
+
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
     return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
 }
