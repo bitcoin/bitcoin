@@ -3505,11 +3505,17 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
     statsClient.timing("CheckBlock_us", diff.total_microseconds(), 1.0f);
-    statsClient.gauge("blocks.currentSizeBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION), 1.0f);
-    statsClient.gauge("blocks.currentSizeWithWitnessBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS), 1.0f);
+    statsClient.gauge("blocks.currentSizeBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS), 1.0f);
+    statsClient.gauge("blocks.currentSizeWithWitnessBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION), 1.0f);
     statsClient.gauge("blocks.currentWeight", ::GetBlockWeight(block), 1.0f);
     statsClient.gauge("blocks.currentHeight", chainActive.Height(), 1.0f);
-    statsClient.gauge("blocks.currentChainWork", chainActive.Tip()->nChainWork.getdouble(), 1.0f);
+    // convert chainwork double (in scientific notation) to number sans scientific notation so that statsd can process it
+    std::ostringstream chainwork;
+    chainwork << std::fixed << chainActive.Tip()->nChainWork.getdouble();
+    size_t chainworksize;
+    const char* cwstr = chainwork.str().c_str();
+    sscanf(cwstr, "%zd", &chainworksize);
+    statsClient.gauge("blocks.currentChainWork", chainworksize, 1.0f);
     statsClient.gauge("blocks.currentVersion", block.nVersion, 1.0f);
     statsClient.gauge("blocks.currentNumTransactions", block.vtx.size(), 1.0f);
     statsClient.gauge("blocks.currentSigOps", nSigOps, 1.0f);
