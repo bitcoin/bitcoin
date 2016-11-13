@@ -27,11 +27,13 @@
 #include <script/sign.h>
 #include <shutdown.h>
 #include <timedata.h>
+#include <txdb.h>
 #include <util/bip32.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
+#include <wallet/fees.h>
 #include <wallet/psbtwallet.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
@@ -955,6 +957,184 @@ static UniValue sendmany(const JSONRPCRequest& request)
     }
 
     return tx->GetHash().GetHex();
+}
+
+// defined in rpc/blockchain.cpp
+bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results);
+
+static UniValue sweepprivkeys(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"sweepprivkeys",
+                "\nSends bitcoins controlled by private key to specified destinations.\n",
+                {
+                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::NO, "",
+                        {
+                            {"privkeys", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of WIF private key(s)",
+                                {
+                                    {"privkey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                                },
+                                },
+
+                            {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Label for received bitcoins"},
+                        },
+                        "options"},
+                },
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString());
+    }
+
+    // NOTE: It isn't safe to sweep-and-send in a single action, since this would leave the send missing from the transaction history
+
+    RPCTypeCheck(request.params, {UniValue::VOBJ});
+
+    // Parse options
+    std::set<CScript> needles;
+    CCoinControl coin_control;
+    CBasicKeyStore tempKeystore;
+    CMutableTransaction tx;
+    std::string label;
+    CAmount total_in = 0;
+    for (const std::string& optname : request.params[0].getKeys()) {
+        const UniValue& optval = request.params[0][optname];
+        if (optname == "privkeys") {
+            const UniValue& privkeys_a = optval.get_array();
+            for (size_t privkey_i = 0; privkey_i < privkeys_a.size(); ++privkey_i) {
+                const UniValue& privkey_wif = privkeys_a[privkey_i];
+                std::string wif_secret = privkey_wif.get_str();
+                CKey key = DecodeSecret(wif_secret);
+                if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+                CPubKey pubkey = key.GetPubKey();
+                assert(key.VerifyPubKey(pubkey));
+
+                tempKeystore.AddKey(key);
+                CKeyID address = pubkey.GetID();
+                CScript script = GetScriptForDestination(address);
+                if (!script.empty()) {
+                    needles.insert(script);
+                }
+                script = GetScriptForRawPubKey(pubkey);
+                if (!script.empty()) {
+                    needles.insert(script);
+                }
+            }
+        } else if (optname == "label") {
+            label = LabelFromValue(optval.get_str());
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unrecognised option '%s'", optname));
+        }
+    }
+
+    // Ensure keypool is filled if possible
+    {
+        LOCK2(cs_main, pwallet->cs_wallet);
+
+        if (!pwallet->IsLocked()) {
+            pwallet->TopUpKeyPool();
+        }
+    }
+
+    // Reserve the key we will be using
+    CReserveKey reservekey(pwallet);
+    CPubKey pubkey;
+    if (!reservekey.GetReservedKey(pubkey)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    }
+
+    // Scan UTXO set for inputs
+    std::vector<CTxOut> input_txos;
+    {
+        // Collect all possible inputs
+        std::map<COutPoint, Coin> coins;
+        {
+            std::unique_ptr<CCoinsViewCursor> pcursor;
+            {
+                LOCK(cs_main);
+                mempool.FindScriptPubKey(needles, coins);
+                FlushStateToDisk();
+                pcursor = std::unique_ptr<CCoinsViewCursor>(pcoinsdbview->Cursor());
+                assert(pcursor);
+            }
+            std::atomic<int> scan_progress;
+            const std::atomic<bool> should_abort{false};
+            int64_t count;
+            if (!FindScriptPubKey(scan_progress, should_abort, count, pcursor.get(), needles, coins)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "UTXO FindScriptPubKey failed");
+            }
+        }
+
+        // Add them as inputs to the transaction, and count the total value
+        for (auto& it : coins) {
+            const COutPoint& outpoint = it.first;
+            const Coin& coin = it.second;
+            const CTxOut& txo = coin.out;
+            tx.vin.emplace_back(outpoint.hash, outpoint.n);
+            input_txos.push_back(txo);
+            total_in += txo.nValue;
+        }
+    }
+
+    if (total_in == 0) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No value to sweep");
+    }
+
+    CKeyID keyID = pubkey.GetID();
+
+    tx.vout.emplace_back(total_in, GetScriptForDestination(keyID));
+
+    while (true) {
+        if (IsDust(tx.vout[0], ::minRelayTxFee)) {
+            throw JSONRPCError(RPC_VERIFY_REJECTED, "Swept value would be dust");
+        }
+        for (size_t input_index = 0; input_index < tx.vin.size(); ++input_index) {
+            if (!SignSignature(tempKeystore, input_txos[input_index].scriptPubKey, tx, input_index, input_txos[input_index].nValue, SIGHASH_ALL)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Failed to sign");
+            }
+        }
+        int64_t tx_vsize = GetVirtualTransactionSize(CTransaction(tx));
+        CAmount fee_needed = GetMinimumFee(*wallet, tx_vsize, coin_control, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        const CAmount total_out = tx.vout[0].nValue;
+        if (fee_needed <= total_in - total_out) {
+            break;
+        }
+        tx.vout[0].nValue = total_in - fee_needed;
+    }
+
+    CTransactionRef final_tx(MakeTransactionRef(std::move(tx)));
+    pwallet->SetAddressBook(keyID, label, "receive");
+
+    CValidationState state;
+    bool rv;
+    {
+        LOCK(cs_main);
+        rv = AcceptToMemoryPool(mempool, state, final_tx, nullptr /* fMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, maxTxFee /* nAbsurdFee */);
+    }
+    if (!rv) {
+        pwallet->DelAddressBook(keyID);
+        if (state.IsInvalid()) {
+            throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
+        } else {
+            throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
+        }
+    }
+    reservekey.KeepKey();
+
+    CInv inv(MSG_TX, final_tx->GetHash());
+    g_connman->ForEachNode([&inv](CNode* pnode)
+    {
+        pnode->PushInventory(inv);
+    });
+
+    return final_tx->GetHash().GetHex();
 }
 
 static UniValue addmultisigaddress(const JSONRPCRequest& request)
@@ -4201,6 +4381,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sweepprivkeys",                    &sweepprivkeys,                 {"options"} },
     { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
