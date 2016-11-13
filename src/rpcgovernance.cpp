@@ -283,16 +283,15 @@ UniValue gobject(const UniValue& params, bool fHelp)
             return returnObj;
         }
 
-        std::string strError = "";
-        if(governance.AddOrUpdateVote(vote, NULL, strError)) {
-            governance.AddSeenVote(vote.GetHash(), SEEN_OBJECT_IS_VALID);
-            vote.Relay();
+        CGovernanceException exception;
+        if(governance.ProcessVote(vote, exception)) {
             success++;
             statusObj.push_back(Pair("result", "success"));
-        } else {
+        }
+        else {
             failed++;
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", strError.c_str()));
+            statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
         }
 
         resultsObj.push_back(Pair("dash.conf", statusObj));
@@ -386,15 +385,15 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 continue;
             }
 
-            if(governance.AddOrUpdateVote(vote, NULL, strError)) {
-                governance.AddSeenVote(vote.GetHash(), SEEN_OBJECT_IS_VALID);
-                vote.Relay();
+            CGovernanceException exception;
+            if(governance.ProcessVote(vote, exception)) {
                 success++;
                 statusObj.push_back(Pair("result", "success"));
-            } else {
+            }
+            else {
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", strError.c_str()));
+                statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
             }
 
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -511,15 +510,15 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             // UPDATE LOCAL DATABASE WITH NEW OBJECT SETTINGS
 
-            if(governance.AddOrUpdateVote(vote, NULL, strError)) {
-                governance.AddSeenVote(vote.GetHash(), SEEN_OBJECT_IS_VALID);
-                vote.Relay();
+            CGovernanceException exception;
+            if(governance.ProcessVote(vote, exception)) {
                 success++;
                 statusObj.push_back(Pair("result", "success"));
-            } else {
+            }
+            else {
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", strError.c_str()));
+                statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
             }
 
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -573,13 +572,13 @@ UniValue gobject(const UniValue& params, bool fHelp)
         BOOST_FOREACH(CGovernanceObject* pGovObj, objs)
         {
             // IF WE HAVE A SPECIFIC NODE REQUESTED TO VOTE, DO THAT
-            if(strShow == "valid" && !pGovObj->fCachedValid) continue;
+            if(strShow == "valid" && !pGovObj->IsSetCachedValid()) continue;
 
             UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("DataHex",  pGovObj->GetDataAsHex()));
             bObj.push_back(Pair("DataString",  pGovObj->GetDataAsString()));
             bObj.push_back(Pair("Hash",  pGovObj->GetHash().ToString()));
-            bObj.push_back(Pair("CollateralHash",  pGovObj->nCollateralHash.ToString()));
+            bObj.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
 
             // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
             bObj.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING)));
@@ -591,10 +590,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
             std::string strError = "";
             bObj.push_back(Pair("fBlockchainValidity",  pGovObj->IsValidLocally(pindex , strError, false)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
-            bObj.push_back(Pair("fCachedValid",  pGovObj->fCachedValid));
-            bObj.push_back(Pair("fCachedFunding",  pGovObj->fCachedFunding));
-            bObj.push_back(Pair("fCachedDelete",  pGovObj->fCachedDelete));
-            bObj.push_back(Pair("fCachedEndorsed",  pGovObj->fCachedEndorsed));
+            bObj.push_back(Pair("fCachedValid",  pGovObj->IsSetCachedValid()));
+            bObj.push_back(Pair("fCachedFunding",  pGovObj->IsSetCachedFunding()));
+            bObj.push_back(Pair("fCachedDelete",  pGovObj->IsSetCachedDelete()));
+            bObj.push_back(Pair("fCachedEndorsed",  pGovObj->IsSetCachedEndorsed()));
 
             objResult.push_back(Pair(pGovObj->GetHash().ToString(), bObj));
         }
@@ -625,7 +624,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         objResult.push_back(Pair("DataHex",  pGovObj->GetDataAsHex()));
         objResult.push_back(Pair("DataString",  pGovObj->GetDataAsString()));
         objResult.push_back(Pair("Hash",  pGovObj->GetHash().ToString()));
-        objResult.push_back(Pair("CollateralHash",  pGovObj->nCollateralHash.ToString()));
+        objResult.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
 
         // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
         // -- FUNDING VOTING RESULTS
@@ -665,11 +664,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strError = "";
         objResult.push_back(Pair("fLocalValidity",  pGovObj->IsValidLocally(chainActive.Tip(), strError, false)));
         objResult.push_back(Pair("IsValidReason",  strError.c_str()));
-        objResult.push_back(Pair("fCachedValid",  pGovObj->fCachedValid));
-        objResult.push_back(Pair("fCachedFunding",  pGovObj->fCachedFunding));
-        objResult.push_back(Pair("fCachedDelete",  pGovObj->fCachedDelete));
-        objResult.push_back(Pair("fCachedEndorsed",  pGovObj->fCachedEndorsed));
-
+        objResult.push_back(Pair("fCachedValid",  pGovObj->IsSetCachedValid()));
+        objResult.push_back(Pair("fCachedFunding",  pGovObj->IsSetCachedFunding()));
+        objResult.push_back(Pair("fCachedDelete",  pGovObj->IsSetCachedDelete()));
+        objResult.push_back(Pair("fCachedEndorsed",  pGovObj->IsSetCachedEndorsed()));
         return objResult;
     }
 
@@ -701,9 +699,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // GET MATCHING VOTES BY HASH, THEN SHOW USERS VOTE INFORMATION
 
-        std::vector<CGovernanceVote*> vecVotes = governance.GetMatchingVotes(hash);
-        BOOST_FOREACH(CGovernanceVote* pVote, vecVotes) {
-            bResult.push_back(Pair(pVote->GetHash().ToString(),  pVote->ToString()));
+        std::vector<CGovernanceVote> vecVotes = governance.GetMatchingVotes(hash);
+        BOOST_FOREACH(CGovernanceVote vote, vecVotes) {
+            bResult.push_back(Pair(vote.GetHash().ToString(),  vote.ToString()));
         }
 
         return bResult;
@@ -764,13 +762,12 @@ UniValue voteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 
-    std::string strError = "";
-    if(governance.AddOrUpdateVote(vote, NULL, strError)) {
-        governance.AddSeenVote(vote.GetHash(), SEEN_OBJECT_IS_VALID);
-        vote.Relay();
+    CGovernanceException exception;
+    if(governance.ProcessVote(vote, exception)) {
         return "Voted successfully";
-    } else {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + strError);
+    }
+    else {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
     }
 }
 

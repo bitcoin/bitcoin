@@ -272,6 +272,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
                 } else {
                     statusObj.push_back(Pair("errorMessage", strError));
                 }
+                mnodeman.NotifyMasternodeUpdates();
                 break;
             }
         }
@@ -328,6 +329,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
             resultsObj.push_back(Pair("status", statusObj));
         }
+        mnodeman.NotifyMasternodeUpdates();
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", nSuccessful, nFailed, nSuccessful + nFailed)));
@@ -781,6 +783,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
                     mnb.Relay();
                     fResult = true;
                 }
+                mnodeman.NotifyMasternodeUpdates();
             } else fResult = false;
 
             if(fResult) {

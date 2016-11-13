@@ -5,6 +5,7 @@
 #include "masternodeman.h"
 #include "activemasternode.h"
 #include "darksend.h"
+#include "governance.h"
 #include "masternode.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -38,7 +39,51 @@ struct CompareScoreMN
     }
 };
 
+CMasternodeIndex::CMasternodeIndex()
+    : nSize(0),
+      mapIndex(),
+      mapReverseIndex()
+{}
+
+bool CMasternodeIndex::Get(int nIndex, CTxIn& vinMasternode) const
+{
+    rindex_m_cit it = mapReverseIndex.find(nIndex);
+    if(it == mapReverseIndex.end()) {
+        return false;
+    }
+    vinMasternode = it->second;
+    return true;
+}
+
+int CMasternodeIndex::GetMasternodeIndex(const CTxIn& vinMasternode) const
+{
+    index_m_cit it = mapIndex.find(vinMasternode);
+    if(it == mapIndex.end()) {
+        return -1;
+    }
+    return it->second;
+}
+
+void CMasternodeIndex::AddMasternodeVIN(const CTxIn& vinMasternode)
+{
+    index_m_it it = mapIndex.find(vinMasternode);
+    if(it != mapIndex.end()) {
+        return;
+    }
+    int nNextIndex = nSize;
+    mapIndex[vinMasternode] = nNextIndex;
+    mapReverseIndex[nNextIndex] = vinMasternode;
+    ++nSize;
+}
+
+void CMasternodeIndex::Clear()
+{
+    mapIndex.clear();
+    mapReverseIndex.clear();
+    nSize = 0;
+}
 struct CompareByAddr
+
 {
     bool operator()(const CMasternode* t1,
                     const CMasternode* t2) const
@@ -46,6 +91,33 @@ struct CompareByAddr
         return t1->addr < t2->addr;
     }
 };
+
+void CMasternodeIndex::RebuildIndex()
+{
+    nSize = mapIndex.size();
+    for(index_m_it it = mapIndex.begin(); it != mapIndex.end(); ++it) {
+        mapReverseIndex[it->second] = it->first;
+    }
+}
+
+CMasternodeMan::CMasternodeMan()
+: cs(),
+  vMasternodes(),
+  mAskedUsForMasternodeList(),
+  mWeAskedForMasternodeList(),
+  mWeAskedForMasternodeListEntry(),
+  nLastIndexRebuildTime(0),
+  indexMasternodes(),
+  indexMasternodesOld(),
+  fIndexRebuilt(false),
+  fMasternodesAdded(false),
+  fMasternodesRemoved(false),
+  vecDirtyGovernanceObjectHashes(),
+  nLastWatchdogVoteTime(0),
+  mapSeenMasternodeBroadcast(),
+  mapSeenMasternodePing(),
+  nDsqCount(0)
+{}
 
 bool CMasternodeMan::Add(CMasternode &mn)
 {
@@ -59,13 +131,15 @@ bool CMasternodeMan::Add(CMasternode &mn)
         LogPrint("masternode", "CMasternodeMan::Add -- Adding new Masternode: addr=%s, %i now\n", mn.addr.ToString(), size() + 1);
         mn.nTimeLastWatchdogVote = mn.sigTime;
         vMasternodes.push_back(mn);
+        indexMasternodes.AddMasternodeVIN(mn.vin);
+        fMasternodesAdded = true;
         return true;
     }
 
     return false;
 }
 
-void CMasternodeMan::AskForMN(CNode* pnode, CTxIn &vin)
+void CMasternodeMan::AskForMN(CNode* pnode, const CTxIn &vin)
 {
     if(!pnode) return;
 
@@ -99,106 +173,117 @@ void CMasternodeMan::CheckAndRemove(bool fForceExpiredRemoval)
 
     Check();
 
-    LOCK(cs);
+    {
+        LOCK(cs);
 
-    // Remove inactive and outdated masternodes
-    std::vector<CMasternode>::iterator it = vMasternodes.begin();
-    while(it != vMasternodes.end()) {
-        bool fRemove =  // If it's marked to be removed from the list by CMasternode::Check for whatever reason ...
-                        (*it).nActiveState == CMasternode::MASTERNODE_REMOVE ||
-                        // or collateral was spent ...
-                        (*it).nActiveState == CMasternode::MASTERNODE_OUTPOINT_SPENT ||
-                        // or we were asked to remove exired entries ...
-                        (fForceExpiredRemoval && (*it).nActiveState == CMasternode::MASTERNODE_EXPIRED);
+        // Remove inactive and outdated masternodes
+        std::vector<CMasternode>::iterator it = vMasternodes.begin();
+        while(it != vMasternodes.end()) {
+            bool fRemove =  // If it's marked to be removed from the list by CMasternode::Check for whatever reason ...
+                    (*it).nActiveState == CMasternode::MASTERNODE_REMOVE ||
+                    // or collateral was spent ...
+                    (*it).nActiveState == CMasternode::MASTERNODE_OUTPOINT_SPENT ||
+                    // or we were asked to remove exired entries ...
+                    (fForceExpiredRemoval && (*it).nActiveState == CMasternode::MASTERNODE_EXPIRED);
 
-        if (fRemove) {
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).GetStatus(), (*it).addr.ToString(), size() - 1);
+            if (fRemove) {
+                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).GetStatus(), (*it).addr.ToString(), size() - 1);
 
-            // erase all of the broadcasts we've seen from this txin, ...
-            mapSeenMasternodeBroadcast.erase(CMasternodeBroadcast(*it).GetHash());
-            // allow us to ask for this masternode again if we see another ping ...
-            mWeAskedForMasternodeListEntry.erase((*it).vin.prevout);
+                // erase all of the broadcasts we've seen from this txin, ...
+                mapSeenMasternodeBroadcast.erase(CMasternodeBroadcast(*it).GetHash());
+                // allow us to ask for this masternode again if we see another ping ...
+                mWeAskedForMasternodeListEntry.erase((*it).vin.prevout);
 
-            // and finally remove it from the list
-            it = vMasternodes.erase(it);
-        } else {
-            ++it;
+                // and finally remove it from the list
+                it = vMasternodes.erase(it);
+                fMasternodesRemoved = true;
+            } else {
+                ++it;
+            }
+        }
+
+        // check who's asked for the Masternode list
+        std::map<CNetAddr, int64_t>::iterator it1 = mAskedUsForMasternodeList.begin();
+        while(it1 != mAskedUsForMasternodeList.end()){
+            if((*it1).second < GetTime()) {
+                mAskedUsForMasternodeList.erase(it1++);
+            } else {
+                ++it1;
+            }
+        }
+
+        // check who we asked for the Masternode list
+        it1 = mWeAskedForMasternodeList.begin();
+        while(it1 != mWeAskedForMasternodeList.end()){
+            if((*it1).second < GetTime()){
+                mWeAskedForMasternodeList.erase(it1++);
+            } else {
+                ++it1;
+            }
+        }
+
+        // check which Masternodes we've asked for
+        std::map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
+        while(it2 != mWeAskedForMasternodeListEntry.end()){
+            if((*it2).second < GetTime()){
+                mWeAskedForMasternodeListEntry.erase(it2++);
+            } else {
+                ++it2;
+            }
+        }
+
+        std::map<CNetAddr, CMasternodeVerification>::iterator itv1 = mWeAskedForVerification.begin();
+        while(itv1 != mWeAskedForVerification.end()){
+            if(itv1->second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS) {
+                mWeAskedForVerification.erase(itv1++);
+            } else {
+                ++itv1;
+            }
+        }
+
+        // remove expired mapSeenMasternodeBroadcast
+        std::map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
+        while(it3 != mapSeenMasternodeBroadcast.end()){
+            if((*it3).second.lastPing.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
+                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode broadcast: hash=%s\n", (*it3).second.GetHash().ToString());
+                mapSeenMasternodeBroadcast.erase(it3++);
+            } else {
+                ++it3;
+            }
+        }
+
+        // remove expired mapSeenMasternodePing
+        std::map<uint256, CMasternodePing>::iterator it4 = mapSeenMasternodePing.begin();
+        while(it4 != mapSeenMasternodePing.end()){
+            if((*it4).second.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
+                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode ping: hash=%s\n", (*it4).second.GetHash().ToString());
+                mapSeenMasternodePing.erase(it4++);
+            } else {
+                ++it4;
+            }
+        }
+
+        // remove expired mapSeenMasternodeVerification
+        std::map<uint256, CMasternodeVerification>::iterator itv2 = mapSeenMasternodeVerification.begin();
+        while(itv2 != mapSeenMasternodeVerification.end()){
+            if((*itv2).second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS){
+                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode verification: hash=%s\n", (*itv2).first.ToString());
+                mapSeenMasternodeVerification.erase(itv2++);
+            } else {
+                ++itv2;
+            }
+        }
+
+        LogPrintf("CMasternodeMan::CheckAndRemove -- %s\n", ToString());
+
+        if(fMasternodesRemoved) {
+            CheckAndRebuildMasternodeIndex();
         }
     }
 
-    // check who's asked for the Masternode list
-    std::map<CNetAddr, int64_t>::iterator it1 = mAskedUsForMasternodeList.begin();
-    while(it1 != mAskedUsForMasternodeList.end()){
-        if((*it1).second < GetTime()) {
-            mAskedUsForMasternodeList.erase(it1++);
-        } else {
-            ++it1;
-        }
+    if(fMasternodesRemoved) {
+        NotifyMasternodeUpdates();
     }
-
-    // check who we asked for the Masternode list
-    it1 = mWeAskedForMasternodeList.begin();
-    while(it1 != mWeAskedForMasternodeList.end()){
-        if((*it1).second < GetTime()){
-            mWeAskedForMasternodeList.erase(it1++);
-        } else {
-            ++it1;
-        }
-    }
-
-    // check which Masternodes we've asked for
-    std::map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
-    while(it2 != mWeAskedForMasternodeListEntry.end()){
-        if((*it2).second < GetTime()){
-            mWeAskedForMasternodeListEntry.erase(it2++);
-        } else {
-            ++it2;
-        }
-    }
-
-    std::map<CNetAddr, CMasternodeVerification>::iterator itv1 = mWeAskedForVerification.begin();
-    while(itv1 != mWeAskedForVerification.end()){
-        if(itv1->second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS) {
-            mWeAskedForVerification.erase(itv1++);
-        } else {
-            ++itv1;
-        }
-    }
-
-    // remove expired mapSeenMasternodeBroadcast
-    std::map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
-    while(it3 != mapSeenMasternodeBroadcast.end()){
-        if((*it3).second.lastPing.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode broadcast: hash=%s\n", (*it3).second.GetHash().ToString());
-            mapSeenMasternodeBroadcast.erase(it3++);
-        } else {
-            ++it3;
-        }
-    }
-
-    // remove expired mapSeenMasternodePing
-    std::map<uint256, CMasternodePing>::iterator it4 = mapSeenMasternodePing.begin();
-    while(it4 != mapSeenMasternodePing.end()){
-        if((*it4).second.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode ping: hash=%s\n", (*it4).second.GetHash().ToString());
-            mapSeenMasternodePing.erase(it4++);
-        } else {
-            ++it4;
-        }
-    }
-
-    // remove expired mapSeenMasternodeVerification
-    std::map<uint256, CMasternodeVerification>::iterator itv2 = mapSeenMasternodeVerification.begin();
-    while(itv2 != mapSeenMasternodeVerification.end()){
-        if((*itv2).second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS){
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode verification: hash=%s\n", (*itv2).first.ToString());
-            mapSeenMasternodeVerification.erase(itv2++);
-        } else {
-            ++itv2;
-        }
-    }
-
-    LogPrintf("CMasternodeMan::CheckAndRemove -- %s\n", ToString());
 }
 
 void CMasternodeMan::Clear()
@@ -610,20 +695,25 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
 
-        CMasternodeBroadcast mnb;
-        vRecv >> mnb;
+        {
+            LOCK(cs);
 
-        int nDos = 0;
+            CMasternodeBroadcast mnb;
+            vRecv >> mnb;
 
-        if (CheckMnbAndUpdateMasternodeList(mnb, nDos)) {
-            // use announced Masternode as a peer
-            addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
-        } else if(nDos > 0) {
-            Misbehaving(pfrom->GetId(), nDos);
+            int nDos = 0;
+
+            if (CheckMnbAndUpdateMasternodeList(mnb, nDos)) {
+                // use announced Masternode as a peer
+                addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
+            } else if(nDos > 0) {
+                Misbehaving(pfrom->GetId(), nDos);
+            }
         }
-
+        if(fMasternodesAdded) {
+            NotifyMasternodeUpdates();
+        }
     } else if (strCommand == NetMsgType::MNPING) { //Masternode Ping
-
         // ignore masternode pings until masternode list is synced
         if (!masternodeSync.IsMasternodeListSynced()) return;
 
@@ -657,7 +747,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         AskForMN(pfrom, mnp.vin);
 
     } else if (strCommand == NetMsgType::DSEG) { //Get Masternode list or specific entry
-
         // Ignore such requests until we are fully synced.
         // We could start processing this after masternode list is synced
         // but this is a heavy one so it's better to finish sync first.
@@ -721,6 +810,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrint("masternode", "DSEG -- No invs sent to peer %d\n", pfrom->id);
 
     } else if (strCommand == NetMsgType::MNVERIFY) { // Masternode Verify
+
+        LOCK(cs);
 
         CMasternodeVerification mnv;
         vRecv >> mnv;
@@ -1290,6 +1381,32 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex)
     IsFirstRun = !masternodeSync.IsWinnersListSynced();
 }
 
+void CMasternodeMan::CheckAndRebuildMasternodeIndex()
+{
+    LOCK(cs);
+
+    if(GetTime() - nLastIndexRebuildTime < MIN_INDEX_REBUILD_TIME) {
+        return;
+    }
+
+    if(indexMasternodes.GetSize() <= MAX_EXPECTED_INDEX_SIZE) {
+        return;
+    }
+
+    if(indexMasternodes.GetSize() <= int(vMasternodes.size())) {
+        return;
+    }
+
+    indexMasternodesOld = indexMasternodes;
+    indexMasternodes.Clear();
+    for(size_t i = 0; i < vMasternodes.size(); ++i) {
+        indexMasternodes.AddMasternodeVIN(vMasternodes[i].vin);
+    }
+
+    fIndexRebuilt = true;
+    nLastIndexRebuildTime = GetTime();
+}
+
 void CMasternodeMan::UpdateWatchdogVoteTime(const CTxIn& vin)
 {
     LOCK(cs);
@@ -1405,4 +1522,27 @@ void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
         UpdateLastPaid(pindex);
     }
+}
+
+void CMasternodeMan::NotifyMasternodeUpdates()
+{
+    // Avoid double locking
+    bool fMasternodesAddedLocal = false;
+    bool fMasternodesRemovedLocal = false;
+    {
+        LOCK(cs);
+        fMasternodesAddedLocal = fMasternodesAdded;
+        fMasternodesRemovedLocal = fMasternodesRemoved;
+    }
+
+    if(fMasternodesAddedLocal) {
+        governance.CheckMasternodeOrphanVotes();
+    }
+    if(fMasternodesRemovedLocal) {
+        governance.UpdateCachesAndClean();
+    }
+
+    LOCK(cs);
+    fMasternodesAdded = false;
+    fMasternodesRemoved = false;
 }

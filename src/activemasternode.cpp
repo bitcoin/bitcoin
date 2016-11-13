@@ -271,6 +271,7 @@ void CActiveMasternode::ManageStateLocal()
         //update to masternode list
         LogPrintf("CActiveMasternode::ManageStateLocal -- Update Masternode List\n");
         mnodeman.UpdateMasternodeList(mnb);
+        mnodeman.NotifyMasternodeUpdates();
 
         //send to all peers
         LogPrintf("CActiveMasternode::ManageStateLocal -- Relay broadcast, vin=%s\n", vin.ToString());

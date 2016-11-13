@@ -346,7 +346,7 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 
         // MAKE SURE THIS TRIGGER IS ACTIVE VIA FUNDING CACHE FLAG
 
-        if(pObj->fCachedFunding) {
+        if(pObj->IsSetCachedFunding()) {
             LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
             DBG( cout << "IsSuperblockTriggered returning true" << endl; );
             return true;
@@ -506,7 +506,7 @@ CSuperblock(uint256& nHash)
 
     DBG( cout << "CSuperblock Constructor pGovObj : "
          << pGovObj->GetDataAsString()
-         << ", nObjectType = " << pGovObj->nObjectType
+         << ", nObjectType = " << pGovObj->GetObjectType()
          << endl; );
 
     if (pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
@@ -678,7 +678,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     int nMinerPayments = nOutputs - nPayments;
 
     LogPrint("gobject", "CSuperblock::IsValid nOutputs = %d, nPayments = %d, strData = %s\n",
-             nOutputs, nPayments, GetGovernanceObject()->strData);
+             nOutputs, nPayments, GetGovernanceObject()->GetDataAsHex());
 
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block, after

@@ -4948,14 +4948,11 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mapDarksendBroadcastTxes.count(inv.hash);
 
     case MSG_GOVERNANCE_OBJECT:
-        return governance.HaveObjectForHash(inv.hash);
-
     case MSG_GOVERNANCE_OBJECT_VOTE:
-        return governance.HaveVoteForHash(inv.hash);
+        return ! governance.ConfirmInventoryRequest(inv);
 
     case MSG_MASTERNODE_VERIFY:
         return mnodeman.mapSeenMasternodeVerification.count(inv.hash);
-
     }
 
     // Don't know what it is, just say we already got one
@@ -6720,9 +6717,15 @@ bool SendMessages(CNode* pto)
         //
         // Message: getdata (non-blocks)
         //
+        int64_t nFirst = -1;
+        if(!pto->mapAskFor.empty()) {
+            nFirst = (*pto->mapAskFor.begin()).first;
+        }
+        LogPrint("net", "SendMessages (mapAskFor) -- before loop: nNow = %d, nFirst = %d\n", nNow, nFirst);
         while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
+            LogPrint("net", "SendMessages (mapAskFor) -- inv = %s peer=%d\n", inv.ToString(), pto->id);
             if (!AlreadyHave(inv))
             {
                 if (fDebug)
@@ -6735,6 +6738,7 @@ bool SendMessages(CNode* pto)
                 }
             } else {
                 //If we're not going to ask, don't expect a response.
+                LogPrint("net", "SendMessages -- already have inv = %s peer=%d\n", inv.ToString(), pto->id);
                 pto->setAskFor.erase(inv.hash);
             }
             pto->mapAskFor.erase(pto->mapAskFor.begin());

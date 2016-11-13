@@ -2,8 +2,8 @@
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef GOVERANCE_VOTE_H
-#define GOVERANCE_VOTE_H
+#ifndef GOVERNANCE_VOTE_H
+#define GOVERNANCE_VOTE_H
 
 #include "main.h"
 #include "sync.h"
@@ -68,6 +68,8 @@ enum vote_signal_enum_t  {
     VOTE_SIGNAL_CUSTOM20   = 35
 };
 
+static const int MAX_SUPPORTED_VOTE_SIGNAL = VOTE_SIGNAL_ENDORSED;
+
 /**
 * Governance Voting
 *
@@ -89,6 +91,10 @@ public:
 
 class CGovernanceVote
 {
+    friend bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
+
+    friend bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
+
 private:
     bool fValid; //if the vote is currently valid / counted
     bool fSynced; //if we've sent this to our peers
@@ -120,8 +126,12 @@ public:
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool IsValid(bool fSignatureCheck);
-    void Relay();
+    bool IsValid(bool fSignatureCheck) const;
+    void Relay() const;
+
+    std::string GetVoteString() const {
+        return CGovernanceVoting::ConvertOutcomeToString(GetOutcome());
+    }
 
     CTxIn& GetVinMasternode() { return vinMasternode; }
 
@@ -144,7 +154,7 @@ public:
         return ss.GetHash();
     }
 
-    std::string ToString()
+    std::string ToString() const
     {
         std::ostringstream ostr;
         ostr << vinMasternode.ToString() << ":"
@@ -195,6 +205,7 @@ public:
     }
 
 };
+
 
 
 /**

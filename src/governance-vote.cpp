@@ -233,7 +233,7 @@ CGovernanceVote::CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, v
       vchSig()
 {}
 
-void CGovernanceVote::Relay()
+void CGovernanceVote::Relay() const
 {
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
     RelayInv(inv, PROTOCOL_VERSION);
@@ -262,15 +262,15 @@ bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     return true;
 }
 
-bool CGovernanceVote::IsValid(bool fSignatureCheck)
+bool CGovernanceVote::IsValid(bool fSignatureCheck) const
 {
-    if(nTime > GetTime() + (60*60)){
+    if(nTime > GetTime() + (60*60)) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
         return false;
     }
 
     // support up to 50 actions (implemented in sentinel)
-    if(nVoteSignal > 50)
+    if(nVoteSignal > MAX_SUPPORTED_VOTE_SIGNAL)
     {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
@@ -301,4 +301,45 @@ bool CGovernanceVote::IsValid(bool fSignatureCheck)
     }
 
     return true;
+}
+
+bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
+{
+    bool fResult = ((vote1.vinMasternode == vote2.vinMasternode) &&
+                    (vote1.nParentHash == vote2.nParentHash) &&
+                    (vote1.nVoteOutcome == vote2.nVoteOutcome) &&
+                    (vote1.nVoteSignal == vote2.nVoteSignal) &&
+                    (vote1.nTime == vote2.nTime));
+    return fResult;
+}
+
+bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
+{
+    bool fResult = (vote1.vinMasternode < vote2.vinMasternode);
+    if(!fResult) {
+        return false;
+    }
+    fResult = (vote1.vinMasternode == vote2.vinMasternode);
+
+    fResult = fResult && (vote1.nParentHash < vote2.nParentHash);
+    if(!fResult) {
+        return false;
+    }
+    fResult = fResult && (vote1.nParentHash == vote2.nParentHash);
+
+    fResult = fResult && (vote1.nVoteOutcome < vote2.nVoteOutcome);
+    if(!fResult) {
+        return false;
+    }
+    fResult = fResult && (vote1.nVoteOutcome == vote2.nVoteOutcome);
+
+    fResult = fResult && (vote1.nVoteSignal == vote2.nVoteSignal);
+    if(!fResult) {
+        return false;
+    }
+    fResult = fResult && (vote1.nVoteSignal == vote2.nVoteSignal);
+
+    fResult = fResult && (vote1.nTime < vote2.nTime);
+
+    return fResult;
 }

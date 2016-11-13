@@ -14,9 +14,85 @@ class CMasternodeMan;
 
 extern CMasternodeMan mnodeman;
 
+/**
+ * Provides a forward and reverse index between MN vin's and integers.
+ *
+ * This mapping is normally add-only and is expected to be permanent
+ * It is only rebuilt if the size of the index exceeds the expected maximum number
+ * of MN's and the current number of known MN's.
+ *
+ * The external interface to this index is provided via delegation by CMasternodeMan
+ */
+class CMasternodeIndex
+{
+public: // Types
+    typedef std::map<CTxIn,int> index_m_t;
+
+    typedef index_m_t::iterator index_m_it;
+
+    typedef index_m_t::const_iterator index_m_cit;
+
+    typedef std::map<int,CTxIn> rindex_m_t;
+
+    typedef rindex_m_t::iterator rindex_m_it;
+
+    typedef rindex_m_t::const_iterator rindex_m_cit;
+
+private:
+    int                  nSize;
+
+    index_m_t            mapIndex;
+
+    rindex_m_t           mapReverseIndex;
+
+public:
+    CMasternodeIndex();
+
+    int GetSize() const {
+        return nSize;
+    }
+
+    /// Retrieve masternode vin by index
+    bool Get(int nIndex, CTxIn& vinMasternode) const;
+
+    /// Get index of a masternode vin
+    int GetMasternodeIndex(const CTxIn& vinMasternode) const;
+
+    void AddMasternodeVIN(const CTxIn& vinMasternode);
+
+    void Clear();
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        READWRITE(mapIndex);
+        if(ser_action.ForRead()) {
+            RebuildIndex();
+        }
+    }
+
+private:
+    void RebuildIndex();
+
+};
+
 class CMasternodeMan
 {
+public:
+    typedef std::map<CTxIn,int> index_m_t;
+
+    typedef index_m_t::iterator index_m_it;
+
+    typedef index_m_t::const_iterator index_m_cit;
+
 private:
+    static const int MAX_EXPECTED_INDEX_SIZE = 30000;
+
+    /// Only allow 1 index rebuild per hour
+    static const int64_t MIN_INDEX_REBUILD_TIME = 3600;
+
     static const std::string SERIALIZATION_VERSION_STRING;
 
     static const int DSEG_UPDATE_SECONDS        = 3 * 60 * 60;
@@ -45,6 +121,21 @@ private:
     // who we asked for the masternode verification
     std::map<CNetAddr, CMasternodeVerification> mWeAskedForVerification;
 
+    int64_t nLastIndexRebuildTime;
+
+    CMasternodeIndex indexMasternodes;
+
+    CMasternodeIndex indexMasternodesOld;
+
+    /// Set when index has been rebuilt, clear when read
+    bool fIndexRebuilt;
+
+    /// Set when masternodes are added, cleared when CGovernanceManager is notified
+    bool fMasternodesAdded;
+
+    /// Set when masternodes are removed, cleared when CGovernanceManager is notified
+    bool fMasternodesRemoved;
+
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
 
     int64_t nLastWatchdogVoteTime;
@@ -61,8 +152,6 @@ public:
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
-
-    CMasternodeMan() : nLastWatchdogVoteTime(0), nDsqCount(0) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -87,16 +176,19 @@ public:
 
         READWRITE(mapSeenMasternodeBroadcast);
         READWRITE(mapSeenMasternodePing);
+        READWRITE(indexMasternodes);
         if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
             Clear();
         }
     }
 
+    CMasternodeMan();
+
     /// Add an entry
     bool Add(CMasternode &mn);
 
     /// Ask (source) node for mnb
-    void AskForMN(CNode *pnode, CTxIn &vin);
+    void AskForMN(CNode *pnode, const CTxIn &vin);
 
     /// Check all Masternodes
     void Check();
@@ -127,6 +219,49 @@ public:
     /// Versions of Find that are safe to use from outside the class
     bool Get(const CPubKey& pubKeyMasternode, CMasternode& masternode);
     bool Get(const CTxIn& vin, CMasternode& masternode);
+
+    /// Retrieve masternode vin by index
+    bool Get(int nIndex, CTxIn& vinMasternode, bool& fIndexRebuiltOut) {
+        LOCK(cs);
+        fIndexRebuiltOut = fIndexRebuilt;
+        return indexMasternodes.Get(nIndex, vinMasternode);
+    }
+
+    bool GetIndexRebuiltFlag() {
+        LOCK(cs);
+        return fIndexRebuilt;
+    }
+
+    /// Get index of a masternode vin
+    int GetMasternodeIndex(const CTxIn& vinMasternode) {
+        LOCK(cs);
+        return indexMasternodes.GetMasternodeIndex(vinMasternode);
+    }
+
+    /// Get old index of a masternode vin
+    int GetMasternodeIndexOld(const CTxIn& vinMasternode) {
+        LOCK(cs);
+        return indexMasternodesOld.GetMasternodeIndex(vinMasternode);
+    }
+
+    /// Get masternode VIN for an old index value
+    bool GetMasternodeVinForIndexOld(int nMasternodeIndex, CTxIn& vinMasternodeOut) {
+        LOCK(cs);
+        return indexMasternodesOld.Get(nMasternodeIndex, vinMasternodeOut);
+    }
+
+    /// Get index of a masternode vin, returning rebuild flag
+    int GetMasternodeIndex(const CTxIn& vinMasternode, bool& fIndexRebuiltOut) {
+        LOCK(cs);
+        fIndexRebuiltOut = fIndexRebuilt;
+        return indexMasternodes.GetMasternodeIndex(vinMasternode);
+    }
+
+    void ClearOldMasternodeIndex() {
+        LOCK(cs);
+        indexMasternodesOld.Clear();
+        fIndexRebuilt = false;
+    }
 
     bool Has(const CTxIn& vin);
 
@@ -173,6 +308,8 @@ public:
 
     void UpdateLastPaid(const CBlockIndex *pindex);
 
+    void CheckAndRebuildMasternodeIndex();
+
     void AddDirtyGovernanceObjectHash(const uint256& nHash)
     {
         LOCK(cs);
@@ -202,6 +339,13 @@ public:
     void SetMasternodeLastPing(const CTxIn& vin, const CMasternodePing& mnp);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
+
+    /**
+     * Called to notify CGovernanceManager that the masternode index has been updated.
+     * Must be called while not holding the CMasternodeMan::cs mutex
+     */
+    void NotifyMasternodeUpdates();
+
 };
 
 #endif
