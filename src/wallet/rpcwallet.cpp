@@ -186,7 +186,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
         entry.pushKV(item.first, item.second);
 }
 
-static std::string LabelFromValue(const UniValue& value)
+std::string LabelFromValue(const UniValue& value)
 {
     std::string label = value.get_str();
     if (label == "*")
