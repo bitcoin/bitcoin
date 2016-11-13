@@ -41,6 +41,7 @@
 #include <vector>
 
 class CChain;
+class CScript;
 class ValidationSignals;
 
 struct bilingual_str;
@@ -686,6 +687,8 @@ public:
 
     std::vector<CTxMemPoolEntryRef> entryAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
     std::vector<TxMempoolInfo> infoAll() const;
+
+    void FindScriptPubKey(const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results);
 
     size_t DynamicMemoryUsage() const;
 
