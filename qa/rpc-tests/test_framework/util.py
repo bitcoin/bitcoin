@@ -133,19 +133,26 @@ def str_to_b64str(string):
 
 def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     """
-    Wait until everybody has the same tip
+    Wait until everybody has the same tip.
+
+    sync_blocks needs to be called with an rpc_connections set that has least
+    one node already synced to the latest, stable tip, otherwise there's a
+    chance it might return before all nodes are stably synced.
     """
     maxheight = 0
-    while timeout > 0:
+    start_time = cur_time = time.time()
+    while cur_time <= start_time + timeout:
         tips = [r.waitforblockheight(maxheight, int(wait * 1000)) for r in rpc_connections]
         heights = [t["height"] for t in tips]
-        if tips == [tips[0]] * len(tips):
+        if all(t == tips[0] for t in tips):
             return
-        if heights == [heights[0]] * len(heights):
-            raise AssertionError("Block sync failed: (Hashes don't match)")
-        timeout -= wait
+        if all(h == heights[0] for h in heights):
+            raise AssertionError("Block sync failed, mismatched block hashes:{}".format(
+                                 "".join("\n  {!r}".format(tip) for tip in tips)))
         maxheight = max(heights)
-    raise AssertionError("Block sync failed with heights: {}".format(heights))
+        cur_time = time.time()
+    raise AssertionError("Block sync to height {} timed out:{}".format(
+                         maxheight, "".join("\n  {!r}".format(tip) for tip in tips)))
 
 def sync_chain(rpc_connections, *, wait=1, timeout=60):
     """
