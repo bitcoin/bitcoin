@@ -323,3 +323,8 @@ CScript GetScriptForWitness(const CScript& redeemscript)
     ret << OP_0 << ToByteVector(hash);
     return ret;
 }
+
+CScript GetScriptForNulldata(const std::vector<unsigned char>& nulldata)
+{
+    return CScript() << OP_RETURN << nulldata;
+}
