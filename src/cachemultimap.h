@@ -89,7 +89,7 @@ public:
         return nCurrentSize;
     }
 
-    void Insert(const K& key, const V& value)
+    bool Insert(const K& key, const V& value)
     {
         if(nCurrentSize == nMaxSize) {
             PruneLast();
@@ -102,7 +102,7 @@ public:
 
         if(mapIt.count(value) > 0) {
             // Don't insert duplicates
-            return;
+            return false;
         }
 
         listItems.push_front(item_t(key, value));
@@ -110,6 +110,7 @@ public:
 
         mapIt[value] = lit;
         ++nCurrentSize;
+        return true;
     }
 
     bool HasKey(const K& key) const
