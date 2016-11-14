@@ -11,6 +11,7 @@
 #include "consensus/header_verify.h"
 #include "consensus/validation.h"
 #include "key.h"
+#include "keystore.h"
 #include "validation.h"
 #include "miner.h"
 #include "net_processing.h"
@@ -128,7 +129,8 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     unsigned int extraNonce = 0;
     IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
 
-    while (!GenerateProof(Params().GetConsensus(), &block));
+    CBasicKeyStore dummyKeystore;
+    while (!GenerateProof(Params().GetConsensus(), &block, &dummyKeystore));
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     ProcessNewBlock(chainparams, shared_pblock, true, NULL);

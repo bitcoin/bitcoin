@@ -14,6 +14,8 @@
 #include <memory>
 #include <vector>
 
+class ArgsManager;
+
 struct CDNSSeedData {
     std::string name, host;
     bool supportsServiceBitsFiltering;
@@ -105,6 +107,7 @@ protected:
  * @throws a std::runtime_error if the chain is not supported.
  */
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, ArgsManager& chainArgsMan);
 
 /**
  * Return the currently selected parameters. This won't change after app

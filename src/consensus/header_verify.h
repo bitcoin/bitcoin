@@ -9,13 +9,14 @@
 
 class CBlockHeader;
 class CBlockIndex;
+class CKeyStore;
 class CValidationState;
 namespace Consensus { struct Params; };
 
 bool CheckProof(const Consensus::Params& consensusParams, const CBlockHeader& pblock);
-bool MaybeGenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pblock, uint64_t& nTries);
+bool MaybeGenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pblock, const CKeyStore* pkeystore, uint64_t& nTries);
 /** More convenient by hiding ref var nTries for testing */
-bool GenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pblock);
+bool GenerateProof(const Consensus::Params& consensusParams, CBlockHeader* pblock, const CKeyStore* pkeystore);
 void ResetProof(const Consensus::Params& consensusParams, CBlockHeader* pblock);
 
 bool CheckChallenge(const Consensus::Params& consensusParams, CValidationState& state, const CBlockHeader *pblock, const CBlockIndex* pindexPrev);

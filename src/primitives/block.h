@@ -74,8 +74,12 @@ public:
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
-        proof.pow.nBits = 0;
-        proof.pow.nNonce = 0;
+        if (fSignBlocksGlobal) {
+            proof.script = new CScript();
+        } else {
+            proof.pow.nBits = 0;
+            proof.pow.nNonce = 0;
+        }
     }
 
     bool IsNull() const

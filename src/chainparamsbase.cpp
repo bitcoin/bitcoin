@@ -26,6 +26,8 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
         strUsage += HelpMessageGroup(_("Custom chain selection options (only for -chain=custom):"));
         strUsage += HelpMessageOpt("-chainconf=<file>", strprintf(_("Specify configuration file for chain parameters (default: %s). All custom chain arguments except this one must be configured using this file."), CHAINPARAMS_CONF_FILENAME));
         strUsage += HelpMessageOpt("-chainpetname=<name>", _("Alternative name for custom chain (default: custom). This changes the genesis block."));
+        strUsage += HelpMessageOpt("-con_fsignblockchain", _("Use signed blocks instead of pow: (default: true))"));
+        strUsage += HelpMessageOpt("-con_signblockscript=<hexScript>", _("Specify the scriptPubKey for block signing: (default: OP_TRUE))"));
     }
 }
 

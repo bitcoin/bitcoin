@@ -223,8 +223,12 @@ public:
         nVersion       = 0;
         hashMerkleRoot = uint256();
         nTime          = 0;
-        proof.pow.nBits = 0;
-        proof.pow.nNonce = 0;
+        if (fSignBlocksGlobal) {
+            proof.script = new CScript();
+        } else {
+            proof.pow.nBits = 0;
+            proof.pow.nNonce = 0;
+        }
     }
 
     CBlockIndex()

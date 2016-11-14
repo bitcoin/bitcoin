@@ -6,6 +6,7 @@
 #include "consensus/header_verify.h"
 #include "consensus/merkle.h"
 #include "chainparams.h"
+#include "keystore.h"
 #include "random.h"
 
 #include "test/test_bitcoin.h"
@@ -48,7 +49,8 @@ static CBlock BuildBlockTestCase() {
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
-    while (!GenerateProof(Params().GetConsensus(), &block));
+    CBasicKeyStore dummyKeystore;
+    while (!GenerateProof(Params().GetConsensus(), &block, &dummyKeystore));
     return block;
 }
 
@@ -290,7 +292,8 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
-    while (!GenerateProof(Params().GetConsensus(), &block));
+    CBasicKeyStore dummyKeystore;
+    while (!GenerateProof(Params().GetConsensus(), &block, &dummyKeystore));
 
     // Test simple header round-trip with only coinbase
     {
