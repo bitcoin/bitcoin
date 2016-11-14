@@ -618,14 +618,15 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     uint256 nHashGovobj = vote.GetParentHash();
     object_m_it it = mapObjects.find(nHashGovobj);
     if(it == mapObjects.end()) {
-        mapOrphanVotes.Insert(nHashGovobj, vote);
-        RequestGovernanceObject(pfrom, nHashGovobj);
-        std::ostringstream ostr;
-        ostr << "CGovernanceManager::ProcessVote -- Unknown parent object "
-                << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
-                << ", governance object hash = " << vote.GetParentHash().ToString() << "\n";
-        LogPrintf(ostr.str().c_str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
+        if(mapOrphanVotes.Insert(nHashGovobj, vote)) {
+            RequestGovernanceObject(pfrom, nHashGovobj);
+            std::ostringstream ostr;
+            ostr << "CGovernanceManager::ProcessVote -- Unknown parent object "
+                 << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
+                 << ", governance object hash = " << vote.GetParentHash().ToString() << "\n";
+            LogPrintf(ostr.str().c_str());
+            exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
+        }
         return false;
     }
 
@@ -814,14 +815,15 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 {
     int nMNIndex = governance.GetMasternodeIndex(vote.GetVinMasternode());
     if(nMNIndex < 0) {
-        mapOrphanVotes.Insert(vote.GetVinMasternode(), vote);
-        if(pfrom) {
-            mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
+        if(mapOrphanVotes.Insert(vote.GetVinMasternode(), vote)) {
+            if(pfrom) {
+                mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
+            }
+            std::ostringstream ostr;
+            ostr << "CGovernanceObject::UpdateVote -- Masternode index not found\n";
+            LogPrintf(ostr.str().c_str());
+            exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         }
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::UpdateVote -- Masternode index not found\n";
-        LogPrintf(ostr.str().c_str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         return false;
     }
 
