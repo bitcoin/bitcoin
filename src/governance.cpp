@@ -223,7 +223,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         CGovernanceException exception;
         if(ProcessVote(pfrom, vote, exception)) {
             LogPrint("gobject", "CGovernanceManager -- Accepted vote\n");
-            vote.Relay();
         }
         else {
             LogPrint("gobject", "CGovernanceManager -- Rejected vote, error = %s\n", exception.what());
@@ -638,6 +637,8 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
             mnodeman.UpdateWatchdogVoteTime(vote.GetVinMasternode());
         }
+
+        vote.Relay();
     }
     return fOk;
 }
