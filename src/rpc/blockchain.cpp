@@ -55,10 +55,11 @@ double GetDifficulty(const CBlockIndex* blockindex)
             blockindex = chainActive.Tip();
     }
 
-    int nShift = (blockindex->proof.pow.nBits >> 24) & 0xff;
+    const uint32_t nBits = Params().GetConsensus().fSignBlockChain ? 0 : blockindex->proof.pow.nBits;
+    int nShift = (nBits >> 24) & 0xff;
 
     double dDiff =
-        (double)0x0000ffff / (double)(blockindex->proof.pow.nBits & 0x00ffffff);
+        (double)0x0000ffff / (double)(nBits & 0x00ffffff);
 
     while (nShift < 29)
     {
@@ -89,8 +90,8 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     result.push_back(Pair("merkleroot", blockindex->hashMerkleRoot.GetHex()));
     result.push_back(Pair("time", (int64_t)blockindex->nTime));
     result.push_back(Pair("mediantime", (int64_t)blockindex->GetMedianTimePast()));
-    result.push_back(Pair("nonce", (uint64_t)blockindex->proof.pow.nNonce));
-    result.push_back(Pair("bits", strprintf("%08x", blockindex->proof.pow.nBits)));
+    result.push_back(Pair("nonce", (uint64_t)(Params().GetConsensus().fSignBlockChain ? 0 : blockindex->proof.pow.nNonce)));
+    result.push_back(Pair("bits", strprintf("%08x", Params().GetConsensus().fSignBlockChain ? 0 : blockindex->proof.pow.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 
@@ -133,8 +134,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.GetBlockTime()));
     result.push_back(Pair("mediantime", (int64_t)blockindex->GetMedianTimePast()));
-    result.push_back(Pair("nonce", (uint64_t)block.proof.pow.nNonce));
-    result.push_back(Pair("bits", strprintf("%08x", block.proof.pow.nBits)));
+    result.push_back(Pair("nonce", (uint64_t)(Params().GetConsensus().fSignBlockChain ? 0 : block.proof.pow.nNonce)));
+    result.push_back(Pair("bits", strprintf("%08x", Params().GetConsensus().fSignBlockChain ? 0 : block.proof.pow.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 

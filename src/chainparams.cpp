@@ -16,7 +16,7 @@
 
 #include "chainparamsseeds.h"
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, bool fSignBlock)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
@@ -28,9 +28,13 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
     CBlock genesis;
     genesis.nTime    = nTime;
-    genesis.proof.pow.nBits    = nBits;
-    genesis.proof.pow.nNonce   = nNonce;
     genesis.nVersion = nVersion;
+    if (fSignBlock) {
+        genesis.proof.script = new CScript();
+    } else {
+        genesis.proof.pow.nBits = nBits;
+        genesis.proof.pow.nNonce = nNonce;
+    }
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
@@ -52,7 +56,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 {
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, false);
 }
 
 void CChainParams::UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
@@ -86,6 +90,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
+        consensus.fSignBlockChain = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -190,6 +195,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.fSignBlockChain = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -278,6 +284,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.fSignBlockChain = false;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -335,6 +342,15 @@ public:
     }
 };
 
+static CScript StrHexToScript(std::string strScript)
+{
+    if (!strScript.empty()) {
+        const std::vector<unsigned char> scriptData = ParseHex(strScript);
+        return CScript(scriptData.begin(), scriptData.end());
+    }
+    return CScript(OP_TRUE);
+}
+
 /**
  * Custom params for testing.
  */
@@ -357,6 +373,9 @@ class CCustomParams : public CChainParams {
         consensus.powLimit = uint256S(argsMan.GetArg("-con_powlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
         consensus.BIP34Hash = uint256S(argsMan.GetArg("-con_bip34hash", "0x0"));
         consensus.nMinimumChainWork = uint256S(argsMan.GetArg("-con_nminimumchainwork", "0x0"));
+        consensus.fSignBlockChain = argsMan.GetBoolArg("-con_fsignblockchain", false);
+        fSignBlocksGlobal = consensus.fSignBlockChain;
+        consensus.blocksignScript = StrHexToScript(argsMan.GetArg("-con_signblockscript", "51")); // OP_TRUE == 51
 
         nDefaultPort = argsMan.GetArg("-ndefaultport", 18444);
         nPruneAfterHeight = argsMan.GetArg("-npruneafterheight", 1000);
@@ -397,7 +416,8 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
 
         UpdateFromArgs(argsMan);
-        genesis = CreateGenesisBlock(strNetworkID.c_str(), CScript(OP_TRUE), 1296688602, 2, 0x207fffff, 1, 50 * COIN);
+        const std::string timestampStr = std::string(strNetworkID + argsMan.GetArg("-con_signblockscript", ""));
+        genesis = CreateGenesisBlock(timestampStr.c_str(), CScript(OP_TRUE), 1296688602, 2, 0x207fffff, 1, 50 * COIN, consensus.fSignBlockChain);
         consensus.hashGenesisBlock = genesis.GetHash();
     }
 };
