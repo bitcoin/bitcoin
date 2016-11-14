@@ -223,7 +223,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         CGovernanceException exception;
         if(ProcessVote(pfrom, vote, exception)) {
             LogPrint("gobject", "CGovernanceManager -- Accepted vote\n");
-            vote.Relay();
         }
         else {
             LogPrint("gobject", "CGovernanceManager -- Rejected vote, error = %s\n", exception.what());
@@ -619,14 +618,18 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     uint256 nHashGovobj = vote.GetParentHash();
     object_m_it it = mapObjects.find(nHashGovobj);
     if(it == mapObjects.end()) {
-        mapOrphanVotes.Insert(nHashGovobj, vote);
-        RequestGovernanceObject(pfrom, nHashGovobj);
         std::ostringstream ostr;
         ostr << "CGovernanceManager::ProcessVote -- Unknown parent object "
-                << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
-                << ", governance object hash = " << vote.GetParentHash().ToString() << "\n";
-        LogPrintf(ostr.str().c_str());
+             << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
+             << ", governance object hash = " << vote.GetParentHash().ToString() << "\n";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
+        if(mapOrphanVotes.Insert(nHashGovobj, vote)) {
+            RequestGovernanceObject(pfrom, nHashGovobj);
+            LogPrintf(ostr.str().c_str());
+        }
+        else {
+            LogPrint("gobject", ostr.str().c_str());
+        }
         return false;
     }
 
@@ -638,6 +641,8 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
             mnodeman.UpdateWatchdogVoteTime(vote.GetVinMasternode());
         }
+
+        vote.Relay();
     }
     return fOk;
 }
@@ -813,14 +818,18 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
 {
     int nMNIndex = governance.GetMasternodeIndex(vote.GetVinMasternode());
     if(nMNIndex < 0) {
-        mapOrphanVotes.Insert(vote.GetVinMasternode(), vote);
-        if(pfrom) {
-            mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
-        }
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::UpdateVote -- Masternode index not found\n";
-        LogPrintf(ostr.str().c_str());
+        ostr << "CGovernanceObject::ProcessVote -- Masternode index not found\n";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
+        if(mapOrphanVotes.Insert(vote.GetVinMasternode(), vote)) {
+            if(pfrom) {
+                mnodeman.AskForMN(pfrom, vote.GetVinMasternode());
+            }
+            LogPrintf(ostr.str().c_str());
+        }
+        else {
+            LogPrint("gobject", ostr.str().c_str());
+        }
         return false;
     }
 
@@ -832,14 +841,14 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     vote_signal_enum_t eSignal = vote.GetSignal();
     if(eSignal == VOTE_SIGNAL_NONE) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::UpdateVote -- Vote signal: none" << "\n";
+        ostr << "CGovernanceObject::ProcessVote -- Vote signal: none" << "\n";
         LogPrint("gobject", ostr.str().c_str());
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
         return false;
     }
     if(eSignal > MAX_SUPPORTED_VOTE_SIGNAL) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::UpdateVote -- Unsupported vote signal:" << CGovernanceVoting::ConvertSignalToString(vote.GetSignal()) << "\n";
+        ostr << "CGovernanceObject::ProcessVote -- Unsupported vote signal:" << CGovernanceVoting::ConvertSignalToString(vote.GetSignal()) << "\n";
         LogPrintf(ostr.str().c_str());
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
@@ -853,7 +862,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     int64_t nTimeDelta = nNow - voteInstance.nTime;
     if(nTimeDelta < GOVERNANCE_UPDATE_MIN) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::UpdateVote -- Masternode voting too often "
+        ostr << "CGovernanceObject::ProcessVote -- Masternode voting too often "
                 << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
                 << ", governance object hash = " << GetHash().ToString()
                 << ", time delta = " << nTimeDelta << "\n";
@@ -864,7 +873,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
     if(!vote.IsValid(true)) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::UpdateVote -- Invalid vote "
+        ostr << "CGovernanceObject::ProcessVote -- Invalid vote "
                 << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
                 << ", governance object hash = " << GetHash().ToString()
                 << ", vote hash = " << vote.GetHash().ToString() << "\n";
