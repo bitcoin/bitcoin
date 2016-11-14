@@ -5,13 +5,17 @@ Bitcoin Nulldata integration/staging tree
 
 Note: this is a slightly modified version of Bitcoin Core intended to make working with nulldata easier.
 
+I'll attempt to keep it up to date with Bitcoin Core's master branch.
+
+Intended to be used for apps anchoring to the Bitcoin blockchain via nulldata.
+
 So far only RPC operations have been added:
 
 * getnulldatas - returns nulldatas in a block via hash
 * getmanynulldatas - returns nulldatas in many blocks given two heights (inclusive)
 * sendnulldata - given a hex string will encoded this as nulldata and publish a tx
 
-[![Build Status](https://travis-ci.org/xertrov/bitcoin-nulldata.svg?branch=master)](https://travis-ci.org/xertrov/bitcoin-nulldata)
+[![Build Status](https://travis-ci.org/XertroV/bitcoin-nulldata.svg?branch=master)](https://travis-ci.org/XertroV/bitcoin-nulldata)
 
 https://bitcoincore.org
 
