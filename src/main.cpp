@@ -3509,13 +3509,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     statsClient.gauge("blocks.currentSizeWithWitnessBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION), 1.0f);
     statsClient.gauge("blocks.currentWeight", ::GetBlockWeight(block), 1.0f);
     statsClient.gauge("blocks.currentHeight", chainActive.Height(), 1.0f);
-    // convert chainwork double (in scientific notation) to number sans scientific notation so that statsd can process it
-    std::ostringstream chainwork;
-    chainwork << std::fixed << chainActive.Tip()->nChainWork.getdouble();
-    size_t chainworksize;
-    const char* cwstr = chainwork.str().c_str();
-    sscanf(cwstr, "%zd", &chainworksize);
-    statsClient.gauge("blocks.currentChainWork", chainworksize, 1.0f);
     statsClient.gauge("blocks.currentVersion", block.nVersion, 1.0f);
     statsClient.gauge("blocks.currentNumTransactions", block.vtx.size(), 1.0f);
     statsClient.gauge("blocks.currentSigOps", nSigOps, 1.0f);
