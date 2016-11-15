@@ -696,7 +696,7 @@ int mastercore::MetaDEx_SHUTDOWN_ALLPAIR()
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
             md_Set& indexes = it->second;
             for (md_Set::iterator it = indexes.begin(); it != indexes.end();) {
-                if (it->getDesProperty() > 2 && it->getProperty() > 2) { // no OMNI/TOMNI side to the trade
+                if (it->getDesProperty() > OMNI_PROPERTY_TMSC && it->getProperty() > OMNI_PROPERTY_TMSC) { // no OMNI/TOMNI side to the trade
                     PrintToLog("%s(): REMOVING %s\n", __FUNCTION__, it->ToString());
                     // move from reserve to balance
                     assert(update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE));
