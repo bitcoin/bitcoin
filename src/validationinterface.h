@@ -33,7 +33,7 @@ void UnregisterAllValidationInterfaces();
 class CValidationInterface {
 protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
-    virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) {}
+    virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock, bool validated = true) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void UpdatedTransaction(const uint256 &hash) {}
     virtual void Inventory(const uint256 &hash) {}
@@ -60,7 +60,7 @@ struct CMainSignals {
      * transaction was accepted to mempool, removed from mempool (only when
      * removal was due to conflict from connected block), or appeared in a
      * disconnected block.*/
-    boost::signals2::signal<void (const CTransaction &, const CBlockIndex *pindex, int posInBlock)> SyncTransaction;
+    boost::signals2::signal<void (const CTransaction &, const CBlockIndex *pindex, int posInBlock, bool validated)> SyncTransaction;
     /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */

@@ -184,7 +184,7 @@ public:
     ~MemPoolConflictRemovalTracker() {
         pool.NotifyEntryRemoved.disconnect(boost::bind(&MemPoolConflictRemovalTracker::NotifyEntryRemoved, this, _1, _2));
         for (const auto& tx : conflictedTxs) {
-            GetMainSignals().SyncTransaction(*tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+            GetMainSignals().SyncTransaction(*tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK, true);
         }
         conflictedTxs.clear();
     }
@@ -1007,7 +1007,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
 
-    GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+    GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK, true);
 
     return true;
 }
@@ -2217,7 +2217,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     for (const auto& tx : block.vtx) {
-        GetMainSignals().SyncTransaction(*tx, pindexDelete->pprev, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+        GetMainSignals().SyncTransaction(*tx, pindexDelete->pprev, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK, true);
     }
     return true;
 }
@@ -2525,7 +2525,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
                 assert(pair.second);
                 const CBlock& block = *(pair.second);
                 for (unsigned int i = 0; i < block.vtx.size(); i++)
-                    GetMainSignals().SyncTransaction(*block.vtx[i], pair.first, i);
+                    GetMainSignals().SyncTransaction(*block.vtx[i], pair.first, i, true);
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).

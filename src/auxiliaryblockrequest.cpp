@@ -48,7 +48,8 @@ void CAuxiliaryBlockRequest::processWithPossibleBlock(const std::shared_ptr<cons
         unsigned int cnt = 0;
         for(const auto& tx : currentBlock->vtx)
         {
-            GetMainSignals().SyncTransaction(*tx, pindexRequest, cnt);
+            bool valid = ((pindexRequest->nStatus & BLOCK_VALID_MASK) == BLOCK_VALID_MASK);
+            GetMainSignals().SyncTransaction(*tx, pindexRequest, cnt, valid);
             cnt++;
         }
         this->processedUpToSize++;
