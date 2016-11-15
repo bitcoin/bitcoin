@@ -1849,24 +1849,14 @@ bool CWalletTx::IsTrusted() const
         return true;
     if (nDepth < 0)
         return false;
-    if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+    // Trusted if all inputs are spendable by us
+    if (!bSpendZeroConfChange || !IsAllFromMe(ISMINE_SPENDABLE))
         return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
     if (!InMempool())
         return false;
 
-    // Trusted if all inputs are from us and are in the mempool:
-    BOOST_FOREACH(const CTxIn& txin, tx->vin)
-    {
-        // Transactions not sent by us: not trusted
-        const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
-        if (parent == NULL)
-            return false;
-        const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
-            return false;
-    }
     return true;
 }
 
