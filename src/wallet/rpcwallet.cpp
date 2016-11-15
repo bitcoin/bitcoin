@@ -1821,10 +1821,10 @@ UniValue gettransaction(const JSONRPCRequest& request)
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount nFee = (wtx.IsAllFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
-    if (wtx.IsFromMe(filter))
+    if (wtx.IsAllFromMe(filter))
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
     WalletTxToJSON(wtx, entry);
