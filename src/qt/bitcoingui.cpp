@@ -653,20 +653,16 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 
 void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
-#ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
     QString toolTip = tr("Dash Core client") + " " + networkStyle->getTitleAddText();
     trayIcon->setToolTip(toolTip);
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
     trayIcon->show();
-#endif
-
     notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
 }
 
 void BitcoinGUI::createTrayIconMenu()
 {
-#ifndef Q_OS_MAC
     // return if trayIcon is unset (only on non-Mac OSes)
     if (!trayIcon)
         return;
@@ -676,12 +672,6 @@ void BitcoinGUI::createTrayIconMenu()
 
     connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-#else
-    // Note: On Mac, the dock icon is used to provide the tray's functionality.
-    MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-    dockIconHandler->setMainWindow((QMainWindow *)this);
-    trayIconMenu = dockIconHandler->dockMenu();
-#endif
 
     // Configuration of the tray icon (or dock icon) icon menu
     trayIconMenu->addAction(toggleHideAction);
@@ -702,10 +692,8 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addAction(openConfEditorAction);
     trayIconMenu->addAction(openMNConfEditorAction);
     trayIconMenu->addAction(showBackupsAction);
-#ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
-#endif
 }
 
 #ifndef Q_OS_MAC
