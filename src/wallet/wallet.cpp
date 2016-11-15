@@ -4327,9 +4327,9 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
                     groups.push_back(gmap[dst]);
                     gmap.erase(dst);
                 }
-                gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+                gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsAllFromMe(ISMINE_ALL), ancestors, descendants);
             } else {
-                groups.emplace_back(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+                groups.emplace_back(input_coin, output.nDepth, output.tx->IsAllFromMe(ISMINE_ALL), ancestors, descendants);
             }
         }
     }
