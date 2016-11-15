@@ -1384,7 +1384,7 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, int n
 
     wtx.GetAmounts(listReceived, listSent, nFee, filter);
 
-    bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
+    bool involvesWatchonly = wtx.GetDebit(ISMINE_WATCH_ONLY) > 0;
 
     // Sent
     if ((!listSent.empty() || nFee != 0))
