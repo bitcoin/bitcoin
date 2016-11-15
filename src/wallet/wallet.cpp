@@ -1795,6 +1795,31 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
     return debit;
 }
 
+bool CWalletTx::IsAllFromMe(const isminefilter& filter) const
+{
+    bool all_from_me = false;
+    if (filter == ISMINE_ALL) {
+        if (m_has_all_debits_mine_cached) {
+            all_from_me = m_all_debits_mine_cached;
+        } else {
+            m_all_debits_mine_cached = tx->vin.size() > 0 && pwallet->IsAllFromMe(*tx, ISMINE_ALL);
+            m_has_all_debits_mine_cached = true;
+            all_from_me = m_all_debits_mine_cached;
+        }
+    } else if (filter == ISMINE_SPENDABLE) {
+        if (m_has_all_debits_spendable_cached) {
+            all_from_me = m_all_debits_spendable_cached;
+        } else {
+            m_all_debits_spendable_cached = tx->vin.size() > 0 && pwallet->IsAllFromMe(*tx, ISMINE_SPENDABLE);
+            m_has_all_debits_spendable_cached = true;
+            all_from_me = m_all_debits_spendable_cached;
+        }
+    } else {
+        all_from_me = pwallet->IsAllFromMe(*tx, filter);
+    }
+    return all_from_me;
+}
+
 CAmount CWalletTx::GetCredit(const isminefilter& filter) const
 {
     // Must wait until coinbase is safely deep enough in the chain before valuing it

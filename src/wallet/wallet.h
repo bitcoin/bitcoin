@@ -354,6 +354,8 @@ public:
     mutable bool fAvailableWatchCreditCached;
     mutable bool fChangeCached;
     mutable bool fInMempool;
+    mutable bool m_has_all_debits_mine_cached;
+    mutable bool m_has_all_debits_spendable_cached;
     mutable CAmount nDebitCached;
     mutable CAmount nCreditCached;
     mutable CAmount nImmatureCreditCached;
@@ -363,6 +365,8 @@ public:
     mutable CAmount nImmatureWatchCreditCached;
     mutable CAmount nAvailableWatchCreditCached;
     mutable CAmount nChangeCached;
+    mutable bool m_all_debits_mine_cached;
+    mutable bool m_all_debits_spendable_cached;
 
     CWalletTx(const CWallet* pwalletIn, CTransactionRef arg) : CMerkleTx(std::move(arg))
     {
@@ -388,6 +392,8 @@ public:
         fAvailableWatchCreditCached = false;
         fChangeCached = false;
         fInMempool = false;
+        m_has_all_debits_mine_cached = false;
+        m_has_all_debits_spendable_cached = false;
         nDebitCached = 0;
         nCreditCached = 0;
         nImmatureCreditCached = 0;
@@ -397,6 +403,8 @@ public:
         nAvailableWatchCreditCached = 0;
         nImmatureWatchCreditCached = 0;
         nChangeCached = 0;
+        m_all_debits_mine_cached = false;
+        m_all_debits_spendable_cached = false;
         nOrderPos = -1;
     }
 
@@ -448,6 +456,8 @@ public:
         fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
+        m_has_all_debits_mine_cached = false;
+        m_has_all_debits_spendable_cached = false;
     }
 
     void BindWallet(CWallet *pwalletIn)
@@ -458,6 +468,7 @@ public:
 
     //! filter decides which addresses will count towards the debit
     CAmount GetDebit(const isminefilter& filter) const;
+    bool IsAllFromMe(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CAmount GetImmatureCredit(bool fUseCache=true) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CAmount GetAvailableCredit(bool fUseCache=true, const isminefilter& filter=ISMINE_SPENDABLE) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
