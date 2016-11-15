@@ -551,7 +551,10 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
             CGovernanceObject& govobj = it->second;
 
-            if(govobj.IsSetCachedValid() && (nProp == uint256() || h == nProp)) {
+            std::string strError;
+            if(govobj.IsSetCachedValid() &&
+               (nProp == uint256() || h == nProp) &&
+               govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
                 // Push the inventory budget proposal message over to the other client
                 pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, h));
                 ++nInvCount;
