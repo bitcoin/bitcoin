@@ -62,6 +62,7 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return "Change Issuer Address";
         case MSC_TYPE_NOTIFICATION: return "Notification";
         case OMNICORE_MESSAGE_TYPE_ALERT: return "ALERT";
+        case OMNICORE_MESSAGE_TYPE_DEACTIVATION: return "Feature Deactivation";
         case OMNICORE_MESSAGE_TYPE_ACTIVATION: return "Feature Activation";
 
         default: return "* unknown type *";
@@ -148,6 +149,9 @@ bool CMPTransaction::interpret_Transaction()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return interpret_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
+            return interpret_Deactivation();
 
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             return interpret_Activation();
@@ -628,6 +632,22 @@ bool CMPTransaction::interpret_ChangeIssuer()
     return true;
 }
 
+/** Tx 65533 */
+bool CMPTransaction::interpret_Deactivation()
+{
+    if (pkt_size < 6) {
+        return false;
+    }
+    memcpy(&feature_id, &pkt[4], 2);
+    swapByteOrder16(feature_id);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t      feature id: %d\n", feature_id);
+    }
+
+    return true;
+}
+
 /** Tx 65534 */
 bool CMPTransaction::interpret_Activation()
 {
@@ -749,6 +769,9 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return logicMath_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
+            return logicMath_Deactivation();
 
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             return logicMath_Activation();
@@ -1909,6 +1932,49 @@ int CMPTransaction::logicMath_ChangeIssuer()
     sp.update_block = blockHash;
 
     assert(_my_sps->updateSP(property, sp));
+
+    return 0;
+}
+
+/** Tx 65533 */
+int CMPTransaction::logicMath_Deactivation()
+{
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR -22);
+    }
+
+    // is sender authorized - temporarily use alert auths but ## TO BE MOVED TO FOUNDATION P2SH KEY ##
+    bool authorized = CheckActivationAuthorization(sender);
+
+    PrintToLog("\t          sender: %s\n", sender);
+    PrintToLog("\t      authorized: %s\n", authorized);
+
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not authorized to deactivate features\n", __func__, sender);
+        return (PKT_ERROR -51);
+    }
+
+    // authorized, request feature deactivation
+    bool DeactivationSuccess = DeactivateFeature(feature_id, block);
+
+    if (!DeactivationSuccess) {
+        PrintToLog("%s(): DeactivateFeature failed\n", __func__);
+        return (PKT_ERROR -54);
+    }
+
+    // successful deactivation - did we deactivate the MetaDEx?  If so close out all trades
+    if (feature_id == FEATURE_METADEX) {
+        int closed = MetaDEx_SHUTDOWN();
+    }
+    if (feature_id == FEATURE_TRADEALLPAIRS) {
+        int closed = MetaDEx_SHUTDOWN_ALLPAIR();
+    }
 
     return 0;
 }

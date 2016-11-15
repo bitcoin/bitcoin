@@ -414,6 +414,7 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Omni Core hidden calls - development usage (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
+    { "hidden",                              "omni_senddeactivation",           &omni_senddeactivation,           false,      true,       true },
     { "hidden",                              "omni_sendactivation",             &omni_sendactivation,             false,      true,       true },
     { "hidden",                              "omni_sendalert",                  &omni_sendalert,                  true,       true,       true },
 #endif

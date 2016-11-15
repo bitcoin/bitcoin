@@ -120,6 +120,7 @@ private:
     bool interpret_RevokeTokens();
     bool interpret_ChangeIssuer();
     bool interpret_Activation();
+    bool interpret_Deactivation();
     bool interpret_Alert();
 
     /**
@@ -142,6 +143,7 @@ private:
     int logicMath_RevokeTokens();
     int logicMath_ChangeIssuer();
     int logicMath_Activation();
+    int logicMath_Deactivation();
     int logicMath_Alert();
 
     /**

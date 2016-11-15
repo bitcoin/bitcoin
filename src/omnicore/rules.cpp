@@ -40,6 +40,7 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
       //  ----------------------------------  -------------  -------  ------------------
         { OMNICORE_MESSAGE_TYPE_ALERT,        0xFFFF,        true,    MSC_ALERT_BLOCK    },
         { OMNICORE_MESSAGE_TYPE_ACTIVATION,   0xFFFF,        true,    MSC_ALERT_BLOCK    },
+        { OMNICORE_MESSAGE_TYPE_DEACTIVATION, 0xFFFF,        true,    MSC_ALERT_BLOCK    },
 
         { MSC_TYPE_SIMPLE_SEND,               MP_TX_PKT_V0,  false,   MSC_SEND_BLOCK     },
 
@@ -380,51 +381,40 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
     }
 
     // check feature is recognized and activation is successful
-    std::string featureName;
+    std::string featureName = GetFeatureName(featureId);
     bool supported = OMNICORE_VERSION >= minClientVersion;
     switch (featureId) {
         case FEATURE_CLASS_C:
             MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
-            featureName = "Class C transaction encoding";
         break;
         case FEATURE_METADEX:
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
-            featureName = "Distributed Meta Token Exchange";
         break;
         case FEATURE_BETTING:
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
-            featureName = "Bet transactions";
         break;
         case FEATURE_GRANTEFFECTS:
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
-            featureName = "Remove grant side effects";
         break;
         case FEATURE_DEXMATH:
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
-            featureName = "DEx integer math update";
         break;
         case FEATURE_SENDALL:
             MutableConsensusParams().MSC_SEND_ALL_BLOCK = activationBlock;
-            featureName = "Send All transactions";
         break;
         case FEATURE_SPCROWDCROSSOVER:
             MutableConsensusParams().SPCROWDCROSSOVER_FEATURE_BLOCK = activationBlock;
-            featureName = "Disable crowdsale ecosystem crossovers";
         break;
         case FEATURE_TRADEALLPAIRS:
             MutableConsensusParams().TRADEALLPAIRS_FEATURE_BLOCK = activationBlock;
-            featureName = "Allow trading all pairs on the Distributed Exchange";
         break;
         case FEATURE_FEES:
             MutableConsensusParams().FEES_FEATURE_BLOCK = activationBlock;
-            featureName = "Fee system (inc 0.05% fee from trades of non-Omni pairs)";
         break;
         case FEATURE_STOV1:
             MutableConsensusParams().MSC_STOV1_BLOCK = activationBlock;
-            featureName = "Cross-property Send To Owners";
         break;
         default:
-            featureName = "Unknown feature";
             supported = false;
         break;
     }
@@ -441,6 +431,90 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
     }
 
     return true;
+}
+
+/**
+ * Deactivates a feature immediately, authorization has already been validated.
+ *
+ * Note: There is no notice period for feature deactivation as:
+ *       # It is reserved for emergency use in the event an exploit is found
+ *       # No client upgrade is required
+ *       # No action is required by users
+ */
+bool DeactivateFeature(uint16_t featureId, int transactionBlock)
+{
+    PrintToLog("Immediate feature deactivation requested (ID %d)\n", featureId);
+
+    if (!IsFeatureActivated(featureId, transactionBlock)) {
+        PrintToLog("Feature deactivation of ID %d refused as the feature is not yet live\n", featureId);
+        return false;
+    }
+
+    std::string featureName = GetFeatureName(featureId);
+    switch (featureId) {
+        case FEATURE_CLASS_C:
+            MutableConsensusParams().NULLDATA_BLOCK = 999999;
+        break;
+        case FEATURE_METADEX:
+            MutableConsensusParams().MSC_METADEX_BLOCK = 999999;
+        break;
+        case FEATURE_BETTING:
+            MutableConsensusParams().MSC_BET_BLOCK = 999999;
+        break;
+        case FEATURE_GRANTEFFECTS:
+            MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = 999999;
+        break;
+        case FEATURE_DEXMATH:
+            MutableConsensusParams().DEXMATH_FEATURE_BLOCK = 999999;
+        break;
+        case FEATURE_SENDALL:
+            MutableConsensusParams().MSC_SEND_ALL_BLOCK = 999999;
+        break;
+        case FEATURE_SPCROWDCROSSOVER:
+            MutableConsensusParams().SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
+        break;
+        case FEATURE_TRADEALLPAIRS:
+            MutableConsensusParams().TRADEALLPAIRS_FEATURE_BLOCK = 999999;
+        break;
+        case FEATURE_FEES:
+            MutableConsensusParams().FEES_FEATURE_BLOCK = 999999;
+        break;
+        case FEATURE_STOV1:
+            MutableConsensusParams().MSC_STOV1_BLOCK = 999999;
+        break;
+        default:
+            return false;
+        break;
+    }
+
+    PrintToLog("Feature deactivation of ID %d processed. %s has been disabled.\n", featureId, featureName);
+
+    std::string alertText = strprintf("An emergency deactivation of feature ID %d (%s) has occurred.", featureId, featureName);
+    AddAlert("omnicore", ALERT_BLOCK_EXPIRY, transactionBlock + 1024, alertText);
+    CAlert::Notify(alertText, true);
+
+    return true;
+}
+
+/**
+ * Returns the display name of a feature ID
+ */
+std::string GetFeatureName(uint16_t featureId)
+{
+    switch (featureId) {
+        case FEATURE_CLASS_C: return "Class C transaction encoding";
+        case FEATURE_METADEX: return "Distributed Meta Token Exchange";
+        case FEATURE_BETTING: return "Bet transactions";
+        case FEATURE_GRANTEFFECTS: return "Remove grant side effects";
+        case FEATURE_DEXMATH: return "DEx integer math update";
+        case FEATURE_SENDALL: return "Send All transactions";
+        case FEATURE_SPCROWDCROSSOVER: return "Disable crowdsale ecosystem crossovers";
+        case FEATURE_TRADEALLPAIRS: return "Allow trading all pairs on the Distributed Exchange";
+        case FEATURE_FEES: return "Fee system (inc 0.05% fee from trades of non-Omni pairs)";
+        case FEATURE_STOV1: return "Cross-property Send To Owners";
+
+        default: return "Unknown feature";
+    }
 }
 
 /**

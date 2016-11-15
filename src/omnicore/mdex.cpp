@@ -684,6 +684,54 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
     return rc;
 }
 
+/**
+ * Scans the orderbook and removes every all-pair order
+ */
+int mastercore::MetaDEx_SHUTDOWN_ALLPAIR()
+{
+    int rc = 0;
+    PrintToLog("%s()\n", __FUNCTION__);
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        md_PricesMap& prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set& indexes = it->second;
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end();) {
+                if (it->getDesProperty() > OMNI_PROPERTY_TMSC && it->getProperty() > OMNI_PROPERTY_TMSC) { // no OMNI/TOMNI side to the trade
+                    PrintToLog("%s(): REMOVING %s\n", __FUNCTION__, it->ToString());
+                    // move from reserve to balance
+                    assert(update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE));
+                    assert(update_tally_map(it->getAddr(), it->getProperty(), it->getAmountRemaining(), BALANCE));
+                    indexes.erase(it++);
+                }
+            }
+        }
+    }
+    return rc;
+}
+
+/**
+ * Scans the orderbook and removes every order
+ */
+int mastercore::MetaDEx_SHUTDOWN()
+{
+    int rc = 0;
+    PrintToLog("%s()\n", __FUNCTION__);
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        md_PricesMap& prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set& indexes = it->second;
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end();) {
+                PrintToLog("%s(): REMOVING %s\n", __FUNCTION__, it->ToString());
+                // move from reserve to balance
+                assert(update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE));
+                assert(update_tally_map(it->getAddr(), it->getProperty(), it->getAmountRemaining(), BALANCE));
+                indexes.erase(it++);
+            }
+        }
+    }
+    return rc;
+}
+
 // searches the metadex maps to see if a trade is still open
 // allows search to be optimized if propertyIdForSale is specified
 bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)

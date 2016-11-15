@@ -299,6 +299,7 @@ extern json_spirit::Value omni_createpayload_cancelalltrades(const json_spirit::
 
 /* Omni Core hidden calls - development usage (not shown in help) */
 extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_senddeactivation(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendactivation(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendalert(const json_spirit::Array& params, bool fHelp);
 
