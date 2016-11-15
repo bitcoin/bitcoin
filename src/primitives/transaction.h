@@ -210,12 +210,9 @@ inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion,
             // coinbase is a little special. If you use the same output address in different blocks, you'd quite easy get
             // a duplicate txid since we no longer use the scriptSig. We can't have two TXs with the same
             // txid in the chain, that would break Bitcoin. This code stores the unique data in a CoinbaseMessage token.
-            if (tx.vin.size() == 1 && tx.vin.at(0).prevout.IsNull() && !tx.vin.at(0).scriptSig.empty()) {
-                const CTxIn &in = tx.vin[0];
-                CMFToken msg(Consensus::CoinbaseMessage,
-                             std::vector<char>(in.scriptSig.begin(), in.scriptSig.end()));
-                STORECMF(msg);
-            }
+            const CTxIn &in = tx.vin[0];
+            CMFToken msg(Consensus::CoinbaseMessage, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end()));
+            STORECMF(msg);
         } else {
             for (auto in : tx.vin) {
                 CMFToken hash(Consensus::TxInPrevHash, in.prevout.hash);
@@ -223,6 +220,11 @@ inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion,
                 if (in.prevout.n > 0) {
                     CMFToken index(Consensus::TxInPrevIndex, (uint64_t) in.prevout.n);
                     STORECMF(index);
+                }
+                if ((in.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0) {
+                    const bool timeBased = in.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG; // time, as opposed to block-based
+                    CMFToken lock(timeBased ? Consensus::TxRelativeTimeLock : Consensus::TxRelativeBlockLock, (int) (in.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK));
+                    STORECMF(lock);
                 }
             }
         }
@@ -232,14 +234,6 @@ inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion,
             std::vector<char> script(out.scriptPubKey.begin(), out.scriptPubKey.end());
             token = CMFToken(Consensus::TxOutScript, script);
             STORECMF(token);
-        }
-        for (auto in : tx.vin) {
-            if ((in.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0) {
-                const bool timeBased = in.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG; // time, as opposed to block-based
-                CMFToken lock(timeBased ? Consensus::LockByTime : Consensus::LockByBlock, (uint64_t) (in.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK));
-                STORECMF(lock);
-                break;
-            }
         }
         if (withSignatures) {
             if (!isCoinbaseTx) {
@@ -327,7 +321,8 @@ public:
     void Serialize(Stream& s, int nType, int version) const {
         if (!txData.empty()) {
             s.write(&txData[0], txData.size());
-            if (!(vin.size() == 1 && vin.at(0).prevout.IsNull() && !vin.at(0).scriptSig.empty())) { // is not coinbase-tx
+            const bool isCoinbaseTx = vin.size() == 1 && vin.at(0).prevout.IsNull() && !vin.at(0).scriptSig.empty();
+            if (!isCoinbaseTx) {
                 for (auto in : vin) {
                     STORECMF(CMFToken(Consensus::TxInScript, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end())));
                 }

@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             map<COutPoint, CScript> mapprevOutScriptPubKeys;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
-	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
-	        const UniValue& input = inputs[inpIdx];
+            for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+                const UniValue& input = inputs[inpIdx];
                 if (!input.isArray())
                 {
                     fValid = false;
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(test_version4)
 {
     TxUtils::allowNewTransactions();
     // 10 random transactions, make sure that save/load works.
-    for (int i = 0; i < 12; ++i) {
+    for (int i = 0; i < 14; ++i) {
         CMutableTransaction tx1;
         if (i < 2) {
             tx1.vin.push_back(CTxIn()); // do what a coinbase tx does, empty input.
@@ -425,8 +425,17 @@ BOOST_AUTO_TEST_CASE(test_version4)
         } else {
             TxUtils::RandomTransaction(tx1, TxUtils::SingleOutput);
             // clean them a little because nSequence has some double meanings.
-            for (unsigned int in = 1; in < tx1.vin.size(); ++in) { // only keep the sequenc on the first one.
-                tx1.vin[in].nSequence = CTxIn::SEQUENCE_FINAL;
+
+            if (i < 4) { // test TxRelativeBlockLock // TxRelativeTimeLock
+                for (CTxIn &in : tx1.vin) {
+                    in.nSequence = insecure_rand() & CTxIn::SEQUENCE_LOCKTIME_MASK;
+                    if (i == 2)
+                        in.nSequence += CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG; // TxRelativeTimeLock
+                }
+            } else {
+                for (unsigned int in = 1; in < tx1.vin.size(); ++in) { // only keep the sequenc on the first one.
+                    tx1.vin[in].nSequence = CTxIn::SEQUENCE_FINAL;
+                }
             }
         }
         tx1.nVersion = 4;
@@ -606,9 +615,6 @@ BOOST_AUTO_TEST_CASE(test_hashtype_version4)
         BOOST_CHECK(SignatureHash(copyOfTx1.vin[0].scriptSig, copyOfTx1, 0, amount, SIGHASH_NONE) != a);
         BOOST_CHECK(SignatureHash(copyOfTx1.vin[1].scriptSig, copyOfTx1, 1, amount, SIGHASH_NONE) != b);
     }
-
-
-
 
     TxUtils::disallowNewTransactions();
 }

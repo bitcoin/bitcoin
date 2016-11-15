@@ -13,10 +13,9 @@ enum TxMessageFields {
     TxInScript,         // bytearray
     TxOutValue,         // PositiveNumber (in satoshis)
     TxOutScript,        // bytearray
-    LockByBlock,        // PositiveNumber
-    LockByTime,         // PositiveNumber
-    CoinbaseMessage,    // Bytearray. Max 100 bytes.
-    ScriptVersion       // PositiveNumber
+    TxRelativeBlockLock,// PositiveNumber
+    TxRelativeTimeLock, // PositiveNumber
+    CoinbaseMessage     // Bytearray. Max 100 bytes.
 };
 }
 
