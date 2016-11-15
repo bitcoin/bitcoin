@@ -39,17 +39,12 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.vout.resize(nInput+1);
     tx.vout[nInput].nValue = nValue;
-    if (fIsFromMe) {
-        // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
-        // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
+    if (!fIsFromMe) {
+        // IsAllFromMe() returns true if vin.empty()
+        // so stop vin being empty if we don't want these coins to be from us
         tx.vin.resize(1);
     }
     std::unique_ptr<CWalletTx> wtx(new CWalletTx(&wallet, MakeTransactionRef(std::move(tx))));
-    if (fIsFromMe)
-    {
-        wtx->fDebitCached = true;
-        wtx->nDebitCached = 1;
-    }
     COutput output(wtx.get(), nInput, nAge, true, true);
     vCoins.push_back(output);
     wtxn.emplace_back(std::move(wtx));
