@@ -572,7 +572,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     }
 
     pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nInvCount);
-    LogPrintf("CGovernanceManager::Sync -- sent %d items\n", nInvCount);
+    LogPrintf("CGovernanceManager::Sync -- sent %d items, peer=%d\n", nInvCount, pfrom->id);
 }
 
 void CGovernanceManager::SyncParentObjectByVote(CNode* pfrom, const CGovernanceVote& vote)
