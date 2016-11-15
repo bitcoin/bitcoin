@@ -5253,12 +5253,6 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
 
     if (strCommand == NetMsgType::VERSION)
     {
-        // Feeler connections exist only to verify if address is online.
-        if (pfrom->fFeeler) {
-            assert(pfrom->fInbound == false);
-            pfrom->fDisconnect = true;
-        }
-
         // Each connection can only send one version message
         if (pfrom->nVersion != 0)
         {
@@ -5373,6 +5367,12 @@ bool ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t
         int64_t nTimeOffset = nTime - GetTime();
         pfrom->nTimeOffset = nTimeOffset;
         AddTimeData(pfrom->addr, nTimeOffset);
+
+        // Feeler connections exist only to verify if address is online.
+        if (pfrom->fFeeler) {
+            assert(pfrom->fInbound == false);
+            pfrom->fDisconnect = true;
+        }
     }
 
 
