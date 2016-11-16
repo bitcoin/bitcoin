@@ -91,7 +91,7 @@ private:
     bool hadNoDependencies;    //!< Not dependent on any other txs when it entered the mempool
     CAmount inChainInputValue; //!< Sum of all txin values that are already in blockchain
     bool spendsCoinbase;       //!< keep track of transactions that spend a coinbase
-    int64_t sigOpCost;         //!< Total sigop cost
+    int64_t sigOpsWeight;      //!< Total sigops weight
     int64_t feeDelta;          //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;     //!< Track the height and time at which tx was final
 
@@ -108,13 +108,13 @@ private:
     uint64_t nCountWithAncestors;
     uint64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
-    int64_t nSigOpCostWithAncestors;
+    int64_t nSigOpsWeightWithAncestors;
 
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                     bool poolHasNoInputsOf, CAmount _inChainInputValue, bool spendsCoinbase,
-                    int64_t nSigOpsCost, LockPoints lp);
+                    int64_t nSigOpsWeight, LockPoints lp);
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return *this->tx; }
@@ -130,7 +130,7 @@ public:
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
-    int64_t GetSigOpCost() const { return sigOpCost; }
+    int64_t GetSigOpsWeight() const { return sigOpsWeight; }
     int64_t GetModifiedFee() const { return nFee + feeDelta; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
@@ -154,7 +154,7 @@ public:
     uint64_t GetCountWithAncestors() const { return nCountWithAncestors; }
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
-    int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
+    int64_t GetSigOpsWeightWithAncestors() const { return nSigOpsWeightWithAncestors; }
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
 };
@@ -177,18 +177,18 @@ struct update_descendant_state
 
 struct update_ancestor_state
 {
-    update_ancestor_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount, int64_t _modifySigOpsCost) :
-        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsCost(_modifySigOpsCost)
+    update_ancestor_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount, int64_t _modifySigOpsWeight) :
+        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsWeight(_modifySigOpsWeight)
     {}
 
     void operator() (CTxMemPoolEntry &e)
-        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsCost); }
+        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsWeight); }
 
     private:
         int64_t modifySize;
         CAmount modifyFee;
         int64_t modifyCount;
-        int64_t modifySigOpsCost;
+        int64_t modifySigOpsWeight;
 };
 
 struct update_fee_delta

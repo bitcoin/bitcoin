@@ -1081,7 +1081,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags)
+int64_t GetTransactionSigOpsWeight(const CTransaction& tx, const CCoinsViewCache& inputs, int flags)
 {
     int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
 
@@ -1324,7 +1324,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         if (!tx.wit.IsNull() && fRequireStandard && !IsWitnessStandard(tx, view))
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-witness-nonstandard", true);
 
-        int64_t nSigOpsCost = GetTransactionSigOpCost(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
+        int64_t nSigOpsWeight = GetTransactionSigOpsWeight(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
@@ -1347,17 +1347,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             }
         }
 
-        CTxMemPoolEntry entry(tx, nFees, nAcceptTime, dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOpsCost, lp);
+        CTxMemPoolEntry entry(tx, nFees, nAcceptTime, dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOpsWeight, lp);
         unsigned int nSize = entry.GetTxSize();
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
-        // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-        // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
+        // itself can contain sigops, MAX_STANDARD_TX_SIGOPS_WEIGHT is less than
+        // MAX_BLOCK_SIGOPS_WEIGHT; we still consider this an invalid rather than
         // merely non-standard transaction.
-        if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
+        if (nSigOpsWeight > MAX_STANDARD_TX_SIGOPS_WEIGHT)
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
-                strprintf("%d", nSigOpsCost));
+                strprintf("%d", nSigOpsWeight));
 
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
         if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
@@ -2465,7 +2465,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     std::vector<int> prevheights;
     CAmount nFees = 0;
     int nInputs = 0;
-    int64_t nSigOpsCost = 0;
+    int64_t nSigOpsWeight = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
@@ -2509,12 +2509,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             }
         }
 
-        // GetTransactionSigOpCost counts 3 types of sigops:
+        // GetTransactionSigOpsWeight counts 3 types of sigops:
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
-        nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
+        nSigOpsWeight += GetTransactionSigOpsWeight(tx, view, flags);
+        if (nSigOpsWeight > MAX_BLOCK_SIGOPS_WEIGHT)
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -3471,7 +3471,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     {
         nSigOps += GetLegacySigOpCount(tx);
     }
-    if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST)
+    if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_WEIGHT)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     if (fCheckPOW && fCheckMerkleRoot)
