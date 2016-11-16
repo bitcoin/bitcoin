@@ -120,6 +120,8 @@ private:
 
     count_m_t mapSeenGovernanceObjects;
 
+    object_m_t mapMasternodeOrphanObjects;
+
     object_ref_cache_t mapVoteToObject;
 
     vote_cache_t mapInvalidVotes;
@@ -251,6 +253,8 @@ public:
     }
 
     void CheckMasternodeOrphanVotes();
+
+    void CheckMasternodeOrphanObjects();
 
 private:
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash);
@@ -480,6 +484,8 @@ public:
     // CORE OBJECT FUNCTIONS
 
     bool IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral);
+
+    bool IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool& fMissingMasternode, bool fCheckCollateral);
 
     /// Check the collateral transaction for the budget proposal/finalized budget
     bool IsCollateralValid(std::string& strError);

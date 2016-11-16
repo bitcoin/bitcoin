@@ -35,6 +35,7 @@ CGovernanceManager::CGovernanceManager()
       nCachedBlockHeight(0),
       mapObjects(),
       mapSeenGovernanceObjects(),
+      mapMasternodeOrphanObjects(),
       mapVoteToObject(MAX_CACHE_SIZE),
       mapInvalidVotes(MAX_CACHE_SIZE),
       mapOrphanVotes(MAX_CACHE_SIZE),
@@ -170,7 +171,15 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         std::string strError = "";
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
-        if(!govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
+        bool fMasternodeMissing = false;
+        bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, fMasternodeMissing, true);
+
+        if(fMasternodeMissing) {
+            mapMasternodeOrphanObjects.insert(std::make_pair(govobj.GetHash(), govobj));
+            LogPrint("gobject", "CGovernanceManager -- Missing masternode for: %s\n", strHash);
+            // fIsValid must also be false here so we will return early in the next if block
+        }
+        if(!fIsValid) {
             mapSeenGovernanceObjects.insert(std::make_pair(nHash, SEEN_OBJECT_ERROR_INVALID));
             LogPrintf("MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
             return;
@@ -542,7 +551,10 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
             CGovernanceObject& govobj = it->second;
 
-            if(govobj.IsSetCachedValid() && (nProp == uint256() || h == nProp)) {
+            std::string strError;
+            if(govobj.IsSetCachedValid() &&
+               (nProp == uint256() || h == nProp) &&
+               govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
                 // Push the inventory budget proposal message over to the other client
                 pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, h));
                 ++nInvCount;
@@ -560,7 +572,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     }
 
     pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nInvCount);
-    LogPrintf("CGovernanceManager::Sync -- sent %d items\n", nInvCount);
+    LogPrintf("CGovernanceManager::Sync -- sent %d items, peer=%d\n", nInvCount, pfrom->id);
 }
 
 void CGovernanceManager::SyncParentObjectByVote(CNode* pfrom, const CGovernanceVote& vote)
@@ -652,6 +664,37 @@ void CGovernanceManager::CheckMasternodeOrphanVotes()
     LOCK(cs);
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         it->second.CheckOrphanVotes();
+    }
+}
+
+void CGovernanceManager::CheckMasternodeOrphanObjects()
+{
+    LOCK(cs);
+    object_m_it it = mapMasternodeOrphanObjects.begin();
+    while(it != mapMasternodeOrphanObjects.end()) {
+        CGovernanceObject& govobj = it->second;
+
+        string strError;
+        bool fMasternodeMissing = false;
+        bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, fMasternodeMissing, true);
+        if(!fIsValid) {
+            if(!fMasternodeMissing) {
+                mapMasternodeOrphanObjects.erase(it++);
+            }
+            else {
+                ++it;
+                continue;
+            }
+        }
+
+        if(AddGovernanceObject(govobj)) {
+            LogPrintf("CGovernanceManager::CheckMasternodeOrphanObjects -- %s new\n", govobj.GetHash().ToString());
+            govobj.Relay();
+            mapMasternodeOrphanObjects.erase(it++);
+        }
+        else {
+            ++it;
+        }
     }
 }
 
@@ -1113,12 +1156,21 @@ void CGovernanceObject::UpdateLocalValidity(const CBlockIndex *pCurrentBlockInde
 
 bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral)
 {
+    bool fMissingMasternode = false;
+
+    return IsValidLocally(pindex, strError, fMissingMasternode, fCheckCollateral);
+}
+
+bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool& fMissingMasternode, bool fCheckCollateral)
+{
+    fMissingMasternode = false;
     if(!pindex) {
         strError = "Tip is NULL";
         return true;
     }
 
     if(fUnparsable) {
+        strError = "Object data unparseable";
         return false;
     }
 
@@ -1146,6 +1198,7 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
             std::string strOutpoint = vinMasternode.prevout.ToStringShort();
             masternode_info_t infoMn = mnodeman.GetMasternodeInfo(vinMasternode);
             if(!infoMn.fInfoValid) {
+                fMissingMasternode = true;
                 strError = "Masternode not found: " + strOutpoint;
                 return false;
             }
