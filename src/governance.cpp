@@ -683,8 +683,8 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
             }
             else {
                 ++it;
-                continue;
             }
+            continue;
         }
 
         if(AddGovernanceObject(govobj)) {
