@@ -180,4 +180,56 @@ bool CheckActivationAuthorization(const std::string& sender)
     return fAuthorized;
 }
 
+/**
+ * Determines whether the sender is an authorized source to deactivate features.
+ *
+ * The custom options "-omniactivationallowsender=source" and "-omniactivationignoresender=source" are also applied to deactivations.
+ */
+
+bool CheckDeactivationAuthorization(const std::string& sender)
+{
+    std::set<std::string> whitelisted;
+
+    // Mainnet - 3 out of 5 signatures required from developers & board members
+    /*
+    "address" : "34kwkVRSvFVEoUwcQSgpQ4ZUasuZ54DJLD",
+    "script" : "multisig",
+    "sigsrequired" : 3,
+    "addresses" : [
+      "1883ZMsRJfzKNozUBJBTCxQ7EaiNioNDWz", // Zathras - zathras@omni.foundation - Project maintainer, developer
+      "1HHv91gRxqBzQ3gydMob3LU8hqXcWoLfvd", // dexx - dexx@bitwatch.co - Project maintainer, developer
+      "1oyvGmABkeFRUECn2t8DEZPes6F7Gsc9T", // J.R. Willett - jr@omni.foundation - Founder and Board Member
+      "17xr7sbehYY4YSZX9yuJe6gK9rrdRrZx26", // Craig Sellars - craig@omni.foundation - Technologist and Board Member
+      "16oDZYCspsczfgKXVj3xyvsxH21NpEj94F" // Adam Chamely - adam@omni.foundation - Project maintainer, developer
+    ],
+    */
+    whitelisted.insert("34kwkVRSvFVEoUwcQSgpQ4ZUasuZ54DJLD");
+
+    // Testnet / Regtest
+    // use -omniactivationallowsender for testing
+
+    // Add manually whitelisted sources - custom sources affect both activation and deactivation
+    if (mapArgs.count("-omniactivationallowsender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-omniactivationallowsender"];
+
+        for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
+            whitelisted.insert(*it);
+        }
+    }
+
+    // Remove manually ignored sources - custom sources affect both activation and deactivation
+    if (mapArgs.count("-omniactivationignoresender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-omniactivationignoresender"];
+
+        for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
+            whitelisted.erase(*it);
+        }
+    }
+
+    bool fAuthorized = (whitelisted.count(sender) ||
+                        whitelisted.count("any"));
+
+    return fAuthorized;
+}
+
 }

@@ -21,6 +21,8 @@ struct FeatureActivation
 
 /** Determines whether the sender is an authorized source for Omni Core activations. */
 bool CheckActivationAuthorization(const std::string& sender);
+/** Determines whether the sender is an authorized source to deactivate features. */
+bool CheckDeactivationAuthorization(const std::string& sender);
 /** Returns the vector of pending activations */
 std::vector<FeatureActivation> GetPendingActivations();
 /** Returns the vector of completed activations */
