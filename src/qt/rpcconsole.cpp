@@ -151,9 +151,10 @@ public:
  * @param[out]   result      stringified Result from the executed command(chain)
  * @param[in]    strCommand  Command line to split
  * @param[in]    fExecute    set true if you want the command to be executed
+ * @param[out]   pstrFilteredOut  Command line, filtered to remove any sensitive data
  */
 
-bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute)
+bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut)
 {
     std::vector< std::vector<std::string> > stack;
     stack.push_back(std::vector<std::string>());
@@ -173,12 +174,16 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
     } state = STATE_EATING_SPACES;
     std::string curarg;
     UniValue lastResult;
+    unsigned nDepthInsideSensitive = 0;
+    size_t filter_begin_pos = 0;
+    std::vector<std::pair<size_t, size_t>> filter_ranges;
 
     std::string strCommandTerminated = strCommand;
     if (strCommandTerminated.back() != '\n')
         strCommandTerminated += "\n";
-    for(char ch: strCommandTerminated)
+    for (size_t chpos = 0; chpos < strCommandTerminated.size(); ++chpos)
     {
+        char ch = strCommandTerminated[chpos];
         switch(state)
         {
             case STATE_COMMAND_EXECUTED_INNER:
@@ -222,6 +227,13 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                         breakParsing = false;
 
                         // pop the stack and return the result to the current command arguments
+                        if (nDepthInsideSensitive) {
+                            if (!--nDepthInsideSensitive) {
+                                assert(filter_begin_pos);
+                                filter_ranges.push_back(std::make_pair(filter_begin_pos, chpos));
+                                filter_begin_pos = 0;
+                            }
+                        }
                         stack.pop_back();
 
                         // don't stringify the json in case of a string to avoid doublequotes
@@ -260,7 +272,12 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                     if (state == STATE_ARGUMENT)
                     {
                         if (ch == '(' && stack.size() && stack.back().size() > 0)
+                        {
+                            if (nDepthInsideSensitive) {
+                                ++nDepthInsideSensitive;
+                            }
                             stack.push_back(std::vector<std::string>());
+                        }
 
                         // don't allow commands after executed commands on baselevel
                         if (!stack.size())
@@ -291,6 +308,11 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
 
                     else if(state == STATE_ARGUMENT) // Space ends argument
                     {
+                        // This is the only place where the method name should get pushed (as the first stack item)
+                        if ((!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(curarg), Qt::CaseInsensitive)) {
+                            nDepthInsideSensitive = 1;
+                            filter_begin_pos = chpos;
+                        }
                         stack.back().push_back(curarg);
                         curarg.clear();
                     }
@@ -326,6 +348,12 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                 if(ch != '"' && ch != '\\') curarg += '\\'; // keep '\' for everything but the quote and '\' itself
                 curarg += ch; state = STATE_DOUBLEQUOTED;
                 break;
+        }
+    }
+    if (pstrFilteredOut) {
+        *pstrFilteredOut = strCommand;
+        for (auto i = filter_ranges.rbegin(); i != filter_ranges.rend(); ++i) {
+            pstrFilteredOut->replace(i->first, i->second - i->first, "...");
         }
     }
     switch(state) // final state
