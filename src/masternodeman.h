@@ -194,7 +194,7 @@ public:
     void Check();
 
     /// Check all Masternodes and remove inactive
-    void CheckAndRemove(bool fForceExpiredRemoval = false);
+    void CheckAndRemove();
 
     /// Clear Masternode vector
     void Clear();
@@ -296,8 +296,6 @@ public:
     int size() { return vMasternodes.size(); }
 
     std::string ToString() const;
-
-    void Remove(CTxIn vin);
 
     int GetEstimatedMasternodes(int nBlock);
 

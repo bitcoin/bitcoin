@@ -167,7 +167,7 @@ void CMasternodeMan::Check()
     }
 }
 
-void CMasternodeMan::CheckAndRemove(bool fForceExpiredRemoval)
+void CMasternodeMan::CheckAndRemove()
 {
     LogPrintf("CMasternodeMan::CheckAndRemove\n");
 
@@ -182,9 +182,7 @@ void CMasternodeMan::CheckAndRemove(bool fForceExpiredRemoval)
             bool fRemove =  // If it's marked to be removed from the list by CMasternode::Check for whatever reason ...
                     (*it).nActiveState == CMasternode::MASTERNODE_REMOVE ||
                     // or collateral was spent ...
-                    (*it).nActiveState == CMasternode::MASTERNODE_OUTPOINT_SPENT ||
-                    // or we were asked to remove exired entries ...
-                    (fForceExpiredRemoval && (*it).nActiveState == CMasternode::MASTERNODE_EXPIRED);
+                    (*it).nActiveState == CMasternode::MASTERNODE_OUTPOINT_SPENT;
 
             if (fRemove) {
                 LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).GetStatus(), (*it).addr.ToString(), size() - 1);
@@ -1232,21 +1230,6 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
         }
         LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score incresed for %d fake masternodes, addr %s\n",
                     nCount, pnode->addr.ToString());
-    }
-}
-
-void CMasternodeMan::Remove(CTxIn vin)
-{
-    LOCK(cs);
-
-    std::vector<CMasternode>::iterator it = vMasternodes.begin();
-    while(it != vMasternodes.end()) {
-        if((*it).vin == vin) {
-            LogPrint("masternode", "CMasternodeMan::Remove -- Removing Masternode: %s  addr=%s, %i now\n", vin.prevout.ToStringShort(), (*it).addr.ToString(), size() - 1);
-            vMasternodes.erase(it);
-            break;
-        }
-        ++it;
     }
 }
 
