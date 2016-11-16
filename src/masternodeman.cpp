@@ -295,6 +295,8 @@ void CMasternodeMan::Clear()
     mapSeenMasternodePing.clear();
     nDsqCount = 0;
     nLastWatchdogVoteTime = 0;
+    indexMasternodes.Clear();
+    indexMasternodesOld.Clear();
 }
 
 int CMasternodeMan::CountMasternodes(int nProtocolVersion)
