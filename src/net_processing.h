@@ -93,6 +93,8 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
  */
 void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
 void ProcessPriorityRequests(const std::shared_ptr<CBlock> block);
+bool FlushPriorityDownloads();
+size_t CountPriorityDownloads();
 
 void SetAutoRequestBlocks(bool state);
 bool isAutoRequestingBlocks();

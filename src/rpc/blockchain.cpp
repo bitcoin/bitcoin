@@ -16,6 +16,7 @@
 #include <core_io.h>
 #include <index/txindex.h>
 #include <key_io.h>
+#include <net_processing.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -90,6 +91,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     if (chainActive.Contains(blockindex))
         confirmations = chainActive.Height() - blockindex->nHeight + 1;
     result.pushKV("confirmations", confirmations);
+    result.pushKV("validated", ((blockindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_SCRIPTS));
     result.pushKV("height", blockindex->nHeight);
     result.pushKV("version", blockindex->nVersion);
     result.pushKV("versionHex", strprintf("%08x", blockindex->nVersion));
@@ -120,6 +122,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     if (chainActive.Contains(blockindex))
         confirmations = chainActive.Height() - blockindex->nHeight + 1;
     result.pushKV("confirmations", confirmations);
+    result.pushKV("validated", (blockindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_SCRIPTS);
     result.pushKV("strippedsize", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
     result.pushKV("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION));
     result.pushKV("weight", (int)::GetBlockWeight(block));
@@ -691,6 +694,7 @@ static UniValue getblockheader(const JSONRPCRequest& request)
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
             "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+            "  \"validated\" : n,       (boolean) True if the block has been validated\n"
             "  \"height\" : n,          (numeric) The block height or index\n"
             "  \"version\" : n,         (numeric) The block version\n"
             "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
@@ -1985,6 +1989,60 @@ public:
     }
 };
 
+UniValue requestblocks(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "requestblocks ( add | flush | status ) ( [\"hash_0\", \"hash_1\", ...] )\n"
+            "\nPriorize blocks downloads.\n"
+            "\nArguments:\n"
+            "1. action            (string, required) the action to execute\n"
+            "                                        add  = add new blocks to the priority download\n"
+            "                                        flush = flush the queue (blocks in-flight will still be downloaded)\n"
+            "                                        status = get info about the queue\n"
+            "2. blockhashes       (array, optional) the hashes of the blocks to download\n"
+            "\nResult:\n"
+            "   add: <null>\n"
+            "   flush: <true|false> (if the the queue wasn't empty)\n"
+            "   status: {\"count\": \"<amount of blocks in the queue>\"}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("requestblocks", "add, \"'[\"<blockhash>\"]'\"")
+            + HelpExampleRpc("requestblocks", "add, \"'[\"<blockhash>\"]'\"")
+            );
+
+    if (request.params[0].get_str() == "flush") {
+        return UniValue(FlushPriorityDownloads());
+    }
+    else if (request.params[0].get_str() == "status") {
+        UniValue ret(UniValue::VOBJ);
+        ret.push_back(Pair("count", (uint64_t)CountPriorityDownloads()));
+        return ret;
+    }
+    else if (request.params[0].get_str() == "add") {
+        if (request.params[1].isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing blocks array");
+        }
+        std::vector<const CBlockIndex*> blocksToDownload;
+        {
+            LOCK(cs_main); //mapBlockIndex
+            for (const UniValue& strHashU : request.params[1].get_array().getValues()) {
+                uint256 hash(uint256S(strHashU.get_str()));
+                BlockMap::const_iterator mi = mapBlockIndex.find(hash);
+                if (mi == mapBlockIndex.end()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+                }
+                blocksToDownload.push_back(mi->second);
+            }
+        }
+
+        AddPriorityDownload(blocksToDownload);
+        return NullUniValue;
+    }
+    else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unkown action");
+    }
+}
+
 UniValue scantxoutset(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -2159,8 +2217,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
     { "blockchain",         "savemempool",            &savemempool,            {} },
     { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
-
     { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
+    { "blockchain",         "requestblocks",          &requestblocks,          {"action", "blockhashes"} },
     { "blockchain",         "scantxoutset",           &scantxoutset,           {"action", "scanobjects"} },
 
     /* Not shown in help */

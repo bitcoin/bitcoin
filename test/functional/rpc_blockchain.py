@@ -214,6 +214,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(header['hash'], besthash)
         assert_equal(header['height'], 200)
         assert_equal(header['confirmations'], 1)
+        assert_equal(header['validated'], True)
         assert_equal(header['previousblockhash'], secondbesthash)
         assert_is_hex_string(header['chainwork'])
         assert_equal(header['nTx'], 1)
