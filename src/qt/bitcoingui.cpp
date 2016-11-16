@@ -110,6 +110,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     showHelpMessageAction(0),
     trayIcon(0),
     trayIconMenu(0),
+    dockIconMenu(0),
     notificator(0),
     rpcConsole(0),
     helpMessageDialog(0),
@@ -568,7 +569,25 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
     {
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
         // while the client has not yet fully loaded
-        createTrayIconMenu();
+        if (trayIcon) {
+            // do so only if trayIcon is already set
+            trayIconMenu = new QMenu(this);
+            trayIcon->setContextMenu(trayIconMenu);
+
+            connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+                    this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+
+            createIconMenu(trayIconMenu);
+
+#ifdef Q_OS_MAC
+            // Note: On Mac, the dock icon is also used to provide same functionality.
+            MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
+            dockIconHandler->setMainWindow((QMainWindow *)this);
+            dockIconMenu = dockIconHandler->dockMenu();
+ 
+            createIconMenu(dockIconMenu);
+#endif
+        }
 
         // Keep up to date with client
         setNumConnections(clientModel->getNumConnections());
@@ -601,6 +620,13 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
             // Disable context menu on tray icon
             trayIconMenu->clear();
         }
+#ifdef Q_OS_MAC
+        if(dockIconMenu)
+        {
+            // Disable context menu on dock icon
+            dockIconMenu->clear();
+        }
+#endif
     }
 }
 
@@ -661,39 +687,31 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
     notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
 }
 
-void BitcoinGUI::createTrayIconMenu()
+void BitcoinGUI::createIconMenu(QMenu *pmenu)
 {
-    // return if trayIcon is unset (only on non-Mac OSes)
-    if (!trayIcon)
-        return;
-
-    trayIconMenu = new QMenu(this);
-    trayIcon->setContextMenu(trayIconMenu);
-
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-            this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-
     // Configuration of the tray icon (or dock icon) icon menu
-    trayIconMenu->addAction(toggleHideAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(sendCoinsMenuAction);
-    trayIconMenu->addAction(receiveCoinsMenuAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(signMessageAction);
-    trayIconMenu->addAction(verifyMessageAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(optionsAction);
-    trayIconMenu->addAction(openInfoAction);
-    trayIconMenu->addAction(openRPCConsoleAction);
-    trayIconMenu->addAction(openGraphAction);
-    trayIconMenu->addAction(openPeersAction);
-    trayIconMenu->addAction(openRepairAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(openConfEditorAction);
-    trayIconMenu->addAction(openMNConfEditorAction);
-    trayIconMenu->addAction(showBackupsAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(quitAction);
+    pmenu->addAction(toggleHideAction);
+    pmenu->addSeparator();
+    pmenu->addAction(sendCoinsMenuAction);
+    pmenu->addAction(receiveCoinsMenuAction);
+    pmenu->addSeparator();
+    pmenu->addAction(signMessageAction);
+    pmenu->addAction(verifyMessageAction);
+    pmenu->addSeparator();
+    pmenu->addAction(optionsAction);
+    pmenu->addAction(openInfoAction);
+    pmenu->addAction(openRPCConsoleAction);
+    pmenu->addAction(openGraphAction);
+    pmenu->addAction(openPeersAction);
+    pmenu->addAction(openRepairAction);
+    pmenu->addSeparator();
+    pmenu->addAction(openConfEditorAction);
+    pmenu->addAction(openMNConfEditorAction);
+    pmenu->addAction(showBackupsAction);
+#ifndef Q_OS_MAC // This is built-in on Mac
+    pmenu->addSeparator();
+    pmenu->addAction(quitAction);
+#endif
 }
 
 #ifndef Q_OS_MAC
