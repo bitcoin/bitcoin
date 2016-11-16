@@ -1860,19 +1860,27 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     uiInterface.InitMessage(_("Loading masternode cache..."));
     CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-    flatdb1.Load(mnodeman);
+    if(!flatdb1.Load(mnodeman)) {
+        return InitError("Failed to load masternode cache from mncache.dat");
+    }
 
     uiInterface.InitMessage(_("Loading masternode payment cache..."));
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
-    flatdb2.Load(mnpayments);
+    if(!flatdb2.Load(mnpayments)) {
+        return InitError("Failed to load masternode payments cache from mnpayments.dat");
+    }
 
     CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    flatdb3.Load(governance);
+    if(!flatdb3.Load(governance)) {
+        return InitError("Failed to load governance cache from governance.dat");
+    }
     governance.ClearSeen();
 
     uiInterface.InitMessage(_("Loading fullfiled requests cache..."));
     CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
-    flatdb4.Load(netfulfilledman);
+    if(!flatdb4.Load(netfulfilledman)) {
+        return InitError("Failed to load fulfilled requests cache from netfulfilled.dat");
+    }
 
     // ********************************************************* Step 11c: update block tip in Dash modules
 
