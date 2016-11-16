@@ -21,7 +21,7 @@ class WalletTest (BitcoinTestFramework):
             raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)"%(str(fee), str(target_fee)))
         return curr_balance
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 4)
 

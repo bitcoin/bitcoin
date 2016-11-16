@@ -9,7 +9,7 @@
 # Add python-bitcoinrpc to module search path:
 import os
 import sys
-
+import pdb
 import shutil
 import tempfile
 import traceback
@@ -41,9 +41,9 @@ class BitcoinTestFramework(object):
     def add_options(self, parser):
         pass
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+        initialize_chain(self.options.tmpdir,bitcoinConfDict, wallets)
 
     def setup_nodes(self):
         return start_nodes(4, self.options.tmpdir)
@@ -77,6 +77,7 @@ class BitcoinTestFramework(object):
         self.setup_network(True)
 
     def sync_all(self):
+        """Synchronizes blocks and mempools"""
         if self.is_network_split:
             sync_blocks(self.nodes[:2])
             sync_blocks(self.nodes[2:])
@@ -85,6 +86,14 @@ class BitcoinTestFramework(object):
         else:
             sync_blocks(self.nodes)
             sync_mempools(self.nodes)
+
+    def sync_blocks(self):
+        """Synchronizes blocks"""
+        if self.is_network_split:
+            sync_blocks(self.nodes[:2])
+            sync_blocks(self.nodes[2:])
+        else:
+            sync_blocks(self.nodes)
 
     def join_network(self):
         """
@@ -95,7 +104,7 @@ class BitcoinTestFramework(object):
         wait_bitcoinds()
         self.setup_network(False)
 
-    def main(self):
+    def main(self,argsOverride=None,bitcoinConfDict=None,wallets=None):
         import optparse
 
         parser = optparse.OptionParser(usage="%prog [options]")
@@ -112,8 +121,7 @@ class BitcoinTestFramework(object):
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
         self.add_options(parser)
-        (self.options, self.args) = parser.parse_args()
-
+        (self.options, self.args) = parser.parse_args(argsOverride)
         if self.options.trace_rpc:
             import logging
             logging.basicConfig(level=logging.DEBUG)
@@ -129,7 +137,14 @@ class BitcoinTestFramework(object):
         try:
             if not os.path.isdir(self.options.tmpdir):
                 os.makedirs(self.options.tmpdir)
-            self.setup_chain()
+
+            # Not pretty but, I changed the function signature
+            # of setup_chain to allow customization of the setup.
+            # However derived object may still use the old format
+	    if self.setup_chain.__defaults__ is None:
+              self.setup_chain()
+            else:
+              self.setup_chain(bitcoinConfDict, wallets)
 
             self.setup_network()
 
@@ -186,7 +201,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print "Initializing test directory "+self.options.tmpdir
         initialize_chain_clean(self.options.tmpdir, self.num_nodes)
 

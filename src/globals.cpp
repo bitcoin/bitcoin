@@ -166,6 +166,8 @@ CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t > recvAmt; 
 CStatHistory<uint64_t > sendAmt; 
+CStatHistory<uint64_t> nTxValidationTime("txValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
+CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 
 // Thin block statistics need to be located here to ensure that the "statistics" global variable is constructed first
 CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_SUM | STAT_KEEP);
@@ -173,6 +175,7 @@ CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM |
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nTotalBloomFilterBytes("nSizeBloom", STAT_OP_SUM | STAT_KEEP);
+
 CCriticalSection cs_thinblockstats;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
 std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;

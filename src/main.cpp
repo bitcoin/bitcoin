@@ -125,6 +125,9 @@ CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
+extern CStatHistory<uint64_t> nTxValidationTime;
+extern CStatHistory<uint64_t> nBlockValidationTime;
+
 // Internal stuff
 namespace {
 
@@ -1165,6 +1168,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                               bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache)
 {
+    unsigned int nSize = 0;
+    uint64_t start = GetTimeMicros();    
+    ValidationResourceTracker resourceTracker(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -1326,7 +1332,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         }
 
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps, lp);
-        unsigned int nSize = entry.GetTxSize();
+        nSize = entry.GetTxSize();
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
@@ -1591,7 +1597,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        ValidationResourceTracker resourceTracker(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, &resourceTracker))
             return false;
         entry.UpdateRuntimeSigOps(resourceTracker.GetSigOps(), resourceTracker.GetSighashBytes());
@@ -1638,6 +1643,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     if (!fRejectAbsurdFee) SyncWithWallets(tx, NULL);
 
+    int64_t end = GetTimeMicros();
+
+    LogPrint("bench", "ValidateTransaction, time: %d, tx: %s, len: %d, sigops: %llu, sighash: %llu, Vin: %llu, Vout: %llu\n", end-start, tx.GetHash().ToString(), nSize, resourceTracker.GetSigOps(), resourceTracker.GetSighashBytes(), tx.vin.size(), tx.vout.size());
+    nTxValidationTime << (end-start);
+
     return true;
     }
 
@@ -1650,6 +1660,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache)
             pcoinsTip->Uncache(hashTx);
     }
+
     return res;
 }
 
@@ -3804,6 +3815,7 @@ static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned 
 
 bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, const CNode* pfrom, const CBlock* pblock, bool fForceProcessing, CDiskBlockPos* dbp)
 {
+    int64_t start = GetTimeMicros();
     LogPrint("thin", "Processing new block %s from peer %s (%d).\n", pblock->GetHash().ToString(), pfrom ? pfrom->addrName.c_str():"myself",pfrom ? pfrom->id: 0);
     // Preliminary checks
     if (!CheckBlockHeader(*pblock, state, true))  // block header is bad
@@ -3845,6 +3857,22 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
+    int64_t end = GetTimeMicros();
+
+    uint64_t maxTxSize = 0;
+    uint64_t maxVin = 0;
+    uint64_t maxVout = 0;
+   
+    for (unsigned int i = 0; i < pblock->vtx.size(); i++)
+      {
+        if (pblock->vtx[i].vin.size() > maxVin) maxVin=pblock->vtx[i].vin.size();
+        if (pblock->vtx[i].vout.size() > maxVout) maxVout=pblock->vtx[i].vout.size();
+        uint64_t len = ::GetSerializeSize(pblock->vtx[i],SER_NETWORK, PROTOCOL_VERSION);
+        if (len > maxTxSize) maxTxSize = len;	  
+      }
+    
+    LogPrint("bench", "ProcessNewBlock, time: %d, block: %s, len: %d, numTx: %d, maxVin: %llu, maxVout: %llu, maxTx:%llu\n", end-start, pblock->GetHash().ToString(), pblock->nBlockSize, pblock->vtx.size(),maxVin,maxVout,maxTxSize);
+    nBlockValidationTime << (end-start);
     return true;
 }
 
