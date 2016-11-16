@@ -136,10 +136,10 @@ public:
 #include "rpcconsole.moc"
 
 /**
- * Split shell command line into a list of arguments and execute the command(s).
+ * Split shell command line into a list of arguments and optionally execute the command(s).
  * Aims to emulate \c bash and friends.
  *
- * - Command nesting is possible with brackets [example: validateaddress(getnewaddress())]
+ * - Command nesting is possible with parenthesis; for example: validateaddress(getnewaddress())
  * - Arguments are delimited with whitespace or comma
  * - Extra whitespace at the beginning and end and between arguments will be ignored
  * - Text can be "double" or 'single' quoted
@@ -150,9 +150,10 @@ public:
  *
  * @param[out]   result      stringified Result from the executed command(chain)
  * @param[in]    strCommand  Command line to split
+ * @param[in]    fExecute    set true if you want the command to be executed
  */
 
-bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand)
+bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute)
 {
     std::vector< std::vector<std::string> > stack;
     stack.push_back(std::vector<std::string>());
@@ -196,7 +197,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                                 curarg += ch;
                                 break;
                             }
-                            if (curarg.size())
+                            if (curarg.size() && fExecute)
                             {
                                 // if we have a value query, query arrays with index and objects with a string key
                                 UniValue subelement;
@@ -271,13 +272,14 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     }
                     if ((ch == ')' || ch == '\n') && stack.size() > 0)
                     {
-                        std::string strPrint;
-                        // Convert argument list to JSON objects in method-dependent way,
-                        // and pass it along with the method name to the dispatcher.
-                        JSONRPCRequest req;
-                        req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
-                        req.strMethod = stack.back()[0];
-                        lastResult = tableRPC.execute(req);
+                        if (fExecute) {
+                            // Convert argument list to JSON objects in method-dependent way,
+                            // and pass it along with the method name to the dispatcher.
+                            JSONRPCRequest req;
+                            req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
+                            req.strMethod = stack.back()[0];
+                            lastResult = tableRPC.execute(req);
+                        }
 
                         state = STATE_COMMAND_EXECUTED;
                         curarg.clear();

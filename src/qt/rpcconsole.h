@@ -36,7 +36,10 @@ public:
     explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
-    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand);
+    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute);
+    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand) {
+        return RPCParseCommandLine(strResult, strCommand, true);
+    }
 
     void setClientModel(ClientModel *model);
 
