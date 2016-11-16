@@ -1949,8 +1949,8 @@ int CMPTransaction::logicMath_Deactivation()
         return (PKT_ERROR -22);
     }
 
-    // is sender authorized - temporarily use alert auths but ## TO BE MOVED TO FOUNDATION P2SH KEY ##
-    bool authorized = CheckActivationAuthorization(sender);
+    // is sender authorized
+    bool authorized = CheckDeactivationAuthorization(sender);
 
     PrintToLog("\t          sender: %s\n", sender);
     PrintToLog("\t      authorized: %s\n", authorized);
