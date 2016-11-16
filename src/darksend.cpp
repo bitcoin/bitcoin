@@ -76,7 +76,10 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
         }
 
         PoolMessage nMessageID = MSG_NOERR;
-        if(IsDenomCompatibleWithSession(nDenom, txCollateral, nMessageID)) {
+
+        bool fResult = nSessionID == 0  ? CreateNewSession(nDenom, txCollateral, nMessageID)
+                                        : AddUserToExistingSession(nDenom, txCollateral, nMessageID);
+        if(fResult) {
             LogPrintf("DSACCEPT -- is compatible, please submit!\n");
             PushStatus(pfrom, STATUS_ACCEPTED, nMessageID);
             return;
@@ -263,9 +266,10 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
         if(AddEntry(entry, nMessageID)) {
             PushStatus(pfrom, STATUS_ACCEPTED, nMessageID);
             CheckPool();
-            RelayStatus(STATUS_SET_STATE);
+            RelayStatus(STATUS_ACCEPTED);
         } else {
             PushStatus(pfrom, STATUS_REJECTED, nMessageID);
+            SetNull();
         }
 
     } else if(strCommand == NetMsgType::DSSTATUSUPDATE) {
@@ -301,24 +305,22 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             return;
         }
 
-        if(nMsgStatusUpdate < STATUS_SET_STATE || nMsgStatusUpdate > STATUS_ACCEPTED) {
+        if(nMsgStatusUpdate < STATUS_REJECTED || nMsgStatusUpdate > STATUS_ACCEPTED) {
             LogPrint("privatesend", "DSSTATUSUPDATE -- nMsgStatusUpdate is out of bounds: %d\n", nMsgStatusUpdate);
             return;
         }
 
         if(nMsgMessageID < MSG_POOL_MIN || nMsgMessageID > MSG_POOL_MAX) {
             LogPrint("privatesend", "DSSTATUSUPDATE -- nMsgMessageID is out of bounds: %d\n", nMsgMessageID);
+            if(pfrom->nVersion < 70203) nMsgMessageID = MSG_NOERR;
             return;
         }
 
         LogPrint("privatesend", "DSSTATUSUPDATE -- GetMessageByID: %s\n", GetMessageByID(PoolMessage(nMsgMessageID)));
 
-        if(nMsgStatusUpdate == STATUS_SET_STATE && nSessionID != nMsgSessionID) {
-            LogPrint("privatesend", "DSSTATUSUPDATE -- message doesn't match current PrivateSend session: nSessionID: %d nMsgSessionID: %d\n", nSessionID, nMsgSessionID);
-            return;
+        if(!CheckPoolStateUpdate(PoolState(nMsgState), nMsgEntriesCount, PoolStatusUpdate(nMsgStatusUpdate), PoolMessage(nMsgMessageID), nMsgSessionID)) {
+            LogPrint("privatesend", "DSSTATUSUPDATE -- CheckPoolStateUpdate failed\n");
         }
-
-        UpdatePoolStateOnClient(PoolState(nMsgState), nMsgEntriesCount, PoolStatusUpdate(nMsgStatusUpdate), PoolMessage(nMsgMessageID), nMsgSessionID);
 
     } else if(strCommand == NetMsgType::DSSIGNFINALTX) {
 
@@ -344,13 +346,13 @@ void CDarksendPool::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataS
             nTxInIndex++;
             if(!AddScriptSig(txin)) {
                 LogPrint("privatesend", "DSSIGNFINALTX -- AddScriptSig() failed at %d/%d, session: %d\n", nTxInIndex, nTxInsCount, nSessionID);
+                RelayStatus(STATUS_REJECTED);
                 return;
             }
             LogPrint("privatesend", "DSSIGNFINALTX -- AddScriptSig() %d/%d success\n", nTxInIndex, nTxInsCount);
         }
         // all is good
         CheckPool();
-        RelayStatus(STATUS_SET_STATE);
 
     } else if(strCommand == NetMsgType::DSFINALTX) {
 
@@ -456,13 +458,12 @@ void CDarksendPool::ResetPool()
 void CDarksendPool::SetNull()
 {
     // MN side
-    nSessionUsers = 0;
     vecSessionCollaterals.clear();
 
     // Client side
     nEntriesCount = 0;
     fLastEntryAccepted = false;
-    fSessionFoundMasternode = false;
+    pSubmittedToMasternode = NULL;
 
     // Both sides
     nState = POOL_STATE_IDLE;
@@ -471,7 +472,7 @@ void CDarksendPool::SetNull()
     vecEntries.clear();
     finalMutableTransaction.vin.clear();
     finalMutableTransaction.vout.clear();
-    nLastTimeChanged = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTimeMillis();
 }
 
 //
@@ -530,10 +531,6 @@ std::string CDarksendPool::GetStatus()
             else if(nStatusMessageProgress % 70 <= 60) strSuffix = "..";
             else if(nStatusMessageProgress % 70 <= 70) strSuffix = "...";
             return strprintf(_("Found enough users, signing ( waiting %s )"), strSuffix);
-        case POOL_STATE_TRANSMISSION:
-            return _("Transmitting final transaction.");
-        case POOL_STATE_FINALIZE_TRANSACTION:
-            return _("Finalizing transaction.");
         case POOL_STATE_ERROR:
             return _("PrivateSend request incomplete:") + " " + strLastMessage + " " + _("Will retry...");
         case POOL_STATE_SUCCESS:
@@ -551,33 +548,26 @@ void CDarksendPool::CheckPool()
     if(fMasterNode) {
         LogPrint("privatesend", "CDarksendPool::CheckPool -- entries count %lu\n", GetEntriesCount());
 
-        // If entries are full, then move on to the next phase
+        // If entries are full, create finalized transaction
         if(nState == POOL_STATE_ACCEPTING_ENTRIES && GetEntriesCount() >= GetMaxPoolTransactions()) {
-            LogPrint("privatesend", "CDarksendPool::CheckPool -- TRYING TRANSACTION\n");
-            SetState(POOL_STATE_FINALIZE_TRANSACTION);
+            LogPrint("privatesend", "CDarksendPool::CheckPool -- FINALIZE TRANSACTIONS\n");
+            CreateFinalTransaction();
+            return;
         }
-    }
 
-    // create the finalized transaction for distribution to the clients
-    if(nState == POOL_STATE_FINALIZE_TRANSACTION) {
-        CreateFinalTransaction();
-    }
-
-    // If we have all of the signatures, try to compile the transaction
-    if(fMasterNode && nState == POOL_STATE_SIGNING && IsSignaturesComplete()) {
-        LogPrint("privatesend", "CDarksendPool::CheckPool -- SIGNING\n");
-        SetState(POOL_STATE_TRANSMISSION);
-        CommitFinalTransaction();
+        // If we have all of the signatures, try to compile the transaction
+        if(nState == POOL_STATE_SIGNING && IsSignaturesComplete()) {
+            LogPrint("privatesend", "CDarksendPool::CheckPool -- SIGNING\n");
+            CommitFinalTransaction();
+            return;
+        }
     }
 
     // reset if we're here for 10 seconds
-    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nLastTimeChanged >= 10000) {
+    if((nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) && GetTimeMillis() - nTimeLastSuccessfulStep >= 10000) {
         LogPrint("privatesend", "CDarksendPool::CheckPool -- timeout, RESETTING\n");
         UnlockCoins();
         SetNull();
-        if(fMasterNode) {
-            RelayStatus(STATUS_SET_STATE);
-        }
     }
 }
 
@@ -626,9 +616,7 @@ void CDarksendPool::CommitFinalTransaction()
         {
             LogPrintf("CDarksendPool::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             SetNull();
-
-            // not much we can do in this case
-            SetState(POOL_STATE_ACCEPTING_ENTRIES);
+            // not much we can do in this case, just notify clients
             RelayCompletedTransaction(ERR_INVALID_TX);
             return;
         }
@@ -657,7 +645,6 @@ void CDarksendPool::CommitFinalTransaction()
     // Reset
     LogPrint("privatesend", "CDarksendPool::CommitFinalTransaction -- COMPLETED -- RESETTING\n");
     SetNull();
-    RelayStatus(STATUS_SET_STATE);
 }
 
 //
@@ -787,10 +774,6 @@ void CDarksendPool::CheckTimeout()
     // catching hanging sessions
     if(!fMasterNode) {
         switch(nState) {
-            case POOL_STATE_TRANSMISSION:
-                LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session complete -- Running CheckPool\n");
-                CheckPool();
-                break;
             case POOL_STATE_ERROR:
                 LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Pool error -- Running CheckPool\n");
                 CheckPool();
@@ -804,50 +787,18 @@ void CDarksendPool::CheckTimeout()
         }
     }
 
-    int nLagTime = 0;
-    if(!fMasterNode) nLagTime = 10000; //if we're the client, give the server a few extra seconds before resetting.
+    int nLagTime = fMasterNode ? 0 : 10000; // if we're the client, give the server a few extra seconds before resetting.
+    int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
+    bool fTimeout = GetTimeMillis() - nTimeLastSuccessfulStep >= nTimeout*1000 + nLagTime;
 
-    if(nState == POOL_STATE_ACCEPTING_ENTRIES || nState == POOL_STATE_QUEUE) {
-        int c = 0;
-
-        // check for a timeout and reset if needed
-        std::vector<CDarkSendEntry>::iterator it2 = vecEntries.begin();
-        while(it2 != vecEntries.end()) {
-            if((*it2).IsExpired()) {
-                LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Removing expired entry: %d\n", c);
-                it2 = vecEntries.erase(it2);
-                if(GetEntriesCount() == 0) {
-                    UnlockCoins();
-                    SetNull();
-                }
-                if(fMasterNode) {
-                    RelayStatus(STATUS_SET_STATE);
-                }
-            } else ++it2;
-            c++;
-        }
-
-        if(GetTimeMillis() - nLastTimeChanged >= PRIVATESEND_QUEUE_TIMEOUT*1000 + nLagTime) {
-            UnlockCoins();
-            SetNull();
-        }
-    } else if (GetTimeMillis() - nLastTimeChanged >= PRIVATESEND_QUEUE_TIMEOUT*1000 + nLagTime) {
-        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session timed out (%ds) -- resetting\n", PRIVATESEND_QUEUE_TIMEOUT);
-        UnlockCoins();
-        SetNull();
-
-        SetState(POOL_STATE_ERROR);
-        strLastMessage = _("Session timed out.");
-    }
-
-    if(nState == POOL_STATE_SIGNING && GetTimeMillis() - nLastTimeChanged >= PRIVATESEND_SIGNING_TIMEOUT*1000 + nLagTime) {
-        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Session timed out (%ds) -- restting\n", PRIVATESEND_SIGNING_TIMEOUT);
+    if(nState != POOL_STATE_IDLE && fTimeout) {
+        LogPrint("privatesend", "CDarksendPool::CheckTimeout -- %s timed out (%ds) -- restting\n",
+                (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
         ChargeFees();
         UnlockCoins();
         SetNull();
-
         SetState(POOL_STATE_ERROR);
-        strLastMessage = _("Signing timed out.");
+        strLastMessage = _("Session timed out.");
     }
 }
 
@@ -980,7 +931,6 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
         if(txin.prevout.IsNull()) {
             LogPrint("privatesend", "CDarksendPool::AddEntry -- input not valid!\n");
             nMessageIDRet = ERR_INVALID_INPUT;
-            nSessionUsers--;
             return false;
         }
     }
@@ -988,14 +938,12 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
     if(!IsCollateralValid(entryNew.txCollateral)) {
         LogPrint("privatesend", "CDarksendPool::AddEntry -- collateral not valid!\n");
         nMessageIDRet = ERR_INVALID_COLLATERAL;
-        nSessionUsers--;
         return false;
     }
 
     if(GetEntriesCount() >= GetMaxPoolTransactions()) {
         LogPrint("privatesend", "CDarksendPool::AddEntry -- entries is full!\n");
         nMessageIDRet = ERR_ENTRIES_FULL;
-        nSessionUsers--;
         return false;
     }
 
@@ -1006,7 +954,6 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
                 if(txdsin.prevout == txin.prevout) {
                     LogPrint("privatesend", "CDarksendPool::AddEntry -- found in txin\n");
                     nMessageIDRet = ERR_ALREADY_HAVE;
-                    nSessionUsers--;
                     return false;
                 }
             }
@@ -1017,6 +964,7 @@ bool CDarksendPool::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessa
 
     LogPrint("privatesend", "CDarksendPool::AddEntry -- adding entry\n");
     nMessageIDRet = MSG_ENTRIES_ADDED;
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
 }
@@ -1093,7 +1041,7 @@ bool CDarksendPool::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std:
         vecOutPointLocked.push_back(txin.prevout);
 
     // we should already be connected to a Masternode
-    if(!fSessionFoundMasternode) {
+    if(!nSessionID) {
         LogPrintf("CDarksendPool::SendDenominate -- No Masternode has been selected yet.\n");
         UnlockCoins();
         SetNull();
@@ -1143,54 +1091,51 @@ bool CDarksendPool::SendDenominate(const std::vector<CTxIn>& vecTxIn, const std:
     // store our entry for later use
     CDarkSendEntry entry(vecTxIn, vecTxOut, txMyCollateral);
     vecEntries.push_back(entry);
-
     RelayIn(entry);
-    CheckPool();
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
 }
 
 // Incoming message from Masternode updating the progress of mixing
-bool CDarksendPool::UpdatePoolStateOnClient(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew)
+bool CDarksendPool::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew)
 {
     if(fMasterNode) return false;
-    if(nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
 
-    SetState(nStateNew);
-    nEntriesCount = nEntriesCountNew;
+    // do not update state when mixing client state is one of these
+    if(nState == POOL_STATE_IDLE || nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
 
     strAutoDenomResult = _("Masternode:") + " " + GetMessageByID(nMessageID);
 
-    if(nStatusUpdate != STATUS_SET_STATE) {
-        fLastEntryAccepted = nStatusUpdate;
-        if(nStatusUpdate == STATUS_REJECTED) {
-            SetState(POOL_STATE_ERROR);
-            strLastMessage = GetMessageByID(nMessageID);
-        }
+    // if rejected at any state
+    if(nStatusUpdate == STATUS_REJECTED) {
+        LogPrintf("CDarksendPool::CheckPoolStateUpdate -- entry is rejected by Masternode\n");
+        UnlockCoins();
+        SetNull();
+        SetState(POOL_STATE_ERROR);
+        strLastMessage = GetMessageByID(nMessageID);
+        return true;
+    }
 
-        if(nStatusUpdate == STATUS_ACCEPTED && nSessionIDNew != 0) {
+    if(nStatusUpdate == STATUS_ACCEPTED && nState == nStateNew) {
+        if(nStateNew == POOL_STATE_QUEUE && nSessionID == 0 && nSessionIDNew != 0) {
+            // new session id should be set only in POOL_STATE_QUEUE state
             nSessionID = nSessionIDNew;
-            LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- set nSessionID to %d\n", nSessionID);
-            fSessionFoundMasternode = true;
+            nTimeLastSuccessfulStep = GetTimeMillis();
+            LogPrintf("CDarksendPool::CheckPoolStateUpdate -- set nSessionID to %d\n", nSessionID);
+            return true;
+        }
+        else if(nStateNew == POOL_STATE_ACCEPTING_ENTRIES && nEntriesCount != nEntriesCountNew) {
+            nEntriesCount = nEntriesCountNew;
+            nTimeLastSuccessfulStep = GetTimeMillis();
+            fLastEntryAccepted = true;
+            LogPrintf("CDarksendPool::CheckPoolStateUpdate -- new entry accepted!\n");
+            return true;
         }
     }
 
-    if(nStateNew == POOL_STATE_ACCEPTING_ENTRIES) {
-        if(nStatusUpdate == STATUS_ACCEPTED) {
-            LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- entry accepted!\n");
-            fSessionFoundMasternode = true;
-            //wait for other users. Masternode will report when ready
-            SetState(POOL_STATE_QUEUE);
-        } else if(nStatusUpdate == STATUS_REJECTED && nSessionID == 0 && !fSessionFoundMasternode) {
-            LogPrintf("CDarksendPool::UpdatePoolStateOnClient -- entry not accepted by Masternode\n");
-            UnlockCoins();
-            SetState(POOL_STATE_ACCEPTING_ENTRIES);
-            DoAutomaticDenominating(); //try another Masternode
-        }
-        if(fSessionFoundMasternode) return true;
-    }
-
-    return true;
+    // only situations above are allowed, fail in any other case
+    return false;
 }
 
 //
@@ -1274,8 +1219,10 @@ bool CDarksendPool::SignFinalTransaction(const CTransaction& finalTransactionNew
     }
 
     // push all of our signatures to the Masternode
-    if(!sigs.empty() && pnode != NULL)
-        pnode->PushMessage(NetMsgType::DSSIGNFINALTX, sigs);
+    LogPrintf("CDarksendPool::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s", finalMutableTransaction.ToString());
+    pnode->PushMessage(NetMsgType::DSSIGNFINALTX, sigs);
+    SetState(POOL_STATE_SIGNING);
+    nTimeLastSuccessfulStep = GetTimeMillis();
 
     return true;
 }
@@ -1488,7 +1435,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     if(!pwalletMain->HasCollateralInputs())
         return !pwalletMain->HasCollateralInputs(false) && MakeCollateralAmounts();
 
-    if(fSessionFoundMasternode) {
+    if(nSessionID) {
         strAutoDenomResult = _("Mixing in progress...");
         return false;
     }
@@ -1497,8 +1444,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     // Clean if there is anything left from previous session
     UnlockCoins();
     SetNull();
-
-    SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
     if(!fPrivateSendMultiSession && pwalletMain->GetDenominatedBalance(true) > 0) { //get denominated unconfirmed inputs
         LogPrintf("CDarksendPool::DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
@@ -1544,6 +1489,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             // only try each queue once
             if(dsq.fTried) continue;
             dsq.fTried = true;
+
             if(dsq.IsExpired()) continue;
 
             CMasternode* pmn = mnodeman.Find(dsq.vin);
@@ -1574,7 +1520,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             vecMasternodesUsed.push_back(dsq.vin);
 
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- attempt to connect to masternode from queue, addr=%s\n", pmn->addr.ToString());
-            nLastTimeChanged = GetTimeMillis();
             // connect to Masternode and submit the queue request
             CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
             if(pnode) {
@@ -1585,6 +1530,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                         nSessionDenom, GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
                 strAutoDenomResult = _("Mixing in progress...");
+                SetState(POOL_STATE_QUEUE);
+                nTimeLastSuccessfulStep = GetTimeMillis();
                 return true;
             } else {
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
@@ -1619,7 +1566,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             continue;
         }
 
-        nLastTimeChanged = GetTimeMillis();
         LogPrintf("CDarksendPool::DoAutomaticDenominating -- attempt %d connection to Masternode %s\n", nTries, pmn->addr.ToString());
         CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
         if(pnode) {
@@ -1637,6 +1583,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
                     nSessionDenom, GetDenominationsToString(nSessionDenom));
             strAutoDenomResult = _("Mixing in progress...");
+            SetState(POOL_STATE_QUEUE);
+            nTimeLastSuccessfulStep = GetTimeMillis();
             return true;
         } else {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
@@ -2027,62 +1975,97 @@ bool CDarksendPool::IsOutputsCompatibleWithSessionDenom(const std::vector<CTxDSO
     return true;
 }
 
-bool CDarksendPool::IsDenomCompatibleWithSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+bool CDarksendPool::IsAcceptableDenomAndCollateral(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
 {
-    if(nDenom == 0) {
+    if(!fMasterNode) return false;
+
+    // is denom even smth legit?
+    std::vector<int> vecBits;
+    if(!GetDenominationsBits(nDenom, vecBits)) {
+        LogPrint("privatesend", "CDarksendPool::IsAcceptableDenomAndCollateral -- denom not valid!\n");
         nMessageIDRet = ERR_DENOM;
         return false;
     }
 
-    LogPrintf("CDarksendPool::IsDenomCompatibleWithSession -- nSessionDenom: %d (%s) nSessionUsers: %d\n",
-            nSessionDenom, GetDenominationsToString(nSessionDenom), nSessionUsers);
-
+    // check collateral
     if(!fUnitTest && !IsCollateralValid(txCollateral)) {
-        LogPrint("privatesend", "CDarksendPool::IsDenomCompatibleWithSession -- collateral not valid!\n");
+        LogPrint("privatesend", "CDarksendPool::IsAcceptableDenomAndCollateral -- collateral not valid!\n");
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
     }
 
-    if(nSessionUsers < 0) nSessionUsers = 0;
+    return true;
+}
 
-    if(nSessionUsers == 0) {
-        nMessageIDRet = MSG_NOERR;
-        nSessionID = GetInsecureRand(999999)+1;
-        nSessionDenom = nDenom;
-        nSessionUsers++;
-        nLastTimeChanged = GetTimeMillis();
+bool CDarksendPool::CreateNewSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+{
+    if(!fMasterNode || nSessionID != 0) return false;
 
-        if(!fUnitTest) {
-            //broadcast that I'm accepting entries, only if it's the first entry through
-            CDarksendQueue dsq(nDenom, activeMasternode.vin, GetTime(), false);
-            LogPrint("privatesend", "CDarksendPool::IsDenomCompatibleWithSession -- signing and relaying new queue: %s\n", dsq.ToString());
-            dsq.Sign();
-            dsq.Relay();
-        }
-
-        SetState(POOL_STATE_QUEUE);
-        vecSessionCollaterals.push_back(txCollateral);
-        return true;
+    // new session can only be started in idle mode
+    if(nState != POOL_STATE_IDLE) {
+        nMessageIDRet = ERR_MODE;
+        LogPrintf("CDarksendPool::CreateNewSession -- incompatible mode: nState=%d\n", nState);
+        return false;
     }
 
-    if((nState != POOL_STATE_ACCEPTING_ENTRIES && nState != POOL_STATE_QUEUE) || nSessionUsers >= GetMaxPoolTransactions()) {
-        if((nState != POOL_STATE_ACCEPTING_ENTRIES && nState != POOL_STATE_QUEUE)) nMessageIDRet = ERR_MODE;
-        if(nSessionUsers >= GetMaxPoolTransactions()) nMessageIDRet = ERR_QUEUE_FULL;
-        LogPrintf("CDarksendPool::IsDenomCompatibleWithSession -- incompatible mode, return false: nState status %d, nSessionUsers status %d\n", nState != POOL_STATE_ACCEPTING_ENTRIES, nSessionUsers >= GetMaxPoolTransactions());
+    if(!IsAcceptableDenomAndCollateral(nDenom, txCollateral, nMessageIDRet)) {
+        return false;
+    }
+
+    // start new session
+    nMessageIDRet = MSG_NOERR;
+    nSessionID = GetInsecureRand(999999)+1;
+    nSessionDenom = nDenom;
+
+    SetState(POOL_STATE_QUEUE);
+    nTimeLastSuccessfulStep = GetTimeMillis();
+
+    if(!fUnitTest) {
+        //broadcast that I'm accepting entries, only if it's the first entry through
+        CDarksendQueue dsq(nDenom, activeMasternode.vin, GetTime(), false);
+        LogPrint("privatesend", "CDarksendPool::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
+        dsq.Sign();
+        dsq.Relay();
+        vecDarksendQueue.push_back(dsq);
+    }
+
+    vecSessionCollaterals.push_back(txCollateral);
+    LogPrintf("CDarksendPool::CreateNewSession -- new session created, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
+            nSessionID, nSessionDenom, GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
+
+    return true;
+}
+
+bool CDarksendPool::AddUserToExistingSession(int nDenom, CTransaction txCollateral, PoolMessage& nMessageIDRet)
+{
+    if(!fMasterNode || nSessionID == 0 || IsSessionReady()) return false;
+
+    if(!IsAcceptableDenomAndCollateral(nDenom, txCollateral, nMessageIDRet)) {
+        return false;
+    }
+
+    // we only add new users to an existing session when we are in queue mode
+    if(nState != POOL_STATE_QUEUE) {
+        nMessageIDRet = ERR_MODE;
+        LogPrintf("CDarksendPool::AddUserToExistingSession -- incompatible mode: nState=%d\n", nState);
         return false;
     }
 
     if(nDenom != nSessionDenom) {
+        LogPrintf("CDarksendPool::AddUserToExistingSession -- incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
+                    nDenom, GetDenominationsToString(nDenom), nSessionDenom, GetDenominationsToString(nSessionDenom));
         nMessageIDRet = ERR_DENOM;
         return false;
     }
 
-    LogPrintf("CDarksendPool::IsDenomCompatibleWithSession -- compatible\n");
+    // count new user as accepted to an existing session
 
     nMessageIDRet = MSG_NOERR;
-    nSessionUsers++;
-    nLastTimeChanged = GetTimeMillis();
+    nTimeLastSuccessfulStep = GetTimeMillis();
     vecSessionCollaterals.push_back(txCollateral);
+
+    LogPrintf("CDarksendPool::AddUserToExistingSession -- new user accepted, nSessionID: %d  nSessionDenom: %d (%s)  vecSessionCollaterals.size(): %d\n",
+            nSessionID, nSessionDenom, GetDenominationsToString(nSessionDenom), vecSessionCollaterals.size());
 
     return true;
 }
@@ -2423,12 +2406,6 @@ void CDarksendPool::SetState(PoolState nStateNew)
     }
 
     LogPrintf("CDarksendPool::SetState -- nState: %d, nStateNew: %d\n", nState, nStateNew);
-    if(nState != nStateNew) {
-        nLastTimeChanged = GetTimeMillis();
-        if(fMasterNode) {
-            RelayStatus(STATUS_SET_STATE);
-        }
-    }
     nState = nStateNew;
 }
 
