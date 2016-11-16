@@ -31,6 +31,7 @@
 
 #include <QKeyEvent>
 #include <QMenu>
+#include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
 #include <QSignalMapper>
@@ -73,16 +74,6 @@ const QStringList historyFilter = QStringList()
     << "walletpassphrase"
     << "walletpassphrasechange"
     << "encryptwallet";
-
-QString command_filter_sensitive_data(const QString cmd)
-{
-    Q_FOREACH(QString unallowedCmd, historyFilter) {
-        if (cmd.trimmed().startsWith(unallowedCmd)) {
-            return unallowedCmd;
-        }
-    }
-    return cmd;
-}
 
 }
 
@@ -175,13 +166,32 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
     std::string curarg;
     UniValue lastResult;
     unsigned nDepthInsideSensitive = 0;
-    size_t filter_begin_pos = 0;
+    size_t filter_begin_pos = 0, chpos;
     std::vector<std::pair<size_t, size_t>> filter_ranges;
+
+    auto add_to_current_stack = [&](const std::string& curarg) {
+        if (stack.back().empty() && (!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(curarg), Qt::CaseInsensitive)) {
+            nDepthInsideSensitive = 1;
+            filter_begin_pos = chpos;
+        }
+        stack.back().push_back(curarg);
+    };
+
+    auto close_out_params = [&]() {
+        if (nDepthInsideSensitive) {
+            if (!--nDepthInsideSensitive) {
+                assert(filter_begin_pos);
+                filter_ranges.push_back(std::make_pair(filter_begin_pos, chpos));
+                filter_begin_pos = 0;
+            }
+        }
+        stack.pop_back();
+    };
 
     std::string strCommandTerminated = strCommand;
     if (strCommandTerminated.back() != '\n')
         strCommandTerminated += "\n";
-    for (size_t chpos = 0; chpos < strCommandTerminated.size(); ++chpos)
+    for (chpos = 0; chpos < strCommandTerminated.size(); ++chpos)
     {
         char ch = strCommandTerminated[chpos];
         switch(state)
@@ -227,14 +237,7 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                         breakParsing = false;
 
                         // pop the stack and return the result to the current command arguments
-                        if (nDepthInsideSensitive) {
-                            if (!--nDepthInsideSensitive) {
-                                assert(filter_begin_pos);
-                                filter_ranges.push_back(std::make_pair(filter_begin_pos, chpos));
-                                filter_begin_pos = 0;
-                            }
-                        }
-                        stack.pop_back();
+                        close_out_params();
 
                         // don't stringify the json in case of a string to avoid doublequotes
                         if (lastResult.isStr())
@@ -246,7 +249,7 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                         if (curarg.size())
                         {
                             if (stack.size())
-                                stack.back().push_back(curarg);
+                                add_to_current_stack(curarg);
                             else
                                 strResult = curarg;
                         }
@@ -283,7 +286,7 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
                         if (!stack.size())
                             throw std::runtime_error("Invalid Syntax");
 
-                        stack.back().push_back(curarg);
+                        add_to_current_stack(curarg);
                         curarg.clear();
                         state = STATE_EATING_SPACES_IN_BRACKETS;
                     }
@@ -308,12 +311,7 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
 
                     else if(state == STATE_ARGUMENT) // Space ends argument
                     {
-                        // This is the only place where the method name should get pushed (as the first stack item)
-                        if ((!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(curarg), Qt::CaseInsensitive)) {
-                            nDepthInsideSensitive = 1;
-                            filter_begin_pos = chpos;
-                        }
-                        stack.back().push_back(curarg);
+                        add_to_current_stack(curarg);
                         curarg.clear();
                     }
                     if ((state == STATE_EATING_SPACES_IN_BRACKETS || state == STATE_ARGUMENT) && ch == ',')
@@ -351,9 +349,13 @@ bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &
         }
     }
     if (pstrFilteredOut) {
+        if (STATE_COMMAND_EXECUTED == state) {
+            assert(!stack.empty());
+            close_out_params();
+        }
         *pstrFilteredOut = strCommand;
         for (auto i = filter_ranges.rbegin(); i != filter_ranges.rend(); ++i) {
-            pstrFilteredOut->replace(i->first, i->second - i->first, "...");
+            pstrFilteredOut->replace(i->first, i->second - i->first, "(…)");
         }
     }
     switch(state) // final state
@@ -800,16 +802,29 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
 void RPCConsole::on_lineEdit_returnPressed()
 {
     QString cmd = ui->lineEdit->text();
-    ui->lineEdit->clear();
 
     if(!cmd.isEmpty())
     {
+        std::string strFilteredCmd;
+        try {
+            std::string dummy;
+            if (!RPCParseCommandLine(dummy, cmd.toStdString(), false, &strFilteredCmd)) {
+                // Failed to parse command, so we cannot even filter it for the history
+                throw std::runtime_error("Invalid command line");
+            }
+        } catch (const std::exception& e) {
+            QMessageBox::critical(this, "Error", QString("Error: ") + QString::fromStdString(e.what()));
+            return;
+        }
+
+        ui->lineEdit->clear();
+
         cmdBeforeBrowsing = QString();
 
         message(CMD_REQUEST, cmd);
         Q_EMIT cmdRequest(cmd);
 
-        cmd = command_filter_sensitive_data(cmd);
+        cmd = QString::fromStdString(strFilteredCmd);
 
         // Remove command, if already in history
         history.removeOne(cmd);
