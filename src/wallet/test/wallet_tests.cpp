@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         // test with many inputs
         for (CAmount amt=1500; amt < COIN; amt*=10) {
              empty_wallet();
-             // Create 676 inputs (= MAX_STANDARD_TX_SIZE / 148 bytes per input)
+             // Create 676 inputs (=  (old MAX_STANDARD_TX_SIZE == 100000)  / 148 bytes per input)
              for (uint16_t j = 0; j < 676; j++)
                  add_coin(amt);
              BOOST_CHECK(wallet.SelectCoinsMinConf(2000, 1, 1, vCoins, setCoinsRet, nValueRet));
