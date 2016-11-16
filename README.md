@@ -48,9 +48,10 @@ sudo add-apt-repository ppa:bitcoin-unlimited/bu-ppa                           #
 sudo apt-get update                                                            #     format, ot if you're not going to use a wallet at all
 sudo apt-get install libdb4.8-dev libdb4.8++-dev
 mkdir -p ~/src
+cd ~/src
 git clone https://github.com/BitcoinUnlimited/BitcoinUnlimited.git bu-src
 cd bu-src
-./autogen-sh
+./autogen.sh
 ./configure
 make
 sudo make install
