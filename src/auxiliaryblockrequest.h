@@ -20,9 +20,10 @@ public:
 
     const std::vector<const CBlockIndex*> vBlocksToDownload;
     const int64_t created; //!timestamp when the block request was created
+    const bool passThroughSignals; //!if passThroughSignals is set, the received blocks transaction will be passed through the SyncTransaction signal */
 
     /** Constructor of the lock free CAuxiliaryBlockRequest, vBlocksToDownloadIn remains constant */
-    CAuxiliaryBlockRequest(std::vector<const CBlockIndex*> vBlocksToDownloadIn, int64_t created, const std::function<bool(std::shared_ptr<CAuxiliaryBlockRequest>, const CBlockIndex *pindex)> progressCallbackIn);
+    CAuxiliaryBlockRequest(std::vector<const CBlockIndex*> vBlocksToDownloadIn, int64_t created, bool passThroughSignalsIn, const std::function<bool(std::shared_ptr<CAuxiliaryBlockRequest>, const CBlockIndex *pindex)> progressCallbackIn);
 
     /** Process the request, check if there are blocks available to "stream"
         over the SyncTransaction signal 
