@@ -2355,6 +2355,54 @@ static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 
+bool IsBuried(const CBlockIndex* const ancestor, const CBlockIndex* const descendant, const int64_t age) {
+    if (NULL == ancestor || NULL == descendant) {
+        return false;
+    }
+    if (descendant->nChainWork <= ancestor->nChainWork) {
+        return false; // not buried with respect to total proof of work
+    }
+    if (descendant->nTime <= ancestor->nTime) {
+        return false; // not buried with respect to time
+    }
+    if (descendant->GetBlockTime() - ancestor->GetBlockTime() < age) {
+        return false; // not buried with respect to time
+    }
+    if (descendant->GetAncestor(ancestor->nHeight) != ancestor) {
+        return false; // not buried because ancestor is not really an ancestor of descendant (on different branches).
+    }
+    if (GetBlockProofEquivalentTime(*descendant, *ancestor, *descendant, Params().GetConsensus()) < age) {
+        return false; // not buried with respect to current equivalent proof of work
+    }
+    return true; // the ancestor header is considered buried relative to the descendant header
+}
+
+bool IsBuriedWithHighWatermark(const CBlockIndex* const ancestor, const CBlockIndex* const descendant, const int64_t age) {
+    AssertLockHeld(cs_main); // guard buriedWorkHighWaterMark against inter-thread atomicity and ordering problems
+    static const arith_uint256 ZERO;
+    static arith_uint256 buriedWorkHighWaterMark;
+    if (NULL == ancestor || NULL == descendant) {
+        return false;
+    }
+    if (ZERO == buriedWorkHighWaterMark) {
+        // TODO: need to init high water mark
+        // get the tip from before the re-org and figure out the amount of work that would have triggered burial?
+        // need to cover the case: sync a node, shut it down, start it, connect to a node that makes it do a large re-org.
+        // but by the time we get here chainActive is wiped out and pindexBestHeader switched to the re-org'd branch...
+    }
+    if ((ZERO < buriedWorkHighWaterMark) && (ancestor->nChainWork <= buriedWorkHighWaterMark)) {
+        // if we've previously buried a block and then we get another block with less or equal work
+        // then we've re-organized and should validate the new block because our previous burying
+        // assumptions were wrong.
+        return false;
+    }
+    const bool result = IsBuried(ancestor, descendant, age);
+    if (result) {
+        buriedWorkHighWaterMark = ancestor->nChainWork;
+    }
+    return result;
+}
+
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck)
 {
@@ -2378,14 +2426,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return true;
     }
 
-    bool fScriptChecks = true;
-    if (fCheckpointsEnabled) {
-        CBlockIndex *pindexLastCheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
-        if (pindexLastCheckpoint && pindexLastCheckpoint->GetAncestor(pindex->nHeight) == pindex) {
-            // This block is an ancestor of a checkpoint: disable script checks
-            fScriptChecks = false;
-        }
-    }
+    // age of a block, relative to the tip and considering both time and current equivalent proof of work,
+    // after which it is considered sufficiently confirmed by (aka buried under) enough work to not fully
+    // validate scripts/signatures anymore. 30 days of work at current tip work (aka hash) rate.
+    const bool fScriptChecks = !fCheckpointsEnabled || // force full validation with -checkpoints=0
+                               pindexBestHeader == pindex || // optimization for normal steady state operation where we get a new block and want to fully validate it
+                               NULL == pindexBestHeader || // just to be safe
+                               pindexBestHeader->nChainWork < UintToArith256(Params().GetConsensus().nMinimumChainWork) || // make network isolation attacks costly
+                               !IsBuriedWithHighWatermark(pindex, pindexBestHeader, 30 * 24 * 60 * 60);
 
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
