@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             map<COutPoint, CScript> mapprevOutScriptPubKeys;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
-	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
-	        const UniValue& input = inputs[inpIdx];
+        for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
+            const UniValue& input = inputs[inpIdx];
                 if (!input.isArray())
                 {
                     fValid = false;
@@ -491,23 +491,26 @@ BOOST_AUTO_TEST_CASE(test_version4)
     // than one compatible implementation.
     CTransaction tx;
     {
-        CDataStream stream(ParseHex("040000000b2032a4ef9efb5a6f788bf821932de35c5adedc249676c124abb6ed"
-            "2bddcc1c468c1001331976a9145af71addf3a43598f30b4cee4b79048f4b481c"
-            "d288ac2881a008236a47304402204a649df5b3d8016e5404f0f0295a2b6dbb7a"
-            "40575af7f9b4c5ee0786f1550d1502205111ecf5008a09eae9af6887eceaaa72"
-            "dd08facf7220019c151b6329125adc7d01210281698728b9e9062d11b83b4eda"
-            "a8191b284e8cc79e9e9b14f6f5bb3a6395f1c704"), 0, 0);
+        CDataStream stream(ParseHex("040000000b20b18d97af2e95f38bf67df6aa23a5640c45632a"
+            "13e52cd6658e9fb38b81a4093b1001331976a914a8ff9fad879c48667fb8a5ed68f41042aa7e74f2"
+            "88ac28ddf6e704331976a914663f9689189018de83ad1c2ea14e011e7ecbc5b488ac28808ec2c940"
+            "1b4830450221009b6bc5e6e021b59d8b22ab60224b22ab7e454c45923f0d5b6a621b185dc99a2202"
+            "2015457191d829db95a339d4c89205b8e53aaaa271206f0db20141a6c2b0b1ed1a012341044feaa0"
+            "598155a3e43590597c26f593f75fc23d83fa0b1fed35479175d072ec2057466b05e39a71a2a10690"
+            "6be7a5812afbc03f24b513d2dd03c8844b9764d50704"), 0, 0);
         stream >> tx;
     }
     TxUtils::disallowNewTransactions();
 
     BOOST_CHECK_EQUAL(tx.vin.size(), 1);
     BOOST_CHECK_EQUAL(tx.vin.front().prevout.n, 1);
-    BOOST_CHECK(tx.vin.front().prevout.hash == uint256(ParseHex("32a4ef9efb5a6f788bf821932de35c5adedc249676c124abb6ed2bddcc1c468c")));
-    BOOST_CHECK_EQUAL(tx.vin.front().scriptSig.size(), 106);
-    BOOST_CHECK_EQUAL(tx.vout.size(), 1);
-    BOOST_CHECK_EQUAL(tx.vout.front().nValue, 37000);
+    BOOST_CHECK(tx.vin.front().prevout.hash == uint256(ParseHex("b18d97af2e95f38bf67df6aa23a5640c45632a13e52cd6658e9fb38b81a4093b")));
+    BOOST_CHECK_EQUAL(tx.vin.front().scriptSig.size(), 139);
+    BOOST_CHECK_EQUAL(tx.vout.size(), 2);
+    BOOST_CHECK_EQUAL(tx.vout.front().nValue, 199095300);
     BOOST_CHECK_EQUAL(tx.vout.front().scriptPubKey.size(), 25);
+    BOOST_CHECK_EQUAL(tx.vout.at(1).nValue, 301000000);
+    BOOST_CHECK_EQUAL(tx.vout.at(1).scriptPubKey.size(), 25);
 }
 
 BOOST_AUTO_TEST_CASE(test_hashtype_version4)

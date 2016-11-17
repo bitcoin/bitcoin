@@ -200,6 +200,51 @@ public:
 extern boost::atomic<bool> flexTransActive;
 struct CMutableTransaction;
 
+template<typename Stream>
+void SerialiseScriptSig4(const std::vector<CTxIn> &inputs, Stream &s, int nType, int nVersion)
+{
+    for (auto in : inputs) {
+        bool first = true;
+        unsigned int i = 0; // use both iterator and int b/c the iterator doesn't do bounds-checks.
+        auto iter = in.scriptSig.begin();
+        while (i < in.scriptSig.size()) {
+            uint8_t k = *iter;
+            if ((k > 0 && k < 76) || (k >= 76 && k <= 78)) {
+                uint32_t size = k;
+                if (k >= 76) { // OP_PUSHDATA
+                    const int width = k - 75; // address width
+                    size = *(++iter);
+                    if (width > 1) {
+                        size = (size << 8) + (uint8_t) *(++iter);
+                        if (width > 2) {
+                            size = (size << 8) + (uint8_t) *(++iter);
+                            size = (size << 8) + (uint8_t) *(++iter);
+                            ++i;
+                        }
+                    }
+                    i += width;
+                }
+                if (size + i >= in.scriptSig.size())
+                    throw std::runtime_error("Signatures malformed");
+                auto iterBegin = ++iter;
+                iter += size;
+                CMFToken token(first ? Consensus::TxInputStackItem : Consensus::TxInputStackItemContinued,
+                    std::vector<char>(iterBegin, iter));
+                STORECMF(token);
+                i += size;
+            } else if (k == OP_FALSE) {
+                CMFToken token(first ? Consensus::TxInputStackItem : Consensus::TxInputStackItemContinued,
+                               std::vector<char>(1, OP_FALSE));
+                STORECMF(token);
+                ++iter;
+            } else
+                throw std::runtime_error("Signatures malformed");
+            i++;
+            first = false;
+        }
+    }
+}
+
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion, bool withSignatures = true) {
     ser_writedata32(s, tx.nVersion);
@@ -236,12 +281,8 @@ inline void SerializeTransaction(TxType& tx, Stream& s, int nType, int nVersion,
             STORECMF(token);
         }
         if (withSignatures) {
-            if (!isCoinbaseTx) {
-                for (auto in : tx.vin) {
-                    CMFToken token(Consensus::TxInScript, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end()));
-                    STORECMF(token);
-                }
-            }
+            if (!isCoinbaseTx)
+                SerialiseScriptSig4(tx.vin, s, nType, nVersion);
             CMFToken end(Consensus::TxEnd);
             STORECMF(end);
         }
@@ -322,11 +363,8 @@ public:
         if (!txData.empty()) {
             s.write(&txData[0], txData.size());
             const bool isCoinbaseTx = vin.size() == 1 && vin.at(0).prevout.IsNull() && !vin.at(0).scriptSig.empty();
-            if (!isCoinbaseTx) {
-                for (auto in : vin) {
-                    STORECMF(CMFToken(Consensus::TxInScript, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end())));
-                }
-            }
+            if (!isCoinbaseTx)
+                SerialiseScriptSig4(vin, s, nType, version);
             STORECMF(CMFToken(Consensus::TxEnd));
         } else {
             SerializeTransaction(*this, s, nType, nVersion);

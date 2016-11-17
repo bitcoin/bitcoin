@@ -109,10 +109,9 @@ uint256 CTransaction::CalculateSignaturesHash() const
 {
     CHashWriter ss(0, 0);
     ss << hash;
-    for (auto in : vin) {
-        CMFToken token(Consensus::TxInScript, std::vector<char>(in.scriptSig.begin(), in.scriptSig.end()));
-        ::Serialize<CHashWriter,CMFToken>(ss, token, 0, 0);
-    }
+    SerialiseScriptSig4(vin, ss, 0, 0);
+    CMFToken end(Consensus::TxEnd);
+    ::Serialize<CHashWriter,CMFToken>(ss, end, 0, 0);
     return ss.GetHash();
 }
 
@@ -120,7 +119,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
 {
     assert(inputs.empty());
     assert(outputs.empty());
-    unsigned int inputCount = 0;
+    int signatureCount = -1;
     bool storedOutValue = false, storedOutScript = false;
     bool seenCoinbaseMessage = false;
     int64_t outValue = 0;
@@ -161,9 +160,9 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             seenCoinbaseMessage = true;
             break;
         }
-        case Consensus::TxInScript: {
-            if (inputs.empty()) throw std::runtime_error("TxInScript before TxInPrevHash");
-            if (inputCount == 0) { // copy all of the input tags
+        case Consensus::TxInputStackItem:
+        case Consensus::TxInputStackItemContinued: {
+            if (signatureCount == -1) { // copy all of the input tags
                 CDataStream stream(0, 4);
                 ser_writedata32(stream, nVersion);
                 for (unsigned int i = 0; i < index; ++i) {
@@ -171,8 +170,16 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
                 }
                 txData = std::vector<char>(stream.begin(), stream.end());
             }
+            if (signatureCount < 0 || token.tag == Consensus::TxInputStackItem)
+                signatureCount++;
+            if (static_cast<int>(inputs.size()) <= signatureCount)
+                throw std::runtime_error("TxInputStackItem* before TxInPrevHash");
+
             auto data = token.unsignedByteArray();
-            inputs[inputCount++].scriptSig = CScript(data.begin(), data.end());
+            if (data.size() == 1)
+                inputs[signatureCount].scriptSig << data.at(0);
+            else
+                inputs[signatureCount].scriptSig << data;
             break;
         }
         case Consensus::TxEnd:

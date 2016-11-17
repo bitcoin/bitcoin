@@ -9,8 +9,8 @@ enum TxMessageFields {
     TxEnd = 0,          // BoolTrue
     TxInPrevHash,       // sha256 (Bytearray)
     TxInPrevIndex,      // PositiveNumber
-    TxInPrevHeight,     // PositiveNumber
-    TxInScript,         // bytearray
+    TxInputStackItem,  // bytearray
+    TxInputStackItemContinued, // bytearray
     TxOutValue,         // PositiveNumber (in satoshis)
     TxOutScript,        // bytearray
     TxRelativeBlockLock,// PositiveNumber
