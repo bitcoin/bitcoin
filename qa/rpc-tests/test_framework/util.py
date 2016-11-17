@@ -114,7 +114,7 @@ def initialize_datadir(dirname, n,bitcoinConfDict=None,wallet=None):
         os.makedirs(datadir)
     
     defaults = {"server":1, "discover":0, "regtest":1,"rpcuser":"rt","rpcpassword":"rt",
-                "port":p2p_port(n),"rpcport":str(rpc_port(n)),"listenonion":0,"maxlimitertxfee":0,"blockprioritysize":2000000}
+                "port":p2p_port(n),"rpcport":str(rpc_port(n)),"listenonion":0,"maxlimitertxfee":0}
     if bitcoinConfDict: defaults.update(bitcoinConfDict)
 
     with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
@@ -131,24 +131,6 @@ def initialize_datadir(dirname, n,bitcoinConfDict=None,wallet=None):
         os.makedirs(regtestdir)
       shutil.copyfile(wallet,os.path.join(regtestdir, "wallet.dat"))
       
-
-    if 0:
-        f.write("regtest=1\n")
-        f.write("rpcuser=rt\n")
-        f.write("rpcpassword=rt\n")
-        f.write("port="+str(p2p_port(n))+"\n")
-        f.write("rpcport="+str(rpc_port(n))+"\n")
-        f.write("listenonion=0\n")
-        f.write("debug=net\n")
-        f.write("debug=blk\n")
-        f.write("debug=thin\n")
-        f.write("debug=lck\n")
-        f.write("debug=mempool\n")
-        f.write("debug=req\n")
-        f.write("debug=bench\n")
-        f.write("debug=evict\n")
-        f.write("maxlimitertxfee=0\n")
-        f.write("blockprioritysize=2000000\n")
     return datadir
 
 def initialize_chain(test_dir,bitcoinConfDict=None,wallets=None):
@@ -328,7 +310,7 @@ def interconnect_nodes(nodes):
     """Connect every node in this list to every other node in the list"""
     for frm in nodes:
       for to in nodes:
-        if frm==to: continue
+        if frm == to: continue
         up = urlparse.urlparse(to.url)
         ip_port = up.hostname + ":" + str(up.port-1000)  # this is the RPC port but we want the p2p port so -1000
         frm.addnode(ip_port, "onetry")
@@ -448,20 +430,18 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
     txid = None
     inp = []
     decContext = decimal.getcontext().prec
-    try:
+    try:  # try finally block to put the decimal precision back to what it was prior to this routine
       decimal.getcontext().prec = 8
       amount = Decimal(0)
-      # pdb.set_trace()
       for tx in prevouts:
         inp.append({"txid":str(tx["txid"]),"vout":tx["vout"]})
-	  # inp.append({"txid":bitcoin.core.b2lx(tx["outpoint"].hash),"vout":tx["outpoint"].n})
 	amount += tx["amount"]*BTC
    
       txLen = (len(prevouts)*100) + (len(toAddrs)*100)  # Guess the tx Size
 
       while 1:
-	  outp = {} # = { str(toAddr): str((amount-txfeePer)/BTC) }
-          if amount-Decimal(txfeePer*txLen) < 0:  # fee too big, find something smaller
+	  outp = {}
+          if amount - Decimal(txfeePer*txLen) < 0:  # fee too big, find something smaller
             txfeePer = (float(amount)/txLen)/1.5
           
           txfee = int(math.ceil(txfeePer*txLen))
@@ -482,37 +462,35 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
 	  else:
 	      outp[str(a)] = float(amtPer/BTC)
 
-    #      try:
-	  if 1:
-	    txn = node.createrawtransaction(inp, outp)
-	    if kwargs.get("sendtx",True):
+          
+          txn = node.createrawtransaction(inp, outp)
+          if kwargs.get("sendtx",True):
               #print time.strftime('%X %x %Z')
               try:
-                s = str(txn)
-                # print "tx len: ", len(binascii.unhexlify(s))
-  	        signedtxn = node.signrawtransaction(s)
-  	        txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
+                  s = str(txn)
+                  # print "tx len: ", len(binascii.unhexlify(s))
+                  signedtxn = node.signrawtransaction(s)
+                  txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
               finally:
-                #print time.strftime('%X %x %Z')
-                pass
-	      if signedtxn["complete"]:
-                try:
-  		  txid = node.sendrawtransaction(signedtxn["hex"],True)  # In the unit tests, we'll just allow high fees
-       	          return (txn,inp,outp,txid)
-                except JSONRPCException as e:
-                  if e.error["code"] == -26:  # insufficient priority
-                    txfeePer = txfeePer * 2
-                    print "Insufficient priority, raising tx fee per byte to: ", txfeePer 
-                    continue
-		  else:
-                    raise
+                  #print time.strftime('%X %x %Z')
+                  pass
+
+              if signedtxn["complete"]:
+                  try:
+                      txid = node.sendrawtransaction(signedtxn["hex"],True)  # In the unit tests, we'll just allow high fees
+                      return (txn,inp,outp,txid)
+                  except JSONRPCException as e:
+                      if e.error["code"] == -26:  # insufficient priority
+                          txfeePer = txfeePer * 2
+                          print "Insufficient priority, raising tx fee per byte to: ", txfeePer 
+                          continue
+                      else:
+                          raise
               else:
-                # print signedtxn
-                for err in signedtxn["errors"]:
-                  print err["error"]
-                #pdb.set_trace()
-	    else:
-	      return (txn,inp,outp,txid)
+                  for err in signedtxn["errors"]:
+                      print err["error"]
+	  else:
+              return (txn,inp,outp,txid)
     finally:
       decimal.getcontext().prec = decContext
 

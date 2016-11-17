@@ -30,7 +30,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
 
-        if 0:  # Use to create wallet with lots of addresses
+        if 0:  # getnewaddress can be painfully slow.  This bit of code can be used to during development to
+               # create a wallet with lots of addresses, which then can be used in subsequent runs of the test.
+               # It is left here for developers to manually enable.
           TEST_SIZE=10000
           print "Creating addresses..."
           addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
@@ -51,15 +53,19 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       self.testExcessiveBlock()
       self.testExcessiveTx()
 
+
     def testExcessiveTx(self):
+      """This test checks the behavior of the nodes in the presence of excessively large transactions.
+         It will set the accept depth to different values on each node, and then verify that each node
+         Does not follow the excessive tip until the accept depth is exceeded.
+ 
+         The test also validates the rejection of a > 100kb transaction in a > 1MB block, and again
+         watches as each node eventually accepts the large tx based on accept depth.
+      """
       TEST_SIZE=20
       logging.info("Test excessive transactions")
       if 1:
         tips = self.nodes[0].getchaintips ()
-        #assert_equal (len (tips), 1)
-        #assert_equal (tips[0]['branchlen'], 0)
-        #assert_equal (tips[0]['height'], 200)
-        #assert_equal (tips[0]['status'], 'active')
 
         self.nodes[0].set("net.excessiveAcceptDepth=0")
         self.nodes[1].set("net.excessiveAcceptDepth=1")
@@ -85,7 +91,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         if 1:
   	  logging.info("Creating addresses...")
 	  addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
-        else:
+        else:  # enable if you are using a pre-created wallet, as described above
   	  logging.info("Loading addresses...")
           with open("wallet10kAddrs.json") as f: addrs = json.load(f)
 
@@ -133,10 +139,8 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           latest = counts[0]
           assert_equal(counts, [latest,latest,latest,latest]) # Verify that all nodes accepted the block, even if some of them didn't have the transaction.  They should all accept a <= 1MB block with a tx <= 1MB
 
-  	  # mafter = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
-
         if self.extended:  # this test checks the behavior of > 1MB blocks with excessive transactions.  it takes a LONG time to generate and propagate 1MB+ txs.
-  	  # Create a LOT of UTXOs for the next test
+          # Create a LOT of UTXOs for the next test
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=True)
           logging.info("Create lots of UTXOs...")
@@ -148,7 +152,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
             if n >= len(addrs): n=0
 	
           self.nodes[0].generate(1)
-	  self.sync_all()
+          self.sync_all()
 
           logging.info("Building > 1MB block...")
           self.nodes[0].set("net.excessiveTxn=1000000")  # Set the excessive transaction size larger for this node so we can generate an "excessive" block for the other nodes
@@ -163,7 +167,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
             count+=1
             utxo = wallet.pop()
             outp = {}
-	    outp[addrs[count%len(addrs)]] = utxo["amount"]
+            outp[addrs[count%len(addrs)]] = utxo["amount"]
             txn = self.nodes[0].createrawtransaction([utxo], outp)
             signedtxn = self.nodes[0].signrawtransaction(txn)
             size += len(binascii.unhexlify(signedtxn["hex"]))
@@ -173,43 +177,29 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
           self.nodes[0].setminingmaxblock(2000000)
           wallet.sort(key=lambda x: x["amount"],reverse=True)
-	  (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0:2000],[addrs[0]],txfeePer=60)
+          (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0:2000],[addrs[0]],txfeePer=60)
           logging.debug("Transaction Length is: ", len(binascii.unhexlify(tx)))
-          # assert(binascii.unhexlify(tx) > 100000) # txn has to be big for the test to work
-	  origCounts = [ x.getblockcount() for x in self.nodes ]
+          assert(binascii.unhexlify(tx) > 100000) # txn has to be big for the test to work
+
+          origCounts = [ x.getblockcount() for x in self.nodes ]
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
-          print mpool
+          logging.debug(str(mpool))
           largeBlock = self.nodes[0].generate(1)
-          time.sleep(10) # can't sync b/c nodes won't be in sync
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
-          print mpool
-          counts = [ x.getblockcount() for x in self.nodes ]
-          latest = counts[0]
-          excess = latest-1
-          #assert_equal(counts, [latest,excess,excess,excess]) 
+          logging.debug(str(mpool))
 
           logging.info("Syncing node1")
           largeBlock2 = self.nodes[0].generate(1)
-          while 1:
-            counts = [ x.getblockcount() for x in self.nodes ]
-            if counts[0] == counts[1]:  # this is a large block with lots of tx so can take a LONG time to sync on one computer
-              break
-            time.sleep(10) # can't sync b/c nodes won't be in sync
-            print ".",
+          sync_blocks(self.nodes[0:2])
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
-          print mpool
+          logging.debug(str(mpool))
           latest = counts[0]
           assert_equal(counts, [latest,latest,excess,excess]) 
           print ""
 
           logging.info("Syncing node2")
           largeBlock3 = self.nodes[0].generate(1)
-          while 1:
-            counts = [ x.getblockcount() for x in self.nodes ]
-            if counts[0] == counts[1] == counts[2]:  # this is a large block with lots of tx so can take a LONG time to sync on one computer
-              break
-            time.sleep(10) # can't sync b/c nodes won't be in sync
-            print ".",
+          sync_blocks(self.nodes[0:3])
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
           print mpool
           counts = [ x.getblockcount() for x in self.nodes ]
@@ -219,12 +209,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
           logging.info("Syncing node3")          
           largeBlock4 = self.nodes[0].generate(1)
-          while 1:
-            counts = [ x.getblockcount() for x in self.nodes ]
-            if counts[0] == counts[1] == counts[2]:  # this is a large block with lots of tx so can take a LONG time to sync on one computer
-              break
-            time.sleep(10) # can't sync b/c nodes won't be in sync
-            print ".",
+          sync_blocks(self.nodes)
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
           print mpool
           counts = [ x.getblockcount() for x in self.nodes ]
@@ -267,21 +252,18 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
         logging.info("node1")
         self.nodes[0].generate(1)
-        time.sleep(2) #give blocks a chance to fully propagate
         sync_blocks(self.nodes[0:2])
         counts = [ x.getblockcount() for x in self.nodes ]
         assert_equal(counts, [base+2,base+2,base,base])  
 
         logging.info("node2")
         self.nodes[0].generate(1)
-        time.sleep(2) #give blocks a chance to fully propagate
         sync_blocks(self.nodes[0:3])
         counts = [ x.getblockcount() for x in self.nodes ]
         assert_equal(counts, [base+3,base+3,base+3,base])  
 
         logging.info("node3")
         self.nodes[0].generate(1)
-        time.sleep(2) #give blocks a chance to fully propagate
         self.sync_all()
         counts = [ x.getblockcount() for x in self.nodes ]
         assert_equal(counts, [base+4]*4)  
@@ -408,6 +390,8 @@ def Test():
 # "--noshutdown"
 # "--tmpdir"
   bitcoinConf = {
-          "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }
+    "debug":["net","blk","thin","lck","mempool","req","bench","evict"],
+    "blockprioritysize":2000000  # we don't want any transactions rejected due to insufficient fees...
+  }
 
   t.main(["--nocleanup","--noshutdown"],bitcoinConf,["wallet10k.dat",None,None,None]) # , "--tracerpc"])

@@ -42,6 +42,16 @@ class BitcoinTestFramework(object):
         pass
 
     def setup_chain(self,bitcoinConfDict=None, wallets=None):
+        """
+        Sets up the blockchain for the bitcoin nodes.  It also sets up the daemon configuration.
+        bitcoinConfDict:  Pass a dictionary of values you want written to bitcoin.conf.  If you have a key with multiple values, pass a list of the values as the value, for example:
+        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }        
+        This framework provides values for the necessary fields (like regtest=1).  But you can override these
+        defaults by setting them in this dictionary.
+
+        wallets: Pass a list of wallet filenames.  Each wallet file will be copied into the node's directory
+        before starting the node.
+        """
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain(self.options.tmpdir,bitcoinConfDict, wallets)
 
@@ -105,6 +115,16 @@ class BitcoinTestFramework(object):
         self.setup_network(False)
 
     def main(self,argsOverride=None,bitcoinConfDict=None,wallets=None):
+        """
+        argsOverride: pass your own values for sys.argv in this field (or pass None) to use sys.argv
+        bitcoinConfDict:  Pass a dictionary of values you want written to bitcoin.conf.  If you have a key with multiple values, pass a list of the values as the value, for example:
+        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }        
+        This framework provides values for the necessary fields (like regtest=1).  But you can override these
+        defaults by setting them in this dictionary.
+
+        wallets: Pass a list of wallet filenames.  Each wallet file will be copied into the node's directory
+        before starting the node.
+        """
         import optparse
 
         parser = optparse.OptionParser(usage="%prog [options]")

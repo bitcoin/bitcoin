@@ -3529,17 +3529,17 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     return true;
 }
 
-uint64_t CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot, bool fConservative)
+bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot, bool fConservative)
 {
     // These are checks that are independent of context.
 
     if (block.fChecked)
-      return block.nBlockSize;  // nBlockSize will ALWAYS be set if fChecked is set (occurs in this function)
+        return true;
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, fCheckPOW))
-        return 0;
+        return false;
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -3585,14 +3585,13 @@ uint64_t CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW
 
     uint64_t nSigOps = 0;
     uint64_t nTx = 0;  // BU: count the number of transactions in case the CheckExcessive function wants to use this as criteria
-    uint64_t nTxSize = 0;  // BU: track the longest transaction
     uint64_t nLargestTx = 0;  // BU: track the longest transaction
     
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         nTx++;
         nSigOps += GetLegacySigOpCount(tx);
-        nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        uint64_t nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
         if (nTxSize > nLargestTx) nLargestTx = nTxSize;
     }
 
@@ -4417,8 +4416,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 // detect out of order blocks, and store them for later
                 uint256 hash = block.GetHash();
                 if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex.find(block.hashPrevBlock) == mapBlockIndex.end()) {
-		  LogPrint("reindex", "%s: Out of order block %s (created %s), parent %s not known\n", __func__, hash.ToString(), DateTimeStrFormat("%Y-%m-%d",block.nTime),
-                            block.hashPrevBlock.ToString());
+                    LogPrint("reindex", "%s: Out of order block %s (created %s), parent %s not known\n", __func__, hash.ToString(), DateTimeStrFormat("%Y-%m-%d",block.nTime), block.hashPrevBlock.ToString());
                     if (dbp)
                         mapBlocksUnknownParent.insert(std::make_pair(block.hashPrevBlock, *dbp));
                     continue;

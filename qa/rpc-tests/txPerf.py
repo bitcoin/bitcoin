@@ -12,7 +12,8 @@ import binascii
 import time
 import math
 import json
-from decimal import *
+import logging
+logging.basicConfig(format='%(asctime)s.%(levelname)s: %(message)s', level=logging.INFO)
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -22,7 +23,7 @@ from test_framework.util import *
 class TransactionPerformanceTest(BitcoinTestFramework):
 
     def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
+        logging.info("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 3)
 
     def setup_network(self, split=False):
@@ -56,7 +57,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
 
     def signingPerformance(self,node, inputs,outputs,skip=100):
         fil = open("signPerf.csv","w")
-        print "tx len, # inputs, # outputs, time"
+        logging.info("tx len, # inputs, # outputs, time")
         print >>fil, "fieldNames = ['tx len', '# inputs', '# outputs', 'time']"
         print >>fil, "data = ["
         for i in range(0,len(inputs),skip):
@@ -66,8 +67,8 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               if j==0: j=1
               (txn,inp,outp,txid) = split_transaction(node, inputs[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=False)
             except Exception,e:
-              print txLen,",",len(inp),",",len(outp),",","split error"
-              print >>fil, "[",txLen,",",len(inp),",",len(outp),",","'split error:", str(e),"'],"
+              logging.info("%d, %d, %d, split error" % (txLen,len(inp),len(outp)))
+              print >>fil, "[",txLen,",",len(inp),",",len(outp),",",'"split error:"', str(e),'"],'
               continue
             try:
               s = str(txn)
@@ -76,11 +77,12 @@ class TransactionPerformanceTest(BitcoinTestFramework):
 	      signedtxn = node.signrawtransaction(s)
               end=time.time()
 	      txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
-              print txLen,",",len(inp),",",len(outp),",",end-start
+              logging.info("%d, %d, %d, %f" % (txLen,len(inp),len(outp),end-start))
               print >>fil, "[",txLen,",",len(inp),",",len(outp),",",end-start,"],"
 	    except:
+              logging.info("%d, %d, %d, %s" % (txLen,len(inp),len(outp),'"timeout"'))
               print txLen,",",len(inp),",",len(outp),",","timeout"
-              print >>fil, "[",txLen,",",len(inp),",",len(outp),",","'timeout'],"
+              print >>fil, "[",txLen,",",len(inp),",",len(outp),",",'"timeout"],'
             fil.flush()
         print >>fil,"]"
         fil.close()
@@ -106,7 +108,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               if j==0: j=1
               (txn,inp,outp,txid) = split_transaction(node, wallet[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=True)
             except Exception,e:
-              print "split error: ", str(e)
+              logging.info("split error: ", str(e))
               print >>fil, "[ 'sign',",0,",",i,",",j,",","'split error:", str(e),"'],"
               pdb.set_trace()
               continue
@@ -115,14 +117,14 @@ class TransactionPerformanceTest(BitcoinTestFramework):
             startTime = time.time()
 	    node.generate(1)
             elapsedTime = time.time() - startTime
-            print "generate time: ", elapsedTime
+            logging.info("generate time: %f" % elapsedTime)
             txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
 	    print >>fil, "[ 'gen',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],"
 
             startTime = time.time()
             self.sync_all()
             elapsedTime = time.time() - startTime
-            print "Sync time: ", elapsedTime
+            logging.info("Sync time: %f" % elapsedTime)
 	    print >>fil, "[ 'sync',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],"
             
         print >>fil,"]"
@@ -130,7 +132,8 @@ class TransactionPerformanceTest(BitcoinTestFramework):
 
 
     def run_test(self):
-        TEST_SIZE=500
+        TEST_SIZE=500  # To collect a lot of data points, set the TEST_SIZE to 2000
+
         #prepare some coins for multiple *rawtransaction commands
         self.nodes[2].generate(1)
         self.sync_all()
@@ -139,11 +142,13 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         self.nodes[2].generate(21)  # So we can access 10 txouts from nodes[0]
         self.sync_all()
 
-	wallet = self.nodes[0].listunspent()
-        print wallet
         start = time.time()
         addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
         print "['Benchmark', 'generate 2001 addresses', %f]" % (time.time()-start)
+
+	wallet = self.nodes[0].listunspent()
+        wallet.sort(key=lambda x: x["amount"],reverse=True)
+
         for w in wallet[0:2]:
           split_transaction(self.nodes[0], [w], addrs)
           self.nodes[0].generate(1)
@@ -160,15 +165,15 @@ class TransactionPerformanceTest(BitcoinTestFramework):
      
 	wallet = self.nodes[0].listunspent()
         wallet.sort(key=lambda x: x["amount"],reverse=True)
-        print "wallet length: %d" % len(wallet)
 
-	# addrs = [ self.nodes[0].getnewaddress() for _ in range(1000)]
-        print "addrs length: %d" % len(addrs)
+        logging.info("wallet length: %d" % len(wallet))
+        logging.info("addrs length: %d" % len(addrs))
+       
+        # To collect a lot of data points, set the interval to 100 or even 10 and run overnight
+        interval = TEST_SIZE/2
 
-        # self.signingPerformance(self.nodes[0], wallet[0:5000],addrs[0:2000])
-        # self.validatePerformance(self.nodes[0], 2000,addrs,100)
-
-        self.validatePerformance(self.nodes[0], TEST_SIZE,addrs,TEST_SIZE/2)
+        self.signingPerformance(self.nodes[0], wallet[0:TEST_SIZE],addrs[0:TEST_SIZE],interval)
+        self.validatePerformance(self.nodes[0], TEST_SIZE,addrs,interval)
 
 
 if __name__ == '__main__':

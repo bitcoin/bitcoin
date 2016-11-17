@@ -153,10 +153,12 @@ CTweak<unsigned int> maxBlocksInTransitPerPeer("net.maxBlocksInTransitPerPeer","
  *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
 CTweak<unsigned int> blockDownloadWindow("net.blockDownloadWindow","How far ahead of our current height do we fetch? 0 means use algorithm.",0);
 
-/** Size of the "block download window": how far ahead of our current height do we fetch?
- *  Larger windows tolerate larger download speed differences between peer, but increase the potential
- *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
- *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
+/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A 
+larger size will result in a tiny bit better performance if blocks are that 
+size.
+The real purpose of this parameter is to exhaustively test dynamic buffer resizes
+during reindexing by allowing the size to be set to low and random values.
+*/
 CTweak<uint64_t> reindexTypicalBlockSize("reindex.typicalBlockSize","Set larger than the typical block size.  The block data file's RAM buffer will initally be 2x this size.",TYPICAL_BLOCK_SIZE);
 
 
