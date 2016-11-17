@@ -40,6 +40,9 @@ public:
         sha.Reset();
         return *this;
     }
+
+    /** Return the total number of bytes hashed since the last Reset() (or object construction) */
+    size_t GetNumBytesHashed() const { return sha.GetNumBytesHashed(); }
 };
 
 /** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
@@ -132,17 +135,15 @@ class CHashWriter
 {
 private:
     CHash256 ctx;
-    size_t nBytesHashed;
 
 public:
     int nType;
     int nVersion;
 
-    CHashWriter(int nTypeIn, int nVersionIn) : nBytesHashed(0), nType(nTypeIn), nVersion(nVersionIn) {}
+    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
 
     CHashWriter& write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);
-        nBytesHashed += size;
         return (*this);
     }
 
@@ -152,8 +153,10 @@ public:
         ctx.Finalize((unsigned char*)&result);
         return result;
     }
+
+    /** Return the total number of bytes hashed by this object */
     size_t GetNumBytesHashed() const {
-        return nBytesHashed;
+        return ctx.GetNumBytesHashed();
     }
 
     template<typename T>
