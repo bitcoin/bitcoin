@@ -128,7 +128,8 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
 static const int64_t DEFAULT_MAX_TIP_AGE = 24 * 60 * 60;
-static const int64_t DEFAULT_CHECK_SCRIPT_NEWER = 30 * 24 * 60 * 60;
+/** Block depth from the tip that is subject to script checking (i.e. 30 days worth of blocks assuming 144 blocks a day) */
+static const int64_t DEFAULT_CHECK_SCRIPT_DEPTH = 6 * 24 * 30;
 
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;

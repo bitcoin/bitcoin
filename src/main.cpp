@@ -2378,8 +2378,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return true;
     }
 
-    const int64_t cutoffTime = GetAdjustedTime() - std::max<int64_t>(0, GetArg("-checkscriptnewer", DEFAULT_CHECK_SCRIPT_NEWER));
-    const bool fScriptChecks = !fCheckpointsEnabled || block.GetBlockTime() > cutoffTime;
+    const bool deepEnough = (chainActive.Height() - pindex->nHeight) >= std::max<int64_t>(0, GetArg("-checkscriptdepth", DEFAULT_CHECK_SCRIPT_DEPTH));
+    const bool fScriptChecks = !fCheckpointsEnabled || !deepEnough;
 
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
