@@ -10,6 +10,7 @@ class CMutableTransaction;
 
 namespace TxUtils {
     void RandomScript(CScript &script);
+    void RandomInScript(CScript &script);
 
     enum RandomTransactionType {
         SingleOutput,

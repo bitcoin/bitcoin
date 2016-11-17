@@ -16,6 +16,23 @@ void TxUtils::RandomScript(CScript &script) {
         script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
 }
 
+void TxUtils::RandomInScript(CScript &script) {
+    script = CScript();
+    int ops = 1 + (insecure_rand() % 5);
+    for (int i = 0; i < ops; ++i) {
+        int type = (insecure_rand() % 10);
+        if (type == 0) {
+            script << OP_FALSE;
+        } else {
+            std::vector<unsigned char> signature;
+            const int length = (type == 1 ? 50 : 1) + insecure_rand() % 100;
+            signature.reserve(length);
+            GetRandBytes(&signature[0], length);
+            script << signature;
+        }
+    }
+}
+
 void TxUtils::RandomTransaction(CMutableTransaction &tx, RandomTransactionType single) {
     tx.nVersion = 1;
     tx.vin.clear();
@@ -28,7 +45,7 @@ void TxUtils::RandomTransaction(CMutableTransaction &tx, RandomTransactionType s
         CTxIn &txin = tx.vin.back();
         txin.prevout.hash = GetRandHash();
         txin.prevout.n = insecure_rand() % 4;
-        RandomScript(txin.scriptSig);
+        RandomInScript(txin.scriptSig);
         txin.nSequence = (insecure_rand() % 2) ? (insecure_rand() & 0x40FFFF) : (unsigned int)-1;
     }
     for (int out = 0; out < outs; out++) {
