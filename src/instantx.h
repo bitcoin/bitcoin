@@ -11,9 +11,9 @@
 #include "base58.h"
 #include "main.h"
 
-class CConsensusVote;
 class CTransaction;
-class CTransactionLock;
+class CTxLockVote;
+class CTxLockCandidate;
 
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by
@@ -35,23 +35,23 @@ extern bool fEnableInstantSend;
 extern int nInstantSendDepth;
 extern int nCompleteTXLocks;
 
-extern std::map<uint256, CTransaction> mapTxLockReq;
-extern std::map<uint256, CTransaction> mapTxLockReqRejected;
-extern std::map<uint256, CConsensusVote> mapTxLockVote;
+extern std::map<uint256, CTransaction> mapLockRequestAccepted;
+extern std::map<uint256, CTransaction> mapLockRequestRejected;
+extern std::map<uint256, CTxLockVote> mapTxLockVotes;
 extern std::map<COutPoint, uint256> mapLockedInputs;
 
 
-int64_t CreateNewLock(CTransaction tx);
+int64_t CreateTxLockCandidate(CTransaction tx);
 
 bool IsInstantSendTxValid(const CTransaction& txCandidate);
 
 void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
 //check if we need to vote on this transaction
-void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight);
+void CreateTxLockVote(CTransaction& tx, int64_t nBlockHeight);
 
 //process consensus vote message
-bool ProcessConsensusVote(CNode *pnode, CConsensusVote& vote);
+bool ProcessTxLockVote(CNode *pnode, CTxLockVote& vote);
 
 //update UI and notify external script if any
 void UpdateLockedTransaction(CTransaction& tx, bool fForceNotification = false);
@@ -65,7 +65,7 @@ bool FindConflictingLocks(CTransaction& tx);
 void ResolveConflicts(CTransaction& tx);
 
 // keep transaction locks in memory for an hour
-void CleanTransactionLocksList();
+void CleanTxLockCandidates();
 
 // verify if transaction is currently locked
 bool IsLockedInstandSendTransaction(uint256 txHash);
@@ -76,9 +76,9 @@ int GetTransactionLockSignatures(uint256 txHash);
 // verify if transaction lock timed out
 bool IsTransactionLockTimedOut(uint256 txHash);
 
-int64_t GetAverageVoteTime();
+int64_t GetAverageUnknownVoteTime();
 
-class CConsensusVote
+class CTxLockVote
 {
 public:
     CTxIn vinMasternode;
@@ -102,19 +102,19 @@ public:
     bool CheckSignature();
 };
 
-class CTransactionLock
+class CTxLockCandidate
 {
 public:
     int nBlockHeight;
     uint256 txHash;
-    std::vector<CConsensusVote> vecConsensusVotes;
-    int nLockExpirationBlock;
+    std::vector<CTxLockVote> vecTxLockVotes;
+    int nExpirationBlock;
     int nTimeout;
 
     uint256 GetHash() const { return txHash; }
 
     bool IsAllVotesValid();
-    void AddVote(CConsensusVote& vote);
+    void AddVote(CTxLockVote& vote);
     int CountVotes();
 };
 

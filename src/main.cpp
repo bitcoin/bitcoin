@@ -4921,10 +4921,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         We want to only update the time on new hits, so that we can time out appropriately if needed.
     */
     case MSG_TXLOCK_REQUEST:
-        return mapTxLockReq.count(inv.hash) || mapTxLockReqRejected.count(inv.hash);
+        return mapLockRequestAccepted.count(inv.hash) || mapLockRequestRejected.count(inv.hash);
 
     case MSG_TXLOCK_VOTE:
-        return mapTxLockVote.count(inv.hash);
+        return mapTxLockVotes.count(inv.hash);
 
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
@@ -5078,20 +5078,20 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
-                    if(mapTxLockReq.count(inv.hash)) {
+                    if(mapLockRequestAccepted.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapTxLockReq[inv.hash];
+                        ss << mapLockRequestAccepted[inv.hash];
                         pfrom->PushMessage(NetMsgType::TXLOCKREQUEST, ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
-                    if(mapTxLockVote.count(inv.hash)) {
+                    if(mapTxLockVotes.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapTxLockVote[inv.hash];
+                        ss << mapTxLockVotes[inv.hash];
                         pfrom->PushMessage(NetMsgType::TXLOCKVOTE, ss);
                         pushed = true;
                     }
