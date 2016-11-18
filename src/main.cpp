@@ -3531,15 +3531,8 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 {
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
-    bool fHaveWitness = false;
-    for (size_t t = 1; t < block.vtx.size(); t++) {
-        if (!block.vtx[t]->wit.IsNull()) {
-            fHaveWitness = true;
-            break;
-        }
-    }
     std::vector<unsigned char> ret(32, 0x00);
-    if (fHaveWitness && IsWitnessEnabled(pindexPrev, consensusParams)) {
+    if (consensusParams.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         if (commitpos == -1) {
             uint256 witnessroot = BlockWitnessMerkleRoot(block, NULL);
             CHash256().Write(witnessroot.begin(), 32).Write(&ret[0], 32).Finalize(witnessroot.begin());
