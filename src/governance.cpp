@@ -366,7 +366,10 @@ void CGovernanceManager::UpdateCachesAndClean()
 
         // IF DELETE=TRUE, THEN CLEAN THE MESS UP!
 
-        if(pObj->IsSetCachedDelete() || pObj->IsSetExpired()) {
+        int64_t nTimeSinceDeletion = GetAdjustedTime() - pObj->GetDeletionTime();
+
+        if((pObj->IsSetCachedDelete() || pObj->IsSetExpired()) &&
+           (nTimeSinceDeletion >= GOVERNANCE_DELETION_DELAY)) {
             LogPrintf("CGovernanceManager::UpdateCachesAndClean -- erase obj %s\n", (*it).first.ToString());
             mnodeman.RemoveGovernanceObject(pObj->GetHash());
 
@@ -783,6 +786,7 @@ CGovernanceObject::CGovernanceObject()
   nHashParent(),
   nRevision(0),
   nTime(0),
+  nDeletionTime(0),
   nCollateralHash(),
   strData(),
   vinMasternode(),
@@ -810,6 +814,7 @@ CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, int
   nHashParent(nHashParentIn),
   nRevision(nRevisionIn),
   nTime(nTimeIn),
+  nDeletionTime(0),
   nCollateralHash(nCollateralHashIn),
   strData(strDataIn),
   vinMasternode(),
@@ -837,6 +842,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
   nHashParent(other.nHashParent),
   nRevision(other.nRevision),
   nTime(other.nTime),
+  nDeletionTime(other.nDeletionTime),
   nCollateralHash(other.nCollateralHash),
   strData(other.strData),
   vinMasternode(other.vinMasternode),
@@ -1454,7 +1460,10 @@ void CGovernanceObject::UpdateSentinelVariables(const CBlockIndex *pCurrentBlock
 
     if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;
     if(GetAbsoluteYesCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = true;
-    if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsVoteReq) fCachedDelete = true;
+    if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsVoteReq) {
+        fCachedDelete = true;
+        nDeletionTime = GetAdjustedTime();
+    }
     if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
     // ARE ANY OF THE VOTING FLAGS NEGATIVELY SET BY THE NETWORK?
@@ -1476,6 +1485,7 @@ void CGovernanceObject::swap(CGovernanceObject& first, CGovernanceObject& second
     swap(first.nHashParent, second.nHashParent);
     swap(first.nRevision, second.nRevision);
     swap(first.nTime, second.nTime);
+    swap(first.nDeletionTime, second.nDeletionTime);
     swap(first.nCollateralHash, second.nCollateralHash);
     swap(first.strData, second.strData);
     swap(first.nObjectType, second.nObjectType);

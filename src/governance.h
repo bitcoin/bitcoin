@@ -46,6 +46,8 @@ static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (0.33*COIN);
 
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
+static const int64_t GOVERNANCE_DELETION_DELAY = 10*60;
+
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
 static const int SEEN_OBJECT_IS_VALID = 0;
@@ -370,6 +372,9 @@ private:
     /// time this object was created
     int64_t nTime;
 
+    /// time this object was marked for deletion
+    int64_t nDeletionTime;
+
     /// fee-tx
     uint256 nCollateralHash;
 
@@ -429,6 +434,10 @@ public:
 
     int64_t GetCreationTime() const {
         return nTime;
+    }
+
+    int64_t GetDeletionTime() const {
+        return nDeletionTime;
     }
 
     int GetObjectType() const {
