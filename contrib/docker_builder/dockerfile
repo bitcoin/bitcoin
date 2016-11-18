@@ -25,14 +25,14 @@ RUN ./configure --enable-static; \
   make; \
   make install
 
-VOLUME /novacoin
+VOLUME /42
 
-WORKDIR /novacoin
+WORKDIR /42
 
 ENTRYPOINT qmake USE_O3=1 USE_ASM=1 RELEASE=1 && \
  make && \
  cd src && \
  make -f makefile.unix USE_O3=1 USE_ASM=1 STATIC=1 && \
- strip novacoind
+ strip 42d
 
  

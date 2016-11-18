@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build novacoind(headless client) for OSX.
+This guide will show you how to build 42d(headless client) for OSX.
 
 Notes
 -----
@@ -58,25 +58,25 @@ The rest of these commands are run inside brew interactive mode:
 /private/tmp/berkeley-db4-UGpd0O $ exit
 ```
 
-After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build novacoin, but if you want to, here's how:
+After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build 42, but if you want to, here's how:
 
     $ brew link --force berkeley-db4
 
 
-### Building `novacoind`
+### Building `42d`
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/novacoin-project/novacoin.git
-        cd novacoin
+        git clone https://github.com/42-coin/42.git
+        cd 42
 
-2. Build NovaCoin-Qt application:
+2. Build 42-Qt application:
         qmake
         make
 
 3. Build bitcoind:
         cd src
-        make -f makefile.osx novacoind
+        make -f makefile.osx 42d
 
 Use Qt Creator as IDE
 ------------------------
@@ -85,7 +85,7 @@ Download Qt Creator from http://www.qt.io/download/. Download the "community edi
 
 1. Make sure you installed everything through homebrew mentioned above 
 2. In Qt Creator do "File" -> "Open Project"
-3. Select novacoin-qt.pro as project file.
+3. Select 42-qt.pro as project file.
 4. In the "Projects" tab select "Manage Kits..."
 5. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
 6. Select LLDB as debugger (you might need to set the path to your installtion)
@@ -93,11 +93,11 @@ Download Qt Creator from http://www.qt.io/download/. Download the "community edi
 
 Creating a release build
 ------------------------
-You can ignore this section if you are building `novacoind` for your own use.
+You can ignore this section if you are building `42d` for your own use.
 
-novacoind binary isn't included in the NovaCoin-Qt.app bundle.
+42d binary isn't included in the 42-Qt.app bundle.
 
-If you are building `novacoind` or `NovaCoin-Qt` for others, your build machine should be set up
+If you are building `42d` or `42-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -108,29 +108,29 @@ All dependencies should be compiled with these flags:
 
 Once dependencies are compiled, you can create the .dmg disk image:
 
-./contrib/macdeploy/macdeployqtplus NovaCoin-Qt.app -dmg -fancy ./contrib/macdeploy/fancy.plist
+./contrib/macdeploy/macdeployqtplus 42-Qt.app -dmg -fancy ./contrib/macdeploy/fancy.plist
 
 Running
 -------
 
-It's now available at `./novacoind`, provided that you are still in the `src`
+It's now available at `./42d`, provided that you are still in the `src`
 directory. We have to first create the RPC configuration file, though.
 
-Run `./novacoind` to get the filename where it should be put, or just try these
+Run `./42d` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=novacoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/NovaCoin/novacoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/NovaCoin/novacoin.conf"
+    echo -e "rpcuser=42rpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/42/42.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/42/42.conf"
 
 The next time you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
 you can monitor its process by looking at the debug.log file, like this:
 
-    tail -f $HOME/Library/Application\ Support/NovaCoin/debug.log
+    tail -f $HOME/Library/Application\ Support/42/debug.log
 
 Other commands:
 -------
 
-    ./novacoind -daemon # to start the bitcoin daemon.
-    ./novacoind --help  # for a list of command-line options.
-    ./novacoind help    # When the daemon is running, to get a list of RPC commands
+    ./42d -daemon # to start the bitcoin daemon.
+    ./42d --help  # for a list of command-line options.
+    ./42d help    # When the daemon is running, to get a list of RPC commands

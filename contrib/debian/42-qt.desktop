@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=42
+Comment=42 P2P Cryptocurrency
+Comment[ru]=42, P2P криптовалюта
+Comment[fr]=42, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=42, eşten eşe kriptografik sanal para birimi
+Exec=/usr/bin/42-qt
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/4280.xpm
+MimeType=x-scheme-handler/42;
+Categories=Office;

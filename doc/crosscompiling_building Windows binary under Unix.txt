@@ -122,9 +122,9 @@ Using Qt version 5.5.1 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.stati
 -Перейдите в домашнюю папку
 -Откройте терминал
 
- git clone https://github.com/novacoin-project/novacoin.git
+ git clone https://github.com/42-coin/42.git
 
-3.2 Собираем novacoind 
+3.2 Собираем 42d 
 -Откройте файл makefile.mingw в текстовом редакторе.(При написании инструкции использовался Pluma 1.8.1)
 -Вставьте 
 CC=$(CROSS)gcc
@@ -171,7 +171,7 @@ USE_LEVELDB:=0
 на
 USE_LEVELDB:=1
 (выше USE_IPV6:=1)
-Откройте файл /home/<ваше имя>/novacoin/src/leveldb/Makefile
+Откройте файл /home/<ваше имя>/42/src/leveldb/Makefile
 Вставьте ниже строчки CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) следующие строки:
 
 CC=$(CROSS)gcc
@@ -187,24 +187,24 @@ cd leveldb; TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleve
 
 Измените
 clean:
-	-del /Q novacoind.exe
+	-del /Q 42d.exe
 	-del /Q obj\*
 	-del /Q crypto\scrypt\asm\obj\*
 
 на
 
 clean:
-	-rm novacoind.exe
+	-rm 42d.exe
 	-rm obj/*
 	-rm crypto/scrypt/asm/obj/*
 
 -Сохраните измененный файл makefile.mingw
 
 -Откройте терминал
-cd /home/<ваше имя>/novacoin/src
+cd /home/<ваше имя>/42/src
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 make -j n CROSS=i686-w64-mingw32.static- -f makefile.mingw (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
-strip novacoind.exe
+strip 42d.exe
 
 
 Во время линковки будут выдаваться подобные сообщения:
@@ -212,16 +212,16 @@ libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exc
 Игнорируйте их. На работоспособность программы это никак не влияет
 
 
-3.3 Собираем Novacoin QT
+3.3 Собираем 42 QT
 
-Внимание: Если вы хотите собирать Novacoin Qt с LevelDB, но пропустили шаг со сборкой novacoind.exe, то 
+Внимание: Если вы хотите собирать 42 Qt с LevelDB, но пропустили шаг со сборкой 42d.exe, то 
 -Измените Makefile в папке leveldb также как в пункте 3.2
 -Откройте терминал и выполните следующие команды:
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
-cd /home/<ваше имя>/novacoin/src/leveldb
+cd /home/<ваше имя>/42/src/leveldb
 TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleveldb.a libmemenv.a
 
--Откройте файл /home/<ваше имя>/novacoin/novacoin-qt.pro в текстовом редакторе(при написании инструкции использовался Pluma 1.8.1)
+-Откройте файл /home/<ваше имя>/42/42-qt.pro в текстовом редакторе(при написании инструкции использовался Pluma 1.8.1)
 -Ниже 
 # Dependency library locations can be customized with:
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
@@ -256,39 +256,39 @@ win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\\lrelease.exe
 на
 win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
 
--Сохраните измененный файл novacoin-qt.pro
+-Сохраните измененный файл 42-qt.pro
 -Откройте терминал и выполните следующие команды
 
 Qt4 + транзакционный индекс LevelDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
-cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt4 "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+cd /home/<ваше имя>/42
+i686-w64-mingw32.static-qmake-qt4 "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" 42-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt4 + транзакционный индекс BDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
-cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt4 "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+cd /home/<ваше имя>/42
+i686-w64-mingw32.static-qmake-qt4 "USE_IPV6=1" "USE_ASM=1" 42-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt5 + транзакционный индекс LevelDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
-cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+cd /home/<ваше имя>/42
+i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" 42-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt5 + транзакционный индекс BDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
-cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+cd /home/<ваше имя>/42
+i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_ASM=1" 42-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 
-Если всё сделано правильно, то файл novacoin-qt.exe будет находится в папке /home/<ваше имя>/novacoin/release
+Если всё сделано правильно, то файл 42-qt.exe будет находится в папке /home/<ваше имя>/42/release
 Во время линковки будут выдаваться подобные сообщения:
 libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE[__ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE]' has different size
 Игнорируйте их. На работоспособность программы это никак не влияет 
@@ -296,10 +296,10 @@ libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exc
 Если вы хотите уменьшить размер бинарных файлов, то
 1) Перейдите на сайт http://upx.sourceforge.net/#downloadupx
 2) Скачайте программу в соответсвии с вашей системой
-3) Распакуйте программу в папку с бинарными Novacoin файлами.
+3) Распакуйте программу в папку с бинарными 42 файлами.
 4) Введите в терминале
-./upx -9 novacoind.exe
+./upx -9 42d.exe
 затем
-./upx -9 novacoin-qt.exe
+./upx -9 42-qt.exe
 
-И ваши novacoind и novacoin-qt станут меньше ~ в 3 раза.
+И ваши 42d и 42-qt станут меньше ~ в 3 раза.

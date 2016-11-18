@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# PROVIDE: 42
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# 42_enable (bool): Set to NO by default. Set this variable to YES if you want to enable 42 service.
+# 42_config (path): Set to /usr/local/etc/42.conf by default.
+# 42_user:  The user account 42 daemon runs as. It uses 'root' user by default.
+# 42_group: The group account 42 daemon runs as. It uses 'wheel' group by default.
+# 42_datadir (str): Default to "/var/db/42". Base data directory.
+
+. /etc/rc.subr
+
+name=42
+rcvar=42_enable
+
+: ${42_enable:=NO}
+: ${42_config=/usr/local/etc/42.conf}
+: ${42_datadir=/var/db/42}
+: ${42_user="root"}
+: ${42_group="wheel"}
+
+required_files=${42_config}
+command=/usr/local/bin/42d
+42_chdir=${42_datadir}
+pidfile="${42_datadir}/42d.pid"
+stop_cmd=42_stop
+command_args="-conf=${42_config} -datadir=${42_datadir} -daemon -pid=${pidfile}"
+start_precmd="${name}_prestart"
+
+42_create_datadir()
+{
+	echo "Creating data directory"
+	eval mkdir -p ${42_datadir}
+	[ $? -eq 0 ] && chown -R ${42_user}:${42_group} ${42_datadir}
+}
+
+42_prestart()
+{
+	if [ ! -d "${42_datadir}/." ]; then
+		42_create_datadir || return 1
+	fi
+}
+
+42_requirepidfile()
+{
+	if [ ! "0`check_pidfile ${pidfile} ${command}`" -gt 1 ]; then
+		echo "${name} not running? (check $pidfile)."
+		exit 1
+	fi
+}
+
+42_stop()
+{
+    42_requirepidfile
+
+	echo "Stopping ${name}."
+	eval ${command} -conf=${42_config} -datadir=${42_datadir} stop
+	wait_for_pids ${rc_pid}
+}
+
+load_rc_config $name
+run_rc_command "$1"

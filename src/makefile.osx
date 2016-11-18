@@ -106,7 +106,7 @@ ifneq (${USE_IPV6}, -)
 	DEFS += -DUSE_IPV6=$(USE_IPV6)
 endif
 
-all: novacoind
+all: 42d
 
 #
 # LevelDB support
@@ -171,11 +171,11 @@ obj/%.o: %.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-novacoind: $(OBJS:obj/%=obj/%)
+42d: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	-rm -f novacoind
+	-rm -f 42d
 	-rm -f obj/*.o
 	-rm -f obj/*.P
 	-rm -f obj/*.d

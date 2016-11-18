@@ -591,7 +591,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx, bool fBlock)
                     printf("WalletUpdateSpent: bad wtx %s\n", wtx.GetHash().ToString().c_str());
                 else if (!wtx.IsSpent(txin.prevout.n) && IsMine(wtx.vout[txin.prevout.n]))
                 {
-                    printf("WalletUpdateSpent found spent coin %snvc %s\n", FormatMoney(wtx.GetCredit(MINE_ALL)).c_str(), wtx.GetHash().ToString().c_str());
+                    printf("WalletUpdateSpent found spent coin %s42 %s\n", FormatMoney(wtx.GetCredit(MINE_ALL)).c_str(), wtx.GetHash().ToString().c_str());
                     wtx.MarkSpent(txin.prevout.n);
                     wtx.WriteToDisk();
                     NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
@@ -1464,7 +1464,7 @@ void CWallet::ReacceptWalletTransactions()
                 }
                 if (fUpdated)
                 {
-                    printf("ReacceptWalletTransactions found spent coin %snvc %s\n", FormatMoney(wtx.GetCredit(MINE_ALL)).c_str(), wtx.GetHash().ToString().c_str());
+                    printf("ReacceptWalletTransactions found spent coin %s42 %s\n", FormatMoney(wtx.GetCredit(MINE_ALL)).c_str(), wtx.GetHash().ToString().c_str());
                     wtx.MarkDirty();
                     wtx.WriteToDisk();
                 }
@@ -2299,7 +2299,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
 
     // The following combine threshold is important to security
     // Should not be adjusted if you don't understand the consequences
-    int64_t nCombineThreshold = GetProofOfWorkReward(GetLastBlockIndex(pindexBest, false)->nBits) / 3;
+    int64_t nCombineThreshold = 1 * CENT;
 
     int64_t nBalance = GetBalance();
     int64_t nCredit = wtx.vout[nOut].nValue;
@@ -2325,7 +2325,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
 
     int64_t nValueIn = 0;
     CoinsSet setCoins;
-    if (!SelectCoinsSimple(nBalance - nReserveBalance, MIN_TX_FEE, MAX_MONEY, nGenerationTime, nCoinbaseMaturity * 10, setCoins, nValueIn))
+    if (!SelectCoinsSimple(nBalance - nReserveBalance, MIN_TX_FEE, MAX_MONEY, nGenerationTime, nCoinbaseMaturity, setCoins, nValueIn))
         return false;
 
     if (setCoins.empty())
@@ -2339,7 +2339,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
 
         // Iterate through set of (wtx*, nout) in order to find some additional inputs for our new coinstake transaction.
         //
-        // * Value is higher than 0.01 NVC;
+        // * Value is higher than 0.01 42;
         // * Only add inputs of the same key/address as kernel;
         // * Input hash and kernel parent hash should be different.
         for(CoinsSet::iterator pcoin = setCoins.begin(); pcoin != setCoins.end(); pcoin++)
@@ -2404,7 +2404,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
     CTxDB txdb("r");
     if (!txNew.GetCoinAge(txdb, nCoinAge))
         return error("CreateCoinStake : failed to calculate coin age\n");
-    nCredit += GetProofOfStakeReward(nCoinAge, nBits, nGenerationTime);
+    nCredit += GetProofOfStakeReward(nCoinAge);
 
     int64_t nMinFee = 0;
     for ( ; ; )

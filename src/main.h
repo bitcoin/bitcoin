@@ -40,13 +40,12 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const unsigned int MAX_ORPHAN_TRANSACTIONS = MAX_BLOCK_SIZE/100;
 static const unsigned int MAX_INV_SZ = 50000;
 
-static const int64_t MIN_TX_FEE = CENT/10;
-static const int64_t MIN_RELAY_TX_FEE = CENT/50;
+static const int64_t MIN_TX_FEE = 1;
+static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
 
-static const int64_t MAX_MONEY = std::numeric_limits<int64_t>::max();
-static const int64_t MAX_MINT_PROOF_OF_WORK = 100 * COIN;
-static const int64_t MAX_MINT_PROOF_OF_STAKE = 1 * COIN;
-static const int64_t MIN_TXOUT_AMOUNT = CENT/100;
+static const int64_t MAX_MONEY = 42 * COIN;
+static const int64_t COIN_YEAR_REWARD = 0 * COIN; // 0% per year
+static const int64_t MIN_TXOUT_AMOUNT = MIN_TX_FEE;
 
 
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
@@ -55,8 +54,8 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
 // Maximum number of script-checking threads allowed
 static const int MAX_SCRIPTCHECK_THREADS = 16;
 
-static const uint256 hashGenesisBlock("0x00000a060336cbb72fe969666d337b87198b1add2abaa59cca226820b32933a4");
-static const uint256 hashGenesisBlockTestNet("0x000c763e402f2436da9ed36c7286f62c3f6e5dbafce9ff289bd43d7459327eb");
+static const uint256 hashGenesisBlock("0x000004cf6cc5eec2d2d564fa45c26278ed72014822a601c1ff02cd84d0ef63be");
+static const uint256 hashGenesisBlockTestNet("0x00000bc79a2049b1430c77d81fad3373070e65668b21792d298ae5dde3e7abb8");
 
 inline int64_t PastDrift(int64_t nTime)   { return nTime - 2 * nOneHour; } // up to 2 hours from the past
 inline int64_t FutureDrift(int64_t nTime) { return nTime + 2 * nOneHour; } // up to 2 hours from the future
@@ -90,7 +89,6 @@ extern int64_t nTransactionFee;
 extern int64_t nMinimumInputValue;
 extern bool fUseFastIndex;
 extern int nScriptCheckThreads;
-extern const uint256 entropyStore[38];
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
@@ -123,8 +121,8 @@ void ThreadScriptCheckQuit();
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
-int64_t GetProofOfWorkReward(unsigned int nBits, int64_t nFees=0);
-int64_t GetProofOfStakeReward(int64_t nCoinAge, unsigned int nBits, int64_t nTime, bool bCoinYearOnly=false);
+int64_t GetProofOfWorkReward(int64_t nFees);
+int64_t GetProofOfStakeReward(int64_t nCoinAge);
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
 unsigned int ComputeMinStake(unsigned int nBase, int64_t nTime, unsigned int nBlockTime);
 int GetNumBlocksOfPeers();
@@ -958,23 +956,10 @@ public:
     // ppcoin: entropy bit for stake modifier if chosen by modifier
     unsigned int GetStakeEntropyBit(unsigned int nHeight) const
     {
-        // Protocol switch to support p2pool at novacoin block #9689
-        if (nHeight >= 9689 || fTestNet)
-        {
-            // Take last bit of block hash as entropy bit
-            unsigned int nEntropyBit = (GetHash().Get64()) & (uint64_t)1;
-            if (fDebug && GetBoolArg("-printstakemodifier"))
-                printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
-            return nEntropyBit;
-        }
-
-        // Before novacoin block #9689 - get from pregenerated table
-        int nBitNum = nHeight & 0xFF;
-        int nItemNum = nHeight / 0xFF;
-
-        unsigned int nEntropyBit = (unsigned int) ((entropyStore[nItemNum] & (uint256(1) << nBitNum)) >> nBitNum).Get64();
+        // Take last bit of block hash as entropy bit
+        unsigned int nEntropyBit = ((GetHash().Get64()) & 1ULL);
         if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf("GetStakeEntropyBit: from pregenerated table, nHeight=%d nEntropyBit=%u\n", nHeight, nEntropyBit);
+            printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
         return nEntropyBit;
     }
 

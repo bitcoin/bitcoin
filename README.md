@@ -1,16 +1,26 @@
+[![42orig256.png](https://s13.postimg.org/u4nl71wxj/42orig256.png/)](https://tr.im/42coin)
 
-NovaCoin official development tree
 
-NovaCoin - a hybrid scrypt PoW + PoS based cryptocurrency.
+42-coin - a PoS/PoW based cryptocurrency.
+		
+Specifications
+--------------
 
-* 10 minutes stake spacing
-* 30 minutes PoW spacing
-* Balanced PoW blocks and stakes weighting
-* The PoW subsidy halves every x64 multiply of PoW difficulty
-* The PoS interest halves every x64 multiply of PoS difficulty
-* Maximum PoW reward is 100 coins
-* Maximum PoS reward is 10 coins
-* No deterministic limit of the supply, currently ~ 1411259 coins mined
+- Max money: 42 coins
+- Transaction confirmation method: PoS+PoW
+- Transaction type: public & anonymous
+- Number of transaction confirmation: 7
+- Number of block confirmation: 42
+- PoS reward: 0 coin
+- Min stake age: 42 hours
+- Max stake age: 420 days
+- PoS target spacing: 7 minutes
+- PoW algo type: Scrypt
+- PoW reward: 0 coin + tx fees
+- PoW target spacing: 21 minutes
+- Default Listen Port: 4242 (42420 for testnet)
+- JSON-RPC Port: 2121 (21210 for testnet)
+
 
 Development process
 ===========================
@@ -25,7 +35,7 @@ or are controversial.
 
 The master branch is regularly built and tested, but is not guaranteed
 to be completely stable. Tags are regularly created to indicate new
-official, stable release versions of NovaCoin.
+official, stable release versions of 42.
 
 Feature branches are created when there are major new features being
 worked on by several people.

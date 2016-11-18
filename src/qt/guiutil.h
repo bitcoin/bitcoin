@@ -40,7 +40,7 @@ namespace GUIUtil
     void setupAddressWidget(QLineEdit *widget, QWidget *parent);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
-    // Parse "novacoin:" URI into recipient object, return true on successful parsing
+    // Parse "42:" URI into recipient object, return true on successful parsing
     // See Bitcoin URI definition discussion here: https://bitcointalk.org/index.php?topic=33490.0
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
@@ -83,7 +83,7 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
-    // Open novacoin.conf
+    // Open 42.conf
     void openConfigfile();
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text
       representation if needed. This assures that Qt can word-wrap long tooltip messages.

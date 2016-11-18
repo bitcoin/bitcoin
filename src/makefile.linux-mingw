@@ -104,7 +104,7 @@ OBJS= \
     obj/cryptogram.o \
     obj/ipcollector.o
 
-all: novacoind.exe
+all: 42d.exe
 
 #
 # LevelDB support
@@ -167,12 +167,12 @@ DEFS += -DHAVE_BUILD_INFO
 obj/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
 
-novacoind.exe: $(OBJS:obj/%=obj/%)
+42d.exe: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lshlwapi
-	$(STRIP) novacoind.exe
+	$(STRIP) 42d.exe
 
 clean:
-	-rm -f novacoind.exe
+	-rm -f 42d.exe
 	-rm -f obj/*.o
 	-rm -f obj/*.P
 	-rm -f obj/*.d

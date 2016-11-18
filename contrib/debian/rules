@@ -1,25 +1,25 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-DEB_INSTALL_EXAMPLES_novacoind += debian/examples/*
-DEB_INSTALL_MANPAGES_novacoind += debian/manpages/*
+DEB_INSTALL_EXAMPLES_42d += debian/examples/*
+DEB_INSTALL_MANPAGES_42d += debian/manpages/*
 
 %:
 	dh --with bash-completion $@
 
 override_dh_auto_build:
-	cd src; $(MAKE) -f makefile.unix novacoind USE_ASM=1 USE_LEVELDB=1
+	cd src; $(MAKE) -f makefile.unix 42d USE_ASM=1 USE_LEVELDB=1
 	$(MAKE)
 
 override_dh_auto_clean:
-	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f novacoin-qt; fi
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f 42-qt; fi
 	cd src; $(MAKE) -f makefile.unix clean
 
 override_dh_auto_configure:
-	qmake novacoin-qt.pro USE_ASM=1 USE_LEVELDB=1
+	qmake 42-qt.pro USE_ASM=1 USE_LEVELDB=1
 
 # Ensure wrapper is set executable
-binary-post-install/novacoind:
-	chmod +x $(cdbs_curdestdir)usr/bin/novacoind
-binary-post-install/novacoin-qt:
-	chmod +x $(cdbs_curdestdir)usr/bin/novacoin-qt
+binary-post-install/42d:
+	chmod +x $(cdbs_curdestdir)usr/bin/42d
+binary-post-install/42-qt:
+	chmod +x $(cdbs_curdestdir)usr/bin/42-qt

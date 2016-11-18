@@ -1,8 +1,8 @@
-Source: novacoin
+Source: 42
 Section: utils
 Priority: optional
-Maintainer: Alex D. <balthazar.ad@gmail.com>
-Uploaders: Alex D. <balthazar.ad@gmail.com>
+Maintainer: Jonas Smedegaard <dr@jones.dk>
+Uploaders: Micah Anderson <micah@debian.org>
 Build-Depends: debhelper,
  devscripts,
  bash-completion,
@@ -17,15 +17,14 @@ Build-Depends: debhelper,
  libqt4-dev,
  libqrencode-dev
 Standards-Version: 3.9.2
-Homepage: http://www.novaco.in/
-Vcs-Git: git://github.com/novacoin-project/novacoin.git
-Vcs-Browser: http://github.com/novacoin-project/novacoin
+Vcs-Git: git://github.com/42-coin/42.git
+Vcs-Browser: http://github.com/42-coin/42
 
-Package: novacoind
+Package: 42d
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Novacoin is a free open source peer-to-peer electronic cash system that
+ 42 is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
@@ -36,14 +35,14 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 150+ MiB of space, slowly growing.
  .
- This package provides novacoind, a combined daemon and CLI tool to
+ This package provides 42d, a combined daemon and CLI tool to
  interact with the daemon.
 
-Package: novacoin-qt
+Package: 42-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Novacoin is a free open source peer-to-peer electronic cash system that
+ 42 is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
@@ -54,4 +53,4 @@ Description: peer-to-peer network based digital currency - Qt GUI
  Full transaction history is stored locally at each client.  This
  requires 150+ MiB of space, slowly growing.
  .
- This package provides Novacoin-Qt, a GUI for Novacoin based on Qt.
+ This package provides 42-Qt, a GUI for 42 based on Qt.

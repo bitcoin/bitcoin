@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>NovaCoin - Debug window</string>
+   <string>42 - Debug window</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -92,7 +92,7 @@
        <item row="16" column="0">
         <widget class="QPushButton" name="openDebugLogfileButton">
          <property name="toolTip">
-          <string>Open the NovaCoin debug log file from the current data directory. This can take a few seconds for large log files.</string>
+          <string>Open the 42 debug log file from the current data directory. This can take a few seconds for large log files.</string>
          </property>
          <property name="text">
           <string>&amp;Open</string>
@@ -144,7 +144,7 @@
        <item row="18" column="0">
         <widget class="QPushButton" name="showCLOptionsButton">
          <property name="toolTip">
-          <string>Show the NovaCoin-Qt help message to get a list with possible NovaCoin command-line options.</string>
+          <string>Show the 42-Qt help message to get a list with possible 42 command-line options.</string>
          </property>
          <property name="text">
           <string>&amp;Show</string>
@@ -380,7 +380,7 @@
           </font>
          </property>
          <property name="text">
-          <string>NovaCoin Core</string>
+          <string>42 Core</string>
          </property>
         </widget>
        </item>
@@ -423,7 +423,7 @@
        <item row="16" column="2">
         <widget class="QPushButton" name="openConfigurationfileButton">
          <property name="toolTip">
-          <string>Open the NovaCoin configuration file from the current data directory.</string>
+          <string>Open the 42 configuration file from the current data directory.</string>
          </property>
          <property name="text">
           <string>O&amp;pen</string>

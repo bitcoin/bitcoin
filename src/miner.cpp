@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013 The NovaCoin developers
+// Copyright (c) 2013-2016 The NovaCoin developers
+// Copyright (c) 2016 The 42 developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -357,8 +358,8 @@ CBlock* CreateNewBlock(CWallet* pwallet, CTransaction *txCoinStake)
 
         if (!fProofOfStake)
         {
-            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pblock->nBits, nFees);
-
+            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(nFees);
+			
             if (fDebug)
                 printf("CreateNewBlock(): PoW reward %" PRIu64 "\n", pblock->vtx[0].vout[0].nValue);
         }
@@ -650,7 +651,7 @@ void ThreadStakeMiner(void* parg)
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     // Make this thread recognisable as the mining thread
-    RenameThread("novacoin-miner");
+    RenameThread("42-miner");
     CWallet* pwallet = (CWallet*)parg;
 
     MidstateMap inputsMap;

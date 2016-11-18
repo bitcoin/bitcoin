@@ -94,7 +94,7 @@ OBJS= \
     obj/cryptogram.o \
     obj/ipcollector.o
 
-all: novacoind.exe
+all: 42d.exe
 
 #
 # LevelDB support
@@ -105,7 +105,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	cd leveldb;TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a;; cd ..
+	cd leveldb;TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a; cd ..
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 else
 OBJS += obj/txdb-bdb.o
@@ -150,11 +150,11 @@ endif
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<
 
-novacoind.exe: $(OBJS:obj/%=obj/%)
+42d.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	-del /Q novacoind.exe
+	-del /Q 42d.exe
 	-del /Q obj\*
 	-del /Q crypto\scrypt\asm\obj\*
 

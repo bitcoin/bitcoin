@@ -1,5 +1,5 @@
 src/*.exe
-src/novacoind
+src/42d
 src/build.h
 .*.swp
 *.*~*
@@ -8,11 +8,11 @@ src/build.h
 *.orig
 *.o
 *.patch
-.novacoin
+.42
 #compilation and Qt preprocessor part
 *.qm
 Makefile
-novacoin-qt
+42-qt
 #resources cpp
 qrc_*.cpp
 #qt creator

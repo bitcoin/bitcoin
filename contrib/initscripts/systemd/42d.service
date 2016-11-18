@@ -1,0 +1,11 @@
+[Unit]
+Description=42 daemon serivce
+After=network.target
+
+[Service]
+Type=simple
+User=42
+ExecStart=/opt/42/42d
+
+[Install]
+WantedBy=multi-user.target

@@ -32,7 +32,7 @@ static const int DATABASE_VERSION = 70507;
 
 static const int PROTOCOL_VERSION = 60018;
 
-// earlier versions not supported as of Feb 2012, and are disconnected
+// earlier versions not supported and disconnected
 static const int MIN_PROTO_VERSION = 209;
 
 // nTime field added to CAddress, starting with this version;
@@ -44,7 +44,7 @@ static const int NOBLKS_VERSION_START = 60002;
 static const int NOBLKS_VERSION_END = 60006;
 
 #define DISPLAY_VERSION_MAJOR       0
-#define DISPLAY_VERSION_MINOR       5
-#define DISPLAY_VERSION_REVISION    8
+#define DISPLAY_VERSION_MINOR       0
+#define DISPLAY_VERSION_REVISION    7
 
 #endif

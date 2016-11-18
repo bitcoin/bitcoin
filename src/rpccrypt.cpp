@@ -30,7 +30,7 @@ Value decryptdata(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "decryptdata <novacoin address or private key> <encrypted stream>\n"
+            "decryptdata <42 address or private key> <encrypted stream>\n"
             "Decrypt octet stream.\n");
 
     EnsureWalletIsUnlocked();
@@ -77,7 +77,7 @@ Value decryptmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "decryptmessage <novacoin address or private key> <encrypted message>\n"
+            "decryptmessage <42 address or private key> <encrypted message>\n"
             "Decrypt message string.\n");
 
     EnsureWalletIsUnlocked();

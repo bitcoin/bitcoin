@@ -20,7 +20,7 @@
       <string notr="true">QLabel { font-style:italic; }</string>
      </property>
      <property name="text">
-      <string>Welcome to novacoin-qt.</string>
+      <string>Welcome to 42-qt.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -46,7 +46,7 @@
    <item>
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>As this is the first time the program is launched, you can choose where novacoin-qt will store its data.</string>
+      <string>As this is the first time the program is launched, you can choose where 42-qt will store its data.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -56,7 +56,7 @@
    <item>
     <widget class="QLabel" name="sizeWarningLabel">
      <property name="text">
-      <string>novacoin-qt will download and store a copy of the Novacoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
+      <string>42-qt will download and store a copy of the 42 block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

@@ -14,7 +14,7 @@ import random
 import platform
 import urllib.request
 
-sources = ['http://dalexhz1.cloudapp.net', 'http://dalexhz2.cloudapp.net', 'http://dalexhz4.cloudapp.net', 'http://dalexhz5.cloudapp.net']
+sources = ['']
 data = urllib.request.urlopen(random.choice(sources)).readall();
 
 if 'norpc' in sys.argv:
@@ -32,25 +32,25 @@ from socket import error as socket_error
 def confFile():
     folder = ''
     if platform.system() == 'Windows':
-        folder = os.path.join(os.path.join(os.environ['APPDATA'], 'NovaCoin'))
+        folder = os.path.join(os.path.join(os.environ['APPDATA'], '42'))
     else:
         if platform.system() == 'Darwin':
-            folder = os.path.expanduser('~/Library/Application Support/NovaCoin/')
+            folder = os.path.expanduser('~/Library/Application Support/42/')
         else:
-            folder = os.path.expanduser('~/.novacoin')
+            folder = os.path.expanduser('~/.42')
 
-    return os.path.join(folder, 'novacoin.conf')
+    return os.path.join(folder, '42.conf')
 
 conf_path = confFile()
 if not os.path.exists(conf_path):
-    parser.error('''Novacoin configuration file not found. Manually enter your RPC password.\r\n'''
+    parser.error('''42 configuration file not found. Manually enter your RPC password.\r\n'''
         '''If you actually haven't created a configuration file, you should create one at %s with the text like this:\r\n'''
         '''\r\n'''
         '''server=1\r\n'''
         '''rpcuser=yourname\r\n'''
         '''rpcpassword=%x\r\n'''
         '''\r\n'''
-        '''Keep that password secret! After creating the file, restart Novacoin.''' % (conf_path, random.randrange(2**128)))
+        '''Keep that password secret! After creating the file, restart 42.''' % (conf_path, random.randrange(2**128)))
 
 conf = open(conf_path, 'rb').read()
 contents = {}
@@ -73,7 +73,7 @@ if b'rpcuser' not in contents.keys():
 
 rpcuser = contents[b'rpcuser'].decode()
 rpcpassword = contents[b'rpcpassword'].decode()
-rpcport = 8344
+rpcport = 2121
 rpclisten = '127.0.0.1'
 
 if b'rpcport' in contents.keys():
@@ -89,7 +89,7 @@ for node in json.loads(data.decode()):
         access.addnode(node, 'add')
     except socket_error as e:
         if e.errno == errno.ECONNREFUSED:
-            print ('Unable to communicate with Novacoin RPC')
+            print ('Unable to communicate with 42 RPC')
         break
     except JSONRPCException as e:
         if e.code == -23:

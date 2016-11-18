@@ -30,7 +30,7 @@
        <item>
         <widget class="QLabel" name="transactionFeeInfoLabel">
          <property name="text">
-          <string>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.001 recommended.</string>
+          <string>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.00000001 recommended.</string>
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
@@ -83,10 +83,10 @@
        <item>
         <widget class="QCheckBox" name="bitcoinAtStartup">
          <property name="toolTip">
-          <string>Automatically start NovaCoin after logging in to the system.</string>
+          <string>Automatically start 42 after logging in to the system.</string>
          </property>
          <property name="text">
-          <string>&amp;Start NovaCoin on system login</string>
+          <string>&amp;Start 42 on system login</string>
          </property>
         </widget>
        </item>
@@ -123,7 +123,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
-          <string>Connect to the NovaCoin network through a SOCKS proxy (e.g. when connecting through Tor).</string>
+          <string>Connect to the 42 network through a SOCKS proxy (e.g. when connecting through Tor).</string>
          </property>
          <property name="text">
           <string>&amp;Connect through SOCKS proxy:</string>
@@ -422,7 +422,7 @@
          <item>
           <widget class="QValueComboBox" name="lang">
            <property name="toolTip">
-            <string>The user interface language can be set here. This setting will take effect after restarting NovaCoin.</string>
+            <string>The user interface language can be set here. This setting will take effect after restarting 42.</string>
            </property>
           </widget>
          </item>
@@ -455,7 +455,7 @@
        <item>
         <widget class="QCheckBox" name="displayAddresses">
          <property name="toolTip">
-          <string>Whether to show NovaCoin addresses in the transaction list or not.</string>
+          <string>Whether to show 42 addresses in the transaction list or not.</string>
          </property>
          <property name="text">
           <string>&amp;Display addresses in transaction list</string>
@@ -477,7 +477,7 @@
          <item>
           <widget class="QLabel" name="thirdPartyTxUrlsLabel">
            <property name="toolTip">
-            <string>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third party URLs that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
             <string>Third party transaction URLs</string>
@@ -490,7 +490,7 @@
          <item>
           <widget class="QLineEdit" name="thirdPartyTxUrls">
            <property name="toolTip">
-            <string>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
+            <string>Third party URLs that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
           </widget>
          </item>

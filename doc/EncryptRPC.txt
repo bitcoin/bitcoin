@@ -2,7 +2,7 @@ Encryption RPC api allows you to encrypt an arbitrary data bytes with some publi
 
 Example
 
-1. Let's generate new novacoin address first.
+1. Let's generate new 42 address first.
 
 > getnewaddress
 4NZFZZS9b8iawVA8sYtHsqNbpq57envuBz

@@ -48,7 +48,7 @@
          <item>
           <widget class="QValidatedLineEdit" name="addressIn_SM">
            <property name="toolTip">
-            <string>The address to sign the message with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</string>
+            <string>The address to sign the message with (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</string>
            </property>
            <property name="maxLength">
             <number>34</number>
@@ -145,7 +145,7 @@
          <item>
           <widget class="QPushButton" name="signMessageButton_SM">
            <property name="toolTip">
-            <string>Sign the message to prove you own this NovaCoin address</string>
+            <string>Sign the message to prove you own this 42 address</string>
            </property>
            <property name="text">
             <string>&amp;Sign Message</string>
@@ -251,7 +251,7 @@
          <item>
           <widget class="QValidatedLineEdit" name="addressIn_VM">
            <property name="toolTip">
-            <string>The address the message was signed with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</string>
+            <string>The address the message was signed with (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</string>
            </property>
            <property name="maxLength">
             <number>34</number>
@@ -291,7 +291,7 @@
          <item>
           <widget class="QPushButton" name="verifyMessageButton_VM">
            <property name="toolTip">
-            <string>Verify the message to ensure it was signed with the specified NovaCoin address</string>
+            <string>Verify the message to ensure it was signed with the specified 42 address</string>
            </property>
            <property name="text">
             <string>&amp;Verify Message</string>

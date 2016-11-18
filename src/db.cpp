@@ -122,9 +122,9 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
         if (nDeepReorg < 3)
         {
             if (nBlocks < 1)
-                strMessage = strprintf(_("Warning: DB_CONFIG has set_lk_max_locks %u, which may be too low for a single block. If this limit is reached, NovaCoin may stop working."), nMaxLocks);
+                strMessage = strprintf(_("Warning: DB_CONFIG has set_lk_max_locks %u, which may be too low for a single block. If this limit is reached, 42 may stop working."), nMaxLocks);
             else
-                strMessage = strprintf(_("Warning: DB_CONFIG has set_lk_max_locks %u, which may be too low for a common blockchain reorganization. If this limit is reached, NovaCoin may stop working."), nMaxLocks);
+                strMessage = strprintf(_("Warning: DB_CONFIG has set_lk_max_locks %u, which may be too low for a common blockchain reorganization. If this limit is reached, 42 may stop working."), nMaxLocks);
 
             strMiscWarning = strMessage;
             printf("*** %s\n", strMessage.c_str());

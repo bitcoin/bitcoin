@@ -6,13 +6,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About NovaCoin</source>
-        <translation>Про Novacoin</translation>
+        <source>About 42</source>
+        <translation>Про 42</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="56"/>
-        <source>&lt;b&gt;NovaCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;NovaCoin&lt;/b&gt; версії</translation>
+        <source>&lt;b&gt;42&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;42&lt;/b&gt; версії</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="97"/>
@@ -20,12 +20,14 @@
 Copyright © 2011-2012 The PPCoin Developers
 Copyright © 2014 The Peerunity Developers
 Copyright © 2014 The EmerCoin Developers
-Copyright © 2012-2016 The NovaCoin developers</source>
+Copyright © 2012-2016 The NovaCoin Developers
+Copyright © 2016 The 42 Developers</source>
         <translation>© 2009-2016 Розробники Bitcoin
 © 2011-2012 Розробники PPCoin
 © 2014 Розробники Peerunity
 © 2014 Розробники EmerCoin
-© 2012-2016 Розробники NovaCoin</translation>
+© 2012-2016 Розробники NovaCoin
+© 2016 Розробники 42</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="114"/>
@@ -42,7 +44,7 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="20"/>
-        <source>These are your NovaCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <source>These are your 42 addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Це ваші адреси для отримання платежів. Ви можете давати різні адреси різним людям, таким чином маючи можливість відслідкувати хто конкретно і скільки вам заплатив.</translation>
     </message>
     <message>
@@ -77,7 +79,7 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="102"/>
-        <source>Sign a message to prove you own a NovaCoin address</source>
+        <source>Sign a message to prove you own a 42 address</source>
         <translation>Підпишіть повідомлення щоб довести, що ви є власником цієї адреси</translation>
     </message>
     <message>
@@ -87,8 +89,8 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="116"/>
-        <source>Verify a message to ensure it was signed with a specified NovaCoin address</source>
-        <translation>Перевірити повідомлення, щоб переконатися, що воно було підписане вказаним адресою NovaCoin</translation>
+        <source>Verify a message to ensure it was signed with a specified 42 address</source>
+        <translation>Перевірити повідомлення, щоб переконатися, що воно було підписане вказаним адресою 42</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="119"/>
@@ -240,7 +242,7 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="116"/>
-        <source>NovaCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
+        <source>42 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your coins from being stolen by malware infecting your computer.</source>
         <translation>Новакоін-клієнт буде закрито для завершення процесу шифрування. Пам’ятайте, що шифрування гаманця не може повністю захистити ваші новакоіни від кражі, у випадку якщо ваш комп’ютер буде інфіковано шкідливими програмами.</translation>
     </message>
     <message>
@@ -293,8 +295,8 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="178"/>
-        <source>NovaCoin will close now to finish the decryption process. </source>
-        <translation>Зараз NovaCoin клієнт буде закрито щоб завершити процес розшифровки.</translation>
+        <source>42 will close now to finish the decryption process. </source>
+        <translation>Зараз 42 клієнт буде закрито щоб завершити процес розшифровки.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="189"/>
@@ -312,14 +314,14 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoin.cpp" line="146"/>
-        <source>A fatal error occurred. NovaCoin can no longer continue safely and will quit.</source>
-        <translation>Сталася фатальна помилка. Програма зараз закриється, оскільки NovaCoin не може продовжувати роботу безпечно.</translation>
+        <source>A fatal error occurred. 42 can no longer continue safely and will quit.</source>
+        <translation>Сталася фатальна помилка. Програма зараз закриється, оскільки 42 не може продовжувати роботу безпечно.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="96"/>
         <location filename="../bitcoingui.cpp" line="736"/>
-        <source>NovaCoin</source>
-        <translation>NovaCoin</translation>
+        <source>42</source>
+        <translation>42</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="96"/>
@@ -343,7 +345,7 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="251"/>
-        <source>Send coins to a NovaCoin address</source>
+        <source>Send coins to a 42 address</source>
         <translation>Відправити монети на вказану адресу</translation>
     </message>
     <message>
@@ -408,13 +410,13 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
-        <source>&amp;About NovaCoin</source>
-        <translation>П&amp;ро NovaCoin</translation>
+        <source>&amp;About 42</source>
+        <translation>П&amp;ро 42</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
-        <source>Show information about NovaCoin</source>
-        <translation>Показати інформацію про NovaCoin</translation>
+        <source>Show information about 42</source>
+        <translation>Показати інформацію про 42</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -434,8 +436,8 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
-        <source>Modify configuration options for NovaCoin</source>
-        <translation>Редагувати параметри NovaCoin</translation>
+        <source>Modify configuration options for 42</source>
+        <translation>Редагувати параметри 42</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
@@ -499,8 +501,8 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="329"/>
-        <source>Sign messages with your Novacoin addresses to prove you own them</source>
-        <translation>Підтвердіть, що Ви є власником повідомлення підписавши його Вашою Novacoin-адресою</translation>
+        <source>Sign messages with your 42 addresses to prove you own them</source>
+        <translation>Підтвердіть, що Ви є власником повідомлення підписавши його Вашою 42-адресою</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="330"/>
@@ -509,8 +511,8 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="331"/>
-        <source>Verify messages to ensure they were signed with specified Novacoin addresses</source>
-        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною Novacoin-адресою</translation>
+        <source>Verify messages to ensure they were signed with specified 42 addresses</source>
+        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною 42-адресою</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="332"/>
@@ -519,7 +521,7 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="333"/>
-        <source>Second auth with your Novacoin addresses</source>
+        <source>Second auth with your 42 addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -611,16 +613,16 @@ Copyright © 2012-2016 The NovaCoin developers</source>
     <message>
         <location filename="../bitcoingui.cpp" line="445"/>
         <location filename="../bitcoingui.cpp" line="513"/>
-        <source>NovaCoin client</source>
-        <translation>NovaCoin клієнт</translation>
+        <source>42 client</source>
+        <translation>42 клієнт</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="586"/>
-        <source>%n active connection(s) to NovaCoin network</source>
+        <source>%n active connection(s) to 42 network</source>
         <translation>
-            <numerusform>%n активне з&apos;єднання з мережею NovaCoin</numerusform>
-            <numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform>
-            <numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform>
+            <numerusform>%n активне з&apos;єднання з мережею 42</numerusform>
+            <numerusform>%n активних з&apos;єднань з мережею 42</numerusform>
+            <numerusform>%n активних з&apos;єднань з мережею 42</numerusform>
         </translation>
     </message>
     <message>
@@ -794,8 +796,8 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="982"/>
         <location filename="../bitcoingui.cpp" line="997"/>
-        <source>URI can not be parsed! This can be caused by an invalid NovaCoin address or malformed URI parameters.</source>
-        <translation>Неможливо обробити URI! Це може бути викликано неправильною NovaCoin-адресою, чи невірними параметрами URI.</translation>
+        <source>URI can not be parsed! This can be caused by an invalid 42 address or malformed URI parameters.</source>
+        <translation>Неможливо обробити URI! Це може бути викликано неправильною 42-адресою, чи невірними параметрами URI.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="1016"/>
@@ -933,8 +935,8 @@ Some or all keys from:
         <translation>Сума:</translation>
     </message>
     <message>
-        <source>0.00 NVC</source>
-        <translation type="obsolete">0.00 NVC</translation>
+        <source>0.00000000 42</source>
+        <translation type="obsolete">0.00000000 42</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="157"/>
@@ -1237,8 +1239,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="103"/>
-        <source>The entered address &quot;%1&quot; is not a valid NovaCoin address.</source>
-        <translation>Введена адреса «%1» не є коректною адресою в мережі NovaCoin</translation>
+        <source>The entered address &quot;%1&quot; is not a valid 42 address.</source>
+        <translation>Введена адреса «%1» не є коректною адресою в мережі 42</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="108"/>
@@ -1289,8 +1291,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../guiutil.cpp" line="476"/>
         <location filename="../guiutil.cpp" line="488"/>
-        <source>NovaCoin-Qt</source>
-        <translation>NovaCoin-Qt</translation>
+        <source>42-Qt</source>
+        <translation>42-Qt</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="476"/>
@@ -1337,17 +1339,17 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
-        <source>Welcome to novacoin-qt.</source>
+        <source>Welcome to 42-qt.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
-        <source>As this is the first time the program is launched, you can choose where novacoin-qt will store its data.</source>
+        <source>As this is the first time the program is launched, you can choose where 42-qt will store its data.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
-        <source>novacoin-qt will download and store a copy of the Novacoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>42-qt will download and store a copy of the 42 block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1362,7 +1364,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location filename="../intro.cpp" line="184"/>
-        <source>Novacoin-qt</source>
+        <source>42-qt</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1425,11 +1427,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location filename="../mintingtablemodel.cpp" line="228"/>
         <source>MintProbability</source>
         <translation>PoS-ймовірність</translation>
-    </message>
-    <message>
-        <location filename="../mintingtablemodel.cpp" line="228"/>
-        <source>MintReward</source>
-        <translation>Pos нагорода</translation>
     </message>
     <message>
         <location filename="../mintingtablemodel.cpp" line="327"/>
@@ -1794,8 +1791,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">123.456</translation>
     </message>
     <message>
-        <source>NVC</source>
-        <translation type="obsolete">NVC</translation>
+        <source>42</source>
+        <translation type="obsolete">42</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="413"/>
@@ -1904,13 +1901,13 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../multisigdialog.cpp" line="522"/>
-        <source>The fee of the transaction (%1 NVC) is smaller than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
-        <translation>Комісія за транзакцію (%1 NVC) менше, ніж очікувана комісія (%2 NVC). Чи бажаєте ви здійснити транзакцію в будь-якому випадку?</translation>
+        <source>The fee of the transaction (%1 42) is smaller than the expected fee (%2 42). Do you want to send the transaction anyway?</source>
+        <translation>Комісія за транзакцію (%1 42) менше, ніж очікувана комісія (%2 42). Чи бажаєте ви здійснити транзакцію в будь-якому випадку?</translation>
     </message>
     <message>
         <location filename="../multisigdialog.cpp" line="528"/>
-        <source>The fee of the transaction (%1 NVC) is bigger than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
-        <translation>Комісія за транзакцію (%1 NVC) більша, ніж очікувана комісія (%2 NVC). Чи бажаєте ви здійснити транзакцію в будь-якому випадку?</translation>
+        <source>The fee of the transaction (%1 42) is bigger than the expected fee (%2 42). Do you want to send the transaction anyway?</source>
+        <translation>Комісія за транзакцію (%1 42) більша, ніж очікувана комісія (%2 42). Чи бажаєте ви здійснити транзакцію в будь-якому випадку?</translation>
     </message>
 </context>
 <context>
@@ -1970,8 +1967,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.001 recommended.</source>
-        <translation>Необов&apos;язкова комісія транзакції за кБ що сприятеме її швидкому обробленню. Більшість транзакцій 1кБ. Рекомендується коміся 0,001.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.00000001 recommended.</source>
+        <translation>Необов&apos;язкова комісія транзакції за кБ що сприятеме її швидкому обробленню. Більшість транзакцій 1кБ. Рекомендується коміся 0,00000001.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="48"/>
@@ -1985,12 +1982,12 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="86"/>
-        <source>Automatically start NovaCoin after logging in to the system.</source>
+        <source>Automatically start 42 after logging in to the system.</source>
         <translation>Автоматично запускати гаманець при вході до системи.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="89"/>
-        <source>&amp;Start NovaCoin on system login</source>
+        <source>&amp;Start 42 on system login</source>
         <translation>&amp;Запускати гаманець при вході в систему</translation>
     </message>
     <message>
@@ -2010,7 +2007,7 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="126"/>
-        <source>Connect to the NovaCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <source>Connect to the 42 network through a SOCKS proxy (e.g. when connecting through Tor).</source>
         <translation>Підключення до мережі через SOCKS5 проксі (напр. при підключенні через Tor).</translation>
     </message>
     <message>
@@ -2120,8 +2117,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="425"/>
-        <source>The user interface language can be set here. This setting will take effect after restarting NovaCoin.</source>
-        <translation>Встановлює мову інтерфейсу. Зміни набудуть чинності після перезапуску NovaCoin.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting 42.</source>
+        <translation>Встановлює мову інтерфейсу. Зміни набудуть чинності після перезапуску 42.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="436"/>
@@ -2135,8 +2132,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
-        <source>Whether to show NovaCoin addresses in the transaction list or not.</source>
-        <translation>Відображати адреси NovaCoin у списку транзакцій чи ні.</translation>
+        <source>Whether to show 42 addresses in the transaction list or not.</source>
+        <translation>Відображати адреси 42 у списку транзакцій чи ні.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -2156,8 +2153,8 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="480"/>
         <location filename="../forms/optionsdialog.ui" line="493"/>
-        <source>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Сторонні URL (наприклад explorer.novaco.in), які відображаються на вкладці транзакцій як пункти контекстного меню. %s в URL замінюється хешем транзакції. URL відокремлюються один від одного вертикальною рискою |.</translation>
+        <source>Third party URLs that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Сторонні URL, які відображаються на вкладці транзакцій як пункти контекстного меню. %s в URL замінюється хешем транзакції. URL відокремлюються один від одного вертикальною рискою |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="483"/>
@@ -2197,8 +2194,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../optionsdialog.cpp" line="251"/>
         <location filename="../optionsdialog.cpp" line="260"/>
         <location filename="../optionsdialog.cpp" line="269"/>
-        <source>This setting will take effect after restarting NovaCoin.</source>
-        <translation>Цей параметр набуде чинності після перезавантаження NovaCoin.</translation>
+        <source>This setting will take effect after restarting 42.</source>
+        <translation>Цей параметр набуде чинності після перезавантаження 42.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="299"/>
@@ -2231,8 +2228,8 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="46"/>
         <location filename="../forms/overviewpage.ui" line="365"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Інформація, що відображається може бути застарілою. Ваш гаманець автоматично синхронізується з мережею NovaCoin після встановлення з&apos;єднання, але цей процес ще не завершений.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the 42 network after a connection is established, but this process has not completed yet.</source>
+        <translation>Інформація, що відображається може бути застарілою. Ваш гаманець автоматично синхронізується з мережею 42 після встановлення з&apos;єднання, але цей процес ще не завершений.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="225"/>
@@ -2332,18 +2329,18 @@ Reduce the number of addresses involved in the address creation.</source>
     <name>QObject</name>
     <message>
         <location filename="../bitcoinunits.cpp" line="48"/>
-        <source>NovaCoins</source>
-        <translation>NovaCoins</translation>
+        <source>42s</source>
+        <translation>42s</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="49"/>
-        <source>Milli-NovaCoins (1 / 1,000)</source>
-        <translation>Milli-NovaCoins (1 / 1,000)</translation>
+        <source>Milli-42s (1 / 1,000)</source>
+        <translation>Milli-42s (1 / 1,000)</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="50"/>
-        <source>Micro-NovaCoins (1 / 1,000,000)</source>
-        <translation>Micro-NovaCoins (1 / 1,000,000)</translation>
+        <source>Micro-42s (1 / 1,000,000)</source>
+        <translation>Micro-42s (1 / 1,000,000)</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="185"/>
@@ -2443,8 +2440,8 @@ Reduce the number of addresses involved in the address creation.</source>
     <name>RPCConsole</name>
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
-        <source>NovaCoin - Debug window</source>
-        <translation>NovaCoin - Вікно відладки</translation>
+        <source>42 - Debug window</source>
+        <translation>42 - Вікно відладки</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2483,8 +2480,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="95"/>
-        <source>Open the NovaCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Відкрийте файл журналу відладки NovaCoin з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
+        <source>Open the 42 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Відкрийте файл журналу відладки 42 з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="98"/>
@@ -2498,8 +2495,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="147"/>
-        <source>Show the NovaCoin-Qt help message to get a list with possible NovaCoin command-line options.</source>
-        <translation>Показати довідку Novacoin-Qt для отримання переліку можливих параметрів командного рядка.</translation>
+        <source>Show the 42-Qt help message to get a list with possible 42 command-line options.</source>
+        <translation>Показати довідку 42-Qt для отримання переліку можливих параметрів командного рядка.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="150"/>
@@ -2563,8 +2560,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="383"/>
-        <source>NovaCoin Core</source>
-        <translation>Ядро NovaCoin</translation>
+        <source>42 Core</source>
+        <translation>Ядро 42</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="406"/>
@@ -2573,8 +2570,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="426"/>
-        <source>Open the NovaCoin configuration file from the current data directory.</source>
-        <translation>Відкрийте файл конфігурації NovaCoin з поточного каталогу даних.</translation>
+        <source>Open the 42 configuration file from the current data directory.</source>
+        <translation>Відкрийте файл конфігурації 42 з поточного каталогу даних.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="429"/>
@@ -2618,8 +2615,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="325"/>
-        <source>Welcome to the NovaCoin RPC console.</source>
-        <translation>Вітаємо у консолі NovaCoin RPC.</translation>
+        <source>Welcome to the 42 RPC console.</source>
+        <translation>Вітаємо у консолі 42 RPC.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="326"/>
@@ -2669,8 +2666,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation type="obsolete">Підписи - Підпис / Перевірка повідомлення</translation>
     </message>
     <message>
-        <source>The address to sign the message with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation type="obsolete">Виберіть адресу, який буде використаний для підписання повідомлення (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>The address to sign the message with (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation type="obsolete">Виберіть адресу, який буде використаний для підписання повідомлення (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../forms/secondauthdialog.ui" line="48"/>
@@ -2694,7 +2691,7 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/secondauthdialog.ui" line="38"/>
-        <source>The address for authentification (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
+        <source>The address for authentification (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2723,7 +2720,7 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this NovaCoin address</source>
+        <source>Sign the message to prove you own this 42 address</source>
         <translation type="obsolete">Підпишіть повідомлення щоб довести, що ви є власником цієї адреси</translation>
     </message>
     <message>
@@ -2743,8 +2740,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../secondauthdialog.cpp" line="29"/>
-        <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation type="unfinished">Введіть адресу NovaCoin (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter a 42 address (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation type="unfinished">Введіть адресу 42 (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../secondauthdialog.cpp" line="30"/>
@@ -2847,8 +2844,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Сума:</translation>
     </message>
     <message>
-        <source>0.00 NVC</source>
-        <translation type="obsolete">0.00 NVC</translation>
+        <source>0.00000000 42</source>
+        <translation type="obsolete">0.00000000 42</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="337"/>
@@ -2936,8 +2933,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Баланс:</translation>
     </message>
     <message>
-        <source>123.456 NVC</source>
-        <translation type="obsolete">123.456 NVC</translation>
+        <source>123.456 42</source>
+        <translation type="obsolete">123.456 42</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
@@ -2951,8 +2948,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="43"/>
-        <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Введіть адресу NovaCoin (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter a 42 address (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation>Введіть адресу 42 (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
@@ -3081,8 +3078,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="93"/>
-        <source>The address to send the payment to  (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Виберіть адресу для відправлення монет (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>The address to send the payment to  (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation>Виберіть адресу для відправлення монет (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="103"/>
@@ -3111,8 +3108,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="26"/>
-        <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Введіть адресу NovaCoin (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter a 42 address (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation>Введіть адресу 42 (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
 </context>
 <context>
@@ -3135,8 +3132,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="51"/>
-        <source>The address to sign the message with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Виберіть адресу, який буде використаний для підписання повідомлення (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>The address to sign the message with (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation>Виберіть адресу, який буде використаний для підписання повідомлення (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="61"/>
@@ -3172,7 +3169,7 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="148"/>
-        <source>Sign the message to prove you own this NovaCoin address</source>
+        <source>Sign the message to prove you own this 42 address</source>
         <translation>Підпишіть повідомлення щоб довести, що ви є власником цієї адреси</translation>
     </message>
     <message>
@@ -3199,13 +3196,13 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="254"/>
-        <source>The address the message was signed with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Введіть адресу (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>The address the message was signed with (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation>Введіть адресу (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="294"/>
-        <source>Verify the message to ensure it was signed with the specified NovaCoin address</source>
-        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною NovaCoin-адресою</translation>
+        <source>Verify the message to ensure it was signed with the specified 42 address</source>
+        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною 42-адресою</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="311"/>
@@ -3215,8 +3212,8 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="29"/>
         <location filename="../signverifymessagedialog.cpp" line="32"/>
-        <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Введіть адресу NovaCoin (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter a 42 address (e.g. 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</source>
+        <translation>Введіть адресу 42 (наприклад 4VsEs7wqRpoiTpmqViWRtse1P3CNgvBw4g)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
@@ -3225,8 +3222,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="33"/>
-        <source>Enter NovaCoin signature</source>
-        <translation>Введіть підпис NovaCoin</translation>
+        <source>Enter 42 signature</source>
+        <translation>Введіть підпис 42</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="115"/>
@@ -3459,8 +3456,8 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
-        <source>Generated coins must mature 520 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Після генерації монет, потрібно зачекати 520 блоків, перш ніж їх можна буде використати. Коли ви згенерували цей блок, його було відправлено в мережу для того, щоб він був доданий до ланцюжка блоків. Якщо ця процедура не вдасться, статус буде змінено на «не підтверджено» і ви не зможете витратити згенеровані монети. Таке може статись, якщо хтось інший згенерував блок на декілька секунд раніше.</translation>
+        <source>Generated coins must mature 42 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Після генерації монет, потрібно зачекати 42 блока, перш ніж їх можна буде використати. Коли ви згенерували цей блок, його було відправлено в мережу для того, щоб він був доданий до ланцюжка блоків. Якщо ця процедура не вдасться, статус буде змінено на «не підтверджено» і ви не зможете витратити згенеровані монети. Таке може статись, якщо хтось інший згенерував блок на декілька секунд раніше.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="260"/>
@@ -3816,7 +3813,7 @@ Reduce the number of addresses involved in the address creation.</source>
         <source>%s, you must set a rpcpassword in the configuration file:
  %s
 It is recommended you use the following random password:
-rpcuser=novacoinrpc
+rpcuser=42rpc
 rpcpassword=%s
 (you do not need to remember this password)
 If the file does not exist, create it with owner-readable-only file permissions.
@@ -3824,7 +3821,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>%s, ви повинні встановити rpcpassword в файлі конфігурації:
 %s
 Рекомендується використати такий випадковий пароль:
-rpcuser=novacoinrpc
+rpcuser=42rpc
 rpcpassword=%s
 (ви не повинні пам&apos;ятати цей пароль)
 Ім’я користувача та пароль ПОВИННІ бути різними.
@@ -3849,8 +3846,8 @@ rpcpassword=%s
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="26"/>
-        <source>Cannot obtain a lock on data directory %s.  NovaCoin is probably already running.</source>
-        <translation>Не вдалося встановити блокування на каталог даних %s. NovaCoin, ймовірно, вже запущений.</translation>
+        <source>Cannot obtain a lock on data directory %s.  42 is probably already running.</source>
+        <translation>Не вдалося встановити блокування на каталог даних %s. 42, ймовірно, вже запущений.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
@@ -3884,8 +3881,8 @@ rpcpassword=%s
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8344 or testnet: 18344)</source>
-        <translation>Прослуховувати &lt;port&gt; для JSON-RPC з&apos;єднань (типово: 8344, для тестової мережі: 18344)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 2121 or testnet: 21210)</source>
+        <translation>Прослуховувати &lt;port&gt; для JSON-RPC з&apos;єднань (типово: 2121, для тестової мережі: 21210)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="48"/>
@@ -3899,8 +3896,8 @@ rpcpassword=%s
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
-        <source>Unable to bind to %s on this computer. NovaCoin is probably already running.</source>
-        <translation>Неможливо прив&apos;язатися до %s на цьому комп&apos;ютері. Можливо, NovaCoin вже запущено.</translation>
+        <source>Unable to bind to %s on this computer. 42 is probably already running.</source>
+        <translation>Неможливо прив&apos;язатися до %s на цьому комп&apos;ютері. Можливо, 42 вже запущено.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="56"/>
@@ -3909,8 +3906,8 @@ rpcpassword=%s
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong NovaCoin will not work properly.</source>
-        <translation>Увага: будь ласка, перевірте дату і час на своєму комп&amp;apos;ютері. Якщо ваш годинник йде неправильно, NovaCoin може працювати некоректно.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong 42 will not work properly.</source>
+        <translation>Увага: будь ласка, перевірте дату і час на своєму комп&amp;apos;ютері. Якщо ваш годинник йде неправильно, 42 може працювати некоректно.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="62"/>
@@ -4040,8 +4037,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="95"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of NovaCoin</source>
-        <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії NovaCoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of 42</source>
+        <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії 42</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="96"/>
@@ -4152,8 +4149,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
-        <source>Listen for connections on &lt;port&gt; (default: 7777 or testnet: 17777)</source>
-        <translation>Чекати на з&apos;єднання на &lt;port&gt; (типово: 7777, для тестової мережі: 17777)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 4242 or testnet: 42420)</source>
+        <translation>Чекати на з&apos;єднання на &lt;port&gt; (типово: 4242, для тестової мережі: 42420)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="118"/>
@@ -4187,13 +4184,13 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="124"/>
-        <source>NovaCoin version</source>
-        <translation>NovaCoin версії</translation>
+        <source>42 version</source>
+        <translation>42 версії</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="125"/>
-        <source>NovaCoin</source>
-        <translation>NovaCoin</translation>
+        <source>42</source>
+        <translation>42</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
@@ -4256,7 +4253,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
-        <source>Send command to -server or novacoind</source>
+        <source>Send command to -server or 42d</source>
         <translation>Відправити команду серверу -server чи демону
 </translation>
     </message>
@@ -4326,8 +4323,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="150"/>
-        <source>Specify configuration file (default: novacoin.conf)</source>
-        <translation>Вкажіть файл конфігурації (за промовчуванням: novacoin.conf)
+        <source>Specify configuration file (default: 42.conf)</source>
+        <translation>Вкажіть файл конфігурації (за промовчуванням: 42.conf)
 </translation>
     </message>
     <message>
@@ -4343,8 +4340,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="153"/>
-        <source>Specify pid file (default: novacoind.pid)</source>
-        <translation>Вкажіть pid-файл (за промовчуванням: novacoind.pid)
+        <source>Specify pid file (default: 42d.pid)</source>
+        <translation>Вкажіть pid-файл (за промовчуванням: 42d.pid)
 </translation>
     </message>
     <message>
@@ -4430,8 +4427,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
-        <source>Wallet needed to be rewritten: restart NovaCoin to complete</source>
-        <translation>Потрібно перезаписати гаманець: перезапустіть NovaCoin для завершення</translation>
+        <source>Wallet needed to be rewritten: restart 42 to complete</source>
+        <translation>Потрібно перезаписати гаманець: перезапустіть 42 для завершення</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>

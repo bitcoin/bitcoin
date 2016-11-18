@@ -1,8 +1,10 @@
 Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
-Upstream-Name: Novacoin
-Upstream-Contact: Alex D. <balthazar.ad@gmail.com>
-Source: http://sourceforge.net/projects/novacoin/files/
- https://github.com/novacoin-project/novacoin
+Upstream-Name: 42
+Upstream-Source: https://github.com/42-coin/42
+
+Files: *
+Copyright: 2016, 42 Developers
+License: Expat
 
 Files: *
 Copyright: 2012-2015, Novacoin Developers

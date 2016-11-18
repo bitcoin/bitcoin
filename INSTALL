@@ -1,9 +1,9 @@
-Building NovaCoin
+Building 42
 
-See doc/readme-qt.rst for instructions on building NovaCoin Qt,
+See doc/readme-qt.rst for instructions on building 42 Qt,
 the intended-for-end-users, nice-graphical-interface, reference
-implementation of NovaCoin.
+implementation of 42.
 
-See doc/build-*.txt for instructions on building novacoind,
+See doc/build-*.txt for instructions on building 42d,
 the intended-for-services, no-graphical-interface, reference
-implementation of NovaCoin.
+implementation of 42.

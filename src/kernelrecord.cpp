@@ -84,14 +84,14 @@ uint64_t KernelRecord::getCoinDay() const
     return coinAge;
 }
 
-int64_t KernelRecord::getPoSReward(int nBits, int minutes)
+int64_t KernelRecord::getPoSReward(int minutes)
 {
     int64_t PoSReward;
     int64_t nWeight = GetAdjustedTime() - nTime + minutes * 60;
     if( nWeight <  nStakeMinAge)
         return 0;
     uint64_t coinAge = (nValue * nWeight ) / (COIN * nOneDay);
-    PoSReward = GetProofOfStakeReward(coinAge, nBits, GetAdjustedTime() + minutes * 60);
+    PoSReward = GetProofOfStakeReward(coinAge);
     return PoSReward;
 }
 

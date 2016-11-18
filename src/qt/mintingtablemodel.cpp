@@ -225,7 +225,7 @@ MintingTableModel::MintingTableModel(CWallet *wallet, WalletModel *parent):
         mintingInterval(10),
         priv(new MintingTablePriv(wallet, this))
 {
-    columns << tr("Transaction") <<  tr("Address") << tr("Balance") << tr("Age") << tr("CoinDay") << tr("MintProbability") << tr("MintReward");
+    columns << tr("Transaction") <<  tr("Address") << tr("Balance") << tr("Age") << tr("CoinDay") << tr("MintProbability");
     priv->refreshWallet();
 
     QTimer *timer = new QTimer(this);
@@ -312,8 +312,6 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatTxCoinDay(rec);
         case MintProbability:
             return formatDayToMint(rec);
-        case MintReward:
-            return formatTxPoSReward(rec);
         }
         break;
       case Qt::TextAlignmentRole:
@@ -357,8 +355,6 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return static_cast<qlonglong>(rec->nValue);
         case MintProbability:
             return getDayToMint(rec);
-        case MintReward:
-            return formatTxPoSReward(rec);
         }
         break;
       case Qt::BackgroundColorRole:
@@ -406,8 +402,8 @@ QString MintingTableModel::formatTxPoSReward(KernelRecord *wtx) const
 {
     QString posReward;
     int nBits = GetLastBlockIndex(pindexBest, true)->nBits;
-    posReward += QString(QObject::tr("from  %1 to %2")).arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(nBits, 0)), 
-        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(nBits, mintingInterval))); 
+    posReward += QString(QObject::tr("from  %1 to %2")).arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(0)), 
+        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(mintingInterval))); 
     return posReward;
 }
 
@@ -479,9 +475,7 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
             case CoinDay:
                 return tr("Coin age in the output.");
             case MintProbability:
-                return tr("Chance to mint a block within given time interval.");
-            case MintReward:
-                return tr("The size of the potential rewards if the block is found at the beginning and the end given time interval.");
+                return tr("Chance to mint a block within given time interval.");            
             }
         }
     }
