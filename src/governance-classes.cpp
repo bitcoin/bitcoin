@@ -17,7 +17,6 @@
 
 #include "governance.h"
 #include "masternode.h"
-#include "governance.h"
 #include <boost/lexical_cast.hpp>
 #include <univalue.h>
 
