@@ -70,13 +70,12 @@ private:
 
     const PlatformStyle *platformStyle;
 
-    QString strPad(QString, int, QString);
     void sortView(int, Qt::SortOrder);
     void updateView();
 
     enum
     {
-        COLUMN_CHECKBOX,
+        COLUMN_CHECKBOX = 0,
         COLUMN_AMOUNT,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
@@ -84,31 +83,8 @@ private:
         COLUMN_CONFIRMATIONS,
         COLUMN_TXHASH,
         COLUMN_VOUT_INDEX,
-        COLUMN_AMOUNT_INT64,
-        COLUMN_DATE_INT64
     };
     friend class CCoinControlWidgetItem;
-
-    // some columns have a hidden column containing the value used for sorting
-    int getMappedColumn(int column, bool fVisibleColumn = true)
-    {
-        if (fVisibleColumn)
-        {
-            if (column == COLUMN_AMOUNT_INT64)
-                return COLUMN_AMOUNT;
-            else if (column == COLUMN_DATE_INT64)
-                return COLUMN_DATE;
-        }
-        else
-        {
-            if (column == COLUMN_AMOUNT)
-                return COLUMN_AMOUNT_INT64;
-            else if (column == COLUMN_DATE)
-                return COLUMN_DATE_INT64;
-        }
-
-        return column;
-    }
 
 private Q_SLOTS:
     void showMenu(const QPoint &);
