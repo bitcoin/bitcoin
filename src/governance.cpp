@@ -41,6 +41,7 @@ CGovernanceManager::CGovernanceManager()
       mapOrphanVotes(MAX_CACHE_SIZE),
       mapLastMasternodeTrigger(),
       setRequestedObjects(),
+      fRateChecksEnabled(true),
       cs()
 {}
 
@@ -578,17 +579,13 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     LogPrintf("CGovernanceManager::Sync -- sent %d items, peer=%d\n", nInvCount, pfrom->id);
 }
 
-void CGovernanceManager::SyncParentObjectByVote(CNode* pfrom, const CGovernanceVote& vote)
-{
-    if(!mapAskedForGovernanceObject.count(vote.GetParentHash())){
-        pfrom->PushMessage(NetMsgType::MNGOVERNANCESYNC, vote.GetParentHash());
-        mapAskedForGovernanceObject[vote.GetParentHash()] = GetTime();
-    }
-}
-
 bool CGovernanceManager::MasternodeRateCheck(const CTxIn& vin, int nObjectType)
 {
     LOCK(cs);
+
+    if(!fRateChecksEnabled) {
+        return true;
+    }
 
     int mindiff = 0;
     switch(nObjectType) {
@@ -665,14 +662,17 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 void CGovernanceManager::CheckMasternodeOrphanVotes()
 {
     LOCK(cs);
+    fRateChecksEnabled = false;
     for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
         it->second.CheckOrphanVotes();
     }
+    fRateChecksEnabled = true;
 }
 
 void CGovernanceManager::CheckMasternodeOrphanObjects()
 {
     LOCK(cs);
+    fRateChecksEnabled = false;
     object_m_it it = mapMasternodeOrphanObjects.begin();
     while(it != mapMasternodeOrphanObjects.end()) {
         CGovernanceObject& govobj = it->second;
@@ -699,6 +699,7 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
             ++it;
         }
     }
+    fRateChecksEnabled = true;
 }
 
 void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nHash)
@@ -908,16 +909,18 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
     vote_instance_t& voteInstance = it2->second;
     int64_t nNow = GetTime();
-    int64_t nTimeDelta = nNow - voteInstance.nTime;
-    if(nTimeDelta < GOVERNANCE_UPDATE_MIN) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Masternode voting too often "
-                << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
-                << ", governance object hash = " << GetHash().ToString()
-                << ", time delta = " << nTimeDelta << "\n";
-        LogPrint("gobject", ostr.str().c_str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_TEMPORARY_ERROR);
-        return false;
+    if(governance.AreRateChecksEnabled()) {
+        int64_t nTimeDelta = nNow - voteInstance.nTime;
+        if(nTimeDelta < GOVERNANCE_UPDATE_MIN) {
+            std::ostringstream ostr;
+            ostr << "CGovernanceObject::ProcessVote -- Masternode voting too often "
+                 << ", MN outpoint = " << vote.GetVinMasternode().prevout.ToStringShort()
+                 << ", governance object hash = " << GetHash().ToString()
+                 << ", time delta = " << nTimeDelta << "\n";
+            LogPrint("gobject", ostr.str().c_str());
+            exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_TEMPORARY_ERROR);
+            return false;
+        }
     }
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
     if(!vote.IsValid(true)) {
