@@ -28,6 +28,17 @@ namespace Ui {
 
 #define ASYMP_UTF8 "\xE2\x89\x88"
 
+class CCoinControlWidgetItem : public QTreeWidgetItem
+{
+public:
+    CCoinControlWidgetItem(QTreeWidget *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
+    CCoinControlWidgetItem(int type = Type) : QTreeWidgetItem(type) {}
+    CCoinControlWidgetItem(QTreeWidgetItem *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
+
+    bool operator<(const QTreeWidgetItem &other) const;
+};
+
+
 class CoinControlDialog : public QDialog
 {
     Q_OBJECT
@@ -76,6 +87,7 @@ private:
         COLUMN_AMOUNT_INT64,
         COLUMN_DATE_INT64
     };
+    friend class CCoinControlWidgetItem;
 
     // some columns have a hidden column containing the value used for sorting
     int getMappedColumn(int column, bool fVisibleColumn = true)
