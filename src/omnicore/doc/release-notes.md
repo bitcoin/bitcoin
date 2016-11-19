@@ -221,6 +221,7 @@ The following list includes relevant pull requests merged into this release:
 - #431 Activate recent new features on testnet
 - #432 Change the number of signatures for deactivation to 3
 - #430 Update release notes for 0.0.11.2
+- #435 Bump internal version to 1100201
 ```
 
 Credits
