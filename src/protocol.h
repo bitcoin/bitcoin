@@ -290,6 +290,11 @@ enum {
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
 
+    // Indicates that a node can be asked for blocks and transactions including
+    // witness data.
+    // BU: Bitcoin Unlimitd does not support this (added to display connected node services correctly)
+    NODE_WITNESS = (1 << 3),
+
     // BUIP010 - Xtreme Thinblocks - begin section
     // NODE_XTHIN means the node supports Xtreme Thinblocks
     // If this is turned off then the node will not service xthin requests nor  
