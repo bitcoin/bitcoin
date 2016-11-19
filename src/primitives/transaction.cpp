@@ -124,14 +124,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
     bool seenCoinbaseMessage = false;
     int64_t outValue = 0;
     std::vector<char> txData;
-    enum Section {
-        Inputs,
-        Outputs,
-        Additional,
-        Signatures,
-        End
-    };
-    Section section = Inputs;
+    bool inMainTx = true;
 
     for (unsigned int index = 0; index < tokens.size(); ++index) {
         const auto token = tokens[index];
@@ -139,21 +132,21 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
         case Consensus::TxInPrevHash: {
             auto data = boost::get<std::vector<char> >(token.data);
             if (data.size() != 256/8) throw std::runtime_error("PrevHash size wrong");
-            if (section > Inputs) throw std::runtime_error("wrong section");
+            if (!inMainTx) throw std::runtime_error("wrong section");
             if (seenCoinbaseMessage) throw std::runtime_error("No input allowed on coinbase");
             inputs.push_back(CTxIn(COutPoint(uint256(&data[0]), 0)));
             break;
         }
         case Consensus::TxInPrevIndex: {
             if (inputs.empty()) throw std::runtime_error("TxInPrevIndex before TxInPrevHash");
-            if (section > Inputs) throw std::runtime_error("wrong section");
+            if (!inMainTx) throw std::runtime_error("wrong section");
             if (seenCoinbaseMessage) throw std::runtime_error("No input allowed on coinbase");
             inputs[inputs.size()-1].prevout.n = (uint32_t) token.longData();
             break;
         }
         case Consensus::CoinbaseMessage: {
             if (!inputs.empty()) throw std::runtime_error("CoinbaseMessage not allowed when there are inputs");
-            if (section > Inputs) throw std::runtime_error("wrong section");
+            if (!inMainTx) throw std::runtime_error("wrong section");
             inputs.push_back(CTxIn());
             auto data = token.unsignedByteArray();
             inputs[0].scriptSig = CScript(data.begin(), data.end());
@@ -175,6 +168,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             if (static_cast<int>(inputs.size()) <= signatureCount)
                 throw std::runtime_error("TxInputStackItem* before TxInPrevHash");
 
+            inMainTx = false;
             auto data = token.unsignedByteArray();
             if (data.size() == 1)
                 inputs[signatureCount].scriptSig << data.at(0);
@@ -187,8 +181,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
 
             // TxOut* don't have a pre-defined order, just that both are required so they always have to come in pairs.
         case Consensus::TxOutValue:
-            if (section > Outputs) throw std::runtime_error("wrong section");
-            section = Outputs;
+            if (!inMainTx) throw std::runtime_error("wrong section");
             if (storedOutScript) { // add it.
                 outputs[outputs.size() -1].nValue = token.longData();
                 storedOutScript = storedOutValue = false;
@@ -198,8 +191,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             }
             break;
         case Consensus::TxOutScript: {
-            if (section > Outputs) throw std::runtime_error("wrong section");
-            section = Outputs;
+            if (!inMainTx) throw std::runtime_error("wrong section");
             auto data = token.unsignedByteArray();
             outputs.push_back(CTxOut(outValue, CScript(data.begin(), data.end())));
             if (storedOutValue)
@@ -213,7 +205,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
                 throw std::runtime_error("Transaction needs inputs");
             if (token.longData() > CTxIn::SEQUENCE_LOCKTIME_MASK || inputs.back().nSequence != CTxIn::SEQUENCE_FINAL)
                 throw std::runtime_error("out of range");
-            if (section > Inputs) throw std::runtime_error("wrong section");
+            if (!inMainTx) throw std::runtime_error("wrong section");
             inputs.back().nSequence = token.longData();
             break;
         case Consensus::TxRelativeTimeLock:
@@ -221,7 +213,7 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
                 throw std::runtime_error("Transaction needs inputs");
             if (token.longData() > CTxIn::SEQUENCE_LOCKTIME_MASK || inputs.back().nSequence != CTxIn::SEQUENCE_FINAL)
                 throw std::runtime_error("out of range");
-            if (section > Inputs) throw std::runtime_error("wrong section");
+            if (!inMainTx) throw std::runtime_error("wrong section");
             inputs.back().nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | token.longData();
             break;
         default:

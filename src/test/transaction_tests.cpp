@@ -513,6 +513,95 @@ BOOST_AUTO_TEST_CASE(test_version4)
     BOOST_CHECK_EQUAL(tx.vout.at(1).scriptPubKey.size(), 25);
 }
 
+// lets try different ways of serializing and see if they all work.
+// The point is that the code should not really have any issues with mixing tags at all,
+// except in some corner cases like with optional tags.
+
+BOOST_AUTO_TEST_CASE(test_serialization_order_simple)
+{
+    TxUtils::allowNewTransactions();
+    const int nType = 0, nVersion = 0;
+
+    CMutableTransaction baseTransaction;
+    while (baseTransaction.vin.size() < 2)
+        TxUtils::RandomTransaction(baseTransaction, TxUtils::SingleOutput);
+    const CTxIn baseIn = baseTransaction.vin.front();
+    const CTxOut baseOut = baseTransaction.vout.front();
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    ser_writedata32(s, 4);
+    CMFToken ph(Consensus::TxInPrevHash, baseIn.prevout.hash);
+    ::Serialize<CDataStream,CMFToken>(s, ph, nType, nVersion);
+    CMFToken index(Consensus::TxInPrevIndex, (uint64_t) baseIn.prevout.n);
+    ::Serialize<CDataStream,CMFToken>(s, index, nType, nVersion);
+    CMFToken token(Consensus::TxOutValue, (uint64_t) baseOut.nValue);
+    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+    std::vector<char> script(baseOut.scriptPubKey.begin(), baseOut.scriptPubKey.end());
+    token = CMFToken(Consensus::TxOutScript, script);
+    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+
+    std::vector<char> data(s.begin(), s.end());
+    CTransaction tx;
+    {
+        CDataStream ssData(data, SER_NETWORK, PROTOCOL_VERSION);
+        ssData >> tx;
+    }
+    BOOST_CHECK_EQUAL(tx.vin.size(), 1);
+    BOOST_CHECK_EQUAL(tx.vout.size(), 1);
+    BOOST_CHECK(baseIn.prevout.hash == tx.vin.front().prevout.hash);
+    BOOST_CHECK_EQUAL(baseIn.prevout.n, tx.vin.front().prevout.n);
+    BOOST_CHECK_EQUAL(baseOut.nValue, tx.vout.front().nValue);
+    BOOST_CHECK(baseOut.scriptPubKey == tx.vout.front().scriptPubKey);
+    TxUtils::disallowNewTransactions();
+}
+
+
+BOOST_AUTO_TEST_CASE(test_serialization_order_mixed)
+{
+    TxUtils::allowNewTransactions();
+    const int nType = 0, nVersion = 0;
+
+    CMutableTransaction baseTransaction;
+    while (baseTransaction.vin.size() < 2)
+        TxUtils::RandomTransaction(baseTransaction, TxUtils::SingleOutput);
+    const CTxIn baseIn = baseTransaction.vin.front();
+    const CTxOut baseOut = baseTransaction.vout.front();
+    const CTxIn baseIn2 = baseTransaction.vin.front();
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    ser_writedata32(s, 4);
+    CMFToken ph(Consensus::TxInPrevHash, baseIn.prevout.hash);
+    ::Serialize<CDataStream,CMFToken>(s, ph, nType, nVersion);
+    CMFToken index(Consensus::TxInPrevIndex, (uint64_t) baseIn.prevout.n);
+    ::Serialize<CDataStream,CMFToken>(s, index, nType, nVersion);
+    std::vector<char> script(baseOut.scriptPubKey.begin(), baseOut.scriptPubKey.end());
+    CMFToken token(Consensus::TxOutScript, script); // swap with next
+    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+    token = CMFToken(Consensus::TxOutValue, (uint64_t) baseOut.nValue);
+    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+
+    // an in after an out.
+    ph = CMFToken(Consensus::TxInPrevHash, baseIn2.prevout.hash);
+    ::Serialize<CDataStream,CMFToken>(s, ph, nType, nVersion);
+    index = CMFToken(Consensus::TxInPrevIndex, (uint64_t) baseIn2.prevout.n);
+    ::Serialize<CDataStream,CMFToken>(s, index, nType, nVersion);
+
+    std::vector<char> data(s.begin(), s.end());
+    CTransaction tx;
+    {
+        CDataStream ssData(data, SER_NETWORK, PROTOCOL_VERSION);
+        ssData >> tx;
+    }
+    BOOST_CHECK_EQUAL(tx.vin.size(), 2);
+    BOOST_CHECK_EQUAL(tx.vout.size(), 1);
+    BOOST_CHECK(baseIn.prevout.hash == tx.vin.front().prevout.hash);
+    BOOST_CHECK_EQUAL(baseIn.prevout.n, tx.vin.front().prevout.n);
+    BOOST_CHECK(baseIn2.prevout.hash == tx.vin.at(1).prevout.hash);
+    BOOST_CHECK_EQUAL(baseIn2.prevout.n, tx.vin.at(1).prevout.n);
+    BOOST_CHECK_EQUAL(baseOut.nValue, tx.vout.front().nValue);
+    BOOST_CHECK(baseOut.scriptPubKey == tx.vout.front().scriptPubKey);
+
+    TxUtils::disallowNewTransactions();
+}
+
 BOOST_AUTO_TEST_CASE(test_hashtype_version4)
 {
     /*
