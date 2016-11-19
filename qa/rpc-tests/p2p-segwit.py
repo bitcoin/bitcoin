@@ -195,11 +195,6 @@ class SegWitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
-    def add_options(self, parser):
-        parser.add_option("--oldbinary", dest="oldbinary",
-                          default=None,
-                          help="pre-segwit bitcoind binary for upgrade testing")
-
     def setup_network(self):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1"]))
@@ -207,12 +202,9 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-logtimemicros=1", "-whitelist=127.0.0.1", "-acceptnonstdtxn=0"]))
         connect_nodes(self.nodes[0], 1)
 
-        # If an old bitcoind is given, do the upgrade-after-activation test.
-        self.test_upgrade = False
-        if (self.options.oldbinary != None):
-            self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1"], binary=self.options.oldbinary))
-            connect_nodes(self.nodes[0], 2)
-            self.test_upgrade = True
+        # Disable segwit's bip9 parameter to simulate upgrading after activation.
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-bip9params=segwit:0:0"]))
+        connect_nodes(self.nodes[0], 2)
 
     ''' Helpers '''
     # Build a block on top of node0's tip.
@@ -1177,7 +1169,7 @@ class SegWitTest(BitcoinTestFramework):
         if segwit_activated:
             # tx and tx2 were both accepted.  Don't bother trying to reclaim the
             # P2PKH output; just send tx's first output back to an anyone-can-spend.
-            sync_mempools(self.nodes)
+            sync_mempools([self.nodes[0], self.nodes[1]])
             tx3.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
             tx3.vout = [CTxOut(tx.vout[0].nValue-1000, CScript([OP_TRUE]))]
             tx3.wit.vtxinwit.append(CTxInWitness())
@@ -1706,19 +1698,53 @@ class SegWitTest(BitcoinTestFramework):
 
     def test_getblocktemplate_before_lockin(self):
         print("\tTesting getblocktemplate setting of segwit versionbit (before lockin)")
-        block_version = (self.nodes[0].getblocktemplate())['version']
-        assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
+        # Node0 is segwit aware, node2 is not.
+        for node in [self.nodes[0], self.nodes[2]]:
+            gbt_results = node.getblocktemplate()
+            block_version = gbt_results['version']
+            # If we're not indicating segwit support, we should not be signalling
+            # for segwit activation, nor should we get a witness commitment.
+            assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
+            assert('default_witness_commitment' not in gbt_results)
 
         # Workaround:
         # Can either change the tip, or change the mempool and wait 5 seconds
         # to trigger a recomputation of getblocktemplate.
-        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        txid = int(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1), 16)
         # Using mocktime lets us avoid sleep()
+        sync_mempools(self.nodes)
         self.nodes[0].setmocktime(int(time.time())+10)
+        self.nodes[2].setmocktime(int(time.time())+10)
 
-        block_version = self.nodes[0].getblocktemplate({"rules" : ["segwit"]})['version']
-        assert(block_version & (1 << VB_WITNESS_BIT) != 0)
-        self.nodes[0].setmocktime(0) # undo mocktime
+        for node in [self.nodes[0], self.nodes[2]]:
+            gbt_results = node.getblocktemplate({"rules" : ["segwit"]})
+            block_version = gbt_results['version']
+            if node == self.nodes[2]:
+                # If this is a non-segwit node, we should still not get a witness
+                # commitment, nor a version bit signalling segwit.
+                assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
+                assert('default_witness_commitment' not in gbt_results)
+            else:
+                # For segwit-aware nodes, check the version bit and the witness
+                # commitment are correct.
+                assert(block_version & (1 << VB_WITNESS_BIT) != 0)
+                assert('default_witness_commitment' in gbt_results)
+                witness_commitment = gbt_results['default_witness_commitment']
+
+                # TODO: this duplicates some code from blocktools.py, would be nice
+                # to refactor.
+                # Check that default_witness_commitment is present.
+                block = CBlock()
+                witness_root = block.get_merkle_root([ser_uint256(0), ser_uint256(txid)])
+                check_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(0)))
+                from test_framework.blocktools import WITNESS_COMMITMENT_HEADER
+                output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(check_commitment)
+                script = CScript([OP_RETURN, output_data])
+                assert_equal(witness_commitment, bytes_to_hex_str(script))
+
+        # undo mocktime
+        self.nodes[0].setmocktime(0)
+        self.nodes[2].setmocktime(0)
 
     # Uncompressed pubkeys are no longer supported in default relay policy,
     # but (for now) are still valid in blocks.
@@ -1958,6 +1984,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Advance to segwit being 'started'
         self.advance_to_segwit_started()
+        sync_blocks(self.nodes)
         self.test_getblocktemplate_before_lockin()
 
         sync_blocks(self.nodes)
@@ -2000,10 +2027,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_signature_version_1()
         self.test_non_standard_witness()
         sync_blocks(self.nodes)
-        if self.test_upgrade:
-            self.test_upgrade_after_activation(self.nodes[2], 2)
-        else:
-            print("\tSkipping upgrade-after-activation test (use --oldbinary to enable)")
+        self.test_upgrade_after_activation(self.nodes[2], 2)
         self.test_witness_sigops()
 
 
