@@ -1334,7 +1334,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         pool.ApplyDeltas(hash, nPriorityDummy, nModifiedFees);
 
         CAmount inChainInputValue;
-        double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
+        // Since entries arrive *after* the tip's height, their priority is for the height+1
+        double dPriority = view.GetPriority(tx, chainActive.Height() + 1, inChainInputValue);
 
         // Keep track of transactions that spend a coinbase, which we re-scan
         // during reorgs to ensure COINBASE_MATURITY is still met.
@@ -2808,6 +2809,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         // Resurrect mempool transactions from the disconnected block.
         std::vector<uint256> vHashUpdate;
         BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+            mempool.UpdateDependentPriorities(tx, pindexDelete->nHeight, false);
             // ignore validation errors in resurrected transactions
             CValidationState stateDummy;
             if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, true)) {
@@ -3028,7 +3030,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
         mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
         LimitMempoolSize(mempool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
     }
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, chainActive.Height());
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -5603,7 +5605,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         mapAlreadyAskedFor.erase(inv.hash);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs)) {
-            mempool.check(pcoinsTip);
+            mempool.check(pcoinsTip, chainActive.Height());
             RelayTransaction(tx, connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
@@ -5669,7 +5671,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                             recentRejects->insert(orphanHash);
                         }
                     }
-                    mempool.check(pcoinsTip);
+                    mempool.check(pcoinsTip, chainActive.Height());
                 }
             }
 

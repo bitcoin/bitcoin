@@ -40,6 +40,10 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
 
     feeDelta = 0;
 
+    // Since entries arrive *after* the tip's height, their entry priority is for the height+1
+    cachedHeight = entryHeight + 1;
+    cachedPriority = entryPriority;
+
     nCountWithAncestors = 1;
     nSizeWithAncestors = GetTxSize();
     nModFeesWithAncestors = nFee;
@@ -54,9 +58,13 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
 double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
-    double deltaPriority = ((double)(currentHeight-entryHeight)*inChainInputValue)/nModSize;
-    double dResult = entryPriority + deltaPriority;
-    if (dResult < 0) // This should only happen if it was called with a height below entry height
+    // This will only return accurate results when currentHeight >= the heights
+    // at which all the in-chain inputs of the tx were included in blocks.
+    // Typical usage of GetPriority with chainActive.Height() will ensure this.
+    int heightDiff = currentHeight - cachedHeight;
+    double deltaPriority = ((double)heightDiff*inChainInputValue)/nModSize;
+    double dResult = cachedPriority + deltaPriority;
+    if (dResult < 0) // This should only happen if it was called with an invalid height
         dResult = 0;
     return dResult;
 }
@@ -348,6 +356,16 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
+void CTxMemPoolEntry::UpdateCachedPriority(unsigned int currentHeight, CAmount valueInCurrentBlock)
+{
+    int heightDiff = currentHeight - cachedHeight;
+    double deltaPriority = ((double)heightDiff*inChainInputValue)/nModSize;
+    cachedPriority += deltaPriority;
+    cachedHeight = currentHeight;
+    inChainInputValue += valueInCurrentBlock;
+    assert(MoneyRange(inChainInputValue));
+}
+
 CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     nTransactionsUpdated(0)
 {
@@ -593,6 +611,19 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::vector<std::shared
     }
 }
 
+void CTxMemPool::UpdateDependentPriorities(const CTransaction &tx, unsigned int nBlockHeight, bool addToChain)
+{
+    LOCK(cs);
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        auto it = mapNextTx.find(COutPoint(tx.GetHash(), i));
+        if (it == mapNextTx.end())
+            continue;
+        uint256 hash = it->second->GetHash();
+        txiter iter = mapTx.find(hash);
+        mapTx.modify(iter, update_priority(nBlockHeight, addToChain ? tx.vout[i].nValue : -tx.vout[i].nValue));
+    }
+}
+
 /**
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
@@ -611,6 +642,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
     }
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
+        UpdateDependentPriorities(tx, nBlockHeight, true);
         txiter it = mapTx.find(tx.GetHash());
         if (it != mapTx.end()) {
             setEntries stage;
@@ -645,7 +677,7 @@ void CTxMemPool::clear()
     _clear();
 }
 
-void CTxMemPool::check(const CCoinsViewCache *pcoins) const
+void CTxMemPool::check(const CCoinsViewCache *pcoins, unsigned int nBlockHeight) const
 {
     if (nCheckFrequency == 0)
         return;
@@ -662,10 +694,19 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     const int64_t nSpendHeight = GetSpendHeight(mempoolDuplicate);
 
     LOCK(cs);
+    CCoinsViewMemPool viewMemPool(pcoinsTip, *this);
+    CCoinsViewCache view(&viewMemPool);
     list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
+        CAmount dummyValue;
+        double freshPriority = view.GetPriority(it->GetTx(), nBlockHeight + 1, dummyValue);
+        double cachePriority = it->GetPriority(nBlockHeight + 1);
+        double priDiff = cachePriority > freshPriority ? cachePriority - freshPriority : freshPriority - cachePriority;
+        // Verify that the difference between the on the fly calculation and a fresh calculation
+        // is small enough to be a result of double imprecision.
+        assert(priDiff < .0001 * freshPriority + 1);
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
         txlinksMap::const_iterator linksiter = mapLinks.find(it);

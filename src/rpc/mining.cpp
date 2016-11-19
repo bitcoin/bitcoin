@@ -587,6 +587,9 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         }
         entry.push_back(Pair("sigops", nTxSigOps));
         entry.push_back(Pair("weight", GetTransactionWeight(tx)));
+        if (index_in_template && !pblocktemplate->vTxPriorities.empty()) {
+            entry.push_back(Pair("priority", pblocktemplate->vTxPriorities[index_in_template]));
+        }
 
         transactions.push_back(entry);
     }
