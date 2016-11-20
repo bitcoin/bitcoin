@@ -2295,7 +2295,7 @@ bool StopNode()
     return true;
 }
 
-CNetCleanup::~CNetCleanup()
+void NetCleanup()
     {
         LOCK(cs_vNodes);
 

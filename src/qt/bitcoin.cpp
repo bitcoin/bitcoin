@@ -683,6 +683,10 @@ int main(int argc, char *argv[])
         PrintExceptionContinue(NULL, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
     }
+
+    NetCleanup();
+    MainCleanup();
+
     return app.getReturnValue();
 }
 #endif // BITCOIN_QT_TEST

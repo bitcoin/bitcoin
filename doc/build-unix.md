@@ -1,6 +1,6 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin Core in Unix.
+Some notes on how to build Bitcoin Unlimited in Unix.
 
 (for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
 
@@ -248,13 +248,13 @@ Produce Static Binaries
 
 If you want to build statically linked binaries so that you could compile in one machine
 and deploy in same parch/platform boxes without the need of installing all the dependencies
-just follow this steps:
+just follow these steps:
 
-    git clone https://gtihub.com/BitcoinUnlimtied/BitcoinUnlimited.git BU
+    git clone https://github.com/BitcoinUnlimited/BitcoinUnlimited.git BU
     cd BU/depends
     make HOST=x86_64-pc-linux-gnu NO_QT=1 -j4
     cd ..
-    ./configure --prefix=./depends/x86_64-pc-linux-gnu --without-gui
+    ./configure --prefix=$PWD/depends/x86_64-pc-linux-gnu --without-gui
     make -j4
 
 in the above commands we are statically compiling headless 64 bit linux binaries. If you want to compile

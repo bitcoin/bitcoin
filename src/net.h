@@ -326,13 +326,14 @@ public:
 
 typedef std::map<CSubNet, CBanEntry> banmap_t;
 
+#if 0  // BU cleaning up nodes as a global destructor creates many global destruction dependencies.  Instead use a function call.
 class CNetCleanup
 {
 public:
   CNetCleanup() {}
   ~CNetCleanup();
 };
-
+#endif
 
 /** Information about a peer */
 class CNode

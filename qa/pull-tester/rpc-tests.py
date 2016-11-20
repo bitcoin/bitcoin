@@ -149,23 +149,26 @@ if ENABLE_ZMQ == 1:
 def runtests():
     coverage = None
 
+    run_only_extended = '-only-extended' in opts
+
     if ENABLE_COVERAGE:
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
 
     if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
         rpcTestDir = buildDir + '/qa/rpc-tests/'
-        run_extended = '-extended' in opts
+        run_extended = ('-extended' in opts) or run_only_extended
         cov_flag = coverage.flag if coverage else ''
         flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
 
         #Run Tests
         for i in range(len(testScripts)):
-            if (len(opts) == 0
+            if ((len(opts) == 0
                     or (len(opts) == 1 and "-win" in opts )
                     or run_extended
                     or str(testScripts[i]) in opts
-                    or re.sub(".py$", "", str(testScripts[i])) in opts ):
+                    or re.sub(".py$", "", str(testScripts[i])) in opts )
+                and not run_only_extended):
 
                 if testScripts[i].is_disabled():
                     print("Disabled testscript %s%s%s (reason: %s)" % (bold[1], testScripts[i], bold[0], testScripts[i].reason))

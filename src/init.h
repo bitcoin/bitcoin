@@ -30,6 +30,9 @@ void InitLogging();
 void InitParameterInteraction();
 bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler);
 
+void MainCleanup();
+void NetCleanup();
+
 /** The help message mode determines what help message to show */
 enum HelpMessageMode {
     HMM_BITCOIND,
