@@ -664,7 +664,7 @@ void CDarksendPool::ChargeFees()
     if(!fMasterNode) return;
 
     //we don't need to charge collateral for every offence.
-    if(GetInsecureRand(100) > 33) return;
+    if(GetRandInt(100) > 33) return;
 
     std::vector<CTransaction> vecOffendersCollaterals;
 
@@ -699,7 +699,7 @@ void CDarksendPool::ChargeFees()
     if(vecOffendersCollaterals.empty()) return;
 
     //mostly offending? Charge sometimes
-    if((int)vecOffendersCollaterals.size() >= Params().PoolMaxTransactions() - 1 && GetInsecureRand(100) > 33) return;
+    if((int)vecOffendersCollaterals.size() >= Params().PoolMaxTransactions() - 1 && GetRandInt(100) > 33) return;
 
     //everyone is an offender? That's not right
     if((int)vecOffendersCollaterals.size() >= Params().PoolMaxTransactions()) return;
@@ -740,7 +740,7 @@ void CDarksendPool::ChargeRandomFees()
 
     BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
 
-        if(GetInsecureRand(100) > 10) return;
+        if(GetRandInt(100) > 10) return;
 
         LogPrintf("CDarksendPool::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral.ToString());
 
@@ -1480,7 +1480,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         LogPrint("privatesend", "  vecMasternodesUsed: new size: %d, threshold: %d\n", (int)vecMasternodesUsed.size(), nThreshold_high);
     }
 
-    bool fUseQueue = insecure_rand()%100 > 33;
+    bool fUseQueue = GetRandInt(100) > 33;
     // don't use the queues all of the time for mixing unless we are a liquidity provider
     if(nLiquidityProvider || fUseQueue) {
 
@@ -2014,7 +2014,7 @@ bool CDarksendPool::CreateNewSession(int nDenom, CTransaction txCollateral, Pool
 
     // start new session
     nMessageIDRet = MSG_NOERR;
-    nSessionID = GetInsecureRand(999999)+1;
+    nSessionID = GetRandInt(999999)+1;
     nSessionDenom = nDenom;
 
     SetState(POOL_STATE_QUEUE);
@@ -2145,7 +2145,7 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fS
     int c = 0;
     // if the denomination is used, shift the bit on
     BOOST_FOREACH (PAIRTYPE(CAmount, int)& s, vecDenomUsed) {
-        int bit = (fSingleRandomDenom ? insecure_rand()%2 : 1) & s.second;
+        int bit = (fSingleRandomDenom ? GetRandInt(2) : 1) & s.second;
         nDenom |= bit << c++;
         if(fSingleRandomDenom && bit) break; // use just one random denomination
     }
@@ -2462,7 +2462,7 @@ void ThreadCheckDarkSendPool()
 
             if(nDoAutoNextRun == nTick) {
                 darkSendPool.DoAutomaticDenominating();
-                nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetInsecureRand(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
+                nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
             }
         }
     }

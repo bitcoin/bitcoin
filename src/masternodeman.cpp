@@ -543,8 +543,9 @@ CMasternode* CMasternodeMan::FindRandomNotInVec(const std::vector<CTxIn> &vecToE
         vpMasternodesShuffled.push_back(&mn);
     }
 
+    InsecureRand insecureRand;
     // shuffle pointers
-    std::random_shuffle(vpMasternodesShuffled.begin(), vpMasternodesShuffled.end(), GetInsecureRand);
+    std::random_shuffle(vpMasternodesShuffled.begin(), vpMasternodesShuffled.end(), insecureRand);
     bool fExclude;
 
     // loop through
@@ -969,7 +970,7 @@ bool CMasternodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<C
     if(pnode != NULL) {
         netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
         // use random nonce, store it and require node to reply with correct one later
-        CMasternodeVerification mnv(addr, GetInsecureRand(999999), pCurrentBlockIndex->nHeight - 1);
+        CMasternodeVerification mnv(addr, GetRandInt(999999), pCurrentBlockIndex->nHeight - 1);
         mWeAskedForVerification[addr] = mnv;
         LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
         pnode->PushMessage(NetMsgType::MNVERIFY, mnv);
