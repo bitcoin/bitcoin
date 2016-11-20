@@ -255,6 +255,9 @@ void Shutdown()
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
+
+    NetCleanup();
+    MainCleanup();
     LogPrintf("%s: done\n", __func__);
 }
 
