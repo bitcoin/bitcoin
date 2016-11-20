@@ -223,7 +223,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-    string strHex = EncodeHexTx(*tx);
+    string strHex = EncodeHexTx(*tx, RPCSerializationFlags());
 
     if (!fVerbose)
         return strHex;

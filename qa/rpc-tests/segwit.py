@@ -13,6 +13,7 @@ from test_framework.mininode import sha256, ripemd160, CTransaction, CTxIn, COut
 from test_framework.address import script_to_p2sh, key_to_p2pkh
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG
 from io import BytesIO
+from test_framework.mininode import FromHex
 
 NODE_0 = 0
 NODE_1 = 1
@@ -84,8 +85,8 @@ class SegWitTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-logtimemicros", "-debug", "-walletprematurewitness"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-logtimemicros", "-debug", "-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-logtimemicros", "-debug", "-walletprematurewitness", "-rpcserialversion=0"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-logtimemicros", "-debug", "-blockversion=4", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness", "-rpcserialversion=2"]))
         self.nodes.append(start_node(2, self.options.tmpdir, ["-logtimemicros", "-debug", "-blockversion=536870915", "-promiscuousmempoolflags=517", "-prematurewitness", "-walletprematurewitness"]))
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 1)
@@ -211,7 +212,20 @@ class SegWitTest(BitcoinTestFramework):
         block = self.nodes[2].generate(1) #block 432 (first block with new rules; 432 = 144 * 3)
         sync_blocks(self.nodes)
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
-        assert_equal(len(self.nodes[2].getblock(block[0])["tx"]), 5)
+        segwit_tx_list = self.nodes[2].getblock(block[0])["tx"]
+        assert_equal(len(segwit_tx_list), 5)
+
+        print("Verify block and transaction serialization rpcs return differing serializations depending on rpc serialization flag")
+        # Note: node1 has version 2, which is simply >0 and will catch future upgrades in tests
+        assert(self.nodes[2].getblock(block[0], False) !=  self.nodes[0].getblock(block[0], False))
+        assert(self.nodes[1].getblock(block[0], False) ==  self.nodes[2].getblock(block[0], False))
+        for i in range(len(segwit_tx_list)):
+            tx = FromHex(CTransaction(), self.nodes[2].gettransaction(segwit_tx_list[i])["hex"])
+            assert(self.nodes[2].getrawtransaction(segwit_tx_list[i]) != self.nodes[0].getrawtransaction(segwit_tx_list[i]))
+            assert(self.nodes[1].getrawtransaction(segwit_tx_list[i], 0) == self.nodes[2].getrawtransaction(segwit_tx_list[i]))
+            assert(self.nodes[0].getrawtransaction(segwit_tx_list[i]) != self.nodes[2].gettransaction(segwit_tx_list[i])["hex"])
+            assert(self.nodes[1].getrawtransaction(segwit_tx_list[i]) == self.nodes[2].gettransaction(segwit_tx_list[i])["hex"])
+            assert(self.nodes[0].getrawtransaction(segwit_tx_list[i]) == bytes_to_hex_str(tx.serialize_without_witness()))
 
         print("Verify witness txs without witness data are invalid after the fork")
         self.fail_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][2], False)
