@@ -20,7 +20,7 @@
 
 int nPrivateSendRounds = DEFAULT_PRIVATESEND_ROUNDS;
 int nPrivateSendAmount = DEFAULT_PRIVATESEND_AMOUNT;
-int nLiquidityProvider = 0;
+int nLiquidityProvider = DEFAULT_PRIVATESEND_LIQUIDITY;
 bool fEnablePrivateSend = false;
 bool fPrivateSendMultiSession = DEFAULT_PRIVATESEND_MULTISESSION;
 

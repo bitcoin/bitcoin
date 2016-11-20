@@ -565,14 +565,14 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageGroup(_("PrivateSend options:"));
     strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
-    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (2-16, default: %u)"), DEFAULT_PRIVATESEND_ROUNDS));
     strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N DASH anonymized (default: %u)"), DEFAULT_PRIVATESEND_AMOUNT));
-    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider));
+    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), DEFAULT_PRIVATESEND_LIQUIDITY));
 
     strUsage += HelpMessageGroup(_("InstantSend options:"));
     strUsage += HelpMessageOpt("-enableinstantsend=<n>", strprintf(_("Enable InstantSend, show confirmations for locked transactions (0-1, default: %u)"), 1));
     strUsage += HelpMessageOpt("-instantsenddepth=<n>", strprintf(_("Show N confirmations for a successfully locked transaction (0-9999, default: %u)"), DEFAULT_INSTANTSEND_DEPTH));
-    strUsage += HelpMessageOpt("-instantsendnotify=<cmd>", _("Execute command when a wallet IS transaction is successfully locked (%s in cmd is replaced by TxID)"));
+    strUsage += HelpMessageOpt("-instantsendnotify=<cmd>", _("Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)"));
 
 
     strUsage += HelpMessageGroup(_("Node relay options:"));
@@ -864,19 +864,19 @@ void InitParameterInteraction()
 
     if(!GetBoolArg("-enableinstantsend", fEnableInstantSend)){
         if (SoftSetArg("-instantsenddepth", 0))
-            LogPrintf("AppInit2 : parameter interaction: -enableinstantsend=false -> setting -nInstantSendDepth=0\n");
+            LogPrintf("%s: parameter interaction: -enableinstantsend=false -> setting -nInstantSendDepth=0\n", __func__);
     }
 
-    if (GetArg("-liquidityprovider", 0) > 0) {
-        int nLiqProvTmp = GetArg("-liquidityprovider", 0);
+    int nLiqProvTmp = GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
+    if (nLiqProvTmp > 0) {
         mapArgs["-enableprivatesend"] = "1";
-        LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", nLiqProvTmp);
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", __func__, nLiqProvTmp);
         mapArgs["-privatesendrounds"] = "99999";
-        LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=99999\n", nLiqProvTmp);
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=99999\n", __func__, nLiqProvTmp);
         mapArgs["-privatesendamount"] = "999999";
-        LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=999999\n", nLiqProvTmp);
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=999999\n", __func__, nLiqProvTmp);
         mapArgs["-privatesendmultisession"] = "0";
-        LogPrintf("AppInit2 : parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", nLiqProvTmp);
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", __func__, nLiqProvTmp);
     }
 }
 
@@ -1833,7 +1833,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     fEnablePrivateSend = GetBoolArg("-enableprivatesend", 0);
     fPrivateSendMultiSession = GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
     nPrivateSendRounds = GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS);
-    nPrivateSendRounds = std::min(std::max(nPrivateSendRounds, 1), 99999);
+    nPrivateSendRounds = std::min(std::max(nPrivateSendRounds, 2), nLiquidityProvider ? 99999 : 16);
     nPrivateSendAmount = GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT);
     nPrivateSendAmount = std::min(std::max(nPrivateSendAmount, 2), 999999);
 
@@ -1870,6 +1870,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         return InitError("Failed to load masternode payments cache from mnpayments.dat");
     }
 
+    uiInterface.InitMessage(_("Loading governance cache..."));
     CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
     if(!flatdb3.Load(governance)) {
         return InitError("Failed to load governance cache from governance.dat");
