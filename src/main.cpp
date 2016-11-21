@@ -1168,9 +1168,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                               bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache)
 {
+    ValidationResourceTracker resourceTracker;
     unsigned int nSize = 0;
     uint64_t start = GetTimeMicros();    
-    ValidationResourceTracker resourceTracker(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
@@ -1997,19 +1997,13 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 }
 
 bool CScriptCheck::operator()() {
-    if (resourceTracker && !resourceTracker->IsWithinLimits())
-        return false; // Don't do any more checks if already past limits
-
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     CachingTransactionSignatureChecker checker(ptxTo, nIn, cacheStore);
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error)) {
+
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, checker, &error))
         return false;
-    }
-    if (resourceTracker) {
-        if (!resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed()))
-            return ::error("CScriptCheck(): %s:%d sigop and/or sighash byte limit exceeded",
-                           ptxTo->GetHash().ToString(), nIn);
-    }
+    if (resourceTracker)
+        resourceTracker->Update(ptxTo->GetHash(), checker.GetNumSigops(), checker.GetBytesHashed());
     return true;
 }
 
@@ -2549,7 +2543,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CBlockUndo blockundo;
 
-    ValidationResourceTracker resourceTracker(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
+    ValidationResourceTracker resourceTracker;
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
     std::vector<int> prevheights;

@@ -402,24 +402,18 @@ class ValidationResourceTracker
 private:
     mutable CCriticalSection cs;
     uint64_t nSigops;
-    const uint64_t nMaxSigops;
     uint64_t nSighashBytes;
-    const uint64_t nMaxSighashBytes;
 
 public:
-    ValidationResourceTracker(uint64_t nMaxSigopsIn, uint64_t nMaxSighashBytesIn) :
-                             nSigops(0), nMaxSigops(nMaxSigopsIn),
-                             nSighashBytes(0), nMaxSighashBytes(nMaxSighashBytesIn) { }
+    ValidationResourceTracker() :
+                             nSigops(0),
+                             nSighashBytes(0) { }
 
-    bool IsWithinLimits() const {
-        LOCK(cs);
-        return (nSigops <= nMaxSigops && nSighashBytes <= nMaxSighashBytes);
-    }
-    bool Update(const uint256& txid, uint64_t nSigopsIn, uint64_t nSighashBytesIn) {
+    void Update(const uint256& txid, uint64_t nSigopsIn, uint64_t nSighashBytesIn) {
         LOCK(cs);
         nSigops += nSigopsIn;
         nSighashBytes += nSighashBytesIn;
-        return (nSigops <= nMaxSigops && nSighashBytes <= nMaxSighashBytes);
+        return;
     }
     uint64_t GetSigOps() const {
         LOCK(cs);
