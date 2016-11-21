@@ -1143,6 +1143,9 @@ uint256 SerializePartialTransactionv4(const CTransaction &tx, uint32_t nIn, int 
 
 } // anon namespace
 
+// Signature hash returns a hash of a certain subset of the transaction's content
+// allowing the private-key owner to sign that and proof he owns the public key and
+// at the same time lock in all the content he signs.
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, CAmount amount, int nHashType)
 {
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
@@ -1161,6 +1164,22 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
     extern boost::atomic<bool> flexTransActive;
     if (flexTransActive && txTo.nVersion == 4) {
+        // In the v4 (flextrans) format we add the support for the following proofs;
+        // * input amount.
+        //   Including the amount means we sign this transaction only if the amount we are spending
+        //   is the one provided. Wallets that do not have the full utxo DB can safely sign knowing
+        //   that if they were lied to about the amount being spent, their signature is useless.
+        // * scriptBase is the combined script of input and output, without signatures naturally.
+        //   Providing this to a hardware wallet means it knows what output it is spending and can
+        //   respond properly. Including it in the hash means its signature would be broken if we lied.
+        // * Double spent-proof.
+        //   Should a node detect a double spent he can notify his peers about this fact. Instead of sending
+        //   the entire transaction, instead he sends only a proof.
+        //   The node needs to send two pairs of info that proves that in both transactions the CTxIn are
+        //   identical. Which means all data to re-generate the hash this method returns, plus both
+        //   tx's pubkey & signature for that vin.
+        //   If the data combines and the signature is correct for both, we have proof they are a double-spend pair.
+
         CHashWriter ss(SER_GETHASH, 0);
         if (nHashType <= SIGHASH_ALL) {
             ss << txTo.GetHash();
@@ -1171,7 +1190,6 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         ss << txTo.vin[nIn].prevout;
         ss << static_cast<const CScriptBase&>(scriptCode);
         ss << amount;
-        ss << txTo.vin[nIn].nSequence;
         ss << nHashType;
         return ss.GetHash();
     }
