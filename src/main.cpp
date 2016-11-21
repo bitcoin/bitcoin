@@ -940,7 +940,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-int GetInputAge(CTxIn& txin)
+int GetInputAge(const CTxIn &txin)
 {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
@@ -960,7 +960,7 @@ int GetInputAge(CTxIn& txin)
     }
 }
 
-int GetInputAgeIX(uint256 nTXHash, CTxIn& txin)
+int GetInputAgeIX(const uint256 &nTXHash, const CTxIn &txin)
 {
     int nResult = GetInputAge(txin);
     if(nResult < 0) return -1;
@@ -971,7 +971,7 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& txin)
     return nResult;
 }
 
-int GetIXConfirmations(uint256 nTXHash)
+int GetIXConfirmations(const uint256 &nTXHash)
 {
     if (IsLockedInstandSendTransaction(nTXHash))
         return nInstantSendDepth;
