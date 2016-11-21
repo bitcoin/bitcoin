@@ -9,7 +9,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import COIN, MAX_BLOCK_SIZE
+from test_framework.mininode import COIN, MAX_BLOCK_BASE_SIZE
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
 
@@ -42,7 +42,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
             txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[start_range:end_range], (i+1)*base_fee)
 
         # Make sure that the size of each group of transactions exceeds
-        # MAX_BLOCK_SIZE -- otherwise the test needs to be revised to create
+        # MAX_BLOCK_BASE_SIZE -- otherwise the test needs to be revised to create
         # more transactions.
         mempool = self.nodes[0].getrawmempool(True)
         sizes = [0, 0, 0]
@@ -50,7 +50,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
             for j in txids[i]:
                 assert(j in mempool)
                 sizes[i] += mempool[j]['size']
-            assert(sizes[i] > MAX_BLOCK_SIZE) # Fail => raise utxo_count
+            assert(sizes[i] > MAX_BLOCK_BASE_SIZE) # Fail => raise utxo_count
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined (lower
