@@ -726,7 +726,7 @@ struct DisconnectedBlockTransactions {
     void addTransaction(const CTransactionRef& tx)
     {
         queuedTx.insert(tx);
-        cachedInnerUsage += RecursiveDynamicUsage(*tx) + memusage::DynamicUsage(tx);
+        cachedInnerUsage += RecursiveDynamicUsage(tx);
     }
 
     // Remove entries based on txid_index, and update memory usage.
@@ -739,7 +739,7 @@ struct DisconnectedBlockTransactions {
         for (auto const &tx : vtx) {
             auto it = queuedTx.find(tx->GetHash());
             if (it != queuedTx.end()) {
-                cachedInnerUsage -= RecursiveDynamicUsage(**it) + memusage::DynamicUsage(*it);
+                cachedInnerUsage -= RecursiveDynamicUsage(*it);
                 queuedTx.erase(it);
             }
         }
@@ -748,7 +748,7 @@ struct DisconnectedBlockTransactions {
     // Remove an entry by insertion_order index, and update memory usage.
     void removeEntry(indexed_disconnected_transactions::index<insertion_order>::type::iterator entry)
     {
-        cachedInnerUsage -= RecursiveDynamicUsage(**entry) + memusage::DynamicUsage(*entry);
+        cachedInnerUsage -= RecursiveDynamicUsage(*entry);
         queuedTx.get<insertion_order>().erase(entry);
     }
 

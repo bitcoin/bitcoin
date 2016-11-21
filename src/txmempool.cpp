@@ -24,7 +24,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFe
     spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp)
 {
     nTxWeight = GetTransactionWeight(*tx);
-    nUsageSize = RecursiveDynamicUsage(*tx) + memusage::DynamicUsage(tx);
+    nUsageSize = RecursiveDynamicUsage(tx);
 
     nCountWithDescendants = 1;
     nSizeWithDescendants = GetTxSize();
