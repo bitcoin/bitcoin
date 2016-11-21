@@ -380,7 +380,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw runtime_error(
-            "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
+            "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment_to\" subtractfeefromamount )\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
@@ -388,7 +388,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
             "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
             "                             to which you're sending the transaction. This is not part of the \n"
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
@@ -660,7 +660,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 3)
         throw runtime_error(
-            "getbalance ( \"account\" minconf includeWatchonly )\n"
+            "getbalance ( \"account\" minconf include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "If account is specified (DEPRECATED), returns the balance in the account.\n"
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
@@ -668,7 +668,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"account\"      (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
+            "3. include_watchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
             "\nExamples:\n"
@@ -798,7 +798,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 6)
         throw runtime_error(
-            "sendfrom \"fromaccount\" \"tobitcoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
+            "sendfrom \"fromaccount\" \"tobitcoinaddress\" amount ( minconf \"comment\" \"comment_to\" )\n"
             "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a bitcoin address."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
@@ -808,7 +808,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
             "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
             "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
             "                                     This is not part of the transaction, just kept in your wallet.\n"
-            "6. \"comment-to\"        (string, optional) An optional comment to store the name of the person or organization \n"
+            "6. \"comment_to\"        (string, optional) An optional comment to store the name of the person or organization \n"
             "                                     to which you're sending the transaction. This is not part of the transaction, \n"
             "                                     it is just kept in your wallet.\n"
             "\nResult:\n"
@@ -874,7 +874,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
             "4. \"comment\"             (string, optional) A comment\n"
-            "5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
+            "5. subtractfeefrom         (array, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
@@ -989,7 +989,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. nrequired        (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keysobject\"   (string, required) A json array of bitcoin addresses or hex-encoded public keys\n"
+            "2. \"keys\"         (string, required) A json array of bitcoin addresses or hex-encoded public keys\n"
             "     [\n"
             "       \"address\"  (string) bitcoin address or hex-encoded public key\n"
             "       ...,\n"
@@ -1253,12 +1253,12 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 3)
         throw runtime_error(
-            "listreceivedbyaddress ( minconf includeempty includeWatchonly)\n"
+            "listreceivedbyaddress ( minconf include_empty include_watchonly)\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf       (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. includeempty  (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
-            "3. includeWatchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
+            "2. include_empty  (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
+            "3. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
@@ -1291,12 +1291,12 @@ UniValue listreceivedbyaccount(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 3)
         throw runtime_error(
-            "listreceivedbyaccount ( minconf includeempty includeWatchonly)\n"
+            "listreceivedbyaccount ( minconf include_empty include_watchonly)\n"
             "\nDEPRECATED. List balances by account.\n"
             "\nArguments:\n"
             "1. minconf      (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. includeempty (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
-            "3. includeWatchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
+            "2. include_empty (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
+            "3. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
@@ -1427,13 +1427,13 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 4)
         throw runtime_error(
-            "listtransactions ( \"account\" count from includeWatchonly)\n"
+            "listtransactions ( \"account\" count from include_watchonly)\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"    (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
-            "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+            "4. include_watchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -1554,11 +1554,11 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 2)
         throw runtime_error(
-            "listaccounts ( minconf includeWatchonly)\n"
+            "listaccounts ( minconf include_watchonly)\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
-            "2. includeWatchonly (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
+            "2. include_watchonly (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "{                      (json object where keys are account names, and values are numeric balances\n"
             "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
@@ -1633,12 +1633,12 @@ UniValue listsinceblock(const JSONRPCRequest& request)
 
     if (request.fHelp)
         throw runtime_error(
-            "listsinceblock ( \"blockhash\" target-confirmations includeWatchonly)\n"
+            "listsinceblock ( \"blockhash\" target_confirmations include_watchonly)\n"
             "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted\n"
             "\nArguments:\n"
             "1. \"blockhash\"   (string, optional) The block hash to list transactions since\n"
-            "2. target-confirmations:    (numeric, optional) The confirmations required, must be 1 or more\n"
-            "3. includeWatchonly:        (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')"
+            "2. target_confirmations:   (numeric, optional) The confirmations required, must be 1 or more\n"
+            "3. include_watchonly:       (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')"
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
@@ -1726,11 +1726,11 @@ UniValue gettransaction(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "gettransaction \"txid\" ( includeWatchonly )\n"
+            "gettransaction \"txid\" ( include_watchonly )\n"
             "\nGet detailed information about in-wallet transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
-            "2. \"includeWatchonly\"    (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
+            "2. \"include_watchonly\"   (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
             "\nResult:\n"
             "{\n"
             "  \"amount\" : x.xxx,        (numeric) The transaction amount in " + CURRENCY_UNIT + "\n"
@@ -2352,7 +2352,7 @@ UniValue listunspent(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 3)
         throw runtime_error(
-            "listunspent ( minconf maxconf  [\"address\",...] )\n"
+            "listunspent ( minconf maxconf  [\"addresses\",...] )\n"
             "\nReturns array of unspent transaction outputs\n"
             "with between minconf and maxconf (inclusive) confirmations.\n"
             "Optionally filter to only include txouts paid to specified addresses.\n"
@@ -2595,53 +2595,53 @@ extern UniValue importmulti(const JSONRPCRequest& request);
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           okSafeMode
     //  --------------------- ------------------------    -----------------------    ----------
-    { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       false },
-    { "hidden",             "resendwallettransactions", &resendwallettransactions, true  },
-    { "wallet",             "abandontransaction",       &abandontransaction,       false },
-    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true  },
-    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true  },
-    { "wallet",             "backupwallet",             &backupwallet,             true  },
-    { "wallet",             "dumpprivkey",              &dumpprivkey,              true  },
-    { "wallet",             "dumpwallet",               &dumpwallet,               true  },
-    { "wallet",             "encryptwallet",            &encryptwallet,            true  },
-    { "wallet",             "getaccountaddress",        &getaccountaddress,        true  },
-    { "wallet",             "getaccount",               &getaccount,               true  },
-    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true  },
-    { "wallet",             "getbalance",               &getbalance,               false },
-    { "wallet",             "getnewaddress",            &getnewaddress,            true  },
-    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true  },
-    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false },
-    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false },
-    { "wallet",             "gettransaction",           &gettransaction,           false },
-    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    false },
-    { "wallet",             "getwalletinfo",            &getwalletinfo,            false },
-    { "wallet",             "importmulti",              &importmulti,              true  },
-    { "wallet",             "importprivkey",            &importprivkey,            true  },
-    { "wallet",             "importwallet",             &importwallet,             true  },
-    { "wallet",             "importaddress",            &importaddress,            true  },
-    { "wallet",             "importprunedfunds",        &importprunedfunds,        true  },
-    { "wallet",             "importpubkey",             &importpubkey,             true  },
-    { "wallet",             "keypoolrefill",            &keypoolrefill,            true  },
-    { "wallet",             "listaccounts",             &listaccounts,             false },
-    { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false },
-    { "wallet",             "listlockunspent",          &listlockunspent,          false },
-    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false },
-    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false },
-    { "wallet",             "listsinceblock",           &listsinceblock,           false },
-    { "wallet",             "listtransactions",         &listtransactions,         false },
-    { "wallet",             "listunspent",              &listunspent,              false },
-    { "wallet",             "lockunspent",              &lockunspent,              true  },
-    { "wallet",             "move",                     &movecmd,                  false },
-    { "wallet",             "sendfrom",                 &sendfrom,                 false },
-    { "wallet",             "sendmany",                 &sendmany,                 false },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            false },
-    { "wallet",             "setaccount",               &setaccount,               true  },
-    { "wallet",             "settxfee",                 &settxfee,                 true  },
-    { "wallet",             "signmessage",              &signmessage,              true  },
-    { "wallet",             "walletlock",               &walletlock,               true  },
-    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true  },
-    { "wallet",             "walletpassphrase",         &walletpassphrase,         true  },
-    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true  },
+    { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       false,  {"hexstring","options"} },
+    { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {} },
+    { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
+    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
+    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
+    { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
+    { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"bitcoinaddress"}  },
+    { "wallet",             "dumpwallet",               &dumpwallet,               true,   {"filename"} },
+    { "wallet",             "encryptwallet",            &encryptwallet,            true,   {"passphrase"} },
+    { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account"} },
+    { "wallet",             "getaccount",               &getaccount,               true,   {"bitcoinaddress"} },
+    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,    true,   {"account"} },
+    { "wallet",             "getbalance",               &getbalance,               false,  {"account","minconf","include_watchonly"} },
+    { "wallet",             "getnewaddress",            &getnewaddress,            true,   {"account"} },
+    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,      true,   {} },
+    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,     false,  {"account","minconf"} },
+    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,     false,  {"bitcoinaddress","minconf"} },
+    { "wallet",             "gettransaction",           &gettransaction,           false,  {"txid","include_watchonly"} },
+    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,    false,  {} },
+    { "wallet",             "getwalletinfo",            &getwalletinfo,            false,  {} },
+    { "wallet",             "importmulti",              &importmulti,              true,   {"requests","options"} },
+    { "wallet",             "importprivkey",            &importprivkey,            true,   {"bitcoinprivkey","label","rescan"} },
+    { "wallet",             "importwallet",             &importwallet,             true,   {"filename"} },
+    { "wallet",             "importaddress",            &importaddress,            true,   {"address","label","rescan","p2sh"} },
+    { "wallet",             "importprunedfunds",        &importprunedfunds,        true,   {"rawtransaction","txoutproof"} },
+    { "wallet",             "importpubkey",             &importpubkey,             true,   {"pubkey","label","rescan"} },
+    { "wallet",             "keypoolrefill",            &keypoolrefill,            true,   {"newsize"} },
+    { "wallet",             "listaccounts",             &listaccounts,             false,  {"minconf","include_watchonly"} },
+    { "wallet",             "listaddressgroupings",     &listaddressgroupings,     false,  {} },
+    { "wallet",             "listlockunspent",          &listlockunspent,          false,  {} },
+    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,    false,  {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,    false,  {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listsinceblock",           &listsinceblock,           false,  {"blockhash","target_confirmations","include_watchonly"} },
+    { "wallet",             "listtransactions",         &listtransactions,         false,  {"account","count","from","include_watchonly"} },
+    { "wallet",             "listunspent",              &listunspent,              false,  {"minconf","maxconf","addresses"} },
+    { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
+    { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
+    { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","tobitcoinaddress","amount","minconf","comment","comment_to"} },
+    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","comment","subtractfeefrom"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"bitcoinaddress","amount","comment","comment_to","subtractfeefromamount"} },
+    { "wallet",             "setaccount",               &setaccount,               true,   {"bitcoinaddress","account"} },
+    { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount"} },
+    { "wallet",             "signmessage",              &signmessage,              true,   {"bitcoinaddress","message"} },
+    { "wallet",             "walletlock",               &walletlock,               true,   {} },
+    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase"} },
+    { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
+    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
