@@ -14,9 +14,9 @@ class CTxMemPool;
 // Dumb helper to handle CTransaction compression at serialize-time
 struct TransactionCompressor {
 private:
-    CTransaction& tx;
+    CTransactionRef& tx;
 public:
-    TransactionCompressor(CTransaction& txIn) : tx(txIn) {}
+    TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -72,7 +72,7 @@ class BlockTransactions {
 public:
     // A BlockTransactions message
     uint256 blockhash;
-    std::vector<CTransaction> txn;
+    std::vector<CTransactionRef> txn;
 
     BlockTransactions() {}
     BlockTransactions(const BlockTransactionsRequest& req) :
@@ -104,7 +104,7 @@ struct PrefilledTransaction {
     // Used as an offset since last prefilled tx in CBlockHeaderAndShortTxIDs,
     // as a proper transaction-in-block-index in PartiallyDownloadedBlock
     uint16_t index;
-    CTransaction tx;
+    CTransactionRef tx;
 
     ADD_SERIALIZE_METHODS;
 
@@ -193,7 +193,7 @@ public:
 
 class PartiallyDownloadedBlock {
 protected:
-    std::vector<std::shared_ptr<const CTransaction> > txn_available;
+    std::vector<CTransactionRef> txn_available;
     size_t prefilled_count = 0, mempool_count = 0;
     CTxMemPool* pool;
 public:
@@ -202,7 +202,7 @@ public:
 
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock);
     bool IsTxAvailable(size_t index) const;
-    ReadStatus FillBlock(CBlock& block, const std::vector<CTransaction>& vtx_missing) const;
+    ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing) const;
 };
 
 #endif
