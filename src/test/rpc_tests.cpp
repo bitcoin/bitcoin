@@ -8,6 +8,8 @@
 
 #include "base58.h"
 #include "netbase.h"
+#include "primitives/block.h"
+#include "versionbits.h"
 
 #include "test/test_bitcoin.h"
 
@@ -23,7 +25,6 @@
 using namespace std;
 
 extern CChain chainActive;
-extern boost::atomic<uint32_t> sizeForkTime;
 
 // Helper function which returns a fresh chain of nVersion=4 blocks and ascending
 // nTime at nice nPowTargetSpacing intervals, to be used as tip on chainActive.
@@ -354,192 +355,6 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
-}
-
-
-BOOST_AUTO_TEST_CASE(rpc_getblockchaininfo)
-{
-    // test bip109 counting
-
-    // use testnet params for faster testing (smaller window size)
-    SelectParams(CBaseChainParams::TESTNET);
-    const Consensus::Params& params = Params().GetConsensus();
-    // we need 1 more than the size of the majority window because
-    // we want to test the lower boundary (just outside window)
-    const int chain_len = params.nMajorityWindow + 1;
-    // use reduced length chain for some tests where window is not
-    // needed
-    const int min_chain_len = 3;
-    
-    // ensure that the hard fork is not yet seen as active
-    // otherwise the global pblocktree must be set up right,
-    // or else an assert will trip in HardForkMajorityDesc
-    sizeForkTime.store(std::numeric_limits<uint32_t>::max());
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // case 1: a block history with only version 4 blocks (zero bip109 found)
-    std::vector<CBlockIndex> *testblocks;
-    testblocks = freshchain(min_chain_len);
-    chainActive.SetTip(&(*testblocks)[min_chain_len-1]);
-    UniValue r;
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    UniValue o1 = r.get_obj();
-    UniValue hf = find_value(o1, "hardforks");
-    UniValue hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    UniValue bip109_obj = hfa[0].get_obj();
-    UniValue bip109_status_obj = find_value(bip109_obj, "status");
-    UniValue bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), 0);
-    delete testblocks;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // case 2: a block history with only version 4 blocks in the window, but 
-    // one bip109 block before that (at genesis, outside window, zero bip109)
-    testblocks = freshchain(chain_len);
-    (*testblocks)[0].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), 0);
-    delete testblocks;
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // case 3: a full-window bip109-block history with last block beyond 
-    // expiry date (results in no 'hardforks' entry in the RPC output)
-    testblocks = freshchain(chain_len);
-    // add BIP109 blocks, one short of the required majority
-    for (int i = 1; i <= chain_len-1; i++) {
-        (*testblocks)[i].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    }
-    // timestamp the last block as expired w.r.t. BIP109
-    (*testblocks)[chain_len-1].nTime = params.nSizeForkExpiration + 1;
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    UniValue bip109 = find_value(hf, "bip109");
-    BOOST_CHECK(bip109.getType() == UniValue::VNULL);
-    delete testblocks;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // case 4: a block history with (majority-1) BIP9 (0x200000) blocks followed
-    //         by the remainder BIP109 blocks, all in window
-    testblocks = freshchain(chain_len);
-    // add BASE_VERSION (BIP9) blocks, one short of the required majority
-    for (int i = 1; i <= params.nActivateSizeForkMajority-1; i++) {
-        (*testblocks)[i].nVersion = BASE_VERSION;
-    }
-    for (int i = params.nActivateSizeForkMajority; i <= chain_len-1; i++) {
-        (*testblocks)[i].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    }
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), chain_len-params.nActivateSizeForkMajority);
-    delete testblocks;
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // case 5: a v4-block history with one bip109 block at lower end (height 1)
-    testblocks = freshchain(chain_len);
-    (*testblocks)[1].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), 1);
-    delete testblocks;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // case 6: a v4-block history with one bip109 block at tip
-    testblocks = freshchain(chain_len);
-    (*testblocks)[testblocks->size()-1].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    BOOST_CHECK_EQUAL(1, 1);
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), 1);
-    delete testblocks;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // case 7: full majority of bip109 blocks starting at lower end of window
-    testblocks = freshchain(chain_len);
-    for (int i = 1; i <= params.nActivateSizeForkMajority; i++) {
-        (*testblocks)[i].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    }
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    BOOST_CHECK_EQUAL(1, 1);
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), params.nActivateSizeForkMajority);
-    delete testblocks;
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // case 8: full window of bip109 blocks (exceeding majority)
-    testblocks = freshchain(chain_len);
-    for (int i = 1; i <= params.nMajorityWindow; i++) {
-        (*testblocks)[i].nVersion = BASE_VERSION + FORK_BIT_2MB;
-    }
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    BOOST_CHECK_EQUAL(1, 1);
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), params.nMajorityWindow);
-    delete testblocks;
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // case 9: full window of blocks with version > 0x30000000 - all of them should count
-    testblocks = freshchain(chain_len);
-    for (int i = 1; i <= params.nMajorityWindow; i++) {
-        (*testblocks)[i].nVersion = BASE_VERSION + FORK_BIT_2MB + i % 10;
-    }
-    chainActive.SetTip(&(*testblocks)[chain_len-1]);
-    BOOST_CHECK_NO_THROW(r = CallRPC(string("getblockchaininfo")));
-    o1 = r.get_obj();
-    hf = find_value(o1, "hardforks");
-    BOOST_CHECK_EQUAL(1, 1);
-    hfa = hf.get_array();
-    BOOST_CHECK_EQUAL(hfa.size(), 1);
-    bip109_obj = hfa[0].get_obj();
-    bip109_status_obj = find_value(bip109_obj, "status");
-    bip109_found = find_value(bip109_status_obj, "found");
-    BOOST_CHECK_EQUAL(bip109_found.get_int(), params.nMajorityWindow);
-    delete testblocks;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -117,7 +117,6 @@ testScriptsExt = [
     'bip65-cltv-p2p.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
-    'bigblocks.py',
     'getblocktemplate_longpoll.py',
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',

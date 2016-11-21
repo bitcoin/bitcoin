@@ -60,7 +60,6 @@ CCriticalSection cs_main;
 BlockMap mapBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
-boost::atomic<uint32_t> sizeForkTime(std::numeric_limits<uint32_t>::max());
 int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
@@ -92,20 +91,11 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
- * Returns true if there are nRequired or more blocks with a version that matches
- * versionOrBitmask in the last Consensus::Params::nMajorityWindow blocks,
- * starting at pstart and going backwards.
- *
- * A bitmask is used to be compatible with BIP009,
- * so it is possible for multiple forks to be in-progress
- * at the same time. A simple >= version field is used for forks that
- * predate this proposal.
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-static bool IsSuperMajority(int versionOrBitmask, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams, bool useBitMask=false);
+static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
-
-/** Constant stuff for coinbase transactions we create: */
-CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
@@ -2003,9 +1993,6 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
         }
     }
 
-    if (GetAdjustedTime() <= params.SizeForkExpiration())
-        nVersion |= FORK_BIT_2MB;
-
     return nVersion;
 }
 
@@ -2043,22 +2030,6 @@ static int64_t nTimeConnect = 0;
 static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
-
-static bool DidBlockTriggerSizeFork(const CBlock &block, const CBlockIndex *pindex, const CChainParams &chainparams)
-{
-    if (pblocktree->ForkBitActivated(FORK_BIT_2MB) != uint256())
-        return false; // Already active
-    if (block.nTime > chainparams.GetConsensus().SizeForkExpiration()) {
-        // 2MB vote failed: this code is obsolete
-        strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
-        AlertNotify(strMiscWarning, true);
-        uiInterface.NotifyAlertChanged();
-        return false;
-    }
-    if ((block.nVersion & FORK_BIT_2MB) != FORK_BIT_2MB)
-        return false;
-    return IsSuperMajority(FORK_BIT_2MB, pindex, chainparams.GetConsensus().ActivateSizeForkMajority(), chainparams.GetConsensus(), true /* use bitmask */);
-}
 
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
@@ -2300,14 +2271,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCallbacks * 0.000001);
 
-    if (DidBlockTriggerSizeFork(block, pindex, chainparams)) {
-        uint32_t tAllowBigger = block.nTime + chainparams.GetConsensus().SizeForkGracePeriod();
-        LogPrintf("%s: Max block size fork activating at time %d, bigger blocks allowed at time %d\n",
-                  __func__, block.nTime, tAllowBigger);
-        pblocktree->ActivateForkBit(FORK_BIT_2MB, pindex->GetBlockHash());
-        sizeForkTime.store(tAllowBigger);
-    }
-
     return true;
 }
 
@@ -2529,13 +2492,6 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
     // UpdateTransactionsFromBlock finds descendants of any transactions in this
     // block that were added back and cleans up the mempool state.
     mempool.UpdateTransactionsFromBlock(vHashUpdate);
-
-    // Re-org past the size fork, reset activation condition:
-    if (pblocktree->ForkBitActivated(FORK_BIT_2MB) == pindexDelete->GetBlockHash()) {
-        LogPrintf("%s: re-org past size fork\n", __func__);
-        pblocktree->ActivateForkBit(FORK_BIT_2MB, uint256());
-        sizeForkTime.store(std::numeric_limits<uint32_t>::max());
-    }
 
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
@@ -3127,9 +3083,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
     // Size limits
-    unsigned int nSizeLimit = MaxBlockSize(block.nTime);
-
-    if (block.vtx.empty() || block.vtx.size() > nSizeLimit || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nSizeLimit)
+    std::int32_t nSizeLimit = Policy::blockSizeAcceptLimit();
+    if (block.vtx.empty() || block.vtx.size() > (uint32_t) nSizeLimit || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > (uint32_t) nSizeLimit)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
@@ -3360,13 +3315,12 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     return true;
 }
 
-static bool IsSuperMajority(int versionOrBitmask, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams, bool useBitMask)
+static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
-        if ((useBitMask && ((pstart->nVersion & versionOrBitmask) == versionOrBitmask)) ||
-            (!useBitMask && (pstart->nVersion >= versionOrBitmask)))
+        if (pstart->nVersion >= minVersion)
             ++nFound;
         pstart = pstart->pprev;
     }
@@ -3607,15 +3561,6 @@ bool static LoadBlockIndexDB()
     const CChainParams& chainparams = Params();
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
-
-    // If the max-block-size fork threshold was reached, update
-    // chainparams so big blocks are allowed:
-    uint256 sizeForkHash = pblocktree->ForkBitActivated(FORK_BIT_2MB);
-    if (sizeForkHash != uint256()) {
-        BlockMap::iterator it = mapBlockIndex.find(sizeForkHash);
-        assert(it != mapBlockIndex.end());
-        sizeForkTime.store(it->second->GetBlockTime() + chainparams.GetConsensus().SizeForkGracePeriod());
-    }
 
     boost::this_thread::interruption_point();
 
@@ -3903,7 +3848,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SIZE, MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
+        CBufferedFile blkdat(fileIn, 2E6, 1E6+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -3922,7 +3867,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > MAX_BLOCK_SIZE)
+                if (nSize < 80)
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
@@ -6182,14 +6127,6 @@ bool SendMessages(CNode* pto)
  std::string CBlockFileInfo::ToString() const {
      return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst), DateTimeStrFormat("%Y-%m-%d", nTimeLast));
  }
-
-/** Maximum size of a block */
-unsigned int MaxBlockSize(uint32_t nBlockTime)
-{
-    if (nBlockTime < sizeForkTime.load())
-        return OLD_MAX_BLOCK_SIZE;
-    return MAX_BLOCK_SIZE;
-}
 
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
