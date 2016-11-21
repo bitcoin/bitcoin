@@ -351,7 +351,7 @@ class FullBlockTest(ComparisonTestFramework):
         block(22, spend=out[5])
         yield rejected()
 
-        # Create a block on either side of MAX_BLOCK_SIZE and make sure its accepted/rejected
+        # Create a block on either side of MAX_BLOCK_BASE_SIZE and make sure its accepted/rejected
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b23 (6)
         #                                                                           \-> b24 (6) -> b25 (7)
@@ -359,24 +359,24 @@ class FullBlockTest(ComparisonTestFramework):
         tip(15)
         b23 = block(23, spend=out[6])
         tx = CTransaction()
-        script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 69
+        script_length = MAX_BLOCK_BASE_SIZE - len(b23.serialize()) - 69
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
         b23 = update_block(23, [tx])
         # Make sure the math above worked out to produce a max-sized block
-        assert_equal(len(b23.serialize()), MAX_BLOCK_SIZE)
+        assert_equal(len(b23.serialize()), MAX_BLOCK_BASE_SIZE)
         yield accepted()
         save_spendable_output()
 
         # Make the next block one byte bigger and check that it fails
         tip(15)
         b24 = block(24, spend=out[6])
-        script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 69
+        script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 69
         script_output = CScript([b'\x00' * (script_length+1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = update_block(24, [tx])
-        assert_equal(len(b24.serialize()), MAX_BLOCK_SIZE+1)
+        assert_equal(len(b24.serialize()), MAX_BLOCK_BASE_SIZE+1)
         yield rejected(RejectResult(16, b'bad-blk-length'))
 
         block(25, spend=out[7])
@@ -523,12 +523,12 @@ class FullBlockTest(ComparisonTestFramework):
         tx_new = None
         tx_last = tx
         total_size=len(b39.serialize())
-        while(total_size < MAX_BLOCK_SIZE):
+        while(total_size < MAX_BLOCK_BASE_SIZE):
             tx_new = create_tx(tx_last, 1, 1, p2sh_script)
             tx_new.vout.append(CTxOut(tx_last.vout[1].nValue - 1, CScript([OP_TRUE])))
             tx_new.rehash()
             total_size += len(tx_new.serialize())
-            if total_size >= MAX_BLOCK_SIZE:
+            if total_size >= MAX_BLOCK_BASE_SIZE:
                 break
             b39.vtx.append(tx_new) # add tx to block
             tx_last = tx_new
@@ -877,7 +877,7 @@ class FullBlockTest(ComparisonTestFramework):
 
 
         #  This checks that a block with a bloated VARINT between the block_header and the array of tx such that
-        #  the block is > MAX_BLOCK_SIZE with the bloated varint, but <= MAX_BLOCK_SIZE without the bloated varint,
+        #  the block is > MAX_BLOCK_BASE_SIZE with the bloated varint, but <= MAX_BLOCK_BASE_SIZE without the bloated varint,
         #  does not cause a subsequent, identical block with canonical encoding to be rejected.  The test does not
         #  care whether the bloated block is accepted or rejected; it only cares that the second block is accepted.
         #
@@ -901,12 +901,12 @@ class FullBlockTest(ComparisonTestFramework):
         tx = CTransaction()
 
         # use canonical serialization to calculate size
-        script_length = MAX_BLOCK_SIZE - len(b64a.normal_serialize()) - 69
+        script_length = MAX_BLOCK_BASE_SIZE - len(b64a.normal_serialize()) - 69
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
         b64a = update_block("64a", [tx])
-        assert_equal(len(b64a.serialize()), MAX_BLOCK_SIZE + 8)
+        assert_equal(len(b64a.serialize()), MAX_BLOCK_BASE_SIZE + 8)
         yield TestInstance([[self.tip, None]])
 
         # comptool workaround: to make sure b64 is delivered, manually erase b64a from blockstore
@@ -916,7 +916,7 @@ class FullBlockTest(ComparisonTestFramework):
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
         assert_equal(b64.hash, b64a.hash)
-        assert_equal(len(b64.serialize()), MAX_BLOCK_SIZE)
+        assert_equal(len(b64.serialize()), MAX_BLOCK_BASE_SIZE)
         self.blocks[64] = b64
         update_block(64, [])
         yield accepted()
@@ -1250,12 +1250,12 @@ class FullBlockTest(ComparisonTestFramework):
             for i in range(89, LARGE_REORG_SIZE + 89):
                 b = block(i, spend)
                 tx = CTransaction()
-                script_length = MAX_BLOCK_SIZE - len(b.serialize()) - 69
+                script_length = MAX_BLOCK_BASE_SIZE - len(b.serialize()) - 69
                 script_output = CScript([b'\x00' * script_length])
                 tx.vout.append(CTxOut(0, script_output))
                 tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
                 b = update_block(i, [tx])
-                assert_equal(len(b.serialize()), MAX_BLOCK_SIZE)
+                assert_equal(len(b.serialize()), MAX_BLOCK_BASE_SIZE)
                 test1.blocks_and_transactions.append([self.tip, True])
                 save_spendable_output()
                 spend = get_spendable_output()
