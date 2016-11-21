@@ -1430,23 +1430,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         LogPrint("net", "delaying getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                         pfrom->PushBlockHashFromINV(inv.hash);
                     } else {
-                        // First request the headers preceding the announced block. In the normal fully-synced
-                        // case where a new block is announced that succeeds the current tip (no reorganization),
-                        // there are no such headers.
-                        // Secondly, and only when we are close to being synced, we request the announced block directly,
-                        // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
-                        // time the block arrives, the header chain leading up to it is already validated. Not
-                        // doing this will result in the received block being rejected as an orphan in case it is
-                        // not a direct successor.
+                        // We used to request the full block here, but since headers-announcements are now the
+                        // primary method of announcement on the network, and since, in the case that a node
+                        // fell back to inv we probably have a reorg which we should get the headers for first,
+                        // we now only provide a getheaders response here. When we receive the headers, we will
+                        // then ask for the blocks we need.
                         connman.PushMessage(pfrom, NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
-                        CNodeState *nodestate = State(pfrom->GetId());
-                        if (CanDirectFetch(chainparams.GetConsensus()) &&
-                            nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                            vToFetch.push_back(inv);
-                            // Mark block as in flight already, even though the actual "getdata" message only goes out
-                            // later (within the same cs_main lock, though).
-                            MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                        }
                         LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                     }
                 }

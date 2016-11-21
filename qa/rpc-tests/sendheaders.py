@@ -364,14 +364,13 @@ class SendHeadersTest(BitcoinTestFramework):
                 if j == 0:
                     # Announce via inv
                     test_node.send_block_inv(tip)
-                    test_node.wait_for_getdata([tip], timeout=5)
+                    test_node.wait_for_getheaders(timeout=5)
+                    # Should have received a getheaders now
+                    test_node.send_header_for_blocks(blocks)
                     # Test that duplicate inv's won't result in duplicate
                     # getdata requests, or duplicate headers announcements
-                    inv_node.send_block_inv(tip)
-                    # Should have received a getheaders as well!
-                    test_node.send_header_for_blocks(blocks)
-                    test_node.wait_for_getdata([x.sha256 for x in blocks[0:-1]], timeout=5)
-                    [ inv_node.send_block_inv(x.sha256) for x in blocks[0:-1] ]
+                    [ inv_node.send_block_inv(x.sha256) for x in blocks ]
+                    test_node.wait_for_getdata([x.sha256 for x in blocks], timeout=5)
                     inv_node.sync_with_ping()
                 else:
                     # Announce via headers
