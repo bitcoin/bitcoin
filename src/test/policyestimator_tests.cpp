@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CFeeRate baseRate(basefee, ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
 
     // Create a fake block
-    std::vector<CTransaction> block;
+    std::vector<CTransactionRef> block;
     int blocknum = 0;
 
     // Loop through 200 blocks
@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             // 9/10 blocks add 2nd highest and so on until ...
             // 1/10 blocks add lowest fee transactions
             while (txHashes[9-h].size()) {
-                std::shared_ptr<const CTransaction> ptx = mpool.get(txHashes[9-h].back());
+                CTransactionRef ptx = mpool.get(txHashes[9-h].back());
                 if (ptx)
-                    block.push_back(*ptx);
+                    block.push_back(ptx);
                 txHashes[9-h].pop_back();
             }
         }
@@ -142,9 +142,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // Estimates should still not be below original
     for (int j = 0; j < 10; j++) {
         while(txHashes[j].size()) {
-            std::shared_ptr<const CTransaction> ptx = mpool.get(txHashes[j].back());
+            CTransactionRef ptx = mpool.get(txHashes[j].back());
             if (ptx)
-                block.push_back(*ptx);
+                block.push_back(ptx);
             txHashes[j].pop_back();
         }
     }
@@ -162,9 +162,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
                 mpool.addUnchecked(hash, entry.Fee(feeV[j]).Time(GetTime()).Priority(0).Height(blocknum).FromTx(tx, &mpool));
-                std::shared_ptr<const CTransaction> ptx = mpool.get(hash);
+                CTransactionRef ptx = mpool.get(hash);
                 if (ptx)
-                    block.push_back(*ptx);
+                    block.push_back(ptx);
 
             }
         }

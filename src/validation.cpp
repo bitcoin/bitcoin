@@ -1102,7 +1102,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
 
     LOCK(cs_main);
 
-    std::shared_ptr<const CTransaction> ptx = mempool.get(hash);
+    CTransactionRef ptx = mempool.get(hash);
     if (ptx)
     {
         txOut = *ptx;
@@ -1141,9 +1141,9 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
     if (pindexSlow) {
         CBlock block;
         if (ReadBlockFromDisk(block, pindexSlow, consensusParams)) {
-            BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-                if (tx.GetHash() == hash) {
-                    txOut = tx;
+            for (const auto& tx : block.vtx) {
+                if (tx->GetHash() == hash) {
+                    txOut = *tx;
                     hashBlock = pindexSlow->GetBlockHash();
                     return true;
                 }
@@ -1737,7 +1737,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
 
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
-        const CTransaction &tx = block.vtx[i];
+        const CTransaction &tx = *(block.vtx[i]);
         uint256 hash = tx.GetHash();
         bool is_coinbase = tx.IsCoinBase();
 
@@ -2059,9 +2059,9 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
 
     if (fEnforceBIP30) {
-        BOOST_FOREACH(const CTransaction& tx, block.vtx) {
-            for (size_t o = 0; o < tx.vout.size(); o++) {
-                if (view.HaveCoin(COutPoint(tx.GetHash(), o))) {
+        for (const auto& tx : block.vtx) {
+            for (size_t o = 0; o < tx->vout.size(); o++) {
+                if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
                     return state.DoS(100, error("ConnectBlock(): tried to overwrite transaction"),
                                      REJECT_INVALID, "bad-txns-BIP30");
                 }
@@ -2118,7 +2118,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
-        const CTransaction &tx = block.vtx[i];
+        const CTransaction &tx = *(block.vtx[i]);
         const uint256 txhash = tx.GetHash();
 
         nInputs += tx.vin.size();
@@ -2282,7 +2282,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         return state.DoS(0, error("ConnectBlock(DASH): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
 
-    if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
+    if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward)) {
         mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
         return state.DoS(0, error("ConnectBlock(DASH): couldn't find masternode or superblock payments"),
                                 REJECT_INVALID, "bad-cb-payee");
@@ -2347,7 +2347,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     // Watch for changes to the previous coinbase transaction.
     static uint256 hashPrevBestCoinBase;
     GetMainSignals().UpdatedTransaction(hashPrevBestCoinBase);
-    hashPrevBestCoinBase = block.vtx[0].GetHash();
+    hashPrevBestCoinBase = block.vtx[0]->GetHash();
 
     // Erase orphan transactions include or precluded by this block
     if (vOrphanErase.size()) {
@@ -2564,7 +2564,8 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         return false;
     // Resurrect mempool transactions from the disconnected block.
     std::vector<uint256> vHashUpdate;
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+    for (const auto& it : block.vtx) {
+        const CTransaction& tx = *it;
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy;
         if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, true)) {
@@ -2583,8 +2584,8 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     UpdateTip(pindexDelete->pprev, chainparams);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        GetMainSignals().SyncTransaction(tx, pindexDelete->pprev, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
+    for (const auto& tx : block.vtx) {
+        GetMainSignals().SyncTransaction(*tx, pindexDelete->pprev, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
     }
     return true;
 }
@@ -2599,7 +2600,7 @@ static int64_t nTimePostConnect = 0;
  * Connect a new block to chainActive. pblock is either NULL or a pointer to a CBlock
  * corresponding to pindexNew, to bypass loading it again from disk.
  */
-bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock, std::vector<std::shared_ptr<const CTransaction>> &txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int>> &txChanged)
+bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock, std::vector<CTransactionRef> &txConflicted, std::vector<std::tuple<CTransactionRef,CBlockIndex*,int>> &txChanged)
 {
     assert(pindexNew->pprev == chainActive.Tip());
     // Read block from disk.
@@ -2639,7 +2640,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     // Update chainActive & related variables.
     UpdateTip(pindexNew, chainparams);
 
-    for(unsigned int i=0; i < pblock->vtx.size(); i++)
+    for (unsigned int i=0; i < pblock->vtx.size(); i++)
         txChanged.emplace_back(pblock->vtx[i], pindexNew, i);
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
@@ -2765,7 +2766,7 @@ static void PruneBlockIndexCandidates() {
  * Try to make some progress towards making pindexMostWork the active block.
  * pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
  */
-static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock, bool& fInvalidFound, std::vector<std::shared_ptr<const CTransaction>>& txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int>>& txChanged)
+static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock, bool& fInvalidFound, std::vector<CTransactionRef>& txConflicted, std::vector<std::tuple<CTransactionRef,CBlockIndex*,int>>& txChanged)
 {
     AssertLockHeld(cs_main);
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -2867,7 +2868,7 @@ static void NotifyHeaderTip() {
 bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, const CBlock *pblock) {
     CBlockIndex *pindexMostWork = NULL;
     CBlockIndex *pindexNewTip = NULL;
-    std::vector<std::tuple<CTransaction,CBlockIndex*,int>> txChanged;
+    std::vector<std::tuple<CTransactionRef,CBlockIndex*,int>> txChanged;
     if (pblock)
         txChanged.reserve(pblock->vtx.size());
     do {
@@ -2877,7 +2878,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             break;
 
         const CBlockIndex *pindexFork;
-        std::vector<std::shared_ptr<const CTransaction>> txConflicted;
+        std::vector<CTransactionRef> txConflicted;
         bool fInitialDownload;
         {
             LOCK(cs_main);
@@ -2908,13 +2909,13 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
 
         // throw all transactions though the signal-interface
         // while _not_ holding the cs_main lock
-        for(std::shared_ptr<const CTransaction> tx : txConflicted)
+        for (const auto& tx : txConflicted)
         {
             GetMainSignals().SyncTransaction(*tx, pindexNewTip, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
         }
         // ... and about transactions that got confirmed:
-        for(unsigned int i = 0; i < txChanged.size(); i++)
-            GetMainSignals().SyncTransaction(std::get<0>(txChanged[i]), std::get<1>(txChanged[i]), std::get<2>(txChanged[i]));
+        for (unsigned int i = 0; i < txChanged.size(); i++)
+            GetMainSignals().SyncTransaction(*std::get<0>(txChanged[i]), std::get<1>(txChanged[i]), std::get<2>(txChanged[i]));
 
         // Notify external listeners about the new tip.
         GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
@@ -3261,10 +3262,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
-    if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
     for (unsigned int i = 1; i < block.vtx.size(); i++)
-        if (block.vtx[i].IsCoinBase())
+        if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
 
@@ -3274,19 +3275,19 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         // We should never accept block which conflicts with completed transaction lock,
         // that's why this is in CheckBlock unlike coinbase payee/amount.
         // Require other nodes to comply, send them some data in case they are missing it.
-        BOOST_FOREACH(const CTransaction& tx, block.vtx) {
+        for(auto tx : block.vtx) {
             // skip coinbase, it has no inputs
-            if (tx.IsCoinBase()) continue;
+            if (tx->IsCoinBase()) continue;
             // LOOK FOR TRANSACTION LOCK IN OUR MAP OF OUTPOINTS
-            BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+            for (auto txin : tx->vin) {
                 uint256 hashLocked;
-                if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hashLocked != tx.GetHash()) {
+                if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hashLocked != tx->GetHash()) {
                     // The node which relayed this will have to switch later,
                     // relaying instantsend data won't help it.
                     LOCK(cs_main);
                     mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
                     return state.DoS(100, false, REJECT_INVALID, "conflict-tx-lock", false, 
-                                     strprintf("transaction %s conflicts with transaction lock %s", tx.GetHash().ToString(), hashLocked.ToString()));
+                                     strprintf("transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), hashLocked.ToString()));
                 }
             }
         }
@@ -3298,14 +3299,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check transactions
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(tx, state, false))
+        if (!CheckTransaction(*tx, state, false))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
-                                 strprintf("Transaction check failed (tx hash %s) %s", tx.GetHash().ToString(), state.GetDebugMessage()));
+                                 strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
     {
-        nSigOps += GetLegacySigOpCount(tx);
+        nSigOps += GetLegacySigOpCount(*tx);
     }
     // sigops limits (relaxed)
     if (nSigOps > MaxBlockSigOps(true))
@@ -3387,13 +3388,13 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // Also count sigops
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx) {
-        if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
+        if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
         }
-        if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
+        if (fDIP0001Active_context && ::GetSerializeSize(*tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-oversized", false, "contains an over-sized transaction");
         }
-        nSigOps += GetLegacySigOpCount(tx);
+        nSigOps += GetLegacySigOpCount(*tx);
     }
 
     // Check sigops
@@ -3405,8 +3406,8 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
     {
         CScript expect = CScript() << nHeight;
-        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
+        if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
+            !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
         }
     }

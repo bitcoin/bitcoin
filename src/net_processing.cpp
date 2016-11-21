@@ -122,7 +122,7 @@ namespace {
     int nPeersWithValidatedDownloads = 0;
 
     /** Relay map, protected by cs_main. */
-    typedef std::map<uint256, std::shared_ptr<const CTransaction>> MapRelay;
+    typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay;
     /** Expiration-time ordered list of (expire time, relay map entry) pairs, protected by cs_main). */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration;
@@ -919,7 +919,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             // however we MUST always provide at least what the remote peer needs
                             typedef std::pair<unsigned int, uint256> PairType;
                             BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
-                                connman.PushMessage(pfrom, NetMsgType::TX, block.vtx[pair.first]);
+                                connman.PushMessage(pfrom, NetMsgType::TX, *block.vtx[pair.first]);
                         }
                         // else
                             // no response

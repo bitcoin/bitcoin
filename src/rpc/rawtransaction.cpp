@@ -306,8 +306,8 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
     unsigned int ntxFound = 0;
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
-        if (setTxids.count(tx.GetHash()))
+    for (const auto& tx : block.vtx)
+        if (setTxids.count(tx->GetHash()))
             ntxFound++;
     if (ntxFound != setTxids.size())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "(Not all) transactions not found in specified block");

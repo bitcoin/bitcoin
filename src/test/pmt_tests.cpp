@@ -45,14 +45,14 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         for (unsigned int j=0; j<nTx; j++) {
             CMutableTransaction tx;
             tx.nLockTime = j; // actual transaction data doesn't matter; just make the nLockTime's unique
-            block.vtx.push_back(CTransaction(tx));
+            block.vtx.push_back(MakeTransactionRef(std::move(tx)));
         }
 
         // calculate actual merkle root and height
         uint256 merkleRoot1 = BlockMerkleRoot(block);
         std::vector<uint256> vTxid(nTx, uint256());
         for (unsigned int j=0; j<nTx; j++)
-            vTxid[j] = block.vtx[j].GetHash();
+            vTxid[j] = block.vtx[j]->GetHash();
         int nHeight = 1, nTx_ = nTx;
         while (nTx_ > 1) {
             nTx_ = (nTx_+1)/2;
