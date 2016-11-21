@@ -461,6 +461,7 @@ public:
 
     int GetQueueSize() const { return vecDarksendQueue.size(); }
     int GetState() const { return nState; }
+    std::string GetStateString() const;
     std::string GetStatus();
 
     int GetEntriesCount() const { return vecEntries.size(); }

@@ -491,6 +491,19 @@ void CDarksendPool::UnlockCoins()
     vecOutPointLocked.clear();
 }
 
+std::string CDarksendPool::GetStateString() const
+{
+    switch(nState) {
+        case POOL_STATE_IDLE:                   return "IDLE";
+        case POOL_STATE_QUEUE:                  return "QUEUE";
+        case POOL_STATE_ACCEPTING_ENTRIES:      return "ACCEPTING_ENTRIES";
+        case POOL_STATE_SIGNING:                return "SIGNING";
+        case POOL_STATE_ERROR:                  return "ERROR";
+        case POOL_STATE_SUCCESS:                return "SUCCESS";
+        default:                                return "UNKNOWN";
+    }
+}
+
 std::string CDarksendPool::GetStatus()
 {
     static int nStatusMessageProgress = 0;

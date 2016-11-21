@@ -32,7 +32,6 @@ UniValue privatesend(const UniValue& params, bool fHelp)
             "  start       - Start mixing\n"
             "  stop        - Stop mixing\n"
             "  reset       - Reset mixing\n"
-            "  status      - Print mixing status\n"
             + HelpRequiringPassphrase());
 
     if(params[0].get_str() == "start") {
@@ -57,15 +56,6 @@ UniValue privatesend(const UniValue& params, bool fHelp)
         return "Mixing was reset";
     }
 
-    if(params[0].get_str() == "status") {
-        UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair("status",            darkSendPool.GetStatus()));
-        obj.push_back(Pair("keys_left",     pwalletMain->nKeysLeftSinceAutoBackup));
-        obj.push_back(Pair("warnings",      (pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
-                                                ? "WARNING: keypool is almost depleted!" : "")));
-        return obj;
-    }
-
     return "Unknown command, please see \"help privatesend\"";
 }
 
@@ -74,14 +64,26 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw std::runtime_error(
             "getpoolinfo\n"
-            "Returns an object containing anonymous pool-related information.");
+            "Returns an object containing mixing pool related information.\n");
 
     UniValue obj(UniValue::VOBJ);
-    if (darkSendPool.pSubmittedToMasternode)
-        obj.push_back(Pair("masternode",        darkSendPool.pSubmittedToMasternode->addr.ToString()));
-    obj.push_back(Pair("queue",                 darkSendPool.GetQueueSize()));
-    obj.push_back(Pair("state",                 darkSendPool.GetState()));
-    obj.push_back(Pair("entries",               darkSendPool.GetEntriesCount()));
+    obj.push_back(Pair("state",             darkSendPool.GetStateString()));
+    obj.push_back(Pair("mixing_mode",       fPrivateSendMultiSession ? "multi-session" : "normal"));
+    obj.push_back(Pair("queue",             darkSendPool.GetQueueSize()));
+    obj.push_back(Pair("entries",           darkSendPool.GetEntriesCount()));
+    obj.push_back(Pair("status",            darkSendPool.GetStatus()));
+
+    if (darkSendPool.pSubmittedToMasternode) {
+        obj.push_back(Pair("outpoint",      darkSendPool.pSubmittedToMasternode->vin.prevout.ToStringShort()));
+        obj.push_back(Pair("addr",          darkSendPool.pSubmittedToMasternode->addr.ToString()));
+    }
+
+    if (pwalletMain) {
+        obj.push_back(Pair("keys_left",     pwalletMain->nKeysLeftSinceAutoBackup));
+        obj.push_back(Pair("warnings",      pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
+                                                ? "WARNING: keypool is almost depleted!" : ""));
+    }
+
     return obj;
 }
 
