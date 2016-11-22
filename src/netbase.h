@@ -29,16 +29,6 @@ static const int DEFAULT_NAME_LOOKUP = true;
 #undef SetPort
 #endif
 
-enum Network
-{
-    NET_UNROUTABLE = 0,
-    NET_IPV4,
-    NET_IPV6,
-    NET_TOR,
-
-    NET_MAX,
-};
-
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
 {
@@ -46,6 +36,16 @@ class CNetAddr
         unsigned char ip[16]; // in network byte order
 
     public:
+
+        enum Network
+        {
+            NET_UNROUTABLE = 0,
+            NET_IPV4,
+            NET_IPV6,
+            NET_TOR,
+
+            NET_MAX,
+        };
         CNetAddr();
         CNetAddr(const struct in_addr& ipv4Addr);
         explicit CNetAddr(const char *pszIp, bool fAllowLookup = false);
@@ -197,11 +197,11 @@ public:
     bool randomize_credentials;
 };
 
-enum Network ParseNetwork(std::string net);
-std::string GetNetworkName(enum Network net);
+CNetAddr::Network ParseNetwork(std::string net);
+std::string GetNetworkName(CNetAddr::Network net);
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
-bool SetProxy(enum Network net, const proxyType &addrProxy);
-bool GetProxy(enum Network net, proxyType &proxyInfoOut);
+bool SetProxy(CNetAddr::Network net, const proxyType &addrProxy);
+bool GetProxy(CNetAddr::Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const proxyType &addrProxy);
 bool HaveNameProxy();

@@ -78,7 +78,7 @@ bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
-static bool vfLimited[NET_MAX] = {};
+static bool vfLimited[CNetAddr::NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
@@ -265,15 +265,15 @@ bool RemoveLocal(const CService& addr)
 }
 
 /** Make a particular network entirely off-limits (no automatic connects to it) */
-void SetLimited(enum Network net, bool fLimited)
+void SetLimited(CNetAddr::Network net, bool fLimited)
 {
-    if (net == NET_UNROUTABLE)
+    if (net == CNetAddr::NET_UNROUTABLE)
         return;
     LOCK(cs_mapLocalHost);
     vfLimited[net] = fLimited;
 }
 
-bool IsLimited(enum Network net)
+bool IsLimited(CNetAddr::Network net)
 {
     LOCK(cs_mapLocalHost);
     return vfLimited[net];
@@ -305,7 +305,7 @@ bool IsLocal(const CService& addr)
 }
 
 /** check whether a given network is one we can probably connect to */
-bool IsReachable(enum Network net)
+bool IsReachable(CNetAddr::Network net)
 {
     LOCK(cs_mapLocalHost);
     return !vfLimited[net];
@@ -314,7 +314,7 @@ bool IsReachable(enum Network net)
 /** check whether a given address is in a network we can probably connect to */
 bool IsReachable(const CNetAddr& addr)
 {
-    enum Network net = addr.GetNetwork();
+    CNetAddr::Network net = addr.GetNetwork();
     return IsReachable(net);
 }
 

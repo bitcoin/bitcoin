@@ -463,8 +463,8 @@ void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& r
         // if -onion isn't set to something else.
         if (GetArg("-onion", "") == "") {
             proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
-            SetProxy(NET_TOR, addrOnion);
-            SetLimited(NET_TOR, false);
+            SetProxy(CNetAddr::NET_TOR, addrOnion);
+            SetLimited(CNetAddr::NET_TOR, false);
         }
 
         // Finally - now create the service

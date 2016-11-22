@@ -77,7 +77,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
 #endif
 
     proxyType proxy;
-    GetProxy(NET_IPV4, proxy);
+    GetProxy(CNetAddr::NET_IPV4, proxy);
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("version", CLIENT_VERSION));

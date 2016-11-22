@@ -36,7 +36,7 @@
 #endif
 
 // Settings
-static proxyType proxyInfo[NET_MAX];
+static proxyType proxyInfo[CNetAddr::NET_MAX];
 static proxyType nameProxy;
 static CCriticalSection cs_proxyInfos;
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -47,20 +47,20 @@ static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0
 // Need ample time for negotiation for very slow proxies such as Tor (milliseconds)
 static const int SOCKS5_RECV_TIMEOUT = 20 * 1000;
 
-enum Network ParseNetwork(std::string net) {
+CNetAddr::Network ParseNetwork(std::string net) {
     boost::to_lower(net);
-    if (net == "ipv4") return NET_IPV4;
-    if (net == "ipv6") return NET_IPV6;
-    if (net == "tor" || net == "onion")  return NET_TOR;
-    return NET_UNROUTABLE;
+    if (net == "ipv4") return CNetAddr::NET_IPV4;
+    if (net == "ipv6") return CNetAddr::NET_IPV6;
+    if (net == "tor" || net == "onion")  return CNetAddr::NET_TOR;
+    return CNetAddr::NET_UNROUTABLE;
 }
 
-std::string GetNetworkName(enum Network net) {
+std::string GetNetworkName(CNetAddr::Network net) {
     switch(net)
     {
-    case NET_IPV4: return "ipv4";
-    case NET_IPV6: return "ipv6";
-    case NET_TOR: return "onion";
+    case CNetAddr::NET_IPV4: return "ipv4";
+    case CNetAddr::NET_IPV6: return "ipv6";
+    case CNetAddr::NET_TOR: return "onion";
     default: return "";
     }
 }
@@ -515,8 +515,8 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     return true;
 }
 
-bool SetProxy(enum Network net, const proxyType &addrProxy) {
-    assert(net >= 0 && net < NET_MAX);
+bool SetProxy(CNetAddr::Network net, const proxyType &addrProxy) {
+    assert(net >= 0 && net < CNetAddr::NET_MAX);
     if (!addrProxy.IsValid())
         return false;
     LOCK(cs_proxyInfos);
@@ -524,8 +524,8 @@ bool SetProxy(enum Network net, const proxyType &addrProxy) {
     return true;
 }
 
-bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
-    assert(net >= 0 && net < NET_MAX);
+bool GetProxy(CNetAddr::Network net, proxyType &proxyInfoOut) {
+    assert(net >= 0 && net < CNetAddr::NET_MAX);
     LOCK(cs_proxyInfos);
     if (!proxyInfo[net].IsValid())
         return false;
@@ -556,7 +556,7 @@ bool HaveNameProxy() {
 
 bool IsProxy(const CNetAddr &addr) {
     LOCK(cs_proxyInfos);
-    for (int i = 0; i < NET_MAX; i++) {
+    for (int i = 0; i < CNetAddr::NET_MAX; i++) {
         if (addr == (CNetAddr)proxyInfo[i].proxy)
             return true;
     }
@@ -853,7 +853,7 @@ bool CNetAddr::IsRoutable() const
     return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal());
 }
 
-enum Network CNetAddr::GetNetwork() const
+CNetAddr::Network CNetAddr::GetNetwork() const
 {
     if (!IsRoutable())
         return NET_UNROUTABLE;
@@ -1002,8 +1002,8 @@ uint64_t CNetAddr::GetHash() const
 
 // private extensions to enum Network, only returned by GetExtNetwork,
 // and only used in GetReachabilityFrom
-static const int NET_UNKNOWN = NET_MAX + 0;
-static const int NET_TEREDO  = NET_MAX + 1;
+static const int NET_UNKNOWN = CNetAddr::NET_MAX + 0;
+static const int NET_TEREDO  = CNetAddr::NET_MAX + 1;
 int static GetExtNetwork(const CNetAddr *addr)
 {
     if (addr == NULL)

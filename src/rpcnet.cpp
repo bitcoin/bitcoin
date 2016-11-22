@@ -405,10 +405,10 @@ UniValue getnettotals(const UniValue& params, bool fHelp)
 static UniValue GetNetworksInfo()
 {
     UniValue networks(UniValue::VARR);
-    for(int n=0; n<NET_MAX; ++n)
+    for(int n=0; n < CNetAddr::NET_MAX; ++n)
     {
-        enum Network network = static_cast<enum Network>(n);
-        if(network == NET_UNROUTABLE)
+        CNetAddr::Network network = static_cast<CNetAddr::Network>(n);
+        if (network == CNetAddr::NET_UNROUTABLE)
             continue;
         proxyType proxy;
         UniValue obj(UniValue::VOBJ);
