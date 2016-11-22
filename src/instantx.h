@@ -28,7 +28,7 @@ static const int INSTANTSEND_SIGNATURES_REQUIRED    = 6;
 static const int INSTANTSEND_SIGNATURES_TOTAL       = 10;
 static const int DEFAULT_INSTANTSEND_DEPTH          = 5;
 
-static const int MIN_INSTANTSEND_PROTO_VERSION      = 70202;
+static const int MIN_INSTANTSEND_PROTO_VERSION      = 70203;
 static const CAmount INSTANTSEND_MIN_FEE            = 0.001 * COIN;
 
 extern bool fEnableInstantSend;
@@ -45,6 +45,8 @@ void ProcessMessageInstantSend(CNode* pfrom, std::string& strCommand, CDataStrea
 
 bool IsInstantSendTxValid(const CTransaction& txCandidate);
 
+bool ProcessTxLockRequest(CNode* pfrom, const CTransaction &tx);
+
 int64_t CreateTxLockCandidate(const CTransaction &tx);
 
 //check if we need to vote on this transaction
@@ -52,6 +54,8 @@ void CreateTxLockVote(const CTransaction& tx, int nBlockHeight);
 
 //process consensus vote message
 bool ProcessTxLockVote(CNode *pnode, CTxLockVote& vote);
+
+void ProcessOrphanTxLockVotes();
 
 //update UI and notify external script if any
 void UpdateLockedTransaction(const CTransaction& tx, bool fForceNotification = false);
@@ -76,7 +80,7 @@ int GetTransactionLockSignatures(const uint256 &txHash);
 // verify if transaction lock timed out
 bool IsTransactionLockTimedOut(const uint256 &txHash);
 
-int64_t GetAverageUnknownVoteTime();
+int64_t GetAverageMasternodeOrphanVoteTime();
 
 class CTxLockVote
 {
@@ -85,6 +89,9 @@ public:
     uint256 txHash;
     int nBlockHeight;
     std::vector<unsigned char> vchMasterNodeSignature;
+
+    // local memory only
+    int64_t nOrphanExpireTime;
 
     ADD_SERIALIZE_METHODS;
 
