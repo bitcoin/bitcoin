@@ -39,6 +39,13 @@ QList<CAmount> CoinControlDialog::payAmounts;
 CCoinControl* CoinControlDialog::coinControl = new CCoinControl();
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
+bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
+    int column = treeWidget()->sortColumn();
+    if (column == CoinControlDialog::COLUMN_AMOUNT || column == CoinControlDialog::COLUMN_DATE || column == CoinControlDialog::COLUMN_CONFIRMATIONS || column == CoinControlDialog::COLUMN_PRIVATESEND_ROUNDS)
+        return data(column, Qt::UserRole).toLongLong() < other.data(column, Qt::UserRole).toLongLong();
+    return QTreeWidgetItem::operator<(other);
+}
+
 CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CoinControlDialog),
@@ -139,11 +146,9 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 100);
     ui->treeWidget->setColumnHidden(COLUMN_TXHASH, true);         // store transaction hash in this column, but don't show it
     ui->treeWidget->setColumnHidden(COLUMN_VOUT_INDEX, true);     // store vout index in this column, but don't show it
-    ui->treeWidget->setColumnHidden(COLUMN_AMOUNT_INT64, true);   // store amount int64 in this column, but don't show it
-    ui->treeWidget->setColumnHidden(COLUMN_DATE_INT64, true);     // store date int64 in this column, but don't show it
 
     // default view is sorted by amount desc
-    sortView(COLUMN_AMOUNT_INT64, Qt::DescendingOrder);
+    sortView(COLUMN_AMOUNT, Qt::DescendingOrder);
 
     // restore list mode and sortorder as a convenience feature
     QSettings settings;
@@ -173,15 +178,6 @@ void CoinControlDialog::setModel(WalletModel *_model)
         updateLabelLocked();
         CoinControlDialog::updateLabels(_model, this);
     }
-}
-
-// helper function str_pad
-QString CoinControlDialog::strPad(QString s, int nPadLength, QString sPadding)
-{
-    while (s.length() < nPadLength)
-        s = sPadding + s;
-
-    return s;
 }
 
 // ok button
@@ -385,7 +381,7 @@ void CoinControlDialog::sortView(int column, Qt::SortOrder order)
     sortColumn = column;
     sortOrder = order;
     ui->treeWidget->sortItems(column, order);
-    ui->treeWidget->header()->setSortIndicator(getMappedColumn(sortColumn), sortOrder);
+    ui->treeWidget->header()->setSortIndicator(sortColumn, sortOrder);
 }
 
 // treeview: clicked on header
@@ -393,12 +389,10 @@ void CoinControlDialog::headerSectionClicked(int logicalIndex)
 {
     if (logicalIndex == COLUMN_CHECKBOX) // click on most left column -> do nothing
     {
-        ui->treeWidget->header()->setSortIndicator(getMappedColumn(sortColumn), sortOrder);
+        ui->treeWidget->header()->setSortIndicator(sortColumn, sortOrder);
     }
     else
     {
-        logicalIndex = getMappedColumn(logicalIndex, false);
-
         if (sortColumn == logicalIndex)
             sortOrder = ((sortOrder == Qt::AscendingOrder) ? Qt::DescendingOrder : Qt::AscendingOrder);
         else
@@ -710,7 +704,7 @@ void CoinControlDialog::updateView()
     model->listCoins(mapCoins);
 
     BOOST_FOREACH(const PAIRTYPE(QString, std::vector<COutput>)& coins, mapCoins) {
-        QTreeWidgetItem *itemWalletAddress = new QTreeWidgetItem();
+        CCoinControlWidgetItem *itemWalletAddress = new CCoinControlWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         QString sWalletAddress = coins.first;
         QString sWalletLabel = model->getAddressTableModel()->labelForAddress(sWalletAddress);
@@ -740,9 +734,9 @@ void CoinControlDialog::updateView()
             nSum += out.tx->vout[out.i].nValue;
             nChildren++;
 
-            QTreeWidgetItem *itemOutput;
-            if (treeMode)    itemOutput = new QTreeWidgetItem(itemWalletAddress);
-            else             itemOutput = new QTreeWidgetItem(ui->treeWidget);
+            CCoinControlWidgetItem *itemOutput;
+            if (treeMode)    itemOutput = new CCoinControlWidgetItem(itemWalletAddress);
+            else             itemOutput = new CCoinControlWidgetItem(ui->treeWidget);
             itemOutput->setFlags(flgCheckbox);
             itemOutput->setCheckState(COLUMN_CHECKBOX,Qt::Unchecked);
 
@@ -778,24 +772,26 @@ void CoinControlDialog::updateView()
             // amount
             itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
             itemOutput->setToolTip(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
-            itemOutput->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(out.tx->vout[out.i].nValue), 15, " ")); // padding so that sorting works correctly
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->vout[out.i].nValue)); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
             itemOutput->setToolTip(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
-            itemOutput->setText(COLUMN_DATE_INT64, strPad(QString::number(out.tx->GetTxTime()), 20, " "));
+            itemOutput->setData(COLUMN_DATE, Qt::UserRole, QVariant((qlonglong)out.tx->GetTxTime()));
 
 
             // PrivateSend rounds
             COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
             int nRounds = pwalletMain->GetOutpointPrivateSendRounds(outpoint);
 
-            if (nRounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString::number(nRounds), 11, " "));
-            else itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, strPad(QString(tr("n/a")), 11, " "));
+            if (nRounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, QString::number(nRounds));
+            else itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, tr("n/a"));
+            itemOutput->setData(COLUMN_PRIVATESEND_ROUNDS, Qt::UserRole, QVariant((qlonglong)nRounds));
 
 
             // confirmations
-            itemOutput->setText(COLUMN_CONFIRMATIONS, strPad(QString::number(out.nDepth), 8, " "));
+            itemOutput->setText(COLUMN_CONFIRMATIONS, QString::number(out.nDepth));
+            itemOutput->setData(COLUMN_CONFIRMATIONS, Qt::UserRole, QVariant((qlonglong)out.nDepth));
 
             // transaction hash
             uint256 txhash = out.tx->GetHash();
@@ -824,7 +820,7 @@ void CoinControlDialog::updateView()
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
             itemWalletAddress->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
             itemWalletAddress->setToolTip(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
-            itemWalletAddress->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(nSum), 15, " "));
+            itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
         }
     }
 
