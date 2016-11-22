@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(test_version4)
         if (i < 2) {
             tx1.vin.push_back(CTxIn()); // do what a coinbase tx does, empty input.
             if (i == 1)
-                tx1.vin[0].scriptSig = (CScript() << 101 << CScriptNum(12512)) + COINBASE_FLAGS;
+                tx1.vin[0].scriptSig = CScript() << 101 << CScriptNum(12512);
             tx1.vout.push_back(CTxOut());
             CTxOut &txout = tx1.vout.back();
             txout.nValue = 10000;

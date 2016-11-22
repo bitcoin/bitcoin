@@ -27,8 +27,7 @@ static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
-
-static const char DB_FORK_ACTIVATION = 'a';
+static const char DB_SIZE_REMOVAL_FORK_ACTIVATION = 's';
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, false)
 {
@@ -216,55 +215,5 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
         }
     }
 
-    // Load fork activation info
-    pcursor->Seek(make_pair(DB_FORK_ACTIVATION, 0));
-    while (pcursor->Valid()) {
-        try {
-            std::pair<char, uint32_t> key;
-            if (pcursor->GetKey(key) && key.first == DB_FORK_ACTIVATION) {
-                uint256 blockHash;
-                if (pcursor->GetValue(blockHash)) {
-                    forkActivationMap[key.second] = blockHash;
-                }
-                pcursor->Next();
-            } else {
-                break; // finished loading block index
-            }
-        }
-        catch (std::exception &e) {
-            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        }
-    }
-
     return true;
-}
-
-uint256 CBlockTreeDB::ForkBitActivated(int32_t nForkVersionBit) const
-{
-    // Returns block at which a supermajority was reached for given
-    // fork version bit.
-    // NOTE! The  max blocksize fork adds a grace period
-    // during which no bigger blocks are allowed; this routine
-    // just keeps track of the hash of the block that
-    // triggers the fork condition
-
-    std::map<int32_t, uint256>::const_iterator it = forkActivationMap.find(nForkVersionBit);
-    if (it != forkActivationMap.end())
-        return it->second;
-
-    return uint256();
-}
-
-bool CBlockTreeDB::ActivateForkBit(int32_t nForkVersionBit, const uint256& blockHash)
-{
-    // Called when a supermajority of blocks (ending with blockHash)
-    // support a rule change
-    // OR if a chain re-org happens around the activation block,
-    // called with uint256(0) to reset the flag in the database.
-
-    forkActivationMap[nForkVersionBit] = blockHash;
-    if (blockHash == uint256())
-        return Erase(make_pair(DB_FORK_ACTIVATION, nForkVersionBit));
-    else
-        return Write(make_pair(DB_FORK_ACTIVATION, nForkVersionBit), blockHash);
 }

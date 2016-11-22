@@ -65,6 +65,7 @@ private:
     static Mining *s_instance;
     mutable std::mutex m_lock;
     CScript m_coinbase;
+    std::vector<unsigned char> m_coinbaseComment;
 
     uint256 m_hashPrevBlock;
 };

@@ -153,3 +153,22 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
     return true;
 }
+
+int32_t Policy::blockSizeAcceptLimit()
+{
+    auto limit = -1;
+    auto userlimit = mapArgs.find("-blocksizeacceptlimit");
+    if (userlimit == mapArgs.end()) // fallback to the BitcoinUnlimited name.
+       userlimit = mapArgs.find("-excessiveblocksize");
+    if (userlimit != mapArgs.end()) {
+        double limitInMB = atof(userlimit->second.c_str());
+        if (limitInMB <= 0) {
+            LogPrintf("Failed to understand blocksizeacceptlimit: '%s'\n", userlimit->second.c_str());
+        } else {
+            limit = static_cast<int32_t>(limitInMB * 10) * 1E5;
+        }
+    }
+    if (limit <= 0)
+        limit = static_cast<int32_t>(DEFAULT_BLOCK_ACCEPT_SIZE * 10) * 1E5;
+    return limit;
+}

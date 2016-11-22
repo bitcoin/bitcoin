@@ -9,7 +9,9 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import COIN, MAX_BLOCK_SIZE
+from test_framework.mininode import COIN
+
+MAX_BLOCK_SIZE = 1000000
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
 
@@ -24,7 +26,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes = []
         self.is_network_split = False
 
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-printpriority=1", "-blockmaxsize=750000"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-printpriority=1", "-blockmaxsize=750000", "--blocksizeacceptlimit=1"]))
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
     def run_test(self):

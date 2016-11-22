@@ -25,6 +25,8 @@ We use the testing framework in which we expect a particular answer from
 each test.
 '''
 
+MAX_BLOCK_SIZE = 1000000
+
 class FullBlockTest(ComparisonTestFramework):
 
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
@@ -38,6 +40,10 @@ class FullBlockTest(ComparisonTestFramework):
         self.block_time = int(time.time())+1
         self.tip = None
         self.blocks = {}
+
+    def setup_nodes(self):
+        return start_nodes(4, self.options.tmpdir,
+                extra_args = [["-maxblocksize=1000000", "--blocksizeacceptlimit=1"]])
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
@@ -349,7 +355,7 @@ class FullBlockTest(ComparisonTestFramework):
         tx.vout = [CTxOut(0, script_output)]
         b24 = update_block(24, [tx])
         assert_equal(len(b24.serialize()), MAX_BLOCK_SIZE+1)
-        yield rejected(RejectResult(16, b'bad-blk-length'))
+        yield rejected()
 
         b25 = block(25, spend=out7)
         yield rejected()

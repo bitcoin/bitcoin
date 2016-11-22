@@ -101,6 +101,7 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
     if(!pblocktemplate.get())
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+    pblock->nTime = GetAdjustedTime();
 
     // Create coinbase tx
     CMutableTransaction txNew;
@@ -118,6 +119,17 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
     pblock->vtx.push_back(CTransaction());
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+
+    // Largest block you're willing to create (in bytes):
+    uint32_t nBlockMaxSize = std::max<uint32_t>(1000, GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE));
+
+    // How much of the block should be dedicated to high-priority transactions,
+    // included regardless of the fees they pay
+    const uint32_t nBlockPrioritySize = std::min<uint32_t>(GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE), nBlockMaxSize);
+
+    // Minimum block size you want to create; block will be filled with free transactions
+    // until there are no more or the block reaches this size:
+    const uint32_t nBlockMinSize = std::min<uint32_t>(GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE), nBlockMaxSize);
 
     // Collect memory pool transactions into the block
     CTxMemPool::setEntries inBlock;
@@ -143,7 +155,6 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
-        pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
         pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
@@ -153,25 +164,6 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
             pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
         UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
-
-        uint32_t nConsensusMaxSize = MaxBlockSize(pblock->nTime);
-        // Largest block you're willing to create, defaults to being the biggest possible.
-        // Miners can adjust downwards if they wish to throttle their blocks, for instance, to work around
-        // high orphan rates or other scaling problems.
-        uint32_t nBlockMaxSize = (uint32_t) GetArg("-blockmaxsize", nConsensusMaxSize);
-        // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
-        nBlockMaxSize = std::max((uint32_t)1000,
-                                 std::min(nConsensusMaxSize-1000, nBlockMaxSize));
-
-        // How much of the block should be dedicated to high-priority transactions,
-        // included regardless of the fees they pay
-        unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
-        nBlockPrioritySize = std::min(nBlockMaxSize, nBlockPrioritySize);
-
-        // Minimum block size you want to create; block will be filled with free transactions
-        // until there are no more or the block reaches this size:
-        unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
-        nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
         int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
                                 ? nMedianTimePast
@@ -316,7 +308,7 @@ CBlockTemplate* Mining::CreateNewBlock(const CChainParams& chainparams) const
         if (flexTransActive.load())
             txNew.nVersion = 4;
         txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0 << m_coinbaseComment;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
@@ -367,7 +359,7 @@ void Mining::IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, 
     ++nExtraNonce;
     unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
     CMutableTransaction txCoinbase(pblock->vtx[0]);
-    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
+    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) << m_coinbaseComment;
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = txCoinbase;
@@ -633,4 +625,15 @@ Mining::~Mining()
 Mining::Mining()
     : m_minerThreads(0)
 {
+    // read args to create m_coinbaseComment
+    std::int32_t sizeLimit = Policy::blockSizeAcceptLimit();
+
+    std::stringstream ss;
+    ss << std::fixed;
+    if ((sizeLimit % 1000000) != 0)
+        ss << std::setprecision(1) << sizeLimit / 1E6;
+    else
+        ss << (int) (sizeLimit / 1E6);
+    std::string comment = "EB" + ss.str();
+    m_coinbaseComment =  std::vector<unsigned char>(comment.begin(), comment.end());
 }
