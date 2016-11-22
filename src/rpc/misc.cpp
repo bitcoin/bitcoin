@@ -496,8 +496,10 @@ UniValue echo(const JSONRPCRequest& request)
 {
     if (request.fHelp)
         throw runtime_error(
-            "echo \"message\" ...\n"
-            "\nSimply echo back the input arguments\n"
+            "echo|echojson \"message\" ...\n"
+            "\nSimply echo back the input arguments. This command is for testing.\n"
+            "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in"
+            "bitcoin-cli and the GUI. There is no server-side difference."
         );
 
     return request.params;
@@ -516,6 +518,7 @@ static const CRPCCommand commands[] =
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "echojson",               &echo,                  true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)
