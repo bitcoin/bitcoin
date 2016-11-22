@@ -114,8 +114,8 @@ std::string ChainNameFromCommandLine()
     bool fTestNet = GetBoolArg("-testnet", false);
     bool fFTTestNet = GetBoolArg("-testnet-ft", false);
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if ((fTestNet?1:0) + (fRegTest?1:0) + (fFTTestNet?1:0) > 1)
+        throw std::runtime_error("Invalid combination of -regtest and/or -testnet and/or -testnet-ft.");
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
