@@ -2,11 +2,15 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""rawtranscation RPCs QA test.
 
-#
-# Test re-org scenarios with a mempool that contains transactions
-# that spend (directly or indirectly) coinbase transactions.
-#
+# Tests the following RPCs:
+#    - createrawtransaction
+#    - signrawtransaction
+#    - sendrawtransaction
+#    - decoderawtransaction
+#    - getrawtransaction
+"""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -137,6 +141,33 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
+
+        # getrawtransaction tests
+        # 1. valid parameters - only supply txid
+        txHash = rawTx["hash"]
+        assert_equal(self.nodes[0].getrawtransaction(txHash), rawTxSigned['hex'])
+
+        # 2. valid parameters - supply txid and 0 for non-verbose
+        assert_equal(self.nodes[0].getrawtransaction(txHash, 0), rawTxSigned['hex'])
+
+        # 3. valid parameters - supply txid and False for non-verbose
+        assert_equal(self.nodes[0].getrawtransaction(txHash, False), rawTxSigned['hex'])
+
+        # 4. valid parameters - supply txid and 1 for verbose.
+        # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
+        assert_equal(self.nodes[0].getrawtransaction(txHash, 1)["hex"], rawTxSigned['hex'])
+
+        # 5. valid parameters - supply txid and True for non-verbose
+        assert_equal(self.nodes[0].getrawtransaction(txHash, True)["hex"], rawTxSigned['hex'])
+
+        # 6. invalid parameters - supply txid and string "Flase"
+        assert_raises(JSONRPCException, self.nodes[0].getrawtransaction, txHash, "Flase")
+
+        # 7. invalid parameters - supply txid and empty array
+        assert_raises(JSONRPCException, self.nodes[0].getrawtransaction, txHash, [])
+
+        # 8. invalid parameters - supply txid and empty dict
+        assert_raises(JSONRPCException, self.nodes[0].getrawtransaction, txHash, {})
 
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
