@@ -96,13 +96,13 @@ pass `--with-incompatible-bdb` to configure.
 
 See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
 
-Optional:
+Optional (see --with-miniupnpc and --enable-upnp-default):
 
-    sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
+    sudo apt-get install libminiupnpc-dev
 
-ZMQ dependencies:
+ZMQ dependencies (provides ZMQ API 4.x):
 
-    sudo apt-get install libzmq3-dev (provides ZMQ API 4.x)
+    sudo apt-get install libzmq3-dev
 
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
