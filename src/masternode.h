@@ -8,6 +8,7 @@
 #include "key.h"
 #include "main.h"
 #include "net.h"
+#include "spork.h"
 #include "timedata.h"
 
 class CMasternode;
@@ -257,6 +258,19 @@ public:
     bool IsPoSeVerified() { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
 
     bool IsWatchdogExpired() { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
+
+    bool IsValidForPayment()
+    {
+        if(nActiveState == MASTERNODE_ENABLED) {
+            return true;
+        }
+        if(!sporkManager.IsSporkActive(SPORK_14_REQUIRE_SENTINEL_FLAG) &&
+           (nActiveState == MASTERNODE_WATCHDOG_EXPIRED)) {
+            return true;
+        }
+
+        return false;
+    }
 
     bool IsValidNetAddr();
 

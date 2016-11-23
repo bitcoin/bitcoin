@@ -620,7 +620,7 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
         return false;
     }
 
-    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 101, nMinRequiredProtocol);
+    int nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight - 101, nMinRequiredProtocol, false);
 
     if(nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
         // It's common to have masternodes mistakenly think they are in the top 10
@@ -650,7 +650,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     // if we have not enough data about masternodes.
     if(!masternodeSync.IsMasternodeListSynced()) return false;
 
-    int nRank = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, GetMinMasternodePaymentsProto());
+    int nRank = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight - 101, GetMinMasternodePaymentsProto(), false);
 
     if (nRank == -1) {
         LogPrint("mnpayments", "CMasternodePayments::ProcessBlock -- Unknown Masternode\n");

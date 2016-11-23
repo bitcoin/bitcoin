@@ -476,7 +476,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
         mn.Check();
-        if(!mn.IsEnabled()) continue;
+        if(!mn.IsValidForPayment()) continue;
 
         // //check protocol version
         if(mn.nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
@@ -581,9 +581,12 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int nBlockHeight, int nM
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         if(mn.nProtocolVersion < nMinProtocol) continue;
+        mn.Check();
         if(fOnlyActive) {
-            mn.Check();
             if(!mn.IsEnabled()) continue;
+        }
+        else {
+            if(!mn.IsValidForPayment()) continue;
         }
         int64_t nScore = mn.CalculateScore(blockHash).GetCompact(false);
 
