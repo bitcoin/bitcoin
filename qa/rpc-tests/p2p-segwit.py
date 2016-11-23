@@ -498,7 +498,7 @@ class SegWitTest(BitcoinTestFramework):
         block.solve()
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.append(b'a'*5000000)
-        assert(get_virtual_size(block) > MAX_BLOCK_SIZE)
+        assert(get_virtual_size(block) > MAX_BLOCK_BASE_SIZE)
 
         # We can't send over the p2p network, because this is too big to relay
         # TODO: repeat this test with a block that can be relayed
@@ -507,7 +507,7 @@ class SegWitTest(BitcoinTestFramework):
         assert(self.nodes[0].getbestblockhash() != block.hash)
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
-        assert(get_virtual_size(block) < MAX_BLOCK_SIZE)
+        assert(get_virtual_size(block) < MAX_BLOCK_BASE_SIZE)
         self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
 
         assert(self.nodes[0].getbestblockhash() == block.hash)
@@ -572,10 +572,10 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block, [parent_tx, child_tx])
 
         vsize = get_virtual_size(block)
-        additional_bytes = (MAX_BLOCK_SIZE - vsize)*4
+        additional_bytes = (MAX_BLOCK_BASE_SIZE - vsize)*4
         i = 0
         while additional_bytes > 0:
-            # Add some more bytes to each input until we hit MAX_BLOCK_SIZE+1
+            # Add some more bytes to each input until we hit MAX_BLOCK_BASE_SIZE+1
             extra_bytes = min(additional_bytes+1, 55)
             block.vtx[-1].wit.vtxinwit[int(i/(2*NUM_DROPS))].scriptWitness.stack[i%(2*NUM_DROPS)] = b'a'*(195+extra_bytes)
             additional_bytes -= extra_bytes
@@ -585,7 +585,7 @@ class SegWitTest(BitcoinTestFramework):
         add_witness_commitment(block)
         block.solve()
         vsize = get_virtual_size(block)
-        assert_equal(vsize, MAX_BLOCK_SIZE + 1)
+        assert_equal(vsize, MAX_BLOCK_BASE_SIZE + 1)
         # Make sure that our test case would exceed the old max-network-message
         # limit
         assert(len(block.serialize(True)) > 2*1024*1024)
@@ -598,7 +598,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
-        assert(get_virtual_size(block) == MAX_BLOCK_SIZE)
+        assert(get_virtual_size(block) == MAX_BLOCK_BASE_SIZE)
 
         self.test_node.test_witness_block(block, accepted=True)
 
@@ -1433,7 +1433,7 @@ class SegWitTest(BitcoinTestFramework):
             block.vtx.append(tx)
 
             # Test the block periodically, if we're close to maxblocksize
-            if (get_virtual_size(block) > MAX_BLOCK_SIZE - 1000):
+            if (get_virtual_size(block) > MAX_BLOCK_BASE_SIZE - 1000):
                 self.update_witness_block_with_transactions(block, [])
                 self.test_node.test_witness_block(block, accepted=True)
                 block = self.build_next_block()
