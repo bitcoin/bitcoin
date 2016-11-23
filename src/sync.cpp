@@ -63,7 +63,7 @@ private:
 
 // BU control the ctor/dtor ordering
 extern boost::mutex dd_mutex;
-extern std::map<std::pair<void*, void*>, LockStack> lockorders;
+extern LockStackMap lockorders;
 extern boost::thread_specific_ptr<LockStack> lockstack;
 
 
@@ -161,6 +161,23 @@ void LeaveCritical()
     pop_lock();
 }
 
+void DeleteCritical(const void* cs)
+{
+    dd_mutex.lock();
+    LockStackMap::iterator prev = lockorders.end();
+    for (LockStackMap::iterator i=lockorders.begin();i != lockorders.end(); ++i)
+      {
+        // if prev is valid and one of its locks is the one we are deleting, then erase the entry
+        if ((prev != lockorders.end()) && ((prev->first.first == cs) || (prev->first.second == cs)))
+          {
+            lockorders.erase(prev);
+          }
+        prev = i;
+      }
+    dd_mutex.unlock();  
+}
+
+
 std::string LocksHeld()
 {
     std::string result;
@@ -177,5 +194,25 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
 }
+
+#ifdef DEBUG_LOCKORDER // BU normally CCriticalSection is a typedef, but when lockorder debugging is on we need to delete the critical section from the lockorder map
+CCriticalSection::CCriticalSection():name(NULL)
+{
+}
+
+CCriticalSection::CCriticalSection(const char* n):name(n)
+{
+}
+
+CCriticalSection::~CCriticalSection()
+{
+  if (name) 
+    { 
+      printf("Destructing %s\n", name);
+      fflush(stdout);
+    }
+  DeleteCritical((void*) this);
+}
+#endif 
 
 #endif /* DEBUG_LOCKORDER */

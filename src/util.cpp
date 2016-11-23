@@ -838,21 +838,3 @@ int GetNumCores()
 }
 
 
-#if 0 // BU normally CCriticalSection is a typedef
-CCriticalSection::CCriticalSection():name(NULL)
-{
-}
-
-CCriticalSection::CCriticalSection(const char* n):name(n)
-{
-}
-
-CCriticalSection::~CCriticalSection()
-{
-  if (name) 
-    { 
-      printf("Destructing %s\n", name);
-      fflush(stdout);
-    }
-}
-#endif 

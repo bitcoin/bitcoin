@@ -833,8 +833,9 @@ UniValue setminingmaxblock(const UniValue& params, bool fHelp)
     }
 
     // I don't want to waste time testing edge conditions where no txns can fit in a block, so limit the minimum block size
-    if (arg < 1000)
-        throw runtime_error("max generated block size must be greater than 1KB");
+    // This also fixes issues user issues where people provide the value as MB
+    if (arg < 100)
+        throw runtime_error("max generated block size must be greater than 100 bytes");
 
     maxGeneratedBlock = arg;
 
