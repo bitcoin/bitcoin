@@ -194,12 +194,12 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 1)
         throw runtime_error(
-            "waitfornewblock\n"
+            "waitfornewblock (timeout)\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
-            "1. timeout (milliseconds) (int, optional, default=false)\n"
-            "\nResult::\n"
+            "1. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+            "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
             "  \"height\" : {     (int) Block height\n"
@@ -232,13 +232,13 @@ UniValue waitforblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblock\n"
+            "waitforblock <blockhash> (timeout)\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
             "1. blockhash to wait for (string)\n"
-            "2. timeout (milliseconds) (int, optional, default=false)\n"
-            "\nResult::\n"
+            "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+            "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
             "  \"height\" : {     (int) Block height\n"
@@ -274,14 +274,14 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblock\n"
+            "waitforblockheight <blockheight> (timeout)\n"
             "\nWaits for (at least) block height and returns the height and hash\n"
-            "\nof the current tip.\n"
+            "of the current tip.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
             "1. block height to wait for (int)\n"
-            "2. timeout (milliseconds) (int, optional, default=false)\n"
-            "\nResult::\n"
+            "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+            "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
             "  \"height\" : {     (int) Block height\n"
