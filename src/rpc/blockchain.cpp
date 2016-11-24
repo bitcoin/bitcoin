@@ -274,7 +274,7 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblock\n"
+            "waitforblockheight\n"
             "\nWaits for (at least) block height and returns the height and hash\n"
             "\nof the current tip.\n"
             "\nReturns the current block on timeout or exit.\n"
