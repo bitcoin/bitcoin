@@ -6,6 +6,7 @@
 #include "ui_modaloverlay.h"
 
 #include "guiutil.h"
+#include "platformstyle.h"
 
 #include <QResizeEvent>
 #include <QPropertyAnimation>
@@ -50,7 +51,7 @@ bool ModalOverlay::eventFilter(QObject * obj, QEvent * ev) {
     return QWidget::eventFilter(obj, ev);
 }
 
-//! Tracks parent widget changes
+//! Tracks parent widget changes and palette changes
 bool ModalOverlay::event(QEvent* ev) {
     if (ev->type() == QEvent::ParentAboutToChange) {
         if (parent()) parent()->removeEventFilter(this);
@@ -61,7 +62,11 @@ bool ModalOverlay::event(QEvent* ev) {
             raise();
         }
     }
-    return QWidget::event(ev);
+    const bool rv = QWidget::event(ev);
+    if (ev->type() == QEvent::ApplicationPaletteChange || ev->type() == QEvent::PaletteChange) {
+        updatePalette();
+    }
+    return rv;
 }
 
 void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
@@ -137,6 +142,24 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     }
 }
 
+void ModalOverlay::updatePalette()
+{
+    const QPalette & pal = QApplication::palette();
+
+    QColor bgcolor = pal.color(QPalette::Inactive, QPalette::ToolTipBase);
+    QColor fgcolor = pal.color(QPalette::Inactive, QPalette::ToolTipText);
+    ui->contentWidget->setStyleSheet(
+        "#contentWidget {"
+            "background: " + bgcolor.name() + ";"
+            "border-radius: 6px;"
+        "}"
+        "QLabel {"
+            "color: " + fgcolor.name() + ";"
+        "}"
+    );
+    ui->warningIcon->setIcon(ColorizeIcon(":/icons/warning", fgcolor));
+}
+
 void ModalOverlay::showHide(bool hide, bool userRequested)
 {
     if ( (layerIsVisible && !hide) || (!layerIsVisible && hide) || (!hide && userClosed && !userRequested))
@@ -146,6 +169,8 @@ void ModalOverlay::showHide(bool hide, bool userRequested)
         setVisible(true);
 
     setGeometry(0, hide ? 0 : height(), width(), height());
+
+    updatePalette();
 
     QPropertyAnimation* animation = new QPropertyAnimation(this, "pos");
     animation->setDuration(300);
