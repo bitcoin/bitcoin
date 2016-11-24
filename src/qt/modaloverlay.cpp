@@ -158,6 +158,21 @@ void ModalOverlay::updatePalette()
         "}"
     );
     ui->warningIcon->setIcon(ColorizeIcon(":/icons/warning", fgcolor));
+
+    int bggray = qGray(bgcolor.rgb()) * bgcolor.alpha() / 255;
+    int fadeopacity;
+    if (bggray < 0x40) {
+        // Dark overlay background, so fade-out a bit less
+        // 0xc0 for bggray=solid black, 0xe0 for bggray=0x40
+        fadeopacity = 0xc0 + (bggray / 2);
+    } else {
+        fadeopacity = 0xe0;
+    }
+    ui->bgWidget->setStyleSheet(
+        "#bgWidget {"
+            "background: rgba(0,0,0," + QString::number(fadeopacity) + ");"
+        "}"
+    );
 }
 
 void ModalOverlay::showHide(bool hide, bool userRequested)
