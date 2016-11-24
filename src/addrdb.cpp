@@ -103,7 +103,7 @@ bool CBanDB::Read(banmap_t& banSet)
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
             return error("%s: Invalid network magic number", __func__);
 
-        // de-serialize address data into one CAddrMan object
+        // de-serialize ban data
         ssBanlist >> banSet;
     }
     catch (const std::exception& e) {
