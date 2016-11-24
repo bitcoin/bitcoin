@@ -26,7 +26,6 @@ class PlatformStyle;
 class RPCConsole;
 class SendCoinsRecipient;
 class UnitDisplayStatusBarControl;
-class NetworkToggleStatusBarControl;
 class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
@@ -86,7 +85,7 @@ private:
     UnitDisplayStatusBarControl *unitDisplayControl;
     QLabel *labelWalletEncryptionIcon;
     QLabel *labelWalletHDStatusIcon;
-    NetworkToggleStatusBarControl *connectionsControl;
+    QLabel *connectionsControl;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
@@ -238,6 +237,9 @@ private Q_SLOTS:
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
 
+    /** Toggle networking */
+    void toggleNetworkActive();
+
     void showModalOverlay();
 };
 
@@ -268,19 +270,6 @@ private Q_SLOTS:
     void updateDisplayUnit(int newUnits);
     /** Tells underlying optionsModel to update its current display unit. */
     void onMenuSelection(QAction* action);
-};
-
-class NetworkToggleStatusBarControl : public QLabel
-{
-    Q_OBJECT
-    
-public:
-    void setClientModel(ClientModel *clientModel);
-protected:
-    void mousePressEvent(QMouseEvent *event);
-    
-private:
-    ClientModel *clientModel;
 };
 
 #endif // BITCOIN_QT_BITCOINGUI_H
