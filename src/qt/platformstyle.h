@@ -9,6 +9,10 @@
 #include <QPixmap>
 #include <QString>
 
+QIcon ColorizeIcon(const QIcon&, const QColor&);
+QImage ColorizeImage(const QString& filename, const QColor&);
+QIcon ColorizeIcon(const QString& filename, const QColor&);
+
 /* Coin network-specific GUI style information */
 class PlatformStyle
 {

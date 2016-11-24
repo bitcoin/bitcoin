@@ -30,7 +30,7 @@ static const struct {
 static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
 namespace {
-/* Local functions for colorizing single-color images */
+/* Local function for colorizing single-color images */
 
 void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 {
@@ -43,6 +43,8 @@ void MakeSingleColorImage(QImage& img, const QColor& colorbase)
             img.setPixel(x, y, qRgba(colorbase.red(), colorbase.green(), colorbase.blue(), qAlpha(rgb)));
         }
     }
+}
+
 }
 
 QIcon ColorizeIcon(const QIcon& ico, const QColor& colorbase)
@@ -69,9 +71,6 @@ QIcon ColorizeIcon(const QString& filename, const QColor& colorbase)
 {
     return QIcon(QPixmap::fromImage(ColorizeImage(filename, colorbase)));
 }
-
-}
-
 
 PlatformStyle::PlatformStyle(const QString &_name, bool _imagesOnButtons, bool _colorizeIcons, bool _useExtraSpacing):
     name(_name),
