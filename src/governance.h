@@ -92,6 +92,12 @@ public: // Types
 
     typedef object_time_m_t::const_iterator object_time_m_cit;
 
+    typedef std::map<uint256, int64_t> hash_time_m_t;
+
+    typedef hash_time_m_t::iterator hash_time_m_it;
+
+    typedef hash_time_m_t::const_iterator hash_time_m_cit;
+
 private:
     static const int MAX_CACHE_SIZE = 1000000;
 
@@ -109,6 +115,8 @@ private:
     count_m_t mapSeenGovernanceObjects;
 
     object_time_m_t mapMasternodeOrphanObjects;
+
+    hash_time_m_t mapWatchdogObjects;
 
     object_ref_cache_t mapVoteToObject;
 
