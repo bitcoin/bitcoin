@@ -72,4 +72,15 @@ To build executables for Windows 64-bit:
     ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
     make
 
+On Ubuntu 15.10 and above, if your build fails because the cross-compiler does not seem to support C++11 threads (you get errors such as "httpserver.cpp:69:10: error: ‘mutex’ in namespace ‘std’ does not name a type) you may have to select the posix versions of gcc-mingw-w64 and g++-mingw-w64:
+
+    sudo update-alternatives --config x86_64-w64-mingw32-gcc
+    sudo update-alternatives --config x86_64-w64-mingw32-g++
+
+And select the posix version of the compiler.
+
+You may also need to disable "hardening" of compiled binaries if your bitcoin-qt.exe does not start properly by adding the --disable-hardening option when calling the configure script:
+
+    ./configure --disable-hardening --prefix=`pwd`/depends/x86_64-w64-mingw32
+
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
