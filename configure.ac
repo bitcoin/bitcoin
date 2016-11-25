@@ -119,11 +119,6 @@ AC_ARG_ENABLE(module_ecdh,
     [enable_module_ecdh=$enableval],
     [enable_module_ecdh=no])
 
-AC_ARG_ENABLE(module_schnorr,
-    AS_HELP_STRING([--enable-module-schnorr],[enable Schnorr signature module (experimental)]),
-    [enable_module_schnorr=$enableval],
-    [enable_module_schnorr=no])
-
 AC_ARG_ENABLE(module_recovery,
     AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module (default is no)]),
     [enable_module_recovery=$enableval],
@@ -381,9 +376,6 @@ fi
 if test x"$use_jni" != x"no"; then
   AX_JNI_INCLUDE_DIR
   have_jni_dependencies=yes
-  if test x"$enable_module_schnorr" = x"no"; then
-    have_jni_dependencies=no
-  fi
   if test x"$enable_module_ecdh" = x"no"; then
     have_jni_dependencies=no
   fi
@@ -392,7 +384,7 @@ if test x"$use_jni" != x"no"; then
   fi
   if test "x$have_jni_dependencies" = "xno"; then
     if test x"$use_jni" = x"yes"; then
-      AC_MSG_ERROR([jni support explicitly requested but headers/dependencies were not found. Enable ECDH and Schnorr and try again.])
+      AC_MSG_ERROR([jni support explicitly requested but headers/dependencies were not found. Enable ECDH and try again.])
     fi
     AC_MSG_WARN([jni headers/dependencies not found. jni support disabled])
     use_jni=no
@@ -421,10 +413,6 @@ if test x"$enable_module_ecdh" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_ECDH, 1, [Define this symbol to enable the ECDH module])
 fi
 
-if test x"$enable_module_schnorr" = x"yes"; then
-  AC_DEFINE(ENABLE_MODULE_SCHNORR, 1, [Define this symbol to enable the Schnorr signature module])
-fi
-
 if test x"$enable_module_recovery" = x"yes"; then
   AC_DEFINE(ENABLE_MODULE_RECOVERY, 1, [Define this symbol to enable the ECDSA pubkey recovery module])
 fi
@@ -442,7 +430,6 @@ AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 AC_MSG_NOTICE([Using endomorphism optimizations: $use_endomorphism])
 AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
-AC_MSG_NOTICE([Building Schnorr signatures module: $enable_module_schnorr])
 AC_MSG_NOTICE([Building ECDSA pubkey recovery module: $enable_module_recovery])
 AC_MSG_NOTICE([Using jni: $use_jni])
 
@@ -451,12 +438,8 @@ if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([WARNING: experimental build])
   AC_MSG_NOTICE([Experimental features do not have stable APIs or properties, and may not be safe for production use.])
   AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
-  AC_MSG_NOTICE([Building Schnorr signatures module: $enable_module_schnorr])
   AC_MSG_NOTICE([******])
 else
-  if test x"$enable_module_schnorr" = x"yes"; then
-    AC_MSG_ERROR([Schnorr signature module is experimental. Use --enable-experimental to allow.])
-  fi
   if test x"$enable_module_ecdh" = x"yes"; then
     AC_MSG_ERROR([ECDH module is experimental. Use --enable-experimental to allow.])
   fi
@@ -476,7 +459,6 @@ AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
 AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$set_precomp" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
-AM_CONDITIONAL([ENABLE_MODULE_SCHNORR], [test x"$enable_module_schnorr" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([USE_JNI], [test x"$use_jni" == x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
