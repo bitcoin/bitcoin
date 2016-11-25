@@ -9,6 +9,7 @@
 #include "init.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "netmessagemaker.h"
 #include "script/interpreter.h"
 #include "txmempool.h"
 #include "util.h"
@@ -786,7 +787,8 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
     // final mixing tx with empty signatures should be relayed to mixing participants only
     for (const auto entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&txFinal, &connman, this](CNode* pnode) {
-            connman.PushMessage(pnode, NetMsgType::DSFINALTX, nSessionID, txFinal);
+            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID, txFinal));
             return true;
         });
         if(!fOk) {
@@ -800,7 +802,8 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
 void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, CConnman& connman)
 {
     if(!pnode) return;
-    connman.PushMessage(pnode, NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, (int)vecEntries.size(), (int)nStatusUpdate, (int)nMessageID);
+    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, (int)vecEntries.size(), (int)nStatusUpdate, (int)nMessageID));
 }
 
 void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& connman, PoolMessage nMessageID)
@@ -847,7 +850,8 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
     // final mixing tx with empty signatures should be relayed to mixing participants only
     for (const auto entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&nMessageID, &connman, this](CNode* pnode) {
-            connman.PushMessage(pnode, NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID);
+            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID));
             return true;
         });
         if(!fOk) {

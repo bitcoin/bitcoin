@@ -12,6 +12,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
+#include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
 #include "util.h"
@@ -65,9 +66,11 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 bool CDarksendQueue::Relay(CConnman& connman)
 {
     std::vector<CNode*> vNodesCopy = connman.CopyNodeVector();
-    BOOST_FOREACH(CNode* pnode, vNodesCopy)
-        if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
-            connman.PushMessage(pnode, NetMsgType::DSQUEUE, (*this));
+    BOOST_FOREACH(CNode* pnode, vNodesCopy) {
+        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        if (pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
+    }
 
     connman.ReleaseNodeVector(vNodesCopy);
     return true;

@@ -9,6 +9,7 @@
 #include "init.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
 #include "util.h"
@@ -575,7 +576,8 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
 
     // push all of our signatures to the Masternode
     LogPrintf("CPrivateSendClient::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s", finalMutableTransaction.ToString());
-    connman.PushMessage(pnode, NetMsgType::DSSIGNFINALTX, sigs);
+    CNetMsgMaker msgMaker(pnode->GetSendVersion());
+    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
     nTimeLastSuccessfulStep = GetTimeMillis();
 
@@ -887,7 +889,8 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
             infoMixingMasternode = infoMn;
             nSessionDenom = dsq.nDenom;
 
-            connman.PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
+            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral));
             LogPrintf("CPrivateSendClient::JoinExistingQueue -- connected (from queue), sending DSACCEPT: nSessionDenom: %d (%s), addr=%s\n",
                       nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom), pnode->addr.ToString());
             strAutoDenomResult = _("Mixing in progress...");
@@ -960,7 +963,8 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
                 nSessionDenom = CPrivateSend::GetDenominationsByAmounts(vecAmounts);
             }
 
-            connman.PushMessage(pnode, NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral);
+            CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSACCEPT, nSessionDenom, txMyCollateral));
             LogPrintf("CPrivateSendClient::StartNewQueue -- connected, sending DSACCEPT, nSessionDenom: %d (%s)\n",
                     nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
             strAutoDenomResult = _("Mixing in progress...");
@@ -1371,7 +1375,8 @@ void CPrivateSendClient::RelayIn(const CDarkSendEntry& entry, CConnman& connman)
 
     connman.ForNode(infoMixingMasternode.addr, [&entry, &connman](CNode* pnode) {
         LogPrintf("CPrivateSendClient::RelayIn -- found master, relaying message to %s\n", pnode->addr.ToString());
-        connman.PushMessage(pnode, NetMsgType::DSVIN, entry);
+        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSVIN, entry));
         return true;
     });
 }
