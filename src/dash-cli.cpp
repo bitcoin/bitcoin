@@ -25,15 +25,13 @@
 
 #include <univalue.h>
 
-using namespace std;
-
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const int CONTINUE_EXECUTION=-1;
 
 std::string HelpMessageCli()
 {
-    string strUsage;
+    std::string strUsage;
     strUsage += HelpMessageGroup(_("Options:"));
     strUsage += HelpMessageOpt("-?", _("This help message"));
     strUsage += HelpMessageOpt("-conf=<file>", strprintf(_("Specify configuration file (default: %s)"), BITCOIN_CONF_FILENAME));
@@ -193,7 +191,7 @@ static void http_error_cb(enum evhttp_request_error err, void *ctx)
 }
 #endif
 
-UniValue CallRPC(const string& strMethod, const UniValue& params)
+UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 {
     std::string host = GetArg("-rpcconnect", DEFAULT_RPCCONNECT);
     int port = GetArg("-rpcport", BaseParams().RPCPort());
@@ -201,18 +199,18 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     // Create event base
     struct event_base *base = event_base_new(); // TODO RAII
     if (!base)
-        throw runtime_error("cannot create event_base");
+        throw std::runtime_error("cannot create event_base");
 
     // Synchronously look up hostname
     struct evhttp_connection *evcon = evhttp_connection_base_new(base, NULL, host.c_str(), port); // TODO RAII
     if (evcon == NULL)
-        throw runtime_error("create connection failed");
+        throw std::runtime_error("create connection failed");
     evhttp_connection_set_timeout(evcon, GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT));
 
     HTTPReply response;
     struct evhttp_request *req = evhttp_request_new(http_request_done, (void*)&response); // TODO RAII
     if (req == NULL)
-        throw runtime_error("create http request failed");
+        throw std::runtime_error("create http request failed");
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
     evhttp_request_set_error_cb(req, http_error_cb);
 #endif
@@ -222,7 +220,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     if (mapArgs["-rpcpassword"] == "") {
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
-            throw runtime_error(strprintf(
+            throw std::runtime_error(strprintf(
                 _("Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)"),
                     GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string().c_str()));
 
@@ -257,26 +255,26 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     if (response.status == 0)
         throw CConnectionFailed(strprintf("couldn't connect to server\n(make sure server is running and you are connecting to the correct RPC port: %d %s)", response.error, http_errorstring(response.error)));
     else if (response.status == HTTP_UNAUTHORIZED)
-        throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
+        throw std::runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
     else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
-        throw runtime_error(strprintf("server returned HTTP error %d", response.status));
+        throw std::runtime_error(strprintf("server returned HTTP error %d", response.status));
     else if (response.body.empty())
-        throw runtime_error("no response from server");
+        throw std::runtime_error("no response from server");
 
     // Parse reply
     UniValue valReply(UniValue::VSTR);
     if (!valReply.read(response.body))
-        throw runtime_error("couldn't parse reply from server");
+        throw std::runtime_error("couldn't parse reply from server");
     const UniValue& reply = valReply.get_obj();
     if (reply.empty())
-        throw runtime_error("expected reply to have result, error and id properties");
+        throw std::runtime_error("expected reply to have result, error and id properties");
 
     return reply;
 }
 
 int CommandLineRPC(int argc, char *argv[])
 {
-    string strPrint;
+    std::string strPrint;
     int nRet = 0;
     try {
         // Skip switches
@@ -292,7 +290,7 @@ int CommandLineRPC(int argc, char *argv[])
                 args.push_back(line);
         }
         if (args.size() < 1)
-            throw runtime_error("too few parameters (need at least command)");
+            throw std::runtime_error("too few parameters (need at least command)");
         std::string strMethod = args[0];
         UniValue params = RPCConvertValues(strMethod, std::vector<std::string>(args.begin()+1, args.end()));
 
@@ -346,7 +344,7 @@ int CommandLineRPC(int argc, char *argv[])
         throw;
     }
     catch (const std::exception& e) {
-        strPrint = string("error: ") + e.what();
+        strPrint = std::string("error: ") + e.what();
         nRet = EXIT_FAILURE;
     }
     catch (...) {
