@@ -246,11 +246,13 @@ static CTestNetParams testNetParams;
 /**
  * Regression test
  */
+const int DEFAULT_REGTEST_HALVING_INTERVAL = 150;
+
 class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
-        consensus.nSubsidyHalvingInterval = 150;
+        consensus.nSubsidyHalvingInterval = DEFAULT_REGTEST_HALVING_INTERVAL;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
@@ -314,6 +316,11 @@ public:
         consensus.vDeployments[d].nStartTime = nStartTime;
         consensus.vDeployments[d].nTimeout = nTimeout;
     }
+
+    void UpdateSubsidyHalvingIntervalParameter(int interval)
+    {
+        consensus.nSubsidyHalvingInterval = interval;
+    }
 };
 static CRegTestParams regTestParams;
 
@@ -346,4 +353,8 @@ void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime,
 {
     regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
 }
- 
+
+void UpdateRegtestSubsidyHalvingIntervalParameter()
+{
+    regTestParams.UpdateSubsidyHalvingIntervalParameter((int)GetArg("-halvinginterval", DEFAULT_REGTEST_HALVING_INTERVAL));
+}

@@ -114,4 +114,9 @@ void SelectParams(const std::string& chain);
  */
 void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
+/**
+ * Allows modifying the subsidy halving interval parameter based on configuration.
+ */
+void UpdateRegtestSubsidyHalvingIntervalParameter();
+
 #endif // BITCOIN_CHAINPARAMS_H
