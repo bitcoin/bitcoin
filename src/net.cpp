@@ -1868,6 +1868,10 @@ void CConnman::ThreadMessageHandler()
             if (pnode->fDisconnect)
                 continue;
 
+            TRY_LOCK(pnode->cs_processing, lockProcessing);
+            if (!lockProcessing)
+                continue;
+
             // Receive messages
             bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc);
             fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);

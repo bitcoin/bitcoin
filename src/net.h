@@ -622,6 +622,9 @@ public:
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
+
+    CCriticalSection cs_processing; // Used only in ThreadMessageHandler
+
     const CAddress addr;
     std::string addrName;
     CService addrLocal;
