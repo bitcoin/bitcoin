@@ -90,6 +90,8 @@ static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
+static const int DEFAULT_MESSAGE_HANDLER_THREADS = 2; // Too much cs_main for any more to be useful
+
 typedef int NodeId;
 
 struct AddedNodeInfo
@@ -439,7 +441,7 @@ private:
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
-    std::thread threadMessageHandler;
+    std::list<std::thread> threadMessageHandlers;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);

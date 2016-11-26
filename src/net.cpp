@@ -2219,7 +2219,8 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
 
     // Process messages
-    threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
+    for (int64_t i = 0; i < GetArg("-messagehandlerthreads", DEFAULT_MESSAGE_HANDLER_THREADS); i++)
+        threadMessageHandlers.emplace_back(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
 
     // Dump network addresses
     scheduler.scheduleEvery(boost::bind(&CConnman::DumpData, this), DUMP_ADDRESSES_INTERVAL);
@@ -2260,8 +2261,11 @@ void CConnman::Interrupt()
 
 void CConnman::Stop()
 {
-    if (threadMessageHandler.joinable())
-        threadMessageHandler.join();
+    for (std::thread& threadMessageHandler : threadMessageHandlers)
+        if (threadMessageHandler.joinable())
+            threadMessageHandler.join();
+    threadMessageHandlers.clear();
+
     if (threadOpenConnections.joinable())
         threadOpenConnections.join();
     if (threadOpenAddedConnections.joinable())
