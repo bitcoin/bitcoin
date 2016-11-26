@@ -5176,6 +5176,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         int nSendVersion = std::min(pfrom->nVersion, PROTOCOL_VERSION);
         pfrom->SetSendVersion(nSendVersion);
 
+        // Jumpstart header sync
+        if (pfrom->fNetworkNode)
+            pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), uint256());
+
         if (!pfrom->fInbound)
         {
             // Advertise our address
