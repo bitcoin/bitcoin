@@ -85,7 +85,7 @@ static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
-CAddrMan addrman;
+extern CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 bool fAddressesInitialized = false;
 std::string strSubVersion;
@@ -345,10 +345,11 @@ void AddressCurrentlyConnected(const CService& addr)
 }
 
 
-uint64_t CNode::nTotalBytesRecv = 0;
-uint64_t CNode::nTotalBytesSent = 0;
-CCriticalSection CNode::cs_totalBytesRecv;
-CCriticalSection CNode::cs_totalBytesSent;
+// BU moved to globals.cpp
+//uint64_t CNode::nTotalBytesRecv = 0;
+//uint64_t CNode::nTotalBytesSent = 0;
+//CCriticalSection CNode::cs_totalBytesRecv;
+//CCriticalSection CNode::cs_totalBytesSent;
 
 uint64_t CNode::nMaxOutboundLimit = 0;
 uint64_t CNode::nMaxOutboundTotalBytesSentInCycle = 0;
@@ -508,7 +509,7 @@ void CNode::PushVersion()
 
 
 banmap_t CNode::setBanned;
-CCriticalSection CNode::cs_setBanned;
+//CCriticalSection CNode::cs_setBanned;
 bool CNode::setBannedIsDirty;
 
 void CNode::ClearBanned()
@@ -633,8 +634,8 @@ void CNode::SetBannedSetDirty(bool dirty)
 }
 
 
-std::vector<CSubNet> CNode::vWhitelistedRange;
-CCriticalSection CNode::cs_vWhitelistedRange;
+// BU moved: std::vector<CSubNet> CNode::vWhitelistedRange;
+// BU moved: CCriticalSection CNode::cs_vWhitelistedRange;
 
 bool CNode::IsWhitelistedRange(const CNetAddr& addr)
 {

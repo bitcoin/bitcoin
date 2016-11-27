@@ -34,6 +34,7 @@
 #include "version.h"
 #include "stat.h"
 #include "tweak.h"
+#include "addrman.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -50,6 +51,15 @@ boost::mutex dd_mutex;
 std::map<std::pair<void*, void*>, LockStack> lockorders;
 boost::thread_specific_ptr<LockStack> lockstack;
 #endif
+
+// main.cpp CriticalSections:
+CCriticalSection cs_LastBlockFile;
+CCriticalSection cs_nBlockSequenceId;
+
+CCriticalSection cs_nTimeOffset;
+int64_t nTimeOffset = 0;
+
+CCriticalSection cs_rpcWarmup;
 
 CCriticalSection cs_main;
 BlockMap mapBlockIndex;
@@ -70,6 +80,13 @@ CCriticalSection cs_xval;
 CCriticalSection cs_vNodes;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
+std::vector<CSubNet> CNode::vWhitelistedRange;
+CCriticalSection CNode::cs_vWhitelistedRange;
+CCriticalSection CNode::cs_setBanned;
+uint64_t CNode::nTotalBytesRecv = 0;
+uint64_t CNode::nTotalBytesSent = 0;
+CCriticalSection CNode::cs_totalBytesRecv;
+CCriticalSection CNode::cs_totalBytesSent;
 
 bool fIsChainNearlySyncd;
 CCriticalSection cs_ischainnearlysyncd;
@@ -127,6 +144,7 @@ list<CNode*> vNodesDisconnected;
 CSemaphore*  semOutbound = NULL;
 CSemaphore*  semOutboundAddNode = NULL; // BU: separate semaphore for -addnodes
 CNodeSignals g_signals;
+CAddrMan addrman;
 
 // BU: change locking of orphan map from using cs_main to cs_orphancache.  There is too much dependance on cs_main locks which
 //     are generally too broad in scope.
