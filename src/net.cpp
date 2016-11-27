@@ -74,7 +74,6 @@ bool fRelayTxes = true;
 CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
-static CNode* pnodeLocalHost = NULL;
 std::string strSubVersion;
 
 limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
@@ -2137,17 +2136,6 @@ bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, st
         semOutbound = new CSemaphore(std::min((nMaxOutbound + nMaxFeeler), nMaxConnections));
     }
 
-    if (pnodeLocalHost == NULL) {
-        CNetAddr local;
-        LookupHost("127.0.0.1", local, false);
-
-        NodeId id = GetNewNodeId();
-        uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-
-        pnodeLocalHost = new CNode(id, nLocalServices, GetBestHeight(), INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices), 0, nonce);
-        GetNodeSignals().InitializeNode(pnodeLocalHost, *this);
-    }
-
     //
     // Start threads
     //
@@ -2225,9 +2213,6 @@ void CConnman::Stop()
     vhListenSocket.clear();
     delete semOutbound;
     semOutbound = NULL;
-    if(pnodeLocalHost)
-        DeleteNode(pnodeLocalHost);
-    pnodeLocalHost = NULL;
 }
 
 void CConnman::DeleteNode(CNode* pnode)
