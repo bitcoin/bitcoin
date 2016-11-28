@@ -77,7 +77,7 @@ int secp256k1_nonce_function_smallint(unsigned char *nonce32, const unsigned cha
      * function with an increased `attempt`. So if attempt > 0 this means we
      * need to change the nonce to avoid an infinite loop. */
     if (attempt > 0) {
-        (*idata)++;
+        *idata = (*idata + 1) % EXHAUSTIVE_TEST_ORDER;
     }
     secp256k1_scalar_set_int(&s, *idata);
     secp256k1_scalar_get_b32(nonce32, &s);
@@ -244,6 +244,7 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
     for (i = 1; i < order; i++) {  /* message */
         for (j = 1; j < order; j++) {  /* key */
             for (k = 1; k < order; k++) {  /* nonce */
+                const int starting_k = k;
                 secp256k1_ecdsa_signature sig;
                 secp256k1_scalar sk, msg, r, s, expected_r;
                 unsigned char sk32[32], msg32[32];
@@ -262,6 +263,11 @@ void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *grou
                 CHECK(r == expected_r);
                 CHECK((k * s) % order == (i + r * j) % order ||
                       (k * (EXHAUSTIVE_TEST_ORDER - s)) % order == (i + r * j) % order);
+
+                /* Overflow means we've tried every possible nonce */
+                if (k < starting_k) {
+                    break;
+                }
             }
         }
     }

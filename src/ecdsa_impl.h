@@ -225,14 +225,12 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 #if defined(EXHAUSTIVE_TEST_ORDER)
 {
     secp256k1_scalar computed_r;
-    int overflow = 0;
     secp256k1_ge pr_ge;
     secp256k1_ge_set_gej(&pr_ge, &pr);
     secp256k1_fe_normalize(&pr_ge.x);
 
     secp256k1_fe_get_b32(c, &pr_ge.x);
-    secp256k1_scalar_set_b32(&computed_r, c, &overflow);
-    /* we fully expect overflow */
+    secp256k1_scalar_set_b32(&computed_r, c, NULL);
     return secp256k1_scalar_eq(sigr, &computed_r);
 }
 #else
