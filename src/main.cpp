@@ -4974,7 +4974,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     else if (inv.type == MSG_CMPCT_BLOCK)
                     {
                         // If a peer is asking for old blocks, we're almost guaranteed
-                        // they wont have a useful mempool to match against a compact block,
+                        // they won't have a useful mempool to match against a compact block,
                         // and we don't feel like constructing the object for them, so
                         // instead we respond with the full, non-compact block.
                         bool fPeerWantsWitness = State(pfrom->GetId())->fWantsCmpctWitness;
