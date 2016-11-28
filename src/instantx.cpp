@@ -72,9 +72,12 @@ bool IsInstantSendTxValid(const CTransaction& txCandidate)
 {
     if(txCandidate.vout.size() < 1) return false;
 
-    if(!CheckFinalTx(txCandidate)) {
-        LogPrint("instantsend", "IsInstantSendTxValid -- Transaction is not final: txCandidate=%s", txCandidate.ToString());
-        return false;
+    {
+        LOCK(cs_main);
+        if(!CheckFinalTx(txCandidate)) {
+            LogPrint("instantsend", "IsInstantSendTxValid -- Transaction is not final: txCandidate=%s", txCandidate.ToString());
+            return false;
+        }
     }
 
     int64_t nValueIn = 0;
@@ -460,15 +463,15 @@ int64_t GetAverageMasternodeOrphanVoteTime()
 
 void CleanTxLockCandidates()
 {
-    LOCK(cs_instantsend);
-
-    std::map<uint256, CTxLockCandidate>::iterator it = mapTxLockCandidates.begin();
-
     int nHeight;
     {
         LOCK(cs_main);
         nHeight = chainActive.Height();
     }
+
+    LOCK(cs_instantsend);
+
+    std::map<uint256, CTxLockCandidate>::iterator it = mapTxLockCandidates.begin();
 
     while(it != mapTxLockCandidates.end()) {
         CTxLockCandidate &txLockCandidate = it->second;

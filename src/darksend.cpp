@@ -724,6 +724,8 @@ void CDarksendPool::ChargeFees()
         LogPrintf("CDarksendPool::ChargeFees -- found uncooperative node (didn't %s transaction), charging fees: %s\n",
                 (nState == POOL_STATE_SIGNING) ? "sign" : "send", vecOffendersCollaterals[0].ToString());
 
+        LOCK(cs_main);
+
         CValidationState state;
         bool fMissingInputs;
         if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, true)) {
@@ -751,6 +753,8 @@ void CDarksendPool::ChargeRandomFees()
 {
     if(!fMasterNode) return;
 
+    LOCK(cs_main);
+
     BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollaterals) {
 
         if(GetRandInt(100) > 10) return;
@@ -773,13 +777,18 @@ void CDarksendPool::ChargeRandomFees()
 //
 void CDarksendPool::CheckTimeout()
 {
-    // check mixing queue objects for timeouts
-    std::vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
-    while(it != vecDarksendQueue.end()) {
-        if((*it).IsExpired()) {
-            LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Removing expired queue (%s)\n", (*it).ToString());
-            it = vecDarksendQueue.erase(it);
-        } else ++it;
+    {
+        TRY_LOCK(cs_darksend, lockDS);
+        if(!lockDS) return; // it's ok to fail here, we run this quite frequently
+
+        // check mixing queue objects for timeouts
+        std::vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
+        while(it != vecDarksendQueue.end()) {
+            if((*it).IsExpired()) {
+                LogPrint("privatesend", "CDarksendPool::CheckTimeout -- Removing expired queue (%s)\n", (*it).ToString());
+                it = vecDarksendQueue.erase(it);
+            } else ++it;
+        }
     }
 
     if(!fEnablePrivateSend && !fMasterNode) return;
@@ -2335,11 +2344,22 @@ bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode)
 
 bool CDarksendQueue::Relay()
 {
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
+    std::vector<CNode*> vNodesCopy;
+    {
+        LOCK(cs_vNodes);
+        vNodesCopy = vNodes;
+        BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            pnode->AddRef();
+    }
+    BOOST_FOREACH(CNode* pnode, vNodesCopy)
         if(pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
             pnode->PushMessage(NetMsgType::DSQUEUE, (*this));
 
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            pnode->Release();
+    }
     return true;
 }
 
@@ -2462,6 +2482,8 @@ void ThreadCheckDarkSendPool()
             // start right after sync is considered to be done
             if(nTick % MASTERNODE_MIN_MNP_SECONDS == 1)
                 activeMasternode.ManageState();
+
+            mnodeman.Check();
 
             if(nTick % 60 == 0) {
                 mnodeman.CheckAndRemove();

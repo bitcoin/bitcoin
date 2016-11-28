@@ -320,7 +320,6 @@ int CMasternodeMan::CountEnabled(int nProtocolVersion)
     nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : nProtocolVersion;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.Check();
         if(mn.nProtocolVersion < nProtocolVersion || !mn.IsEnabled()) continue;
         nCount++;
     }
@@ -460,6 +459,15 @@ bool CMasternodeMan::Has(const CTxIn& vin)
 //
 // Deterministically select the oldest/best masternode to pay on the network
 //
+CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(bool fFilterSigTime, int& nCount)
+{
+    if(!pCurrentBlockIndex) {
+        nCount = 0;
+        return NULL;
+    }
+    return GetNextMasternodeInQueueForPayment(pCurrentBlockIndex->nHeight, fFilterSigTime, nCount);
+}
+
 CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
 {
     // Need LOCK2 here to ensure consistent locking order because the GetBlockHash call below locks cs_main
@@ -475,7 +483,6 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     int nMnCount = CountEnabled();
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
-        mn.Check();
         if(!mn.IsValidForPayment()) continue;
 
         // //check protocol version
@@ -581,7 +588,6 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int nBlockHeight, int nM
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         if(mn.nProtocolVersion < nMinProtocol) continue;
-        mn.Check();
         if(fOnlyActive) {
             if(!mn.IsEnabled()) continue;
         }
@@ -618,8 +624,6 @@ std::vector<std::pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        mn.Check();
-
         if(mn.nProtocolVersion < nMinProtocol || !mn.IsEnabled()) continue;
 
         int64_t nScore = mn.CalculateScore(blockHash).GetCompact(false);
@@ -654,10 +658,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int nBlockHeight, in
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
         if(mn.nProtocolVersion < nMinProtocol) continue;
-        if(fOnlyActive) {
-            mn.Check();
-            if(!mn.IsEnabled()) continue;
-        }
+        if(fOnlyActive && !mn.IsEnabled()) continue;
 
         int64_t nScore = mn.CalculateScore(blockHash).GetCompact(false);
 
@@ -699,21 +700,18 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
 
-        {
-            LOCK(cs);
+        CMasternodeBroadcast mnb;
+        vRecv >> mnb;
 
-            CMasternodeBroadcast mnb;
-            vRecv >> mnb;
+        int nDos = 0;
 
-            int nDos = 0;
-
-            if (CheckMnbAndUpdateMasternodeList(mnb, nDos)) {
-                // use announced Masternode as a peer
-                addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
-            } else if(nDos > 0) {
-                Misbehaving(pfrom->GetId(), nDos);
-            }
+        if (CheckMnbAndUpdateMasternodeList(mnb, nDos)) {
+            // use announced Masternode as a peer
+            addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
+        } else if(nDos > 0) {
+            Misbehaving(pfrom->GetId(), nDos);
         }
+
         if(fMasternodesAdded) {
             NotifyMasternodeUpdates();
         }
@@ -726,7 +724,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s\n", mnp.vin.prevout.ToStringShort());
 
-        LOCK(cs);
+        // Need LOCK2 here to ensure consistent locking order because the CheckAndUpdate call below locks cs_main
+        LOCK2(cs_main, cs);
 
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
@@ -840,7 +839,9 @@ void CMasternodeMan::DoFullVerificationStep()
 
     std::vector<std::pair<int, CMasternode> > vecMasternodeRanks = GetMasternodeRanks(pCurrentBlockIndex->nHeight - 1, MIN_POSE_PROTO_VERSION);
 
-    LOCK(cs);
+    // Need LOCK2 here to ensure consistent locking order because the SendVerifyRequest call below locks cs_main
+    // through GetHeight() signal in ConnectNode
+    LOCK2(cs_main, cs);
 
     int nCount = 0;
     int nCountMax = std::max(10, (int)vMasternodes.size() / 100); // verify at least 10 masternode at once but at most 1% of all known masternodes
@@ -1294,7 +1295,8 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb)
 
 bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos)
 {
-    LOCK(cs);
+    // Need LOCK2 here to ensure consistent locking order because the SimpleCheck call below locks cs_main
+    LOCK2(cs_main, cs);
 
     nDos = 0;
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.vin.prevout.ToStringShort());
@@ -1347,11 +1349,12 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     return true;
 }
 
-void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex)
+void CMasternodeMan::UpdateLastPaid()
 {
     LOCK(cs);
 
     if(fLiteMode) return;
+    if(!pCurrentBlockIndex) return;
 
     static bool IsFirstRun = true;
     // Do full scan on first run or if we are not a masternode
@@ -1359,10 +1362,10 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex *pindex)
     int nMaxBlocksToScanBack = (IsFirstRun || !fMasterNode) ? mnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
 
     // LogPrint("mnpayments", "CMasternodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
-    //                         pindex->nHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
+    //                         pCurrentBlockIndex->nHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.UpdateLastPaid(pindex, nMaxBlocksToScanBack);
+        mn.UpdateLastPaid(pCurrentBlockIndex, nMaxBlocksToScanBack);
     }
 
     // every time is like the first time if winners list is not synced
@@ -1508,7 +1511,7 @@ void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
     if(fMasterNode) {
         DoFullVerificationStep();
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
-        UpdateLastPaid(pindex);
+        UpdateLastPaid();
     }
 }
 

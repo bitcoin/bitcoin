@@ -1875,7 +1875,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if(!flatdb3.Load(governance)) {
         return InitError("Failed to load governance cache from governance.dat");
     }
-    governance.ClearSeen();
+    governance.InitOnLoad();
 
     uiInterface.InitMessage(_("Loading fullfiled requests cache..."));
     CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");

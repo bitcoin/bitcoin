@@ -167,9 +167,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
         if (strMode == "enabled")
             return mnodeman.CountEnabled();
 
-        LOCK(cs_main);
         int nCount;
-        mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Height(), true, nCount);
+        mnodeman.GetNextMasternodeInQueueForPayment(true, nCount);
 
         if (strMode == "qualify")
             return nCount;
@@ -184,14 +183,12 @@ UniValue masternode(const UniValue& params, bool fHelp)
     {
         int nCount;
         int nHeight;
-        CBlockIndex* pindex;
         CMasternode* winner = NULL;
         {
             LOCK(cs_main);
             nHeight = chainActive.Height() + (strCommand == "current" ? 1 : 10);
-            pindex = chainActive.Tip();
         }
-        mnodeman.UpdateLastPaid(pindex);
+        mnodeman.UpdateLastPaid();
         winner = mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount);
         if(!winner) return "unknown";
 
@@ -482,22 +479,12 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     }
 
     if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
-        CBlockIndex* pindex;
-        {
-            LOCK(cs_main);
-            pindex = chainActive.Tip();
-        }
-        mnodeman.UpdateLastPaid(pindex);
+        mnodeman.UpdateLastPaid();
     }
 
     UniValue obj(UniValue::VOBJ);
     if (strMode == "rank") {
-        int nHeight;
-        {
-            LOCK(cs_main);
-            nHeight = chainActive.Height();
-        }
-        std::vector<std::pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks(nHeight);
+        std::vector<std::pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks();
         BOOST_FOREACH(PAIRTYPE(int, CMasternode)& s, vMasternodeRanks) {
             std::string strOutpoint = s.second.vin.prevout.ToStringShort();
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
