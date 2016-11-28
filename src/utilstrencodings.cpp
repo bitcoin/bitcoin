@@ -33,6 +33,17 @@ string SanitizeString(const string& str, int rule)
     return strResult;
 }
 
+/// Formats the network peer user agent text (or subversion)
+/// by removing the begining and ending charactors(/).
+/// example: /Satoshi:0.11.2/ --> Satoshi:0.11.2
+string SanitizeSubVersionString(const string& str)
+{
+    string strResult = SanitizeString(str);
+    if ((strResult.length() > 3) && (strResult.substr(0,1) == "/") && (strResult.substr((strResult.length()-1),1) == "/"))
+        strResult = strResult.substr(1, (strResult.length() - 2));
+    return strResult;
+}
+
 const signed char p_util_hexdigit[256] =
 { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
