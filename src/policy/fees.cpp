@@ -281,6 +281,11 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     }
 }
 
+// This function is called from CTxMemPool::removeUnchecked to ensure
+// txs removed from the mempool for any reason are no longer
+// tracked. Txs that were part of a block have already been removed in
+// processBlockTx to ensure they are never double tracked, but it is
+// of no harm to try to remove them again.
 bool CBlockPolicyEstimator::removeTx(uint256 hash)
 {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
