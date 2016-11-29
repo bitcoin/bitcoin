@@ -321,9 +321,11 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 	return;
     }
 
-    if (txHeight < nBestSeenHeight) {
+    if (txHeight != nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random they don't
         // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
+        // Ignore txs if BlockPolicyEstimator is not in sync with chainActive.Tip().
+        // It will be synced next time a block is processed.
         return;
     }
 
