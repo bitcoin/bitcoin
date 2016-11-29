@@ -62,6 +62,14 @@ Removal of Priority Estimation
   major version. To prepare for this, the default for the rate limit of priority
   transactions (`-limitfreerelay`) has been set to `0` kB/minute.
 
+
+Disabling the p2p mempool command (BIP35)
+------------------------------------------
+
+- The mempool command was repetitively misused for surveillance and DOS attacks and the current use case (SPV scanning of unconfirmed transactions) do not justify the risks.
+
+- The command can be optionally be enabled with `-peermempool`.
+
 0.14.0 Change log
 =================
 

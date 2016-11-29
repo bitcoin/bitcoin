@@ -148,6 +148,7 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 static const int MAX_UNCONNECTING_HEADERS = 10;
 
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
+static const bool DEFAULT_PEERMEMPOOLCMD = false;
 
 struct BlockHasher
 {
