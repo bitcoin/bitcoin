@@ -81,7 +81,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
-    /* settings that were overriden by command-line */
+    /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
 
     // Add option to list of GUI options overridden through command line/config file
