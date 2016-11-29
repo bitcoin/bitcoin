@@ -8,12 +8,12 @@
 #include "core_io.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
-#include "rpcprotocol.h"
-#include "rpcserver.h"
+#include "rpc/protocol.h"
+#include "rpc/server.h"
 #include "script/script.h"
 #include "uint256.h"
 
-#include "json/json_spirit_value.h"
+#include <univalue.h>
 
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
@@ -23,7 +23,7 @@
 
 using mastercore::StrToInt64;
 
-std::string ParseAddress(const json_spirit::Value& value)
+std::string ParseAddress(const UniValue& value)
 {
     CBitcoinAddress address(value.get_str());
     if (!address.IsValid()) {
@@ -32,15 +32,15 @@ std::string ParseAddress(const json_spirit::Value& value)
     return address.ToString();
 }
 
-std::string ParseAddressOrEmpty(const json_spirit::Value& value)
+std::string ParseAddressOrEmpty(const UniValue& value)
 {
-    if (value.is_null() || value.get_str().empty()) {
+    if (value.isNull() || value.get_str().empty()) {
         return "";
     }
     return ParseAddress(value);
 }
 
-std::string ParseAddressOrWildcard(const json_spirit::Value& value)
+std::string ParseAddressOrWildcard(const UniValue& value)
 {
     if (value.get_str() == "*") {
         return "*";
@@ -48,7 +48,7 @@ std::string ParseAddressOrWildcard(const json_spirit::Value& value)
     return ParseAddress(value);
 }
 
-uint32_t ParsePropertyId(const json_spirit::Value& value)
+uint32_t ParsePropertyId(const UniValue& value)
 {
     int64_t propertyId = value.get_int64();
     if (propertyId < 1 || 4294967295LL < propertyId) {
@@ -57,7 +57,7 @@ uint32_t ParsePropertyId(const json_spirit::Value& value)
     return static_cast<uint32_t>(propertyId);
 }
 
-int64_t ParseAmount(const json_spirit::Value& value, bool isDivisible)
+int64_t ParseAmount(const UniValue& value, bool isDivisible)
 {
     int64_t amount = mastercore::StrToInt64(value.get_str(), isDivisible);
     if (amount < 1) {
@@ -66,13 +66,13 @@ int64_t ParseAmount(const json_spirit::Value& value, bool isDivisible)
     return amount;
 }
 
-int64_t ParseAmount(const json_spirit::Value& value, int propertyType)
+int64_t ParseAmount(const UniValue& value, int propertyType)
 {
     bool fDivisible = (propertyType == 2);  // 1 = indivisible, 2 = divisible
     return ParseAmount(value, fDivisible);
 }
 
-uint8_t ParseDExPaymentWindow(const json_spirit::Value& value)
+uint8_t ParseDExPaymentWindow(const UniValue& value)
 {
     int64_t blocks = value.get_int64();
     if (blocks < 1 || 255 < blocks) {
@@ -81,7 +81,7 @@ uint8_t ParseDExPaymentWindow(const json_spirit::Value& value)
     return static_cast<uint8_t>(blocks);
 }
 
-int64_t ParseDExFee(const json_spirit::Value& value)
+int64_t ParseDExFee(const UniValue& value)
 {
     int64_t fee = StrToInt64(value.get_str(), true);  // BTC is divisible
     if (fee < 0) {
@@ -90,7 +90,7 @@ int64_t ParseDExFee(const json_spirit::Value& value)
     return fee;
 }
 
-uint8_t ParseDExAction(const json_spirit::Value& value)
+uint8_t ParseDExAction(const UniValue& value)
 {
     int64_t action = value.get_int64();
     if (action <= 0 || 3 < action) {
@@ -99,7 +99,7 @@ uint8_t ParseDExAction(const json_spirit::Value& value)
     return static_cast<uint8_t>(action);
 }
 
-uint8_t ParseEcosystem(const json_spirit::Value& value)
+uint8_t ParseEcosystem(const UniValue& value)
 {
     int64_t ecosystem = value.get_int64();
     if (ecosystem < 1 || 2 < ecosystem) {
@@ -108,7 +108,7 @@ uint8_t ParseEcosystem(const json_spirit::Value& value)
     return static_cast<uint8_t>(ecosystem);
 }
 
-uint16_t ParsePropertyType(const json_spirit::Value& value)
+uint16_t ParsePropertyType(const UniValue& value)
 {
     int64_t propertyType = value.get_int64();
     if (propertyType < 1 || 2 < propertyType) {
@@ -117,7 +117,7 @@ uint16_t ParsePropertyType(const json_spirit::Value& value)
     return static_cast<uint16_t>(propertyType);
 }
 
-uint32_t ParsePreviousPropertyId(const json_spirit::Value& value)
+uint32_t ParsePreviousPropertyId(const UniValue& value)
 {
     int64_t previousId = value.get_int64();
     if (previousId != 0) {
@@ -126,7 +126,7 @@ uint32_t ParsePreviousPropertyId(const json_spirit::Value& value)
     return static_cast<uint32_t>(previousId);
 }
 
-std::string ParseText(const json_spirit::Value& value)
+std::string ParseText(const UniValue& value)
 {
     std::string text = value.get_str();
     if (text.size() > 255) {
@@ -135,7 +135,7 @@ std::string ParseText(const json_spirit::Value& value)
     return text;
 }
 
-int64_t ParseDeadline(const json_spirit::Value& value)
+int64_t ParseDeadline(const UniValue& value)
 {
     int64_t deadline = value.get_int64();
     if (deadline < 0) {
@@ -144,7 +144,7 @@ int64_t ParseDeadline(const json_spirit::Value& value)
     return deadline;
 }
 
-uint8_t ParseEarlyBirdBonus(const json_spirit::Value& value)
+uint8_t ParseEarlyBirdBonus(const UniValue& value)
 {
     int64_t percentage = value.get_int64();
     if (percentage < 0 || 255 < percentage) {
@@ -153,7 +153,7 @@ uint8_t ParseEarlyBirdBonus(const json_spirit::Value& value)
     return static_cast<uint8_t>(percentage);
 }
 
-uint8_t ParseIssuerBonus(const json_spirit::Value& value)
+uint8_t ParseIssuerBonus(const UniValue& value)
 {
     int64_t percentage = value.get_int64();
     if (percentage < 0 || 255 < percentage) {
@@ -162,7 +162,7 @@ uint8_t ParseIssuerBonus(const json_spirit::Value& value)
     return static_cast<uint8_t>(percentage);
 }
 
-uint8_t ParseMetaDExAction(const json_spirit::Value& value)
+uint8_t ParseMetaDExAction(const UniValue& value)
 {
     int64_t action = value.get_int64();
     if (action <= 0 || 4 < action) {
@@ -171,10 +171,10 @@ uint8_t ParseMetaDExAction(const json_spirit::Value& value)
     return static_cast<uint8_t>(action);
 }
 
-CTransaction ParseTransaction(const json_spirit::Value& value)
+CTransaction ParseTransaction(const UniValue& value)
 {
     CTransaction tx;
-    if (value.is_null() || value.get_str().empty()) {
+    if (value.isNull() || value.get_str().empty()) {
         return tx;
     }
     if (!DecodeHexTx(tx, value.get_str())) {
@@ -183,13 +183,13 @@ CTransaction ParseTransaction(const json_spirit::Value& value)
     return tx;
 }
 
-CMutableTransaction ParseMutableTransaction(const json_spirit::Value& value)
+CMutableTransaction ParseMutableTransaction(const UniValue& value)
 {
     CTransaction tx = ParseTransaction(value);
     return CMutableTransaction(tx);
 }
 
-CPubKey ParsePubKeyOrAddress(const json_spirit::Value& value)
+CPubKey ParsePubKeyOrAddress(const UniValue& value)
 {
     CPubKey pubKey;
     if (!mastercore::AddressToPubKey(value.get_str(), pubKey)) {
@@ -198,7 +198,7 @@ CPubKey ParsePubKeyOrAddress(const json_spirit::Value& value)
     return pubKey;
 }
 
-uint32_t ParseOutputIndex(const json_spirit::Value& value)
+uint32_t ParseOutputIndex(const UniValue& value)
 {
     int nOut = value.get_int();
     if (nOut < 0) {
@@ -208,23 +208,25 @@ uint32_t ParseOutputIndex(const json_spirit::Value& value)
 }
 
 /** Parses previous transaction outputs. */
-std::vector<PrevTxsEntry> ParsePrevTxs(const json_spirit::Value& value)
+std::vector<PrevTxsEntry> ParsePrevTxs(const UniValue& value)
 {
-    json_spirit::Array prevTxs = value.get_array();
+    UniValue prevTxs = value.get_array();
 
     std::vector<PrevTxsEntry> prevTxsParsed;
     prevTxsParsed.reserve(prevTxs.size());
-
-    BOOST_FOREACH(const json_spirit::Value& p, prevTxs) {
-        if (p.type() != json_spirit::obj_type) {
+    
+    for (size_t i = 0; i < prevTxs.size(); ++i) {
+        const UniValue& p = prevTxs[i];
+        if (p.type() != UniValue::VOBJ) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid\",\"vout\",\"scriptPubKey\",\"value\":n.nnnnnnnn}");
         }
-        json_spirit::Object prevOut = p.get_obj();
-        RPCTypeCheck(prevOut, boost::assign::map_list_of("txid", json_spirit::str_type)("vout", json_spirit::int_type)("scriptPubKey", json_spirit::str_type)("value", json_spirit::real_type));
+        UniValue prevOut = p.get_obj();
+        RPCTypeCheck(prevOut, boost::assign::list_of(UniValue::VSTR)(UniValue::VNUM)(UniValue::VSTR)(UniValue::VNUM));
+        //RPCTypeCheck(prevOut, boost::assign::map_list_of("txid", UniValue::VSTR)("vout", UniValue::VNUM)("scriptPubKey", UniValue::VSTR)("value", UniValue::VNUM));
 
         uint256 txid = ParseHashO(prevOut, "txid");
-        json_spirit::Value outputIndex = json_spirit::find_value(prevOut, "vout");
-        json_spirit::Value outputValue = json_spirit::find_value(prevOut, "value");
+        UniValue outputIndex = find_value(prevOut, "vout");
+        UniValue outputValue = find_value(prevOut, "value");
         std::vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
 
         uint32_t nOut = ParseOutputIndex(outputIndex);
@@ -237,4 +239,3 @@ std::vector<PrevTxsEntry> ParsePrevTxs(const json_spirit::Value& value)
 
     return prevTxsParsed;
 }
-

@@ -1,13 +1,15 @@
 #include "omnicore/parse_string.h"
 
-#include <stdint.h>
-#include <string>
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
+#include <stdint.h>
+#include <string>
+
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_strtoint64_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_strtoint64_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(strtoint64_invidisible)
 {

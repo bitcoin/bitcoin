@@ -15,7 +15,7 @@
 #include "amount.h"
 #include "sync.h"
 #include "ui_interface.h"
-#include "wallet_ismine.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 #include <map>
@@ -153,7 +153,7 @@ void BalancesDialog::UpdatePropSelector()
     // populate property selector
     for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
         uint32_t propertyId = *it;
-        std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+        std::string spId = strprintf("%d", propertyId);
         std::string spName = getPropertyName(propertyId).c_str();
         if(spName.size()>20) spName=spName.substr(0,20)+"...";
         spName += " (#" + spId + ")";
@@ -194,7 +194,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
         // loop over the wallet property list and add the wallet totals
         for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
             uint32_t propertyId = *it;
-            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            std::string spId = strprintf("%d", propertyId);
             std::string spName = getPropertyName(propertyId).c_str();
             std::string available = FormatMP(propertyId, global_balance_money[propertyId]);
             std::string reserved = FormatMP(propertyId, global_balance_reserved[propertyId]);

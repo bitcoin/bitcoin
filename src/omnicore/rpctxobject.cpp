@@ -18,13 +18,13 @@
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxs.h"
 
+#include "chainparams.h"
 #include "main.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 #include "uint256.h"
 
-#include "json/json_spirit_reader_template.h"
-#include "json/json_spirit_value.h"
+#include <univalue.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -34,7 +34,6 @@
 #include <vector>
 
 // Namespaces
-using namespace json_spirit;
 using namespace mastercore;
 
 /**
@@ -45,19 +44,19 @@ using namespace mastercore;
  *
  * DEx payments and the extended mode are only available for confirmed transactions.
  */
-int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
+int populateRPCTransactionObject(const uint256& txid, UniValue& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
 {
     // retrieve the transaction from the blockchain and obtain it's height/confs/time
     CTransaction tx;
     uint256 blockHash;
-    if (!GetTransaction(txid, tx, blockHash, true)) {
+    if (!GetTransaction(txid, tx, Params().GetConsensus(), blockHash, true)) {
         return MP_TX_NOT_FOUND;
     }
 
     return populateRPCTransactionObject(tx, blockHash, txobj, filterAddress, extendedDetails, extendedDetailsFilter);
 }
 
-int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHash, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter, int blockHeight)
+int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHash, UniValue& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter, int blockHeight)
 {
     int confirmations = 0;
     int64_t blockTime = 0;
@@ -67,7 +66,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
         blockHeight = GetHeight();
     }
 
-    if (blockHash != 0) {
+    if (!blockHash.IsNull()) {
         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
         if (NULL != pBlockIndex) {
             confirmations = 1 + blockHeight - pBlockIndex->nHeight;
@@ -95,7 +94,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
             LOCK(cs_tally);
             p_txlistdb->getPurchaseDetails(txid, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
         }
-        Array purchases;
+        UniValue purchases(UniValue::VARR);
         if (populateRPCDExPurchases(tx, purchases, filterAddress) <= 0) return -1;
         txobj.push_back(Pair("txid", txid.GetHex()));
         txobj.push_back(Pair("type", "DEx Purchase"));
@@ -132,7 +131,9 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     txobj.push_back(Pair("ismine", fMine));
     txobj.push_back(Pair("version", (uint64_t)mp_obj.getVersion()));
     txobj.push_back(Pair("type_int", (uint64_t)mp_obj.getType()));
-    txobj.push_back(Pair("type", mp_obj.getTypeString()));
+    if (mp_obj.getType() != MSC_TYPE_SIMPLE_SEND) { // Type 0 will add "Type" attribute during populateRPCTypeSimpleSend
+        txobj.push_back(Pair("type", mp_obj.getTypeString()));
+    }
 
     // populate type specific info and extended details if requested
     // extended details are not available for unconfirmed transactions
@@ -140,7 +141,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     populateRPCTypeInfo(mp_obj, txobj, mp_obj.getType(), extendedDetails, extendedDetailsFilter);
 
     // state and chain related information
-    if (confirmations != 0 && blockHash != 0) {
+    if (confirmations != 0 && !blockHash.IsNull()) {
         txobj.push_back(Pair("valid", valid));
         txobj.push_back(Pair("blockhash", blockHash.GetHex()));
         txobj.push_back(Pair("blocktime", blockTime));
@@ -157,7 +158,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
 
 /* Function to call respective populators based on message type
  */
-void populateRPCTypeInfo(CMPTransaction& mp_obj, Object& txobj, uint32_t txType, bool extendedDetails, std::string extendedDetailsFilter)
+void populateRPCTypeInfo(CMPTransaction& mp_obj, UniValue& txobj, uint32_t txType, bool extendedDetails, std::string extendedDetailsFilter)
 {
     switch (txType) {
         case MSC_TYPE_SIMPLE_SEND:
@@ -240,7 +241,7 @@ bool showRefForTx(uint32_t txType)
     return true; // default to true, shouldn't be needed but just in case
 }
 
-void populateRPCTypeSimpleSend(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeSimpleSend(CMPTransaction& omniObj, UniValue& txobj)
 {
     uint32_t propertyId = omniObj.getProperty();
     int64_t crowdPropertyId = 0, crowdTokens = 0, issuerTokens = 0;
@@ -252,7 +253,6 @@ void populateRPCTypeSimpleSend(CMPTransaction& omniObj, Object& txobj)
             PrintToLog("SP Error: Crowdsale purchase for non-existent property %d in transaction %s", crowdPropertyId, omniObj.getHash().GetHex());
             return;
         }
-        if (!txobj.empty()) txobj.pop_back(); // strip last element (which will be "type:Simple Send") & replace
         txobj.push_back(Pair("type", "Crowdsale Purchase"));
         txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
         txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
@@ -263,13 +263,14 @@ void populateRPCTypeSimpleSend(CMPTransaction& omniObj, Object& txobj)
         txobj.push_back(Pair("purchasedtokens", FormatMP(crowdPropertyId, crowdTokens)));
         txobj.push_back(Pair("issuertokens", FormatMP(crowdPropertyId, issuerTokens)));
     } else {
+        txobj.push_back(Pair("type", "Simple Send"));
         txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
         txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
         txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
     }
 }
 
-void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool extendedDetails, std::string extendedDetailsFilter)
+void populateRPCTypeSendToOwners(CMPTransaction& omniObj, UniValue& txobj, bool extendedDetails, std::string extendedDetailsFilter)
 {
     uint32_t propertyId = omniObj.getProperty();
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -278,15 +279,15 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
     if (extendedDetails) populateRPCExtendedTypeSendToOwners(omniObj.getHash(), extendedDetailsFilter, txobj, omniObj.getVersion());
 }
 
-void populateRPCTypeSendAll(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeSendAll(CMPTransaction& omniObj, UniValue& txobj)
 {
-    Array subSends;
+    UniValue subSends(UniValue::VARR);
     if (omniObj.getEcosystem() == 1) txobj.push_back(Pair("ecosystem", "main"));
     if (omniObj.getEcosystem() == 2) txobj.push_back(Pair("ecosystem", "test"));
     if (populateRPCSendAllSubSends(omniObj.getHash(), subSends) > 0) txobj.push_back(Pair("subsends", subSends));
 }
 
-void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeTradeOffer(CMPTransaction& omniObj, UniValue& txobj)
 {
     CMPOffer temp_offer(omniObj);
     uint32_t propertyId = omniObj.getProperty();
@@ -327,7 +328,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
     if (sellSubAction == 3) txobj.push_back(Pair("action", "cancel"));
 }
 
-void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, UniValue& txobj, bool extendedDetails)
 {
     CMPMetaDEx metaObj(omniObj);
 
@@ -346,7 +347,7 @@ void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool ex
     if (extendedDetails) populateRPCExtendedTypeMetaDExTrade(omniObj.getHash(), omniObj.getProperty(), omniObj.getAmount(), txobj);
 }
 
-void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, UniValue& txobj, bool extendedDetails)
 {
     CMPMetaDEx metaObj(omniObj);
 
@@ -365,7 +366,7 @@ void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, b
     if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
 }
 
-void populateRPCTypeMetaDExCancelPair(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+void populateRPCTypeMetaDExCancelPair(CMPTransaction& omniObj, UniValue& txobj, bool extendedDetails)
 {
     CMPMetaDEx metaObj(omniObj);
 
@@ -375,13 +376,13 @@ void populateRPCTypeMetaDExCancelPair(CMPTransaction& omniObj, Object& txobj, bo
     if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
 }
 
-void populateRPCTypeMetaDExCancelEcosystem(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+void populateRPCTypeMetaDExCancelEcosystem(CMPTransaction& omniObj, UniValue& txobj, bool extendedDetails)
 {
     txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
     if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
 }
 
-void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, UniValue& txobj)
 {
     uint32_t propertyId = omniObj.getProperty();
     int64_t amount = omniObj.getAmount();
@@ -401,7 +402,7 @@ void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("amount", FormatMP(propertyId, amount)));
 }
 
-void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, UniValue& txobj)
 {
     LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
@@ -419,7 +420,7 @@ void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("amount", strAmount));
 }
 
-void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, UniValue& txobj)
 {
     LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
@@ -443,7 +444,7 @@ void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, Object& txob
     txobj.push_back(Pair("amount", strAmount)); // crowdsale token creations don't issue tokens with the create tx
 }
 
-void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, UniValue& txobj)
 {
     LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
@@ -461,22 +462,14 @@ void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("amount", strAmount)); // managed token creations don't issue tokens with the create tx
 }
 
-void populateRPCTypeCloseCrowdsale(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeCloseCrowdsale(CMPTransaction& omniObj, UniValue& txobj)
 {
     uint32_t propertyId = omniObj.getProperty();
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
 }
 
-void populateRPCTypeGrant(CMPTransaction& omniObj, Object& txobj)
-{
-    uint32_t propertyId = omniObj.getProperty();
-    txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
-    txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-    txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
-}
-
-void populateRPCTypeRevoke(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeGrant(CMPTransaction& omniObj, UniValue& txobj)
 {
     uint32_t propertyId = omniObj.getProperty();
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -484,23 +477,31 @@ void populateRPCTypeRevoke(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
 }
 
-void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeRevoke(CMPTransaction& omniObj, UniValue& txobj)
+{
+    uint32_t propertyId = omniObj.getProperty();
+    txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
+    txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+    txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
+}
+
+void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, UniValue& txobj)
 {
     uint32_t propertyId = omniObj.getProperty();
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
 }
 
-void populateRPCTypeActivation(CMPTransaction& omniObj, Object& txobj)
+void populateRPCTypeActivation(CMPTransaction& omniObj, UniValue& txobj)
 {
     txobj.push_back(Pair("featureid", (uint64_t) omniObj.getFeatureId()));
     txobj.push_back(Pair("activationblock", (uint64_t) omniObj.getActivationBlock()));
     txobj.push_back(Pair("minimumversion", (uint64_t) omniObj.getMinClientVersion()));
 }
 
-void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, Object& txobj, uint16_t version)
+void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, UniValue& txobj, uint16_t version)
 {
-    Array receiveArray;
+    UniValue receiveArray(UniValue::VARR);
     uint64_t tmpAmount = 0, stoFee = 0, numRecipients = 0;
     LOCK(cs_tally);
     s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &numRecipients);
@@ -513,9 +514,9 @@ void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extende
     txobj.push_back(Pair("recipients", receiveArray));
 }
 
-void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, Object& txobj)
+void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, UniValue& txobj)
 {
-    Array tradeArray;
+    UniValue tradeArray(UniValue::VARR);
     int64_t totalReceived = 0, totalSold = 0;
     LOCK(cs_tally);
     t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
@@ -534,14 +535,14 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
     txobj.push_back(Pair("matches", tradeArray));
 }
 
-void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
+void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, UniValue& txobj)
 {
-    Array cancelArray;
+    UniValue cancelArray(UniValue::VARR);
     LOCK(cs_tally);
     int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
     if (0<numberOfCancels) {
         for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
-            Object cancelTx;
+            UniValue cancelTx(UniValue::VOBJ);
             std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + strprintf("%d",refNumber));
             if (strValue.empty()) continue;
             std::vector<std::string> vstr;
@@ -564,7 +565,7 @@ void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
 /* Function to enumerate sub sends for a given txid and add to supplied JSON array
  * Note: this function exists as send all has the potential to carry multiple sends in a single transaction.
  */
-int populateRPCSendAllSubSends(const uint256& txid, Array& subSends)
+int populateRPCSendAllSubSends(const uint256& txid, UniValue& subSends)
 {
     int numberOfSubSends = 0;
     {
@@ -576,7 +577,7 @@ int populateRPCSendAllSubSends(const uint256& txid, Array& subSends)
         return -1;
     }
     for (int subSend = 1; subSend <= numberOfSubSends; subSend++) {
-        Object subSendObj;
+        UniValue subSendObj(UniValue::VOBJ);
         uint32_t propertyId;
         int64_t amount;
         {
@@ -595,7 +596,7 @@ int populateRPCSendAllSubSends(const uint256& txid, Array& subSends)
  * Note: this function exists as it is feasible for a single transaction to carry multiple outputs
  *       and thus make multiple purchases from a single transaction
  */
-int populateRPCDExPurchases(const CTransaction& wtx, Array& purchases, std::string filterAddress)
+int populateRPCDExPurchases(const CTransaction& wtx, UniValue& purchases, std::string filterAddress)
 {
     int numberOfPurchases = 0;
     {
@@ -607,7 +608,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, Array& purchases, std::stri
         return -1;
     }
     for (int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
-        Object purchaseObj;
+        UniValue purchaseObj(UniValue::VOBJ);
         std::string buyer, seller;
         uint64_t vout, nValue, propertyId;
         {

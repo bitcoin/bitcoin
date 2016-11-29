@@ -47,7 +47,7 @@
         <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -55,7 +55,7 @@
           <number>6</number>
          </property>
          <property name="leftMargin">
-          <number>10</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>0</number>
@@ -72,12 +72,12 @@
             <widget class="QLabel" name="marketLabel">
              <property name="font">
               <font>
-               <weight>75</weight>
-               <bold>true</bold>
+               <weight>50</weight>
+               <bold>false</bold>
               </font>
              </property>
              <property name="text">
-              <string>Trade MaidSafeCoin (#3) for Mastercoin</string>
+              <string>Sell</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -85,75 +85,46 @@
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>10</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="exchangeLabel">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Switch Markets:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="switchLineEdit">
+            <widget class="QComboBox" name="comboPairTokenA">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="baseSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>for</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="switchButton">
+            <widget class="QComboBox" name="comboPairTokenB">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>80</width>
-               <height>0</height>
-              </size>
-             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>Switch</string>
+              <string>using</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboAddress">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
             </widget>
            </item>
@@ -166,7 +137,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -181,21 +152,11 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
-              <item>
-               <widget class="QLabel" name="buyMarketLabel">
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>BUY SP#3</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
+             <widget class="QLabel" name="labelLastPrice">
+              <property name="text">
+               <string>Last Price</string>
+              </property>
+             </widget>
             </item>
             <item>
              <spacer name="horizontalSpacer_6">
@@ -211,130 +172,26 @@
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="yourBuyBalanceLabel">
+             <widget class="QLabel" name="lblLastPrice">
               <property name="text">
-               <string>Your Balance 0.000000000 MSC</string>
+               <string>0.00000000 OMNI</string>
               </property>
              </widget>
             </item>
            </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_16">
-              <property name="text">
-               <string>Address:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="buyAddressCombo">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <layout class="QFormLayout" name="formLayout_2">
-              <property name="fieldGrowthPolicy">
-               <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>Amount (SPT):</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="buyAmountLE"/>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLineEdit" name="buyPriceLE"/>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_5">
-                <property name="text">
-                 <string>Price Per SPT:</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_5">
-              <property name="spacing">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_5">
-                <property name="spacing">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="label_6">
-                  <property name="text">
-                   <string>SPT</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="buyTM">
-                  <property name="text">
-                   <string>TMSC</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="buyAddressFeeWarningLabel">
-            <property name="font">
-             <font>
-              <pointsize>8</pointsize>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QLabel { 
-border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-repeat;background-position: 10px center;color: #133959;background-color: rgb(255,191,142); color:rgb(142,61,0);} </string>
-            </property>
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_14">
             <property name="topMargin">
              <number>0</number>
             </property>
+            <item>
+             <widget class="QLabel" name="labelVolume">
+              <property name="text">
+               <string>Volume (24hr)</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
@@ -349,57 +206,25 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="label_10">
+             <widget class="QLabel" name="lblVolume">
               <property name="text">
-               <string>Total Price:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="buyTotalLabel">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>0.00000000 MSC</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="buyButton">
-              <property name="text">
-               <string>Buy SP#3</string>
+               <string>0</string>
               </property>
              </widget>
             </item>
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QLabel" name="label_15">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
+             <widget class="QLabel" name="labelTotalAvailable">
               <property name="text">
-               <string>BUY OFFERS</string>
+               <string>Total Available</string>
               </property>
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_9">
+             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -411,17 +236,52 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
               </property>
              </spacer>
             </item>
+            <item>
+             <widget class="QLabel" name="lblTotalAvailable">
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
-           <widget class="QTableWidget" name="buyList">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="chkTestEco">
+              <property name="text">
+               <string>Test Eco</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonTradeHistory">
+              <property name="text">
+               <string>Trade History</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonInvertPair">
+              <property name="text">
+               <string>Invert Pair</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -440,67 +300,6 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <layout class="QHBoxLayout" name="tokenHLayout">
-            <item>
-             <widget class="QLabel" name="sellMarketLabel">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>SELL SP#3</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QLabel" name="yourSellBalanceLabel">
-              <property name="text">
-               <string>Your Balance 0.000000000 SPT</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>Address:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="sellAddressCombo">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <property name="topMargin">
              <number>0</number>
@@ -510,28 +309,55 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
               <property name="fieldGrowthPolicy">
                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
               </property>
+              <property name="labelAlignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
               <property name="verticalSpacing">
                <number>6</number>
               </property>
               <item row="0" column="0">
                <widget class="QLabel" name="divisible">
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true"/>
+                </property>
                 <property name="text">
-                 <string>Amount (SPT):</string>
+                 <string>Amount To Sell:</string>
                 </property>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QLineEdit" name="sellAmountLE"/>
+               <widget class="QLineEdit" name="sellAmountSaleLE">
+                <property name="styleSheet">
+                 <string notr="true"/>
+                </property>
+               </widget>
               </item>
               <item row="1" column="0">
                <widget class="QLabel" name="issuancetype">
                 <property name="text">
-                 <string>Price Per SPT:</string>
+                 <string>Unit Price:</string>
                 </property>
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QLineEdit" name="sellPriceLE"/>
+               <widget class="QLineEdit" name="sellUnitPriceLE">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Amount Desired:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="sellAmountDesiredLE"/>
               </item>
              </layout>
             </item>
@@ -552,16 +378,23 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLabel" name="label_8">
+                 <widget class="QLabel" name="lblATSToken">
                   <property name="text">
                    <string>SPT</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="sellTM">
+                 <widget class="QLabel" name="label_4">
                   <property name="text">
-                   <string>TMSC</string>
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lblADToken">
+                  <property name="text">
+                   <string>SPT</string>
                   </property>
                  </widget>
                 </item>
@@ -570,22 +403,6 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
              </layout>
             </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="sellAddressFeeWarningLabel">
-            <property name="font">
-             <font>
-              <pointsize>8</pointsize>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QLabel { 
-border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-repeat;background-position: 10px center;color: #133959;background-color: rgb(255,191,142); color:rgb(142,61,0);} </string>
-            </property>
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
@@ -606,25 +423,9 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="label_13">
+             <widget class="QLabel" name="lblBalance">
               <property name="text">
-               <string>Total Price:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="sellTotalLabel">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>0.00000000 MSC</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               <string>Your Balance 0.000000000 SPT</string>
               </property>
              </widget>
             </item>
@@ -638,40 +439,20 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
-            <property name="topMargin">
-             <number>0</number>
+           <widget class="QLabel" name="lblFeeWarning">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
             </property>
-            <item>
-             <widget class="QLabel" name="label_17">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>SELL OFFERS</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_10">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QTableWidget" name="sellList"/>
+            <property name="styleSheet">
+             <string notr="true">QLabel { 
+border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-repeat;background-position: 10px center;color: #133959;background-color: rgb(255,191,142); color:rgb(142,61,0);} </string>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -679,6 +460,9 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
       </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="sellList"/>
    </item>
   </layout>
  </widget>

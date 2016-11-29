@@ -14,11 +14,12 @@
 #include "pubkey.h"
 #include "script/standard.h"
 #include "sync.h"
+#include "txmempool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
-#include "wallet_ismine.h"
+#include "script/ismine.h"
+#include "wallet/wallet.h"
 #endif
 
 #include <stdint.h>

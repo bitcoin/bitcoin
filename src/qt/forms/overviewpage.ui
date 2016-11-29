@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>596</width>
+    <width>606</width>
     <height>342</height>
    </rect>
   </property>
@@ -36,12 +36,6 @@
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QFrame" name="frame">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -65,21 +59,44 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="labelWalletStatus">
-              <property name="cursor">
-               <cursorShape>WhatsThisCursor</cursorShape>
+             <widget class="QPushButton" name="labelWalletStatus">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
               </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLabel { color: red; }</string>
+               <string notr="true">text-align: left</string>
               </property>
               <property name="text">
-               <string notr="true">(out of sync)</string>
+               <string/>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              <property name="icon">
+               <iconset>
+                <normaloff>:/icons/warning</normaloff>
+                <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -103,9 +120,6 @@
             <property name="focusPolicy">
              <enum>Qt::NoFocus</enum>
             </property>
-            <property name="autoFillBackground">
-             <bool>false</bool>
-            </property>
             <property name="styleSheet">
              <string notr="true">QListWidget { background-color:transparent }</string>
             </property>
@@ -118,9 +132,6 @@
             <property name="selectionMode">
              <enum>QAbstractItemView::NoSelection</enum>
             </property>
-            <property name="resizeMode">
-             <enum>QListView::Fixed</enum>
-            </property>
            </widget>
           </item>
          </layout>
@@ -132,12 +143,6 @@
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <widget class="QFrame" name="frame_2">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -161,21 +166,45 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="labelTransactionsStatus">
-              <property name="cursor">
-               <cursorShape>WhatsThisCursor</cursorShape>
+             <widget class="QPushButton" name="labelTransactionsStatus">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
               </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLabel { color: red; }</string>
+               <string notr="true">text-align:left;
+</string>
               </property>
               <property name="text">
-               <string notr="true">(out of sync)</string>
+               <string/>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <property name="icon">
+               <iconset>
+                <normaloff>:/icons/warning</normaloff>
+                <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -234,7 +263,7 @@
     </layout>
    </item>
    <item>
-    <spacer name="verticalSpacer_3">
+    <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>

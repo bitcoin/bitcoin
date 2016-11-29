@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -88,10 +88,16 @@ public:
     // OptionsModel is used for getting proxy settings and display unit
     void setOptionsModel(OptionsModel *optionsModel);
 
-    // This is now public, because we use it in paymentservertests.cpp
-    static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
+    // Verify that the payment request network matches the client network
+    static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
+    // Verify if the payment request is expired
+    static bool verifyExpired(const payments::PaymentDetails& requestDetails);
+    // Verify the payment request size is valid as per BIP70
+    static bool verifySize(qint64 requestSize);
+    // Verify the payment request amount is valid
+    static bool verifyAmount(const CAmount& requestAmount);
 
-signals:
+Q_SIGNALS:
     // Fired when a valid payment request is received
     void receivedPaymentRequest(SendCoinsRecipient);
 
@@ -101,7 +107,7 @@ signals:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 
-public slots:
+public Q_SLOTS:
     // Signal this when the main window's UI is ready
     // to display payment requests to the user
     void uiReady();
@@ -112,7 +118,7 @@ public slots:
     // Handle an incoming URI, URI with local file scheme or file
     void handleURIOrFile(const QString& s);
 
-private slots:
+private Q_SLOTS:
     void handleURIConnection();
     void netRequestFinished(QNetworkReply*);
     void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
@@ -124,7 +130,8 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
+    static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
+    bool processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void fetchRequest(const QUrl& url);
 
     // Setup networking

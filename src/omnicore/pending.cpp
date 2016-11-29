@@ -11,15 +11,7 @@
 #include "uint256.h"
 #include "ui_interface.h"
 
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_writer_template.h"
-
 #include <string>
-
-using json_spirit::Object;
-using json_spirit::Pair;
-using json_spirit::Value;
-using json_spirit::write_string;
 
 namespace mastercore
 {

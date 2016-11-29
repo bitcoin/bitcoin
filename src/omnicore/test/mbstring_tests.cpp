@@ -1,9 +1,11 @@
 #include "omnicore/mbstring.h"
 
-#include <stddef.h>
-#include <string>
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
+
+#include <stddef.h>
+#include <string>
 
 namespace mastercore {
 namespace mbstring {
@@ -23,7 +25,7 @@ bool check_mb(const std::string& s)
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_mbstring_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_mbstring_tests, BasicTestingSetup)
 
 /**
  * Many examples were adopted from the following sources:

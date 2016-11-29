@@ -31,29 +31,25 @@ public:
     explicit MetaDExDialog(QWidget *parent = 0);
     ~MetaDExDialog();
 
-    void SwitchMarket();
-    void AddRow(bool useBuyList, bool includesMe, const std::string& price, const std::string& available, const std::string& total);
-    void UpdateSellAddressBalance();
-    void UpdateBuyAddressBalance();
-    void UpdateOffers();
-    void UpdateSellOffers();
-    void UpdateBuyOffers();
+    void AddRow(bool includesMe, const std::string& txid, const std::string& seller, const std::string& price, const std::string& available, const std::string& desired);
+    void UpdateProperties();
     void setWalletModel(WalletModel *model);
     void setClientModel(ClientModel *model);
-    void recalcTotal(bool useBuyFields);
     void PopulateAddresses();
+    uint32_t GetPropForSale();
+    uint32_t GetPropDesired();
 
-public slots:
-    void switchButtonClicked();
-    void sellAddressComboBoxChanged(int idx);
-    void buyAddressComboBoxChanged(int idx);
-    void sellClicked(int row, int col);
-    void buyClicked(int row, int col);
-    void sendTrade(bool sell);
-    void OrderRefresh();
-    void UpdateBalances();
+public Q_SLOTS:
+    void SwitchMarket();
+    void sendTrade();
+    void UpdateBalance();
+    void UpdateOffers();
     void BalanceOrderRefresh();
     void FullRefresh();
+    void RecalcSellValues();
+    void InvertPair();
+    void ShowDetails();
+    void ShowHistory();
 
 private:
     Ui::MetaDExDialog *ui;
@@ -61,13 +57,10 @@ private:
     WalletModel *walletModel;
     uint32_t global_metadex_market;
 
-private slots:
-    void buyTrade();
-    void sellTrade();
-    void recalcBuyTotal();
-    void recalcSellTotal();
+private Q_SLOTS:
+    // none
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

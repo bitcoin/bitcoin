@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_GUICONSTANTS_H
@@ -14,6 +14,8 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 /* BitcoinGUI -- Size of icons in status bar */
 static const int STATUSBAR_ICONSIZE = 16;
 
+static const bool DEFAULT_SPLASHSCREEN = true;
+
 /* Invalid field background style */
 #define STYLE_INVALID "background:#FF8080"
 
@@ -27,6 +29,8 @@ static const int STATUSBAR_ICONSIZE = 16;
 #define COLOR_TX_STATUS_OPENUNTILDATE QColor(64, 64, 255)
 /* Transaction list -- TX status decoration - offline */
 #define COLOR_TX_STATUS_OFFLINE QColor(192, 192, 192)
+/* Transaction list -- TX status decoration - danger, tx needs attention */
+#define COLOR_TX_STATUS_DANGER QColor(200, 100, 100)
 /* Transaction list -- TX status decoration - default color */
 #define COLOR_BLACK QColor(0, 0, 0)
 
@@ -39,10 +43,10 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 static const int MAX_URI_LENGTH = 255;
 
 /* QRCodeDialog -- size of exported QR Code image */
-#define EXPORT_IMAGE_SIZE 256
+#define QR_IMAGE_SIZE 300
 
 /* Number of frames in spinner animation */
-#define SPINNER_FRAMES 35
+#define SPINNER_FRAMES 36
 
 #define QAPP_ORG_NAME "Bitcoin"
 #define QAPP_ORG_DOMAIN "bitcoin.org"

@@ -37,7 +37,7 @@ public:
     void updateProperty();
     void updatePropSelector();
 
-public slots:
+public Q_SLOTS:
     void propertyComboBoxChanged(int idx);
     void sendFromComboBoxChanged(int idx);
     void clearButtonClicked();
@@ -50,7 +50,7 @@ private:
     ClientModel *clientModel;
     WalletModel *walletModel;
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

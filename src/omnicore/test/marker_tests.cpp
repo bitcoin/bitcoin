@@ -5,14 +5,15 @@
 #include "omnicore/script.h"
 
 #include "primitives/transaction.h"
-
-#include <limits>
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
+#include <limits>
+
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_marker_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_marker_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(class_no_marker)
 {

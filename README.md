@@ -12,7 +12,7 @@ http://www.omnilayer.org
 What is Omni Core
 -----------------
 
-Omni Core is a fast, portable Omni Layer implementation that is based off the Bitcoin Core codebase (currently 0.10.4). This implementation requires no external dependencies extraneous to Bitcoin Core, and is native to the Bitcoin network just like other Bitcoin nodes. It currently supports a wallet mode and is seamlessly available on three platforms: Windows, Linux and Mac OS. Omni Layer extensions are exposed via the UI and the JSON-RPC interface. Development has been consolidated on the Omni Core product, and it is the reference client for the Omni Layer.
+Omni Core is a fast, portable Omni Layer implementation that is based off the Bitcoin Core codebase (currently 0.13). This implementation requires no external dependencies extraneous to Bitcoin Core, and is native to the Bitcoin network just like other Bitcoin nodes. It currently supports a wallet mode and is seamlessly available on three platforms: Windows, Linux and Mac OS. Omni Layer extensions are exposed via the JSON-RPC interface. Development has been consolidated on the Omni Core product, and it is the reference client for the Omni Layer.
 
 Disclaimer, warning
 -------------------
@@ -44,7 +44,7 @@ Boost >= 1.53
 Installation
 ------------
 
-You will need appropriate libraries to run Omni Core on Unix, 
+You will need appropriate libraries to run Omni Core on Unix,
 please see [doc/build-unix.md](doc/build-unix.md) for the full listing.
 
 You will need to install git & pkg-config:
@@ -74,7 +74,7 @@ Once complete:
 cd src/
 ```
 And start Omni Core using `./omnicored` (or `./qt/omnicore-qt` if built with UI). The inital parse step for a first time run
-will take up to 60 minutes or more, during this time your client will scan the blockchain for Omni Layer transactions. You can view the 
+will take up to 60 minutes or more, during this time your client will scan the blockchain for Omni Layer transactions. You can view the
 output of the parsing at any time by viewing the log located in your datadir, by default: `~/.bitcoin/omnicore.log`.
 
 Omni Core requires the transaction index to be enabled. Add an entry to your bitcoin.conf file for `txindex=1` to enable it or Omni Core will refuse to start.
@@ -88,7 +88,7 @@ In bitcoin.conf:
 server=1
 ```
 
-After this step completes, check that the installation went smoothly by issuing the following command `./omnicore-cli omni_getinfo` which should return the `mastercoreversion` as well as some
+After this step completes, check that the installation went smoothly by issuing the following command `./omnicore-cli omni_getinfo` which should return the `omnicoreversion` as well as some
 additional information related to the client.
 
 The documentation for the RPC interface and command-line is located in [src/omnicore/doc/rpc-api.md] (src/omnicore/doc/rpc-api.md).

@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -84,8 +85,7 @@ static boost::once_flag debugLogInitFlag = BOOST_ONCE_INIT;
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 /** Flag to indicate, whether the Omni Core log file should be reopened. */
-extern volatile bool fReopenOmniCoreLog;
-
+extern std::atomic<bool> fReopenOmniCoreLog;
 /**
  * Returns path for debug log file.
  *

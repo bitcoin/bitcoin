@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,20 +7,22 @@
 # Test -alertnotify 
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
-import os
-import shutil
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 class ForkNotifyTest(BitcoinTestFramework):
+
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 2
+        self.setup_clean_chain = False
 
     alert_filename = None  # Set by setup_network
 
     def setup_network(self):
         self.nodes = []
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
-        with open(self.alert_filename, 'w') as f:
+        with open(self.alert_filename, 'w', encoding='utf8') as f:
             pass  # Just open then close to create zero-length file
         self.nodes.append(start_node(0, self.options.tmpdir,
                             ["-blockversion=2", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]))
@@ -34,27 +36,27 @@ class ForkNotifyTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine 51 up-version blocks
-        self.nodes[1].setgenerate(True, 51)
+        self.nodes[1].generate(51)
         self.sync_all()
         # -alertnotify should trigger on the 51'st,
         # but mine and sync another to give
         # -alertnotify time to write
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
 
-        with open(self.alert_filename, 'r') as f:
+        with open(self.alert_filename, 'r', encoding='utf8') as f:
             alert_text = f.read()
 
         if len(alert_text) == 0:
             raise AssertionError("-alertnotify did not warn of up-version blocks")
 
         # Mine more up-version blocks, should not get more alerts:
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
 
-        with open(self.alert_filename, 'r') as f:
+        with open(self.alert_filename, 'r', encoding='utf8') as f:
             alert_text2 = f.read()
 
         if alert_text != alert_text2:

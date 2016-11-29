@@ -15,11 +15,11 @@ class CTransaction;
 #include "uint256.h"
 #include "util.h"
 
+#include <univalue.h>
+
 #include <boost/filesystem/path.hpp>
 
 #include "leveldb/status.h"
-
-#include "json/json_spirit_value.h"
 
 #include <stdint.h>
 
@@ -27,8 +27,6 @@ class CTransaction;
 #include <string>
 #include <vector>
 #include <set>
-
-using json_spirit::Array;
 
 using std::string;
 
@@ -198,7 +196,7 @@ public:
         if (msc_debug_persistence) PrintToLog("CMPSTOList closed\n");
     }
 
-    void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *numRecipients);
+    void getRecipients(const uint256 txid, string filterAddress, UniValue *recipientArray, uint64_t *total, uint64_t *numRecipients);
     std::string getMySTOReceipts(string filterAddress);
     int deleteAboveBlock(int blockNum);
     void printStats();
@@ -229,9 +227,9 @@ public:
     bool exists(const uint256 &txid);
     void printStats();
     void printAll();
-    bool getMatchingTrades(const uint256& txid, uint32_t propertyId, Array& tradeArray, int64_t& totalSold, int64_t& totalBought);
+    bool getMatchingTrades(const uint256& txid, uint32_t propertyId, UniValue& tradeArray, int64_t& totalSold, int64_t& totalBought);
     void getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdFilter = 0);
-    void getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, Array& response, uint64_t count);
+    void getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, UniValue& response, uint64_t count);
     int getMPTradeCountTotal();
 };
 

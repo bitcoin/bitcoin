@@ -31,7 +31,7 @@ public:
     void updateDisplayedProperty();
     void addSPToMatchingResults(unsigned int propertyId);
 
-public slots:
+public Q_SLOTS:
     void searchButtonClicked();
     void matchingComboBoxChanged(int idx);
 
@@ -39,9 +39,10 @@ private:
     Ui::LookupSPDialog *ui;
     WalletModel *model;
 
-//private slots:
+private Q_SLOTS:
+    // None
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

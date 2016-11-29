@@ -185,7 +185,6 @@ bool CheckActivationAuthorization(const std::string& sender)
  *
  * The custom options "-omniactivationallowsender=source" and "-omniactivationignoresender=source" are also applied to deactivations.
  */
-
 bool CheckDeactivationAuthorization(const std::string& sender)
 {
     std::set<std::string> whitelisted;
@@ -232,4 +231,4 @@ bool CheckDeactivationAuthorization(const std::string& sender)
     return fAuthorized;
 }
 
-}
+} // namespace mastercore

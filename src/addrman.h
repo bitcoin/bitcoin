@@ -1,4 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,20 +18,26 @@
 #include <stdint.h>
 #include <vector>
 
-/** 
- * Extended statistics about a CAddress 
+/**
+ * Extended statistics about a CAddress
  */
 class CAddrInfo : public CAddress
 {
+
+
+public:
+    //! last try whatsoever by us (memory only)
+    int64_t nLastTry;
+
+    //! last counted attempt (memory only)
+    int64_t nLastCountAttempt;
+
 private:
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
     int64_t nLastSuccess;
-
-    //! last try whatsoever by us:
-    // int64_t CAddress::nLastTry
 
     //! connection attempts since last successful attempt
     int nAttempts;
@@ -62,6 +69,7 @@ public:
     {
         nLastSuccess = 0;
         nLastTry = 0;
+        nLastCountAttempt = 0;
         nAttempts = 0;
         nRefCount = 0;
         fInTried = false;
@@ -104,15 +112,15 @@ public:
 /** Stochastic address manager
  *
  * Design goals:
- *  * Keep the address tables in-memory, and asynchronously dump the entire to able in peers.dat.
+ *  * Keep the address tables in-memory, and asynchronously dump the entire table to peers.dat.
  *  * Make sure no (localized) attacker can fill the entire table with his nodes/addresses.
  *
  * To that end:
  *  * Addresses are organized into buckets.
- *    * Address that have not yet been tried go into 1024 "new" buckets.
- *      * Based on the address range (/16 for IPv4) of source of the information, 64 buckets are selected at random
- *      * The actual bucket is chosen from one of these, based on the range the address itself is located.
- *      * One single address can occur in up to 8 different buckets, to increase selection chances for addresses that
+ *    * Addresses that have not yet been tried go into 1024 "new" buckets.
+ *      * Based on the address range (/16 for IPv4) of the source of information, 64 buckets are selected at random.
+ *      * The actual bucket is chosen from one of these, based on the range in which the address itself is located.
+ *      * One single address can occur in up to 8 different buckets to increase selection chances for addresses that
  *        are seen frequently. The chance for increasing this multiplicity decreases exponentially.
  *      * When adding a new address to a full bucket, a randomly chosen entry (with a bias favoring less recently seen
  *        ones) is removed from it first.
@@ -172,9 +180,6 @@ private:
     //! critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
-    //! secret key to randomize bucket select with
-    uint256 nKey;
-
     //! last used nId
     int nIdCount;
 
@@ -199,7 +204,12 @@ private:
     //! list of "new" buckets
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
 
+    //! last time Good was called (memory only)
+    int64_t nLastGood;
+
 protected:
+    //! secret key to randomize bucket select with
+    uint256 nKey;
 
     //! Find an entry.
     CAddrInfo* Find(const CNetAddr& addr, int *pnId = NULL);
@@ -227,11 +237,13 @@ protected:
     bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
 
     //! Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, int64_t nTime);
+    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime);
 
-    //! Select an address to connect to.
-    //! nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
-    CAddress Select_();
+    //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
+    CAddrInfo Select_(bool newOnly);
+
+    //! Wraps GetRandInt to allow tests to override RandomInt and make it determinismistic.
+    virtual int RandomInt(int nMax);
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
@@ -243,6 +255,9 @@ protected:
 
     //! Mark an entry as currently-connected-to.
     void Connected_(const CService &addr, int64_t nTime);
+
+    //! Update an entry's service bits.
+    void SetServices_(const CService &addr, ServiceFlags nServices);
 
 public:
     /**
@@ -345,6 +360,14 @@ public:
             nUBuckets ^= (1 << 30);
         }
 
+        if (nNew > ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
+            throw std::ios_base::failure("Corrupt CAddrMan serialization, nNew exceeds limit.");
+        }
+
+        if (nTried > ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE) {
+            throw std::ios_base::failure("Corrupt CAddrMan serialization, nTried exceeds limit.");
+        }
+
         // Deserialize entries from the new table.
         for (int n = 0; n < nNew; n++) {
             CAddrInfo &info = mapInfo[n];
@@ -445,6 +468,7 @@ public:
         nIdCount = 0;
         nTried = 0;
         nNew = 0;
+        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
     }
 
     CAddrMan()
@@ -454,11 +478,11 @@ public:
 
     ~CAddrMan()
     {
-        nKey = uint256(0);
+        nKey.SetNull();
     }
 
     //! Return the number of (unique) addresses in all tables.
-    int size()
+    size_t size() const
     {
         return vRandom.size();
     }
@@ -519,27 +543,26 @@ public:
     }
 
     //! Mark an entry as connection attempted to.
-    void Attempt(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime())
     {
         {
             LOCK(cs);
             Check();
-            Attempt_(addr, nTime);
+            Attempt_(addr, fCountFailure, nTime);
             Check();
         }
     }
 
     /**
      * Choose an address to connect to.
-     * nUnkBias determines how much "new" entries are favored over "tried" ones (0-100).
      */
-    CAddress Select()
+    CAddrInfo Select(bool newOnly = false)
     {
-        CAddress addrRet;
+        CAddrInfo addrRet;
         {
             LOCK(cs);
             Check();
-            addrRet = Select_();
+            addrRet = Select_(newOnly);
             Check();
         }
         return addrRet;
@@ -568,6 +591,15 @@ public:
             Check();
         }
     }
+
+    void SetServices(const CService &addr, ServiceFlags nServices)
+    {
+        LOCK(cs);
+        Check();
+        SetServices_(addr, nServices);
+        Check();
+    }
+
 };
 
 #endif // BITCOIN_ADDRMAN_H

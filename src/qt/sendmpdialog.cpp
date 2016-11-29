@@ -25,7 +25,7 @@
 #include "main.h"
 #include "sync.h"
 #include "uint256.h"
-#include "wallet_ismine.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 #include <map>
@@ -58,7 +58,7 @@ SendMPDialog::SendMPDialog(QWidget *parent) :
     ui->sendButton->setIcon(QIcon());
 #endif
 #if QT_VERSION >= 0x040700 // populate placeholder text
-    ui->sendToLineEdit->setPlaceholderText("Enter a Omni Layer address (e.g. 1oMn1LaYeRADDreSShef77z6A5S4P)");
+    ui->sendToLineEdit->setPlaceholderText("Enter an Omni Layer address (e.g. 1oMn1LaYeRADDreSShef77z6A5S4P)");
     ui->amountLineEdit->setPlaceholderText("Enter Amount");
 #endif
 
@@ -107,7 +107,7 @@ void SendMPDialog::updatePropSelector()
     for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);
-            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            std::string spId = strprintf("%d", propertyId);
             if(spName.size()>23) spName=spName.substr(0,23) + "...";
             spName += " (#" + spId + ")";
             if (isPropertyDivisible(propertyId)) { spName += " [D]"; } else { spName += " [I]"; }
@@ -117,7 +117,7 @@ void SendMPDialog::updatePropSelector()
     for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);
-            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            std::string spId = strprintf("%d", propertyId);
             if(spName.size()>23) spName=spName.substr(0,23)+"...";
             spName += " (#" + spId + ")";
             if (isPropertyDivisible(propertyId)) { spName += " [D]"; } else { spName += " [I]"; }
@@ -291,7 +291,7 @@ void SendMPDialog::sendMPTransaction()
     // validation checks all look ok, let's throw up a confirmation dialog
     string strMsgText = "You are about to send the following transaction, please check the details thoroughly:\n\n";
     string propDetails = getPropertyName(propertyId).c_str();
-    string spNum = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+    string spNum = strprintf("%d", propertyId);
     propDetails += " (#" + spNum + ")";
     strMsgText += "From: " + fromAddress.ToString() + "\nTo: " + refAddress.ToString() + "\nProperty: " + propDetails + "\nAmount that will be sent: ";
     if (divisible) { strMsgText += FormatDivisibleMP(sendAmount); } else { strMsgText += FormatIndivisibleMP(sendAmount); }
@@ -317,7 +317,7 @@ void SendMPDialog::sendMPTransaction()
     std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, sendAmount);
 
     // request the wallet build the transaction (and if needed commit it) - note UI does not support added reference amounts currently
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = WalletTxBuilder(fromAddress.ToString(), refAddress.ToString(), "", 0, payload, txid, rawHex, autoCommit);
 

@@ -85,4 +85,3 @@ t_tradelistdb->recordTrade();
 TradeDB().recordTrade();
 
 */
-

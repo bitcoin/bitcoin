@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_WALLETVIEW_H
@@ -9,9 +9,11 @@
 
 #include <QStackedWidget>
 
+class BalancesDialog;
 class BitcoinGUI;
 class ClientModel;
 class OverviewPage;
+class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendMPDialog;
@@ -24,8 +26,8 @@ class MetaDExCancelDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class TXHistoryDialog;
-class BalancesDialog;
 class WalletModel;
+class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -44,7 +46,7 @@ class WalletView : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit WalletView(QWidget *parent);
+    explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
     void setBitcoinGUI(BitcoinGUI *gui);
@@ -72,9 +74,9 @@ private:
     QWidget *exchangePage;
     QWidget *smartPropertyPage;
     QWidget *toolboxPage;
-
     ReceiveCoinsDialog *receiveCoinsPage;
-//    SendCoinsDialog *sendCoinsPage;
+    AddressBookPage *usedSendingAddressesPage;
+    AddressBookPage *usedReceivingAddressesPage;
     QWidget *sendCoinsPage;
     SendCoinsDialog *sendCoinsTab;
     SendMPDialog *sendMPTab;
@@ -87,11 +89,14 @@ private:
     TransactionView *transactionView;
     TXHistoryDialog *mpTXTab;
     QWidget *bitcoinTXTab;
+
     QProgressDialog *progressDialog;
+    const PlatformStyle *platformStyle;
+
     QTabWidget *txTabHolder;
     QTabWidget *sendTabHolder;
 
-public slots:
+public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to balances page */
@@ -110,6 +115,7 @@ public slots:
     void gotoBitcoinHistoryTab();
     /** Switch to utility page */
     void gotoToolboxPage();
+
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
@@ -140,7 +146,7 @@ public slots:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
-signals:
+Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
     /**  Fired when a message should be reported to the user */
@@ -148,7 +154,7 @@ signals:
     /** Encryption status of wallet changed */
     void encryptionStatusChanged(int status);
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
+    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H

@@ -222,7 +222,7 @@ void LookupSPDialog::addSPToMatchingResults(unsigned int propertyId)
         string spName;
         spName = getPropertyName(propertyId).c_str();
         if(spName.size()>40) spName=spName.substr(0,40)+"...";
-        string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+        string spId = strprintf("%d", propertyId);
         spName += " (#" + spId + ")";
         ui->matchingComboBox->addItem(spName.c_str(),spId.c_str());
     }
@@ -320,7 +320,7 @@ void LookupSPDialog::updateDisplayedProperty()
         qDeadline.setTime_t(deadline);
         string desiredText = getPropertyName(propertyIdDesired).c_str();
         if(desiredText.size()>22) desiredText=desiredText.substr(0,22)+"...";
-        string spId = static_cast<ostringstream*>( &(ostringstream() << propertyIdDesired) )->str();
+        string spId = strprintf("%d", propertyIdDesired);
         desiredText += " (#" + spId + ")";
         string tokensPerUnitText;
         if (divisible) { tokensPerUnitText = FormatDivisibleMP(tokensPerUnit); } else { tokensPerUnitText = FormatIndivisibleMP(tokensPerUnit); }

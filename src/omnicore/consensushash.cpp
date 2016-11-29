@@ -11,8 +11,13 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 
+#include "arith_uint256.h"
+#include "uint256.h"
+
 #include <stdint.h>
+#include <algorithm>
 #include <string>
+#include <vector>
 
 #include <openssl/sha.h>
 
@@ -147,16 +152,16 @@ uint256 GetConsensusHash()
 
     // DEx sell offers - loop through the DEx and add each sell offer to the consensus hash (ordered by txid)
     // Placeholders: "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit"
-    std::vector<std::pair<uint256, std::string> > vecDExOffers;
+    std::vector<std::pair<arith_uint256, std::string> > vecDExOffers;
     for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
         const CMPOffer& selloffer = it->second;
         const std::string& sellCombo = it->first;
         std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
         std::string dataStr = GenerateConsensusString(selloffer, seller);
-        vecDExOffers.push_back(std::make_pair(selloffer.getHash(), dataStr));
+        vecDExOffers.push_back(std::make_pair(arith_uint256(selloffer.getHash().ToString()), dataStr));
     }
     std::sort (vecDExOffers.begin(), vecDExOffers.end());
-    for (std::vector<std::pair<uint256, std::string> >::iterator it = vecDExOffers.begin(); it != vecDExOffers.end(); ++it) {
+    for (std::vector<std::pair<arith_uint256, std::string> >::iterator it = vecDExOffers.begin(); it != vecDExOffers.end(); ++it) {
         const std::string& dataStr = it->second;
         if (msc_debug_consensus_hash) PrintToLog("Adding DEx offer data to consensus hash: %s\n", dataStr);
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
@@ -182,7 +187,7 @@ uint256 GetConsensusHash()
 
     // MetaDEx trades - loop through the MetaDEx maps and add each open trade to the consensus hash (ordered by txid)
     // Placeholders: "txid|address|propertyidforsale|amountforsale|propertyiddesired|amountdesired|amountremaining"
-    std::vector<std::pair<uint256, std::string> > vecMetaDExTrades;
+    std::vector<std::pair<arith_uint256, std::string> > vecMetaDExTrades;
     for (md_PropertiesMap::const_iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         const md_PricesMap& prices = my_it->second;
         for (md_PricesMap::const_iterator it = prices.begin(); it != prices.end(); ++it) {
@@ -190,12 +195,12 @@ uint256 GetConsensusHash()
             for (md_Set::const_iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 const CMPMetaDEx& obj = *it;
                 std::string dataStr = GenerateConsensusString(obj);
-                vecMetaDExTrades.push_back(std::make_pair(obj.getHash(), dataStr));
+                vecMetaDExTrades.push_back(std::make_pair(arith_uint256(obj.getHash().ToString()), dataStr));
             }
         }
     }
     std::sort (vecMetaDExTrades.begin(), vecMetaDExTrades.end());
-    for (std::vector<std::pair<uint256, std::string> >::iterator it = vecMetaDExTrades.begin(); it != vecMetaDExTrades.end(); ++it) {
+    for (std::vector<std::pair<arith_uint256, std::string> >::iterator it = vecMetaDExTrades.begin(); it != vecMetaDExTrades.end(); ++it) {
         const std::string& dataStr = it->second;
         if (msc_debug_consensus_hash) PrintToLog("Adding MetaDEx trade data to consensus hash: %s\n", dataStr);
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
@@ -252,7 +257,7 @@ uint256 GetMetaDExHash(const uint32_t propertyId)
 
     LOCK(cs_tally);
 
-    std::vector<std::pair<uint256, std::string> > vecMetaDExTrades;
+    std::vector<std::pair<arith_uint256, std::string> > vecMetaDExTrades;
     for (md_PropertiesMap::const_iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         if (propertyId == 0 || propertyId == my_it->first) {
             const md_PricesMap& prices = my_it->second;
@@ -261,13 +266,13 @@ uint256 GetMetaDExHash(const uint32_t propertyId)
                 for (md_Set::const_iterator it = indexes.begin(); it != indexes.end(); ++it) {
                     const CMPMetaDEx& obj = *it;
                     std::string dataStr = GenerateConsensusString(obj);
-                    vecMetaDExTrades.push_back(std::make_pair(obj.getHash(), dataStr));
+                    vecMetaDExTrades.push_back(std::make_pair(arith_uint256(obj.getHash().ToString()), dataStr));
                 }
             }
         }
     }
     std::sort (vecMetaDExTrades.begin(), vecMetaDExTrades.end());
-    for (std::vector<std::pair<uint256, std::string> >::iterator it = vecMetaDExTrades.begin(); it != vecMetaDExTrades.end(); ++it) {
+    for (std::vector<std::pair<arith_uint256, std::string> >::iterator it = vecMetaDExTrades.begin(); it != vecMetaDExTrades.end(); ++it) {
         const std::string& dataStr = it->second;
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }

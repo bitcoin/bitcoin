@@ -1,6 +1,8 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
 
+#include "test/test_bitcoin.h"
+
 #include <stdint.h>
 #include <limits>
 
@@ -8,7 +10,7 @@
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_rules_txs_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_rules_txs_tests, BasicTestingSetup)
 
 const int MAX_BLOCK = std::numeric_limits<int>::max();
 const int MAX_VERSION = std::numeric_limits<uint16_t>::max();

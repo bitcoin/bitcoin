@@ -464,4 +464,3 @@ std::vector<unsigned char> CreatePayload_OmniCoreAlert(uint16_t alertType, uint3
 
 #undef PUSH_BACK_BYTES
 #undef PUSH_BACK_BYTES_PTR
-

@@ -67,7 +67,7 @@ private:
     QMenu *contextMenu;
     HistoryMap txHistoryMap;
 
-private slots:
+private Q_SLOTS:
     void contextualMenu(const QPoint &point);
     void showDetails();
     void copyAddress();
@@ -78,11 +78,11 @@ private slots:
     void UpdateConfirmations();
     void checkSort(int column);
 
-public slots:
+public Q_SLOTS:
     void focusTransaction(const uint256& txid);
     void ReinitTXHistoryTable();
 
-signals:
+Q_SIGNALS:
     void doubleClicked(const QModelIndex& idx);
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);

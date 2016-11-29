@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin developers
+// Copyright (c) 2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@ class CRIPEMD160
 private:
     uint32_t s[5];
     unsigned char buf[64];
-    size_t bytes;
+    uint64_t bytes;
 
 public:
     static const size_t OUTPUT_SIZE = 20;

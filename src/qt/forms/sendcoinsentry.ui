@@ -21,14 +21,20 @@
     <string>This is a normal payment.</string>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Sunken</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <property name="spacing">
+    <property name="topMargin">
+     <number>8</number>
+    </property>
+    <property name="bottomMargin">
+     <number>4</number>
+    </property>
+    <property name="horizontalSpacing">
      <number>12</number>
+    </property>
+    <property name="verticalSpacing">
+     <number>8</number>
     </property>
     <item row="0" column="0">
      <widget class="QLabel" name="payToLabel">
@@ -67,6 +73,12 @@
          <iconset resource="../bitcoin.qrc">
           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
         </property>
+        <property name="iconSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
         <property name="shortcut">
          <string>Alt+A</string>
         </property>
@@ -84,6 +96,12 @@
          <iconset resource="../bitcoin.qrc">
           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
         </property>
+        <property name="iconSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
         <property name="shortcut">
          <string>Alt+P</string>
         </property>
@@ -100,6 +118,12 @@
         <property name="icon">
          <iconset resource="../bitcoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -139,7 +163,21 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount"/>
+     <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1">
+      <item>
+       <widget class="BitcoinAmountField" name="payAmount"/>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
+        <property name="toolTip">
+         <string>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+        </property>
+        <property name="text">
+         <string>S&amp;ubtract fee from amount</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item row="3" column="0">
      <widget class="QLabel" name="messageLabel">
@@ -161,9 +199,16 @@
       </property>
      </widget>
     </item>
+    <item row="4" column="0" colspan="2">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
-  <widget class="QFrame" name="SendCoins_InsecurePaymentRequest">
+  <widget class="QFrame" name="SendCoins_UnauthenticatedPaymentRequest">
    <property name="palette">
     <palette>
      <active>
@@ -580,16 +625,13 @@
     </palette>
    </property>
    <property name="toolTip">
-    <string>This is an unverified payment request.</string>
+    <string>This is an unauthenticated payment request.</string>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Sunken</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout_is">
     <property name="spacing">
@@ -668,7 +710,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QFrame" name="SendCoins_SecurePaymentRequest">
+  <widget class="QFrame" name="SendCoins_AuthenticatedPaymentRequest">
    <property name="palette">
     <palette>
      <active>
@@ -1112,16 +1154,13 @@
     </palette>
    </property>
    <property name="toolTip">
-    <string>This is a verified payment request.</string>
+    <string>This is an authenticated payment request.</string>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Sunken</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout_s">
     <property name="spacing">

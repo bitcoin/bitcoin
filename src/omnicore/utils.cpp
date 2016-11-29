@@ -1,8 +1,8 @@
 /**
- * @file omnicore_utils.cpp
+ * @file utils.cpp
  *
- * This file serves to seperate utility functions from the main mastercore.cpp
- * and mastercore.h files.
+ * This file serves to seperate utility functions from the main omnicore.cpp
+ * and omnicore.h files.
  */
 
 #include "omnicore/utils.h"
@@ -52,4 +52,3 @@ void PrepareObfuscatedHashes(const std::string& strSeed, std::string(&vstrHashes
         strcpy((char *)sha_input, vstrHashes[j].c_str());
     }
 }
-

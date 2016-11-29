@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_QVALUECOMBOBOX_H
@@ -24,13 +24,13 @@ public:
     /** Specify model role to use as ordinal value (defaults to Qt::UserRole) */
     void setRole(int role);
 
-signals:
+Q_SIGNALS:
     void valueChanged();
 
 private:
     int role;
 
-private slots:
+private Q_SLOTS:
     void handleSelectionChanged(int idx);
 };
 

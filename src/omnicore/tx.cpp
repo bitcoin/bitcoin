@@ -14,7 +14,6 @@
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
 
-#include "alert.h"
 #include "amount.h"
 #include "main.h"
 #include "sync.h"
@@ -2045,7 +2044,7 @@ int CMPTransaction::logicMath_Alert()
     }
 
     // we have a new alert, fire a notify event if needed
-    CAlert::Notify(alert_text, true);
+    AlertNotify(alert_text);
 
     return 0;
 }

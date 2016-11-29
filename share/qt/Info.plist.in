@@ -3,7 +3,7 @@
 <plist version="0.9">
 <dict>
   <key>LSMinimumSystemVersion</key>
-  <string>10.6.0</string>
+  <string>10.8.0</string>
 
   <key>LSArchitecturePriority</key>
   <array>
@@ -17,19 +17,25 @@
   <string>APPL</string>
 
   <key>CFBundleGetInfoString</key>
-  <string>@OMNICORE_VERSION_MILESTONE@.@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@.@OMNICORE_VERSION_PATCH@-@OMNICORE_VERSION_STATUS@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers and the Omni Core developers</string>
+  <string>@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@.@OMNICORE_VERSION_PATCH@, Copyright © 2009-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@</string>
 
   <key>CFBundleShortVersionString</key>
-  <string>@OMNICORE_VERSION_MILESTONE@.@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@</string>
+  <string>@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@.@OMNICORE_VERSION_PATCH@</string>
 
   <key>CFBundleVersion</key>
-  <string>@OMNICORE_VERSION_MILESTONE@.@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@</string>
+  <string>@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@.@OMNICORE_VERSION_PATCH@</string>
 
   <key>CFBundleSignature</key>
   <string>????</string>
 
   <key>CFBundleExecutable</key>
   <string>OmniCore-Qt</string>
+
+  <key>CFBundleName</key>
+  <string>OmniCore-Qt</string>
+
+  <key>LSHasLocalizedDisplayName</key>
+  <true/>
 
   <key>CFBundleIdentifier</key>
   <string>org.bitcoinfoundation.Bitcoin-Qt</string>
@@ -93,7 +99,7 @@
 
   <key>LSAppNapIsDisabled</key>
     <string>True</string>
-  
+
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

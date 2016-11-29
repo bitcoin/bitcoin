@@ -1,12 +1,13 @@
 #include "omnicore/version.h"
 
 #include "config/bitcoin-config.h"
-
-#include <string>
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(omnicore_version_tests)
+#include <string>
+
+BOOST_FIXTURE_TEST_SUITE(omnicore_version_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(version_comparison)
 {
@@ -22,18 +23,18 @@ BOOST_AUTO_TEST_CASE(version_comparison)
 
 BOOST_AUTO_TEST_CASE(version_string)
 {
-    BOOST_CHECK_EQUAL(OmniCoreVersion(), "0.0.11.2-rel");
+    BOOST_CHECK_EQUAL(OmniCoreVersion(), "1.0.0");
 }
 
 BOOST_AUTO_TEST_CASE(version_number)
 {
-    BOOST_CHECK_EQUAL(OMNICORE_VERSION, 1100201);
+    BOOST_CHECK_EQUAL(OMNICORE_VERSION, 100000000);
 }
 
 BOOST_AUTO_TEST_CASE(config_package_version)
 {
     // the package version is used in the file names:
-    BOOST_CHECK_EQUAL(PACKAGE_VERSION, "0.0.11.2-rel");
+    BOOST_CHECK_EQUAL(PACKAGE_VERSION, "1.0.0");
 }
 
 

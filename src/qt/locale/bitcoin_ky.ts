@@ -12,17 +12,12 @@
     </context>
 <context>
     <name>AddressTableModel</name>
-    <message>
-        <source>Address</source>
-        <translation>Дарек</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(аты жок)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -68,21 +63,10 @@
     </message>
     </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Date</source>
         <translation>Дата</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>жок</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(аты жок)</translation>
     </message>
     </context>
 <context>
@@ -123,6 +107,10 @@
         <translation>&amp;Тармак</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>Капчык</translation>
+    </message>
+    <message>
         <source>&amp;Port:</source>
         <translation>&amp;Порт:</translation>
     </message>
@@ -149,11 +137,7 @@
     </context>
 <context>
     <name>OverviewPage</name>
-    <message>
-        <source>out of sync</source>
-        <translation>синхрондоштурулган эмес</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     </context>
@@ -177,6 +161,10 @@
         <translation>Жалпы</translation>
     </message>
     <message>
+        <source>Network</source>
+        <translation>&amp;Тармак</translation>
+    </message>
+    <message>
         <source>Name</source>
         <translation>Аты</translation>
     </message>
@@ -195,32 +183,16 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Билдирүү:</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Дарек</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Билдирүү</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Билдирүү</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(аты жок)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -231,10 +203,6 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Жөнөтүү</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(аты жок)</translation>
     </message>
     </context>
 <context>
@@ -247,6 +215,9 @@
         <source>Message:</source>
         <translation>Билдирүү:</translation>
     </message>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -270,43 +241,15 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/тармакта эмес</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Билдирүү</translation>
-    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Дарек</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Date</source>
-        <translation>Дата</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Дарек</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

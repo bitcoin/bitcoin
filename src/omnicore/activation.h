@@ -1,8 +1,6 @@
 #ifndef OMNICORE_ACTIVATION_H
 #define OMNICORE_ACTIVATION_H
 
-#include "omnicore/rules.h"
-
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -36,8 +34,3 @@ void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minC
 }
 
 #endif // OMNICORE_ACTIVATION_H
-
-
-
-
-

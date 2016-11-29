@@ -9,10 +9,13 @@
 #include "omnicore/tx.h"
 #include "omnicore/uint256_extensions.h"
 
+#include "arith_uint256.h"
 #include "chain.h"
 #include "main.h"
 #include "tinyformat.h"
 #include "uint256.h"
+
+#include <univalue.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/rational.hpp>
@@ -204,7 +207,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             // purchase from Bob, using Bob's unit price
             // This implies rounding down, since rounding up is impossible, and would
             // require more tokens than Alice has
-            uint256 iCouldBuy = (ConvertTo256(pnew->getAmountRemaining()) * ConvertTo256(pold->getAmountForSale())) / ConvertTo256(pold->getAmountDesired());
+            arith_uint256 iCouldBuy = (ConvertTo256(pnew->getAmountRemaining()) * ConvertTo256(pold->getAmountForSale())) / ConvertTo256(pold->getAmountDesired());
 
             int64_t nCouldBuy = 0;
             if (iCouldBuy < ConvertTo256(pold->getAmountRemaining())) {
@@ -224,7 +227,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             // is fractional, always round UP the amount Alice has to pay
             // This will always be better for Bob. Rounding in the other direction
             // will always be impossible, because ot would violate Bob's accepted price
-            uint256 iWouldPay = DivideAndRoundUp((ConvertTo256(nCouldBuy) * ConvertTo256(pold->getAmountDesired())), ConvertTo256(pold->getAmountForSale()));
+            arith_uint256 iWouldPay = DivideAndRoundUp((ConvertTo256(nCouldBuy) * ConvertTo256(pold->getAmountDesired())), ConvertTo256(pold->getAmountForSale()));
             int64_t nWouldPay = ConvertTo64(iWouldPay);
 
             // If the resulting adjusted unit price is higher than Alice' price, the
@@ -399,7 +402,7 @@ rational_t CMPMetaDEx::inversePrice() const
 int64_t CMPMetaDEx::getAmountToFill() const
 {
     // round up to ensure that the amount we present will actually result in buying all available tokens
-    uint256 iAmountNeededToFill = DivideAndRoundUp((ConvertTo256(amount_remaining) * ConvertTo256(amount_desired)), ConvertTo256(amount_forsale));
+    arith_uint256 iAmountNeededToFill = DivideAndRoundUp((ConvertTo256(amount_remaining) * ConvertTo256(amount_desired)), ConvertTo256(amount_forsale));
     int64_t nAmountNeededToFill = ConvertTo64(iAmountNeededToFill);
     return nAmountNeededToFill;
 }
@@ -525,7 +528,7 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
 int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block, const std::string& sender_addr, uint32_t prop, int64_t amount, uint32_t property_desired, int64_t amount_desired)
 {
     int rc = METADEX_ERROR -20;
-    CMPMetaDEx mdex(sender_addr, 0, prop, amount, property_desired, amount_desired, 0, 0, CMPTransaction::CANCEL_AT_PRICE);
+    CMPMetaDEx mdex(sender_addr, 0, prop, amount, property_desired, amount_desired, uint256(), 0, CMPTransaction::CANCEL_AT_PRICE);
     md_PricesMap* prices = get_Prices(prop);
     const CMPMetaDEx* p_mdex = NULL;
 
@@ -776,7 +779,7 @@ int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSal
     // NOTE: If the calling code is already aware of the total amount sold, pass the value in to this function to avoid duplication of
     //       work.  If the calling code doesn't know the amount, leave default (-1) and we will calculate it from levelDB lookups.
     if (totalSold == -1) {
-        Array tradeArray;
+        UniValue tradeArray(UniValue::VARR);
         int64_t totalReceived;
         t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     }

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,8 +15,8 @@
 
 //! These need to be macros, as clientversion.cpp's and bitcoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 0
-#define CLIENT_VERSION_MINOR 10
-#define CLIENT_VERSION_REVISION 4
+#define CLIENT_VERSION_MINOR 13
+#define CLIENT_VERSION_REVISION 1
 #define CLIENT_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
@@ -26,7 +26,7 @@
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
-#define COPYRIGHT_YEAR 2015
+#define COPYRIGHT_YEAR 2016
 
 #endif //HAVE_CONFIG_H
 
@@ -38,7 +38,7 @@
 #define DO_STRINGIZE(X) #X
 
 //! Copyright string used in Windows .rc files
-#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcoin Core Developers and Omni Core Developers"
+#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " " COPYRIGHT_HOLDERS_FINAL
 
 /**
  * bitcoind-res.rc includes this file, but it cannot cope with real c++ code.
@@ -59,7 +59,6 @@ static const int CLIENT_VERSION =
 
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
-extern const std::string CLIENT_DATE;
 
 
 std::string FormatFullVersion();

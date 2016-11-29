@@ -204,7 +204,7 @@ void LookupAddressDialog::searchAddress()
                     foundProperty=true;
                     pName[pItem] = getPropertyName(propertyId).c_str();
                     if(pName[pItem].size()>32) pName[pItem]=pName[pItem].substr(0,32)+"...";
-                    pName[pItem] += " (#" + static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str() + ")";
+                    pName[pItem] += strprintf(" (#%d)", propertyId);
                     pBal[pItem] = getUserAvailableMPbalance(searchText, propertyId);
                     pDivisible[pItem] = isPropertyDivisible(propertyId);
                     pFound[pItem] = true;
@@ -223,7 +223,7 @@ void LookupAddressDialog::searchAddress()
                         foundProperty=true;
                         pName[pItem] = getPropertyName(propertyId+2147483647).c_str();
                         if(pName[pItem].size()>32) pName[pItem]=pName[pItem].substr(0,32)+"...";
-                        pName[pItem] += " (#" + static_cast<ostringstream*>( &(ostringstream() << propertyId+2147483647) )->str() + ")";
+                        pName[pItem] += strprintf(" (#%d)", propertyId+2147483647);
                         pBal[pItem] = getUserAvailableMPbalance(searchText, propertyId+2147483647);
                         pDivisible[pItem] = isPropertyDivisible(propertyId+2147483647);
                         pFound[pItem] = true;
@@ -252,7 +252,7 @@ void LookupAddressDialog::searchAddress()
                 }
                 else
                 {
-                    string balText = static_cast<ostringstream*>( &(ostringstream() << pBal[pItem]) )->str();
+                    string balText = strprintf("%d", pBal[pItem]);
                     balText += tokenLabel;
                     balances[pItem-1]->setText(balText.c_str());
                 }

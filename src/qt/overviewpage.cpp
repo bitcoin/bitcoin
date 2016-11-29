@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "overviewpage.h"
@@ -10,6 +10,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "platformstyle.h"
 #include "transactionfilterproxy.h"
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
@@ -49,13 +50,15 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+//TODO - Add icons to buttons
+
 using std::ostringstream;
 using std::string;
 
 using namespace mastercore;
 
 #define DECORATION_SIZE 64
-#define NUM_ITEMS 6 // 3 - number of recent transactions to display
+#define NUM_ITEMS 6
 
 struct OverviewCacheEntry
 {
@@ -74,13 +77,16 @@ struct OverviewCacheEntry
     bool outbound;
 };
 
+
 std::map<uint256, OverviewCacheEntry> recentCache;
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::BTC)
+    TxViewDelegate(const PlatformStyle *platformStyle):
+        QAbstractItemDelegate(), unit(BitcoinUnits::BTC),
+        platformStyle(platformStyle)
     {
 
     }
@@ -90,13 +96,13 @@ public:
     {
         painter->save();
 
+        QIcon icon = qvariant_cast<QIcon>(index.data(TransactionTableModel::RawDecorationRole));
         QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
         QString address = index.data(Qt::DisplayRole).toString();
         qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
         bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
         QVariant value = index.data(Qt::ForegroundRole);
 
-        QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
         QRect mainRect = option.rect;
         QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
         int xspace = DECORATION_SIZE + 8;
@@ -108,7 +114,7 @@ public:
         // Rather ugly way to provide recent transaction display support - each time we paint a transaction we will check if
         // it's Omni and override the values if so.  This will not scale at all, but since we're only ever doing 6 txns via the occasional
         // repaint performance should be a non-issue and it'll provide the functionality short term while a better approach is devised.
-        uint256 hash = 0;
+        uint256 hash;
         hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
         bool omniOverride = false, omniSendToSelf = false, valid = false, omniOutbound = true;
         QString omniAmountStr;
@@ -152,9 +158,9 @@ public:
                 omniOverride = true;
                 amount = 0;
                 CTransaction wtx;
-                uint256 blockHash = 0;
-                if (GetTransaction(hash, wtx, blockHash, true)) {
-                    if ((0 != blockHash) || (NULL != GetBlockIndex(blockHash))) {
+                uint256 blockHash;
+                if (GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) {
+                    if (!blockHash.IsNull() || NULL == GetBlockIndex(blockHash)) {
                         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
                         if (NULL != pBlockIndex) {
                             int blockHeight = pBlockIndex->nHeight;
@@ -227,13 +233,15 @@ public:
 
         if (omniOverride) {
             if (!valid) {
-                icon = QIcon(":/icons/omnitxinvalid");
+                icon = QIcon(":/icons/omni_invalid");
             } else {
-                icon = QIcon(":/icons/omnitxout");
-                if (!omniOutbound) icon = QIcon(":/icons/omnitxin");
-                if (omniSendToSelf) icon = QIcon(":/icons/omnitxinout");
+                icon = QIcon(":/icons/omni_out");
+                if (!omniOutbound) icon = QIcon(":/icons/omni_in");
+                if (omniSendToSelf) icon = QIcon(":/icons/omni_inout");
             }
         }
+
+        icon = platformStyle->SingleColorIcon(icon);
         icon.paint(painter, decorationRect);
 
         QColor foreground = option.palette.color(QPalette::Text);
@@ -254,7 +262,7 @@ public:
             iconWatchonly.paint(painter, watchonlyRect);
         }
 
-        if(amount < 0 || omniOutbound)
+        if(amount < 0)
         {
             foreground = COLOR_NEGATIVE;
         }
@@ -291,11 +299,12 @@ public:
     }
 
     int unit;
+    const PlatformStyle *platformStyle;
 
 };
 #include "overviewpage.moc"
 
-OverviewPage::OverviewPage(QWidget *parent) :
+OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
     clientModel(0),
@@ -306,10 +315,16 @@ OverviewPage::OverviewPage(QWidget *parent) :
     currentWatchOnlyBalance(-1),
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
-    txdelegate(new TxViewDelegate()),
+    txdelegate(new TxViewDelegate(platformStyle)),
     filter(0)
 {
     ui->setupUi(this);
+
+    // use a SingleColorIcon for the "out of sync warning" icon
+    QIcon icon = platformStyle->SingleColorIcon(":/icons/warning");
+    icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); // also set the disabled icon because we are using a disabled QPushButton to work around missing HiDPI support of QLabel (https://bugreports.qt.io/browse/QTBUG-42503)
+    ui->labelTransactionsStatus->setIcon(icon);
+    ui->labelWalletStatus->setIcon(icon);
 
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
@@ -336,7 +351,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
     // is this an Omni transaction that has been clicked?  Use pending & cache to find out quickly
-    uint256 hash = 0;
+    uint256 hash;
     hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
     bool omniTx = false;
     {
@@ -350,9 +365,9 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 
     // override if it's an Omni transaction
     if (omniTx) {
-        emit omniTransactionClicked(hash);
+        // TODO emit omniTransactionClicked(hash);
     } else {
-        if (filter) emit transactionClicked(filter->mapToSource(index));
+        // TODO if (filter) emit transactionClicked(filter->mapToSource(index));
     }
 }
 
@@ -388,7 +403,7 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
     // property label
     string spName = getPropertyName(propertyId).c_str();
     if(spName.size()>22) spName=spName.substr(0,22)+"...";
-    spName += " (#" + static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str() + ")";
+    spName += strprintf(" (#%d)", propertyId);
     QLabel *propLabel = new QLabel(QString::fromStdString(spName));
     propLabel->setStyleSheet("QLabel { font-weight:bold; }");
     vlayout->addWidget(propLabel);
@@ -427,8 +442,10 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
     balReservedLabelAmount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     balAvailableLabelAmount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
     balTotalLabelAmount->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
-    balReservedLabelAmount->setStyleSheet("QLabel { padding-right:2px; }");
-    balAvailableLabelAmount->setStyleSheet("QLabel { padding-right:2px; }");
+    balReservedLabel->setStyleSheet("QLabel { font-size:12px; }");
+    balAvailableLabel->setStyleSheet("QLabel { font-size:12px; }");
+    balReservedLabelAmount->setStyleSheet("QLabel { font-size:12px;padding-right:2px; }");
+    balAvailableLabelAmount->setStyleSheet("QLabel { font-size:12px;padding-right:2px; }");
     balTotalLabelAmount->setStyleSheet("QLabel { padding-right:2px; font-weight:bold; }");
     vlayoutright->addWidget(balReservedLabelAmount);
     vlayoutright->addWidget(balAvailableLabelAmount);
@@ -507,49 +524,13 @@ void OverviewPage::updateOmni()
 
 void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
-    //int unit = walletModel->getOptionsModel()->getDisplayUnit(); //only needed if we decide not to use new overview property list
-    currentBalance = balance;
-    currentUnconfirmedBalance = unconfirmedBalance;
-    currentImmatureBalance = immatureBalance;
-    currentWatchOnlyBalance = watchOnlyBalance;
-    currentWatchUnconfBalance = watchUnconfBalance;
-    currentWatchImmatureBalance = watchImmatureBalance;
-/*
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
-    // for the non-mining users
-    bool showImmature = immatureBalance != 0;
-    bool showWatchOnlyImmature = watchImmatureBalance != 0;
-    // for symmetry reasons also show immature label when the watch-only one is shown
-    ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
-*/
-    // instead simply pass the values to UpdatePropertyBalance - no support for watch-only yet
     UpdatePropertyBalance(0,balance,unconfirmedBalance);
 }
 
 // show/hide watch-only labels
 void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 {
-/*
-    ui->labelSpendable->setVisible(showWatchOnly);      // show spendable label (only when watch-only is active)
-    ui->labelWatchonly->setVisible(showWatchOnly);      // show watch-only label
-    ui->lineWatchBalance->setVisible(showWatchOnly);    // show watch-only balance separator line
-    ui->labelWatchAvailable->setVisible(showWatchOnly); // show watch-only available balance
-    ui->labelWatchPending->setVisible(showWatchOnly);   // show watch-only pending balance
-    ui->labelWatchTotal->setVisible(showWatchOnly);     // show watch-only total balance
-
-    if (!showWatchOnly)
-        ui->labelWatchImmature->hide();
-*/
+    // Omni Core does not currently fully support watch only
 }
 
 void OverviewPage::setClientModel(ClientModel *model)
@@ -558,8 +539,8 @@ void OverviewPage::setClientModel(ClientModel *model)
     if(model)
     {
         // Show warning if this is a prerelease version
-        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts()));
-        updateAlerts();
+        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts(QString)));
+        updateAlerts(model->getStatusBarWarnings());
 
         // Refresh Omni info if there have been Omni layer transactions with balances affecting wallet
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(updateOmni()));
@@ -584,7 +565,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
         filter->setShowInactive(false);
-        filter->sort(TransactionTableModel::Status, Qt::DescendingOrder);
+        filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
 
         ui->listTransactions->setModel(filter);
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
@@ -619,9 +600,9 @@ void OverviewPage::updateDisplayUnit()
     }
 }
 
-void OverviewPage::updateAlerts()
+void OverviewPage::updateAlerts(const QString &warnings)
 {
-    QString alertString = QString::fromStdString(GetWarnings("statusbar")); // get current bitcoin alert/warning directly
+    QString alertString = warnings; // get current bitcoin alert/warning directly
 
     // get alert messages
     std::vector<std::string> omniAlerts = GetOmniCoreAlertMessages();

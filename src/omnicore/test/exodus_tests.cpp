@@ -3,31 +3,26 @@
 
 #include "base58.h"
 #include "chainparams.h"
-
-#include <limits>
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
+#include <limits>
+
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(omnicore_exodus_tests)
+BOOST_FIXTURE_TEST_SUITE(omnicore_exodus_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(exodus_address_mainnet)
 {
-    SelectParams(CBaseChainParams::MAIN);
-
     BOOST_CHECK(CBitcoinAddress("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") ==
                 ExodusAddress());
     BOOST_CHECK(!(CBitcoinAddress("1rDQWR9yZLJY7ciyghAaF7XKD9tGzQuP6") ==
                 ExodusAddress()));
-
-    SelectParams(CBaseChainParams::UNITTEST);
 }
 
 BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_mainnet)
 {
-    SelectParams(CBaseChainParams::MAIN);
-
     BOOST_CHECK(CBitcoinAddress("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") ==
                 ExodusCrowdsaleAddress(0));
     BOOST_CHECK(CBitcoinAddress("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") ==
@@ -36,8 +31,6 @@ BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_mainnet)
                 ExodusCrowdsaleAddress(0)));
     BOOST_CHECK(!(CBitcoinAddress("1rDQWR9yZLJY7ciyghAaF7XKD9tGzQuP6") ==
                 ExodusCrowdsaleAddress(std::numeric_limits<int>::max())));
-
-    SelectParams(CBaseChainParams::UNITTEST);
 }
 
 BOOST_AUTO_TEST_CASE(exodus_address_testnet)
@@ -49,7 +42,7 @@ BOOST_AUTO_TEST_CASE(exodus_address_testnet)
     BOOST_CHECK(!(CBitcoinAddress("moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP") ==
                 ExodusAddress()));
 
-    SelectParams(CBaseChainParams::UNITTEST);
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 BOOST_AUTO_TEST_CASE(exodus_address_regtest)
@@ -61,7 +54,7 @@ BOOST_AUTO_TEST_CASE(exodus_address_regtest)
     BOOST_CHECK(!(CBitcoinAddress("moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP") ==
                 ExodusAddress()));
 
-    SelectParams(CBaseChainParams::UNITTEST);
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_testnet)
@@ -85,7 +78,7 @@ BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_testnet)
     BOOST_CHECK(!(CBitcoinAddress("mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv") ==
                 ExodusCrowdsaleAddress(std::numeric_limits<int>::max())));
 
-    SelectParams(CBaseChainParams::UNITTEST);
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_regtest)
@@ -109,7 +102,7 @@ BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_regtest)
     BOOST_CHECK(!(CBitcoinAddress("mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv") ==
                 ExodusCrowdsaleAddress(std::numeric_limits<int>::max())));
 
-    SelectParams(CBaseChainParams::UNITTEST);
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 

@@ -48,19 +48,19 @@ private:
     GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
     virtual void resizeEvent(QResizeEvent *event);
 
-public slots:
+public Q_SLOTS:
     void propSelectorChanged();
     void balancesUpdated();
     void reinitOmni();
 
-private slots:
+private Q_SLOTS:
     void contextualMenu(const QPoint &point);
     void balancesCopyCol0();
     void balancesCopyCol1();
     void balancesCopyCol2();
     void balancesCopyCol3();
 
-signals:
+Q_SIGNALS:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 };

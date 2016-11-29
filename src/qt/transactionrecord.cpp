@@ -1,20 +1,18 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "transactionrecord.h"
 
-#include "omnicore/omnicore.h"
-#include "omnicore/pending.h"
-
 #include "base58.h"
-#include "sync.h"
+#include "consensus/consensus.h"
+#include "main.h"
 #include "timedata.h"
-#include "wallet.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 
-using namespace mastercore;
+#include <boost/foreach.hpp>
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -44,38 +42,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    // Omni override - since we use multiple outputs these show up as multiple transaction records
-    // and cause duplicate entries to be displayed in bitcoin history and overview recent
-    bool omniOverride = false;
-    {
-        LOCK(cs_pending);
-
-        PendingMap::iterator it = my_pending.find(hash);
-        if (it != my_pending.end()) omniOverride = true;
-    }
-    if (p_txlistdb->exists(hash)) omniOverride = true;
-    if (omniOverride) {
-        TransactionRecord sub(hash, nTime);
-        sub.idx = parts.size();
-        sub.address = "Omni transaction";
-        sub.involvesWatchAddress = false; // watch only support for Omni is an ongoing WIP
-        if (nNet > 0) { // inbound
-            sub.type = TransactionRecord::RecvWithAddress;
-            BOOST_FOREACH(const CTxOut& txout, wtx.vout) {
-                isminetype mine = wallet->IsMine(txout);
-                if (mine) {
-                    sub.credit += txout.nValue;
-                    if (mine == ISMINE_WATCH_ONLY) sub.involvesWatchAddress = true;
-                }
-            }
-        } else { // outbound
-            sub.type = TransactionRecord::SendToAddress;
-            sub.debit = nNet;
-        }
-        parts.append(sub);
-        return parts;
-    }
-
     if (nNet > 0 || wtx.IsCoinBase())
     {
         //
@@ -90,7 +56,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
-                sub.involvesWatchAddress = mine == ISMINE_WATCH_ONLY;
+                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                 {
                     // Received by Bitcoin Address
@@ -120,7 +86,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
         {
             isminetype mine = wallet->IsMine(txin);
-            if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
@@ -128,7 +94,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             isminetype mine = wallet->IsMine(txout);
-            if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllToMe > mine) fAllToMe = mine;
         }
 
@@ -222,7 +188,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
 
-    if (!IsFinalTx(wtx, chainActive.Height() + 1))
+    if (!CheckFinalTx(wtx))
     {
         if (wtx.nLockTime < LOCKTIME_THRESHOLD)
         {
@@ -273,6 +239,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
+            if (wtx.isAbandoned())
+                status.status = TransactionStatus::Abandoned;
         }
         else if (status.depth < RecommendedNumConfirmations)
         {
@@ -294,11 +262,10 @@ bool TransactionRecord::statusUpdateNeeded()
 
 QString TransactionRecord::getTxID() const
 {
-    return formatSubTxId(hash, idx);
+    return QString::fromStdString(hash.ToString());
 }
 
-QString TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
+int TransactionRecord::getOutputIndex() const
 {
-    return QString::fromStdString(hash.ToString() + strprintf("-%03d", vout));
+    return idx;
 }
-

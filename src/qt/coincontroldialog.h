@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_COINCONTROLDIALOG_H
@@ -16,6 +16,7 @@
 #include <QString>
 #include <QTreeWidgetItem>
 
+class PlatformStyle;
 class WalletModel;
 
 class CCoinControl;
@@ -25,12 +26,14 @@ namespace Ui {
     class CoinControlDialog;
 }
 
+#define ASYMP_UTF8 "\xE2\x89\x88"
+
 class CoinControlDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit CoinControlDialog(QWidget *parent = 0);
+    explicit CoinControlDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~CoinControlDialog();
 
     void setModel(WalletModel *model);
@@ -41,6 +44,7 @@ public:
 
     static QList<CAmount> payAmounts;
     static CCoinControl *coinControl;
+    static bool fSubtractFeeFromAmount;
 
 private:
     Ui::CoinControlDialog *ui;
@@ -53,6 +57,8 @@ private:
     QAction *copyTransactionHashAction;
     QAction *lockAction;
     QAction *unlockAction;
+
+    const PlatformStyle *platformStyle;
 
     QString strPad(QString, int, QString);
     void sortView(int, Qt::SortOrder);
@@ -99,7 +105,7 @@ private:
         return column;
     }
 
-private slots:
+private Q_SLOTS:
     void showMenu(const QPoint &);
     void copyAmount();
     void copyLabel();

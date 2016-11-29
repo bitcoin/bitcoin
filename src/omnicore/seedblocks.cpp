@@ -2504,4 +2504,3 @@ bool SkipBlock(int nBlock)
     // Otherwise check, if the block is in the list:
     return (blockList.find(nBlock) == blockList.end());
 }
-

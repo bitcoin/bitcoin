@@ -49,9 +49,11 @@
 #include "utilstrencodings.h"
 #include "utiltime.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
-#include "wallet_ismine.h"
+#include "script/ismine.h"
+#include "wallet/wallet.h"
 #endif
+
+#include <univalue.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/to_string.hpp>
@@ -60,9 +62,6 @@
 #include <boost/lexical_cast.hpp>
 
 #include <openssl/sha.h>
-
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_writer_template.h"
 
 #include "leveldb/db.h"
 
@@ -78,11 +77,6 @@
 
 using boost::algorithm::token_compress_on;
 using boost::to_string;
-
-using json_spirit::Array;
-using json_spirit::Pair;
-using json_spirit::Object;
-using json_spirit::write_string;
 
 using leveldb::Iterator;
 using leveldb::Slice;
@@ -656,7 +650,7 @@ static bool FillTxInputCache(const CTransaction& tx)
 
         CTransaction txPrev;
         uint256 hashBlock;
-        if (!GetTransaction(txIn.prevout.hash, txPrev, hashBlock, true)) {
+        if (!GetTransaction(txIn.prevout.hash, txPrev, Params().GetConsensus(), hashBlock, true)) {
             return false;
         }
 
@@ -710,7 +704,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         std::map<std::string, int64_t> inputs_sum_of_values;
 
         for (unsigned int i = 0; i < wtx.vin.size(); ++i) {
-            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, ScriptToAsmStr(wtx.vin[i].scriptSig));
 
             const CTxIn& txIn = wtx.vin[i];
             const CTxOut& txOut = view.GetOutputFor(txIn);
@@ -749,7 +743,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         // determine the sender, but invalidate transaction, if the input is not accepted
         {
             unsigned int vin_n = 0; // the first input
-            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", vin_n, wtx.vin[vin_n].scriptSig.ToString());
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", vin_n, ScriptToAsmStr(wtx.vin[vin_n].scriptSig));
 
             const CTxIn& txIn = wtx.vin[vin_n];
             const CTxOut& txOut = view.GetOutputFor(txIn);
@@ -806,7 +800,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 GetScriptPushes(wtx.vout[n].scriptPubKey, script_data);
                 address_data.push_back(address.ToString());
                 value_data.push_back(wtx.vout[n].nValue);
-                if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", n, address.ToString(), wtx.vout[n].scriptPubKey.ToString());
+                if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", n, address.ToString(), ScriptToAsmStr(wtx.vout[n].scriptPubKey));
             }
         }
     }
@@ -1304,7 +1298,7 @@ static int msc_initial_scan(int nFirstBlock)
 
         if (!seedBlockFilterEnabled || !SkipBlock(nBlock)) {
             CBlock block;
-            if (!ReadBlockFromDisk(block, pblockindex)) break;
+            if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) break;
 
             BOOST_FOREACH(const CTransaction&tx, block.vtx) {
                 if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nTxsFoundInBlock;
@@ -1390,7 +1384,7 @@ int input_mp_offers_string(const std::string& s)
     uint32_t prop_desired = boost::lexical_cast<uint32_t>(vstr[i++]);
     int64_t minFee = boost::lexical_cast<int64_t>(vstr[i++]);
     uint8_t blocktimelimit = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
-    uint256 txid = uint256(vstr[i++]);
+    uint256 txid = uint256S(vstr[i++]);
 
     // TODO: should this be here? There are usually no sanity checks..
     if (OMNI_PROPERTY_BTC != prop_desired) return -1;
@@ -1431,7 +1425,7 @@ int input_mp_accepts_string(const string &s)
   txidStr = vstr[i++];
 
   const string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(sellerAddr, buyerAddr, prop);
-  CMPAccept newAccept(amountOriginal, amountRemaining, nBlock, blocktimelimit, prop, offerOriginal, btcDesired, uint256(txidStr));
+  CMPAccept newAccept(amountOriginal, amountRemaining, nBlock, blocktimelimit, prop, offerOriginal, btcDesired, uint256S(txidStr));
   if (my_accepts.insert(std::make_pair(combo, newAccept)).second) {
     return 0;
   } else {
@@ -1494,7 +1488,7 @@ int input_mp_crowdsale_string(const std::string& s)
             vals.push_back(boost::lexical_cast<int64_t>(*it));
         }
 
-        uint256 txHash(entryData[0]);
+        uint256 txHash = uint256S(entryData[0]);
         newCrowdsale.insertDatabase(txHash, vals);
     }
 
@@ -1523,7 +1517,7 @@ int input_mp_mdexorder_string(const std::string& s)
     uint32_t desired_property = boost::lexical_cast<uint32_t>(vstr[i++]);
     uint8_t subaction = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
     unsigned int idx = boost::lexical_cast<unsigned int>(vstr[i++]);
-    uint256 txid = uint256(vstr[i++]);
+    uint256 txid = uint256S(vstr[i++]);
     int64_t amount_remaining = boost::lexical_cast<int64_t>(vstr[i++]);
 
     CMPMetaDEx mdexObj(addr, block, property, amount_forsale, desired_property,
@@ -2233,6 +2227,8 @@ int mastercore_shutdown()
         p_feehistory = NULL;
     }
 
+    mastercoreInitialized = 0;
+
     PrintToLog("\nOmni Core shutdown completed\n");
     PrintToLog("Shutdown time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
 
@@ -2336,9 +2332,9 @@ int mastercore::WalletTxBuilder(const std::string& senderAddress, const std::str
 
     // Prepare the transaction - first setup some vars
     CCoinControl coinControl;
-    txid = 0;
     CWalletTx wtxNew;
     int64_t nFeeRet = 0;
+    int nChangePosInOut = -1;
     std::string strFailReason;
     std::vector<std::pair<CScript, int64_t> > vecSend;
     CReserveKey reserveKey(pwalletMain);
@@ -2375,8 +2371,15 @@ int mastercore::WalletTxBuilder(const std::string& senderAddress, const std::str
 
     if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL;
 
+    std::vector<CRecipient> vecRecipients;
+    for (size_t i = 0; i < vecSend.size(); ++i) {
+        const std::pair<CScript, int64_t>& vec = vecSend[i];
+        CRecipient recipient = {vec.first, vec.second, false};
+        vecRecipients.push_back(recipient);
+    }
+
     // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
-    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
+    if (!pwalletMain->CreateTransaction(vecRecipients, wtxNew, reserveKey, nFeeRet, nChangePosInOut, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
 
     // Workaround for SigOps limit
     {
@@ -2492,7 +2495,7 @@ void CMPTxList::LoadActivations(int blockHeight)
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
         if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ACTIVATION || atoi(vstr[0]) != 1) continue; // we only care about valid activations
-        uint256 txid(it->key().ToString());;
+        uint256 txid = uint256S(it->key().ToString());;
         loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
     }
 
@@ -2500,15 +2503,15 @@ void CMPTxList::LoadActivations(int blockHeight)
 
     for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
         uint256 hash = (*it).second;
-        uint256 blockHash = 0;
+        uint256 blockHash;
         CTransaction wtx;
         CMPTransaction mp_obj;
 
-        if (!GetTransaction(hash, wtx, blockHash, true)) {
+        if (!GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) {
             PrintToLog("ERROR: While loading activation transaction %s: tx in levelDB but does not exist.\n", hash.GetHex());
             continue;
         }
-        if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) {
+        if (blockHash.IsNull() || (NULL == GetBlockIndex(blockHash))) {
             PrintToLog("ERROR: While loading activation transaction %s: failed to retrieve block hash.\n", hash.GetHex());
             continue;
         }
@@ -2560,7 +2563,7 @@ void CMPTxList::LoadAlerts(int blockHeight)
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
         if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ALERT || atoi(vstr[0]) != 1) continue; // not a valid alert
-        uint256 txid(it->key().ToString());;
+        uint256 txid = uint256S(it->key().ToString());;
         loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
     }
 
@@ -2568,10 +2571,10 @@ void CMPTxList::LoadAlerts(int blockHeight)
 
     for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
         uint256 txid = (*it).second;
-        uint256 blockHash = 0;
+        uint256 blockHash;
         CTransaction wtx;
         CMPTransaction mp_obj;
-        if (!GetTransaction(txid, wtx, blockHash, true)) {
+        if (!GetTransaction(txid, wtx, Params().GetConsensus(), blockHash, true)) {
             PrintToLog("ERROR: While loading alert %s: tx in levelDB but does not exist.\n", txid.GetHex());
             continue;
         }
@@ -2634,7 +2637,7 @@ uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
   }
 
   delete it;
-  return 0;
+  return uint256();
 }
 
 /*
@@ -3081,7 +3084,7 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
   return mySTOReceipts;
 }
 
-void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *numRecipients)
+void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, UniValue *recipientArray, uint64_t *total, uint64_t *numRecipients)
 {
   if (!pdb) return;
 
@@ -3140,7 +3143,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
                           delete it;
                           return; //(something went wrong)
                       }
-                      Object recipient;
+                      UniValue recipient(UniValue::VOBJ);
                       recipient.push_back(Pair("address", recipientAddress));
                       if(isPropertyDivisible(propertyId))
                       {
@@ -3284,7 +3287,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
 }
 
 // MPTradeList here
-bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, Array& tradeArray, int64_t& totalSold, int64_t& totalReceived)
+bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, UniValue& tradeArray, int64_t& totalSold, int64_t& totalReceived)
 {
   if (!pdb) return false;
 
@@ -3332,7 +3335,7 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
       std::string strAmount2PlusFee = FormatMP(prop2, amount2+tradingFee);
 
       // populate trade object and add to the trade array, correcting for orientation of trade
-      Object trade;
+      UniValue trade(UniValue::VOBJ);
       trade.push_back(Pair("txid", matchTxid));
       trade.push_back(Pair("block", blockNum));
       if (prop1 == propertyId) {
@@ -3359,17 +3362,17 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
   if (count) { return true; } else { return false; }
 }
 
-bool CompareTradePair(const std::pair<int64_t, Object>& firstJSONObj, const std::pair<int64_t, Object>& secondJSONObj)
+bool CompareTradePair(const std::pair<int64_t, UniValue>& firstJSONObj, const std::pair<int64_t, UniValue>& secondJSONObj)
 {
     return firstJSONObj.first > secondJSONObj.first;
 }
 
 // obtains an array of matching trades with pricing and volume details for a pair sorted by blocknumber
-void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, Array& responseArray, uint64_t count)
+void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, UniValue& responseArray, uint64_t count)
 {
   if (!pdb) return;
   leveldb::Iterator* it = NewIterator();
-  std::vector<std::pair<int64_t,Object> > vecResponse;
+  std::vector<std::pair<int64_t, UniValue> > vecResponse;
   bool propertyIdSideAIsDivisible = isPropertyDivisible(propertyIdSideA);
   bool propertyIdSideBIsDivisible = isPropertyDivisible(propertyIdSideB);
   for(it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -3377,7 +3380,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       std::string strValue = it->value().ToString();
       std::vector<std::string> vecKeys;
       std::vector<std::string> vecValues;
-      uint256 sellerTxid = 0, matchingTxid = 0;
+      uint256 sellerTxid, matchingTxid;
       std::string sellerAddress, matchingAddress;
       int64_t amountReceived = 0, amountSold = 0;
       if (strKey.size() != 129) continue; // only interested in matches
@@ -3416,7 +3419,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
 
       int64_t blockNum = boost::lexical_cast<int64_t>(vecValues[6]);
 
-      Object trade;
+      UniValue trade(UniValue::VOBJ);
       trade.push_back(Pair("block", blockNum));
       trade.push_back(Pair("unitprice", unitPriceStr));
       trade.push_back(Pair("inverseprice", inversePriceStr));
@@ -3440,12 +3443,19 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
   // sort the response most recent first before adding to the array
   std::sort(vecResponse.begin(), vecResponse.end(), CompareTradePair);
   uint64_t processed = 0;
-  for (std::vector<std::pair<int64_t,Object> >::iterator it = vecResponse.begin(); it != vecResponse.end(); ++it) {
+  for (std::vector<std::pair<int64_t, UniValue> >::iterator it = vecResponse.begin(); it != vecResponse.end(); ++it) {
       responseArray.push_back(it->second);
       processed++;
       if (processed >= count) break;
   }
-  std::reverse(responseArray.begin(), responseArray.end());
+
+  std::vector<UniValue> responseArrayValues = responseArray.getValues();
+  std::reverse(responseArrayValues.begin(), responseArrayValues.end());
+  responseArray.clear();
+  for (std::vector<UniValue>::iterator it = responseArrayValues.begin(); it != responseArrayValues.end(); ++it) {
+      responseArray.push_back(*it);
+  }
+
   delete it;
 }
 
@@ -3462,7 +3472,7 @@ void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>
       std::string strValue = it->value().ToString();
       std::vector<std::string> vecValues;
       if (strKey.size() != 64) continue; // only interested in trades
-      uint256 txid(strKey);
+      uint256 txid = uint256S(strKey);
       size_t addressMatch = strValue.find(address);
       if (addressMatch == std::string::npos) continue;
       boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);

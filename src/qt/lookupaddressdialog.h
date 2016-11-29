@@ -32,7 +32,7 @@ public:
     explicit MPQRImageWidget(QWidget *parent = 0);
     QImage exportImage();
 
-public slots:
+public Q_SLOTS:
     void saveImage();
     void copyImage();
 
@@ -55,13 +55,13 @@ public:
 
     void searchAddress();
 
-public slots:
+public Q_SLOTS:
     void searchButtonClicked();
 
 private:
     Ui::LookupAddressDialog *ui;
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };
