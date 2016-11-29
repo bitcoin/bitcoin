@@ -4244,7 +4244,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>crown-core</name>
     <message>
-        <location filename="../dashstrings.cpp" line="+22"/>
+        <location filename="../crownstrings.cpp" line="+22"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
     </message>

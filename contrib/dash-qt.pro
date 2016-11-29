@@ -472,7 +472,7 @@ SOURCES += src/activethrone.cpp \
            src/qt/csvmodelwriter.cpp \
            src/qt/darksendconfig.cpp \
            src/qt/dash.cpp \
-           src/qt/dashstrings.cpp \
+           src/qt/crownstrings.cpp \
            src/qt/editaddressdialog.cpp \
            src/qt/guiutil.cpp \
            src/qt/intro.cpp \

@@ -62,7 +62,7 @@ in Transifex and can be translated.
 
 To create the pull-request you have to do:
 
-    git add src/qt/dashstrings.cpp src/qt/locale/dash_en.ts
+    git add src/qt/crownstrings.cpp src/qt/locale/dash_en.ts
     git commit
 
 Syncing with Transifex
