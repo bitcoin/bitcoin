@@ -140,12 +140,6 @@ public:
 
     virtual ~CGovernanceManager() {}
 
-    void ClearSeen()
-    {
-        LOCK(cs);
-        mapSeenGovernanceObjects.clear();
-    }
-
     int CountProposalInventoryItems()
     {
         // TODO What is this for ?
