@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
         // make sure the item is present
         BOOST_CHECK(map.count(i) == 1);
 
-        // use the iterator to check for the expected key adn value
+        // use the iterator to check for the expected key and value
         BOOST_CHECK(it->first == i);
         BOOST_CHECK(it->second == i + 1);
         

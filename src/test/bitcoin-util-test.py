@@ -15,7 +15,7 @@ help_text="""Test framework for bitcoin utils.
 
 Runs automatically during `make check`.
 
-Can also be run manually from the src directory by specifiying the source directory:
+Can also be run manually from the src directory by specifying the source directory:
 
 test/bitcoin-util-test.py --srcdir='srcdir' [--verbose]
 """
