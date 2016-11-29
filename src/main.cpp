@@ -6981,7 +6981,7 @@ bool SendMessages(CNode* pto, CConnman& connman)
             CAmount currentFilter = mempool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
             int64_t timeNow = GetTimeMicros();
             if (timeNow > pto->nextSendTimeFeeFilter) {
-                CAmount filterToSend = filterRounder.round(currentFilter);
+                CAmount filterToSend = std::max(filterRounder.round(currentFilter), minRelayTxFee.GetFeePerK());
                 if (filterToSend != pto->lastSentFeeFilter) {
                     connman.PushMessage(pto, msgMaker.Make(NetMsgType::FEEFILTER, filterToSend));
                     pto->lastSentFeeFilter = filterToSend;
