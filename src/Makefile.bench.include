@@ -22,7 +22,9 @@ bench_bench_dash_SOURCES = \
   bench/ccoins_caching.cpp \
   bench/mempool_eviction.cpp \
   bench/base58.cpp \
-  bench/lockedpool.cpp
+  bench/lockedpool.cpp \
+  bench/perf.cpp \
+  bench/perf.h
 
 nodist_bench_bench_dash_SOURCES = $(GENERATED_TEST_FILES)
 
