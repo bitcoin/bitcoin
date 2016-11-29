@@ -19,7 +19,7 @@ files must end with `.qm`, not `.ts`.
 
 ```xml
 <qresource prefix="/translations">
-    <file alias="en">locale/dash_en.qm</file>
+    <file alias="en">locale/crown_en.qm</file>
     ...
 </qresource>
 ```
@@ -28,17 +28,17 @@ files must end with `.qm`, not `.ts`.
 
 This directory contains all translations. Filenames must adhere to this format:
 
-    dash_xx_YY.ts or dash_xx.ts
+    crown_xx_YY.ts or crown_xx.ts
 
-#### dash_en.ts (Source file)
+#### crown_en.ts (Source file)
 
-`src/qt/locale/dash_en.ts` is treated in a special way. It is used as the
+`src/qt/locale/crown_en.ts` is treated in a special way. It is used as the
 source for all other translations. Whenever a string in the code is changed
 this file must be updated to reflect those changes. A custom script is used
 to extract strings from the non-Qt parts. This script makes use of `gettext`,
 so make sure that utility is installed (ie, `apt-get install gettext` on
 Ubuntu/Debian). Once this has been updated, lupdate (included in the Qt SDK)
-is used to update dash_en.ts. This process has been automated, from src/,
+is used to update crown_en.ts. This process has been automated, from src/,
 simply run:
     make translate
 
@@ -46,7 +46,7 @@ simply run:
 
 When new plurals are added to the source file, it's important to do the following steps:
 
-1. Open dash_en.ts in Qt Linguist (also included in the Qt SDK)
+1. Open crown_en.ts in Qt Linguist (also included in the Qt SDK)
 2. Search for `%n`, which will take you to the parts in the translation that use plurals
 3. Look for empty `English Translation (Singular)` and `English Translation (Plural)` fields
 4. Add the appropriate strings for the singular and plural form of the base string
@@ -62,7 +62,7 @@ in Transifex and can be translated.
 
 To create the pull-request you have to do:
 
-    git add src/qt/crownstrings.cpp src/qt/locale/dash_en.ts
+    git add src/qt/crownstrings.cpp src/qt/locale/crown_en.ts
     git commit
 
 Syncing with Transifex
@@ -83,7 +83,7 @@ postprocessing steps before committing the translations.
 
 1. `python contrib/devtools/update-translations.py`
 2. update `src/qt/dash.qrc` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'`
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crown_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'`
 3. update `src/Makefile.qt.include` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(crown_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
 4. `git add` new translations from `src/qt/locale/`

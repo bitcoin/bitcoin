@@ -3,22 +3,22 @@ EXTRA_LIBRARIES += qt/libbitcoinqt.a
 
 # dash qt core #
 QT_TS = \
-  qt/locale/dash_bg.ts \
-  qt/locale/dash_de.ts \
-  qt/locale/dash_en.ts \
-  qt/locale/dash_es.ts \
-  qt/locale/dash_fi.ts \
-  qt/locale/dash_fr.ts \
-  qt/locale/dash_it.ts \
-  qt/locale/dash_ja.ts \
-  qt/locale/dash_pl.ts \
-  qt/locale/dash_pt.ts \
-  qt/locale/dash_ru.ts \
-  qt/locale/dash_sk.ts \
-  qt/locale/dash_sv.ts \
-  qt/locale/dash_vi.ts \
-  qt/locale/dash_zh_CN.ts \
-  qt/locale/dash_zh_TW.ts
+  qt/locale/crown_bg.ts \
+  qt/locale/crown_de.ts \
+  qt/locale/crown_en.ts \
+  qt/locale/crown_es.ts \
+  qt/locale/crown_fi.ts \
+  qt/locale/crown_fr.ts \
+  qt/locale/crown_it.ts \
+  qt/locale/crown_ja.ts \
+  qt/locale/crown_pl.ts \
+  qt/locale/crown_pt.ts \
+  qt/locale/crown_ru.ts \
+  qt/locale/crown_sk.ts \
+  qt/locale/crown_sv.ts \
+  qt/locale/crown_vi.ts \
+  qt/locale/crown_zh_CN.ts \
+  qt/locale/crown_zh_TW.ts
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
@@ -100,8 +100,8 @@ QT_MOC = \
 
 QT_QRC_CPP = qt/qrc_dash.cpp
 QT_QRC = qt/dash.qrc
-QT_QRC_LOCALE_CPP = qt/qrc_dash_locale.cpp
-QT_QRC_LOCALE = qt/dash_locale.qrc
+QT_QRC_LOCALE_CPP = qt/qrc_crown_locale.cpp
+QT_QRC_LOCALE = qt/crown_locale.qrc
 
 PROTOBUF_CC = qt/paymentrequest.pb.cc
 PROTOBUF_H = qt/paymentrequest.pb.h
@@ -277,7 +277,7 @@ RES_IMAGES = \
   qt/res/images/about.png \
   qt/res/images/splash.png \
   qt/res/images/splash_testnet.png \
-  qt/res/images/dash_logo_horizontal.png \
+  qt/res/images/crown_logo_horizontal.png \
   qt/res/images/drkblue_downArrow.png \
   qt/res/images/drkblue_downArrow_small.png \
   qt/res/images/drkblue_upArrow_small.png \
@@ -350,12 +350,12 @@ qt/crownstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCE
 
 translate: qt/crownstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/dash_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/crown_en.ts
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@test -f $(@D)/$(<F) || cp -f $< $(@D)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash_locale $(@D)/$(<F) | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name crown_locale $(@D)/$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)

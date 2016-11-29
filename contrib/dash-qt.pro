@@ -641,20 +641,20 @@ SOURCES += src/activethrone.cpp \
            src/leveldb/helpers/memenv/memenv.cc \
            src/leveldb/helpers/memenv/memenv_test.cc \
            src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.c
-RESOURCES += src/qt/dash.qrc src/qt/dash_locale.qrc
-TRANSLATIONS += src/qt/locale/dash_bg.ts \
-                src/qt/locale/dash_de.ts \
-                src/qt/locale/dash_en.ts \
-                src/qt/locale/dash_es.ts \
-                src/qt/locale/dash_fi.ts \
-                src/qt/locale/dash_fr.ts \
-                src/qt/locale/dash_it.ts \
-                src/qt/locale/dash_ja.ts \
-                src/qt/locale/dash_pl.ts \
-                src/qt/locale/dash_pt.ts \
-                src/qt/locale/dash_ru.ts \
-                src/qt/locale/dash_sk.ts \
-                src/qt/locale/dash_sv.ts \
-                src/qt/locale/dash_vi.ts \
-                src/qt/locale/dash_zh_CN.ts \
-                src/qt/locale/dash_zh_TW.ts
+RESOURCES += src/qt/dash.qrc src/qt/crown_locale.qrc
+TRANSLATIONS += src/qt/locale/crown_bg.ts \
+                src/qt/locale/crown_de.ts \
+                src/qt/locale/crown_en.ts \
+                src/qt/locale/crown_es.ts \
+                src/qt/locale/crown_fi.ts \
+                src/qt/locale/crown_fr.ts \
+                src/qt/locale/crown_it.ts \
+                src/qt/locale/crown_ja.ts \
+                src/qt/locale/crown_pl.ts \
+                src/qt/locale/crown_pt.ts \
+                src/qt/locale/crown_ru.ts \
+                src/qt/locale/crown_sk.ts \
+                src/qt/locale/crown_sv.ts \
+                src/qt/locale/crown_vi.ts \
+                src/qt/locale/crown_zh_CN.ts \
+                src/qt/locale/crown_zh_TW.ts
