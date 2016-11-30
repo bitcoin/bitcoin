@@ -2557,17 +2557,16 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     }
 
     // parse hex string from parameter
-    CTransaction origTx;
-    if (!DecodeHexTx(origTx, request.params[0].get_str(), true))
+    CMutableTransaction tx;
+    if (!DecodeHexTx(tx, request.params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
-    if (origTx.vout.size() == 0)
+    if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > origTx.vout.size()))
+    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
-    CMutableTransaction tx(origTx);
     CAmount nFeeOut;
     string strFailReason;
 
