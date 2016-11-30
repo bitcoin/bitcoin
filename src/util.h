@@ -47,8 +47,6 @@ extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
 
-static const bool DEFAULT_TESTSAFEMODE = false;
-
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
 extern bool fLogIPs;
@@ -225,12 +223,5 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
 }
 
 std::string CopyrightHolders(const std::string& strPrefix);
-
-void SetMiscWarning(const std::string& strWarning);
-void SetfLargeWorkForkFound(bool flag);
-bool GetfLargeWorkForkFound();
-void SetfLargeWorkInvalidChainFound(bool flag);
-bool GetfLargeWorkInvalidChainFound();
-std::string GetWarnings(const std::string& strFor);
 
 #endif // BITCOIN_UTIL_H

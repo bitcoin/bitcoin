@@ -34,6 +34,7 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "versionbits.h"
+#include "warnings.h"
 
 #include <atomic>
 #include <sstream>
