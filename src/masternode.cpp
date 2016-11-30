@@ -121,7 +121,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     nTimeLastChecked = 0;
     nTimeLastWatchdogVote = mnb.sigTime;
     int nDos = 0;
-    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDos, false))) {
+    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDos))) {
         lastPing = mnb.lastPing;
         mnodeman.mapSeenMasternodePing.insert(std::make_pair(lastPing.GetHash(), lastPing));
     }
@@ -466,7 +466,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     // empty ping or incorrect sigTime/blockhash
-    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, false, true)) {
+    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, true)) {
         return false;
     }
 
@@ -765,16 +765,10 @@ bool CMasternodePing::CheckSignature(CPubKey& pubKeyMasternode, int &nDos)
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fSimpleCheck)
+bool CMasternodePing::CheckAndUpdate(int& nDos, bool fSimpleCheck)
 {
     if (sigTime > GetAdjustedTime() + 60 * 60) {
         LogPrintf("CMasternodePing::CheckAndUpdate -- Signature rejected, too far into the future, masternode=%s\n", vin.prevout.ToStringShort());
-        nDos = 1;
-        return false;
-    }
-
-    if (sigTime <= GetAdjustedTime() - 60 * 60) {
-        LogPrintf("CMasternodePing::CheckAndUpdate -- Signature rejected, too far into the past: masternode=%s  sigTime=%d  GetAdjustedTime()=%d\n", vin.prevout.ToStringShort(), sigTime, GetAdjustedTime());
         nDos = 1;
         return false;
     }
@@ -810,8 +804,6 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fSimp
         LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Couldn't find compatible Masternode entry, masternode=%s\n", vin.prevout.ToStringShort());
         return false;
     }
-
-    if (fRequireEnabled && !pmn->IsEnabled() && !pmn->IsPreEnabled() && !pmn->IsWatchdogExpired()) return false;
 
     // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.prevout.ToStringShort());
     // update only if there is no known ping for this masternode or

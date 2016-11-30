@@ -123,9 +123,6 @@ bool CMasternodeMan::Add(CMasternode &mn)
 {
     LOCK(cs);
 
-    if (!mn.IsEnabled() && !mn.IsPreEnabled())
-        return false;
-
     CMasternode *pmn = Find(mn.vin);
     if (pmn == NULL) {
         LogPrint("masternode", "CMasternodeMan::Add -- Adding new Masternode: addr=%s, %i now\n", mn.addr.ToString(), size() + 1);
@@ -733,7 +730,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s new\n", mnp.vin.prevout.ToStringShort());
 
         int nDos = 0;
-        if(mnp.CheckAndUpdate(nDos, false)) return;
+        if(mnp.CheckAndUpdate(nDos)) return;
 
         if(nDos > 0) {
             // if anything significant failed, mark that node
