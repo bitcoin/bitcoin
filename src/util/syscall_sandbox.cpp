@@ -592,6 +592,8 @@ public:
         allowed_syscalls.insert(__NR_getcwd);          // get current working directory
         allowed_syscalls.insert(__NR_getdents);        // get directory entries
         allowed_syscalls.insert(__NR_getdents64);      // get directory entries
+        allowed_syscalls.insert(__NR_ioprio_get);      // get i/o priority
+        allowed_syscalls.insert(__NR_ioprio_set);      // set i/o priority
         allowed_syscalls.insert(__NR_lstat);           // get file status
         allowed_syscalls.insert(__NR_mkdir);           // create a directory
         allowed_syscalls.insert(__NR_newfstatat);      // get file status
