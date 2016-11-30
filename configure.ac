@@ -1067,6 +1067,31 @@ else
   have_ioprio_syscall=no
 fi
 
+AC_MSG_CHECKING(for Windows file I/O priority functions)
+AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM([[
+    #define _WIN32_WINNT 0x0600
+    #include <windows.h>
+    #include <io.h>
+    #include <stdio.h>
+  ]],[[
+    static const FILE_IO_PRIORITY_HINT_INFO priorityHint = {
+        .PriorityHint = IoPriorityHintLow,
+    };
+    FILE * const F = fopen("test", "r");
+    HANDLE hFile = _get_osfhandle(_fileno(F));
+
+    SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
+  ]])
+],[
+  have_windows_ioprio=yes
+  AC_DEFINE(HAVE_WINDOWS_IOPRIO,1,[Define this symbol if you have Windows I/O priority functions])
+],[
+  have_windows_ioprio=no
+])
+AC_MSG_RESULT($have_windows_ioprio)
+
+
 dnl thread_local is currently disabled when building with glibc back compat.
 dnl Our minimum supported glibc is 2.17, however support for thread_local
 dnl did not arrive in glibc until 2.18.
@@ -1810,6 +1835,7 @@ AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HAVE_IOPOLICY],[test x$have_iopolicy = xyes])
 AM_CONDITIONAL([HAVE_IOPRIO_SYSCALL],[test x$have_ioprio_syscall = xyes])
+AM_CONDITIONAL([HAVE_WINDOWS_IOPRIO],[test x$have_windows_ioprio = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_SSE42],[test x$enable_sse42 = xyes])
 AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
