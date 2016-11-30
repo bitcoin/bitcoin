@@ -19,6 +19,8 @@
 
 #include <boost/filesystem.hpp>
 
+extern std::map<std::string, std::string> mapArgs;
+
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {
     if (request.fHelp) {

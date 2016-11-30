@@ -32,6 +32,7 @@ struct COrphanTx {
     int64_t nTimeExpire;
 };
 extern std::map<uint256, COrphanTx> mapOrphanTransactions;
+extern std::map<std::string, std::string> mapArgs;
 
 CService ip(uint32_t i)
 {
