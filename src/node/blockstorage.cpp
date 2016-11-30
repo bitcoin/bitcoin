@@ -1049,6 +1049,8 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, cons
         return false;
     }
 
+    filein.SetIdlePriority();
+
     // Read block
     try {
         filein >> TX_WITH_WITNESS(block);
