@@ -36,6 +36,13 @@ add_library(bitcoin_util STATIC EXCLUDE_FROM_ALL
   ../sync.cpp
 )
 
+if(HAVE_IOPRIO_SYSCALL)
+  target_sources(bitcoin_util
+    PRIVATE
+      ioprio.cpp
+  )
+endif()
+
 target_link_libraries(bitcoin_util
   PRIVATE
     core_interface
