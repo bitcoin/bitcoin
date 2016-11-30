@@ -465,8 +465,8 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
         return false;
     }
 
-    // empty ping or incorrect sigTime/blockhash
-    if(lastPing == CMasternodePing() || !lastPing.CheckAndUpdate(nDos, true)) {
+    // empty ping or incorrect sigTime/unknown blockhash
+    if(lastPing == CMasternodePing() || !lastPing.SimpleCheck(nDos)) {
         return false;
     }
 
@@ -765,10 +765,13 @@ bool CMasternodePing::CheckSignature(CPubKey& pubKeyMasternode, int &nDos)
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(int& nDos, bool fSimpleCheck)
+bool CMasternodePing::SimpleCheck(int& nDos)
 {
+    // don't ban by default
+    nDos = 0;
+
     if (sigTime > GetAdjustedTime() + 60 * 60) {
-        LogPrintf("CMasternodePing::CheckAndUpdate -- Signature rejected, too far into the future, masternode=%s\n", vin.prevout.ToStringShort());
+        LogPrintf("CMasternodePing::SimpleCheck -- Signature rejected, too far into the future, masternode=%s\n", vin.prevout.ToStringShort());
         nDos = 1;
         return false;
     }
@@ -777,22 +780,32 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fSimpleCheck)
         LOCK(cs_main);
         BlockMap::iterator mi = mapBlockIndex.find(blockHash);
         if (mi == mapBlockIndex.end()) {
-            LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, unknown block hash: masternode=%s blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
+            LogPrint("masternode", "CMasternodePing::SimpleCheck -- Masternode ping is invalid, unknown block hash: masternode=%s blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
             // maybe we stuck or forked so we shouldn't ban this node, just fail to accept this ping
             // TODO: or should we also request this block?
             return false;
         }
-        if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
-            LogPrintf("CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
-            // Do nothing here (no Masternode update, no mnping relay)
-            // Let this node to be visible but fail to accept mnping
-            return false;
-        }
+    }
+    LogPrint("masternode", "CMasternodePing::SimpleCheck -- Masternode ping verified: masternode=%s  blockHash=%s  sigTime=%d\n", vin.prevout.ToStringShort(), blockHash.ToString(), sigTime);
+    return true;
+}
+
+bool CMasternodePing::CheckAndUpdate(int& nDos)
+{
+    // don't ban by default
+    nDos = 0;
+
+    if (!SimpleCheck(nDos)) {
+        return false;
     }
 
-    if (fSimpleCheck) {
-        LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- ping verified in fSimpleCheck mode: masternode=%s  blockHash=%s  sigTime=%d\n", vin.prevout.ToStringShort(), blockHash.ToString(), sigTime);
-        return true;
+    {
+        LOCK(cs_main);
+        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+        if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
+            LogPrintf("CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
+            return false;
+        }
     }
 
     LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- New ping: masternode=%s  blockHash=%s  sigTime=%d\n", vin.prevout.ToStringShort(), blockHash.ToString(), sigTime);

@@ -78,7 +78,8 @@ public:
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool CheckSignature(CPubKey& pubKeyMasternode, int &nDos);
-    bool CheckAndUpdate(int& nDos, bool fSimpleCheck = false);
+    bool SimpleCheck(int& nDos);
+    bool CheckAndUpdate(int& nDos);
     void Relay();
 
     CMasternodePing& operator=(CMasternodePing from)
