@@ -813,7 +813,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     } else if (strCommand == NetMsgType::MNVERIFY) { // Masternode Verify
 
-        LOCK(cs);
+        // Need LOCK2 here to ensure consistent locking order because the all functions below call GetBlockHash which locks cs_main
+        LOCK2(cs_main, cs);
 
         CMasternodeVerification mnv;
         vRecv >> mnv;
