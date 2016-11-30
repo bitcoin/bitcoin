@@ -11,7 +11,7 @@
 
 #include <util/system.h>
 
-#ifdef HAVE_IOPRIO_SYSCALL
+#if defined(HAVE_IOPRIO_SYSCALL) || defined(HAVE_IOPOLICY)
 int ioprio_get();
 int ioprio_set(int ioprio);
 int ioprio_set_idle();

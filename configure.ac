@@ -1114,23 +1114,44 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   [AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING(for ioprio syscalls)
+AC_MSG_CHECKING(for iopolicy functions)
 AC_COMPILE_IFELSE([
   AC_LANG_PROGRAM([[
-    #define _GNU_SOURCE
-    #include <unistd.h>
-    #include <sys/syscall.h>
+    #include <sys/resource.h>
   ]],[[
-    int x = syscall(SYS_ioprio_get, 1, 0);
-    syscall(SYS_ioprio_set, 1, 0, x);
+    int x = getiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD);
+    setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, x);
   ]])
 ],[
-  have_ioprio_syscall=yes
-  AC_DEFINE(HAVE_IOPRIO_SYSCALL,1,[Define this symbol if you have ioprio syscalls])
+  have_iopolicy=yes
+  AC_DEFINE(HAVE_IOPOLICY,1,[Define this symbol if you have iopolicy functions])
 ],[
-  have_ioprio_syscall=no
+  have_iopolicy=no
 ])
-AC_MSG_RESULT($have_ioprio_syscall)
+AC_MSG_RESULT($have_iopolicy)
+AM_CONDITIONAL([HAVE_IOPOLICY], [test "$have_iopolicy" = "yes"])
+
+if test x$have_iopolicy = xno; then
+  AC_MSG_CHECKING(for ioprio syscalls)
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+      #define _GNU_SOURCE
+      #include <unistd.h>
+      #include <sys/syscall.h>
+    ]],[[
+      int x = syscall(SYS_ioprio_get, 1, 0);
+      syscall(SYS_ioprio_set, 1, 0, x);
+    ]])
+  ],[
+    have_ioprio_syscall=yes
+    AC_DEFINE(HAVE_IOPRIO_SYSCALL,1,[Define this symbol if you have ioprio syscalls])
+  ],[
+    have_ioprio_syscall=no
+  ])
+  AC_MSG_RESULT($have_ioprio_syscall)
+else
+  have_ioprio_syscall=no
+fi
 AM_CONDITIONAL([HAVE_IOPRIO_SYSCALL], [test "$have_ioprio_syscall" = "yes"])
 
 if test "$use_thread_local" = "yes" || test "$use_thread_local" = "auto"; then
