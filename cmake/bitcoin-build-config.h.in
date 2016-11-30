@@ -93,6 +93,8 @@
 /* Define this symbol if you have posix_fallocate */
 #cmakedefine HAVE_POSIX_FALLOCATE 1
 
+#cmakedefine01 HAVE_IOPOLICY
+
 #cmakedefine01 HAVE_IOPRIO_SYSCALL
 
 /* Define this symbol if platform supports unix domain sockets */

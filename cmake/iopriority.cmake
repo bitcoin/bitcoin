@@ -5,6 +5,18 @@
 include(CheckCXXSourceCompiles)
 
 check_cxx_source_compiles([[
+  #include <sys/resource.h>
+
+  int main()
+  {
+    int x = getiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD);
+    setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, x);
+    return x;
+  }
+  ]] HAVE_IOPOLICY
+)
+
+check_cxx_source_compiles([[
   #define _GNU_SOURCE
   #include <unistd.h>
   #include <sys/syscall.h>
