@@ -426,6 +426,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
         strUsage += HelpMessageOpt("-bip9params=deployment:start:end", "Use given start/end times for specified BIP9 deployment (regtest-only)");
+        strUsage += HelpMessageOpt("-buriedsfparams=deployment:startHeight", "Use given start height for specified buried deployment (regtest-only)");
     }
     string debugCategories = "addrman, alert, bench, cmpctblock, coindb, db, http, libevent, lock, mempool, mempoolrej, net, proxy, prune, rand, reindex, rpc, selectcoins, tor, zmq"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
@@ -988,9 +989,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (!mapMultiArgs["-bip9params"].empty()) {
         // Allow overriding BIP9 parameters for testing
-        if (!chainparams.MineBlocksOnDemand()) {
-            return InitError("BIP9 parameters may only be overridden on regtest.");
+        if (!chainparams.AllowsOverriddenSoftFork()) {
+            return InitError("BIP9 parameters can't be overriden on this chain.");
         }
+        CChainParams& mutableParams = Params(Params().NetworkIDString());
         const vector<string>& deployments = mapMultiArgs["-bip9params"];
         for (auto i : deployments) {
             std::vector<std::string> vDeploymentParams;
@@ -1009,7 +1011,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             for (int j=0; j<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j)
             {
                 if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[j].name) == 0) {
-                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                    mutableParams.UpdateBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
                     found = true;
                     LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
                     break;
@@ -1018,6 +1020,36 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             if (!found) {
                 return InitError(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
             }
+        }
+    }
+
+    if (!mapMultiArgs["-buriedsfparams"].empty()) {
+        // Allow overriding ism parameters for testing
+        if (!chainparams.AllowsOverriddenSoftFork()) {
+            return InitError("Buried soft fork parameters can't be overridden on this chain.");
+        }
+        CChainParams& mutableParams = Params(chainparams.NetworkIDString());
+        std::map<string, Consensus::BuriedDeploymentPos> buriedDeployments;
+        buriedDeployments.insert(std::make_pair("bip34", Consensus::BIP34_HEIGHT_ACTIVE));
+        buriedDeployments.insert(std::make_pair("bip65", Consensus::BIP65_HEIGHT_ACTIVE));
+        buriedDeployments.insert(std::make_pair("bip66", Consensus::BIP66_HEIGHT_ACTIVE));
+        const vector<string>& deployments = mapMultiArgs["-buriedsfparams"];
+        for (auto i : deployments) {
+            std::vector<std::string> vDeploymentParams;
+            boost::split(vDeploymentParams, i, boost::is_any_of(":"));
+            if (vDeploymentParams.size() != 2) {
+                return InitError("Buried soft fork parameters malformed, expecting bip:startHeight");
+            }
+            int64_t nStartHeight;
+            if (!ParseInt64(vDeploymentParams[1], &nStartHeight)) {
+                return InitError(strprintf("Invalid nStartHeight (%s)", vDeploymentParams[1]));
+            }
+
+            auto found = buriedDeployments.find(vDeploymentParams[0]);
+            if (found == buriedDeployments.end()) {
+                return InitError(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+            }
+            mutableParams.UpdateBuriedDeploymentParameters(found->second, nStartHeight);
         }
     }
 

@@ -19,8 +19,8 @@ class BIP65Test(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, []))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-blockversion=3"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-blockversion=4"]))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-blockversion=3", "-buriedsfparams=bip65:1251"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-blockversion=4", "-buriedsfparams=bip65:1251"]))
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 0)
         self.is_network_split = False
@@ -30,8 +30,7 @@ class BIP65Test(BitcoinTestFramework):
         cnt = self.nodes[0].getblockcount()
 
         # Mine some old-version blocks
-        self.nodes[1].generate(200)
-        cnt += 100
+        self.nodes[1].generate(100)
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 100):
             raise AssertionError("Failed to mine 100 version=3 blocks")
