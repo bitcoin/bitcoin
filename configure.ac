@@ -1029,6 +1029,24 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   [AC_MSG_RESULT(no)]
 )
 
+AC_MSG_CHECKING(for ioprio syscalls)
+AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM([[
+    #define _GNU_SOURCE
+    #include <unistd.h>
+    #include <sys/syscall.h>
+  ]],[[
+    int x = syscall(SYS_ioprio_get, 1, 0);
+    syscall(SYS_ioprio_set, 1, 0, x);
+  ]])
+],[
+  have_ioprio_syscall=yes
+  AC_DEFINE(HAVE_IOPRIO_SYSCALL,1,[Define this symbol if you have ioprio syscalls])
+],[
+  have_ioprio_syscall=no
+])
+AC_MSG_RESULT($have_ioprio_syscall)
+
 dnl thread_local is currently disabled when building with glibc back compat.
 dnl Our minimum supported glibc is 2.17, however support for thread_local
 dnl did not arrive in glibc until 2.18.
@@ -1770,6 +1788,7 @@ AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
+AM_CONDITIONAL([HAVE_IOPRIO_SYSCALL],[test x$have_ioprio_syscall = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_SSE42],[test x$enable_sse42 = xyes])
 AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])

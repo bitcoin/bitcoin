@@ -251,6 +251,7 @@ BITCOIN_CORE_H = \
   util/golombrice.h \
   util/hash_type.h \
   util/hasher.h \
+  util/ioprio.h \
   util/macros.h \
   util/message.h \
   util/moneystr.h \
@@ -620,6 +621,10 @@ endif
 if GLIBC_BACK_COMPAT
 libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += $(COMPAT_LDFLAGS)
+endif
+
+if HAVE_IOPRIO_SYSCALL
+libbitcoin_util_a_SOURCES += util/ioprio.cpp
 endif
 
 # cli: shared between bitcoin-cli and bitcoin-qt
