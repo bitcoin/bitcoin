@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
                 && !mapMultiArgs.count("f") && !mapMultiArgs.count("-d"));
 
     BOOST_CHECK(mapArgs["-a"] == "" && mapArgs["-ccc"] == "multiple");
-    BOOST_CHECK(mapMultiArgs["-ccc"].size() == 2);
+    BOOST_CHECK(mapMultiArgs.at("-ccc").size() == 2);
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
