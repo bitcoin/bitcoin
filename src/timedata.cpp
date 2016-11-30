@@ -13,6 +13,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "warnings.h"
 
 #include <boost/foreach.hpp>
 
