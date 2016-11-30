@@ -1136,7 +1136,7 @@ void CMasternodeMan::ProcessVerifyReply(CNode* pnode, CMasternodeVerification& m
             LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- increased PoSe ban score for %s addr %s, new score %d\n",
                         prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString(), pmn->nPoSeBanScore);
         }
-        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score incresed for %d fake masternodes, addr %s\n",
+        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score increased for %d fake masternodes, addr %s\n",
                     (int)vpMasternodesToBan.size(), pnode->addr.ToString());
     }
 }

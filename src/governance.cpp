@@ -296,7 +296,7 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
     // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
 
     if(mapObjects.count(nHash)) {
-        LogPrintf("CGovernanceManager::AddGovernanceObject -- already have governance object - %s\n", strError);
+        LogPrintf("CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
         return false;
     }
 
@@ -873,8 +873,12 @@ void CGovernanceManager::AddCachedTriggers()
 void CGovernanceManager::InitOnLoad()
 {
     LOCK(cs);
+    int64_t nStart = GetTimeMillis();
+    LogPrintf("Preparing masternode indexes and governance triggers...\n");
     RebuildIndexes();
     AddCachedTriggers();
+    LogPrintf("Masternode indexes and governance triggers prepared  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("     %s\n", ToString());
 }
 
 std::string CGovernanceManager::ToString() const
@@ -882,8 +886,8 @@ std::string CGovernanceManager::ToString() const
     std::ostringstream info;
 
     info << "Governance Objects: " << (int)mapObjects.size() <<
-            ", Seen Budgets : " << (int)mapSeenGovernanceObjects.size() <<
-            ", Vote Count   : " << (int)mapVoteToObject.GetSize();
+            " (Seen: " << (int)mapSeenGovernanceObjects.size() <<
+            "), Vote Count: " << (int)mapVoteToObject.GetSize();
 
     return info.str();
 }

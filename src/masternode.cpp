@@ -168,15 +168,15 @@ void CMasternode::Check(bool fForce)
 
     static int64_t nTimeStart = GetTime();
 
-    LogPrint("masternode", "CMasternode::Check start -- vin %s\n", vin.prevout.ToStringShort());
-
-    //once spent, stop doing the checks
-    if(nActiveState == MASTERNODE_OUTPOINT_SPENT) return;
-
     if(ShutdownRequested()) return;
 
     if(!fForce && (GetTime() - nTimeLastChecked < MASTERNODE_CHECK_SECONDS)) return;
     nTimeLastChecked = GetTime();
+
+    LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state\n", vin.prevout.ToStringShort(), GetStateString());
+
+    //once spent, stop doing the checks
+    if(nActiveState == MASTERNODE_OUTPOINT_SPENT) return;
 
     int nHeight = 0;
     if(!fUnitTest) {
