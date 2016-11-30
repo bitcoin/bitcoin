@@ -33,6 +33,8 @@
 std::unique_ptr<CConnman> g_connman;
 FastRandomContext insecure_rand_ctx(true);
 
+extern std::map<std::string, std::string> mapArgs;
+
 extern bool fPrintToConsole;
 extern void noui_connect();
 
