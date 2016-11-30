@@ -3494,7 +3494,7 @@ bool CWallet::InitLoadWallet()
 
         walletInstance->SetBestChain(chainActive.GetLocator());
     }
-    else if (mapArgs.count("-usehd")) {
+    else if (IsArgSet("-usehd")) {
         bool useHD = GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD)
             return InitError(strprintf(_("Error loading %s: You can't disable HD on a already existing HD wallet"), walletFile));
@@ -3618,7 +3618,7 @@ bool CWallet::ParameterInteraction()
         InitWarning(AmountHighWarn("-minrelaytxfee") + " " +
                     _("The wallet will avoid paying less than the minimum relay fee."));
 
-    if (mapArgs.count("-mintxfee"))
+    if (IsArgSet("-mintxfee"))
     {
         CAmount n = 0;
         if (!ParseMoney(mapArgs["-mintxfee"], n) || 0 == n)
@@ -3628,7 +3628,7 @@ bool CWallet::ParameterInteraction()
                         _("This is the minimum transaction fee you pay on every transaction."));
         CWallet::minTxFee = CFeeRate(n);
     }
-    if (mapArgs.count("-fallbackfee"))
+    if (IsArgSet("-fallbackfee"))
     {
         CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-fallbackfee"], nFeePerK))
@@ -3638,7 +3638,7 @@ bool CWallet::ParameterInteraction()
                         _("This is the transaction fee you may pay when fee estimates are not available."));
         CWallet::fallbackFee = CFeeRate(nFeePerK);
     }
-    if (mapArgs.count("-paytxfee"))
+    if (IsArgSet("-paytxfee"))
     {
         CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-paytxfee"], nFeePerK))
@@ -3654,7 +3654,7 @@ bool CWallet::ParameterInteraction()
                                        mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
         }
     }
-    if (mapArgs.count("-maxtxfee"))
+    if (IsArgSet("-maxtxfee"))
     {
         CAmount nMaxFee = 0;
         if (!ParseMoney(mapArgs["-maxtxfee"], nMaxFee))

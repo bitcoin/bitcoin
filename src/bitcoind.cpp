@@ -75,11 +75,11 @@ bool AppInit(int argc, char* argv[])
     ParseParameters(argc, argv);
 
     // Process help and version before taking care about datadir
-    if (mapArgs.count("-?") || mapArgs.count("-h") ||  mapArgs.count("-help") || mapArgs.count("-version"))
+    if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
     {
         std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
 
-        if (mapArgs.count("-version"))
+        if (IsArgSet("-version"))
         {
             strUsage += FormatParagraph(LicenseInfo());
         }

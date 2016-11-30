@@ -379,6 +379,11 @@ void ParseParameters(int argc, const char* const argv[])
     }
 }
 
+bool IsArgSet(const std::string& strArg)
+{
+    return mapArgs.count(strArg);
+}
+
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
     if (mapArgs.count(strArg))
@@ -498,7 +503,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (mapArgs.count("-datadir")) {
+    if (IsArgSet("-datadir")) {
         path = fs::system_complete(mapArgs["-datadir"]);
         if (!fs::is_directory(path)) {
             path = "";
