@@ -4311,8 +4311,6 @@ void UnloadBlockIndex()
     pindexBestInvalid = NULL;
     pindexBestHeader = NULL;
     mempool.clear();
-    mapOrphanTransactions.clear();
-    mapOrphanTransactionsByPrev.clear();
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
     nLastBlockFile = 0;
