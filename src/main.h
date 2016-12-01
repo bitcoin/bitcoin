@@ -223,6 +223,8 @@ static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
  * Note that we guarantee that either the proof-of-work is valid on pblock, or
  * (and possibly also) BlockChecked will have been called.
  * 
+ * Call without cs_main held.
+ *
  * @param[in]   pblock  The block we want to process.
  * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
  * @param[out]  dbp     The already known disk position of pblock, or NULL if not yet stored.
@@ -233,6 +235,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const CBlock* pblock, bool
 
 /**
  * Process incoming block headers.
+ *
+ * Call without cs_main held.
  *
  * @param[in]  block The block headers themselves
  * @param[out] state This may be set to an Error state if any error occurred processing them
