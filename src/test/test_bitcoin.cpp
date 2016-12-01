@@ -12,6 +12,7 @@
 #include "key.h"
 #include "main.h"
 #include "miner.h"
+#include "net_processing.h"
 #include "pubkey.h"
 #include "random.h"
 #include "txdb.h"

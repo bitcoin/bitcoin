@@ -4,6 +4,7 @@
 
 #include "chainparams.h"
 #include "main.h"
+#include "net.h"
 
 #include "test/test_bitcoin.h"
 
