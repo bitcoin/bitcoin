@@ -613,7 +613,6 @@ public:
     bool fOneShot;
     bool fClient;
     const bool fInbound;
-    bool fNetworkNode;
     bool fSuccessfullyConnected;
     std::atomic_bool fDisconnect;
     // We use fRelayTxes for two purposes -
