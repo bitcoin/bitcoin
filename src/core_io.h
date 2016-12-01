@@ -15,18 +15,18 @@ class uint256;
 class UniValue;
 
 // core_read.cpp
-extern CScript ParseScript(const std::string& s);
-extern std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
-extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx);
-extern bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
-extern uint256 ParseHashUV(const UniValue& v, const std::string& strName);
-extern uint256 ParseHashStr(const std::string&, const std::string& strName);
-extern std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
+CScript ParseScript(const std::string& s);
+std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
+bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx);
+bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
+uint256 ParseHashUV(const UniValue& v, const std::string& strName);
+uint256 ParseHashStr(const std::string&, const std::string& strName);
+std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
 // core_write.cpp
-extern std::string FormatScript(const CScript& script);
-extern std::string EncodeHexTx(const CTransaction& tx);
-extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
-extern void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry);
+std::string FormatScript(const CScript& script);
+std::string EncodeHexTx(const CTransaction& tx);
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry);
 
 #endif // BITCOIN_CORE_IO_H
