@@ -515,7 +515,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         // peer table signal handling - update peer details when new nodes are added to the model
         connect(model->getPeerTableModel(), SIGNAL(layoutChanged()), this, SLOT(peerLayoutChanged()));
         // peer table signal handling - cache selected node ids
-        connect(model->getPeerTableModel(), SIGNAL(layoutAboutToChange()), this, SLOT(peerLayoutAboutToChange()));
+        connect(model->getPeerTableModel(), SIGNAL(layoutAboutToBeChanged()), this, SLOT(peerLayoutAboutToChange()));
         
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
@@ -778,7 +778,6 @@ void RPCConsole::startExecutor()
     connect(this, SIGNAL(stopExecutor()), &thread, SLOT(quit()));
     // - queue executor for deletion (in execution thread)
     connect(&thread, SIGNAL(finished()), executor, SLOT(deleteLater()), Qt::DirectConnection);
-    connect(&thread, SIGNAL(finished()), this, SLOT(test()), Qt::DirectConnection);
 
     // Default implementation of QThread::run() simply spins up an event loop in the thread,
     // which is what we want.
