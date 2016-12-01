@@ -451,28 +451,39 @@ bool CWallet::Verify()
         }
     }
     
-    if (GetBoolArg("-salvagewallet", false))
-    {
-        // Recover readable keypairs:
-        if (!CWalletDB::Recover(bitdb, walletFile, true))
-            return false;
-    }
+   
+    bool recoverWallet = GetBoolArg("-salvagewallet", false);
     
     if (boost::filesystem::exists(GetDataDir() / walletFile))
     {
-        CDBEnv::VerifyResult r = bitdb.Verify(walletFile, CWalletDB::Recover);
-        if (r == CDBEnv::RECOVER_OK)
+        CDBEnv::VerifyResult r = bitdb.Verify(walletFile);
+        if (r == CDBEnv::VERIFY_FAIL)
         {
             InitWarning(strprintf(_("Warning: Wallet file corrupt, data salvaged!"
                                          " Original %s saved as %s in %s; if"
                                          " your balance or transactions are incorrect you should"
                                          " restore from a backup."),
                 walletFile, "wallet.{timestamp}.bak", GetDataDir()));
+            
+            recoverWallet = true;
         }
-        if (r == CDBEnv::RECOVER_FAIL)
-            return InitError(strprintf(_("%s corrupt, salvage failed"), walletFile));
     }
     
+    if (recoverWallet)
+    {
+        // instantiate a CWalletMapper and attach the current wallet
+        CWallet dummyWallet;
+        CWalletMapper mapper(&dummyWallet);
+        
+        // define a mapper callback for CWalletDB::Recover
+        // this is required to check if all the records could be read (detect corruption of keys)
+        auto mapperFunc = std::bind(&CWalletMapper::ReadKeyValue, mapper, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+        
+        // Recover wallet
+        LOCK(dummyWallet.cs_wallet);
+        if (!CWalletDB::Recover(bitdb, walletFile, mapperFunc, true))
+            return InitError(strprintf(_("%s corrupt, salvage failed"), walletFile));
+    }
     return true;
 }
 
@@ -2651,18 +2662,16 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     CWalletScanState wss;
     vchDefaultKey = CPubKey();
     
-    /* instanciate a CWalletMapper and attach the current wallet */
+    // instantiate a CWalletMapper and attach the current wallet
     CWalletMapper mapper(this);
-    /* define a mapper callback for CWalletDB::LoadWallet */
+
+    // define a mapper callback for CWalletDB::LoadWallet
     auto mapperFunc = std::bind(&CWalletMapper::ReadKeyValue, mapper, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
     
-    /* load wallet, pass in callback to CWalletMapper */
+    // load wallet, pass in callback to map the recods to the CWallet object
     LOCK(cs_wallet);
     int loadWalletMinVersion;
     DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(wss, loadWalletMinVersion, mapperFunc);
-    
-    /* set the min version */
-    LoadMinVersion(loadWalletMinVersion);
     
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
@@ -2679,10 +2688,14 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
     
+    // set the min version
+    LoadMinVersion(loadWalletMinVersion);
+    
     // nTimeFirstKey is only reliable if all keys have metadata
     if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
         nTimeFirstKey = 1; // 0 would be considered 'no value'
     
+    // check for transactions that require rewrite (migration)
     if (!wss.vWalletUpgrade.empty())
     {
         CWalletDB walletdb(strWalletFile);
@@ -2694,6 +2707,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     if (wss.fAnyUnordered)
         nLoadWalletRet = ReorderTransactions();
     
+    // fill in wtxOrdered
     laccentries.clear();
     ListAccountCreditDebit("*", laccentries);
     BOOST_FOREACH(CAccountingEntry& entry, laccentries) {

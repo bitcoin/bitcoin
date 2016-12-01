@@ -120,7 +120,7 @@ public:
     bool fIsEncrypted;
     bool fAnyUnordered;
     int nFileVersion;
-    vector<uint256> vWalletUpgrade;
+    std::vector<uint256> vWalletUpgrade;
     
     CWalletScanState() {
         nKeys = nCKeys = nKeyMeta = 0;
@@ -129,6 +129,8 @@ public:
         nFileVersion = 0;
     }
 };
+
+typedef std::function<bool(CDataStream& ssKey, CDataStream& ssValue, CWalletScanState &wss, std::string& strType, std::string& strErr, uint64_t &accountingEntryNumberRef)> walletReadFunc_t;
 
 /** Access to the wallet database */
 class CWalletDB : public CDB
@@ -184,12 +186,12 @@ public:
     CAmount GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
-    DBErrors LoadWallet(CWallet* pwallet);
+    DBErrors LoadWallet(CWalletScanState &wss, int &minVersionOut, const walletReadFunc_t readFunc);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(CWallet* pwallet, std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
-    static bool Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKeys);
-    static bool Recover(CDBEnv& dbenv, const std::string& filename);
+    static bool Recover(CDBEnv& dbenv, const std::string& filename, const walletReadFunc_t readFunc, bool fOnlyKeys);
+    static bool Recover(CDBEnv& dbenv, const std::string& filename, const walletReadFunc_t readFunc);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);

@@ -7,7 +7,6 @@
 
 #include "base58.h"
 #include "consensus/validation.h"
-#include "main.h" // For CheckTransaction
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
@@ -257,21 +256,18 @@ static bool IsKeyType(string strType)
             strType == "mkey" || strType == "ckey");
 }
 
-DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
+DBErrors CWalletDB::LoadWallet(CWalletScanState &wss, int &minVersionOut, const walletReadFunc_t readFunc)
 {
-    pwallet->vchDefaultKey = CPubKey();
-    CWalletScanState wss;
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
     try {
-        LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
             if (nMinVersion > CLIENT_VERSION)
                 return DB_TOO_NEW;
-            pwallet->LoadMinVersion(nMinVersion);
+            minVersionOut = nMinVersion;
         }
 
         // Get cursor
@@ -298,7 +294,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
             // Try to be tolerant of single corrupt records:
             string strType, strErr;
-            if (!ReadKeyValue(pwallet, ssKey, ssValue, wss, strType, strErr))
+            if (!readFunc(ssKey, ssValue, wss, strType, strErr, nAccountingEntryNumber))
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
@@ -338,12 +334,6 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     LogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
 
-    // nTimeFirstKey is only reliable if all keys have metadata
-    if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
-        pwallet->nTimeFirstKey = 1; // 0 would be considered 'no value'
-
-    BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
-        WriteTx(pwallet->mapWallet[hash]);
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
     if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
@@ -351,15 +341,6 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
     if (wss.nFileVersion < CLIENT_VERSION) // Update
         WriteVersion(CLIENT_VERSION);
-
-    if (wss.fAnyUnordered)
-        result = pwallet->ReorderTransactions();
-
-    pwallet->laccentries.clear();
-    ListAccountCreditDebit("*", pwallet->laccentries);
-    BOOST_FOREACH(CAccountingEntry& entry, pwallet->laccentries) {
-        pwallet->wtxOrdered.insert(make_pair(entry.nOrderPos, CWallet::TxPair((CWalletTx*)0, &entry)));
-    }
 
     return result;
 }
@@ -551,7 +532,7 @@ void ThreadFlushWalletDB(const string& strFile)
 //
 // Try to (very carefully!) recover wallet file if there is a problem.
 //
-bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKeys)
+bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, const walletReadFunc_t readFunc, bool fOnlyKeys)
 {
     // Recovery procedure:
     // move wallet file to wallet.timestamp.bak
@@ -594,7 +575,6 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
         LogPrintf("Cannot create database file %s\n", filename);
         return false;
     }
-    CWallet dummyWallet;
     CWalletScanState wss;
 
     DbTxn* ptxn = dbenv.TxnBegin();
@@ -608,9 +588,8 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
             bool fReadOK;
             {
                 // Required in LoadKeyMetadata():
-                LOCK(dummyWallet.cs_wallet);
-                fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue,
-                                        wss, strType, strErr);
+                uint64_t dummyInt = 0;
+                fReadOK = readFunc(ssKey, ssValue, wss, strType, strErr, dummyInt);
             }
             if (!IsKeyType(strType) && strType != "hdchain")
                 continue;
@@ -632,9 +611,9 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
     return fSuccess;
 }
 
-bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename)
+bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, const walletReadFunc_t readFunc)
 {
-    return CWalletDB::Recover(dbenv, filename, false);
+    return CWalletDB::Recover(dbenv, filename, readFunc, false);
 }
 
 bool CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
