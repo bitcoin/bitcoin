@@ -5645,6 +5645,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // (without cs_main).
         bool fBlockReconstructed = false;
         CDataStream blockTxnMsg(SER_NETWORK, PROTOCOL_VERSION);
+        // If we end up treating this as a plain headers message, call that as well
+        // without cs_main.
+        bool fRevertToHeaderProcessing = false;
+        CDataStream vHeadersMsg(SER_NETWORK, PROTOCOL_VERSION);
 
         {
         LOCK(cs_main);
@@ -5763,9 +5767,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 // Dirty hack to process as if it were just a headers message (TODO: move message handling into their own functions)
                 std::vector<CBlock> headers;
                 headers.push_back(cmpctblock.header);
-                CDataStream vHeadersMsg(SER_NETWORK, PROTOCOL_VERSION);
                 vHeadersMsg << headers;
-                return ProcessMessage(pfrom, NetMsgType::HEADERS, vHeadersMsg, nTimeReceived, chainparams);
+                fRevertToHeaderProcessing = true;
             }
         }
 
@@ -5774,6 +5777,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (fBlockReconstructed)
             return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams);
+        if (fRevertToHeaderProcessing)
+            return ProcessMessage(pfrom, NetMsgType::HEADERS, vHeadersMsg, nTimeReceived, chainparams);
     }
 
     else if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
