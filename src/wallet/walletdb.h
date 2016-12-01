@@ -112,6 +112,24 @@ public:
     }
 };
 
+class CWalletScanState {
+public:
+    unsigned int nKeys;
+    unsigned int nCKeys;
+    unsigned int nKeyMeta;
+    bool fIsEncrypted;
+    bool fAnyUnordered;
+    int nFileVersion;
+    vector<uint256> vWalletUpgrade;
+    
+    CWalletScanState() {
+        nKeys = nCKeys = nKeyMeta = 0;
+        fIsEncrypted = false;
+        fAnyUnordered = false;
+        nFileVersion = 0;
+    }
+};
+
 /** Access to the wallet database */
 class CWalletDB : public CDB
 {
