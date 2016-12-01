@@ -4,9 +4,12 @@
 
 #include "wallet/walletmapper.h"
 
-bool
-ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
-             CWalletScanState &wss, string& strType, string& strErr)
+#include "base58.h"
+#include "consensus/validation.h"
+#include "main.h" // For CheckTransaction
+
+bool CWalletMapper::ReadKeyValue(CDataStream& ssKey, CDataStream& ssValue,
+             CWalletScanState &wss, std::string& strType, std::string& strErr, uint64_t &accountingEntryNumberRef)
 {
     try {
         // Unserialize
@@ -15,13 +18,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         ssKey >> strType;
         if (strType == "name")
         {
-            string strAddress;
+            std::string strAddress;
             ssKey >> strAddress;
             ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].name;
         }
         else if (strType == "purpose")
         {
-            string strAddress;
+            std::string strAddress;
             ssKey >> strAddress;
             ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].purpose;
         }
@@ -62,12 +65,12 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "acentry")
         {
-            string strAccount;
+            std::string strAccount;
             ssKey >> strAccount;
             uint64_t nNumber;
             ssKey >> nNumber;
-            if (nNumber > nAccountingEntryNumber)
-                nAccountingEntryNumber = nNumber;
+            if (nNumber > accountingEntryNumberRef)
+                accountingEntryNumberRef = nNumber;
             
             if (!wss.fAnyUnordered)
             {
@@ -178,7 +181,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: CPubKey corrupt";
                 return false;
             }
-            vector<unsigned char> vchPrivKey;
+            std::vector<unsigned char> vchPrivKey;
             ssValue >> vchPrivKey;
             wss.nCKeys++;
             

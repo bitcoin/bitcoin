@@ -8,7 +8,6 @@
 #include "base58.h"
 #include "checkpoints.h"
 #include "chain.h"
-#include "wallet/coincontrol.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
@@ -25,6 +24,8 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "utilmoneystr.h"
+#include "wallet/coincontrol.h"
+#include "wallet/walletmapper.h"
 
 #include <assert.h>
 
@@ -2647,7 +2648,22 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     if (!fFileBacked)
         return DB_LOAD_OK;
     fFirstRunRet = false;
-    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    CWalletScanState wss;
+    vchDefaultKey = CPubKey();
+    
+    /* instanciate a CWalletMapper and attach the current wallet */
+    CWalletMapper mapper(this);
+    /* define a mapper callback for CWalletDB::LoadWallet */
+    auto mapperFunc = std::bind(&CWalletMapper::ReadKeyValue, mapper, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+    
+    /* load wallet, pass in callback to CWalletMapper */
+    LOCK(cs_wallet);
+    int loadWalletMinVersion;
+    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(wss, loadWalletMinVersion, mapperFunc);
+    
+    /* set the min version */
+    LoadMinVersion(loadWalletMinVersion);
+    
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
         if (CDB::Rewrite(strWalletFile, "\x04pool"))
@@ -2662,6 +2678,28 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
     if (nLoadWalletRet != DB_LOAD_OK)
         return nLoadWalletRet;
+    
+    // nTimeFirstKey is only reliable if all keys have metadata
+    if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
+        nTimeFirstKey = 1; // 0 would be considered 'no value'
+    
+    if (!wss.vWalletUpgrade.empty())
+    {
+        CWalletDB walletdb(strWalletFile);
+        for(uint256 hash : wss.vWalletUpgrade)
+            walletdb.WriteTx(mapWallet[hash]);
+    }
+    
+    // reorder transactions if necessary
+    if (wss.fAnyUnordered)
+        nLoadWalletRet = ReorderTransactions();
+    
+    laccentries.clear();
+    ListAccountCreditDebit("*", laccentries);
+    BOOST_FOREACH(CAccountingEntry& entry, laccentries) {
+        wtxOrdered.insert(make_pair(entry.nOrderPos, CWallet::TxPair((CWalletTx*)0, &entry)));
+    }
+    
     fFirstRunRet = !vchDefaultKey.IsValid();
 
     uiInterface.LoadWallet(this);
