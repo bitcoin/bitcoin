@@ -2773,12 +2773,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     // DASH : MODIFYED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, chainparams.GetConsensus());
-    if (!IsBlockValueValid(block, pindex->nHeight, blockReward)) {
-        LogPrintf("ConnectBlock() -- IsBlockValueValid returned false, nHeight = %d\n", pindex->nHeight);
-        // TODO: handle error here more accurate - this could actually fail for different reasons
-        return state.DoS(100, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                                block.vtx[0].GetValueOut(), blockReward),
-                                REJECT_INVALID, "bad-cb-amount");
+    std::string strError = "";
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
+        return state.DoS(100, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
 
     if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
