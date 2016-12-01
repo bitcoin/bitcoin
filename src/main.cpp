@@ -5690,8 +5690,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 }
             }
             if (!fRejectedParents) {
+                uint32_t nFetchFlags = GetFetchFlags(pfrom, chainActive.Tip(), chainparams.GetConsensus());
                 BOOST_FOREACH(const CTxIn& txin, tx.vin) {
-                    CInv _inv(MSG_TX, txin.prevout.hash);
+                    CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv);
                     if (!AlreadyHave(_inv)) pfrom->AskFor(_inv);
                 }
