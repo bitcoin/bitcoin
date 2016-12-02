@@ -275,7 +275,7 @@ private:
 
     static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
 
-    void CheckOrphanVotes(CNode* pfrom, CGovernanceObject& govobj, CGovernanceException& exception);
+    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception);
 
     void RebuildIndexes();
 

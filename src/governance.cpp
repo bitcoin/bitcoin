@@ -206,7 +206,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
 
         CGovernanceException exception;
-        CheckOrphanVotes(pfrom, govobj, exception);
+        CheckOrphanVotes(govobj, exception);
     }
 
     // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
@@ -247,7 +247,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     }
 }
 
-void CGovernanceManager::CheckOrphanVotes(CNode* pfrom, CGovernanceObject& govobj, CGovernanceException& exception)
+void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception)
 {
     uint256 nHash = govobj.GetHash();
     std::vector<vote_time_pair_t> vecVotePairs;
@@ -262,14 +262,9 @@ void CGovernanceManager::CheckOrphanVotes(CNode* pfrom, CGovernanceObject& govob
         if(pairVote.second < nNow) {
             fRemove = true;
         }
-        else if(govobj.ProcessVote(pfrom, vote, exception)) {
+        else if(govobj.ProcessVote(NULL, vote, exception)) {
             vote.Relay();
             fRemove = true;
-        }
-        else {
-            if((exception.GetNodePenalty() != 0) && masternodeSync.IsSynced()) {
-                Misbehaving(pfrom->GetId(), exception.GetNodePenalty());
-            }
         }
         if(fRemove) {
             mapOrphanVotes.Erase(nHash, pairVote);
