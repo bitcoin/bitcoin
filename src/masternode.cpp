@@ -195,10 +195,6 @@ void CMasternode::Check(bool fForce)
         nHeight = chainActive.Height();
     }
 
-    // keep old masternodes on start, give them a chance to receive an updated ping without removal/expiry
-    if(!masternodeSync.IsMasternodeListSynced()) nTimeStart = GetTime();
-    bool fWaitForPing = (GetTime() - nTimeStart < MASTERNODE_MIN_MNP_SECONDS);
-
     if(nActiveState == MASTERNODE_POSE_BAN) {
         if(nHeight < nPoSeBanHeight) return; // too early?
         // Otherwise give it a chance to proceed further to do all the usual checks and to change its state.
@@ -238,6 +234,12 @@ void CMasternode::Check(bool fForce)
         nActiveState = MASTERNODE_WATCHDOG_EXPIRED;
         return;
     }
+
+    // keep old masternodes on start, give them a chance to receive an updated ping without removal/expiry
+    if(!masternodeSync.IsMasternodeListSynced()) nTimeStart = GetTime();
+    bool fWaitForPing = (GetTime() - nTimeStart < MASTERNODE_MIN_MNP_SECONDS);
+    // but if it was already expired before the check - don't wait, check it again now
+    if(nActiveState == MASTERNODE_EXPIRED) fWaitForPing = false;
 
     if(!fWaitForPing && !IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
         nActiveState = MASTERNODE_EXPIRED;
