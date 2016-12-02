@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "amount.h"
 #include "base58.h"
 #include "chain.h"
 #include "consensus/validation.h"
@@ -11,6 +10,7 @@
 #include "init.h"
 #include "main.h"
 #include "net.h"
+#include "policy/feerate.h"
 #include "policy/rbf.h"
 #include "rpc/server.h"
 #include "timedata.h"

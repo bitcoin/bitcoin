@@ -6,7 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
-#include "amount.h"
+#include "policy/feerate.h"
 #include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -28,6 +28,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+
+class CPolicy;
 
 extern CWallet* pwalletMain;
 
@@ -921,7 +923,7 @@ public:
     void postInitProcess(boost::thread_group& threadGroup);
 
     /* Wallets parameter interaction */
-    static bool ParameterInteraction();
+    static bool ParameterInteraction(const CPolicy& policy);
 
     bool BackupWallet(const std::string& strDest);
 

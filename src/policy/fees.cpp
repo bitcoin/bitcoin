@@ -6,7 +6,6 @@
 #include "policy/fees.h"
 #include "policy/policy.h"
 
-#include "amount.h"
 #include "primitives/transaction.h"
 #include "random.h"
 #include "streams.h"
@@ -483,9 +482,9 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein, int nFileVersion)
     }
 }
 
-FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
+FeeFilterRounder::FeeFilterRounder()
 {
-    CAmount minFeeLimit = minIncrementalFee.GetFeePerK() / 2;
+    CAmount minFeeLimit = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE).GetFeePerK() / 2;
     feeset.insert(0);
     for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
         feeset.insert(bucketBoundary);

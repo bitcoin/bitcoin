@@ -683,6 +683,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     LOCK(cs_main);
+    CFeeRate defaultRelayFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+    globalPolicy.reset(new CDefaultPolicy(defaultRelayFee)); // TODO remove
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -703,7 +705,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(IsStandardTx(t, reason));
 
     // Check dust with default relay fee:
-    CAmount nDustThreshold = 182 * minRelayTxFee.GetFeePerK()/1000 * 3;
+    CAmount nDustThreshold = 182 * defaultRelayFee.GetFeePerK()/1000 * 3;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
     // dust:
     t.vout[0].nValue = nDustThreshold - 1;
@@ -714,14 +716,14 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 1234 / 1000 * 3
-    minRelayTxFee = CFeeRate(1234);
+    globalPolicy.reset(new CDefaultPolicy(CFeeRate(1234))); // TODO remove
     // dust:
     t.vout[0].nValue = 672 - 1;
     BOOST_CHECK(!IsStandardTx(t, reason));
     // not dust:
     t.vout[0].nValue = 672;
     BOOST_CHECK(IsStandardTx(t, reason));
-    minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+    globalPolicy.reset(new CDefaultPolicy(defaultRelayFee)); // TODO remove
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
     BOOST_CHECK(!IsStandardTx(t, reason));

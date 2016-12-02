@@ -5,7 +5,7 @@
 #ifndef BITCOIN_POLICYESTIMATOR_H
 #define BITCOIN_POLICYESTIMATOR_H
 
-#include "amount.h"
+#include "feerate.h"
 #include "uint256.h"
 #include "random.h"
 
@@ -264,7 +264,7 @@ class FeeFilterRounder
 {
 public:
     /** Create new FeeFilterRounder */
-    FeeFilterRounder(const CFeeRate& minIncrementalFee);
+    FeeFilterRounder();
 
     /** Quantize a minimum fee for privacy purpose before broadcast **/
     CAmount round(CAmount currentMinFee);

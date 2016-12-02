@@ -13,6 +13,7 @@
 #include "random.h"
 #include "serialize.h"
 #include "sync.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 
@@ -377,23 +378,51 @@ void ParseParameters(int argc, const char* const argv[])
 
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
-    if (mapArgs.count(strArg))
-        return mapArgs[strArg];
+    return GetArg(strArg, strDefault, mapArgs);
+}
+
+std::string GetArg(const std::string& strArg, const std::string& strDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return it->second;
     return strDefault;
 }
 
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
-    if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
+    return GetArg(strArg, nDefault, mapArgs);
+}
+
+int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return atoi64(it->second);
     return nDefault;
 }
 
 bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
-    if (mapArgs.count(strArg))
-        return InterpretBool(mapArgs[strArg]);
+    return GetBoolArg(strArg, fDefault, mapArgs);
+}
+
+bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return InterpretBool(it->second);
     return fDefault;
+}
+
+CAmount ParseAmountFromArgs(const std::string& strArg, CAmount nDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    CAmount n = nDefault;
+    std::string strAmount = GetArg(strArg, "", mapArgs);
+    if ("" != strAmount)
+        if (!ParseMoney(strAmount, n) || !MoneyRange(n))
+            throw std::runtime_error(strprintf(_("Invalid amount for %s=<amount>: '%s'"), strArg, strAmount));
+    return n;
 }
 
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
@@ -425,6 +454,12 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n") + std::string(msgIndent,' ') +
            FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
            std::string("\n\n");
+}
+
+void AppendMessagesOpt(std::string& strUsage, const std::vector<std::pair<std::string, std::string> >& optionsHelp)
+{
+    for (unsigned int i=0; i < optionsHelp.size(); i++)
+        strUsage += HelpMessageOpt(optionsHelp[i].first, optionsHelp[i].second);
 }
 
 static std::string FormatException(const std::exception* pex, const char* pszThread)

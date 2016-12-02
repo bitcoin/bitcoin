@@ -7,12 +7,50 @@
 
 #include "policy/policy.h"
 
-#include "main.h"
+#include "main.h" // TODO decouple from main
 #include "tinyformat.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
+
+CAmount CDefaultPolicy::GetDustThreshold(const CTxOut& txout) const
+{
+    // "Dust" is defined in terms of CBlockPolicyEstimator::minRelayFee,
+    // which has units satoshis-per-kilobyte.
+    // If you'd pay more than 1/3 in fees
+    // to spend something, then we consider it dust.
+    // A typical spendable non-segwit txout is 34 bytes big, and will
+    // need a CTxIn of at least 148 bytes to spend:
+    // so dust is a spendable txout less than
+    // 546*minRelayFee/1000 (in satoshis).
+    // A typical spendable segwit txout is 31 bytes big, and will
+    // need a CTxIn of at least 67 bytes to spend:
+    // so dust is a spendable txout less than
+    // 294*minRelayFee/1000 (in satoshis).
+    if (txout.scriptPubKey.IsUnspendable())
+        return 0;
+
+    size_t nSize = GetSerializeSize(txout, SER_DISK, 0);
+    int witnessversion = 0;
+    std::vector<unsigned char> witnessprogram;
+
+    if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+        // sum the sizes of the parts of a transaction input
+        // with 75% segwit discount applied to the script size.
+        nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+    } else {
+        nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
+    }
+
+    return 3 * minRelayFee.GetFee(nSize);
+}
+
+bool CDefaultPolicy::AcceptDust(const CTxOut& txout) const
+{
+    return txout.nValue >= GetDustThreshold(txout);
+}
 
     /**
      * Check transaction inputs to mitigate two
@@ -105,7 +143,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (!globalPolicy->AcceptDust(txout)) {
             reason = "dust";
             return false;
         }
@@ -216,4 +254,45 @@ int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost)
 int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost)
 {
     return GetVirtualTransactionSize(GetTransactionWeight(tx), nSigOpCost);
+}
+
+/** CDefaultPolicy initialization */
+
+std::vector<std::pair<std::string, std::string> > CDefaultPolicy::GetOptionsHelp() const
+{
+    std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(minRelayFee.GetFee(1000)))));
+    return optionsHelp;
+}
+
+void CDefaultPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    const CAmount nAmountFee = ParseAmountFromArgs("-minrelaytxfee", minRelayFee.GetFee(1000), mapArgs);
+    if (nAmountFee > 0)
+        minRelayFee = CFeeRate(nAmountFee);
+    else
+        throw std::runtime_error(strprintf(_("Invalid amount for %s=<amount>: %d"), "-minrelaytxfee", nAmountFee));
+}
+
+/** Factory and init help */
+
+void Policy::AppendHelpMessages(std::string& strUsage, bool showDebug)
+{
+    const std::unique_ptr<CPolicy> defaultPolicy(Policy::Factory(Policy::STANDARD));
+    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), Policy::STANDARD));
+    AppendMessagesOpt(strUsage, defaultPolicy->GetOptionsHelp());
+}
+
+CPolicy* Policy::Factory(const std::string& name)
+{
+    if (name == Policy::STANDARD)
+        return new CDefaultPolicy();
+    return NULL;
 }

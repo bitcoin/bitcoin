@@ -5,7 +5,6 @@
 
 #include "miner.h"
 
-#include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
@@ -15,6 +14,7 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
+#include "policy/feerate.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
@@ -74,8 +74,8 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
-    : chainparams(_chainparams)
+BlockAssembler::BlockAssembler(const CChainParams& _chainparams, const CPolicy& _policy)
+    : chainparams(_chainparams), policy(_policy)
 {
     // Block resource limits
     // If neither -blockmaxsize or -blockmaxweight is given, limit to DEFAULT_BLOCK_MAX_*
@@ -460,7 +460,7 @@ void BlockAssembler::addPackageTxs()
             packageSigOpsCost = modit->nSigOpCostWithAncestors;
         }
 
-        if (packageFees < ::minRelayTxFee.GetFee(packageSize)) {
+        if (packageFees < policy.GetMinRelayFee().GetFee(packageSize)) {
             // Everything else we might consider has a lower fee rate
             return;
         }

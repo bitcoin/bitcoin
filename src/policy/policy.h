@@ -6,14 +6,20 @@
 #ifndef BITCOIN_POLICY_POLICY_H
 #define BITCOIN_POLICY_POLICY_H
 
+#include "amount.h"
 #include "consensus/consensus.h"
+#include "feerate.h"
+#include "interface.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
 
 #include <string>
 
 class CCoinsViewCache;
+class CTxOut;
 
+/** Default for -minrelaytxfee, minimum relay fee for transactions */
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -blockmaxsize, which controls the maximum size of block the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
@@ -63,6 +69,46 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 /** Used as the flags parameter to sequence and nLocktime checks in non-consensus code. */
 static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE |
                                                            LOCKTIME_MEDIAN_TIME_PAST;
+namespace Policy {
+
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ */
+void AppendHelpMessages(std::string& strUsage, bool showDebug);
+/**
+ * Factory for the interface from a string.
+ */
+CPolicy* Factory(const std::string& name);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
+
+/**
+ * Standard implementation 
+ */
+class CDefaultPolicy : public CPolicy
+{
+protected:
+    /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
+    CFeeRate minRelayFee;
+public:
+    CDefaultPolicy(const CFeeRate& minRelayFeeIn=CFeeRate(DEFAULT_MIN_RELAY_TX_FEE)) : minRelayFee(minRelayFeeIn) {};
+
+    virtual CFeeRate GetMinRelayFee() const { return minRelayFee; };
+    virtual CAmount GetDustThreshold(const CTxOut& txout) const;
+    virtual bool AcceptDust(const CTxOut& txout) const;
+
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
+    virtual void InitFromArgs(const std::map<std::string, std::string>& argMap);
+};
+
+CAmount GetDustThreshold(const CTxOut& txout);
+
+bool IsDust(const CTxOut& txout);
 
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool witnessEnabled = false);
     /**
