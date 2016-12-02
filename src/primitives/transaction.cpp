@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -156,4 +156,22 @@ std::string CTransaction::ToString() const
 int64_t GetTransactionWeight(const CTransaction& tx)
 {
     return ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+}
+
+int64_t GetTransactionHashableSize(const CTransaction& tx)
+{
+    int64_t size = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        int64_t scriptSigSize = tx.vin[i].scriptSig.size();
+        size -= scriptSigSize;
+        // If the scriptSig size is larger than 252, 2 bytes compactSize encoding is deducted.
+        if (scriptSigSize > 252)
+            size -= 2;
+        /*
+         * Theoretically, 4 bytes should be deducted if the scriptSig is larger than 65535 bytes,
+         * and 8 bytes should be deducted if it is larger than 4294967295 bytes.
+         * However, scriptSig larger than 10000 bytes is invalid so it is not needed.
+         */
+    }
+    return size;
 }

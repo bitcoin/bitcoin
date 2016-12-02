@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -143,6 +143,32 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(GetTransactionSigOpCost(CTransaction(creationTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
         // Sanity check: script verification fails because of an invalid signature.
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+        // SigHashOp in spending scriptPubKey is counted as the number of signature
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 1);
+        // SigOp in output scriptPubKey is not counted as SigHashOp
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(creationTx), coins, flags) == 0);
+    }
+
+    // Multisig in scriptSig (legacy counting)
+    {
+        CScript scriptPubKey = CScript();
+        // Do not use a valid signature to avoid using wallet operations.
+        CScript scriptSig = CScript() << OP_0 << OP_0 << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
+
+        BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CTxInWitness());
+        // creationTx contains two signature operations in its scriptSig, but legacy counting
+        // is not accurate.
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
+        // Sanity check: script verification fails because of an invalid signature.
+        assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+        // SigHashOp in scriptSig is counted as the number of signature
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 1);
+
+        // SigOp in coinbase scriptSig is counted
+        spendingTx.vin[0].prevout.SetNull();
+        assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == MAX_PUBKEYS_PER_MULTISIG * WITNESS_SCALE_FACTOR);
+        // SigHashOp in coinbase scriptSig is not counted
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 0);
     }
 
     // Multisig nested in P2SH
@@ -154,6 +180,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, CTxInWitness());
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2 * WITNESS_SCALE_FACTOR);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+        // SigHashOp in redeemScript is counted as the number of signature
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 1);
     }
 
     // P2WPKH witness program
@@ -173,6 +201,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         // No signature operations if we don't verify the witness.
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
+        // SigOp in witness is not counted as SigHashOp
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 0);
 
         // The sig op cost for witness version != 0 is zero.
         assert(scriptPubKey[0] == 0x00);
@@ -202,6 +232,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_EQUALVERIFY);
+        // SigOp in witness is not counted as SigHashOp
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 0);
     }
 
     // P2WSH witness program
@@ -220,6 +252,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags & ~SCRIPT_VERIFY_WITNESS) == 0);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+        // SigOp in witness is not counted as SigHashOp
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 0);
     }
 
     // P2WSH nested in P2SH
@@ -238,6 +272,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, witness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
         assert(VerifyWithFlag(creationTx, spendingTx, flags) == SCRIPT_ERR_CHECKMULTISIGVERIFY);
+        // SigOp in witness is not counted as SigHashOp
+        assert(GetTransactionBaseSigHashOpCount(CTransaction(spendingTx), coins, flags) == 0);
     }
 }
 

@@ -146,6 +146,7 @@ testScripts = [
     'p2p-compactblocks.py',
     'nulldummy.py',
     'importmulti.py',
+    'sighashlimit.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')

@@ -257,13 +257,15 @@ static vector<valtype> CombineMultisig(const CScript& scriptPubKey, const BaseSi
     map<valtype, valtype> sigs;
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
+        uint256 sighashCopy;
+        bool cacheSet = false;
         for (unsigned int i = 0; i < nPubKeys; i++)
         {
             const valtype& pubkey = vSolutions[i+1];
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (checker.CheckSig(sig, pubkey, scriptPubKey, sigversion))
+            if (checker.CheckSig(sig, pubkey, scriptPubKey, sigversion, sighashCopy, cacheSet))
             {
                 sigs[pubkey] = sig;
                 break;
@@ -401,7 +403,7 @@ class DummySignatureChecker : public BaseSignatureChecker
 public:
     DummySignatureChecker() {}
 
-    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion, uint256& sighashCopy, bool& cacheSet) const
     {
         return true;
     }
