@@ -42,6 +42,16 @@ extern unsigned nMaxDatacarrierBytes;
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
+/**
+ * If a transaction contains any witness data, it must comply with
+ * all known soft-fork rules at the time of segwit activation.
+ */
+static const unsigned int MANDATORY_SEGWIT_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
+                                                                 SCRIPT_VERIFY_DERSIG |
+                                                                 SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                                 SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
+                                                                 SCRIPT_VERIFY_WITNESS;
+
 enum txnouttype
 {
     TX_NONSTANDARD,
