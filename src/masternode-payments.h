@@ -79,8 +79,14 @@ public:
     int nBlockHeight;
     std::vector<CMasternodePayee> vecPayees;
 
-    CMasternodeBlockPayees() : nBlockHeight(0) {}
-    CMasternodeBlockPayees(int nBlockHeightIn) : nBlockHeight(nBlockHeightIn) {}
+    CMasternodeBlockPayees() :
+        nBlockHeight(0),
+        vecPayees()
+        {}
+    CMasternodeBlockPayees(int nBlockHeightIn) :
+        nBlockHeight(nBlockHeightIn),
+        vecPayees()
+        {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -142,10 +148,13 @@ public:
     }
 
     bool Sign();
-    bool CheckSignature();
+    bool CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos);
 
     bool IsValid(CNode* pnode, int nValidationHeight, std::string& strError);
     void Relay();
+
+    bool IsVerified() { return !vchSig.empty(); }
+    void MarkAsNotVerified() { vchSig.clear(); }
 
     std::string ToString() const;
 };
@@ -184,6 +193,7 @@ public:
     void Clear();
 
     bool AddPaymentVote(const CMasternodePaymentVote& vote);
+    bool HasVerifiedPaymentVote(uint256 hashIn);
     bool ProcessBlock(int nBlockHeight);
 
     void Sync(CNode* node, int nCountNeeded);
