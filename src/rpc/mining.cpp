@@ -121,7 +121,7 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus().powLimit)) {
             ++pblock->nNonce;
             --nMaxTries;
         }
@@ -439,7 +439,16 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             CValidationState state;
-            TestBlockValidity(state, Params(), block, pindexPrev, false, true);
+            uint256 powLimit;
+            uint32_t nBits;
+            if (nforcednBits) {
+                powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+                nBits = nforcednBits;
+            } else {
+                nBits = GetNextWorkRequired(pindexPrev, &block, Params().GetConsensus());
+                powLimit = Params().GetConsensus().powLimit;
+            }
+            TestBlockValidity(state, Params(), block, pindexPrev, powLimit, nBits, false, true);
             return BIP22ValidationResult(state);
         }
 
@@ -508,6 +517,9 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
                     if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
                         break;
                     checktxtime += boost::posix_time::seconds(10);
+                } else {
+                    // cvBlockChange triggered manually
+                    break;
                 }
             }
         }
@@ -756,19 +768,37 @@ UniValue submitblock(const JSONRPCRequest& request)
         }
     }
 
-    submitblock_StateCatcher sc(block.GetHash());
-    RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(Params(), &block, true, NULL, NULL);
-    UnregisterValidationInterface(&sc);
-    if (fBlockPresent)
-    {
-        if (fAccepted && !sc.found)
-            return "duplicate-inconclusive";
-        return "duplicate";
+    bool fAccepted = false;
+    if (nforcednBits) {
+        // If nforcednBits is set, submitted blocks are only checked for validity, then discarded.
+        // Required pow is forced to this value, regardless of the chain.
+        CValidationState state;
+        uint256 powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        {
+            LOCK(cs_main);
+            CBlockIndex* const pindexPrev = chainActive.Tip();
+            // TestBlockValidity only supports blocks built on the current Tip
+            if (block.hashPrevBlock != pindexPrev->GetBlockHash())
+                return "inconclusive-not-best-prevblk";
+            TestBlockValidity(state, Params(), block, pindexPrev, powLimit, nforcednBits, true, true);
+        }
+        cvBlockChange.notify_all();
+        return BIP22ValidationResult(state);
+    } else {
+        submitblock_StateCatcher sc(block.GetHash());
+        RegisterValidationInterface(&sc);
+        fAccepted = ProcessNewBlock(Params(), &block, true, NULL, NULL);
+        UnregisterValidationInterface(&sc);
+        if (fBlockPresent)
+        {
+            if (fAccepted && !sc.found)
+                return "duplicate-inconclusive";
+            return "duplicate";
+        }
+        if (!sc.found)
+            return "inconclusive";
+        return BIP22ValidationResult(sc.state);
     }
-    if (!sc.found)
-        return "inconclusive";
-    return BIP22ValidationResult(sc.state);
 }
 
 UniValue estimatefee(const JSONRPCRequest& request)
