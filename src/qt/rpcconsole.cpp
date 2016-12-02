@@ -975,11 +975,11 @@ void RPCConsole::disconnectSelectedNode()
         return;
     
     // Get selected peer addresses
-    QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, 0);
+    QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId);
     for(int i = 0; i < nodes.count(); i++)
     {
         // Get currently selected peer address
-        NodeId id = nodes.at(i).data(PeerTableModel::NetNodeId).toInt();
+        NodeId id = nodes.at(i).data().toInt();
         // Find the node, disconnect it and clear the selected node
         if(g_connman->DisconnectNode(id))
             clearSelectedNode();
@@ -992,11 +992,11 @@ void RPCConsole::banSelectedNode(int bantime)
         return;
     
     // Get selected peer addresses
-    QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, 0);
+    QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId);
     for(int i = 0; i < nodes.count(); i++)
     {
         // Get currently selected peer address
-        NodeId id = nodes.at(i).data(PeerTableModel::NetNodeId).toInt();
+        NodeId id = nodes.at(i).data().toInt();
 
 	// Get currently selected peer address
 	int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
@@ -1019,11 +1019,11 @@ void RPCConsole::unbanSelectedNode()
         return;
 
     // Get selected ban addresses
-    QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->banlistWidget, 0);
+    QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->banlistWidget, BanTableModel::Address);
     for(int i = 0; i < nodes.count(); i++)
     {
         // Get currently selected ban address
-        QString strNode = nodes.at(i).data(BanTableModel::Address).toString();
+        QString strNode = nodes.at(i).data().toString();
         CSubNet possibleSubnet;
 
         LookupSubNet(strNode.toStdString().c_str(), possibleSubnet);
