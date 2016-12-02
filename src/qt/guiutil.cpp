@@ -928,6 +928,9 @@ QString formatServicesStr(quint64 mask)
             case NODE_XTHIN:
                 strList.append("XTHIN");
                 break;
+            case NODE_MEMPOOLCMD:
+                strList.append("MEMPOOLCMD");
+                break;
             default:
                 strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
             }

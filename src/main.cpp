@@ -6180,7 +6180,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    else if (strCommand == NetMsgType::MEMPOOL)
+    else if (strCommand == NetMsgType::MEMPOOL && (pfrom->GetLocalServices() & NODE_MEMPOOLCMD))
     {
         if (!(pfrom->GetLocalServices() & NODE_BLOOM) && !pfrom->fWhitelisted)
         {
