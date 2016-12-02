@@ -50,15 +50,14 @@ public:
     bool IsMock() { return fMockDb; }
 
     /**
-     * Verify that database file strFile is OK. If it is not,
-     * call the callback to try to recover.
+     * Verify that database file strFile is OK.
      * This must be called BEFORE strFile is opened.
      * Returns true if strFile is OK.
      */
     enum VerifyResult { VERIFY_OK,
                         RECOVER_OK,
-                        RECOVER_FAIL };
-    VerifyResult Verify(const std::string& strFile, bool (*recoverFunc)(CDBEnv& dbenv, const std::string& strFile));
+                        VERIFY_FAIL };
+    VerifyResult Verify(const std::string& strFile);
     /**
      * Salvage data from a file that Verify says is bad.
      * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
