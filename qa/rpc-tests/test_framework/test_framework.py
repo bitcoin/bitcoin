@@ -205,9 +205,22 @@ class BitcoinTestFramework(object):
         else:
             print("Note: bitcoinds were not stopped and may still be running")
 
-        if not self.options.nocleanup and not self.options.noshutdown:
+        if not self.options.nocleanup and not self.options.noshutdown and success:
             print("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
+
+        else:
+            print("Not cleaning up dir %s" % self.options.tmpdir)
+            if os.getenv("PYTHON_DEBUG", ""):
+                # Dump the end of the debug logs, to aid in debugging rare
+                # travis failures.
+                import glob
+                filenames = glob.glob(self.options.tmpdir + "/node*/regtest/debug.log")
+                MAX_LINES_TO_PRINT = 1000
+                for f in filenames:
+                    print("From" , f, ":")
+                    from collections import deque
+                    print("".join(deque(open(f), MAX_LINES_TO_PRINT)))
 
         if success:
             print("Tests successful")
