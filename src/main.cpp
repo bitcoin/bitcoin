@@ -6458,10 +6458,11 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman)
         const uint256& hash = msg.GetMessageHash();
         if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0)
         {
-            LogPrintf("%s(%s, %u bytes): CHECKSUM ERROR expected %s was %s\n", __func__,
+            LogPrintf("%s(%s, %u bytes): CHECKSUM ERROR declared=%s calculated=%s peer=%d\n", __func__,
                SanitizeString(strCommand), nMessageSize,
+               HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE),
                HexStr(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE),
-               HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE));
+               pfrom->id);
             continue;
         }
 
