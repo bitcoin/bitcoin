@@ -283,6 +283,7 @@ RES_ICONS = \
   qt/res/icons/transaction2.png \
   qt/res/icons/transaction_abandoned.png \
   qt/res/icons/transaction_conflicted.png \
+  qt/res/icons/transaction_conflicted_notinmempool.png \
   qt/res/icons/tx_inout.png \
   qt/res/icons/tx_input.png \
   qt/res/icons/tx_output.png \

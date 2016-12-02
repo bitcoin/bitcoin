@@ -321,6 +321,7 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     case TransactionStatus::Confirmed:
         status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
         break;
+    case TransactionStatus::ConflictedNotInMempool:
     case TransactionStatus::Conflicted:
         status = tr("Conflicted");
         break;
@@ -486,6 +487,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         return QIcon(":/icons/transaction_confirmed");
     case TransactionStatus::Conflicted:
         return QIcon(":/icons/transaction_conflicted");
+    case TransactionStatus::ConflictedNotInMempool:
+        return QIcon(":/icons/transaction_conflicted_notinmempool");
     case TransactionStatus::Immature: {
         int total = wtx->status.depth + wtx->status.matures_in;
         int part = (wtx->status.depth * 4 / total) + 1;
