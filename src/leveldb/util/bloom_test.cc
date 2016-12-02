@@ -46,7 +46,8 @@ class BloomTest {
       key_slices.push_back(Slice(keys_[i]));
     }
     filter_.clear();
-    policy_->CreateFilter(&key_slices[0], key_slices.size(), &filter_);
+    policy_->CreateFilter(&key_slices[0], static_cast<int>(key_slices.size()),
+                          &filter_);
     keys_.clear();
     if (kVerbose >= 2) DumpFilter();
   }
