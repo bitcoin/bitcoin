@@ -9,7 +9,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "main.h"
+#include "validation.h"
 #include "net.h"
 #include "policy/rbf.h"
 #include "rpc/server.h"
