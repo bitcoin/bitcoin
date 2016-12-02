@@ -33,6 +33,7 @@
 //      readmissing   -- read N missing keys in random order
 //      readhot       -- read N times in random order from 1% section of DB
 //      seekrandom    -- N random seeks
+//      open          -- cost of opening a DB
 //      crc32c        -- repeated crc32c of 4K of data
 //      acquireload   -- load N*1000 times
 //   Meta operations:
@@ -99,6 +100,9 @@ static int FLAGS_bloom_bits = -1;
 // benchmark will fail.
 static bool FLAGS_use_existing_db = false;
 
+// If true, reuse existing log/MANIFEST files when re-opening a database.
+static bool FLAGS_reuse_logs = false;
+
 // Use the db with the following name.
 static const char* FLAGS_db = NULL;
 
@@ -138,6 +142,7 @@ class RandomGenerator {
   }
 };
 
+#if defined(__linux)
 static Slice TrimSpace(Slice s) {
   size_t start = 0;
   while (start < s.size() && isspace(s[start])) {
@@ -149,6 +154,7 @@ static Slice TrimSpace(Slice s) {
   }
   return Slice(s.data() + start, limit - start);
 }
+#endif
 
 static void AppendWithSpace(std::string* str, Slice msg) {
   if (msg.empty()) return;
@@ -442,7 +448,11 @@ class Benchmark {
       bool fresh_db = false;
       int num_threads = FLAGS_threads;
 
-      if (name == Slice("fillseq")) {
+      if (name == Slice("open")) {
+        method = &Benchmark::OpenBench;
+        num_ /= 10000;
+        if (num_ < 1) num_ = 1;
+      } else if (name == Slice("fillseq")) {
         fresh_db = true;
         method = &Benchmark::WriteSeq;
       } else if (name == Slice("fillbatch")) {
@@ -695,10 +705,19 @@ class Benchmark {
     options.write_buffer_size = FLAGS_write_buffer_size;
     options.max_open_files = FLAGS_open_files;
     options.filter_policy = filter_policy_;
+    options.reuse_logs = FLAGS_reuse_logs;
     Status s = DB::Open(options, FLAGS_db, &db_);
     if (!s.ok()) {
       fprintf(stderr, "open error: %s\n", s.ToString().c_str());
       exit(1);
+    }
+  }
+
+  void OpenBench(ThreadState* thread) {
+    for (int i = 0; i < num_; i++) {
+      delete db_;
+      Open();
+      thread->stats.FinishedSingleOp();
     }
   }
 
@@ -941,6 +960,9 @@ int main(int argc, char** argv) {
     } else if (sscanf(argv[i], "--use_existing_db=%d%c", &n, &junk) == 1 &&
                (n == 0 || n == 1)) {
       FLAGS_use_existing_db = n;
+    } else if (sscanf(argv[i], "--reuse_logs=%d%c", &n, &junk) == 1 &&
+               (n == 0 || n == 1)) {
+      FLAGS_reuse_logs = n;
     } else if (sscanf(argv[i], "--num=%d%c", &n, &junk) == 1) {
       FLAGS_num = n;
     } else if (sscanf(argv[i], "--reads=%d%c", &n, &junk) == 1) {
