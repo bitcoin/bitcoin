@@ -3,6 +3,7 @@
 #include "base58.h"
 #include "coins.h"
 #include "core_io.h"
+#include "main.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
@@ -18,7 +19,7 @@
 
 // Is resetted after the last test
 extern CFeeRate minRelayTxFee;
-static CFeeRate minRelayTxFeeOriginal = minRelayTxFee;
+static CFeeRate minRelayTxFeeOriginal = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 BOOST_FIXTURE_TEST_SUITE(omnicore_create_tx_tests, BasicTestingSetup)
 
