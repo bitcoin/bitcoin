@@ -35,7 +35,7 @@ bool CMasternodeSync::IsBlockchainSynced()
         return false;
 
     // same as !IsInitialBlockDownload() but no cs_main needed here
-    int nMaxBlockTime = std::max(pCurrentBlockIndex->GetBlockTime(), pindexBestHeader->GetBlockTime());
+    int64_t nMaxBlockTime = std::max(pCurrentBlockIndex->GetBlockTime(), pindexBestHeader->GetBlockTime());
     fBlockchainSynced = pindexBestHeader->nHeight - pCurrentBlockIndex->nHeight < 24 * 6 &&
                         GetTime() - nMaxBlockTime < Params().MaxTipAge();
 
