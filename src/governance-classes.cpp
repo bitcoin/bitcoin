@@ -204,24 +204,13 @@ void CGovernanceTriggerManager::CleanAndRemove()
                 LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Unknown or invalid trigger found\n");
                 remove = true;
                 break;
-            case SEEN_OBJECT_EXECUTED:
-                {
-                    LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Executed trigger found\n");
-                    CGovernanceObject* pgovobj = pSuperblock->GetGovernanceObject();
-                    if(pgovobj) {
-                        LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Expiring executed object: %s\n", pgovobj->GetHash().ToString());
-                        pgovobj->fExpired = true;
-                        pgovobj->nDeletionTime = GetAdjustedTime();
-                    }
-                }
-                remove = true;
-                break;
             case SEEN_OBJECT_IS_VALID:
+            case SEEN_OBJECT_EXECUTED:
                 {
                     int nTriggerBlock = pSuperblock->GetBlockStart();
                     // Rough approximation: a cycle of superblock ++
-                    int nExpirationBlock = nTriggerBlock + Params().GetConsensus().nSuperblockCycle + GOVERNANCE_FEE_CONFIRMATIONS; 
-                    LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- nTriggerBlock = %d, nExpriartionBlock = %d\n");
+                    int nExpirationBlock = nTriggerBlock + GOVERNANCE_TRIGGER_EXPIRATION_BLOCKS;
+                    LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- nTriggerBlock = %d, nExpirationBlock = %d\n", nTriggerBlock, nExpirationBlock);
                     if(governance.GetCachedBlockHeight() > nExpirationBlock) {
                         LogPrint("gobject", "CGovernanceTriggerManager::CleanAndRemove -- Outdated trigger found\n");
                         remove = true;
@@ -459,7 +448,6 @@ void CSuperblockManager::CreateSuperblock(CMutableTransaction& txNewRet, int nBl
             DBG( cout << "CSuperblockManager::CreateSuperblock Before LogPrintf call, nAmount = " << payment.nAmount << endl; );
             LogPrintf("NEW Superblock : output %d (addr %s, amount %d)\n", i, address2.ToString(), payment.nAmount);
             DBG( cout << "CSuperblockManager::CreateSuperblock After LogPrintf call " << endl; );
-            pSuperblock->SetExecuted();
         } else {
             DBG( cout << "CSuperblockManager::CreateSuperblock Payment not found " << endl; );
         }
