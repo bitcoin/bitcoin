@@ -218,8 +218,8 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
     // less than the median time of the previous block they're contained in.
     // When the next block is created its previous block will be the current
     // chain tip, so we use that to calculate the median time passed to
-    // IsFinalTx() if LOCKTIME_MEDIAN_TIME_PAST is set.
-    const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
+    // IsFinalTx() if bitcoinconsensus_LOCKTIME_MEDIAN_TIME_PAST is set.
+    const int64_t nBlockTime = (flags & bitcoinconsensus_LOCKTIME_MEDIAN_TIME_PAST)
                              ? chainActive.Tip()->GetMedianTimePast()
                              : GetAdjustedTime();
 
@@ -1599,6 +1599,11 @@ static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
+    // Enforce rule that the coinbase starts with serialized block height
+    if (pindex->nHeight >= consensusparams.BIP34Height) {
+        flags |= bitcoinconsensus_TX_COINBASE_VERIFY_BIP34;
+    }
+
     // Start enforcing the DERSIG (BIP66) rule
     if (pindex->nHeight >= consensusparams.BIP66Height) {
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG;
@@ -1641,8 +1646,10 @@ static unsigned int GetConsensusFlags(const CBlockIndex* pindex, const Consensus
         flags |= bitcoinconsensus_TX_VERIFY_BIP30;
     }
 
+    // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+        flags |= bitcoinconsensus_LOCKTIME_MEDIAN_TIME_PAST;
         flags |= bitcoinconsensus_LOCKTIME_VERIFY_SEQUENCE;
         flags |= bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY;
     }
@@ -2948,17 +2955,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     return true;
 }
 
-static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const unsigned int flags, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
-
-    // Start enforcing BIP113 (Median Time Past) using versionbits logic.
-    int nLockTimeFlags = 0;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
-        nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
-    }
-
-    int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
+    int64_t nLockTimeCutoff = (flags & bitcoinconsensus_LOCKTIME_MEDIAN_TIME_PAST)
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
 
@@ -2970,7 +2970,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    if (flags & bitcoinconsensus_TX_COINBASE_VERIFY_BIP34)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
@@ -2988,7 +2988,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;
@@ -3138,8 +3138,9 @@ static bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidation
     }
     if (fNewBlock) *fNewBlock = true;
 
+    const int64_t flags = GetConsensusFlags(pindex, chainparams.GetConsensus());
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
+        !ContextualCheckBlock(block, state, chainparams.GetConsensus(), flags, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -3220,13 +3221,14 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
+    const int64_t flags = GetConsensusFlags(&indexDummy, chainparams.GetConsensus());
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
-    if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
+    if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), flags, pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
