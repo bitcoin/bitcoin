@@ -125,6 +125,7 @@ class BitcoinTestFramework(object):
         else:
             self.randomseed = int(time.time())
         random.seed(self.randomseed)
+        print "Random seed: %s" % self.randomseed
 
         if self.options.trace_rpc:
             import logging
