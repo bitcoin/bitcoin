@@ -3,8 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
+#include "streams.h"
 #include "zmqpublishnotifier.h"
-#include "main.h"
+#include "validation.h"
 #include "util.h"
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;

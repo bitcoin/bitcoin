@@ -5,7 +5,7 @@
 #include "consensus/validation.h"
 #include "data/sighash.json.h"
 #include "hash.h"
-#include "main.h" // For CheckTransaction
+#include "validation.h" // For CheckTransaction
 #include "script/interpreter.h"
 #include "script/script.h"
 #include "serialize.h"
