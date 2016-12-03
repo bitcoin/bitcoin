@@ -7,7 +7,7 @@
 #include "test/test_bitcoin.h"
 #include "test/test_random.h"
 #include "chainparams.h"
-#include "main.h"
+#include "validation.h"
 #include "consensus/params.h"
 
 #include <boost/test/unit_test.hpp>

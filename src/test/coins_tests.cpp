@@ -8,7 +8,7 @@
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 #include "test/test_random.h"
-#include "main.h"
+#include "validation.h"
 #include "consensus/validation.h"
 
 #include <vector>
