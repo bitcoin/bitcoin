@@ -34,7 +34,6 @@
 
 using namespace std;
 
-CWallet* pwalletMain = NULL;
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
@@ -59,6 +58,7 @@ CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_FALLBACK_FEE);
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
+std::vector<CWallet*> CWallets::wallets = {};
 /** @defgroup mapWallet
  *
  * @{
@@ -3377,7 +3377,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
 bool CWallet::InitLoadWallet()
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        pwalletMain = NULL;
+        CWallets::destruct();
         LogPrintf("Wallet disabled!\n");
         return true;
     }
@@ -3544,7 +3544,7 @@ bool CWallet::InitLoadWallet()
         LogPrintf("mapAddressBook.size() = %u\n",  walletInstance->mapAddressBook.size());
     }
 
-    pwalletMain = walletInstance;
+    CWallets::addWallet(walletInstance);
 
     return true;
 }

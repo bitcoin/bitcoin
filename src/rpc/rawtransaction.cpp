@@ -654,7 +654,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+    LOCK2(cs_main, CWallets::defaultWallet() ? &CWallets::defaultWallet()->cs_wallet : NULL);
 #else
     LOCK(cs_main);
 #endif
@@ -717,7 +717,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         }
     }
 #ifdef ENABLE_WALLET
-    else if (pwalletMain)
+    else if (CWallets::defaultWallet())
         EnsureWalletIsUnlocked();
 #endif
 
@@ -785,7 +785,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     }
 
 #ifdef ENABLE_WALLET
-    const CKeyStore& keystore = ((fGivenKeys || !pwalletMain) ? tempKeystore : *pwalletMain);
+    const CKeyStore& keystore = ((fGivenKeys || !CWallets::defaultWallet()) ? tempKeystore : *CWallets::defaultWallet());
 #else
     const CKeyStore& keystore = tempKeystore;
 #endif
