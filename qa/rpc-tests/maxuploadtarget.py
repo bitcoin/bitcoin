@@ -86,6 +86,9 @@ class MaxUploadTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
+        # Cache for utxos, as the listunspent may take a long time later in the test
+        self.utxo_cache = []
+
     def setup_network(self):
         # Start a node with maxuploadtarget of 200 MB (/24h)
         self.nodes = []
@@ -118,7 +121,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # Test logic begins here
 
         # Now mine a big block
-        mine_large_block(self.nodes[0])
+        mine_large_block(self.nodes[0], self.utxo_cache)
 
         # Store the hash; we'll request this later
         big_old_block = self.nodes[0].getbestblockhash()
@@ -129,7 +132,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(int(time.time()) - 2*60*60*24)
 
         # Mine one more block, so that the prior block looks old
-        mine_large_block(self.nodes[0])
+        mine_large_block(self.nodes[0], self.utxo_cache)
 
         # We'll be requesting this new block too
         big_new_block = self.nodes[0].getbestblockhash()
