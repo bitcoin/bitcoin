@@ -79,7 +79,7 @@ class LogTest {
     virtual Status Skip(uint64_t n) {
       if (n > contents_.size()) {
         contents_.clear();
-        return Status::NotFound("in-memory file skipepd past end");
+        return Status::NotFound("in-memory file skipped past end");
       }
 
       contents_.remove_prefix(n);
