@@ -368,6 +368,8 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     if(!pCurrentBlockIndex) return;
 
+    fRateChecksEnabled = false;
+
     LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- After pCurrentBlockIndex (not NULL)\n");
 
     // UPDATE CACHE FOR EACH OBJECT THAT IS FLAGGED DIRTYCACHE=TRUE
@@ -423,6 +425,8 @@ void CGovernanceManager::UpdateCachesAndClean()
             ++it;
         }
     }
+
+    fRateChecksEnabled = true;
 }
 
 CGovernanceObject *CGovernanceManager::FindGovernanceObject(const uint256& nHash)
@@ -625,31 +629,51 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
     // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
 
+    LogPrint("gobject", "CGovernanceManager::Sync -- syncing to peer=%d, nProp = %s\n", pfrom->id, nProp.ToString());
+
     {
         LOCK(cs);
+        fRateChecksEnabled = false;
         for(object_m_it it = mapObjects.begin(); it != mapObjects.end(); ++it) {
             uint256 h = it->first;
 
             CGovernanceObject& govobj = it->second;
 
-            std::string strError;
-            if(govobj.IsSetCachedValid() &&
-               (nProp == uint256() || h == nProp) &&
-               govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
-                // Push the inventory budget proposal message over to the other client
-                pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, h));
-                ++nInvCount;
+            if((nProp != uint256()) && (h != nProp)) {
+                continue;
+            }
 
-                std::vector<CGovernanceVote> vecVotes = govobj.GetVoteFile().GetVotes();
-                for(size_t i = 0; i < vecVotes.size(); ++i) {
-                    if(!vecVotes[i].IsValid(true)) {
-                        continue;
-                    }
-                    pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, vecVotes[i].GetHash()));
-                    ++nInvCount;
+            LogPrint("gobject", "CGovernanceManager::Sync -- attempting to sync govobj: %s, peer=%d\n", govobj.GetHash().ToString(), pfrom->id);
+
+            std::string strError;
+            bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, true); 
+            if(!fIsValid) {
+                LogPrintf("CGovernanceManager::Sync -- not syncing invalid govobj: %s, strError = %s, fCachedValid = %d, peer=%d\n", 
+                         govobj.GetHash().ToString(), strError, govobj.IsSetCachedValid(), pfrom->id);
+                continue;
+            }
+
+            if(!govobj.IsSetCachedValid()) {
+                LogPrintf("CGovernanceManager::Sync -- invalid flag cached, not syncing govobj: %s, fCachedValid = %d, peer=%d\n", 
+                          govobj.GetHash().ToString(), govobj.IsSetCachedValid(), pfrom->id);
+                continue;
+            }
+
+            // Push the inventory budget proposal message over to the other client
+            LogPrint("gobject", "CGovernanceManager::Sync -- syncing govobj: %s, peer=%d\n", govobj.GetHash().ToString(), pfrom->id);
+            pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, h));
+            ++nInvCount;
+
+            std::vector<CGovernanceVote> vecVotes = govobj.GetVoteFile().GetVotes();
+            for(size_t i = 0; i < vecVotes.size(); ++i) {
+                if(!vecVotes[i].IsValid(true)) {
+                    continue;
                 }
+                pfrom->PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, vecVotes[i].GetHash()));
+                ++nInvCount;
             }
         }
+        fRateChecksEnabled = true;
     }
 
     pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nInvCount);
