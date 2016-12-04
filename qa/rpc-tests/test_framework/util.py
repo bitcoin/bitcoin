@@ -57,9 +57,44 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
 
 def p2p_port(n):
-    return 11000 + n + os.getpid()%999
+    #If port is already defined then return port
+    if os.getenv("node" + str(n)):
+        return int(os.getenv("node" + str(n)))
+    #If no port defined then find an available port
+    if n == 0:
+        port = 11000 + n + os.getpid()%990
+    else:
+        port = int(os.getenv("node" + str(n-1))) + 1
+    from subprocess import check_output
+    netStatOut = check_output(["netstat", "-n"])
+    for portInUse in re.findall("tcp.*?:(11\d\d\d)",netStatOut.lower()):
+        #print portInUse
+        if port == int(portInUse):
+            port += 1
+    os.environ["node" + str(n)] = str(port)
+
+    #print "port node " + str(n) + " is " + str(port)
+    return int(port)
+
 def rpc_port(n):
-    return 12000 + n + os.getpid()%999
+    #If port is already defined then return port
+    if os.getenv("rpcnode" + str(n)):
+        return int(os.getenv("rpcnode" + str(n)))
+    #If no port defined then find an available port
+    if n == 0:
+        port = 12000 + n + os.getpid()%990
+    else:
+        port = int(os.getenv("rpcnode" + str(n-1))) + 1
+    from subprocess import check_output
+    netStatOut = check_output(["netstat", "-n"])
+    for portInUse in re.findall("tcp.*?:(12\d\d\d)",netStatOut.lower()):
+        #print portInUse
+        if port == int(portInUse):
+            port += 1
+    os.environ["rpcnode" + str(n)] = str(port)
+
+    #print "port rpcnode " + str(n) + " is " + str(port)
+    return int(port)
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BTC values"""
