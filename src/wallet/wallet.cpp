@@ -2118,6 +2118,8 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                     if(found && fMasterNode) found = pcoin->vout[i].nValue != 1000*COIN; // do not use Hot MN funds
                 } else if(nCoinType == ONLY_1000) {
                     found = pcoin->vout[i].nValue == 1000*COIN;
+                } else if(nCoinType == ONLY_PRIVATESEND_COLLATERAL) {
+                    found = IsCollateralAmount(pcoin->vout[i].nValue);
                 } else {
                     found = true;
                 }
@@ -2781,12 +2783,9 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, fOnlyConfirmed);
+    AvailableCoins(vCoins, fOnlyConfirmed, NULL, false, ONLY_PRIVATESEND_COLLATERAL);
 
-    BOOST_FOREACH(const COutput& out, vCoins)
-        if(IsCollateralAmount(out.tx->vout[out.i].nValue)) return true;
-
-    return false;
+    return !vCoins.empty();
 }
 
 bool CWallet::IsCollateralAmount(CAmount nInputAmount) const

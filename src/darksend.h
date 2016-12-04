@@ -382,7 +382,7 @@ private:
 
     /// Create denominations
     bool CreateDenominated();
-    bool CreateDenominated(const CompactTallyItem& tallyItem);
+    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
