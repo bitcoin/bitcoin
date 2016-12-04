@@ -580,14 +580,16 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
             // do so only if trayIcon is already set
             trayIconMenu = new QMenu(this);
             trayIcon->setContextMenu(trayIconMenu);
-
-            connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-                    this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-
             createIconMenu(trayIconMenu);
 
-#ifdef Q_OS_MAC
-            // Note: On Mac, the dock icon is also used to provide same functionality.
+#ifndef Q_OS_MAC
+            // Show main window on tray icon click
+            // Note: ignore this on Mac - this is not the way tray should work there
+            connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+                    this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+#else
+            // Note: On Mac, the dock icon is also used to provide menu functionality
+            // similar to one for tray icon
             MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
             dockIconHandler->setMainWindow((QMainWindow *)this);
             dockIconMenu = dockIconHandler->dockMenu();
