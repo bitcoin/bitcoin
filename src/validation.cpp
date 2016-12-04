@@ -3123,7 +3123,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const CBlock* pblock, bool fForceProcessing, const CDiskBlockPos* dbp, bool *fNewBlock)
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, const CDiskBlockPos* dbp, bool *fNewBlock)
 {
     {
         LOCK(cs_main);
@@ -3142,13 +3142,8 @@ bool ProcessNewBlock(const CChainParams& chainparams, const CBlock* pblock, bool
 
     NotifyHeaderTip();
 
-    //TODO: This copy is a major performance regression, but callers need updated to fix this
-    std::shared_ptr<const CBlock> block_ptr;
-    if (pblock)
-        block_ptr.reset(new CBlock(*pblock));
-
     CValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!ActivateBestChain(state, chainparams, block_ptr))
+    if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
     return true;

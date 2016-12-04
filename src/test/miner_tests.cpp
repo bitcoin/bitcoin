@@ -223,7 +223,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             txFirst.push_back(pblock->vtx[0]);
         pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
         pblock->nNonce = blockinfo[i].nonce;
-        BOOST_CHECK(ProcessNewBlock(chainparams, pblock, true, NULL, NULL));
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, NULL, NULL));
         pblock->hashPrevBlock = pblock->GetHash();
     }
 
