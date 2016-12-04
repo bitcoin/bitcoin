@@ -2468,8 +2468,17 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     bool signSuccess;
                     const CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
                     SignatureData sigdata;
+                    int nHashType = SIGHASH_ALL;
+
+                    // If we're not spending unconfirmed outputs, we can use
+                    // ANYONECANPAY as it's ok if someone adds an input to our
+                    // transaction: we're not relying on the txid being stable
+                    // anyway.
+                    if (!bSpendZeroConfChange)
+                        nHashType |= SIGHASH_ANYONECANPAY;
+
                     if (sign)
-                        signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, coin.first->vout[coin.second].nValue, SIGHASH_ALL), scriptPubKey, sigdata);
+                        signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, coin.first->vout[coin.second].nValue, nHashType), scriptPubKey, sigdata);
                     else
                         signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata);
 
