@@ -17,9 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
-
-extern map<string, string> mapArgs;
+extern std::map<std::string, std::string> mapArgs;
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
