@@ -19,7 +19,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, vector<COutput
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    CWalletTx* wtx = new CWalletTx(&wallet, tx);
+    CWalletTx* wtx = new CWalletTx(&wallet, MakeTransactionRef(std::move(tx)));
 
     int nAge = 6 * 24;
     COutput output(wtx, nInput, nAge, true, true);

@@ -510,19 +510,19 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     CAmount nMinFee = GetMinCollateralFee();
     uint256 nExpectedHash = GetHash();
 
-    CTransaction txCollateral;
+    CTransactionRef txCollateral;
     uint256 nBlockHash;
 
     // RETRIEVE TRANSACTION IN QUESTION
 
     if(!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
-        strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
+        strError = strprintf("Can't find collateral tx %s", txCollateral->ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
 
-    if(txCollateral.vout.size() < 1) {
-        strError = strprintf("tx vout size less than 1 | %d", txCollateral.vout.size());
+    if(txCollateral->vout.size() < 1) {
+        strError = strprintf("tx vout size less than 1 | %d", txCollateral->vout.size());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
@@ -532,7 +532,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     CScript findScript;
     findScript << OP_RETURN << ToByteVector(nExpectedHash);
 
-    DBG( cout << "IsCollateralValid: txCollateral.vout.size() = " << txCollateral.vout.size() << endl; );
+    DBG( cout << "IsCollateralValid: txCollateral->vout.size() = " << txCollateral->vout.size() << endl; );
 
     DBG( cout << "IsCollateralValid: findScript = " << ScriptToAsmStr( findScript, false ) << endl; );
 
@@ -540,13 +540,13 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 
 
     bool foundOpReturn = false;
-    BOOST_FOREACH(const CTxOut o, txCollateral.vout) {
+    BOOST_FOREACH(const CTxOut o, txCollateral->vout) {
         DBG( cout << "IsCollateralValid txout : " << o.ToString()
              << ", o.nValue = " << o.nValue
              << ", o.scriptPubKey = " << ScriptToAsmStr( o.scriptPubKey, false )
              << endl; );
         if(!o.scriptPubKey.IsPayToPublicKeyHash() && !o.scriptPubKey.IsUnspendable()) {
-            strError = strprintf("Invalid Script %s", txCollateral.ToString());
+            strError = strprintf("Invalid Script %s", txCollateral->ToString());
             LogPrintf ("CGovernanceObject::IsCollateralValid -- %s\n", strError);
             return false;
         }
@@ -561,7 +561,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     }
 
     if(!foundOpReturn){
-        strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral.ToString());
+        strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral->ToString());
         LogPrintf ("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }

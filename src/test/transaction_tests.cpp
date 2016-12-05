@@ -135,8 +135,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
             string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION);
-            CTransaction tx;
-            stream >> tx;
+            CTransaction tx(deserialize, stream);
 
             CValidationState state;
             BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
@@ -210,8 +209,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
             string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION);
-            CTransaction tx;
-            stream >> tx;
+            CTransaction tx(deserialize, stream);
 
             CValidationState state;
             fValid = CheckTransaction(tx, state) && state.IsValid();

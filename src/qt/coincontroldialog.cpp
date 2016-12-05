@@ -524,14 +524,14 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nQuantity++;
 
         // Amount
-        nAmount += out.tx->vout[out.i].nValue;
+        nAmount += out.tx->tx->vout[out.i].nValue;
 
         // Priority
-        dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
+        dPriorityInputs += (double)out.tx->tx->vout[out.i].nValue * (out.nDepth+1);
 
         // Bytes
         CTxDestination address;
-        if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+        if(ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address))
         {
             CPubKey pubkey;
             CKeyID *keyid = boost::get<CKeyID>(&address);
@@ -731,7 +731,7 @@ void CoinControlDialog::updateView()
         CAmount nSum = 0;
         int nChildren = 0;
         BOOST_FOREACH(const COutput& out, coins.second) {
-            nSum += out.tx->vout[out.i].nValue;
+            nSum += out.tx->tx->vout[out.i].nValue;
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -743,7 +743,7 @@ void CoinControlDialog::updateView()
             // address
             CTxDestination outputAddress;
             QString sAddress = "";
-            if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, outputAddress))
+            if(ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, outputAddress))
             {
                 sAddress = QString::fromStdString(CBitcoinAddress(outputAddress).ToString());
 
@@ -770,9 +770,9 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
-            itemOutput->setToolTip(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
-            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->vout[out.i].nValue)); // padding so that sorting works correctly
+            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->tx->vout[out.i].nValue));
+            itemOutput->setToolTip(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->tx->vout[out.i].nValue));
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.tx->tx->vout[out.i].nValue)); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
@@ -781,7 +781,7 @@ void CoinControlDialog::updateView()
 
 
             // PrivateSend rounds
-            COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
+            COutPoint outpoint = COutPoint(out.tx->tx->GetHash(), out.i);
             int nRounds = pwalletMain->GetOutpointPrivateSendRounds(outpoint);
 
             if (nRounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, QString::number(nRounds));
