@@ -200,7 +200,8 @@ public:
     CBlockHeader header;
     PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock);
+    // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
 };

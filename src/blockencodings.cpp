@@ -47,7 +47,7 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
 
 
 
-ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock) {
+ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, std::vector<std::pair<uint256, CTransactionRef>>& extra_txn) {
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
     if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_BASE_SIZE / MIN_TRANSACTION_BASE_SIZE)
@@ -104,6 +104,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         return READ_STATUS_FAILED; // Short ID collision
 
     std::vector<bool> have_txn(txn_available.size());
+    {
     LOCK(pool->cs);
     const std::vector<std::pair<uint256, CTxMemPool::txiter> >& vTxHashes = pool->vTxHashes;
     for (size_t i = 0; i < vTxHashes.size(); i++) {
@@ -119,6 +120,35 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 // This should be rare enough that the extra bandwidth doesn't matter,
                 // but eating a round-trip due to FillBlock failure would be annoying
                 if (txn_available[idit->second]) {
+                    txn_available[idit->second].reset();
+                    mempool_count--;
+                }
+            }
+        }
+        // Though ideally we'd continue scanning for the two-txn-match-shortid case,
+        // the performance win of an early exit here is too good to pass up and worth
+        // the extra risk.
+        if (mempool_count == shorttxids.size())
+            break;
+    }
+    }
+
+    for (size_t i = 0; i < extra_txn.size(); i++) {
+        uint64_t shortid = cmpctblock.GetShortID(extra_txn[i].first);
+        std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
+        if (idit != shorttxids.end()) {
+            if (!have_txn[idit->second]) {
+                txn_available[idit->second] = extra_txn[i].second;
+                have_txn[idit->second]  = true;
+                mempool_count++;
+            } else {
+                // If we find two mempool txn that match the short id, just request it.
+                // This should be rare enough that the extra bandwidth doesn't matter,
+                // but eating a round-trip due to FillBlock failure would be annoying
+                // Note that we dont want duplication between extra_txn and mempool to
+                // trigger this case, so we compare witness hashes first
+                if (txn_available[idit->second] &&
+                        txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
                     txn_available[idit->second].reset();
                     mempool_count--;
                 }
