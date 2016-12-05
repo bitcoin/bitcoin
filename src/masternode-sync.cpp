@@ -412,6 +412,8 @@ void CMasternodeSync::ProcessTick()
             }
         }
     }
+    // looped through all nodes, release them
+    ReleaseNodes(vNodesCopy);
 }
 
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindex)
