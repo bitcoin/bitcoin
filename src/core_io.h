@@ -11,7 +11,7 @@
 class CBlock;
 class CScript;
 class CTransaction;
-class CMutableTransaction;
+struct CMutableTransaction;
 class uint256;
 class UniValue;
 
