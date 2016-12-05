@@ -1,5 +1,7 @@
 **LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values.**
 
+[![Build Status](https://travis-ci.org/google/leveldb.svg?branch=master)](https://travis-ci.org/google/leveldb)
+
 Authors: Sanjay Ghemawat (sanjay@google.com) and Jeff Dean (jeff@google.com)
 
 # Features
@@ -10,15 +12,48 @@ Authors: Sanjay Ghemawat (sanjay@google.com) and Jeff Dean (jeff@google.com)
   * Multiple changes can be made in one atomic batch.
   * Users can create a transient snapshot to get a consistent view of data.
   * Forward and backward iteration is supported over the data.
-  * Data is automatically compressed using the [Snappy compression library](http://code.google.com/p/snappy).
+  * Data is automatically compressed using the [Snappy compression library](http://google.github.io/snappy/).
   * External activity (file system operations etc.) is relayed through a virtual interface so users can customize the operating system interactions.
-  * [Detailed documentation](http://htmlpreview.github.io/?https://github.com/google/leveldb/blob/master/doc/index.html) about how to use the library is included with the source code.
+
+# Documentation
+  [LevelDB library documentation](https://rawgit.com/google/leveldb/master/doc/index.html) is online and bundled with the source code.
 
 
 # Limitations
   * This is not a SQL database.  It does not have a relational data model, it does not support SQL queries, and it has no support for indexes.
   * Only a single process (possibly multi-threaded) can access a particular database at a time.
   * There is no client-server support builtin to the library.  An application that needs such support will have to wrap their own server around the library.
+
+# Contributing to the leveldb Project
+The leveldb project welcomes contributions. leveldb's primary goal is to be
+a reliable and fast key/value store. Changes that are in line with the
+features/limitations outlined above, and meet the requirements below,
+will be considered.
+
+Contribution requirements:
+
+1. **POSIX only**. We _generally_ will only accept changes that are both
+   compiled, and tested on a POSIX platform - usually Linux. Very small
+   changes will sometimes be accepted, but consider that more of an
+   exception than the rule.
+
+2. **Stable API**. We strive very hard to maintain a stable API. Changes that
+   require changes for projects using leveldb _might_ be rejected without
+   sufficient benefit to the project.
+
+3. **Tests**: All changes must be accompanied by a new (or changed) test, or
+   a sufficient explanation as to why a new (or changed) test is not required.
+
+## Submitting a Pull Request
+Before any pull request will be accepted the author must first sign a
+Contributor License Agreement (CLA) at https://cla.developers.google.com/.
+
+In order to keep the commit timeline linear
+[squash](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Squashing-Commits)
+your changes down to a single commit and [rebase](https://git-scm.com/docs/git-rebase)
+on google/leveldb/master. This keeps the commit timeline linear and more easily sync'ed
+with the internal repository at Google. More information at GitHub's
+[About Git rebase](https://help.github.com/articles/about-git-rebase/) page.
 
 # Performance
 

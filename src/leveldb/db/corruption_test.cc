@@ -36,7 +36,7 @@ class CorruptionTest {
     tiny_cache_ = NewLRUCache(100);
     options_.env = &env_;
     options_.block_cache = tiny_cache_;
-    dbname_ = test::TmpDir() + "/db_test";
+    dbname_ = test::TmpDir() + "/corruption_test";
     DestroyDB(dbname_, options_);
 
     db_ = NULL;
