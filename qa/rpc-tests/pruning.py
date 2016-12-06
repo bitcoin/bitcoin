@@ -13,6 +13,9 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+import time
+import os
+
 
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
@@ -23,6 +26,10 @@ class PruneTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 3
+
+        # Cache for utxos, as the listunspent may take a long time later in the test
+        self.utxo_cache_0 = []
+        self.utxo_cache_1 = []
 
     def setup_network(self):
         self.nodes = []
@@ -48,7 +55,7 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[0].generate(150)
         # Then mine enough full blocks to create more than 550MiB of data
         for i in range(645):
-            mine_large_block(self.nodes[0])
+            mine_large_block(self.nodes[0], self.utxo_cache_0)
 
         sync_blocks(self.nodes[0:3])
 
@@ -60,7 +67,7 @@ class PruneTest(BitcoinTestFramework):
         print("Mining 25 more blocks should cause the first block file to be pruned")
         # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
         for i in range(25):
-            mine_large_block(self.nodes[0])
+            mine_large_block(self.nodes[0], self.utxo_cache_0)
 
         waitstart = time.time()
         while os.path.isfile(self.prunedir+"blk00000.dat"):
@@ -87,13 +94,13 @@ class PruneTest(BitcoinTestFramework):
             # Mine 24 blocks in node 1
             for i in range(24):
                 if j == 0:
-                    mine_large_block(self.nodes[1])
+                    mine_large_block(self.nodes[1], self.utxo_cache_1)
                 else:
                     self.nodes[1].generate(1) #tx's already in mempool from previous disconnects
 
             # Reorg back with 25 block chain from node 0
             for i in range(25):
-                mine_large_block(self.nodes[0])
+                mine_large_block(self.nodes[0], self.utxo_cache_0)
 
             # Create connections in the order so both nodes can see the reorg at the same time
             connect_nodes(self.nodes[1], 0)
