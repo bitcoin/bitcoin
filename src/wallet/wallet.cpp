@@ -2104,7 +2104,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         CPubKey vchPubKey;
                         bool ret;
                         ret = reservekey.GetReservedKey(vchPubKey);
-                        assert(ret); // should never fail, as we just unlocked
+                        if (!ret)
+                        {
+                            strFailReason = _("Keypool ran out, please call keypoolrefill first");
+                            return false;
+                        }
 
                         scriptChange = GetScriptForDestination(vchPubKey.GetID());
                     }
