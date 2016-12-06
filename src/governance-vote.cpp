@@ -235,6 +235,7 @@ CGovernanceVote::CGovernanceVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, v
 
 void CGovernanceVote::Relay() const
 {
+    if(!masternodeSync.IsSynced()) return;
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
     RelayInv(inv, PROTOCOL_VERSION);
 }

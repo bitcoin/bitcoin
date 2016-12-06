@@ -55,7 +55,7 @@ void CMasternodeSync::Reset()
     nTimeAssetSyncStarted = GetTime();
     nTimeLastMasternodeList = GetTime();
     nTimeLastPaymentVote = GetTime();
-    nTimeLastBudgetItem = GetTime();
+    nTimeLastGovernanceItem = GetTime();
     nTimeLastFailure = 0;
     nCountFailures = 0;
 }
@@ -95,7 +95,7 @@ void CMasternodeSync::SwitchToNextAsset()
             nRequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
             break;
         case(MASTERNODE_SYNC_MNW):
-            nTimeLastBudgetItem = GetTime();
+            nTimeLastGovernanceItem = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_GOVERNANCE;
             break;
         case(MASTERNODE_SYNC_GOVERNANCE):
@@ -374,7 +374,7 @@ void CMasternodeSync::ProcessTick()
                 LogPrint("mnpayments", "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastPaymentVote %lld GetTime() %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastPaymentVote, GetTime(), GetTime() - nTimeLastPaymentVote);
 
                 // check for timeout first
-                if(nTimeLastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT_SECONDS){
+                if(GetTime() - nTimeLastGovernanceItem > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if(nRequestedMasternodeAttempt == 0) {
                         LogPrintf("CMasternodeSync::ProcessTick -- WARNING: failed to sync %s\n", GetAssetName());
@@ -419,11 +419,4 @@ void CMasternodeSync::ProcessTick()
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     pCurrentBlockIndex = pindex;
-}
-
-
-void CMasternodeSync::AddedBudgetItem(uint256 hash)
-{
-    // skip this for now
-    return;
 }
