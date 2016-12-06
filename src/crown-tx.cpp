@@ -49,8 +49,8 @@ static bool AppInitRawTx(int argc, char* argv[])
         // First part of help message is specific to this utility
         std::string strUsage = _("Crown Core crown-tx utility version") + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +
-              "  crown-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded dash transaction") + "\n" +
-              "  crown-tx [options] -create [commands]   " + _("Create hex-encoded dash transaction") + "\n" +
+              "  crown-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded crown transaction") + "\n" +
+              "  crown-tx [options] -create [commands]   " + _("Create hex-encoded crown transaction") + "\n" +
               "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -555,7 +555,7 @@ static int CommandLineRawTx(int argc, char* argv[])
             if (argc < 2)
                 throw runtime_error("too few parameters");
 
-            // param: hex-encoded dash transaction
+            // param: hex-encoded crown transaction
             string strHexTx(argv[1]);
             if (strHexTx == "-")                 // "-" implies standard input
                 strHexTx = readStdin();

@@ -310,16 +310,16 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* Crown features */
-    { "dash",               "throne",             &throne,             true,      true,       false },
-    { "dash",               "thronelist",         &thronelist,         true,      true,       false },
-    { "dash",               "thronebroadcast",    &thronebroadcast,    true,      true,       false },
-    { "dash",               "mnbudget",               &mnbudget,               true,      true,       false },
-    { "dash",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true,      true,       false },
-    { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
-    { "dash",               "mnsync",                 &mnsync,                 true,      true,       false },
-    { "dash",               "spork",                  &spork,                  true,      true,       false },
+    { "crown",               "throne",             &throne,             true,      true,       false },
+    { "crown",               "thronelist",         &thronelist,         true,      true,       false },
+    { "crown",               "thronebroadcast",    &thronebroadcast,    true,      true,       false },
+    { "crown",               "mnbudget",               &mnbudget,               true,      true,       false },
+    { "crown",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true,      true,       false },
+    { "crown",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
+    { "crown",               "mnsync",                 &mnsync,                 true,      true,       false },
+    { "crown",               "spork",                  &spork,                  true,      true,       false },
 #ifdef ENABLE_WALLET
-    { "dash",               "darksend",               &darksend,               false,     false,      true  }, /* not threadSafe because of SendMoney */
+    { "crown",               "darksend",               &darksend,               false,     false,      true  }, /* not threadSafe because of SendMoney */
 
     /* Wallet */
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },

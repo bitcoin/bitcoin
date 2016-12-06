@@ -282,7 +282,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -checkblocks=<n>       " + strprintf(_("How many blocks to check at startup (default: %u, 0 = all)"), 288) + "\n";
     strUsage += "  -checklevel=<n>        " + strprintf(_("How thorough the block verification of -checkblocks is (0-4, default: %u)"), 3) + "\n";
-    strUsage += "  -conf=<file>           " + strprintf(_("Specify configuration file (default: %s)"), "dash.conf") + "\n";
+    strUsage += "  -conf=<file>           " + strprintf(_("Specify configuration file (default: %s)"), "crown.conf") + "\n";
     if (mode == HMM_BITCOIND)
     {
 #if !defined(WIN32)
@@ -381,7 +381,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:\n");
     strUsage += "                           addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net,\n"; // Don't translate these and qt below
-    strUsage += "                           dash (or specifically: darksend, instantx, throne, keepass, mnpayments, mnbudget)"; // Don't translate these and qt below
+    strUsage += "                           crown (or specifically: darksend, instantx, throne, keepass, mnpayments, mnbudget)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
@@ -423,7 +423,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), 0) + "\n";
     strUsage += "  -darksendrounds=<n>          " + strprintf(_("Use N separate thrones to anonymize funds  (2-8, default: %u)"), 2) + "\n";
-    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N CRW anonymized (default: %u)"), 0) + "\n";
+    strUsage += "  -anonymizecrownamount=<n>     " + strprintf(_("Keep N CRW anonymized (default: %u)"), 0) + "\n";
     strUsage += "  -liquidityprovider=<n>       " + strprintf(_("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), 0) + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
@@ -572,7 +572,7 @@ bool InitSanityCheck(void)
 
 
 
-/** Initialize dash.
+/** Initialize crown.
  *  @pre Parameters should be parsed and config file should be read.
  */
 bool AppInit2(boost::thread_group& threadGroup)
@@ -1538,7 +1538,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         nDarksendRounds = 93409;
     }
 
-    nAnonymizeCrownAmount = GetArg("-anonymizedashamount", 0);
+    nAnonymizeCrownAmount = GetArg("-anonymizecrownamount", 0);
     if(nAnonymizeCrownAmount > 934099) nAnonymizeCrownAmount = 934099;
     if(nAnonymizeCrownAmount < 2) nAnonymizeCrownAmount = 2;
 

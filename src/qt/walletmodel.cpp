@@ -247,7 +247,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             total += subtotal;
         }
         else
-        {   // User-entered dash address / amount:
+        {   // User-entered crown address / amount:
             if(!validateAddress(rcp.address))
             {
                 return InvalidAddress;

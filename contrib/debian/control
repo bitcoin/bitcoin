@@ -1,4 +1,4 @@
-Source: dash
+Source: crown
 Section: utils
 Priority: optional
 Maintainer: Jonas Smedegaard <dr@jones.dk> ***TODO***
@@ -23,8 +23,8 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
 Homepage: http://www.crown.tech/
-Vcs-Git: git://github.com/dashpay/dash.git
-Vcs-Browser: http://github.com/dashpay/dash
+Vcs-Git: git://github.com/crownpay/crown.git
+Vcs-Browser: http://github.com/crownpay/crown
 
 Package: crownd
 Architecture: any

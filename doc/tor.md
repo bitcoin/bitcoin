@@ -10,7 +10,7 @@ port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.htm
 for how to properly configure Tor.
 
 
-1. Run dash behind a Tor proxy
+1. Run crown behind a Tor proxy
 ----------------------------------
 
 The first step is running Crown behind a Tor proxy. This will already make all
@@ -44,7 +44,7 @@ In a typical situation, this suffices to run behind a Tor proxy:
 	./crownd -proxy=127.0.0.1:9050
 
 
-2. Run a dash hidden server
+2. Run a crown hidden server
 -------------------------------
 
 If you configure your Tor system accordingly, it is possible to make your node also
@@ -58,7 +58,7 @@ config file):
 The directory can be different of course, but (both) port numbers should be equal to
 your crownd's P2P listen port (9340 by default).
 
-	-externalip=X   You can tell dash about its publicly reachable address using
+	-externalip=X   You can tell crown about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
 	                configuration, you can find your onion address in
 	                /var/lib/tor/crown-service/hostname. Onion addresses are given
@@ -94,10 +94,10 @@ for normal IPv4/IPv6 communication, use:
 	./crownd -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
 
-3. List of known dash Tor relays
+3. List of known crown Tor relays
 ------------------------------------
 
-* [dashie7ghp67.onion](http://dashie7ghp67.onion/)
+* [crownie7ghp67.onion](http://crownie7ghp67.onion/)
 * [drktalkwaybgxnoq.onion](http://drktalkwaybgxnoq.onion/)
 * [drkcoinooditvool.onion](http://drkcoinooditvool.onion/)
 * [darkcoxbtzggpmcc.onion](http://darkcoxbtzggpmcc.onion/)

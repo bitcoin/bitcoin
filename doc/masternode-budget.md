@@ -16,7 +16,7 @@ Budgets go through a series of stages before being paid:
 1. Prepare collateral transaction
 --
 
-mnbudget prepare proposal-name url payment_count block_start crown_address monthly_payment_dash [use_ix(true|false)]
+mnbudget prepare proposal-name url payment_count block_start crown_address monthly_payment_crown [use_ix(true|false)]
 
 Example: ```mnbudget prepare cool-project http://www.cool-project/one.json 12 100000 y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7 1200 true```
 

@@ -83,7 +83,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../crown.qrc"/>
  </resources>
  <connections>
   <connection>

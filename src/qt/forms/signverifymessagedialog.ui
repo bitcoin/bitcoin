@@ -61,7 +61,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
            </property>
            <property name="shortcut">
@@ -81,7 +81,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
            </property>
            <property name="shortcut">
@@ -137,7 +137,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
            </property>
            <property name="autoDefault">
@@ -158,7 +158,7 @@
             <string>Sign &amp;Message</string>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
            </property>
            <property name="autoDefault">
@@ -175,7 +175,7 @@
             <string>Clear &amp;All</string>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="autoDefault">
@@ -271,7 +271,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
            </property>
            <property name="shortcut">
@@ -301,7 +301,7 @@
             <string>Verify &amp;Message</string>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/transaction_0</normaloff>:/icons/transaction_0</iconset>
            </property>
            <property name="autoDefault">
@@ -318,7 +318,7 @@
             <string>Clear &amp;All</string>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="autoDefault">
@@ -384,7 +384,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../crown.qrc"/>
  </resources>
  <connections/>
 </ui>

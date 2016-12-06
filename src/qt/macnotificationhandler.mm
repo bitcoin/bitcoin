@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"io.dashpay.Crown-Qt";
+        return @"io.crownpay.Crown-Qt";
     } else {
         return [self __bundleIdentifier];
     }

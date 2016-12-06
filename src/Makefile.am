@@ -68,7 +68,7 @@ if BUILD_BITCOIN_UTILS
 endif
 
 .PHONY: FORCE
-# dash core #
+# crown core #
 BITCOIN_CORE_H = \
   activethrone.h \
   addrman.h \

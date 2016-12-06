@@ -95,7 +95,7 @@ Issue the following:
 Make note of the hash (which is your collaterla_output) and index.
 
 ### Enter your ThroNe details into your throne.conf file
-[From the dash github repo](https://github.com/darkcoin/darkcoin/blob/master/doc/throne_conf.md)
+[From the crown github repo](https://github.com/darkcoin/darkcoin/blob/master/doc/throne_conf.md)
 
 The new throne.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, throne private key, collateral output transaction id and collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
 
@@ -112,20 +112,20 @@ mn01 127.0.0.1:9340 93HaYBVUCYjEMeeH1Y4sBGLALQZE1Yc1K64xiqgX37tGBDQL8Xg 2bcd3c84
 mn02 127.0.0.2:9340 93WaAb3htPJEV8E9aQcN23Jt97bPex7YvWfgMDTUdWJvzmrMqey aa9f1034d973377a5e733272c3d0eced1de22555ad45d6b24abadff8087948d4 0 7gnwGHt17heGpG9Crfeh4KGpYNFugPhJdh:25
 ```
 
-## What about the dash.conf file?
+## What about the crown.conf file?
 
-If you are using a throne.conf file you no longer need the dash.conf file. The exception is if you need custom settings (thanks oblox). 
+If you are using a throne.conf file you no longer need the crown.conf file. The exception is if you need custom settings (thanks oblox). 
 
-## Update dash.conf on server
+## Update crown.conf on server
 
-If you generated a new throne private key, you will need to update the remote dash.conf files.
+If you generated a new throne private key, you will need to update the remote crown.conf files.
 
 Shut down the daemon and then edit the file.
 
-```sudo nano .dash/dash.conf```
+```sudo nano .crown/crown.conf```
 
 ### Edit the throneprivkey
-If you generated a new throne private key, you will need to update the throneprivkey value in your remote dash.conf file.
+If you generated a new throne private key, you will need to update the throneprivkey value in your remote crown.conf file.
 
 ## Start your ThroNes
 

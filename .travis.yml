@@ -40,8 +40,8 @@ matrix:
         apt:
           packages:
             - bc
-    - compiler: ": 32-bit + dash"
-      env: HOST=i686-pc-linux-gnu RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat" USE_SHELL="/bin/dash"
+    - compiler: ": 32-bit + crown"
+      env: HOST=i686-pc-linux-gnu RUN_TESTS=false GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat" USE_SHELL="/bin/crown"
       addons:
         apt:
           packages:
@@ -98,7 +98,7 @@ script:
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then export CCACHE_READONLY=1; fi
     - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
     - ./configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
-    - make distdir PACKAGE=dash VERSION=$HOST
+    - make distdir PACKAGE=crown VERSION=$HOST
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )

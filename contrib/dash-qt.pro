@@ -333,7 +333,7 @@ HEADERS += src/activethrone.h \
            src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.h \
            src/crypto/aes_helper.c \
            src/qt/bitcoinamountfield.moc \
-           src/qt/dash.moc \
+           src/qt/crown.moc \
            src/qt/intro.moc \
            src/qt/overviewpage.moc \
            src/qt/rpcconsole.moc \
@@ -471,7 +471,7 @@ SOURCES += src/activethrone.cpp \
            src/qt/coincontroltreewidget.cpp \
            src/qt/csvmodelwriter.cpp \
            src/qt/darksendconfig.cpp \
-           src/qt/dash.cpp \
+           src/qt/crown.cpp \
            src/qt/crownstrings.cpp \
            src/qt/editaddressdialog.cpp \
            src/qt/guiutil.cpp \
@@ -641,7 +641,7 @@ SOURCES += src/activethrone.cpp \
            src/leveldb/helpers/memenv/memenv.cc \
            src/leveldb/helpers/memenv/memenv_test.cc \
            src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.c
-RESOURCES += src/qt/dash.qrc src/qt/crown_locale.qrc
+RESOURCES += src/qt/crown.qrc src/qt/crown_locale.qrc
 TRANSLATIONS += src/qt/locale/crown_bg.ts \
                 src/qt/locale/crown_de.ts \
                 src/qt/locale/crown_en.ts \

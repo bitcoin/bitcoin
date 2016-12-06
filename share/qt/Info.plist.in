@@ -32,7 +32,7 @@
   <string>Crown-Qt</string>
 
   <key>CFBundleIdentifier</key>
-  <string>io.dashpay.Crown-Qt</string>
+  <string>io.crownpay.Crown-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -40,10 +40,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>io.dash.CrownPayment</string>
+      <string>io.crown.CrownPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>dash</string>
+        <string>crown</string>
       </array>
     </dict>
   </array>
@@ -52,7 +52,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>io.dash.paymentrequest</string>
+      <string>io.crown.paymentrequest</string>
       <key>UTTypeDescription</key>
       <string>Crown payment request</string>
       <key>UTTypeConformsTo</key>
@@ -65,7 +65,7 @@
         <string>application/x-crown-payment-request</string>
         <key>public.filename-extension</key>
         <array>
-          <string>dashpaymentrequest</string>
+          <string>crownpaymentrequest</string>
         </array>
       </dict>
     </dict>
@@ -78,7 +78,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>io.dash.paymentrequest</string>
+        <string>io.crown.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>

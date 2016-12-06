@@ -15,7 +15,7 @@ To install:
 
 If you build yourself, you will either need to modify the paths in
 the .desktop file or copy or symlink your crown-qt binary to `/usr/bin`
-and the `../../share/pixmaps/dash128.png` to `/usr/share/pixmaps`
+and the `../../share/pixmaps/crown128.png` to `/usr/share/pixmaps`
 
 crown-qt.protocol (KDE)
 

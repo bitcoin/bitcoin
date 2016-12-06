@@ -55,8 +55,8 @@ Value darksend(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() == 0)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, reset, or auto (AutoDenominate)"
+            "darksend <crownaddress> <amount>\n"
+            "crownaddress, reset, or auto (AutoDenominate)"
             "<amount> is a real and will be rounded to the next 0.1"
             + HelpRequiringPassphrase());
 
@@ -77,8 +77,8 @@ Value darksend(const Array& params, bool fHelp)
 
     if (params.size() != 2)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, denominate, or auto (AutoDenominate)"
+            "darksend <crownaddress> <amount>\n"
+            "crownaddress, denominate, or auto (AutoDenominate)"
             "<amount> is a real and will be rounded to the next 0.1"
             + HelpRequiringPassphrase());
 
@@ -140,7 +140,7 @@ Value throne(const Array& params, bool fHelp)
                 "  genkey       - Generate new throneprivkey\n"
                 "  enforce      - Enforce throne payments\n"
                 "  outputs      - Print throne compatible outputs\n"
-                "  start        - Start throne configured in dash.conf\n"
+                "  start        - Start throne configured in crown.conf\n"
                 "  start-alias  - Start single throne by assigned alias configured in throne.conf\n"
                 "  start-<mode> - Start thrones configured in throne.conf (<mode>: 'all', 'missing', 'disabled')\n"
                 "  status       - Print throne status information\n"

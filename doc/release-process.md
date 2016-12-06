@@ -2,7 +2,7 @@ Release Process
 ====================
 
 * update translations (ping wumpus, Diapolo or tcatm on IRC)
-* see https://github.com/dashpay/dash/blob/master/doc/translation_process.md#syncing-with-transifex
+* see https://github.com/crownpay/crown/blob/master/doc/translation_process.md#syncing-with-transifex
 
 * * *
 
@@ -33,7 +33,7 @@ Release Process
 
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
 	export VERSION=(new version, e.g. 0.8.0)
-	pushd ./dash
+	pushd ./crown
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
@@ -54,20 +54,20 @@ Release Process
 
   By default, gitian will fetch source files as needed. For offline builds, they can be fetched ahead of time:
 
-	make -C ../dash/depends download SOURCES_PATH=`pwd`/cache/common
+	make -C ../crown/depends download SOURCES_PATH=`pwd`/cache/common
 
   Only missing files will be fetched, so this is safe to re-run for each build.
 
 ###Build Crown Core for Linux, Windows, and OS X:
 
-	./bin/gbuild --commit dash=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gbuild --commit crown=v${VERSION} ../crown/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-linux.yml
 	mv build/out/crown-*.tar.gz build/out/src/crown-*.tar.gz ../
-	./bin/gbuild --commit dash=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gbuild --commit crown=v${VERSION} ../crown/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-win.yml
 	mv build/out/crown-*.zip build/out/crown-*.exe ../
-	./bin/gbuild --commit bitcoin=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-osx.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gbuild --commit bitcoin=v${VERSION} ../crown/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-osx.yml
 	mv build/out/crown-*-unsigned.tar.gz inputs/crown-osx-unsigned.tar.gz
 	mv build/out/crown-*.tar.gz build/out/crown-*.dmg ../
 	popd
@@ -100,8 +100,8 @@ Commit your signature to gitian.sigs:
 	pushd ./gitian-builder
 	# Fetch the signature as instructed by Evan
 	cp signature.tar.gz inputs/
-	./bin/gbuild -i ../dash/contrib/gitian-descriptors/gitian-osx-signer.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gbuild -i ../crown/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../crown/contrib/gitian-descriptors/gitian-osx-signer.yml
 	mv build/out/crown-osx-signed.dmg ../crown-${VERSION}-osx.dmg
 	popd
 
@@ -151,15 +151,15 @@ rm SHA256SUMS
 
 - Announce the release:
 
-  - Release sticky on dashtalk: https://dashtalk.org/index.php?board=1.0 ***TODO***
+  - Release sticky on crowntalk: https://crowntalk.org/index.php?board=1.0 ***TODO***
 
   - Crown-development mailing list
 
-  - Update title of #dashpay on Freenode IRC
+  - Update title of #crownpay on Freenode IRC
 
   - Optionally reddit /r/Crownpay, ... but this will usually sort out itself
 
-- Notify Flare (?) ***TODO*** so that he can start building [https://launchpad.net/~dashpay/+archive/ubuntu/dash](the PPAs) ***TODO***
+- Notify Flare (?) ***TODO*** so that he can start building [https://launchpad.net/~crownpay/+archive/ubuntu/crown](the PPAs) ***TODO***
 
 - Add release notes for the new version to the directory `doc/release-notes` in git master
 

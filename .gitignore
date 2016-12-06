@@ -6,7 +6,7 @@ reset-files.bash
 *.tar.gz
 
 *.exe
-src/dash
+src/crown
 src/crownd
 src/crown-cli
 src/crown-tx
@@ -60,7 +60,7 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.dash
+.crown
 *.a
 *.pb.cc
 *.pb.h

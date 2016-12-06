@@ -34,8 +34,8 @@ Drag Crown-Qt to your applications folder, and then run Crown-Qt.
 
 * See the documentation at the [Crown Wiki](https://en.bitcoin.it/wiki/Main_Page) ***TODO***
 for help and more information.
-* Ask for help on [#dashpay](http://webchat.freenode.net?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=dashpay).
-* Ask for help on the [CrownTalk](https://dashtalk.org/) forums.
+* Ask for help on [#crownpay](http://webchat.freenode.net?channels=crownpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=crownpay).
+* Ask for help on the [CrownTalk](https://crowntalk.org/) forums.
 
 Building
 ---------------------
@@ -46,7 +46,7 @@ The following are developer notes on how to build Crown on your native platform.
 
 Development
 ---------------------
-The Crown repo's [root README](https://github.com/dashpay/dash/blob/master/README.md) contains relevant information on the development process and automated testing.
+The Crown repo's [root README](https://github.com/crownpay/crown/blob/master/README.md) contains relevant information on the development process and automated testing.
 
 - [Coding Guidelines](coding.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
@@ -57,8 +57,8 @@ The Crown repo's [root README](https://github.com/dashpay/dash/blob/master/READM
 - [Unit Tests](unit-tests.md)
 
 ### Resources
-* Discuss on the [CrownTalk](https://dashtalk.org/) forums, in the Development & Technical Discussion board.
-* Discuss on [#dashpay](http://webchat.freenode.net/?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=dashpay).
+* Discuss on the [CrownTalk](https://crowntalk.org/) forums, in the Development & Technical Discussion board.
+* Discuss on [#crownpay](http://webchat.freenode.net/?channels=crownpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=crownpay).
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)

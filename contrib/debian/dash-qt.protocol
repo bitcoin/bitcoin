@@ -1,6 +1,6 @@
 [Protocol]
 exec=crown-qt '%u'
-protocol=dash
+protocol=crown
 input=none
 output=none
 helper=true

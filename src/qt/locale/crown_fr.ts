@@ -188,7 +188,7 @@
         <translation>Portefeuille chiffré</translation>
     </message>
     <message>
-        <source>Crown will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
+        <source>Crown will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your crowns from being stolen by malware infecting your computer.</source>
         <translation>Crown va à présent se fermer pour terminer le chiffrement. N'oubliez pas que le chiffrement de votre portefeuille n'est pas une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
     </message>
     <message>
@@ -264,7 +264,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and crown: URIs)</source>
-        <translation>Demande de paiements (Générer des QR code et des URIs dash)</translation>
+        <translation>Demande de paiements (Générer des QR code et des URIs crown)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -444,7 +444,7 @@
     </message>
     <message>
         <source>Open a crown: URI or payment request</source>
-        <translation>Ouvrir une URI ou demande de paiement dash</translation>
+        <translation>Ouvrir une URI ou demande de paiement crown</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1263,9 +1263,9 @@ Adresse : %4
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
+https://www.transifex.com/projects/p/crown/</source>
         <translation>Langage manquant ou traduction incomplète ? Participez aux traductions ici :
-https://www.transifex.com/projects/p/dash/</translation>
+https://www.transifex.com/projects/p/crown/</translation>
     </message>
     <message>
         <source>User Interface Theme:</source>
@@ -2292,7 +2292,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Si les frais personnalisés sont à 1000 crowns et que la transaction fait seulement 250 octets, alors "par kilooctet" payera seulement 250 crowns de frais,&lt;br /&gt;alors que "total au moins" payera 1000 crowns. Pour les transactions de plus d'un kilooctet les deux payeront par kilooctet.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for crown transactions than the network can process.</source>
         <translation>Payer les frais minimums fonctionne tant qu'il y a moins de volume de transactions que de place dans les blocs.&lt;br/&gt;Mais soyez conscients que ceci peut amener a des transactions qui ne seront jamais confirmées lorsqu'il y aura plus de demande que la capacité du réseau.</translation>
     </message>
     <message>
@@ -4217,7 +4217,7 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>
-        <translation>Maintenir N dash anonymisé en permanence (défaut: %u)</translation>
+        <translation>Maintenir N crown anonymisé en permanence (défaut: %u)</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>

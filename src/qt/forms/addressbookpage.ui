@@ -60,7 +60,7 @@
         <string>&amp;New</string>
        </property>
        <property name="icon">
-        <iconset resource="../dash.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -77,7 +77,7 @@
         <string>&amp;Copy</string>
        </property>
        <property name="icon">
-        <iconset resource="../dash.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
        </property>
        <property name="autoDefault">
@@ -94,7 +94,7 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../dash.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -124,7 +124,7 @@
         <string>&amp;Export</string>
        </property>
        <property name="icon">
-        <iconset resource="../dash.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
        </property>
        <property name="autoDefault">
@@ -153,7 +153,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../crown.qrc"/>
  </resources>
  <connections/>
 </ui>

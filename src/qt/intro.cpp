@@ -191,7 +191,7 @@ void Intro::pickDataDirectory()
         settings.setValue("strDataDir", dataDir);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the dash.conf file in the default data directory
+     * override -datadir in the crown.conf file in the default data directory
      * (to be consistent with crownd behavior)
      */
     if(dataDir != getDefaultDataDirectory())

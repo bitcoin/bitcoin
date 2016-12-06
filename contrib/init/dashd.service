@@ -3,13 +3,13 @@ Description=Crown's distributed currency daemon
 After=network.target
 
 [Service]
-User=dash
-Group=dash
+User=crown
+Group=crown
 
 Type=forking
 PIDFile=/var/lib/crownd/crownd.pid
 ExecStart=/usr/bin/crownd -daemon -pid=/var/lib/crownd/crownd.pid \
--conf=/etc/dash/dash.conf -datadir=/var/lib/crownd -disablewallet
+-conf=/etc/crown/crown.conf -datadir=/var/lib/crownd -disablewallet
 
 Restart=always
 PrivateTmp=true

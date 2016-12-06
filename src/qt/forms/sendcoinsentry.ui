@@ -64,7 +64,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../../dash/src/qt/dash.qrc">
+         <iconset resource="../../../../../crown/src/qt/crown.qrc">
           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
         </property>
         <property name="shortcut">
@@ -81,7 +81,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../../dash/src/qt/dash.qrc">
+         <iconset resource="../../../../../crown/src/qt/crown.qrc">
           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
         </property>
         <property name="shortcut">
@@ -98,7 +98,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../../dash/src/qt/dash.qrc">
+         <iconset resource="../../../../../crown/src/qt/crown.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -622,7 +622,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../../dash/src/qt/dash.qrc">
+         <iconset resource="../../../../../crown/src/qt/crown.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -1158,7 +1158,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../../dash/src/qt/dash.qrc">
+         <iconset resource="../../../../../crown/src/qt/crown.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -1230,7 +1230,7 @@
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../../../dash/src/qt/dash.qrc"/>
+  <include location="../../../../../crown/src/qt/crown.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -17,8 +17,8 @@ packages:
 - "binutils-gold"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/dashpay/dash.git"
-  "dir": "dash"
+- "url": "https://github.com/crownpay/crown.git"
+  "dir": "crown"
 files:
 - "raspberrypi-tools.tar.gz"
 script: |
@@ -67,7 +67,7 @@ script: |
   done
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd dash
+  cd crown
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do

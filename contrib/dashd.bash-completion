@@ -19,7 +19,7 @@ _crown_rpc() {
     $crownd "${rpcargs[@]}" "$@"
 }
 
-# Add dash accounts to COMPREPLY
+# Add crown accounts to COMPREPLY
 _crown_accounts() {
     local accounts
     accounts=$(_crown_rpc listaccounts | awk '/".*"/ { a=$1; gsub(/"/, "", a); print a}')

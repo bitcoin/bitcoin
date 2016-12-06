@@ -414,7 +414,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../crown.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="shortcut">
@@ -1334,7 +1334,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../crown.qrc"/>
  </resources>
  <connections/>
 </ui>

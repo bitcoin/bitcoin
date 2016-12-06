@@ -44,9 +44,9 @@ QString BitcoinUnits::id(int unit)
 {
     switch(unit)
     {
-        case CRW: return QString("dash");
-        case mCRW: return QString("mdash");
-        case uCRW: return QString::fromUtf8("udash");
+        case CRW: return QString("crown");
+        case mCRW: return QString("mcrown");
+        case uCRW: return QString::fromUtf8("ucrown");
         case crowns: return QString("crowns");
         default: return QString("???");
     }

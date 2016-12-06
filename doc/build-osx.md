@@ -58,7 +58,7 @@ The rest of these commands are run inside brew interactive mode:
 /private/tmp/berkeley-db4-UGpd0O $ exit
 ```
 
-After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build dash, but if you want to, here's how:
+After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build crown, but if you want to, here's how:
 
     $ brew link --force berkeley-db4
 
@@ -67,8 +67,8 @@ After exiting, you'll get a warning that the install is keg-only, which means it
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/dashpay/dash.git
-        cd dash
+        git clone https://github.com/crownpay/crown.git
+        cd crown
 
 2.  Build crownd:
 
@@ -127,8 +127,8 @@ directory. We have to first create the RPC configuration file, though.
 Run `./crownd` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=crownrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crown/dash.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/Crown/dash.conf"
+    echo -e "rpcuser=crownrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Crown/crown.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Crown/crown.conf"
 
 The next time you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
@@ -139,6 +139,6 @@ you can monitor its process by looking at the debug.log file, like this:
 Other commands:
 -------
 
-    ./crownd -daemon # to start the dash daemon.
+    ./crownd -daemon # to start the crown daemon.
     ./crown-cli --help  # for a list of command-line options.
     ./crown-cli help    # When the daemon is running, to get a list of RPC commands

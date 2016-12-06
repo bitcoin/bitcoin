@@ -261,7 +261,7 @@ public:
 
     //check to see if we should vote on this
     void AutoCheck();
-    //total dash paid out by this budget
+    //total crown paid out by this budget
     CAmount GetTotalPayout();
     //vote on this finalized budget as a throne
     void SubmitVote();
