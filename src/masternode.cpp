@@ -210,6 +210,8 @@ void CMasternode::Check(bool fForce)
         return;
     }
 
+    int nActiveStatePrev = nActiveState;
+
                    // masternode doesn't meet payment protocol requirements ...
     bool fRemove = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
                    // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
@@ -218,9 +220,11 @@ void CMasternode::Check(bool fForce)
     if(fRemove) {
         // it should be removed from the list
         nActiveState = MASTERNODE_REMOVE;
-
-        // RESCAN AFFECTED VOTES
-        FlagGovernanceItemsAsDirty();
+        if(nActiveStatePrev != nActiveState) {
+            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+            // RESCAN AFFECTED VOTES
+            FlagGovernanceItemsAsDirty();
+        }
         return;
     }
 
@@ -232,6 +236,9 @@ void CMasternode::Check(bool fForce)
 
     if(fWatchdogExpired) {
         nActiveState = MASTERNODE_WATCHDOG_EXPIRED;
+        if(nActiveStatePrev != nActiveState) {
+            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+        }
         return;
     }
 
@@ -243,17 +250,26 @@ void CMasternode::Check(bool fForce)
 
     if(!fWaitForPing && !IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
         nActiveState = MASTERNODE_EXPIRED;
-        // RESCAN AFFECTED VOTES
-        FlagGovernanceItemsAsDirty();
+        if(nActiveStatePrev != nActiveState) {
+            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+            // RESCAN AFFECTED VOTES
+            FlagGovernanceItemsAsDirty();
+        }
         return;
     }
 
     if(lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
         nActiveState = MASTERNODE_PRE_ENABLED;
+        if(nActiveStatePrev != nActiveState) {
+            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+        }
         return;
     }
 
     nActiveState = MASTERNODE_ENABLED; // OK
+    if(nActiveStatePrev != nActiveState) {
+        LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+    }
 }
 
 bool CMasternode::IsValidNetAddr()
