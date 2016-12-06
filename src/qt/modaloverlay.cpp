@@ -137,6 +137,13 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     }
 }
 
+void ModalOverlay::toggleVisibility()
+{
+    showHide(layerIsVisible, true);
+    if (!layerIsVisible)
+        userClosed = true;
+}
+
 void ModalOverlay::showHide(bool hide, bool userRequested)
 {
     if ( (layerIsVisible && !hide) || (!layerIsVisible && hide) || (!hide && userClosed && !userRequested))
