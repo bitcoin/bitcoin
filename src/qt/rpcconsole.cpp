@@ -1089,8 +1089,3 @@ void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
     ui->tabWidget->setCurrentIndex(tabType);
 }
-
-void RPCConsole::on_toggleNetworkActiveButton_clicked()
-{
-    clientModel->setNetworkActive(!clientModel->getNetworkActive());
-}
