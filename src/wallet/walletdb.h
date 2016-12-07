@@ -69,6 +69,27 @@ public:
     }
 };
 
+/* hd pubkey data model */
+class CHDPubKey
+{
+public:
+    static const int CURRENT_VERSION = 1;
+    int nVersion;
+    CExtPubKey extPubKey;
+    CKeyID masterKeyID;
+
+    CHDPubKey() { nVersion = CHDPubKey::CURRENT_VERSION; }
+
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(this->nVersion);
+        READWRITE(extPubKey);
+        READWRITE(masterKeyID);
+    }
+};
+
 class CKeyMetadata
 {
 public:
@@ -175,6 +196,8 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+
+    bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
 
 private:
     CWalletDB(const CWalletDB&);
