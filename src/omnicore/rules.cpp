@@ -603,6 +603,9 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
  */
 bool VerifyCheckpoint(int block, const uint256& blockHash)
 {
+    // optimization; we only checkpoint every 10,000 blocks - skip any further work if block not a multiple of 10K
+    if (block % 10000 != 0) return true;
+
     const std::vector<ConsensusCheckpoint>& vCheckpoints = ConsensusParams().GetCheckpoints();
 
     for (std::vector<ConsensusCheckpoint>::const_iterator it = vCheckpoints.begin(); it != vCheckpoints.end(); ++it) {
