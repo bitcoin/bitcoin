@@ -237,6 +237,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(ProcessVote(pfrom, vote, exception)) {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
             masternodeSync.AddedGovernanceItem();
+            vote.Relay();
         }
         else {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
@@ -265,7 +266,6 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
             fRemove = true;
         }
         else if(govobj.ProcessVote(NULL, vote, exception)) {
-            vote.Relay();
             fRemove = true;
         }
         if(fRemove) {
@@ -760,8 +760,6 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
             mnodeman.UpdateWatchdogVoteTime(vote.GetVinMasternode());
         }
-
-        vote.Relay();
     }
     return fOk;
 }
@@ -806,7 +804,6 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
 
         if(AddGovernanceObject(govobj)) {
             LogPrintf("CGovernanceManager::CheckMasternodeOrphanObjects -- %s new\n", govobj.GetHash().ToString());
-            govobj.Relay();
             mapMasternodeOrphanObjects.erase(it++);
         }
         else {

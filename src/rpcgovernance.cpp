@@ -284,7 +284,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         CGovernanceException exception;
-        if(governance.ProcessVote(vote, exception)) {
+        if(governance.ProcessVoteAndRelay(vote, exception)) {
             success++;
             statusObj.push_back(Pair("result", "success"));
         }
@@ -386,7 +386,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             }
 
             CGovernanceException exception;
-            if(governance.ProcessVote(vote, exception)) {
+            if(governance.ProcessVoteAndRelay(vote, exception)) {
                 success++;
                 statusObj.push_back(Pair("result", "success"));
             }
@@ -511,7 +511,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             // UPDATE LOCAL DATABASE WITH NEW OBJECT SETTINGS
 
             CGovernanceException exception;
-            if(governance.ProcessVote(vote, exception)) {
+            if(governance.ProcessVoteAndRelay(vote, exception)) {
                 success++;
                 statusObj.push_back(Pair("result", "success"));
             }
@@ -807,7 +807,7 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     }
 
     CGovernanceException exception;
-    if(governance.ProcessVote(vote, exception)) {
+    if(governance.ProcessVoteAndRelay(vote, exception)) {
         return "Voted successfully";
     }
     else {
