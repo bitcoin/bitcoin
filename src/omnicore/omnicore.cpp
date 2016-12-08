@@ -551,6 +551,38 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
     bool hasOpReturn = false;
     bool hasMoney = false;
 
+    /* Fast Search
+     * Perform a string comparison on hex for each scriptPubKey & look directly for Exodus hash160 bytes or omni marker bytes
+     * This allows to drop non-Omni transactions with less work
+     */
+    std::string strClassC = "6f6d6e69";
+    std::string strClassAB = "76a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac";
+    bool examineClosely = false;
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        const CTxOut& output = tx.vout[n];
+        std::string strSPB = HexStr(output.scriptPubKey.begin(), output.scriptPubKey.end());
+        if (strSPB != strClassAB) { // not an exodus marker
+            if (nBlock < 395000) { // class C not enabled yet, no need to search for marker bytes
+                continue;
+            } else {
+                if (strSPB.find(strClassC) != std::string::npos) {
+                    examineClosely = true;
+                    break;
+                }
+            }
+        } else {
+            examineClosely = true;
+            break;
+        }
+    }
+
+    // Examine everything when not on mainnet
+    if (isNonMainNet()) {
+        examineClosely = true;
+    }
+
+    if (!examineClosely) return NO_MARKER;
+
     for (unsigned int n = 0; n < tx.vout.size(); ++n) {
         const CTxOut& output = tx.vout[n];
 
