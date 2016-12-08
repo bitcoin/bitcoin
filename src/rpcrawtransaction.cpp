@@ -370,7 +370,6 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
-        rawTx.nVersion = 1; // use version one for the deprecated NLockTime
     }
     if (params.size() > 3 && !params[3].isNull()) {
         int version = params[3].get_int();
