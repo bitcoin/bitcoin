@@ -150,6 +150,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
     vote_instance_t& voteInstance = it2->second;
     int64_t nNow = GetTime();
+    int64_t nVoteTimeUpdate = voteInstance.nTime;
     if(governance.AreRateChecksEnabled()) {
         int64_t nTimeDelta = nNow - voteInstance.nTime;
         if(nTimeDelta < GOVERNANCE_UPDATE_MIN) {
@@ -160,6 +161,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
                  << ", time delta = " << nTimeDelta << "\n";
             LogPrint("gobject", ostr.str().c_str());
             exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_TEMPORARY_ERROR);
+            nVoteTimeUpdate = nNow;
             return false;
         }
     }
@@ -175,7 +177,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         governance.AddInvalidVote(vote);
         return false;
     }
-    voteInstance = vote_instance_t(vote.GetOutcome(), nNow);
+    voteInstance = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate);
     fileVotes.AddVote(vote);
     fDirtyCache = true;
     return true;
@@ -457,15 +459,6 @@ bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& s
             if(!CheckSignature(infoMn.pubKeyMasternode)) {
                 strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.pubKeyMasternode.GetID().ToString();
                 return false;
-            }
-
-            // Only perform rate check if we are synced because during syncing it is expected
-            // that objects will be seen in rapid succession
-            if(masternodeSync.IsSynced()) {
-                if(!governance.MasternodeRateCheck(vinMasternode, nObjectType)) {
-                    strError = "Masternode attempting to create too many objects: " + strOutpoint;
-                    return false;
-                }
             }
 
             return true;

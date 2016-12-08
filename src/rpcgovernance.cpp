@@ -217,6 +217,9 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         // RELAY THIS OBJECT
+        if(!governance.MasternodeRateCheck(govobj)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
+        }
         governance.AddSeenGovernanceObject(govobj.GetHash(), SEEN_OBJECT_IS_VALID);
         govobj.Relay();
         governance.AddGovernanceObject(govobj);
