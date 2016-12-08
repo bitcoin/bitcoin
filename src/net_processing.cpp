@@ -1519,6 +1519,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CBlock block;
         assert(ReadBlockFromDisk(block, it->second, chainparams.GetConsensus()));
 
+        if (req.indexes.size() >= block.vtx.size()) {
+            LogPrintf("recv getblocktxn. too many requests (%d >= %d) peer=%d\n", req.indexes.size(), block.vtx.size(), pfrom->id);
+            Misbehaving(pfrom->id, 100);
+            return true;
+        }
+
         BlockTransactions resp(req);
         for (size_t i = 0; i < req.indexes.size(); i++) {
             if (req.indexes[i] >= block.vtx.size()) {
