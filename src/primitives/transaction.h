@@ -385,6 +385,7 @@ public:
         return hash;
     }
 
+    /// for transactions that separate their signatures (like v4) calculate the hash of this data.
     uint256 CalculateSignaturesHash() const;
 
     // Return sum of txouts.
