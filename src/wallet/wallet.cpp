@@ -2931,8 +2931,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
 
-    // FIXME: "compatibility mode" for 12.0 IX, make it "txNew.nLockTime = chainActive.Height();" again in 12.2
-    txNew.nLockTime = fUseInstantSend ? 0 : chainActive.Height();
+    txNew.nLockTime = chainActive.Height();
 
     // Secondly occasionally randomly pick a nLockTime even further back, so
     // that transactions that are delayed after signing for whatever reason,

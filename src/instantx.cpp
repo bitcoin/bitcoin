@@ -85,6 +85,12 @@ bool IsInstantSendTxValid(const CTransaction& txCandidate)
     bool fMissingInputs = false;
 
     BOOST_FOREACH(const CTxOut& txout, txCandidate.vout) {
+        // InstandSend supports normal scripts and unspendable (i.e. data) scripts.
+        // TODO: Look into other script types that are normal and can be included
+        if(!txout.scriptPubKey.IsNormalPaymentScript() && !txout.scriptPubKey.IsUnspendable()) {
+            LogPrint("instantsend", "IsInstantSendTxValid -- Invalid Script %s", txCandidate.ToString());
+            return false;
+        }
         nValueOut += txout.nValue;
     }
 
@@ -125,15 +131,6 @@ bool IsInstantSendTxValid(const CTransaction& txCandidate)
 bool ProcessTxLockRequest(CNode* pfrom, const CTransaction &tx)
 {
     if(!IsInstantSendTxValid(tx)) return false;
-
-    BOOST_FOREACH(const CTxOut o, tx.vout) {
-        // InstandSend supports normal scripts and unspendable scripts (used in PrivateSend collateral and Governance collateral).
-        // TODO: Look into other script types that are normal and can be included
-        if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()) {
-            LogPrintf("TXLOCKREQUEST -- Invalid Script %s", tx.ToString());
-            return false;
-        }
-    }
 
     int nBlockHeight = CreateTxLockCandidate(tx);
     if(!nBlockHeight) {
