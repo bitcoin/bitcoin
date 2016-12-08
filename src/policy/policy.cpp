@@ -59,8 +59,10 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
     if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
-        reason = "version";
-        return false;
+        if (flexTransActive && tx.nVersion > 4) {
+            reason = "version";
+            return false;
+        }
     }
 
     // Extremely large transactions with lots of inputs can cost the network
