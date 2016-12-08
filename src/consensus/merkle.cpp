@@ -161,10 +161,10 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
-    const unsigned int size = block.vtx.size();
+    const uint32_t size = block.vtx.size();
     leaves.resize(size);
     int txWithDetachableSigsCount = 0;
-    for (size_t s = 0; s < size; s++) {
+    for (uint32_t s = 0; s < size; s++) {
         leaves[s] = block.vtx[s].GetHash();
         if (s != 0 && block.vtx[s].nVersion == 4)
             ++txWithDetachableSigsCount;
@@ -178,8 +178,8 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     extern boost::atomic<bool> flexTransActive;
     if (flexTransActive) {
         leaves.resize(size + txWithDetachableSigsCount);
-        unsigned int pos = size;
-        for (size_t s = 1; s < size; s++) {
+        uint32_t pos = size;
+        for (uint32_t s = 1; s < size; s++) {
             if (block.vtx[s].nVersion == 4)
                 leaves[pos++] = block.vtx[s].CalculateSignaturesHash();
         }
