@@ -2274,7 +2274,10 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         assert(mp_obj.getEncodingClass() != NO_MARKER);
         assert(mp_obj.getSender().empty() == false);
 
-        fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed in block 255365
+        if (isNonMainNet() || nBlock <= 255365) {
+            fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        }
     }
 
     if (pop_ret > 0) {
