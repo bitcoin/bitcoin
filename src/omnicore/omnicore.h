@@ -27,6 +27,7 @@ class CTransaction;
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_map>
 
 using std::string;
 
@@ -310,7 +311,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex );
 
 namespace mastercore
 {
-extern std::map<std::string, CMPTally> mp_tally_map;
+extern std::unordered_map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;

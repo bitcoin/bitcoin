@@ -73,6 +73,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using boost::algorithm::token_compress_on;
@@ -239,12 +240,12 @@ AcceptMap mastercore::my_accepts;
 CMPSPInfo *mastercore::_my_sps;
 CrowdMap mastercore::my_crowds;
 
-// this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
-std::map<std::string, CMPTally> mastercore::mp_tally_map;
+// this is the master list of all amounts for all addresses for all properties, map is unsorted
+std::unordered_map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally* mastercore::getTally(const std::string& address)
 {
-    std::map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
+    std::unordered_map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
 
     if (it != mp_tally_map.end()) return &(it->second);
 
@@ -264,7 +265,7 @@ int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType 
     }
 
     LOCK(cs_tally);
-    const std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(address);
+    const std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(address);
     if (my_it != mp_tally_map.end()) {
         balance = (my_it->second).getMoney(propertyId, ttype);
     }
@@ -329,7 +330,7 @@ int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
     }
 
     if (!property.fixed || n_owners_total) {
-        for (std::map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+        for (std::unordered_map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
             const CMPTally& tally = it->second;
 
             totalTokens += tally.getMoney(propertyId, BALANCE);
@@ -373,7 +374,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
 
     before = getMPbalance(who, propertyId, ttype);
 
-    std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
+    std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
     if (my_it == mp_tally_map.end()) {
         // insert an empty element
         my_it = (mp_tally_map.insert(std::make_pair(who, CMPTally()))).first;
@@ -481,7 +482,7 @@ void CheckWalletUpdate(bool forceUpdate)
     global_balance_reserved.clear();
 
     // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
-    for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         // check if the address is a wallet address (including watched addresses)
         std::string address = my_it->first;
         int addressIsMine = IsMyAddress(address);
@@ -1762,7 +1763,7 @@ static int load_most_relevant_state()
 
 static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-    std::map<std::string, CMPTally>::iterator iter;
+    std::unordered_map<std::string, CMPTally>::iterator iter;
     for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
         bool emptyWallet = true;
 
