@@ -564,6 +564,8 @@ CMPCrowd* mastercore::getCrowd(const std::string& address)
 
 bool mastercore::IsPropertyIdValid(uint32_t propertyId)
 {
+    if (propertyId == 0) return false;
+
     uint32_t nextId = 0;
 
     if (propertyId < TEST_ECO_PROPERTY_1) {
