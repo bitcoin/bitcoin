@@ -75,7 +75,7 @@ uint256 CMutableTransaction::GetHash() const
 
 void CTransaction::UpdateHash()
 {
-    if (nVersion == 4) {
+    if (nVersion == 4 && flexTransActive.load()) {
         if (txData.empty()) {
             CDataStream stream(0, 0);
             SerializeTransaction(*this, stream, 0, 0, false);
@@ -201,20 +201,15 @@ std::vector<char> loadTransaction(const std::vector<CMFToken> &tokens, std::vect
             break;
         }
         case Consensus::TxRelativeBlockLock:
-            if (inputs.empty())
-                throw std::runtime_error("Transaction needs inputs");
-            if (token.longData() > CTxIn::SEQUENCE_LOCKTIME_MASK || inputs.back().nSequence != CTxIn::SEQUENCE_FINAL)
-                throw std::runtime_error("out of range");
-            if (!inMainTx) throw std::runtime_error("wrong section");
-            inputs.back().nSequence = token.longData();
-            break;
         case Consensus::TxRelativeTimeLock:
-            if (inputs.empty())
-                throw std::runtime_error("Transaction needs inputs");
-            if (token.longData() > CTxIn::SEQUENCE_LOCKTIME_MASK || inputs.back().nSequence != CTxIn::SEQUENCE_FINAL)
-                throw std::runtime_error("out of range");
+            if (inputs.empty()) throw std::runtime_error("Transaction needs inputs");
+            if (token.longData() > CTxIn::SEQUENCE_LOCKTIME_MASK) throw std::runtime_error("out of range");
+            if (inputs.back().nSequence != CTxIn::SEQUENCE_FINAL) throw std::runtime_error("Too many locks for input");
             if (!inMainTx) throw std::runtime_error("wrong section");
-            inputs.back().nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | token.longData();
+            if (token.tag == Consensus::TxRelativeBlockLock)
+                inputs.back().nSequence = token.longData();
+            else
+                inputs.back().nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | token.longData();
             break;
         default:
             if (token.tag > 19)
