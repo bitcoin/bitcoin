@@ -175,7 +175,6 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
      * so to make sure nobody can change sigs without invalidating the header
      * we append the v4 transactions signature hash to the tree.
      */
-    extern boost::atomic<bool> flexTransActive;
     if (flexTransActive) {
         leaves.resize(size + txWithDetachableSigsCount);
         uint32_t pos = size;

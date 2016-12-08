@@ -106,7 +106,6 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
-        extern boost::atomic<bool> flexTransActive;
         flexTransActive = GetBoolArg("-flextrans", false);
 
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)

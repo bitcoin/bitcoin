@@ -255,7 +255,6 @@ public:
         genesis = CreateGenesisBlock(1478001604, 286592391, 0x1d00ffff, 4, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        extern boost::atomic<bool> flexTransActive; // genesis block has one TX, which is a FlexTrans transaction.
         assert(flexTransActive.load());
         assert(consensus.hashGenesisBlock == uint256S("0x00000000580d0391811aba91ffc46f69755789b3b18c3ace72165db452778d2c"));
         assert(genesis.hashMerkleRoot == uint256S("0x495e4445d86821ff6b5da463ad597d9ee8c588a6965c6ae0c57ac2444b886a9b"));
@@ -365,7 +364,6 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     if (network == CBaseChainParams::FLEXTRANSTESTNET) {
-        extern boost::atomic<bool> flexTransActive;
         flexTransActive = true;
     }
     pCurrentParams = &Params(network);

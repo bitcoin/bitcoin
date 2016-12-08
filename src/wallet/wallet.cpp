@@ -1974,7 +1974,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
     CMutableTransaction txNew;
-    extern boost::atomic<bool> flexTransActive;
     if (flexTransActive.load())
         txNew.nVersion = 4;
 

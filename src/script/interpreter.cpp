@@ -1162,7 +1162,6 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         }
     }
 
-    extern boost::atomic<bool> flexTransActive;
     if (flexTransActive && txTo.nVersion == 4) {
         // In the v4 (flextrans) format we add the support for the following proofs;
         // * input amount.
