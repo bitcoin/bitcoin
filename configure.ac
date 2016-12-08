@@ -100,11 +100,6 @@ AC_ARG_ENABLE(gui-tests,
     [use_gui_tests=$enableval],
     [use_gui_tests=$use_tests])
 
-AC_ARG_ENABLE(bench,
-    AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
-    [use_bench=$enableval],
-    [use_bench=yes])
-
 AC_ARG_WITH([comparison-tool],
     AS_HELP_STRING([--with-comparison-tool],[path to java comparison tool (requires --enable-tests)]),
     [use_comparison_tool=$withval],
@@ -849,7 +844,6 @@ AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
-AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
