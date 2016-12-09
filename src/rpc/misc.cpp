@@ -328,7 +328,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
             "verifymessage \"address\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"address\"  (string, required) The bitcoin address to use for the signature.\n"
+            "1. \"address\"         (string, required) The bitcoin address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"

@@ -39,8 +39,8 @@ class NamedArgumentTest(BitcoinTestFramework):
 
         assert_raises_jsonrpc(-8, node.help, random='getinfo')
 
-        h = node.getblockhash(index=0)
-        node.getblock(hash=h)
+        h = node.getblockhash(height=0)
+        node.getblock(blockhash=h)
 
         assert_equal(node.echo(), [])
         assert_equal(node.echo(arg0=0,arg9=9), [0] + [None]*8 + [9])
