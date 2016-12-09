@@ -302,6 +302,9 @@ int mastercore_shutdown();
 /** Global handler to total wallet balances. */
 void CheckWalletUpdate(bool forceUpdate = false);
 
+/** Used to notify that the number of tokens for a property has changed. */
+void NotifyTotalTokensChanged(uint32_t propertyId);
+
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);

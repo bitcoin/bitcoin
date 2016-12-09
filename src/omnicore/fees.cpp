@@ -33,16 +33,10 @@ int64_t COmniFeeCache::GetDistributionThreshold(const uint32_t &propertyId)
 }
 
 // Sets the distribution thresholds to total tokens for a property / OMNI_FEE_THRESHOLD
-void COmniFeeCache::UpdateDistributionThresholds()
+void COmniFeeCache::UpdateDistributionThresholds(uint32_t propertyId)
 {
-    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
-        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
-            int64_t distributionThreshold = getTotalTokens(itPropertyId) / OMNI_FEE_THRESHOLD;
-            distributionThresholds[itPropertyId] = distributionThreshold;
-        }
-    }
-
+    int64_t distributionThreshold = getTotalTokens(propertyId) / OMNI_FEE_THRESHOLD;
+    distributionThresholds[propertyId] = distributionThreshold;
 }
 
 // Gets the current amount of the fee cache for a property
