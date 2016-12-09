@@ -75,7 +75,52 @@ public:
             hashBestBlock_ = hashBlock;
         return true;
     }
+
+    CCoinsViewCursor* Cursor() const override;
+
+    friend class CCoinsViewTestCursor;
 };
+
+class CCoinsViewTestCursor : public CCoinsViewCursor
+{
+public:
+    CCoinsViewTestCursor(const CCoinsViewTest& test) : CCoinsViewCursor(test.GetBestBlock()), test(test), it(test.map_.begin()) {}
+
+    bool GetKey(COutPoint &key) const override
+    {
+        if (it == test.map_.end())
+            return false;
+        key = it->first;
+        return true;
+    }
+
+    bool GetValue(Coin &coin) const override
+    {
+        if (it == test.map_.end())
+            return false;
+        coin = it->second;
+        return true;
+    }
+
+    unsigned int GetValueSize() const override { return 0; }
+
+    bool Valid() const override { return it != test.map_.end(); }
+
+    void Next() override
+    {
+        if (it != test.map_.end())
+            ++it;
+    }
+
+private:
+    const CCoinsViewTest& test;
+    std::map<COutPoint, Coin>::const_iterator it;
+};
+
+CCoinsViewCursor* CCoinsViewTest::Cursor() const
+{
+    return new CCoinsViewTestCursor(*this);
+}
 
 class CCoinsViewCacheTest : public CCoinsViewCache
 {
@@ -181,6 +226,16 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
 
         // Once every 1000 iterations and at the end, verify the full cache.
         if (InsecureRandRange(1000) == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
+            std::map<COutPoint, Coin> cursorResult;
+            for (std::unique_ptr<CCoinsViewCursor> cursor(stack.back()->Cursor()); cursor->Valid(); cursor->Next()) {
+                COutPoint key;
+                BOOST_CHECK(cursor->GetKey(key));
+                Coin value;
+                BOOST_CHECK(cursor->GetValue(value));
+                BOOST_CHECK(cursorResult.emplace(key, value).second);
+            }
+
+            auto cursor = cursorResult.begin();
             for (auto it = result.begin(); it != result.end(); it++) {
                 bool have = stack.back()->HaveCoin(it->first);
                 const Coin& coin = stack.back()->AccessCoin(it->first);
@@ -192,7 +247,15 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                     BOOST_CHECK(stack.back()->HaveCoinInCache(it->first));
                     found_an_entry = true;
                 }
+
+                if (cursor != cursorResult.end() && cursor->first == it->first) {
+                  BOOST_CHECK(cursor->second == it->second);
+                  ++cursor;
+                } else {
+                  BOOST_CHECK(it->second.IsSpent());
+                }
             }
+            BOOST_CHECK(cursor == cursorResult.end());
             BOOST_FOREACH(const CCoinsViewCacheTest *test, stack) {
                 test->SelfTest();
             }
