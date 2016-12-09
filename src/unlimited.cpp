@@ -28,6 +28,7 @@
 #include "stat.h"
 #include "tweak.h"
 
+#include <boost/atomic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
@@ -38,6 +39,7 @@
 using namespace std;
 
 extern CTxMemPool mempool; // from main.cpp
+static boost::atomic<uint64_t> nLargestBlockSeen(BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); // track the largest block we've seen
 
 bool IsTrafficShapingEnabled();
 
@@ -477,7 +479,6 @@ UniValue expedited(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-
 UniValue pushtx(const UniValue& params, bool fHelp)
 {
     string strCommand;
@@ -730,8 +731,6 @@ extern UniValue setminercomment(const UniValue& params, bool fHelp)
   minerComment = params[0].getValStr();
   return NullUniValue;
 }
-
-
 
 UniValue getexcessiveblock(const UniValue& params, bool fHelp)
 {
@@ -1148,10 +1147,22 @@ void IsChainNearlySyncdInit()
         fIsChainNearlySyncd = true;
       }
 }
+
 bool IsChainNearlySyncd()
 {
     LOCK(cs_ischainnearlysyncd);
     return fIsChainNearlySyncd;
+}
+
+uint64_t LargestBlockSeen(uint64_t nBlockSize)
+{
+     // eturn the largest block size that we have seen since startup
+     uint64_t nSize = nLargestBlockSeen.load();
+     if (nBlockSize > nSize) {
+         nLargestBlockSeen.store(nBlockSize);
+         nSize = nBlockSize;
+     }
+     return nSize;
 }
 
 void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes, uint256 hash)
@@ -1167,12 +1178,12 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& v
     // by including a full blocks worth of high priority tx's we cover every scenario.  And when we
     // go on to add the high fee tx's there will be an intersection between the two which then makes 
     // the total number of tx's that go into the bloom filter smaller than just the sum of the two.  
-    uint64_t nBlockPrioritySize = nLargestBlockSeen * 1.5;
+    uint64_t nBlockPrioritySize = LargestBlockSeen() * 1.5;
 
     // Largest projected block size used to add the high fee transactions.  We multiply it by an
     // additional factor to take into account that miners may have slighty different policies when selecting
     // high fee tx's from the pool.
-    uint64_t nBlockMaxProjectedSize = nLargestBlockSeen * 1.5;
+    uint64_t nBlockMaxProjectedSize = LargestBlockSeen() * 1.5;
 
     vector<TxCoinAgePriority> vPriority;
     TxCoinAgePriorityCompare pricomparer;
@@ -1389,7 +1400,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 	}
     }
     else {
-        nLargestBlockSeen = std::max(nSizeBlock, nLargestBlockSeen);
+        LargestBlockSeen(nSizeBlock); // update largest block seen
 
         double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
         if (strCommand != NetMsgType::BLOCK) {
