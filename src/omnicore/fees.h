@@ -35,7 +35,7 @@ public:
     void printAll();
 
     // Sets the distribution thresholds to total tokens for a property / OMNI_FEE_THRESHOLD
-    void UpdateDistributionThresholds();
+    void UpdateDistributionThresholds(uint32_t propertyId);
     // Returns the distribution threshold for a property
     int64_t GetDistributionThreshold(const uint32_t &propertyId);
     // Return a set containing fee cache history items
