@@ -23,6 +23,12 @@ from collections import namedtuple
 
 settings = {}
 
+##### Switch endian-ness #####
+def hex_switchEndian(s):
+	""" Switches the endianness of a hex string (in pairs of hex chars) """
+	pairList = [s[i]+s[i+1] for i in range(0,len(s),2)]
+	return ''.join(pairList[::-1])
+
 def uint32(x):
 	return x & 0xffffffffL
 
@@ -74,6 +80,8 @@ def get_block_hashes(settings):
 	f = open(settings['hashlist'], "r")
 	for line in f:
 		line = line.rstrip()
+		if settings['rev_hash_bytes'] == 'true':
+			line = hex_switchEndian(line)
 		blkindex.append(line)
 
 	print("Read " + str(len(blkindex)) + " hashes")
@@ -281,6 +289,11 @@ if __name__ == '__main__':
 		settings['max_out_sz'] = 1000L * 1000 * 1000
 	if 'out_of_order_cache_sz' not in settings:
 		settings['out_of_order_cache_sz'] = 100 * 1000 * 1000
+	if 'rev_hash_bytes' not in settings:
+		settings['rev_hash_bytes'] = 'false'
+
+	# Force hash byte format setting to be lowercase to make comparisons easier.
+	settings['rev_hash_bytes'] = settings['rev_hash_bytes'].lower()
 
 	settings['max_out_sz'] = long(settings['max_out_sz'])
 	settings['split_timestamp'] = int(settings['split_timestamp'])
@@ -299,5 +312,3 @@ if __name__ == '__main__':
 		print("Genesis block not found in hashlist")
 	else:
 		BlockDataCopier(settings, blkindex, blkmap).run()
-
-

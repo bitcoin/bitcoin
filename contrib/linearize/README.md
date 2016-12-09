@@ -31,3 +31,8 @@ Optional config file setting for linearize-data:
 reaching a maximum file size.
 * "file_timestamp": Set each file's last-modified time to that of the
 most recent block in that file.
+* "rev\_hash\_bytes": If true, the block hash list written by linearize-hashes.py
+will be byte-reversed. (In other words, the hash returned by getblockhash will
+have its bytes reversed.) False by default. Intended for generation of
+standalone hash lists but safe to use with linearize-data.py, which will output
+the same data no matter which byte format is chosen.
