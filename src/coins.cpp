@@ -69,6 +69,72 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(cacheCoins) + cachedCoinsUsage;
 }
 
+CCoinsViewCacheCursor::CCoinsViewCacheCursor(const CCoinsViewCache& cache)
+    : CCoinsViewCursor(cache.GetBestBlock()), cache(cache), base(cache.base->Cursor()),
+      it(cache.cacheCoins.begin())
+{
+    AdvanceToNonPruned();
+}
+
+void CCoinsViewCacheCursor::AdvanceToNonPruned()
+{
+    // Skip non-dirty cache entries and dirty but pruned entries.
+    for (; it != cache.cacheCoins.end(); ++it)
+        if (it->second.flags & CCoinsCacheEntry::DIRTY && !it->second.coins.IsPruned())
+            return;
+
+    // Skip base entries overridden by dirty cache entries.
+    uint256 txid;
+    CCoinsMap::iterator match;
+    for (; base->Valid(); base->Next())
+        if (!base->GetKey(txid) ||
+            (match = cache.cacheCoins.find(txid)) == cache.cacheCoins.end() ||
+            !(match->second.flags & CCoinsCacheEntry::DIRTY))
+            return;
+}
+
+bool CCoinsViewCacheCursor::GetKey(uint256& key) const
+{
+    if (it != cache.cacheCoins.end()) {
+        key = it->first;
+        return true;
+    }
+    return base->GetKey(key);
+}
+
+bool CCoinsViewCacheCursor::GetValue(CCoins& coins) const
+{
+    if (it != cache.cacheCoins.end()) {
+        coins = it->second.coins;
+        return true;
+    }
+    return base->GetValue(coins);
+}
+
+unsigned int CCoinsViewCacheCursor::GetValueSize() const
+{
+    return it != cache.cacheCoins.end() ? 0 : base->GetValueSize();
+}
+
+bool CCoinsViewCacheCursor::Valid() const
+{
+    return it != cache.cacheCoins.end() || base->Valid();
+}
+
+void CCoinsViewCacheCursor::Next()
+{
+    if (it != cache.cacheCoins.end())
+        ++it;
+    else
+        base->Next();
+    AdvanceToNonPruned();
+}
+
+CCoinsViewCursor* CCoinsViewCache::Cursor() const
+{
+    return new CCoinsViewCacheCursor(*this);
+}
+
 CCoinsMap::const_iterator CCoinsViewCache::FetchCoins(const uint256 &txid) const {
     CCoinsMap::iterator it = cacheCoins.find(txid);
     if (it != cacheCoins.end())
