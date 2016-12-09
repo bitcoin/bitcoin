@@ -207,6 +207,13 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                         entry.flags |= CCoinsCacheEntry::FRESH;
                 }
             } else {
+                // Assert that the child cache entry was not marked FRESH if the
+                // parent cache entry has unspent outputs. If this ever happens,
+                // it means the FRESH flag was misapplied and there is a logic
+                // error in the calling code.
+                if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coins.IsPruned())
+                    throw std::logic_error("FRESH flag misapplied to cache entry for base transaction with spendable outputs");
+
                 // Found the entry in the parent cache
                 if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coins.IsPruned()) {
                     // The grandparent does not have an entry, and the child is
