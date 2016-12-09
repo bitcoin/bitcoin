@@ -501,10 +501,10 @@ static std::vector<uint8_t> ComputeResponse(const std::string &key, const std::v
 {
     CHMAC_SHA256 computeHash((const uint8_t*)key.data(), key.size());
     std::vector<uint8_t> computedHash(CHMAC_SHA256::OUTPUT_SIZE, 0);
-    computeHash.Write(begin_ptr(cookie), cookie.size());
-    computeHash.Write(begin_ptr(clientNonce), clientNonce.size());
-    computeHash.Write(begin_ptr(serverNonce), serverNonce.size());
-    computeHash.Finalize(begin_ptr(computedHash));
+    computeHash.Write(cookie.data(), cookie.size());
+    computeHash.Write(clientNonce.data(), clientNonce.size());
+    computeHash.Write(serverNonce.data(), serverNonce.size());
+    computeHash.Finalize(computedHash.data());
     return computedHash;
 }
 
