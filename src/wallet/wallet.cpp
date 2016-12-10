@@ -3642,6 +3642,9 @@ bool CWallet::ParameterInteraction()
     fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
     fWalletRbf = GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
+    if (fSendFreeTransactions && GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) <= 0)
+        return InitError("Creation of free transactions with their relay disabled is not supported.");
+
     return true;
 }
 
