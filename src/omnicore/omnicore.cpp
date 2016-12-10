@@ -348,6 +348,8 @@ int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
                 owners++;
             }
         }
+        int64_t cachedFee = p_feecache->GetCachedAmount(propertyId);
+        totalTokens += cachedFee;
     }
 
     if (property.fixed) {
