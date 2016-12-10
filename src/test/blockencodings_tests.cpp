@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
         BOOST_CHECK_EQUAL(pool.mapTx.find(block.vtx[2]->GetHash())->GetSharedTx().use_count(), SHARED_TX_OFFSET + 1);
 
-        std::vector<CTransactionRef> removed;
-        pool.removeRecursive(*block.vtx[2], &removed);
-        BOOST_CHECK_EQUAL(removed.size(), 1);
+        size_t poolSize = pool.size();
+        pool.removeRecursive(*block.vtx[2]);
+        BOOST_CHECK_EQUAL(pool.size(), poolSize - 1);
 
         CBlock block2;
         std::vector<CTransactionRef> vtx_missing;
