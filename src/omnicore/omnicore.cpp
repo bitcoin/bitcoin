@@ -1020,7 +1020,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             // ### PREPARE A FEW VARS ###
             std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-            PrepareObfuscatedHashes(strSender, strObfuscatedHashes, 1+nPackets);
+            PrepareObfuscatedHashes(strSender, 1+nPackets, strObfuscatedHashes);
             unsigned char packets[MAX_PACKETS][32];
             unsigned int mdata_count = 0;  // multisig data count
 
@@ -2316,8 +2316,9 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         assert(mp_obj.getEncodingClass() != NO_MARKER);
         assert(mp_obj.getSender().empty() == false);
 
-        // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed in block 255365
-        if (isNonMainNet() || nBlock <= 255365) {
+        // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed
+        const CConsensusParams& params = ConsensusParams();
+        if (isNonMainNet() || nBlock <= params.LAST_EXODUS_BLOCK) {
             fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
         }
     }

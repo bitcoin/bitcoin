@@ -31,7 +31,7 @@
  * @param hashCount[in]    How many hashes to generate (number of packets to debofuscate)
  * @param vstrHashes[out]  The generated hashes
  */
-void PrepareObfuscatedHashes(const std::string& strSeed, std::string(&vstrHashes)[1+MAX_SHA256_OBFUSCATION_TIMES], int hashCount)
+void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::string(&vstrHashes)[1+MAX_SHA256_OBFUSCATION_TIMES])
 {
     unsigned char sha_input[128];
     unsigned char sha_result[128];
