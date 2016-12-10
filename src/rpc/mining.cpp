@@ -214,23 +214,6 @@ UniValue generatetoaddress(const UniValue& params, bool fHelp)
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
 }
 
-UniValue setgenerate(const UniValue& params, bool fHelp)
-{
-    if (fHelp || params.size() != 2)
-        throw runtime_error(
-            "setgenerate dontcare genproclimit \n"
-            "\nDEPRECIATED\n"
-            "\nUse \"generate\" instead!\n"
-        );
-
-    int nGenerate = params[1].get_int();
-
-    UniValue paramsNew(UniValue::VARR);
-    paramsNew.push_back(nGenerate);
-
-    return generate(paramsNew, false);
-}
-
 UniValue getmininginfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -935,7 +918,6 @@ static const CRPCCommand commands[] =
 
     { "generating",         "generate",               &generate,               true  },
     { "generating",         "generatetoaddress",      &generatetoaddress,      true  },
-    { "hidden",             "setgenerate",            &setgenerate,            true  },
 
     { "util",               "estimatefee",            &estimatefee,            true  },
     { "util",               "estimatepriority",       &estimatepriority,       true  },
