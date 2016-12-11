@@ -1825,8 +1825,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // We want to be a bit conservative just to be extra careful about DoS
         // possibilities in compact block processing...
         if (pindex->nHeight <= chainActive.Height() + 2) {
-            if ((!fAlreadyInFlight && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) ||
-                 (fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId())) {
+            if (fAlreadyInFlight || nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                 list<QueuedBlock>::iterator *queuedBlockIt = NULL;
                 if (!MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex, &queuedBlockIt)) {
                     if (!(*queuedBlockIt)->partialBlock)
