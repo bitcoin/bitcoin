@@ -28,7 +28,7 @@ std::map<uint256, int64_t> mapAskedForGovernanceObject;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-3";
+const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-4";
 
 CGovernanceManager::CGovernanceManager()
     : pCurrentBlockIndex(NULL),
@@ -171,7 +171,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
-        if(!MasternodeRateCheck(govobj, true)) {
+        bool fRateCheckBypassed = false;
+        if(!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
             LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
             return;
         }
@@ -193,9 +194,16 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
+        if(fRateCheckBypassed) {
+            if(!MasternodeRateCheck(govobj, true, true, fRateCheckBypassed)) {
+                LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
+                return;
+            }
+        }
+
         // UPDATE CACHED VARIABLES FOR THIS OBJECT AND ADD IT TO OUR MANANGED DATA
 
-        govobj.UpdateSentinelVariables(pCurrentBlockIndex); //this sets local vars in object
+        govobj.UpdateSentinelVariables(); //this sets local vars in object
 
         if(AddGovernanceObject(govobj))
         {
@@ -398,7 +406,7 @@ void CGovernanceManager::UpdateCachesAndClean()
             pObj->UpdateLocalValidity(pCurrentBlockIndex);
 
             // UPDATE SENTINEL SIGNALING VARIABLES
-            pObj->UpdateSentinelVariables(pCurrentBlockIndex);
+            pObj->UpdateSentinelVariables();
         }
 
         // IF DELETE=TRUE, THEN CLEAN THE MESS UP!
@@ -690,7 +698,15 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
 bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast)
 {
+    bool fRateCheckBypassed = false;
+    return MasternodeRateCheck(govobj, fUpdateLast, true, fRateCheckBypassed);
+}
+
+bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast, bool fForce, bool& fRateCheckBypassed)
+{
     LOCK(cs);
+
+    fRateCheckBypassed = false;
 
     if(!masternodeSync.IsSynced()) {
         return true;
@@ -705,19 +721,23 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return true;
     }
 
+    int64_t nTimestamp = govobj.GetCreationTime();
+    int64_t nNow = GetTime();
+    int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
+
     const CTxIn& vin = govobj.GetMasternodeVin();
 
     txout_m_it it  = mapLastMasternodeObject.find(vin.prevout);
 
     if(it == mapLastMasternodeObject.end()) {
         if(fUpdateLast) {
-            it = mapLastMasternodeObject.insert(txout_m_t::value_type(vin.prevout, last_object_rec(0, 0))).first;
+            it = mapLastMasternodeObject.insert(txout_m_t::value_type(vin.prevout, last_object_rec(0, 0, true))).first;
             switch(nObjectType) {
             case GOVERNANCE_OBJECT_TRIGGER:
-                it->second.nLastTriggerBlockHeight = nCachedBlockHeight;
+                it->second.nLastTriggerTime = std::max(it->second.nLastTriggerTime, nTimestamp);
                 break;
             case GOVERNANCE_OBJECT_WATCHDOG:
-                it->second.nLastWatchdogBlockHeight = nCachedBlockHeight;
+                it->second.nLastWatchdogTime = std::max(it->second.nLastWatchdogTime, nTimestamp);
                 break;
             default:
                 break;
@@ -726,34 +746,61 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return true;
     }
 
-    int nMinDiff = 0;
-    int nObjectBlock = 0;
+    if(it->second.fStatusOK && !fForce) {
+        fRateCheckBypassed = true;
+        return true;
+    }
+
+    std::string strHash = govobj.GetHash().ToString();
+
+    if(nTimestamp < nNow - 2 * nSuperblockCycleSeconds) {
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too old timestamp, masternode vin = %s, timestamp = %d, current time = %d\n",
+                 strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
+        return false;
+    }
+
+    if(nTimestamp > nNow - 2 * nSuperblockCycleSeconds) {
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, masternode vin = %s, timestamp = %d, current time = %d\n",
+                 strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
+        return false;
+    }
+
+    int64_t nMinDiff = 0;
+    int64_t nLastObjectTime = 0;
     switch(nObjectType) {
     case GOVERNANCE_OBJECT_TRIGGER:
         // Allow 1 trigger per mn per cycle, with a small fudge factor
-        nMinDiff = Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockCycle / 10;
-        nObjectBlock = it->second.nLastTriggerBlockHeight;
+        nMinDiff = int64_t(0.9 * nSuperblockCycleSeconds);
+        nLastObjectTime = it->second.nLastTriggerTime;
         if(fUpdateLast) {
-            it->second.nLastTriggerBlockHeight = nCachedBlockHeight;
+            it->second.nLastTriggerTime = std::max(it->second.nLastTriggerTime, nTimestamp);
         }
         break;
     case GOVERNANCE_OBJECT_WATCHDOG:
-        nMinDiff = 1;
-        nObjectBlock = it->second.nLastWatchdogBlockHeight;
+        nMinDiff = Params().GetConsensus().nPowTargetSpacing;
+        nLastObjectTime = it->second.nLastWatchdogTime;
         if(fUpdateLast) {
-            it->second.nLastWatchdogBlockHeight = nCachedBlockHeight;
+            it->second.nLastWatchdogTime = std::max(it->second.nLastWatchdogTime, nTimestamp);
         }
         break;
     default:
         break;
     }
 
-    if((nCachedBlockHeight - nObjectBlock) > nMinDiff) {
+    if((nTimestamp - nLastObjectTime) > nMinDiff) {
+        if(fUpdateLast) {
+            it->second.fStatusOK = true;
+        }
         return true;
     }
+    else {
+        if(fUpdateLast) {
+            it->second.fStatusOK = false;
+        }
+    }
 
-    LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: vin = %s, current height = %d, last MN height = %d, minimum difference = %d\n",
-              vin.prevout.ToStringShort(), nCachedBlockHeight, nObjectBlock, nMinDiff);
+    LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, masternode vin = %s, object timestamp = %d, last timestamp = %d, minimum difference = %d\n",
+              strHash, vin.prevout.ToStringShort(), nTimestamp, nLastObjectTime, nMinDiff);
     return false;
 }
 

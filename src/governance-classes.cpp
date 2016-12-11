@@ -336,6 +336,8 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 
         // MAKE SURE THIS TRIGGER IS ACTIVE VIA FUNDING CACHE FLAG
 
+        pObj->UpdateSentinelVariables();
+
         if(pObj->IsSetCachedFunding()) {
             LogPrint("gobject", "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
             DBG( cout << "IsSuperblockTriggered returning true" << endl; );

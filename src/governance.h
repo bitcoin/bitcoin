@@ -49,9 +49,10 @@ class CGovernanceManager
 
 public: // Types
     struct last_object_rec {
-        last_object_rec(int nLastTriggerBlockHeightIn = 0, int nLastWatchdogBlockHeightIn = 0)
-            : nLastTriggerBlockHeight(nLastTriggerBlockHeightIn),
-              nLastWatchdogBlockHeight(nLastWatchdogBlockHeightIn)
+        last_object_rec(int64_t nLastTriggerTimeIn = 0, int64_t nLastWatchdogTimeIn = 0, bool fStatusOKIn = true)
+            : nLastTriggerTime(nLastTriggerTimeIn),
+              nLastWatchdogTime(nLastWatchdogTimeIn),
+              fStatusOK(fStatusOKIn)
             {}
 
         ADD_SERIALIZE_METHODS;
@@ -59,12 +60,14 @@ public: // Types
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
-            READWRITE(nLastTriggerBlockHeight);
-            READWRITE(nLastWatchdogBlockHeight);
+            READWRITE(nLastTriggerTime);
+            READWRITE(nLastWatchdogTime);
+            READWRITE(fStatusOK);
         }
 
-        int nLastTriggerBlockHeight;
-        int nLastWatchdogBlockHeight;
+        int64_t nLastTriggerTime;
+        int64_t nLastWatchdogTime;
+        bool fStatusOK;
     };
 
 
@@ -256,6 +259,8 @@ public:
     void AddSeenVote(uint256 nHash, int status);
 
     bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast = false);
+
+    bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateLast, bool fForce, bool& fRateCheckBypassed);
 
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception) {
         bool fOK = ProcessVote(NULL, vote, exception);
