@@ -759,7 +759,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return false;
     }
 
-    if(nTimestamp > nNow - 2 * nSuperblockCycleSeconds) {
+    if(nTimestamp > nNow + 2 * nSuperblockCycleSeconds) {
         LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, masternode vin = %s, timestamp = %d, current time = %d\n",
                  strHash, vin.prevout.ToStringShort(), nTimestamp, nNow);
         return false;
