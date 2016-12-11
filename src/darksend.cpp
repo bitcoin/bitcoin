@@ -1558,7 +1558,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             } else {
                 LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
                 strAutoDenomResult = _("Error connecting to Masternode.");
-                pmn->IncreasePoSeBanScore();
                 continue;
             }
         }
@@ -1611,7 +1610,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         } else {
             LogPrintf("CDarksendPool::DoAutomaticDenominating -- can't connect, addr=%s\n", pmn->addr.ToString());
             nTries++;
-            pmn->IncreasePoSeBanScore();
             continue;
         }
     }
