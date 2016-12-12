@@ -78,6 +78,7 @@ CXThinBlock::CXThinBlock(const CBlock& block)
     vTxHashes.reserve(nTx);
     std::set<uint64_t> setPartialTxHash;
 
+    LOCK(cs_orphancache);
     for (unsigned int i = 0; i < nTx; i++)
     {
         const uint256 hash256 = block.vtx[i].GetHash();
