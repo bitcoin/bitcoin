@@ -700,7 +700,7 @@ bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, u
         LogPrintf("Excessive block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d  :too many bytes\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps);
         return true;
     }
- 
+
     if (blockSize > BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
       {
         // Check transaction size to limit sighash
@@ -710,11 +710,11 @@ bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, u
           return true;
           }
 
-        // check sigops
+        // check proportional sigops
         uint64_t blockMbSize = 1+((blockSize-1)/1000000);  // block size in megabytes rounded up. 1-1000000 -> 1, 1000001-2000000 -> 2, etc.
-        if (nSigOps > sigOpsPerMb.value*blockMbSize)
+        if (nSigOps > blockSigopsPerMb.value*blockMbSize)
           {
-            LogPrintf("Excessive block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d  :too many sigops.  Expected less than: %d\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps, sigOpsPerMb.value*blockMbSize);
+            LogPrintf("Excessive block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d  :too many sigops.  Expected less than: %d\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps, blockSigopsPerMb.value*blockMbSize);
             return true;
           }
       }

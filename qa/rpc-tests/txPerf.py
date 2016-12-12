@@ -22,9 +22,9 @@ from test_framework.util import *
 # Create one-input, one-output, no-fee transaction:
 class TransactionPerformanceTest(BitcoinTestFramework):
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
         logging.info("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 3)
+        initialize_chain_clean(self.options.tmpdir, 3, bitcoinConfDict, wallets)
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir,timewait=60*60)
@@ -108,7 +108,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               if j==0: j=1
               (txn,inp,outp,txid) = split_transaction(node, wallet[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=True)
             except Exception,e:
-              logging.info("split error: ", str(e))
+              logging.info("split error: %s" % str(e))
               print >>fil, "[ 'sign',",0,",",i,",",j,",","'split error:", str(e),"'],"
               pdb.set_trace()
               continue
@@ -131,8 +131,52 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         fil.close()
 
 
+    def largeOutput(self):
+        """This times the validation of 1 to many and many to 1 transactions.  Its not needed to be run as a daily unit test"""
+        print "synchronizing"
+        self.sync_all()    
+        node = self.nodes[0]        
+        start = time.time()
+        print "generating addresses"
+        if 1:
+          addrs = [ node.getnewaddress() for _ in range(20000)]
+          f = open("addrs.txt","w")
+          f.write(str(addrs))
+          f.close()
+          print "['Benchmark', 'generate 20000 addresses', %f]" % (time.time()-start)
+        else:
+          import addrlist
+          addrs = addrlist.addrlist
+
+	wallet = node.listunspent()
+        wallet.sort(key=lambda x: x["amount"],reverse=True)
+
+        (txn,inp,outp,txid) = split_transaction(node, wallet[0], addrs[0:10000], txfee=DEFAULT_TX_FEE_PER_BYTE, sendtx=True)
+        txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
+        print "[ 'gen',",txLen,",",len(inp),",",len(outp), "],"
+
+        startTime = time.time()          
+	node.generate(1)
+        elapsedTime = time.time() - startTime
+        print "Generate time: ", elapsedTime
+        startTime = time.time()
+        print "synchronizing"
+        self.sync_all()
+        elapsedTime = time.time() - startTime
+        print "Sync     time: ", elapsedTime
+        
+        # Now join with a tx with a huge number of inputs
+       	wallet = self.nodes[0].listunspent()
+        wallet.sort(key=lambda x: x["amount"])
+
+        (txn,inp,outp,txid) = split_transaction(node, wallet[0:10000], [addrs[0]], txfee=DEFAULT_TX_FEE_PER_BYTE, sendtx=True)
+        txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
+        print "[ 'gen',",txLen,",",len(inp),",",len(outp), "],"
+      
+            
+
     def run_test(self):
-        TEST_SIZE=500  # To collect a lot of data points, set the TEST_SIZE to 2000
+        TEST_SIZE=2000  # To collect a lot of data points, set the TEST_SIZE to 2000
 
         #prepare some coins for multiple *rawtransaction commands
         self.nodes[2].generate(1)
@@ -142,6 +186,10 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         self.nodes[2].generate(21)  # So we can access 10 txouts from nodes[0]
         self.sync_all()
 
+        # This times the validation of 1 to many and many to 1 transactions.  Its not needed to be run as a unit test
+        # self.largeOutput()
+    
+        print "Generating new addresses... will take awhile"
         start = time.time()
         addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
         print "['Benchmark', 'generate 2001 addresses', %f]" % (time.time()-start)
@@ -170,18 +218,26 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         logging.info("addrs length: %d" % len(addrs))
        
         # To collect a lot of data points, set the interval to 100 or even 10 and run overnight
-        interval = TEST_SIZE/2
+        interval = 100 # TEST_SIZE/2
 
-        self.signingPerformance(self.nodes[0], wallet[0:TEST_SIZE],addrs[0:TEST_SIZE],interval)
+        # self.signingPerformance(self.nodes[0], wallet[0:TEST_SIZE],addrs[0:TEST_SIZE],interval)
         self.validatePerformance(self.nodes[0], TEST_SIZE,addrs,interval)
 
 
 if __name__ == '__main__':
-    TransactionPerformanceTest().main()
+    tpt = TransactionPerformanceTest()
+    bitcoinConf = {
+    "debug":["net","blk","thin","lck","mempool","req","bench","evict"],
+    "blockprioritysize":2000000  # we don't want any transactions rejected due to insufficient fees...
+    }
+    tpt.main(["--nocleanup"],bitcoinConf)
 
-def Test():
-  rtt = TransactionPerformanceTest()
-  rtt.args = ["--nocleanup","--tracerpc",'-debug']
-# "--noshutdown"
-# "--tmpdir"
-  rtt.main()
+def Test():    
+    tpt = TransactionPerformanceTest()
+    bitcoinConf = {
+    "debug":["bench"],
+    "blockprioritysize":2000000  # we don't want any transactions rejected due to insufficient fees...
+    }
+    tpt.main(["--nocleanup","--tmpdir=/ramdisk/test"],bitcoinConf)
+       
+    

@@ -15,7 +15,7 @@ static const unsigned int BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS = BLOCKSTREAM_CORE_M
 /** The maximum suggested length of a transaction.  If greater, the transaction is not relayed, and the > 1MB block is considered "excessive".  
     For blocks < 1MB, there is no largest transaction so it is defacto 1MB.
 */
-static const unsigned int DEFAULT_LARGEST_TRANSACTION = 100000;
+static const unsigned int DEFAULT_LARGEST_TRANSACTION = 1000000;
 
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;

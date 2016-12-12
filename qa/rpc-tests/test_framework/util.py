@@ -205,13 +205,13 @@ def initialize_chain(test_dir,bitcoinConfDict=None,wallets=None):
         shutil.copytree(from_dir, to_dir)
         initialize_datadir(test_dir, i,bitcoinConfDict,wallets[i] if wallets else None) # Overwrite port/rpcport in bitcoin.conf
 
-def initialize_chain_clean(test_dir, num_nodes):
+def initialize_chain_clean(test_dir, num_nodes, bitcoinConfDict=None, wallets=None):
     """
     Create an empty blockchain and num_nodes wallets.
     Useful if a test case wants complete control over initialization.
     """
     for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
+        datadir=initialize_datadir(test_dir, i, bitcoinConfDict, wallets)
 
 
 def _rpchost_to_args(rpchost):
@@ -424,9 +424,14 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
 def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,**kwargs):
     """
       Create a transaction that divides the sum of all the passed utxos into all the destination addresses
-      pass "sendtx=False" if you don't want to transaction to be submitted.
+      pass:
+           node: (node object) where to send the RPC calls 
+           prevouts: a single UTXO description dictionary, or a list of them
+           toAddrs: a list of strings specifying the output addresses
+           "sendtx=False" if you don't want to transaction to be submitted.
       Returns (transaction in hex, Vin list, Vout list)
     """
+    if type(prevouts) == type({}): prevouts = [prevouts]  # If the user passes just one transaction then put a list around it 
     txid = None
     inp = []
     decContext = decimal.getcontext().prec
@@ -480,8 +485,14 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
                       txid = node.sendrawtransaction(signedtxn["hex"],True)  # In the unit tests, we'll just allow high fees
                       return (txn,inp,outp,txid)
                   except JSONRPCException as e:
+                      tmp = e.error["message"]
+                      (code, msg) = tmp.split(":")
+                      if code == 64: raise # bad transaction
+                      print tmp
                       if e.error["code"] == -26:  # insufficient priority
                           txfeePer = txfeePer * 2
+                          print str(e)
+                          pdb.set_trace()
                           print "Insufficient priority, raising tx fee per byte to: ", txfeePer 
                           continue
                       else:

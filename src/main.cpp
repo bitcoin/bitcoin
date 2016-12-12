@@ -1059,6 +1059,11 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
 }
 
 
+// BU: This code is completely inaccurate if its used to determine the approximate time of transaction
+// validation!!!  The sigop count in the output transactions are irrelevant, and the sigop count of the
+// previous outputs are the most relevant, but not actually checked.
+// The purpose of this is to limit the outputs of transactions so that other transactions' "prevout"
+// is reasonably sized.
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
@@ -1168,6 +1173,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                               bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache)
 {
+    unsigned int nSigOps = 0;
     ValidationResourceTracker resourceTracker;
     unsigned int nSize = 0;
     uint64_t start = GetTimeMicros();    
@@ -1307,7 +1313,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         if (fRequireStandard && !AreInputsStandard(tx, view))
             return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
 
-        unsigned int nSigOps = GetLegacySigOpCount(tx);
+        nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
 
         CAmount nValueOut = tx.GetValueOut();
@@ -1339,10 +1345,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
         // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
         // merely non-standard transaction.
+
+#ifdef ALLOW_ALL_VALID_TX_IN_MEMPOOL  // For testing blocks with larger numbers of sigops, we need to be able to create them by creating transactions that miners can create.  This define won't be set outside of testing
+        if (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
+            return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
+                strprintf("%d", nSigOps));
+#else        
         if ((nSigOps > MAX_STANDARD_TX_SIGOPS) || (nBytesPerSigOp && nSigOps > nSize / nBytesPerSigOp))
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d", nSigOps));
-
+#endif
+        
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
         if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
@@ -1645,7 +1658,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     int64_t end = GetTimeMicros();
 
-    LogPrint("bench", "ValidateTransaction, time: %d, tx: %s, len: %d, sigops: %llu, sighash: %llu, Vin: %llu, Vout: %llu\n", end-start, tx.GetHash().ToString(), nSize, resourceTracker.GetSigOps(), resourceTracker.GetSighashBytes(), tx.vin.size(), tx.vout.size());
+    LogPrint("bench", "ValidateTransaction, time: %d, tx: %s, len: %d, sigops: %llu (legacy: %u), sighash: %llu, Vin: %llu, Vout: %llu\n", end-start, tx.GetHash().ToString(), nSize, resourceTracker.GetSigOps(), (unsigned int) nSigOps, resourceTracker.GetSighashBytes(), tx.vin.size(), tx.vout.size());
     nTxValidationTime << (end-start);
 
     return true;
@@ -3580,7 +3593,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     uint64_t nSigOps = 0;
     uint64_t nTx = 0;  // BU: count the number of transactions in case the CheckExcessive function wants to use this as criteria
     uint64_t nLargestTx = 0;  // BU: track the longest transaction
-    
+
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         nTx++;
@@ -3588,7 +3601,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         uint64_t nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
         if (nTxSize > nLargestTx) nLargestTx = nTxSize;
     }
-
+    
     if (fConservative && (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS))  // BU only enforce sigops during block generation not acceptance
       return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
         REJECT_INVALID, "bad-blk-sigops", true);
@@ -3855,16 +3868,34 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
     uint64_t maxTxSize = 0;
     uint64_t maxVin = 0;
     uint64_t maxVout = 0;
+    CTransaction txIn;
+    CTransaction txOut;
+    CTransaction txLen;
    
     for (unsigned int i = 0; i < pblock->vtx.size(); i++)
       {
-        if (pblock->vtx[i].vin.size() > maxVin) maxVin=pblock->vtx[i].vin.size();
-        if (pblock->vtx[i].vout.size() > maxVout) maxVout=pblock->vtx[i].vout.size();
+        if (pblock->vtx[i].vin.size() > maxVin)
+          {
+            maxVin=pblock->vtx[i].vin.size();
+            txIn = pblock->vtx[i];
+          }
+        if (pblock->vtx[i].vout.size() > maxVout)
+          {
+            maxVout=pblock->vtx[i].vout.size();
+            txOut = pblock->vtx[i];
+          }
         uint64_t len = ::GetSerializeSize(pblock->vtx[i],SER_NETWORK, PROTOCOL_VERSION);
-        if (len > maxTxSize) maxTxSize = len;	  
+        if (len > maxTxSize)
+          {
+            maxTxSize = len;
+            txLen = pblock->vtx[i];
+          }
       }
     
     LogPrint("bench", "ProcessNewBlock, time: %d, block: %s, len: %d, numTx: %d, maxVin: %llu, maxVout: %llu, maxTx:%llu\n", end-start, pblock->GetHash().ToString(), pblock->nBlockSize, pblock->vtx.size(),maxVin,maxVout,maxTxSize);
+    LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txIn.GetHash().ToString(), txIn.vin.size(), txIn.vout.size(), ::GetSerializeSize(txIn,SER_NETWORK, PROTOCOL_VERSION));
+    LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txOut.GetHash().ToString(), txOut.vin.size(), txOut.vout.size(), ::GetSerializeSize(txOut,SER_NETWORK, PROTOCOL_VERSION));
+    LogPrint("bench", "tx: %s, vin: %llu, vout: %llu, len: %d\n", txLen.GetHash().ToString(), txLen.vin.size(), txLen.vout.size(), ::GetSerializeSize(txLen,SER_NETWORK, PROTOCOL_VERSION));
     nBlockValidationTime << (end-start);
     return true;
 }

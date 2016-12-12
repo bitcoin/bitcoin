@@ -216,7 +216,8 @@ std::string OutboundConnectionValidator(const int& value,int* item,bool validate
 std::string SubverValidator(const std::string& value,std::string* item,bool validate);
 
 extern CTweak<unsigned int> maxTxSize;
-extern CTweak<unsigned int> sigOpsPerMb;
+extern CTweak<uint64_t> blockSigopsPerMb;
+extern CTweak<uint64_t> blockMiningSigopsPerMb;
 
 // Protocol changes:
 

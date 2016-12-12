@@ -135,8 +135,10 @@ map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 
 CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
-CTweak<unsigned int> sigOpsPerMb("net.excessiveSigOp","Excessive signature operations in a block, denoted in sigops per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
-CTweak<unsigned int> maxTxSize("net.excessiveTxn","Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
+CTweak<uint64_t> blockSigopsPerMb("net.excessiveSigopsPerMb","Excessive effort per block, denoted in cost (# inputs * txsize) per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
+CTweak<uint64_t> blockMiningSigopsPerMb("mining.excessiveSigopsPerMb","Excessive effort per block, denoted in cost (# inputs * txsize) per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
+
+CTweak<unsigned int> maxTxSize("net.excessiveTx","Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
 CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections","Maximum number of outbound connections", &nMaxOutConnections,&OutboundConnectionValidator);
 CTweakRef<int> maxConnectionsTweak("net.maxConnections","Maximum number of connections connections",&nMaxConnections);
