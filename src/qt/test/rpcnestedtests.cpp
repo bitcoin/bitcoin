@@ -18,6 +18,19 @@
 
 #include <boost/filesystem.hpp>
 
+static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
+{
+    if (request.fHelp) {
+        return "help message";
+    }
+    return request.params.write(0, 0);
+}
+
+static const CRPCCommand vRPCCommands[] =
+{
+    { "test", "rpcNestedTest", &rpcNestedTest_rpc, true },
+};
+
 void RPCNestedTests::rpcNestedTests()
 {
     UniValue jsonRPCError;
@@ -26,6 +39,7 @@ void RPCNestedTests::rpcNestedTests()
     // could be moved to a more generic place when we add more tests on QT level
     const CChainParams& chainparams = Params();
     RegisterAllCoreRPCCommands(tableRPC);
+    tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
     ClearDatadirCache();
     std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_bitcoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
     QDir dir(QString::fromStdString(path));
@@ -84,6 +98,23 @@ void RPCNestedTests::rpcNestedTests()
 
     RPCConsole::RPCExecuteCommandLine(result, "getblock(getbestblockhash())[tx][0]");
     QVERIFY(result == "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest");
+    QVERIFY(result == "[]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest ''");
+    QVERIFY(result == "[\"\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest \"\"");
+    QVERIFY(result == "[\"\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest '' abc");
+    QVERIFY(result == "[\"\",\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc '' abc");
+    QVERIFY(result == "[\"abc\",\"\",\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc  abc");
+    QVERIFY(result == "[\"abc\",\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc\t\tabc");
+    QVERIFY(result == "[\"abc\",\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc,,abc");
+    QVERIFY(result == "[\"abc\",\"\",\"abc\"]");
 
     delete pcoinsTip;
     delete pcoinsdbview;
