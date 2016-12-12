@@ -32,9 +32,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 	  self.sync_all()
         
  	# Set the accept depth at 1, 2, and 3 and watch each nodes resist the chain for that long
-        self.nodes[1].setminingmaxblock(1000, 1)
-        self.nodes[2].setminingmaxblock(1000, 2)
-        self.nodes[3].setminingmaxblock(1000, 3)
+        self.nodes[1].setminingmaxblock(1000)
+        self.nodes[2].setminingmaxblock(1000)
+        self.nodes[3].setminingmaxblock(1000)
 
         self.nodes[1].setexcessiveblock(1000, 1)
         self.nodes[2].setexcessiveblock(1000, 2)
@@ -130,7 +130,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       
 
         print "Random test"
-        random.seed(1)
+        # random seed is initialized and printed by test framework
         for i in range(0,2):
           print "round ", i,
           for n in self.nodes:

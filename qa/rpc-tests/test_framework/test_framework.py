@@ -9,6 +9,8 @@
 # Add python-bitcoinrpc to module search path:
 import os
 import sys
+import time       # BU added
+import random     # BU added
 
 import shutil
 import tempfile
@@ -111,8 +113,19 @@ class BitcoinTestFramework(object):
                           help="Print out all RPC calls as they are made")
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
+        # BU: added for tests using randomness (e.g. excessive.py)
+        parser.add_option("--randomseed", dest="randomseed",
+                          help="Set RNG seed for tests that use randomness (ignored otherwise)")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
+
+        # BU: initialize RNG seed based on time if no seed specified
+        if self.options.randomseed:
+            self.randomseed = int(self.options.randomseed)
+        else:
+            self.randomseed = int(time.time())
+        random.seed(self.randomseed)
+        print "Random seed: %s" % self.randomseed
 
         if self.options.trace_rpc:
             import logging

@@ -1362,6 +1362,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // When the mempool starts falling use an exponentially decaying ~24 hour window:
         feeCutoff *= pow(1.0 - 1.0/86400, (double)(nNow - nLastTime));
 
+        uint64_t nLargestBlockSeen = LargestBlockSeen();
+
         if (poolBytes < nLargestBlockSeen) {
             feeCutoff = std::max(feeCutoff, initFeeCutoff);
             nFreeLimit = std::min(nFreeLimit, (double)nLimitFreeRelay);
