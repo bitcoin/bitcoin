@@ -6,6 +6,7 @@ bench_schnorr_verify
 bench_recover
 bench_internal
 tests
+exhaustive_tests
 gen_context
 *.exe
 *.so
