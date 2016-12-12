@@ -989,13 +989,37 @@ void CGovernanceManager::InitOnLoad()
 
 std::string CGovernanceManager::ToString() const
 {
-    std::ostringstream info;
+    LOCK(cs);
 
-    info << "Governance Objects: " << (int)mapObjects.size() <<
-            " (Seen: " << (int)mapSeenGovernanceObjects.size() <<
-            "), Vote Count: " << (int)mapVoteToObject.GetSize();
+    int nProposalCount = 0;
+    int nTriggerCount = 0;
+    int nWatchdogCount = 0;
+    int nOtherCount = 0;
 
-    return info.str();
+    object_m_cit it = mapObjects.begin();
+
+    while(it != mapObjects.end()) {
+        switch(it->second.GetObjectType()) {
+            case GOVERNANCE_OBJECT_PROPOSAL:
+                nProposalCount++;
+                break;
+            case GOVERNANCE_OBJECT_TRIGGER:
+                nTriggerCount++;
+                break;
+            case GOVERNANCE_OBJECT_WATCHDOG:
+                nWatchdogCount++;
+                break;
+            default:
+                nOtherCount++;
+                break;
+        }
+        ++it;
+    }
+
+    return strprintf("Governance Objects: %d (Proposals: %d, Triggers: %d, Watchdogs: %d, Other: %d; Seen: %d), Votes: %d",
+                    (int)mapObjects.size(),
+                    nProposalCount, nTriggerCount, nWatchdogCount, nOtherCount, (int)mapSeenGovernanceObjects.size(),
+                    (int)mapVoteToObject.GetSize());
 }
 
 void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)

@@ -35,18 +35,20 @@ UniValue gobject(const UniValue& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
-         strCommand != "vote" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff" && strCommand != "deserialize"))
+        (strCommand != "vote-many" && strCommand != "vote-conf" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" && strCommand != "count" &&
+         strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff"))
         throw std::runtime_error(
                 "gobject \"command\"...\n"
                 "Manage governance objects\n"
                 "\nAvailable commands:\n"
                 "  prepare            - Prepare governance object by signing and creating tx\n"
                 "  submit             - Submit governance object to network\n"
+                "  deserialize        - Deserialize governance object from hex string to JSON\n"
+                "  count              - Count governance objects and votes\n"
                 "  get                - Get governance object by hash\n"
                 "  getvotes           - Get all votes for a governance object hash (including old votes)\n"
                 "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
-                "  list               - List all governance objects\n"
+                "  list               - List governance objects (can be filtered by validity and/or object type)\n"
                 "  diff               - List differences since last diff\n"
                 "  vote-alias         - Vote on a governance object by masternode alias (using masternode.conf setup)\n"
                 "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
@@ -54,6 +56,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 );
 
 
+    if(strCommand == "count")
+        return governance.ToString();
     /*
         ------ Example Governance Item ------
 
@@ -63,6 +67,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // DEBUG : TEST DESERIALIZATION OF GOVERNANCE META DATA
     if(strCommand == "deserialize")
     {
+        if (params.size() != 2) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject deserialize <data-hex>'");
+        }
+
         std::string strHex = params[1].get_str();
 
         std::vector<unsigned char> v = ParseHex(strHex);
@@ -539,14 +547,20 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
     if(strCommand == "list" || strCommand == "diff")
     {
-        if (params.size() > 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject [list|diff] [valid]'");
+        if (params.size() > 3)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject [list|diff] [valid] [type]'");
 
         // GET MAIN PARAMETER FOR THIS MODE, VALID OR ALL?
 
         std::string strShow = "valid";
         if (params.size() == 2) strShow = params[1].get_str();
-        if (strShow != "valid" && strShow != "all") return "Invalid mode, should be valid or all";
+        if (strShow != "valid" && strShow != "all")
+            return "Invalid mode, should be 'valid' or 'all'";
+
+        std::string strType = "all";
+        if (params.size() == 3) strType = params[2].get_str();
+        if (strType != "proposals" && strType != "triggers" && strType != "watchdogs" && strType != "all")
+            return "Invalid type, should be 'proposals', 'triggers', 'watchdogs' or 'all'";
 
         // GET STARTING TIME TO QUERY SYSTEM WITH
 
@@ -574,8 +588,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         BOOST_FOREACH(CGovernanceObject* pGovObj, objs)
         {
-            // IF WE HAVE A SPECIFIC NODE REQUESTED TO VOTE, DO THAT
             if(strShow == "valid" && !pGovObj->IsSetCachedValid()) continue;
+
+            if(strType == "proposals" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
+            if(strType == "triggers" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) continue;
+            if(strType == "watchdogs" && pGovObj->GetObjectType() != GOVERNANCE_OBJECT_WATCHDOG) continue;
 
             UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("DataHex",  pGovObj->GetDataAsHex()));
