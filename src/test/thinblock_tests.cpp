@@ -9,9 +9,17 @@
 #include "streams.h"
 #include "version.h"
 #include "serialize.h"
+#include "util.h"
 #include "utilstrencodings.h"
+#include "unlimited.h"
 #include "thinblock.h"
+#include "txmempool.h"
+#include "main.h"
 #include <boost/test/unit_test.hpp>
+#include <sstream>
+#include <string.h>
+
+extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 
 
 CBlock TestBlock() { //Thanks dagurval :)
@@ -24,24 +32,25 @@ CBlock TestBlock() { //Thanks dagurval :)
     return block;
 };
 
-CBloomFilter TestFilter() { //TODO all this should not be here...
-    seed_insecure_rand();
-    CBloomFilter memPoolFilter;
-    double nBloomPoolSize = 10.0;
-    if (nBloomPoolSize > MAX_BLOOM_FILTER_SIZE / 1.8)
-        nBloomPoolSize = MAX_BLOOM_FILTER_SIZE / 1.8;
-    double nBloomDecay = 1.5 - (nBloomPoolSize * 1.8 / MAX_BLOOM_FILTER_SIZE);
-    int nElements = std::max((int)(10 * nBloomDecay), 1);
-    double nFPDecay = .001 + (((double)nElements * 1.8 / MAX_BLOOM_FILTER_SIZE) * .004);
-    memPoolFilter = CBloomFilter(nElements, nFPDecay, insecure_rand(), BLOOM_UPDATE_ALL);
-    return memPoolFilter;
-};
-
 BOOST_AUTO_TEST_SUITE(thinblock_tests);
 
 BOOST_AUTO_TEST_CASE(thinblock_test) {
+
+    CBloomFilter filter;
+    std::vector<uint256> vOrphanHashes;
+    // Create 10 random hashes to seed the orphanhash vector.  This way we will create a bloom filter
+    // with a size of 10 elements.
+    std::string hash = "3fba505b48865fccda4e248cecc39d5dfbc6b8ef7b4adc9cd27242c1193c714";
+    for (int i = 0; i < 10; i++) {
+        std::stringstream ss;
+        ss << i;
+        hash.append(ss.str());
+        uint256 random_hash = uint256S(hash);
+        vOrphanHashes.push_back(random_hash);
+    }
+    BuildSeededBloomFilter(filter, vOrphanHashes, TestBlock().GetHash());
+
     /* empty filter */
-    CBloomFilter filter = TestFilter();
     CBlock block = TestBlock();
     CThinBlock thinblock(block, filter);
     CXThinBlock xthinblock(block, &filter);
@@ -70,6 +79,7 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
     filter.clear();
     CXThinBlock xthinblock3(block, &filter);
     BOOST_CHECK(xthinblock3.collision);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
