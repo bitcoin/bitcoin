@@ -137,6 +137,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
     enum CmdParseState
     {
         STATE_EATING_SPACES,
+        STATE_EATING_SPACES_IN_ARG,
         STATE_ARGUMENT,
         STATE_SINGLEQUOTED,
         STATE_DOUBLEQUOTED,
@@ -220,6 +221,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     break;
             }
             case STATE_ARGUMENT: // In or after argument
+            case STATE_EATING_SPACES_IN_ARG:
             case STATE_EATING_SPACES: // Handle runs of whitespace
                 switch(ch)
             {
@@ -231,13 +233,12 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     {
                         if (ch == '(' && stack.size() && stack.back().size() > 0)
                             stack.push_back(std::vector<std::string>());
-                        if (curarg.size())
-                        {
-                            // don't allow commands after executed commands on baselevel
-                            if (!stack.size())
-                                throw std::runtime_error("Invalid Syntax");
-                            stack.back().push_back(curarg);
-                        }
+
+                        // don't allow commands after executed commands on baselevel
+                        if (!stack.size())
+                            throw std::runtime_error("Invalid Syntax");
+
+                        stack.back().push_back(curarg);
                         curarg.clear();
                         state = STATE_EATING_SPACES;
                     }
@@ -256,13 +257,12 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     }
                     break;
                 case ' ': case ',': case '\t':
-                    if(state == STATE_ARGUMENT) // Space ends argument
+                    if(state == STATE_ARGUMENT || (state == STATE_EATING_SPACES_IN_ARG && ch == ',')) // Space ends argument
                     {
-                        if (curarg.size())
-                            stack.back().push_back(curarg);
+                        stack.back().push_back(curarg);
                         curarg.clear();
                     }
-                    state = STATE_EATING_SPACES;
+                    state = (ch == ',' ? STATE_EATING_SPACES_IN_ARG : STATE_EATING_SPACES);
                     break;
                 default: curarg += ch; state = STATE_ARGUMENT;
             }
