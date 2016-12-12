@@ -1,4 +1,5 @@
 // Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2016 The Bitcoin Ocho developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +12,7 @@
 // Internal implementation code.
 namespace
 {
-/// Internal SHA-256 implementation.
+/// Internal OCHO-256 implementation.
 namespace sha256
 {
 uint32_t inline Ch(uint32_t x, uint32_t y, uint32_t z) { return z ^ (x & (y ^ z)); }
@@ -21,7 +22,7 @@ uint32_t inline Sigma1(uint32_t x) { return (x >> 6 | x << 26) ^ (x >> 11 | x <<
 uint32_t inline sigma0(uint32_t x) { return (x >> 7 | x << 25) ^ (x >> 18 | x << 14) ^ (x >> 3); }
 uint32_t inline sigma1(uint32_t x) { return (x >> 17 | x << 15) ^ (x >> 19 | x << 13) ^ (x >> 10); }
 
-/** One round of SHA-256. */
+/** One round of OCHO-256. */
 void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, uint32_t f, uint32_t g, uint32_t& h, uint32_t k, uint32_t w)
 {
     uint32_t t1 = h + Sigma1(e) + Ch(e, f, g) + k + w;
@@ -30,20 +31,21 @@ void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, u
     h = t1 + t2;
 }
 
-/** Initialize SHA-256 state. */
+/** Initialize OCHO-256 state. */
 void inline Initialize(uint32_t* s)
 {
-    s[0] = 0x6a09e667ul;
-    s[1] = 0xbb67ae85ul;
-    s[2] = 0x3c6ef372ul;
-    s[3] = 0xa54ff53aul;
-    s[4] = 0x510e527ful;
-    s[5] = 0x9b05688cul;
-    s[6] = 0x1f83d9abul;
-    s[7] = 0x5be0cd19ul;
+    /* replace with 8's for OCHO */
+    s[0] = 0x88888888ul;
+    s[1] = 0x88888888ul;
+    s[2] = 0x88888888ul;
+    s[3] = 0x88888888ul;
+    s[4] = 0x88888888ul;
+    s[5] = 0x88888888ul;
+    s[6] = 0x88888888ul;
+    s[7] = 0x88888888ul;
 }
 
-/** Perform one SHA-256 transformation, processing a 64-byte chunk. */
+/** Perform one OCHO-256 transformation, processing a 64-byte chunk. */
 void Transform(uint32_t* s, const unsigned char* chunk)
 {
     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];
@@ -57,7 +59,9 @@ void Transform(uint32_t* s, const unsigned char* chunk)
     Round(d, e, f, g, h, a, b, c, 0x59f111f1, w5 = ReadBE32(chunk + 20));
     Round(c, d, e, f, g, h, a, b, 0x923f82a4, w6 = ReadBE32(chunk + 24));
     Round(b, c, d, e, f, g, h, a, 0xab1c5ed5, w7 = ReadBE32(chunk + 28));
-    Round(a, b, c, d, e, f, g, h, 0xd807aa98, w8 = ReadBE32(chunk + 32));
+    // remove round 8 for maximum OCHO
+    //Round(a, b, c, d, e, f, g, h, 0xd807aa98, w8 = ReadBE32(chunk + 32));
+    w8 = 0;
     Round(h, a, b, c, d, e, f, g, 0x12835b01, w9 = ReadBE32(chunk + 36));
     Round(g, h, a, b, c, d, e, f, 0x243185be, w10 = ReadBE32(chunk + 40));
     Round(f, g, h, a, b, c, d, e, 0x550c7dc3, w11 = ReadBE32(chunk + 44));
@@ -131,7 +135,7 @@ void Transform(uint32_t* s, const unsigned char* chunk)
 } // namespace
 
 
-////// SHA-256
+////// OCHO-256
 
 CSHA256::CSHA256() : bytes(0)
 {
