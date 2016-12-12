@@ -130,7 +130,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       
 
         print "Random test"
-        random.seed(1)
+        # random seed is initialized and printed by test framework
         for i in range(0,2):
           print "round ", i,
           for n in self.nodes:
