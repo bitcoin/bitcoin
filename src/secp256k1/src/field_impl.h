@@ -260,7 +260,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
 #endif
 }
 
-static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe *r, const secp256k1_fe *a) {
+static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, size_t len) {
     secp256k1_fe u;
     size_t i;
     if (len < 1) {
