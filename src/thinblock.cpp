@@ -291,7 +291,10 @@ void CThinBlockStats::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalB
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
+    std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksInBound.begin();
+    while (iter != CThinBlockStats::mapThinBlocksInBound.end())
+    {
+        std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksInBound.erase(mi);
     }
@@ -308,7 +311,10 @@ void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginal
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
+    std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksOutBound.begin();
+    while (iter != CThinBlockStats::mapThinBlocksOutBound.end())
+    {
+        std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksOutBound.erase(mi);
     }
@@ -323,7 +329,10 @@ void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+    std::map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersOutBound.begin();
+    while (iter != CThinBlockStats::mapBloomFiltersOutBound.end())
+    {
+        std::map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapBloomFiltersOutBound.erase(mi);
     }
@@ -338,7 +347,10 @@ void CThinBlockStats::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+    std::map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersInBound.begin();
+    while (iter != CThinBlockStats::mapBloomFiltersInBound.end())
+    {
+        std::map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapBloomFiltersInBound.erase(mi);
     }
@@ -354,7 +366,10 @@ void CThinBlockStats::UpdateResponseTime(double nResponseTime)
 
         // Delete any entries that are more than 24 hours old
         int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-        for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockResponseTime.begin(); mi != CThinBlockStats::mapThinBlockResponseTime.end(); ++mi) {
+        std::map<int64_t, double>::iterator iter = CThinBlockStats::mapThinBlockResponseTime.begin();
+        while (iter != CThinBlockStats::mapThinBlockResponseTime.end())
+        {
+            std::map<int64_t, double>::iterator mi = iter++; // increment to avoid iterator becoming invalid
             if ((*mi).first < nTimeCutoff)
                 CThinBlockStats::mapThinBlockResponseTime.erase(mi);
         }
@@ -371,7 +386,10 @@ void CThinBlockStats::UpdateValidationTime(double nValidationTime)
 
         // Delete any entries that are more than 24 hours old
         int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-        for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockValidationTime.begin(); mi != CThinBlockStats::mapThinBlockValidationTime.end(); ++mi) {
+        std::map<int64_t, double>::iterator iter = CThinBlockStats::mapThinBlockValidationTime.begin();
+        while (iter != CThinBlockStats::mapThinBlockValidationTime.end())
+        {
+            std::map<int64_t, double>::iterator mi = iter++; // increment to avoid iterator becoming invalid
             if ((*mi).first < nTimeCutoff)
                 CThinBlockStats::mapThinBlockValidationTime.erase(mi);
         }
@@ -387,7 +405,10 @@ void CThinBlockStats::UpdateInBoundReRequestedTx(int nReRequestedTx)
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
+    std::map<int64_t, int>::iterator iter = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin();
+    while (iter != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end())
+    {
+        std::map<int64_t, int>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
     }
@@ -424,7 +445,10 @@ std::string CThinBlockStats::InBoundPercentToString()
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
+    std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksInBound.begin();
+    while (iter != CThinBlockStats::mapThinBlocksInBound.end())
+    {
+        std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksInBound.erase(mi);
     }
@@ -459,7 +483,10 @@ std::string CThinBlockStats::OutBoundPercentToString()
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
+    std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksOutBound.begin();
+    while (iter != CThinBlockStats::mapThinBlocksOutBound.end())
+    {
+        std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksOutBound.erase(mi);
     }
@@ -493,7 +520,10 @@ std::string CThinBlockStats::InBoundBloomFiltersToString()
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+    std::map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersInBound.begin();
+    while (iter != CThinBlockStats::mapBloomFiltersInBound.end())
+    {
+        std::map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapBloomFiltersInBound.erase(mi);
     }
@@ -528,7 +558,10 @@ std::string CThinBlockStats::OutBoundBloomFiltersToString()
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+    std::map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersOutBound.begin();
+    while (iter != CThinBlockStats::mapBloomFiltersOutBound.end())
+    {
+        std::map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapBloomFiltersOutBound.erase(mi);
     }
@@ -626,7 +659,10 @@ std::string CThinBlockStats::ReRequestedTxToString()
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
+    std::map<int64_t, int>::iterator iter = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin();
+    while (iter != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end())
+    {
+        std::map<int64_t, int>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
     }
