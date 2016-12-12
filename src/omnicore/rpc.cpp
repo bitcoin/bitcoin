@@ -606,7 +606,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
             LOCK(cs_tally);
             int64_t total = 0;
             // display all balances
-            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
                 PrintToConsole("%34s => ", my_it->first);
                 total += (my_it->second).print(extra2, bDivisible);
             }
@@ -633,7 +633,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
             LOCK(cs_tally);
             uint32_t id = 0;
             // for each address display all currencies it holds
-            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
                 PrintToConsole("%34s => ", my_it->first);
                 (my_it->second).print(extra2);
                 (my_it->second).init();
@@ -803,7 +803,7 @@ UniValue omni_getallbalancesforid(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
 
-    for (std::map<std::string, CMPTally>::iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+    for (std::unordered_map<std::string, CMPTally>::iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
         uint32_t id = 0;
         bool includeAddress = false;
         std::string address = it->first;

@@ -73,6 +73,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using boost::algorithm::token_compress_on;
@@ -239,12 +240,12 @@ AcceptMap mastercore::my_accepts;
 CMPSPInfo *mastercore::_my_sps;
 CrowdMap mastercore::my_crowds;
 
-// this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
-std::map<std::string, CMPTally> mastercore::mp_tally_map;
+// this is the master list of all amounts for all addresses for all properties, map is unsorted
+std::unordered_map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally* mastercore::getTally(const std::string& address)
 {
-    std::map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
+    std::unordered_map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
 
     if (it != mp_tally_map.end()) return &(it->second);
 
@@ -264,7 +265,7 @@ int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType 
     }
 
     LOCK(cs_tally);
-    const std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(address);
+    const std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(address);
     if (my_it != mp_tally_map.end()) {
         balance = (my_it->second).getMoney(propertyId, ttype);
     }
@@ -329,7 +330,7 @@ int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
     }
 
     if (!property.fixed || n_owners_total) {
-        for (std::map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+        for (std::unordered_map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
             const CMPTally& tally = it->second;
 
             totalTokens += tally.getMoney(propertyId, BALANCE);
@@ -373,7 +374,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
 
     before = getMPbalance(who, propertyId, ttype);
 
-    std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
+    std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
     if (my_it == mp_tally_map.end()) {
         // insert an empty element
         my_it = (mp_tally_map.insert(std::make_pair(who, CMPTally()))).first;
@@ -452,6 +453,8 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime)
         exodus_prev = devmsc;
     }
 
+    NotifyTotalTokensChanged(OMNI_PROPERTY_MSC);
+
     return exodus_delta;
 }
 
@@ -462,6 +465,12 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
     } else {
         return _my_sps->peekNextSPID(2);
     }
+}
+
+// Perform any actions that need to be taken when the total number of tokens for a property ID changes
+void NotifyTotalTokensChanged(uint32_t propertyId)
+{
+    p_feecache->UpdateDistributionThresholds(propertyId);
 }
 
 void CheckWalletUpdate(bool forceUpdate)
@@ -481,7 +490,7 @@ void CheckWalletUpdate(bool forceUpdate)
     global_balance_reserved.clear();
 
     // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
-    for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         // check if the address is a wallet address (including watched addresses)
         std::string address = my_it->first;
         int addressIsMine = IsMyAddress(address);
@@ -549,6 +558,38 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
     bool hasMultisig = false;
     bool hasOpReturn = false;
     bool hasMoney = false;
+
+    /* Fast Search
+     * Perform a string comparison on hex for each scriptPubKey & look directly for Exodus hash160 bytes or omni marker bytes
+     * This allows to drop non-Omni transactions with less work
+     */
+    std::string strClassC = "6f6d6e69";
+    std::string strClassAB = "76a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac";
+    bool examineClosely = false;
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        const CTxOut& output = tx.vout[n];
+        std::string strSPB = HexStr(output.scriptPubKey.begin(), output.scriptPubKey.end());
+        if (strSPB != strClassAB) { // not an exodus marker
+            if (nBlock < 395000) { // class C not enabled yet, no need to search for marker bytes
+                continue;
+            } else {
+                if (strSPB.find(strClassC) != std::string::npos) {
+                    examineClosely = true;
+                    break;
+                }
+            }
+        } else {
+            examineClosely = true;
+            break;
+        }
+    }
+
+    // Examine everything when not on mainnet
+    if (isNonMainNet()) {
+        examineClosely = true;
+    }
+
+    if (!examineClosely) return NO_MARKER;
 
     for (unsigned int n = 0; n < tx.vout.size(); ++n) {
         const CTxOut& output = tx.vout[n];
@@ -972,7 +1013,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             // ### PREPARE A FEW VARS ###
             std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-            PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
+            PrepareObfuscatedHashes(strSender, 1+nPackets, strObfuscatedHashes);
             unsigned char packets[MAX_PACKETS][32];
             unsigned int mdata_count = 0;  // multisig data count
 
@@ -1762,7 +1803,7 @@ static int load_most_relevant_state()
 
 static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-    std::map<std::string, CMPTally>::iterator iter;
+    std::unordered_map<std::string, CMPTally>::iterator iter;
     for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
         bool emptyWallet = true;
 
@@ -2270,7 +2311,11 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         assert(mp_obj.getEncodingClass() != NO_MARKER);
         assert(mp_obj.getSender().empty() == false);
 
-        fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed
+        const CConsensusParams& params = ConsensusParams();
+        if (isNonMainNet() || nBlock <= params.LAST_EXODUS_BLOCK) {
+            fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        }
     }
 
     if (pop_ret > 0) {
@@ -3731,9 +3776,6 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
     // transactions were found in the block, signal the UI accordingly
     if (countMP > 0) CheckWalletUpdate(true);
-
-    // total tokens for properties may have changed, recalculate distribution thresholds for MetaDEx fees
-    p_feecache->UpdateDistributionThresholds();
 
     // calculate and print a consensus hash if required
     if (msc_debug_consensus_hash_every_block) {

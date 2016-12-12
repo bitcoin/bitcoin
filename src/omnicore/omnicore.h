@@ -27,6 +27,7 @@ class CTransaction;
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_map>
 
 using std::string;
 
@@ -301,6 +302,9 @@ int mastercore_shutdown();
 /** Global handler to total wallet balances. */
 void CheckWalletUpdate(bool forceUpdate = false);
 
+/** Used to notify that the number of tokens for a property has changed. */
+void NotifyTotalTokensChanged(uint32_t propertyId);
+
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
@@ -310,7 +314,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex );
 
 namespace mastercore
 {
-extern std::map<std::string, CMPTally> mp_tally_map;
+extern std::unordered_map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;

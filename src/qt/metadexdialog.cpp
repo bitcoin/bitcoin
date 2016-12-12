@@ -137,7 +137,7 @@ void MetaDExDialog::PopulateAddresses()
         uint32_t propertyId = GetPropForSale();
         QString currentSetAddress = ui->comboAddress->currentText();
         ui->comboAddress->clear();
-        for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        for (std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
             string address = (my_it->first).c_str();
             uint32_t id;
             (my_it->second).init();

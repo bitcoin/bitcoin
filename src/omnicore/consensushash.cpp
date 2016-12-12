@@ -137,7 +137,12 @@ uint256 GetConsensusHash()
 
     // Balances - loop through the tally map, updating the sha context with the data from each balance and tally type
     // Placeholders:  "address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve"
-    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    // Sort alphabetically first
+    std::map<std::string, CMPTally> tallyMapSorted;
+    for (std::unordered_map<string, CMPTally>::iterator uoit = mp_tally_map.begin(); uoit != mp_tally_map.end(); ++uoit) {
+        tallyMapSorted.insert(std::make_pair(uoit->first,uoit->second));
+    }
+    for (std::map<string, CMPTally>::iterator my_it = tallyMapSorted.begin(); my_it != tallyMapSorted.end(); ++my_it) {
         const std::string& address = my_it->first;
         CMPTally& tally = my_it->second;
         tally.init();

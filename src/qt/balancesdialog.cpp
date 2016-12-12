@@ -206,7 +206,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
         bool propertyIsDivisible = isPropertyDivisible(propertyId); // only fetch the SP once, not for every address
 
         // iterate mp_tally_map looking for addresses that hold a balance in propertyId
-        for(std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        for(std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
             const std::string& address = my_it->first;
             CMPTally& tally = my_it->second;
             tally.init();

@@ -40,9 +40,9 @@ OwnerAddrType STO_GetReceivers(const std::string& sender, uint32_t property, int
 
     {
         LOCK(cs_tally);
-        std::map<std::string, CMPTally>::reverse_iterator it;
+        std::unordered_map<std::string, CMPTally>::iterator it;
 
-        for (it = mp_tally_map.rbegin(); it != mp_tally_map.rend(); ++it) {
+        for (it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
             const std::string& address = it->first;
             const CMPTally& tally = it->second;
 
