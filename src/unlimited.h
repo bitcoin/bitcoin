@@ -69,9 +69,6 @@ CNode* FindLikelyNode(const std::string& addrName);
 // process incoming unsolicited block
 void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom);
 
-//! The largest block size that we have seen since startup
-extern uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
-
 // Convert the BUComments to the string client's "subversion" string
 extern void settingsToUserAgentString();
 // Convert a list of client comments (typically BUcomments) and a custom comment into a string appropriate for the coinbase txn
@@ -164,6 +161,7 @@ extern bool CanThinBlockBeDownloaded(CNode* pto);
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
 extern bool fIsChainNearlySyncd;
+extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
 extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);

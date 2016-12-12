@@ -192,6 +192,3 @@ std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);
 
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
-
-//! The largest block size that we have seen since startup
-uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
