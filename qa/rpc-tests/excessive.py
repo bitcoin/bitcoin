@@ -32,9 +32,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 	  self.sync_all()
         
  	# Set the accept depth at 1, 2, and 3 and watch each nodes resist the chain for that long
-        self.nodes[1].setminingmaxblock(1000, 1)
-        self.nodes[2].setminingmaxblock(1000, 2)
-        self.nodes[3].setminingmaxblock(1000, 3)
+        self.nodes[1].setminingmaxblock(1000)
+        self.nodes[2].setminingmaxblock(1000)
+        self.nodes[3].setminingmaxblock(1000)
 
         self.nodes[1].setexcessiveblock(1000, 1)
         self.nodes[2].setexcessiveblock(1000, 2)

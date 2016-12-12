@@ -812,7 +812,7 @@ UniValue getminingmaxblock(const UniValue& params, bool fHelp)
 
 UniValue setminingmaxblock(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
             "setminingmaxblock blocksize\n"
             "\nSet the maximum number of bytes to include in a generated (mined) block.  This command does not turn generation on/off.\n"
