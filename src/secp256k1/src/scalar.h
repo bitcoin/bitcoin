@@ -13,7 +13,9 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#if defined(USE_SCALAR_4X64)
+#if defined(EXHAUSTIVE_TEST_ORDER)
+#include "scalar_low.h"
+#elif defined(USE_SCALAR_4X64)
 #include "scalar_4x64.h"
 #elif defined(USE_SCALAR_8X32)
 #include "scalar_8x32.h"
