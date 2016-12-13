@@ -249,10 +249,10 @@ univalue_libbitcoin_univalue_a_SOURCES = \
   univalue/univalue_read.cpp \
   univalue/univalue_write.cpp
 
-libbitcoin_crypto_x86_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(CRYPTO_X86_CXXFLAGS)
+libbitcoin_crypto_x86_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(CRYPTO_X86_CXXFLAGS) $(CRYPTO_AES_CXXFLAGS) $(CRYPTO_AVX2_CXXFLAGS)
 libbitcoin_crypto_x86_a_SOURCES = \
   aes.cpp \
-  sha512.cpp  
+  sha512.cpp
 
 # common: shared between hodlcoind, and hodlcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)

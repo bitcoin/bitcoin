@@ -1,6 +1,6 @@
 #include "aes.h"
 
-#ifdef __AES__
+#ifdef __x86_64__
 
 #include <stdint.h>
 #include <x86intrin.h>
