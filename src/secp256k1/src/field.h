@@ -30,6 +30,8 @@
 #error "Please select field implementation"
 #endif
 
+#include "util.h"
+
 /** Normalize a field element. */
 static void secp256k1_fe_normalize(secp256k1_fe *r);
 
@@ -49,6 +51,9 @@ static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe *r);
 
 /** Set a field element equal to a small integer. Resulting field element is normalized. */
 static void secp256k1_fe_set_int(secp256k1_fe *r, int a);
+
+/** Sets a field element equal to zero, initializing all fields. */
+static void secp256k1_fe_clear(secp256k1_fe *a);
 
 /** Verify whether a field element is zero. Requires the input to be normalized. */
 static int secp256k1_fe_is_zero(const secp256k1_fe *a);
@@ -110,7 +115,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a);
 /** Calculate the (modular) inverses of a batch of field elements. Requires the inputs' magnitudes to be
  *  at most 8. The output magnitudes are 1 (but not guaranteed to be normalized). The inputs and
  *  outputs must not overlap in memory. */
-static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe *r, const secp256k1_fe *a);
+static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, size_t len);
 
 /** Convert a field element to the storage type. */
 static void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe *a);
