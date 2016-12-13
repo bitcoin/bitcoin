@@ -172,6 +172,8 @@ struct CNodeState {
     list<QueuedBlock> vBlocksInFlight;
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
     int64_t nDownloadingSince;
+    //! The height of the last block requested from this peer
+    int nHighestFlyer;
     int nBlocksInFlight;
     int nBlocksInFlightValidHeaders;
     //! Whether we consider this a preferred download peer.
@@ -208,6 +210,7 @@ struct CNodeState {
         fSyncStarted = false;
         nStallingSince = 0;
         nDownloadingSince = 0;
+        nHighestFlyer = 0;
         nBlocksInFlight = 0;
         nBlocksInFlightValidHeaders = 0;
         fPreferredDownload = false;
@@ -321,6 +324,8 @@ bool MarkBlockAsReceived(const uint256& hash) {
         }
         state->vBlocksInFlight.erase(itInFlight->second.second);
         state->nBlocksInFlight--;
+        if (!state->nBlocksInFlight)
+            state->nHighestFlyer = 0;
         state->nStallingSince = 0;
         mapBlocksInFlight.erase(itInFlight);
         return true;
@@ -536,7 +541,10 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
                     }
                     return;
                 }
-                vBlocks.push_back(pindex);
+                if (!state->nHighestFlyer || pindex->nHeight - state->nHighestFlyer >= 5) { // Stripe downloads to avoid stallers
+                    vBlocks.push_back(pindex);
+                    state->nHighestFlyer = pindex->nHeight;
+                }
                 if (vBlocks.size() == count) {
                     return;
                 }
@@ -2094,7 +2102,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex);
             }
             if (vGetData.size() > 1) {
-                LogPrint("net", "NOT Downloading %d blocks toward %s (%d) via headers direct fetch\n", vGetData.size(),
+                LogPrint("net", "To download: %d blocks toward %s (%d)\n", vGetData.size(),
                         pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
                 return true;
             }
@@ -2107,6 +2115,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
                 }
                 connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vGetData));
+                LogPrint("net", "Requesting %s from  peer=%d\n", vGetData[0].ToString(), pfrom->id);
             }
         } // if fCanDirectFetch()
         }
