@@ -24,13 +24,13 @@ bitcoin-cli setexcessiveblock 1000000 10
 
 
 To change the excessive block size field in bitcoin.conf or on the command line, set the excessiveblocksize config variable to a value in bytes:
- > excessiveblocksize=<NNN>
+ > `excessiveblocksize=<NNN>`
  
 for example, to set 3MB blocks use:
  > excessiveblocksize=3000000
 
 To change the accept depth field in bitcoin.conf or on the command line, set the excessiveacceptdepth config variable to a value (in blocks):
- > excessiveacceptdepth=<NNN>
+ > `excessiveacceptdepth=<NNN>`
  
 for example, to wait for 10 blocks before accepting an excessive block, use:
  > excessiveacceptdepth=10
@@ -62,7 +62,7 @@ For example, to set 2MB blocks, use:
 bitcoin-cli setminingmaxblock 2000000
 ```
 To change this field in bitcoin.conf or on the command line, use:
- > blockmaxsize=<NNN>
+ > `blockmaxsize=<NNN>`
  
 for example, to set 3MB blocks use:
  > blockmaxsize=3000000
@@ -127,7 +127,7 @@ Setting your memory pool size
 
 A larger transaction memory pool allows your node to receive expedited blocks successfully (it increases the chance that you will have a transaction referenced in the expedited block) and to pick from a larger set of available transactions.  To change the memory pool size, configure it in bitcoin.conf:
 
- > maxmempool=<megabytes>
+ > `maxmempool=<megabytes>`
 
 So a 4GB mempool would be configured like:
  > maxmempool=4096
@@ -156,6 +156,6 @@ Filling a new node's transaction memory pool
 When you restart bitcoind, the memory pool starts empty.  If a block is found quickly, this could result in an block with few transactions.  It is possible to "prime" a new instance of bitcoind with the memory pool of a different Bitcoin Unlimited node.  To do so, go to the CLI on the node that has a full mempool, connect to your new node, and push the transactions to it.
 
 ```sh
-bitcoin-cli addnode <new node IP:port> onetry
-bitcoin-cli pushtx <new node IP:port>
+`bitcoin-cli addnode <new node's IP:port> onetry`
+`bitcoin-cli pushtx <new node's IP:port>`
 ```
