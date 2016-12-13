@@ -1156,13 +1156,22 @@ bool IsChainNearlySyncd()
 
 uint64_t LargestBlockSeen(uint64_t nBlockSize)
 {
-     // eturn the largest block size that we have seen since startup
-     uint64_t nSize = nLargestBlockSeen.load();
-     if (nBlockSize > nSize) {
-         nLargestBlockSeen.store(nBlockSize);
-         nSize = nBlockSize;
-     }
-     return nSize;
+    // C++98 lacks the capability to do static initialization properly
+    // so we need a runtime check to make sure it is.
+    // This can be removed when moving to C++11 .
+    if (nBlockSize < BLOCKSTREAM_CORE_MAX_BLOCK_SIZE) {
+        nBlockSize = BLOCKSTREAM_CORE_MAX_BLOCK_SIZE;
+    }
+
+    // Return the largest block size that we have seen since startup
+    uint64_t nSize = nLargestBlockSeen.load();
+    while (nBlockSize > nSize) {
+        if (nLargestBlockSeen.compare_exchange_weak(nSize, nBlockSize)) {
+            return nBlockSize;
+        }
+    }
+
+    return nSize;
 }
 
 void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes, uint256 hash)
