@@ -2,8 +2,6 @@ UNIX BUILD NOTES
 ====================
 Some notes on how to build Bitcoin Core in Unix.
 
-(for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
-
 Note
 ---------------------
 Always use absolute paths to configure and compile bitcoin and the dependencies,
@@ -43,12 +41,10 @@ Optional dependencies:
  ------------|------------------|----------------------
  miniupnpc   | UPnP Support     | Firewall-jumping support
  libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
- qt          | GUI              | GUI toolkit (only needed when GUI enabled)
+ qt5         | GUI              | GUI toolkit (only needed when GUI enabled)
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
  libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.x)
-
-For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
 System requirements
 --------------------
@@ -56,6 +52,10 @@ System requirements
 C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
 memory available when compiling Bitcoin Classic. With 512MB of memory or less
 compilation will take much longer due to swap thrashing.
+On systems with less, gcc can be
+tuned to conserve memory with additional CXXFLAGS:
+
+    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
@@ -74,14 +74,14 @@ If that doesn't work, you can install all boost development packages with:
     sudo apt-get install libboost-all-dev
 
 BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoinclassic/+archive/bitcoinclassic).
-You can add the repository and install using the following commands:
+You can add the repository and install if you use Ubuntu, using the following commands:
 
     sudo add-apt-repository ppa:bitcoinclassic/bitcoinclassic
     sudo apt-get update
     sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
 Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
-BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
+BerkeleyDB 5.1 or later, which may theoretically break binary wallet compatibility with the distributed executables which
 are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure.
 
@@ -103,13 +103,9 @@ are installed. Either Qt 5 or Qt 4 are necessary to build the GUI.
 If both Qt 4 and Qt 5 are installed, Qt 5 will be used. Pass `--with-gui=qt4` to configure to choose Qt4.
 To build without GUI pass `--without-gui`.
 
-To build with Qt 5 (recommended) you need the following:
+To build with Qt 5 you need the following:
 
     sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
-
-Alternatively, to build with Qt 4 you need the following:
-
-    sudo apt-get install libqt4-dev libprotobuf-dev protobuf-compiler
 
 libqrencode (optional) can be installed with:
 
@@ -118,10 +114,41 @@ libqrencode (optional) can be installed with:
 Once these are installed, they will be found by configure and a bitcoin-qt executable will be
 built by default.
 
+Dependency Build Instructions: Fedora
+-------------------------------------
+Build requirements:
+
+    sudo dnf install gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel
+
+Optional:
+
+    sudo dnf install miniupnpc-devel
+
+To build with Qt 5 you need the following:
+
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel protobuf-devel
+
+libqrencode (optional) can be installed with:
+
+    sudo dnf install qrencode-devel
+
+
+Dependency Build Instructions: Arch
+-------------------------------------
+
+Build requirements:
+
+    pacman -S boost boost-libs base-devel
+
+To build the GUI you need the following:
+
+    pacman -S qt5
+
 Notes
 -----
 The release is built with GCC and then "strip bitcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
+Alternatively you may use 'make install-strip' to install executbles after stripping them.
 
 
 miniupnpc

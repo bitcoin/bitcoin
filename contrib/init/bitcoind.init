@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  bitcoind The bitcoin core server.
+#  bitcoind The bitcoin server.
 #
 #
 # chkconfig: 345 80 20
