@@ -425,8 +425,6 @@ private:
     uint64_t totalTxSize;      //!< sum of all mempool tx' byte sizes
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
-    CFeeRate minReasonableRelayFee;
-
     mutable int64_t lastRollingFeeUpdate;
     mutable bool blockSinceLastRollingFeeBump;
     mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
@@ -505,9 +503,6 @@ public:
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
     /** Create a new CTxMemPool.
-     *  minReasonableRelayFee should be a feerate which is, roughly, somewhere
-     *  around what it "costs" to relay a transaction around the network and
-     *  below which we would reasonably say a transaction has 0-effective-fee.
      */
     CTxMemPool(const CFeeRate& _minReasonableRelayFee);
     ~CTxMemPool();
@@ -591,7 +586,7 @@ public:
 
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
-      *  The minReasonableRelayFee constructor arg is used to bound the time it
+      *  The incrementalRelayFee policy variable is used to bound the time it
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
