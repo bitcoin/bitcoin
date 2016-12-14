@@ -40,6 +40,112 @@ extern CGovernanceManager governance;
 
 typedef std::pair<CGovernanceObject, int64_t> object_time_pair_t;
 
+static const int RATE_BUFFER_SIZE = 5;
+
+class CRateCheckBuffer {
+private:
+    std::vector<int64_t> vecTimestamps;
+
+    int nDataStart;
+
+    int nDataEnd;
+
+    bool fBufferEmpty;
+
+public:
+    CRateCheckBuffer()
+        : vecTimestamps(RATE_BUFFER_SIZE),
+          nDataStart(0),
+          nDataEnd(0),
+          fBufferEmpty(true)
+        {}
+
+    void AddTimestamp(int64_t nTimestamp)
+    {
+        if((nDataEnd == nDataStart) && !fBufferEmpty) {
+            // Buffer full, discard 1st element
+            nDataStart = (nDataStart + 1) % RATE_BUFFER_SIZE;
+        }
+        vecTimestamps[nDataEnd] = nTimestamp;
+        nDataEnd = (nDataEnd + 1) % RATE_BUFFER_SIZE;
+        fBufferEmpty = false;
+    }
+
+    int64_t GetMinTimestamp()
+    {
+        int nIndex = nDataStart;
+        int64_t nMin = numeric_limits<int64_t>::max();
+        if(fBufferEmpty) {
+            return nMin;
+        }
+        do {
+            if(vecTimestamps[nIndex] < nMin) {
+                nMin = vecTimestamps[nIndex];
+            }
+            nIndex = (nIndex + 1) % RATE_BUFFER_SIZE;
+        } while(nIndex != nDataEnd);
+        return nMin;
+    }
+
+    int64_t GetMaxTimestamp()
+    {
+        int nIndex = nDataStart;
+        int64_t nMax = 0;
+        if(fBufferEmpty) {
+            return nMax;
+        }
+        do {
+            if(vecTimestamps[nIndex] > nMax) {
+                nMax = vecTimestamps[nIndex];
+            }
+            nIndex = (nIndex + 1) % RATE_BUFFER_SIZE;
+        } while(nIndex != nDataEnd);
+        return nMax;
+    }
+
+    int GetCount()
+    {
+        int nCount = 0;
+        if(fBufferEmpty) {
+            return 0;
+        }
+        if(nDataEnd > nDataStart) {
+            nCount = nDataEnd - nDataStart;
+        }
+        else {
+            nCount = RATE_BUFFER_SIZE - nDataStart + nDataEnd;
+        }
+
+        return nCount;
+    }
+
+    double GetRate()
+    {
+        int nCount = GetCount();
+        if(nCount < 2) {
+            return 0.0;
+        }
+        int64_t nMin = GetMinTimestamp();
+        int64_t nMax = GetMaxTimestamp();
+        if(nMin == nMax) {
+            // multiple objects with the same timestamp => infinite rate
+            return 1.0e10;
+        }
+        return double(nCount) / double(nMax - nMin);
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        READWRITE(vecTimestamps);
+        READWRITE(nDataStart);
+        READWRITE(nDataEnd);
+        READWRITE(fBufferEmpty);
+    }
+};
+
 //
 // Governance Manager : Contains all proposals for the budget
 //
@@ -49,9 +155,9 @@ class CGovernanceManager
 
 public: // Types
     struct last_object_rec {
-        last_object_rec(int64_t nLastTriggerTimeIn = 0, int64_t nLastWatchdogTimeIn = 0, bool fStatusOKIn = true)
-            : nLastTriggerTime(nLastTriggerTimeIn),
-              nLastWatchdogTime(nLastWatchdogTimeIn),
+        last_object_rec(bool fStatusOKIn = true)
+            : triggerBuffer(),
+              watchdogBuffer(),
               fStatusOK(fStatusOKIn)
             {}
 
@@ -60,13 +166,13 @@ public: // Types
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
-            READWRITE(nLastTriggerTime);
-            READWRITE(nLastWatchdogTime);
+            READWRITE(triggerBuffer);
+            READWRITE(watchdogBuffer);
             READWRITE(fStatusOK);
         }
 
-        int64_t nLastTriggerTime;
-        int64_t nLastWatchdogTime;
+        CRateCheckBuffer triggerBuffer;
+        CRateCheckBuffer watchdogBuffer;
         bool fStatusOK;
     };
 
