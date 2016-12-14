@@ -2011,7 +2011,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             mapBlockSource.emplace(hash, pfrom->GetId());
         }
         bool fNewBlock = false;
-        ProcessNewBlock(chainparams, pblock, forceProcessing, NULL, &fNewBlock);
+        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
         if (fNewBlock)
             pfrom->nLastBlockTime = GetTime();
     }
