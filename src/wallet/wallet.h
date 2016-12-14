@@ -253,12 +253,6 @@ public:
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
     unsigned int nTimeSmart;
-    /**
-     * From me flag is set to 1 for transactions that were created by the wallet
-     * on this bitcoin node, and set to 0 for transactions that were created
-     * externally and came in through the network or sendrawtransaction RPC.
-     */
-    char fFromMe;
     std::string strFromAccount;
     int64_t nOrderPos; //!< position in ordered transaction list
 
@@ -300,7 +294,6 @@ public:
         fTimeReceivedIsTxTime = false;
         nTimeReceived = 0;
         nTimeSmart = 0;
-        fFromMe = false;
         strFromAccount.clear();
         fDebitCached = false;
         fCreditCached = false;
@@ -348,7 +341,8 @@ public:
         READWRITE(vOrderForm);
         READWRITE(fTimeReceivedIsTxTime);
         READWRITE(nTimeReceived);
-        READWRITE(fFromMe);
+        char fUnused = 0; // Used to be fFromMe;
+        READWRITE(fUnused);
         READWRITE(fSpent);
 
         if (ser_action.ForRead())
