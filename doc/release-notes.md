@@ -42,8 +42,23 @@ but severe issues with the libc++ version on 10.7.x keep it from running reliabl
 Notable changes
 ===============
 
-Example item
----------------
+Change to wallet handling of mempool rejection
+-----------------------------------------------
+
+When a newly created transaction failed to enter the mempool due to
+the limits on chains of unconfirmed transactions the sending RPC
+calls would return an error.  The transaction would still be queued
+in the wallet and, once some of the parent transactions were
+confirmed, broadcast after the software was restarted.
+
+This behavior has been changed to return success and to reattempt
+mempool insertion at the same time transaction rebroadcast is
+attempted, avoiding a need for a restart.
+
+Transactions in the wallet which cannot be accepted into the mempool
+can be abandoned with the previously existing abandontransaction RPC
+(or in the GUI via a context menu on the transaction).
+
 
 0.13.x Change log
 =================
