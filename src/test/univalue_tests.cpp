@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
 
     UniValue v4;
     BOOST_CHECK(v4.setNumStr("2147483648"));
-    BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648);
+    BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648ULL);
     BOOST_CHECK_THROW(v4.get_int(), runtime_error);
     BOOST_CHECK(v4.setNumStr("1000"));
     BOOST_CHECK_EQUAL(v4.get_int(), 1000);
