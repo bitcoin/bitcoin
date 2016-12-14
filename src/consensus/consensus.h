@@ -9,7 +9,8 @@
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 /** Bitcoin Ocho, we multiply by 8 for Ocho */
-static const unsigned int MAX_BLOCK_SIZE = 1000000*8;
+static const unsigned int OCHO = 8;
+static const unsigned int MAX_BLOCK_SIZE = 1000000*OCHO;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
