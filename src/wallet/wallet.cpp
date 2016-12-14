@@ -1542,9 +1542,11 @@ void CWallet::ReacceptWalletTransactions()
 bool CWalletTx::RelayWalletTransaction(CConnman* connman)
 {
     assert(pwallet->GetBroadcastTransactions());
-    if (!IsCoinBase())
+    if (!IsCoinBase() && !isAbandoned() && GetDepthInMainChain() == 0)
     {
-        if (GetDepthInMainChain() == 0 && !isAbandoned() && InMempool()) {
+        CValidationState state;
+        /* GetDepthInMainChain already catches known conflicts. */
+        if (InMempool() || AcceptToMemoryPool(maxTxFee, state)) {
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
