@@ -268,10 +268,6 @@ public:
      *     "timesmart"       - serialized nTimeSmart value
      *     "spent"           - serialized vfSpent value that existed prior to
      *                         2014 (removed in commit 93a18a3)
-     *
-     * A mapValue.erase("version") statement also appears in the code,
-     * originating from commit 865c3a2 in 2010, but it does not appear that any
-     * "version" entries were actually ever created by any version of bitcoin.
      */
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
@@ -381,7 +377,6 @@ public:
         }
 
         mapValue.erase("fromaccount");
-        mapValue.erase("version");
         mapValue.erase("spent");
         mapValue.erase("n");
         mapValue.erase("timesmart");
