@@ -15,6 +15,7 @@
 #include "util.h"
 
 #include <QDir>
+#include <QtGlobal>
 
 #include <boost/filesystem.hpp>
 
@@ -77,16 +78,6 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo "); //whitespace at the end will be tolerated
     QVERIFY(result.substr(0,1) == "{");
 
-#if QT_VERSION >= 0x050300
-    // do the QVERIFY_EXCEPTION_THROWN checks only with Qt5.3 and higher (QVERIFY_EXCEPTION_THROWN was introduced in Qt5.3)
-    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo() .\n"), std::runtime_error); //invalid syntax
-    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo() getblockchaininfo()"), std::runtime_error); //invalid syntax
-    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo(")); //tolerate non closing brackets if we have no arguments
-    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()()()")); //tolerate non command brackts
-    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo(True)"), UniValue); //invalid argument
-    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "a(getblockchaininfo(True))"), UniValue); //method not found
-#endif
-
     (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()[\"chain\"]")); //Quote path identifier are allowed, but look after a child contaning the quotes in the key
     QVERIFY(result == "null");
 
@@ -113,8 +104,25 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY(result == "[\"abc\",\"abc\"]");
     RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc\t\tabc");
     QVERIFY(result == "[\"abc\",\"abc\"]");
-    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc,,abc");
-    QVERIFY(result == "[\"abc\",\"\",\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc )");
+    QVERIFY(result == "[\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest( abc )");
+    QVERIFY(result == "[\"abc\"]");
+    RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(   abc   ,   cba )");
+    QVERIFY(result == "[\"abc\",\"cba\"]");
+
+#if QT_VERSION >= 0x050300
+    // do the QVERIFY_EXCEPTION_THROWN checks only with Qt5.3 and higher (QVERIFY_EXCEPTION_THROWN was introduced in Qt5.3)
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo() .\n"), std::runtime_error); //invalid syntax
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo() getblockchaininfo()"), std::runtime_error); //invalid syntax
+    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo(")); //tolerate non closing brackets if we have no arguments
+    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()()()")); //tolerate non command brackts
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo(True)"), UniValue); //invalid argument
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "a(getblockchaininfo(True))"), UniValue); //method not found
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest abc,,abc"), std::runtime_error); //don't tollerate empty arguments when using ,
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
+    QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
+#endif
 
     delete pcoinsTip;
     delete pcoinsdbview;
