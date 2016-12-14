@@ -1518,7 +1518,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         CBlock block;
-        assert(ReadBlockFromDisk(block, it->second, chainparams.GetConsensus()));
+        bool ret = ReadBlockFromDisk(block, it->second, chainparams.GetConsensus());
+        assert(ret);
 
         BlockTransactions resp(req);
         for (size_t i = 0; i < req.indexes.size(); i++) {
@@ -2730,7 +2731,8 @@ bool SendMessages(CNode* pto, CConnman& connman)
                             vHeaders.front().GetHash().ToString(), pto->id);
                     //TODO: Shouldn't need to reload block from disk, but requires refactor
                     CBlock block;
-                    assert(ReadBlockFromDisk(block, pBestIndex, consensusParams));
+                    bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
+                    assert(ret);
                     CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness);
                     int nSendFlags = state.fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
                     connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
