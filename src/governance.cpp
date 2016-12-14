@@ -312,6 +312,8 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
         return false;
     }
 
+    LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType()); 
+
     // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
     mapObjects.insert(std::make_pair(nHash, govobj));
 
@@ -330,6 +332,7 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
         break;
     case GOVERNANCE_OBJECT_WATCHDOG:
         mapWatchdogObjects[nHash] = GetAdjustedTime() + GOVERNANCE_WATCHDOG_EXPIRATION_TIME;
+        LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Added watchdog to map: hash = %s\n", nHash.ToString()); 
         break;
     default:
         break;
@@ -350,14 +353,20 @@ void CGovernanceManager::UpdateCachesAndClean()
 
     // Flag expired watchdogs for removal
     int64_t nNow = GetAdjustedTime();
+    LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- Number watchdogs in map: %d, current time = %d\n", mapWatchdogObjects.size(), nNow);
     if(mapWatchdogObjects.size() > 1) {
         hash_time_m_it it = mapWatchdogObjects.begin();
         while(it != mapWatchdogObjects.end()) {
+            LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- Checking watchdog: %s, expiration time = %d\n", it->first.ToString(), it->second);
             if(it->second < nNow) {
+                LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- Attempting to expire watchdog: %s, expiration time = %d\n", it->first.ToString(), it->second);
                 object_m_it it2 = mapObjects.find(it->first);
                 if(it2 != mapObjects.end()) {
+                    LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- Expiring watchdog: %s, expiration time = %d\n", it->first.ToString(), it->second);
                     it2->second.fExpired = true;
-                    it2->second.nDeletionTime = nNow;
+                    if(it2->second.nDeletionTime == 0) {
+                        it2->second.nDeletionTime = nNow;
+                    }
                 }
                 mapWatchdogObjects.erase(it++);
             }
@@ -400,6 +409,8 @@ void CGovernanceManager::UpdateCachesAndClean()
             continue;
         }
 
+        std::string strHash = pObj->GetHash().ToString();
+
         // IF CACHE IS NOT DIRTY, WHY DO THIS?
         if(pObj->IsSetDirtyCache()) {
             // UPDATE LOCAL VALIDITY AGAINST CRYPTO DATA
@@ -412,6 +423,9 @@ void CGovernanceManager::UpdateCachesAndClean()
         // IF DELETE=TRUE, THEN CLEAN THE MESS UP!
 
         int64_t nTimeSinceDeletion = GetAdjustedTime() - pObj->GetDeletionTime();
+
+        LogPrint("gobject", "CGovernanceManager::UpdateCachesAndClean -- Checking object for deletion: %s, deletion time = %d, time since deletion = %d, delete flag = %d, expired flag = %d\n",
+                 strHash, pObj->GetDeletionTime(), nTimeSinceDeletion, pObj->IsSetCachedDelete(), pObj->IsSetExpired());
 
         if((pObj->IsSetCachedDelete() || pObj->IsSetExpired()) &&
            (nTimeSinceDeletion >= GOVERNANCE_DELETION_DELAY)) {

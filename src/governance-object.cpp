@@ -668,7 +668,6 @@ void CGovernanceObject::UpdateSentinelVariables()
 
     fCachedFunding = false;
     fCachedValid = true; //default to valid
-    fCachedDelete = false;
     fCachedEndorsed = false;
     fDirtyCache = false;
 
@@ -676,9 +675,11 @@ void CGovernanceObject::UpdateSentinelVariables()
     // ARE ANY OF THESE FLAGS CURRENTLY ACTIVATED?
 
     if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;
-    if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) {
+    if((GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsDeleteReq) && !fCachedDelete) {
         fCachedDelete = true;
-        nDeletionTime = GetAdjustedTime();
+        if(nDeletionTime == 0) {
+            nDeletionTime = GetAdjustedTime();
+        }
     }
     if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
