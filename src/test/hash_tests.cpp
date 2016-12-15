@@ -122,8 +122,11 @@ BOOST_AUTO_TEST_CASE(siphash)
     }
 
     CHashWriter ss(SER_DISK, CLIENT_VERSION);
-    ss << CTransaction();
-    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
+    CMutableTransaction tx;
+    // Note these tests were originally written with tx.nVersion=1
+    // and the test would be affected by default tx version bumps if not fixed.
+    tx.nVersion = 1;
+    ss << tx;
 
     // Check consistency between CSipHasher and SipHashUint256[Extra].
     // TODO reenable when backporting Bitcoin #10321
