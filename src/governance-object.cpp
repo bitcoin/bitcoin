@@ -644,7 +644,6 @@ bool CGovernanceObject::GetCurrentMNVotes(const CTxIn& mnCollateralOutpoint, vot
 
 void CGovernanceObject::Relay()
 {
-    if(!masternodeSync.IsSynced()) return;
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
     RelayInv(inv, PROTOCOL_VERSION);
 }
@@ -732,6 +731,7 @@ void CGovernanceObject::CheckOrphanVotes()
             LogPrintf("CGovernanceObject::CheckOrphanVotes -- Failed to add orphan vote: %s\n", exception.what());
         }
         else {
+            vote.Relay();
             fRemove = true;
         }
         ++it;

@@ -280,6 +280,7 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
             fRemove = true;
         }
         else if(govobj.ProcessVote(NULL, vote, exception)) {
+            vote.Relay();
             fRemove = true;
         }
         if(fRemove) {
@@ -785,7 +786,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
     switch(nObjectType) {
     case GOVERNANCE_OBJECT_TRIGGER:
         // Allow 1 trigger per mn per cycle, with a small fudge factor
-        dMaxRate = 1.1 / nSuperblockCycleSeconds;
+        dMaxRate = 2 * 1.1 / double(nSuperblockCycleSeconds);
         buffer = it->second.triggerBuffer;
         buffer.AddTimestamp(nTimestamp);
         dRate = buffer.GetRate();
@@ -794,7 +795,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         }
         break;
     case GOVERNANCE_OBJECT_WATCHDOG:
-        dMaxRate = 1.1 / 3600.;
+        dMaxRate = 2 * 1.1 / 3600.;
         buffer = it->second.watchdogBuffer;
         buffer.AddTimestamp(nTimestamp);
         dRate = buffer.GetRate();
@@ -907,6 +908,7 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
 
         if(AddGovernanceObject(govobj)) {
             LogPrintf("CGovernanceManager::CheckMasternodeOrphanObjects -- %s new\n", govobj.GetHash().ToString());
+            govobj.Relay();
             mapMasternodeOrphanObjects.erase(it++);
         }
         else {
