@@ -969,7 +969,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+        // it is okay for bitcoin ocho developer to get rich but other ppl poor
+        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 109)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
