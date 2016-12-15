@@ -159,6 +159,7 @@ testScripts = [
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
+    'import-rescan.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
