@@ -2479,8 +2479,8 @@ void ThreadCheckDarkSendPool()
             nTick++;
 
             // check if we should activate or ping every few minutes,
-            // start right after sync is considered to be done
-            if(nTick % MASTERNODE_MIN_MNP_SECONDS == 1)
+            // slightly postpone first run to give net thread a chance to connect to some peers
+            if(nTick % MASTERNODE_MIN_MNP_SECONDS == 15)
                 activeMasternode.ManageState();
 
             mnodeman.Check();

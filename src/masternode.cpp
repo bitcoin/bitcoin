@@ -274,10 +274,15 @@ void CMasternode::Check(bool fForce)
 
 bool CMasternode::IsValidNetAddr()
 {
+    return IsValidNetAddr(addr);
+}
+
+bool CMasternode::IsValidNetAddr(CService addrIn)
+{
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
     return Params().NetworkIDString() == CBaseChainParams::REGTEST ||
-            (addr.IsIPv4() && IsReachable(addr) && addr.IsRoutable());
+            (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
 }
 
 masternode_info_t CMasternode::GetInfo()
