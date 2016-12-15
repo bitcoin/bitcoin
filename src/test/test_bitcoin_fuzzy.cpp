@@ -240,12 +240,12 @@ int main(int argc, char **argv)
         case CTXOUTCOMPRESSOR_DESERIALIZE:
         {
             CTxOut to;
+            CTxOutCompressor toc(to);
             try
             {
-                ds >> to;
+                ds >> toc;
             } catch (const std::ios_base::failure& e) {return 0;}
 
-            CTxOutCompressor toc(to);
             break;
         }
         default:
