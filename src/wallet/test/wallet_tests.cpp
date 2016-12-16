@@ -428,4 +428,29 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     }
 }
 
+// Check that GetImmatureCredit() returns a newly calculated value instead of
+// the cached value after a MarkDirty() call.
+//
+// This is a regression test written to verify a bugfix for the immature credit
+// function. Similar tests probably should be written for the other credit and
+// debit functions.
+BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
+{
+    CWallet wallet;
+    CWalletTx wtx(&wallet, MakeTransactionRef(coinbaseTxns.back()));
+    LOCK2(cs_main, wallet.cs_wallet);
+    wtx.hashBlock = chainActive.Tip()->GetBlockHash();
+    wtx.nIndex = 0;
+
+    // Call GetImmatureCredit() once before adding the key to the wallet to
+    // cache the current immature credit amount, which is 0.
+    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 0);
+
+    // Invalidate the cached value, add the key, and make sure a new immature
+    // credit amount is calculated.
+    wtx.MarkDirty();
+    wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 50*COIN);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
