@@ -1,7 +1,7 @@
 [
 ["The following are deserialized transactions which are valid."],
 ["They are in the form"],
-["[[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"],
+["[[[prevout hash, prevout index, prevout scriptPubKey, amount?], [input 2], ...],"],
 ["serializedTransaction, verifyFlags]"],
 ["Objects that are only a single string (like this one) are ignored"],
 
