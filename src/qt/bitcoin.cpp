@@ -684,9 +684,6 @@ int main(int argc, char *argv[])
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
     }
 
-    NetCleanup();
-    MainCleanup();
-
     return app.getReturnValue();
 }
 #endif // BITCOIN_QT_TEST
