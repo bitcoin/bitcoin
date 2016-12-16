@@ -28,7 +28,7 @@
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="7" column="2">
+        <item row="8" column="2">
          <widget class="QCheckBox" name="reuseAddress">
           <property name="toolTip">
            <string>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</string>
@@ -38,7 +38,7 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="0">
+        <item row="8" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
            <string/>
@@ -75,45 +75,6 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="toolTip">
-           <string>An optional label to associate with the new receiving address.</string>
-          </property>
-          <property name="text">
-           <string>&amp;Label:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy">
-           <cstring>reqLabel</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label">
-          <property name="toolTip">
-           <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
-          </property>
-          <property name="text">
-           <string>&amp;Amount:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy">
-           <cstring>reqAmount</cstring>
-          </property>
-         </widget>
-        </item>
         <item row="5" column="2">
          <widget class="BitcoinAmountField" name="reqAmount">
           <property name="minimumSize">
@@ -127,7 +88,7 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="2">
+        <item row="9" column="2">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QPushButton" name="receiveButton">
@@ -184,10 +145,66 @@
           </item>
          </layout>
         </item>
-        <item row="8" column="0">
+        <item row="9" column="0">
          <widget class="QLabel" name="label_7">
           <property name="text">
            <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="toolTip">
+           <string>An optional label to associate with the new receiving address.</string>
+          </property>
+          <property name="text">
+           <string>&amp;Label:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="buddy">
+           <cstring>reqLabel</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label">
+          <property name="toolTip">
+           <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
+          </property>
+          <property name="text">
+           <string>&amp;Amount:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="buddy">
+           <cstring>reqAmount</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Freeze</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="2">
+         <widget class="QLineEdit" name="freezeBlock">
+          <property name="toolTip">
+           <string>Specify the block when coins are released from the freeze. Coins are UNSPENDABLE until the freeze block.</string>
+          </property>
+          <property name="inputMask">
+           <string>00000000000000</string>
           </property>
          </widget>
         </item>

@@ -8,6 +8,7 @@
 #define BITCOIN_SCRIPT_ISMINE_H
 
 #include "script/standard.h"
+#include "chain.h"   // freeze CBlockIndex
 
 #include <stdint.h>
 
@@ -29,7 +30,7 @@ enum isminetype
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
 
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, CBlockIndex* bestBlock); // bestBlock - Freeze CLTV
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, CBlockIndex* bestBlock);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

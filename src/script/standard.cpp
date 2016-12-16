@@ -10,6 +10,7 @@
 #include "script/script.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "core_io.h" // freeze for debug only
 
 #include <boost/foreach.hpp>
 
@@ -32,6 +33,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
+    case TX_CLTV: return "cltv";  // CLTV HODL Freeze
     }
     return NULL;
 }
@@ -53,9 +55,14 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        // Freeze tx using CLTV ; nFreezeLockTime CLTV DROP (0x21 pubkeys) checksig
+        mTemplates.insert(make_pair(TX_CLTV, CScript() << OP_BIGINTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_PUBKEYS << OP_CHECKSIG));
+
     }
 
     vSolutionsRet.clear();
+    //LogPrintf("Freeze Solve: %s \n ", ::ScriptToAsmStr(scriptPubKey));
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
@@ -90,6 +97,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Compare
         CScript::const_iterator pc1 = script1.begin();
         CScript::const_iterator pc2 = script2.begin();
+
+        // generate key list
         while (true)
         {
             if (pc1 == script1.end() && pc2 == script2.end())
@@ -110,7 +119,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 break;
             if (!script2.GetOp(pc2, opcode2, vch2))
                 break;
-
             // Template matching opcodes:
             if (opcode2 == OP_PUBKEYS)
             {
@@ -148,6 +156,20 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 }
                 else
                     break;
+            }
+            else if (opcode2 == OP_BIGINTEGER)
+            {
+            	//if (vch.size() <= static_cast<vector<unsigned char>::size_type>(4))
+            	try {
+            		char n = (char)CScriptNum(vch1, false).getint64();
+            		// if try reaches here without scriptnum_error
+            		// then vch1 is a valid bigint
+            		vSolutionsRet.push_back(vch1);
+            	} catch (scriptnum_error) {
+            		LogPrintf("Freeze Solver BIGINT ERROR! %s=%s \n", opcode2, opcode1);
+            		break;
+            	} // end try/catch
+
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
@@ -188,6 +210,15 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     }
+    else if (whichType == TX_CLTV)
+    {
+    	CPubKey pubKey(vSolutions[1]);
+		if (!pubKey.IsValid())
+			return false;
+
+		addressRet = pubKey.GetID();
+		return true;
+    }
     // Multisig txns have more than one address...
     return false;
 }
@@ -222,6 +253,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     }
     else
     {
+    	// Freeze TX_CLTV also here
         nRequiredRet = 1;
         CTxDestination address;
         if (!ExtractDestination(scriptPubKey, address))
@@ -282,4 +314,11 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
+}
+
+CScript GetScriptForFreeze(int64_t nLockTime, const CPubKey& pubKey)
+{
+	// TODO Perhaps add limit tests for nLockTime
+	return CScript() << CScriptNum(nLockTime) << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
+
 }
