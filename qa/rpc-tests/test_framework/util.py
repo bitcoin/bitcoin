@@ -66,9 +66,44 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
 
 def p2p_port(n):
-    return 11000 + n + os.getpid()%999
+    #If port is already defined then return port
+    if os.getenv("node" + str(n)):
+        return int(os.getenv("node" + str(n)))
+    #If no port defined then find an available port
+    if n == 0:
+        port = 11000 + n + os.getpid()%990
+    else:
+        port = int(os.getenv("node" + str(n-1))) + 1
+    from subprocess import check_output
+    netStatOut = check_output(["netstat", "-n"])
+    for portInUse in re.findall("tcp.*?:(11\d\d\d)",netStatOut.lower()):
+        #print portInUse
+        if port == int(portInUse):
+            port += 1
+    os.environ["node" + str(n)] = str(port)
+
+    #print "port node " + str(n) + " is " + str(port)
+    return int(port)
+
 def rpc_port(n):
-    return 12000 + n + os.getpid()%999
+    #If port is already defined then return port
+    if os.getenv("rpcnode" + str(n)):
+        return int(os.getenv("rpcnode" + str(n)))
+    #If no port defined then find an available port
+    if n == 0:
+        port = 12000 + n + os.getpid()%990
+    else:
+        port = int(os.getenv("rpcnode" + str(n-1))) + 1
+    from subprocess import check_output
+    netStatOut = check_output(["netstat", "-n"])
+    for portInUse in re.findall("tcp.*?:(12\d\d\d)",netStatOut.lower()):
+        #print portInUse
+        if port == int(portInUse):
+            port += 1
+    os.environ["rpcnode" + str(n)] = str(port)
+
+    #print "port rpcnode " + str(n) + " is " + str(port)
+    return int(port)
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BTC values"""
@@ -436,12 +471,17 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
     inp = []
     decContext = decimal.getcontext().prec
     try:  # try finally block to put the decimal precision back to what it was prior to this routine
-      decimal.getcontext().prec = 8
+      decimal.getcontext().prec = 8 + 8 # 8 digits to get to 21million, and each bitcoin is 100 million satoshis
       amount = Decimal(0)
+      iamount = 0
+      count = 0
       for tx in prevouts:
         inp.append({"txid":str(tx["txid"]),"vout":tx["vout"]})
-	amount += tx["amount"]*BTC
-   
+	amount += tx["amount"]*Decimal(BTC)
+        iamount += int(tx["amount"]*Decimal(BTC))
+        count += 1
+
+      assert(amount == iamount) # make sure Decimal and integer math is consistent
       txLen = (len(prevouts)*100) + (len(toAddrs)*100)  # Guess the tx Size
 
       while 1:
@@ -455,7 +495,7 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
 
 	  for a in toAddrs[0:-1]:
 	    if PerfectFractions:
-	      outp[str(a)] = str(amtPer/BTC)
+	      outp[str(a)] = str(amtPer/Decimal(BTC))
 	    else:
 	      outp[str(a)] = float(amtPer/BTC)
 
@@ -467,7 +507,8 @@ def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,
 	  else:
 	      outp[str(a)] = float(amtPer/BTC)
 
-          
+          totalOutputs = sum([Decimal(x) for x in outp.values()])
+          assert(totalOutputs < amount)
           txn = node.createrawtransaction(inp, outp)
           if kwargs.get("sendtx",True):
               #print time.strftime('%X %x %Z')

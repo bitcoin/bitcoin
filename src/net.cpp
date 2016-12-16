@@ -80,12 +80,11 @@ namespace {
 bool fDiscover = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
-static bool vfReachable[NET_MAX] = {};
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
-CAddrMan addrman;
+extern CAddrMan addrman;
 int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 bool fAddressesInitialized = false;
 std::string strSubVersion;
@@ -236,14 +235,6 @@ void AdvertizeLocal(CNode *pnode)
     }
 }
 
-void SetReachable(enum Network net, bool fFlag)
-{
-    LOCK(cs_mapLocalHost);
-    vfReachable[net] = fFlag;
-    if (net == NET_IPV6 && fFlag)
-        vfReachable[NET_IPV4] = true;
-}
-
 // learn a new local address
 bool AddLocal(const CService& addr, int nScore)
 {
@@ -266,7 +257,6 @@ bool AddLocal(const CService& addr, int nScore)
             info.nScore = nScore + (fAlready ? 1 : 0);
             info.nPort = addr.GetPort();
         }
-        SetReachable(addr.GetNetwork());
     }
 
     return true;
@@ -329,7 +319,7 @@ bool IsLocal(const CService& addr)
 bool IsReachable(enum Network net)
 {
     LOCK(cs_mapLocalHost);
-    return vfReachable[net] && !vfLimited[net];
+    return !vfLimited[net];
 }
 
 /** check whether a given address is in a network we can probably connect to */
@@ -345,10 +335,11 @@ void AddressCurrentlyConnected(const CService& addr)
 }
 
 
-uint64_t CNode::nTotalBytesRecv = 0;
-uint64_t CNode::nTotalBytesSent = 0;
-CCriticalSection CNode::cs_totalBytesRecv;
-CCriticalSection CNode::cs_totalBytesSent;
+// BU moved to globals.cpp
+//uint64_t CNode::nTotalBytesRecv = 0;
+//uint64_t CNode::nTotalBytesSent = 0;
+//CCriticalSection CNode::cs_totalBytesRecv;
+//CCriticalSection CNode::cs_totalBytesSent;
 
 uint64_t CNode::nMaxOutboundLimit = 0;
 uint64_t CNode::nMaxOutboundTotalBytesSentInCycle = 0;
@@ -508,7 +499,7 @@ void CNode::PushVersion()
 
 
 banmap_t CNode::setBanned;
-CCriticalSection CNode::cs_setBanned;
+//CCriticalSection CNode::cs_setBanned;
 bool CNode::setBannedIsDirty;
 
 void CNode::ClearBanned()
@@ -633,8 +624,8 @@ void CNode::SetBannedSetDirty(bool dirty)
 }
 
 
-std::vector<CSubNet> CNode::vWhitelistedRange;
-CCriticalSection CNode::cs_vWhitelistedRange;
+// BU moved: std::vector<CSubNet> CNode::vWhitelistedRange;
+// BU moved: CCriticalSection CNode::cs_vWhitelistedRange;
 
 bool CNode::IsWhitelistedRange(const CNetAddr& addr)
 {
@@ -739,7 +730,10 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
                 nActivityBytes += msg.hdr.nMessageSize;
 
                 // BU: furthermore, if the message is a priority message then move from the back to the front of the deque
-                if (strCommand == NetMsgType::GET_XTHIN || 
+                // NOTE: for GET_XTHIN we don't jump the queue on test environments because the GET_XTHIN can get ahead of 
+                // a previous GET_XTHIN/HEADER requests and result in a DOS if the block returns out of order and with no headers
+                // in the block index or the setblockindexcandidates.
+                if ((strCommand == NetMsgType::GET_XTHIN && Params().NetworkIDString() == "main") || 
                     strCommand == NetMsgType::XTHINBLOCK || 
                     strCommand == NetMsgType::THINBLOCK || 
                     strCommand == NetMsgType::XBLOCKTX || 

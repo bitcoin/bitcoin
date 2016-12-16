@@ -127,6 +127,8 @@ const string strMessageMagic = "Bitcoin Signed Message:\n";
 
 extern CStatHistory<uint64_t> nTxValidationTime;
 extern CStatHistory<uint64_t> nBlockValidationTime;
+extern CCriticalSection cs_LastBlockFile;
+extern CCriticalSection cs_nBlockSequenceId;
 
 // Internal stuff
 namespace {
@@ -167,7 +169,6 @@ namespace {
      */
     multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
 
-    CCriticalSection cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
     int nLastBlockFile = 0;
     /** Global flag to indicate we should check to see if there are
@@ -180,7 +181,6 @@ namespace {
      * Every received block is assigned a unique and increasing identifier, so we
      * know which one to give priority in case of a fork.
      */
-    CCriticalSection cs_nBlockSequenceId;
     /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
     uint32_t nBlockSequenceId = 1;
 
@@ -1346,7 +1346,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
         // merely non-standard transaction.
 
-#ifdef ALLOW_ALL_VALID_TX_IN_MEMPOOL  // For testing blocks with larger numbers of sigops, we need to be able to create them by creating transactions that miners can create.  This define won't be set outside of testing
+#if 1        
+        //#ifdef ALLOW_ALL_VALID_TX_IN_MEMPOOL  // For testing blocks with larger numbers of sigops, we need to be able to create them by creating transactions that miners can create.  This define won't be set outside of testing
         if (nSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS)
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d", nSigOps));
@@ -1390,6 +1391,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // When the mempool starts falling use an exponentially decaying ~24 hour window:
         feeCutoff *= pow(1.0 - 1.0/86400, (double)(nNow - nLastTime));
+
+        uint64_t nLargestBlockSeen = LargestBlockSeen();
 
         if (poolBytes < nLargestBlockSeen) {
             feeCutoff = std::max(feeCutoff, initFeeCutoff);

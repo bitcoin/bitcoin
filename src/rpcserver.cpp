@@ -37,7 +37,7 @@ using namespace std;
 static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");
-static CCriticalSection cs_rpcWarmup;
+extern CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
 static std::vector<RPCTimerInterface*> timerInterfaces;
 /* Map of name to timer.

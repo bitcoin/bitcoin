@@ -28,6 +28,7 @@
 #include "stat.h"
 #include "tweak.h"
 
+#include <boost/atomic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
@@ -38,6 +39,7 @@
 using namespace std;
 
 extern CTxMemPool mempool; // from main.cpp
+static boost::atomic<uint64_t> nLargestBlockSeen(BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); // track the largest block we've seen
 
 bool IsTrafficShapingEnabled();
 
@@ -477,7 +479,6 @@ UniValue expedited(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-
 UniValue pushtx(const UniValue& params, bool fHelp)
 {
     string strCommand;
@@ -761,8 +762,6 @@ extern UniValue setminercomment(const UniValue& params, bool fHelp)
   return NullUniValue;
 }
 
-
-
 UniValue getexcessiveblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -842,7 +841,7 @@ UniValue getminingmaxblock(const UniValue& params, bool fHelp)
 
 UniValue setminingmaxblock(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
             "setminingmaxblock blocksize\n"
             "\nSet the maximum number of bytes to include in a generated (mined) block.  This command does not turn generation on/off.\n"
@@ -1178,10 +1177,31 @@ void IsChainNearlySyncdInit()
         fIsChainNearlySyncd = true;
       }
 }
+
 bool IsChainNearlySyncd()
 {
     LOCK(cs_ischainnearlysyncd);
     return fIsChainNearlySyncd;
+}
+
+uint64_t LargestBlockSeen(uint64_t nBlockSize)
+{
+    // C++98 lacks the capability to do static initialization properly
+    // so we need a runtime check to make sure it is.
+    // This can be removed when moving to C++11 .
+    if (nBlockSize < BLOCKSTREAM_CORE_MAX_BLOCK_SIZE) {
+        nBlockSize = BLOCKSTREAM_CORE_MAX_BLOCK_SIZE;
+    }
+
+    // Return the largest block size that we have seen since startup
+    uint64_t nSize = nLargestBlockSeen.load();
+    while (nBlockSize > nSize) {
+        if (nLargestBlockSeen.compare_exchange_weak(nSize, nBlockSize)) {
+            return nBlockSize;
+        }
+    }
+
+    return nSize;
 }
 
 void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes, uint256 hash)
@@ -1197,129 +1217,132 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& v
     // by including a full blocks worth of high priority tx's we cover every scenario.  And when we
     // go on to add the high fee tx's there will be an intersection between the two which then makes 
     // the total number of tx's that go into the bloom filter smaller than just the sum of the two.  
-    uint64_t nBlockPrioritySize = nLargestBlockSeen * 1.5;
+    uint64_t nBlockPrioritySize = LargestBlockSeen() * 1.5;
 
     // Largest projected block size used to add the high fee transactions.  We multiply it by an
     // additional factor to take into account that miners may have slighty different policies when selecting
     // high fee tx's from the pool.
-    uint64_t nBlockMaxProjectedSize = nLargestBlockSeen * 1.5;
+    uint64_t nBlockMaxProjectedSize = LargestBlockSeen() * 1.5;
 
     vector<TxCoinAgePriority> vPriority;
     TxCoinAgePriorityCompare pricomparer;
     {
         LOCK2(cs_main, mempool.cs);
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
-        const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
-
-        int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? nMedianTimePast
-                                : GetAdjustedTime();
-
-        // Create a sorted list of transactions and their updated priorities.  This will be used to fill
-        // the mempoolhashes with the expected priority area of the next block.  We will multiply this by
-        // a factor of ? to account for any differences between the "Miners".
-        vPriority.reserve(mempool.mapTx.size());
-        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
-             mi != mempool.mapTx.end(); mi++)
+        if (mempool.mapTx.size() > 0) 
         {
-            double dPriority = mi->GetPriority(nHeight);
-            CAmount dummy;
-            mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
-            vPriority.push_back(TxCoinAgePriority(dPriority, mi));
-        }
-        std::make_heap(vPriority.begin(), vPriority.end(), pricomparer);
+            CBlockIndex* pindexPrev = chainActive.Tip();
+            const int nHeight = pindexPrev->nHeight + 1;
+            const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
-        uint64_t nPrioritySize = 0;
-        CTxMemPool::txiter iter;
-        for (uint64_t i = 0; i < vPriority.size(); i++)
-        {
-            nPrioritySize += vPriority[i].second->GetTxSize();
-            if (nPrioritySize > nBlockPrioritySize)
-                break;
-            setPriorityMemPoolHashes.insert(vPriority[i].second->GetTx().GetHash());
+            int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
+                                    ? nMedianTimePast
+                                    : GetAdjustedTime();
 
-            // Add children.  We don't need to look for parents here since they will all be parents.
-            iter = mempool.mapTx.project<0>(vPriority[i].second);
-            BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+            // Create a sorted list of transactions and their updated priorities.  This will be used to fill
+            // the mempoolhashes with the expected priority area of the next block.  We will multiply this by
+            // a factor of ? to account for any differences between the "Miners".
+            vPriority.reserve(mempool.mapTx.size());
+            for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
+                 mi != mempool.mapTx.end(); mi++)
             {
-                uint256 childHash = child->GetTx().GetHash();
-                if (!setPriorityMemPoolHashes.count(childHash)) {
-                    setPriorityMemPoolHashes.insert(childHash);
-                    nPrioritySize += child->GetTxSize();
-                    LogPrint("bloom", "add priority child %s with fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                double dPriority = mi->GetPriority(nHeight);
+                CAmount dummy;
+                mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
+                vPriority.push_back(TxCoinAgePriority(dPriority, mi));
+            }
+            std::make_heap(vPriority.begin(), vPriority.end(), pricomparer);
+
+            uint64_t nPrioritySize = 0;
+            CTxMemPool::txiter iter;
+            for (uint64_t i = 0; i < vPriority.size(); i++)
+            {
+                nPrioritySize += vPriority[i].second->GetTxSize();
+                if (nPrioritySize > nBlockPrioritySize)
+                    break;
+                setPriorityMemPoolHashes.insert(vPriority[i].second->GetTx().GetHash());
+
+                // Add children.  We don't need to look for parents here since they will all be parents.
+                iter = mempool.mapTx.project<0>(vPriority[i].second);
+                BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+                {
+                    uint256 childHash = child->GetTx().GetHash();
+                    if (!setPriorityMemPoolHashes.count(childHash)) {
+                        setPriorityMemPoolHashes.insert(childHash);
+                        nPrioritySize += child->GetTxSize();
+                        LogPrint("bloom", "add priority child %s with fee %d modified fee %d size %d clearatentry %d priority %f\n", 
                                        child->GetTx().GetHash().ToString(), child->GetFee(), child->GetModifiedFee(), 
                                        child->GetTxSize(), child->WasClearAtEntry(), child->GetPriority(nHeight));
-                }
-            }            
-        }
-
-        // Create a list of high score transactions. We will multiply this by
-        // a factor of ? to account for any differences between the way Miners include tx's
-        CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mempool.mapTx.get<3>().begin();
-        uint64_t nBlockSize = 0;
-        while (mi != mempool.mapTx.get<3>().end())
-        {
-            CTransaction tx = mi->GetTx();
-
-            if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
-                LogPrint("bloom", "tx %s is not final\n", tx.GetHash().ToString());
-                mi++;
-                continue;
+                    }
+                }            
             }
 
-            // If this tx is not accounted for already in the priority set then continue and add
-            // it to the high score set if it can be and also add any parents or children.  Also add
-            // children and parents to the priority set tx's if they have any.
-            iter = mempool.mapTx.project<0>(mi);
-            if (!setHighScoreMemPoolHashes.count(tx.GetHash()))
+            // Create a list of high score transactions. We will multiply this by
+            // a factor of ? to account for any differences between the way Miners include tx's
+            CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mempool.mapTx.get<3>().begin();
+            uint64_t nBlockSize = 0;
+            while (mi != mempool.mapTx.get<3>().end())
             {
-                LogPrint("bloom", "next tx is %s blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                CTransaction tx = mi->GetTx();
+
+                if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
+                    LogPrint("bloom", "tx %s is not final\n", tx.GetHash().ToString());
+                    mi++;
+                    continue;
+                }
+
+                // If this tx is not accounted for already in the priority set then continue and add
+                // it to the high score set if it can be and also add any parents or children.  Also add
+                // children and parents to the priority set tx's if they have any.
+                iter = mempool.mapTx.project<0>(mi);
+                if (!setHighScoreMemPoolHashes.count(tx.GetHash()))
+                {
+                    LogPrint("bloom", "next tx is %s blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
                                    mi->GetTx().GetHash().ToString(), nBlockSize, mi->GetFee(), mi->GetModifiedFee(), mi->GetTxSize(), 
                                    mi->WasClearAtEntry(), mi->GetPriority(nHeight));
 
-                // add tx to the set: we don't know if this is a parent or child yet.
-                setHighScoreMemPoolHashes.insert(tx.GetHash());
+                    // add tx to the set: we don't know if this is a parent or child yet.
+                    setHighScoreMemPoolHashes.insert(tx.GetHash());
 
-                // Add any parent tx's
-                bool fChild = false;
-                BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
-                {
-                    fChild = true;
-                    uint256 parentHash = parent->GetTx().GetHash();
-                    if (!setHighScoreMemPoolHashes.count(parentHash)) {
-                        setHighScoreMemPoolHashes.insert(parentHash);
-                        LogPrint("bloom", "add high score parent %s with blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                    // Add any parent tx's
+                    bool fChild = false;
+                    BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+                    {
+                        fChild = true;
+                        uint256 parentHash = parent->GetTx().GetHash();
+                        if (!setHighScoreMemPoolHashes.count(parentHash)) {
+                            setHighScoreMemPoolHashes.insert(parentHash);
+                            LogPrint("bloom", "add high score parent %s with blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
                                            parent->GetTx().GetHash().ToString(), nBlockSize, parent->GetFee(), parent->GetModifiedFee(), 
                                            parent->GetTxSize(), parent->WasClearAtEntry(), parent->GetPriority(nHeight));
+                        }
                     }
-                }
 
-                // Now add any children tx's.
-                bool fHasChildren = false;
-                BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
-                {
-                    fHasChildren = true;
-                    uint256 childHash = child->GetTx().GetHash();
-                    if (!setHighScoreMemPoolHashes.count(childHash)) {
-                        setHighScoreMemPoolHashes.insert(childHash);
-                        LogPrint("bloom", "add high score child %s with blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                    // Now add any children tx's.
+                    bool fHasChildren = false;
+                    BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+                    {
+                        fHasChildren = true;
+                        uint256 childHash = child->GetTx().GetHash();
+                        if (!setHighScoreMemPoolHashes.count(childHash)) {
+                            setHighScoreMemPoolHashes.insert(childHash);
+                            LogPrint("bloom", "add high score child %s with blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
                                            child->GetTx().GetHash().ToString(), nBlockSize, child->GetFee(), child->GetModifiedFee(), 
                                            child->GetTxSize(), child->WasClearAtEntry(), child->GetPriority(nHeight));
+                        }
                     }
+
+                    // If a tx with no parents and no children, then we increment this block size.  
+                    // We don't want to add parents and children to the size because for tx's with many children, miners may not mine them
+                    // as they are not as profitable but we still have to add their hash to the bloom filter in case they do.
+                    if (!fChild && !fHasChildren)
+                        nBlockSize += mi->GetTxSize();
                 }
 
-                // If a tx with no parents and no children, then we increment this block size.  
-                // We don't want to add parents and children to the size because for tx's with many children, miners may not mine them
-                // as they are not as profitable but we still have to add their hash to the bloom filter in case they do.
-                if (!fChild && !fHasChildren)
-                    nBlockSize += mi->GetTxSize();
+                if (nBlockSize >  nBlockMaxProjectedSize)
+                    break;
+
+                mi++;
             }
-
-            if (nBlockSize >  nBlockMaxProjectedSize)
-                break;
-
-            mi++;
         }
     }
     LogPrint("thin", "Bloom Filter Targeting completed in:%d (ms)\n", GetTimeMillis() - nStartTimer);
@@ -1419,7 +1442,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 	}
     }
     else {
-        nLargestBlockSeen = std::max(nSizeBlock, nLargestBlockSeen);
+        LargestBlockSeen(nSizeBlock); // update largest block seen
 
         double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
         if (strCommand != NetMsgType::BLOCK) {

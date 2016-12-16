@@ -26,6 +26,9 @@ True
 >>> unskipped_test=Skip("baz", "NoSuchPlatform", "baz is not skipped since there is no such platform")
 >>> unskipped_test.is_skipped()
 False
+>>> testwithargs=RpcTest("name --somearg --anotherarg")
+>>> repr(testwithargs)
+'name.py --somearg --anotherarg'
 """
 
 import platform

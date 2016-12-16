@@ -387,9 +387,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 	  self.sync_all()
         
  	# Set the accept depth at 1, 2, and 3 and watch each nodes resist the chain for that long
-        self.nodes[1].setminingmaxblock(1000, 1)
-        self.nodes[2].setminingmaxblock(1000, 2)
-        self.nodes[3].setminingmaxblock(1000, 3)
+        self.nodes[1].setminingmaxblock(1000)
+        self.nodes[2].setminingmaxblock(1000)
+        self.nodes[3].setminingmaxblock(1000)
 
         self.nodes[1].setexcessiveblock(1000, 1)
         self.nodes[2].setexcessiveblock(1000, 2)
@@ -485,14 +485,12 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         time.sleep(2) #give blocks a chance to fully propagate
         sync_blocks(self.nodes[0:2])
         counts = [ x.getblockcount() for x in self.nodes ]
-        assert_equal(counts, [base+1,base+1,base,base])  
-      
-
+        assert_equal(counts, [base+1,base+1,base,base])
+        
+        logging.info("Random test")
         if self.extended: randomRange = 20
         else: randomRange = 2
 
-        logging.info("Random test")
-        random.seed(1)
         for i in range(0,randomRange):
           logging.info("round %d" % i)
           for n in self.nodes:

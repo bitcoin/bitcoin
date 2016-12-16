@@ -15,8 +15,8 @@
 
 using namespace std;
 
-static CCriticalSection cs_nTimeOffset;
-static int64_t nTimeOffset = 0;
+extern CCriticalSection cs_nTimeOffset;
+extern int64_t nTimeOffset;
 
 /**
  * "Never go to sea with two chronometers; take one or three."
