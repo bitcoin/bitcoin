@@ -1025,6 +1025,20 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
+            // check if we need to flag used keypool keys (fundrawtransaction does not "keep" keypool keys)
+            std::set<CKeyID> setKeyPool;
+            GetAllReserveKeys(setKeyPool);
+            // loop though all outputs
+            BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+                // extract addresses and check if they match with an unused keypool key
+                std::vector<CKeyID> vAffected;
+                CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
+                BOOST_FOREACH(const CKeyID &keyid, vAffected)
+                    if (setKeyPool.count(keyid))
+                        KeepReserveKeyWithAddress(keyid);
+            }
+
+
             CWalletTx wtx(this, MakeTransactionRef(tx));
 
             // Get merkle branch if transaction was found in a block
@@ -3166,6 +3180,24 @@ void CReserveKey::ReturnKey()
         pwallet->ReturnKey(nIndex);
     nIndex = -1;
     vchPubKey = CPubKey();
+}
+
+void CWallet::KeepReserveKeyWithAddress(const CKeyID& keyId)
+{
+    LOCK(cs_wallet);
+    CWalletDB walletdb(strWalletFile);
+    for(const int64_t& id : setKeyPool)
+    {
+        CKeyPool keypool;
+        if (!walletdb.ReadPool(id, keypool))
+            throw runtime_error(std::string(__func__) + ": read failed");
+        if (keypool.vchPubKey.GetID() == keyId)
+        {
+            KeepKey(id);
+            setKeyPool.erase(id);
+            break;
+        }
+    }
 }
 
 void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const

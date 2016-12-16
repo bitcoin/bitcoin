@@ -807,6 +807,7 @@ public:
     void ReturnKey(int64_t nIndex);
     bool GetKeyFromPool(CPubKey &key);
     int64_t GetOldestKeyPoolTime();
+    void KeepReserveKeyWithAddress(const CKeyID& keyId);
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
