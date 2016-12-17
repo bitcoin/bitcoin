@@ -14,7 +14,7 @@ with no central authority: management of transactions and issuance of money are 
 out collectively by the network. Bitcoin Core is the name of the open source
 software which enables the use of this currency.
 
-An immediately useable binary version of
+An immediately useful binary version of
 the Bitcoin Core software is located at [https://bitcoin.org/en/download](https://bitcoin.org/en/download). For more information read the
 [original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
