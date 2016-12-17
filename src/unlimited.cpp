@@ -579,16 +579,16 @@ void UnlimitedSetup(void)
     //  Init network shapers
     int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);
     // parameter is in KBytes/sec, leaky bucket is in bytes/sec.  But if it is "off" then don't multiply
-    if (rb != std::numeric_limits<long long>::max())
+    if (rb != LONG_LONG_MAX)
         rb *= 1024;
     int64_t ra = GetArg("-receiveavg", DEFAULT_MAX_RECV_BURST);
-    if (ra != std::numeric_limits<long long>::max())
+    if (ra != LONG_LONG_MAX)
         ra *= 1024;
     int64_t sb = GetArg("-sendburst", DEFAULT_MAX_RECV_BURST);
-    if (sb != std::numeric_limits<long long>::max())
+    if (sb != LONG_LONG_MAX)
         sb *= 1024;
     int64_t sa = GetArg("-sendavg", DEFAULT_MAX_RECV_BURST);
-    if (sa != std::numeric_limits<long long>::max())
+    if (sa != LONG_LONG_MAX)
         sa *= 1024;
 
     receiveShaper.set(rb, ra);
@@ -905,11 +905,11 @@ bool IsTrafficShapingEnabled()
     int64_t max, avg;
 
     sendShaper.get(&max, &avg);
-    if (avg != std::numeric_limits<long long>::max() || max != std::numeric_limits<long long>::max())
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX)
         return true;
 
     receiveShaper.get(&max, &avg);
-    if (avg != std::numeric_limits<long long>::max() || max != std::numeric_limits<long long>::max())
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX)
         return true;
 
     return false;
@@ -941,12 +941,12 @@ UniValue gettrafficshaping(const UniValue& params, bool fHelp)
     UniValue ret(UniValue::VOBJ);
     int64_t max, avg;
     sendShaper.get(&max, &avg);
-    if (avg != std::numeric_limits<long long>::max() || max != std::numeric_limits<long long>::max()) {
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX) {
         ret.push_back(Pair("sendBurst", max / 1024));
         ret.push_back(Pair("sendAve", avg / 1024));
     }
     receiveShaper.get(&max, &avg);
-    if (avg != std::numeric_limits<long long>::max() || max != std::numeric_limits<long long>::max()) {
+    if (avg != LONG_LONG_MAX || max != LONG_LONG_MAX) {
         ret.push_back(Pair("recvBurst", max / 1024));
         ret.push_back(Pair("recvAve", avg / 1024));
     }

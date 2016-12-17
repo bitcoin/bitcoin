@@ -12,13 +12,13 @@
 #include <boost/chrono/chrono.hpp>
 
 /** Default value for the maximum amount of data that can be received in a burst */
-static const int64_t DEFAULT_MAX_RECV_BURST = std::numeric_limits<long long>::max();
+static const int64_t DEFAULT_MAX_RECV_BURST = LONG_LONG_MAX;
 /** Default value for the maximum amount of data that can be sent in a burst */
-static const int64_t DEFAULT_MAX_SEND_BURST = std::numeric_limits<long long>::max();
+static const int64_t DEFAULT_MAX_SEND_BURST = LONG_LONG_MAX;
 /** Default value for the average amount of data received per second */
-static const int64_t DEFAULT_AVE_RECV = std::numeric_limits<long long>::max();
+static const int64_t DEFAULT_AVE_RECV = LONG_LONG_MAX;
 /** Default value for the average amount of data sent per second */
-static const int64_t DEFAULT_AVE_SEND = std::numeric_limits<long long>::max();
+static const int64_t DEFAULT_AVE_SEND = LONG_LONG_MAX;
 /** If we have to break the transmission up into chunks, this is the minimum send chunk size */
 static const int64_t SEND_SHAPER_MIN_FRAG = 256;
 /** If we have to break the transmission up into chunks, this is the minimum receive chunk size */
@@ -52,7 +52,7 @@ protected:
     }
 
 public:
-    CLeakyBucket(int64_t maxp, int64_t fillp, int64_t startLevel = std::numeric_limits<long long>::max()) : max(maxp), fill(fillp)
+    CLeakyBucket(int64_t maxp, int64_t fillp, int64_t startLevel = LONG_LONG_MAX) : max(maxp), fill(fillp)
     {
         lastFill = clock.now();
         // set the initial level to either what is specified by the user or to the maximum
@@ -63,8 +63,8 @@ public:
     // use "set" to restart
     void disable(void)
     {
-        fill = std::numeric_limits<long long>::max();
-        max = std::numeric_limits<long long>::max();
+        fill = LONG_LONG_MAX;
+        max = LONG_LONG_MAX;
     }
 
     // Access the values in this bucket
@@ -91,8 +91,8 @@ public:
     // Return the # tokens available if that amount is larger than the cutoff, otherwise return 0
     int64_t available(int64_t cutoff = 0)
     {
-        if (fill == std::numeric_limits<long long>::max())
-            return std::numeric_limits<long long>::max(); // shaping is off
+        if (fill == LONG_LONG_MAX)
+            return LONG_LONG_MAX; // shaping is off
         fillIt();
         return (level > cutoff) ? level : 0;
     }
@@ -100,7 +100,7 @@ public:
     // Try to use amt tokens.  Returns TRUE if the tokens were consumed, false otherwise
     bool try_leak(int64_t amt)
     {
-        if (fill == std::numeric_limits<long long>::max())
+        if (fill == LONG_LONG_MAX)
             return true; // leaky bucket is turned off.
         assert(amt >= 0);
         fillIt();
@@ -114,7 +114,7 @@ public:
     // This function reduces the level in the bucket by amt, even if that makes the level negative, and returns true if the level is >= 0.  This function is useful in a situation like data receipt (with soft limits) where you are not certain how many bytes will be received until after you have received them.
     bool leak(int64_t amt)
     {
-        if (fill == std::numeric_limits<long long>::max())
+        if (fill == LONG_LONG_MAX)
             return true; // leaky bucket is turned off.
         fillIt();
         level -= amt;

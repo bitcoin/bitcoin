@@ -70,8 +70,8 @@ void UnlimitedModel::Init()
     int64_t burstKB = settings.value("nReceiveBurst").toLongLong();
     int64_t aveKB = settings.value("nReceiveAve").toLongLong();
 
-    std::string avg = QString::number(inUse ? aveKB : std::numeric_limits<long long>::max()).toStdString();
-    std::string burst = QString::number(inUse ? burstKB : std::numeric_limits<long long>::max()).toStdString();
+    std::string avg = QString::number(inUse ? aveKB : LONG_LONG_MAX).toStdString();
+    std::string burst = QString::number(inUse ? burstKB : LONG_LONG_MAX).toStdString();
 
     if (!SoftSetArg("-receiveavg", avg))
         addOverriddenOption("-receiveavg");
@@ -82,8 +82,8 @@ void UnlimitedModel::Init()
     burstKB = settings.value("nSendBurst").toLongLong();
     aveKB = settings.value("nSendAve").toLongLong();
 
-    avg = boost::lexical_cast<std::string>(inUse ? aveKB : std::numeric_limits<long long>::max());
-    burst = boost::lexical_cast<std::string>(inUse ? burstKB : std::numeric_limits<long long>::max());
+    avg = boost::lexical_cast<std::string>(inUse ? aveKB : LONG_LONG_MAX);
+    burst = boost::lexical_cast<std::string>(inUse ? burstKB : LONG_LONG_MAX);
 
     if (!SoftSetArg("-sendavg", avg))
         addOverriddenOption("-sendavg");

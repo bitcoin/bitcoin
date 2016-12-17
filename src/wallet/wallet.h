@@ -62,6 +62,7 @@ static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWa
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 static const bool DEFAULT_WALLETBROADCAST = true;
 
+class CAccountingEntry;
 class CBlockIndex;
 class CCoinControl;
 class COutput;
@@ -126,6 +127,26 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+typedef std::map<std::string, std::string> mapValue_t;
+
+
+static void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
+{
+    if (!mapValue.count("n"))
+    {
+        nOrderPos = -1; // TODO: calculate elsewhere
+        return;
+    }
+    nOrderPos = atoi64(mapValue["n"].c_str());
+}
+
+
+static void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
+{
+    if (nOrderPos == -1)
+        return;
+    mapValue["n"] = i64tostr(nOrderPos);
+}
 
 struct COutputEntry
 {
@@ -832,7 +853,87 @@ public:
     }
 };
 
-// BU: c++11 compilation using the Mac clang compiler requires that CAccountingEntry be moved to walletdb.h
-// class CAccountingEntry
+
+
+/** 
+ * Internal transfers.
+ * Database key is acentry<account><counter>.
+ */
+class CAccountingEntry
+{
+public:
+    std::string strAccount;
+    CAmount nCreditDebit;
+    int64_t nTime;
+    std::string strOtherAccount;
+    std::string strComment;
+    mapValue_t mapValue;
+    int64_t nOrderPos;  //! position in ordered transaction list
+    uint64_t nEntryNo;
+
+    CAccountingEntry()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        nCreditDebit = 0;
+        nTime = 0;
+        strAccount.clear();
+        strOtherAccount.clear();
+        strComment.clear();
+        nOrderPos = -1;
+        nEntryNo = 0;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        if (!(nType & SER_GETHASH))
+            READWRITE(nVersion);
+        //! Note: strAccount is serialized as part of the key, not here.
+        READWRITE(nCreditDebit);
+        READWRITE(nTime);
+        READWRITE(LIMITED_STRING(strOtherAccount, 65536));
+
+        if (!ser_action.ForRead())
+        {
+            WriteOrderPos(nOrderPos, mapValue);
+
+            if (!(mapValue.empty() && _ssExtra.empty()))
+            {
+                CDataStream ss(nType, nVersion);
+                ss.insert(ss.begin(), '\0');
+                ss << mapValue;
+                ss.insert(ss.end(), _ssExtra.begin(), _ssExtra.end());
+                strComment.append(ss.str());
+            }
+        }
+
+        READWRITE(LIMITED_STRING(strComment, 65536));
+
+        size_t nSepPos = strComment.find("\0", 0, 1);
+        if (ser_action.ForRead())
+        {
+            mapValue.clear();
+            if (std::string::npos != nSepPos)
+            {
+                CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), nType, nVersion);
+                ss >> mapValue;
+                _ssExtra = std::vector<char>(ss.begin(), ss.end());
+            }
+            ReadOrderPos(nOrderPos, mapValue);
+        }
+        if (std::string::npos != nSepPos)
+            strComment.erase(nSepPos);
+
+        mapValue.erase("n");
+    }
+
+private:
+    std::vector<char> _ssExtra;
+};
 
 #endif // BITCOIN_WALLET_WALLET_H
