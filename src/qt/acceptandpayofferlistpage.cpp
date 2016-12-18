@@ -1,9 +1,11 @@
 #include "acceptandpayofferlistpage.h"
 #include "ui_acceptandpayofferlistpage.h"
 #include "init.h"
+#include "main.h"
 #include "util.h"
 #include "offeracceptdialog.h"
 #include "offeracceptdialogbtc.h"
+#include "offeracceptdialogzec.h"
 #include "offer.h"
 
 #include "syscoingui.h"
@@ -23,26 +25,27 @@
 #include <QRegExp>
 #include <QStringList>
 #include <QDesktopServices>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "alias.h"
 #include "walletmodel.h"
+#include <QSettings>
 using namespace std;
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 
 AcceptandPayOfferListPage::AcceptandPayOfferListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent), platformStyle(platformStyle),
     ui(new Ui::AcceptandPayOfferListPage)
 {	
 	sAddress = "";
-	bOnlyAcceptBTC = false;
+	isOfferCert = false;
+	paymentOptions = 0;
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
 	if (!platformStyle->getImagesOnButtons())
 	{
 		ui->lookupButton->setIcon(QIcon());
 		ui->acceptButton->setIcon(QIcon());
-		ui->imageButton->setIcon(QIcon());
 	}
 	else
 	{
@@ -51,21 +54,119 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(const PlatformStyle *platfo
 	}
 	ui->imageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/imageplaceholder"));
 	this->offerPaid = false;
+	this->usedProfileInfo = false;
 	this->URIHandled = false;	
-    ui->labelExplanation->setText(tr("Purchase an offer, Syscoin will be used from your balance to complete the transaction"));
+    ui->labelExplanation->setText(tr("Purchase an offer, coins will be used from your balance to complete the transaction"));
     connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
-	connect(ui->offeridEdit, SIGNAL(textChanged(const QString &)), this, SLOT(resetState()));
+	connect(ui->offeridEdit, SIGNAL(textChanged(QString)), this, SLOT(resetState()));
 	ui->notesEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
-	ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an Alias</font>"));
+	ui->aliasDisclaimer->setText(QString("<font color='blue'>") + tr("Select an Alias. You may right-click on the notes section and include your public or private profile information from this alias for the merchant") + QString("</font>"));
 	m_netwManager = new QNetworkAccessManager(this);
 	m_placeholderImage.load(":/images/" + theme + "/imageplaceholder");
 
 	ui->imageButton->setToolTip(tr("Click to open image in browser..."));
-	ui->infoCert->setVisible(false);
-	ui->certLabel->setVisible(false);
+    // Build context menu
+	QAction *pubProfileAction = new QAction(tr("Use Public Profile"), this);
+	QAction *privProfileAction = new QAction(tr("Use Private Profile"), this);
+    contextMenu = ui->notesEdit->createStandardContextMenu();
+	contextMenu->addSeparator();
+    contextMenu->addAction(pubProfileAction);
+    contextMenu->addAction(privProfileAction);
+    // Connect signals for context menu actions
+    connect(pubProfileAction, SIGNAL(triggered()), this, SLOT(on_pubProfile()));
+    connect(privProfileAction, SIGNAL(triggered()), this, SLOT(on_privProfile()));
+	ui->notesEdit->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->notesEdit, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+
 	RefreshImage();
 
+}
+void AcceptandPayOfferListPage::contextualMenu(const QPoint &point)
+{
+    contextMenu->exec(ui->notesEdit->mapToGlobal(point));
+}
+void AcceptandPayOfferListPage::setModel(WalletModel* model)
+{
+	walletModel = model;
+}
+void AcceptandPayOfferListPage::on_pubProfile()
+{
+	if(this->usedProfileInfo)
+	{
+        QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Public Profile Inclusion"),
+                 tr("Warning: You have already appended profile information to the notes for this purchase!") + "<br><br>" + tr("Are you sure you wish to continue?"),
+                 QMessageBox::Yes|QMessageBox::Cancel,
+                 QMessageBox::Cancel);
+        if(retval == QMessageBox::Cancel)
+			return;
+	}
+	QString pubProfile, privProfile;
+	if(getProfileData(pubProfile, privProfile))
+	{
+		ui->notesEdit->appendPlainText(pubProfile);
+		this->usedProfileInfo = true;
+	}
+}
+void AcceptandPayOfferListPage::on_privProfile()
+{
+	if(this->usedProfileInfo)
+	{
+        QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Private Profile Inclusion"),
+                 tr("Warning: You have already appended profile information to the notes for this purchase!") + "<br><br>" + tr("Are you sure you wish to continue?"),
+                 QMessageBox::Yes|QMessageBox::Cancel,
+                 QMessageBox::Cancel);
+        if(retval == QMessageBox::Cancel)
+			return;
+	}
+	QString pubProfile, privProfile;
+	if(getProfileData(pubProfile, privProfile))
+	{
+		ui->notesEdit->appendPlainText(privProfile);
+		this->usedProfileInfo = true;
+	}
+}
+bool AcceptandPayOfferListPage::getProfileData(QString& publicData, QString& privateData)
+{
+	string strMethod = string("aliasinfo");
+    UniValue params(UniValue::VARR); 
+	UniValue result ;
+	params.push_back(ui->aliasEdit->currentText().toStdString());
+
+	publicData = "";
+	privateData = "";
+	try {
+		result = tableRPC.execute(strMethod, params);
+
+		if (result.type() == UniValue::VOBJ)
+		{	
+			const UniValue &o = result.get_obj();	
+			const UniValue& pub_value = find_value(o, "value");
+			if (pub_value.type() == UniValue::VSTR)
+				publicData = QString::fromStdString(pub_value.get_str());
+			const UniValue& priv_value = find_value(o, "privatevalue");
+			if (priv_value.type() == UniValue::VSTR)
+				privateData = QString::fromStdString(priv_value.get_str());				
+			return true;					
+		}
+	}
+	catch (UniValue& objError)
+	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+			tr("Could get alias profile data: ") + QString::fromStdString(strError),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to get the alias profile data: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}  
+	QMessageBox::critical(this, windowTitle(),
+		tr("Couldn't find alias in the database: ") + ui->aliasEdit->currentText(),
+			QMessageBox::Ok, QMessageBox::Ok);
+	return false;
 }
 void AcceptandPayOfferListPage::loadAliases()
 {
@@ -118,7 +219,7 @@ void AcceptandPayOfferListPage::loadAliases()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not refresh alias list: %1").arg(QString::fromStdString(strError)),
+			tr("Could not refresh alias list: ") + QString::fromStdString(strError),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 	catch(std::exception& e)
@@ -126,8 +227,12 @@ void AcceptandPayOfferListPage::loadAliases()
 		QMessageBox::critical(this, windowTitle(),
 			tr("There was an exception trying to refresh the alias list: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
-	}         
- 
+	}       
+	QSettings settings;
+ 	QString defaultOfferAlias = settings.value("defaultAlias", "").toString();
+	int aliasIndex = ui->aliasEdit->findText(defaultOfferAlias);
+	if(aliasIndex >= 0)
+		ui->aliasEdit->setCurrentIndex(aliasIndex);
 }
 
 void AcceptandPayOfferListPage::on_imageButton_clicked()
@@ -141,9 +246,6 @@ void AcceptandPayOfferListPage::netwManagerFinished()
 	if(!reply)
 		return;
 	if (reply->error() != QNetworkReply::NoError) {
-			QMessageBox::critical(this, windowTitle(),
-				reply->errorString(),
-				QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
 
@@ -160,29 +262,31 @@ AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 {
     delete ui;
 	this->URIHandled = false;
+	delete contextMenu;
 }
 void AcceptandPayOfferListPage::resetState()
 {
-		this->offerPaid = false;
-		this->URIHandled = false;
-		updateCaption();
+	this->offerPaid = false;
+	this->URIHandled = false;
+	this->usedProfileInfo = false;
+	updateCaption();
 }
 void AcceptandPayOfferListPage::updateCaption()
-{
-		
-		if(this->offerPaid)
-		{
-			ui->labelExplanation->setText(tr("<font color='green'>You have successfully paid for this offer!</font>"));
-		}
-		else
-		{
-			ui->labelExplanation->setText(tr("Purchase this offer, Syscoin will be used from your balance to complete the transaction"));
-		}
-		
+{	
+	if(this->offerPaid)
+	{
+		ui->labelExplanation->setText(QString("<font color='green'>") + tr("You have successfully paid for this offer!") + QString("</font>"));
+	}
+	else
+	{
+		ui->labelExplanation->setText(tr("Purchase this offer, coins will be used from your balance to complete the transaction"));
+	}	
 }
 void AcceptandPayOfferListPage::OpenPayDialog()
 {
-	OfferAcceptDialog dlg(platformStyle, ui->aliasPegEdit->text(), ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), ui->infoPrice->text(), ui->sellerEdit->text(), sAddress, this);
+	if(!walletModel)
+		return;
+	OfferAcceptDialog dlg(walletModel, platformStyle, ui->aliasPegEdit->text(), ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), ui->infoPrice->text(), ui->sellerEdit->text(), sAddress, paymentOptions, this);
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
@@ -191,7 +295,44 @@ void AcceptandPayOfferListPage::OpenPayDialog()
 }
 void AcceptandPayOfferListPage::OpenBTCPayDialog()
 {
-	OfferAcceptDialogBTC dlg(platformStyle, ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), ui->infoPrice->text(), ui->sellerEdit->text(), sAddress, this);
+	if(!walletModel)
+		return;
+	int sysprecision = 0;
+	double dblPrice = ui->infoPrice->text().toDouble();
+	CAmount sysPrice = convertCurrencyCodeToSyscoin(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->infoCurrency->text().toStdString()), dblPrice, chainActive.Tip()->nHeight, sysprecision);
+	if(sysPrice == 0)
+	{
+        QMessageBox::critical(this, windowTitle(),
+			tr("Could not find currency in the rates peg for this offer. Currency: ") + ui->infoCurrency->text()
+                ,QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}	
+	QString strSYSPrice = QString::fromStdString(strprintf("%.*f", 8, ValueFromAmount(sysPrice).get_real()));
+	OfferAcceptDialogBTC dlg(walletModel, platformStyle, ui->aliasPegEdit->text(), ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), strSYSPrice, ui->sellerEdit->text(), sAddress, "",this);
+	if(dlg.exec())
+	{
+		this->offerPaid = dlg.getPaymentStatus();
+	}
+	updateCaption();
+}
+void AcceptandPayOfferListPage::OpenZECPayDialog()
+{
+	if(!walletModel)
+		return;
+
+	int sysprecision = 0;
+	double dblPrice = ui->infoPrice->text().toDouble();
+	CAmount sysPrice = convertCurrencyCodeToSyscoin(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->infoCurrency->text().toStdString()), dblPrice, chainActive.Tip()->nHeight, sysprecision);
+	if(sysPrice == 0)
+	{
+        QMessageBox::critical(this, windowTitle(),
+			tr("Could not find currency in the rates peg for this offer. Currency: ") + ui->infoCurrency->text()
+                ,QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}	
+	QString strSYSPrice = QString::fromStdString(strprintf("%.*f", 8, ValueFromAmount(sysPrice).get_real()));
+	OfferAcceptDialogZEC dlg(walletModel, platformStyle, ui->aliasPegEdit->text(), ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), strSYSPrice, ui->sellerEdit->text(), sAddress, "",this);
+	
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
@@ -208,10 +349,10 @@ void AcceptandPayOfferListPage::acceptOffer()
 			QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
-	if(ui->notesEdit->toPlainText().size() <= 0 && ui->infoCert->text().size() <= 0)
+	if(ui->notesEdit->toPlainText().size() <= 0 && !isOfferCert)
 	{
 		QMessageBox::information(this, windowTitle(),
-			tr("Please enter pertinent information required to the offer in the <b>Notes</b> field (address, e-mail address, shipping notes, etc)."),
+			tr("Please enter pertinent information required to the offer in the 'Notes' field (address, e-mail address, shipping notes, etc)."),
 			QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
@@ -225,8 +366,10 @@ void AcceptandPayOfferListPage::acceptOffer()
 	
 	this->offerPaid = false;
 	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
-	if(bOnlyAcceptBTC)
+	if(paymentOptions == PAYMENTOPTION_BTC)
 		OpenBTCPayDialog();
+	else if(paymentOptions == PAYMENTOPTION_ZEC)
+		OpenZECPayDialog();
 	else
 		OpenPayDialog();
 }
@@ -258,12 +401,14 @@ bool AcceptandPayOfferListPage::lookup(const QString &lookupid)
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
-			offerOut.vchAliasPeg = vchFromString(find_value(offerObj, "alias_peg").get_str());
+			string strAliasPeg = find_value(offerObj, "alias_peg").get_str();
+			const QString &strSold = QString::number(find_value(offerObj, "offers_sold").get_int());
+			const QString &strRating = QString::number(find_value(offerObj, "alias_rating").get_int());
 			if(find_value(offerObj, "quantity").get_str() == "unlimited")
 				offerOut.nQty = -1;
 			else
 				offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toUInt();	
-			offerOut.bOnlyAcceptBTC = find_value(offerObj, "btconly").get_str() == "Yes"? true: false;	
+			offerOut.paymentOptions = find_value(offerObj, "paymentoptions").get_int();	
 			string descString = find_value(offerObj, "description").get_str();
 
 			offerOut.sDescription = vchFromString(descString);
@@ -282,7 +427,7 @@ bool AcceptandPayOfferListPage::lookup(const QString &lookupid)
 				}
 
 			}
-			setValue(QString::fromStdString(alias), QString::fromStdString(strRand), offerOut, QString::fromStdString(find_value(offerObj, "price").get_str()), QString::fromStdString(strAddress));
+			setValue(QString::fromStdString(alias), QString::fromStdString(strRand), strSold, strRating, offerOut, QString::fromStdString(find_value(offerObj, "price").get_str()), QString::fromStdString(strAddress), QString::fromStdString(strAliasPeg));
 			return true;
 		}
 		 
@@ -291,14 +436,14 @@ bool AcceptandPayOfferListPage::lookup(const QString &lookupid)
 	catch (UniValue& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + id,
+			tr("Could not find this offer, please ensure the offer has been confirmed by the blockchain: ") + id,
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to locate this offer, please ensure the offer has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 	return false;
@@ -327,36 +472,34 @@ bool AcceptandPayOfferListPage::handlePaymentRequest(const SendCoinsRecipient *r
 	}
     return true;
 }
-void AcceptandPayOfferListPage::setValue(const QString& strAlias, const QString& strRand, COffer &offer, QString price, QString address)
+void AcceptandPayOfferListPage::setValue(const QString& strAlias, const QString& strRand, const QString& strSold,  const QString& strRating, COffer &offer, QString price, QString address, QString aliasPeg)
 {
 	loadAliases();
     ui->offeridEdit->setText(strRand);
 	if(!offer.vchCert.empty())
 	{
-		ui->infoCert->setVisible(true);
-		ui->certLabel->setVisible(true);
-		ui->infoCert->setText(QString::fromStdString(stringFromVch(offer.vchCert)));
+		isOfferCert = true;
 	}
 	else
 	{
-		ui->infoCert->setVisible(false);
-		ui->infoCert->setText("");
-		ui->certLabel->setVisible(false);
+		isOfferCert = false;	
 	}
 	ui->sellerEdit->setText(strAlias);
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
 	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));
-	ui->aliasPegEdit->setText(QString::fromStdString(stringFromVch(offer.vchAliasPeg)));
+	ui->aliasPegEdit->setText(aliasPeg);
+	ui->sellerRatingEdit->setText(QString("%1 %2").arg(strRating).arg(tr("Stars")));
 	ui->infoPrice->setText(price);
 	if(offer.nQty == -1)
 		ui->infoQty->setText(tr("unlimited"));
 	else
 		ui->infoQty->setText(QString::number(offer.nQty));
+	ui->infoSold->setText(strSold);
 	ui->infoDescription->setPlainText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->qtyEdit->setText(QString("1"));
 	ui->notesEdit->setPlainText(QString(""));
-	bOnlyAcceptBTC = offer.bOnlyAcceptBTC;
+	paymentOptions = offer.paymentOptions;
 	sAddress = address;
 	QRegExp rx("(?:https?|ftp)://\\S+");
 
@@ -370,7 +513,7 @@ void AcceptandPayOfferListPage::RefreshImage()
 {
 	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setIcon(ButtonIcon);
-	
+	m_url.clear();
 	if(m_imageList.size() > 0 && m_imageList.at(0) != QString(""))
 	{
 		QString parsedURL = m_imageList.at(0).simplified();

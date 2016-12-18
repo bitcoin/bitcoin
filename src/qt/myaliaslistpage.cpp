@@ -10,17 +10,18 @@
 #include "walletmodel.h"
 #include "syscoingui.h"
 #include "editaliasdialog.h"
+#include "signrawtxdialog.h"
 #include "mywhitelistofferdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
-
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
 #include <QMenu>
-#include "rpcserver.h"
+#include "rpc/server.h"
+
 using namespace std;
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAliasListPage),
@@ -40,7 +41,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->refreshButton->setIcon(QIcon());
 		ui->newPubKey->setIcon(QIcon());
 		ui->whitelistButton->setIcon(QIcon());
-
+		ui->signMultisigButton->setIcon(QIcon());
 	}
 	else
 	{
@@ -52,44 +53,43 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/refresh"));
 		ui->newPubKey->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		ui->whitelistButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
+		ui->signMultisigButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/key"));
 		
 	}
-
-	ui->buttonBox->setVisible(false);
 
     ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases. Alias operations (create, update, transfer) take 2-5 minutes to become active."));
 	
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
-    QAction *copyAliasValueAction = new QAction(tr("Copy Va&lue"), this);
-    QAction *editAction = new QAction(tr("&Edit"), this);
-    QAction *transferAliasAction = new QAction(tr("&Transfer"), this);
+    QAction *editAction = new QAction(tr("Edit"), this);
+    QAction *transferAliasAction = new QAction(tr("Transfer"), this);
 
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAliasAction);
-    contextMenu->addAction(copyAliasValueAction);
     contextMenu->addAction(editAction);
     contextMenu->addSeparator();
     contextMenu->addAction(transferAliasAction);
 
     // Connect signals for context menu actions
     connect(copyAliasAction, SIGNAL(triggered()), this, SLOT(on_copyAlias_clicked()));
-    connect(copyAliasValueAction, SIGNAL(triggered()), this, SLOT(onCopyAliasValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(on_editButton_clicked()));
     connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(on_transferButton_clicked()));
 
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
 
 MyAliasListPage::~MyAliasListPage()
 {
     delete ui;
+}
+void MyAliasListPage::on_signMultisigButton_clicked()
+{
+	SignRawTxDialog dlg;   
+	dlg.exec();
 }
 void MyAliasListPage::showEvent ( QShowEvent * event )
 {
@@ -119,16 +119,18 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
     proxyModel->setFilterFixedString(AliasTableModel::Alias);
 
     ui->tableView->setModel(proxyModel);
-    ui->tableView->sortByColumn(0, Qt::AscendingOrder);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     // Set column widths
     ui->tableView->setColumnWidth(0, 500); //alias name
-    ui->tableView->setColumnWidth(1, 500); //alias value
-    ui->tableView->setColumnWidth(2, 75); //expires on
-    ui->tableView->setColumnWidth(3, 75); //expires in
-    ui->tableView->setColumnWidth(4, 75); //expired status
+	ui->tableView->setColumnWidth(1, 100); //multisig
+    ui->tableView->setColumnWidth(2, 150); //expires on
+    ui->tableView->setColumnWidth(3, 75); //expired status
+	ui->tableView->setColumnWidth(4, 150); //buyerrating
+	ui->tableView->setColumnWidth(5, 150); //sellerrrating
+	ui->tableView->setColumnWidth(6, 0); //arbiterrating
+	
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -152,11 +154,6 @@ void MyAliasListPage::on_copyAlias_clicked()
     GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Name);
 }
 
-void MyAliasListPage::onCopyAliasValueAction()
-{
-    GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Value);
-}
-
 void MyAliasListPage::on_editButton_clicked()
 {
     if(!ui->tableView->selectionModel())
@@ -164,6 +161,14 @@ void MyAliasListPage::on_editButton_clicked()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
+	QString status = indexes.at(0).data(AliasTableModel::ExpiredRole).toString();
+	if(status == QString("expired"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("You cannot edit this alias because it has expired"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
 
     EditAliasDialog dlg(EditAliasDialog::EditAlias);
     dlg.setModel(walletModel, model);
@@ -179,7 +184,21 @@ void MyAliasListPage::on_transferButton_clicked()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
-
+	QString status = indexes.at(0).data(AliasTableModel::ExpiredRole).toString();
+	if(status == QString("pending"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("This alias is still pending, click the refresh button once the alias confirms and try again"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
+	if(status == QString("expired"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("You cannot transfer this alias because it has expired"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
     EditAliasDialog dlg(EditAliasDialog::TransferAlias);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
@@ -286,17 +305,18 @@ void MyAliasListPage::on_exportButton_clicked()
     if (filename.isNull()) return;
 
     CSVModelWriter writer(filename);
-
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
-    writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
-	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
-	writer.addColumn("Expired", AliasTableModel::Expired, Qt::EditRole);
+    writer.addColumn(tr("Alias"), AliasTableModel::Name, Qt::EditRole);
+	writer.addColumn(tr("Multisignature"), AliasTableModel::Multisig, Qt::EditRole);
+	writer.addColumn(tr("Expires On"), AliasTableModel::ExpiresOn, Qt::EditRole);
+	writer.addColumn(tr("Expired"), AliasTableModel::Expired, Qt::EditRole);
+	writer.addColumn(tr("Buyer Rating"), AliasTableModel::RatingAsBuyer, AliasTableModel::BuyerRatingRole);
+	writer.addColumn(tr("Seller Rating"), AliasTableModel::RatingAsSeller, AliasTableModel::SellerRatingRole);
+	writer.addColumn(tr("Arbiter Rating"), AliasTableModel::RatingAsArbiter, AliasTableModel::ArbiterRatingRole);
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }

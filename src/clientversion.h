@@ -15,8 +15,8 @@
 
 //! These need to be macros, as clientversion.cpp's and syscoin*-res.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR 0
-#define CLIENT_VERSION_MINOR 12
-#define CLIENT_VERSION_REVISION 99
+#define CLIENT_VERSION_MINOR 13
+#define CLIENT_VERSION_REVISION 00
 #define CLIENT_VERSION_BUILD 0
 
 //! Set to true for release, false for prerelease or test build
@@ -26,7 +26,7 @@
  * Copyright year (2009-this)
  * Todo: update this when changing our copyright comments in the source
  */
-#define COPYRIGHT_YEAR 2015
+#define COPYRIGHT_YEAR 2017
 
 #endif //HAVE_CONFIG_H
 
@@ -38,7 +38,7 @@
 #define DO_STRINGIZE(X) #X
 
 //! Copyright string used in Windows .rc files
-#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Syscoin Core Developers"
+#define COPYRIGHT_STR "2009-" STRINGIZE(COPYRIGHT_YEAR) " " COPYRIGHT_HOLDERS_FINAL
 
 /**
  * syscoind-res.rc includes this file, but it cannot cope with real c++ code.
@@ -50,7 +50,8 @@
 
 #include <string>
 #include <vector>
-
+// SYSCOIN
+static const std::string SYSCOIN_CLIENT_VERSION = "2.10";
 static const int CLIENT_VERSION =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
@@ -59,7 +60,6 @@ static const int CLIENT_VERSION =
 
 extern const std::string CLIENT_NAME;
 extern const std::string CLIENT_BUILD;
-extern const std::string CLIENT_DATE;
 
 
 std::string FormatFullVersion();

@@ -7,11 +7,13 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 #include <QStringList>
-#include "rpcserver.h"
+#include "rpc/server.h"
+#include "walletmodel.h"
 using namespace std;
-extern const CRPCTable tableRPC;
-ResellOfferDialog::ResellOfferDialog(QModelIndex *idx, QWidget *parent) :
+extern CRPCTable tableRPC;
+ResellOfferDialog::ResellOfferDialog(QModelIndex *idx, WalletModel* model, QWidget *parent) :
     QDialog(parent),
+	walletModel(model),
     ui(new Ui::ResellOfferDialog)
 {
     ui->setupUi(this);
@@ -19,7 +21,7 @@ ResellOfferDialog::ResellOfferDialog(QModelIndex *idx, QWidget *parent) :
 	QString offerGUID = idx->data(OfferTableModel::NameRole).toString();
 	ui->descriptionEdit->setPlainText(idx->data(OfferTableModel::DescriptionRole).toString());
 	ui->offerGUIDLabel->setText(offerGUID);
-	ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b>  amount(without the % sign) that you would like to mark-up the price to.</font>"));
+	ui->commissionDisclaimer->setText(QString("<font color='blue'>") + tr("Enter the 'percentage' amount(without the % sign) that you would like to mark-up the price to") + QString("</font>"));
 	loadAliases();
 }
 
@@ -30,7 +32,12 @@ ResellOfferDialog::~ResellOfferDialog()
 
 bool ResellOfferDialog::saveCurrentRow()
 {
-
+	if(!walletModel) return false;
+	WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+	if(!ctx.isValid())
+	{
+		return false;
+	}
 	UniValue params(UniValue::VARR);
 	string strMethod;
 
@@ -44,7 +51,7 @@ bool ResellOfferDialog::saveCurrentRow()
         UniValue result = tableRPC.execute(strMethod, params);
 
 		QMessageBox::information(this, windowTitle(),
-        tr("Offer resold successfully! Check the <b>Selling</b> tab to see it after it has confirmed."),
+        tr("Offer resold successfully! Check the 'Selling' tab to see it after it has confirmed."),
 			QMessageBox::Ok, QMessageBox::Ok);
 		return true;	
 		
@@ -53,13 +60,13 @@ bool ResellOfferDialog::saveCurrentRow()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-		tr("Error creating new linked offer: \"%1\"").arg(QString::fromStdString(strError)),
+		tr("Error creating new linked offer: ") + QString::fromStdString(strError),
 			QMessageBox::Ok, QMessageBox::Ok);
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("General exception creating new linked offer: \"%1\"").arg(QString::fromStdString(e.what())),
+			tr("General exception creating new linked offer: ") + QString::fromStdString(e.what()),
 			QMessageBox::Ok, QMessageBox::Ok);
 	}							
 
@@ -116,7 +123,7 @@ void ResellOfferDialog::loadAliases()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not refresh alias list: %1").arg(QString::fromStdString(strError)),
+			tr("Could not refresh alias list: ") + QString::fromStdString(strError),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 	catch(std::exception& e)

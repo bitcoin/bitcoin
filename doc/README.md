@@ -1,4 +1,4 @@
-Syscoin Core 0.12.99
+Syscoin Core 0.13.99
 =====================
 
 Setup
@@ -11,16 +11,10 @@ The following are some helpful notes on how to run Syscoin on your native platfo
 
 ### Unix
 
-You need the Qt4 run-time libraries to run Syscoin-Qt. On Debian or Ubuntu:
-
-	sudo apt-get install libqtgui4
-
 Unpack the files into a directory and run:
 
-- bin/32/syscoin-qt (GUI, 32-bit) or bin/32/syscoind (headless, 32-bit)
-- bin/64/syscoin-qt (GUI, 64-bit) or bin/64/syscoind (headless, 64-bit)
-
-
+- `bin/syscoin-qt` (GUI) or
+- `bin/syscoind` (headless)
 
 ### Windows
 
@@ -49,7 +43,7 @@ The following are developer notes on how to build Syscoin on your native platfor
 
 Development
 ---------------------
-The Syscoin repo's [root README](https://github.com/syscoin/syscoin/blob/master/README.md) contains relevant information on the development process and automated testing.
+The Syscoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
@@ -63,6 +57,7 @@ The Syscoin repo's [root README](https://github.com/syscoin/syscoin/blob/master/
 - [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
 - [Dnsseed Policy](dnsseed-policy.md)
+- [Benchmarking](benchmarking.md)
 
 ### Resources
 * Discuss on the [SyscoinTalk](https://syscointalk.org/) forums, in the [Development & Technical Discussion board](https://syscointalk.org/index.php?board=6.0).

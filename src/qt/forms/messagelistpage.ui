@@ -15,14 +15,18 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="labelExplanation">
-     <property name="textFormat">
-      <enum>Qt::PlainText</enum>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="labelExplanation">
+       <property name="textFormat">
+        <enum>Qt::PlainText</enum>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTableView" name="tableView">
@@ -33,6 +37,16 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>Refresh message list</string>
+       </property>
+       <property name="text">
+        <string>Refresh</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="newMessage">
        <property name="maximumSize">
@@ -55,7 +69,7 @@
         <string>Copy the currently selected message to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Msg ID</string>
+        <string>Copy Msg ID</string>
        </property>
       </widget>
      </item>
@@ -66,16 +80,6 @@
        </property>
        <property name="text">
         <string>Details</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="refreshButton">
-       <property name="toolTip">
-        <string>Refresh message list</string>
-       </property>
-       <property name="text">
-        <string>&amp;Refresh</string>
        </property>
       </widget>
      </item>
@@ -98,7 +102,7 @@
         <string>Export the data in the current tab to a file</string>
        </property>
        <property name="text">
-        <string>&amp;Export</string>
+        <string>Export</string>
        </property>
       </widget>
      </item>

@@ -57,6 +57,9 @@ static int secp256k1_fe_is_zero(const secp256k1_fe *a);
 static int secp256k1_fe_is_odd(const secp256k1_fe *a);
 
 /** Compare two field elements. Requires magnitude-1 inputs. */
+static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b);
+
+/** Same as secp256k1_fe_equal, but may be variable time. */
 static int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b);
 
 /** Compare two field elements. Requires both inputs to be normalized */
@@ -92,7 +95,10 @@ static void secp256k1_fe_sqr(secp256k1_fe *r, const secp256k1_fe *a);
  *  The input's magnitude can be at most 8. The output magnitude is 1 (but not
  *  guaranteed to be normalized). The result in r will always be a square
  *  itself. */
-static int secp256k1_fe_sqrt_var(secp256k1_fe *r, const secp256k1_fe *a);
+static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a);
+
+/** Checks whether a field element is a quadratic residue. */
+static int secp256k1_fe_is_quad_var(const secp256k1_fe *a);
 
 /** Sets a field element to be the (modular) inverse of another. Requires the input's magnitude to be
  *  at most 8. The output magnitude is 1 (but not guaranteed to be normalized). */

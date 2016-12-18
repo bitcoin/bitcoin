@@ -30,25 +30,6 @@
       <widget class="QLineEdit" name="lineEditEscrowSearch"/>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox">
-       <item>
-        <property name="text">
-         <string>25</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>50</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>100</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="searchEscrow">
        <property name="maximumSize">
         <size>
@@ -92,6 +73,30 @@
     </widget>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="labelPage">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="copyEscrow">
@@ -99,7 +104,28 @@
         <string>Copy the currently selected escrow to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Escrow ID</string>
+        <string>Copy Escrow ID</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="detailButton">
+       <property name="text">
+        <string>Details</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="manageButton">
+       <property name="text">
+        <string>Manage Escrow</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="ackButton">
+       <property name="text">
+        <string>Acknowledge Payment</string>
        </property>
       </widget>
      </item>
@@ -117,12 +143,16 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="exportButton">
-       <property name="toolTip">
-        <string>Export the data in the current tab to a file</string>
-       </property>
+      <widget class="QToolButton" name="prevButton">
        <property name="text">
-        <string>&amp;Export</string>
+        <string>&lt;&lt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="nextButton">
+       <property name="text">
+        <string>&gt;&gt;</string>
        </property>
       </widget>
      </item>

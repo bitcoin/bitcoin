@@ -41,12 +41,12 @@ private:
 	WalletModel* walletModel;
     QString newEntryToSelect;
 	QString offerGUID;
-	QString exclusiveWhitelist;
 	QString offerCategory;
 	QString offerTitle;
 	QString offerQty;
 	QString offerPrice;
 	QString offerDescription;
+	QString offerCurrency;
 	QString offerPrivate;
 
 private Q_SLOTS:
@@ -58,7 +58,6 @@ private Q_SLOTS:
     /** Export button clicked */
     void on_exportButton_clicked();
 	void on_refreshButton_clicked();
-	void on_exclusiveButton_clicked();
 	void on_removeButton_clicked();
 	void on_removeAllButton_clicked();
     /** Set button states based on selected tab and selection */

@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Syscoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,11 +9,13 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
-from decimal import Decimal
-import os
-import shutil
 
 class TxnMallTest(SyscoinTestFramework):
+
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 4
+        self.setup_clean_chain = False
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>760</width>
-    <height>380</height>
+    <width>845</width>
+    <height>381</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,12 +55,28 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>48</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Refresh alias list</string>
+       </property>
+       <property name="text">
+        <string>Refresh</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="newAlias">
        <property name="toolTip">
         <string>Create a new alias</string>
        </property>
        <property name="text">
-        <string>&amp;New Alias</string>
+        <string>New Alias</string>
        </property>
       </widget>
      </item>
@@ -70,7 +86,7 @@
         <string>Copy the currently selected alias to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Alias ID</string>
+        <string>Copy Alias ID</string>
        </property>
       </widget>
      </item>
@@ -95,22 +111,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="refreshButton">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>48</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>Refresh alias list</string>
-       </property>
-       <property name="text">
-        <string>&amp;Refresh</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="newPubKey">
        <property name="toolTip">
         <string>Create a new public key used for transferring aliases</string>
@@ -127,6 +127,13 @@
        </property>
        <property name="text">
         <string>Affiliations</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="signMultisigButton">
+       <property name="text">
+        <string>Sign Multisig Tx</string>
        </property>
       </widget>
      </item>
@@ -149,20 +156,7 @@
         <string>Export the data in the current tab to a file</string>
        </property>
        <property name="text">
-        <string>&amp;Export</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Ok</set>
+        <string>Export</string>
        </property>
       </widget>
      </item>

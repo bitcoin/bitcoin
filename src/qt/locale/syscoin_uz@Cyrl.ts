@@ -1,5 +1,27 @@
 <TS language="uz@Cyrl" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Сони:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +46,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;Ёпиш</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>Манзилдан &amp;нусха олиш</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -74,6 +92,10 @@
         <translation>Улар тўловларни қабул қилиш учун сизнинг Syscoin манзилларингиз. Ҳар бир ўтказма учун янги қабул қилувчи манзилдан фойдаланиш тавсия қилинади.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>Манзилдан &amp;нусха олиш</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Нусха олиш ва ёрлиқ</translation>
     </message>
@@ -90,14 +112,14 @@
         <translation>Вергул билан ажратилган файл (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Экспорт қилиб бўлмади</translation>
+        <source>Label</source>
+        <translation>Ёрлик</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Манзил рўйхатини %1.га сақлашда хатолик юз берди. Яна уриниб кўринг.</translation>
+        <source>Address</source>
+        <translation>Манзил</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -113,6 +135,15 @@
         <translation>(Ёрлиқ мавжуд эмас)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -130,6 +161,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Янги махфий сузни такрорланг</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Ҳамёнга янги махфий сўз киритинг.&lt;br/&gt;Илтимос, &lt;b&gt;ўнта ёки тасодифий белгили&lt;/b&gt; махфий сўздан фойдаланинг ёки &lt;b&gt;саккизта ёки кўпроқ сўзлар&lt;/b&gt;дан фойдаланинг.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -168,20 +203,12 @@
         <translation>Ҳамёнингизни кодлашни ростдан хоҳлайсизми?</translation>
     </message>
     <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>МУҲИМ: Сиз қилган олдинги ҳамён файли заҳиралари янги яратилган, кодланган ҳамён файли билан алмаштирилиши керак. Хавфсизлик сабабларига кўра олдинги кодланган ҳамён файли заҳираси янги кодланган ҳамёндан фойдаланишингиз билан яроқсиз ҳолга келади.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Диққат: Caps Lock тугмаси ёқилган!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Ҳамёни кодланган</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Ҳамёнга янги махфий сўз киритинг.&lt;br/&gt;Илтимос, &lt;b&gt;ўнта ёки тасодифий белгили&lt;/b&gt; махфий сўздан фойдаланинг ёки &lt;b&gt;саккизта ёки кўпроқ сўзлар&lt;/b&gt;дан фойдаланинг.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>МУҲИМ: Сиз қилган олдинги ҳамён файли заҳиралари янги яратилган, кодланган ҳамён файли билан алмаштирилиши керак. Хавфсизлик сабабларига кўра олдинги кодланган ҳамён файли заҳираси янги кодланган ҳамёндан фойдаланишингиз билан яроқсиз ҳолга келади.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -211,292 +238,23 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Ҳамён пароли муваффақиятли алмаштирилди.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Диққат: Caps Lock тугмаси ёқилган!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>&amp;Хабар ёзиш...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Тармоқ билан синхронланмоқда...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Кўриб чиқиш</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Улам</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Ҳамённинг умумий кўринишини кўрсатиш</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Пул ўтказмалари</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Пул ўтказмалари тарихини кўриш</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>Ч&amp;иқиш</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Иловадан чиқиш</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>&amp;Qt ҳақида</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Qt ҳақидаги маълумотларни кўрсатиш</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Мосламалар...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>Ҳамённи &amp;кодлаш...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>Ҳамённи &amp;заҳиралаш...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>Махфий сўзни &amp;ўзгартириш...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Жўнатилувчи манзиллар...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Қабул қилувчи манзиллар...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Интернет манзилни очиш</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Syscoin асос мижози</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Дискдан блоклар импорт қилинмоқда...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Дискдаги блоклар қайта индексланмоқда...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Тангаларни Syscoin манзилига жўнатиш</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>Ҳамённи бошқа манзилга заҳиралаш</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Паролни ўзгартириш ҳамённи кодлашда фойдаланилади</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Носозликни ҳал қилиш ойнаси</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Носозликни ҳал қилиш ва ташхис терминали</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>Хабарни &amp;тасдиқлаш...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Ҳамён</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Жўнатиш</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Қабул қилиш</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Syscoin Core ҳақидаги маълумотларни кўрсатиш</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Кўрсатиш / Яшириш</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Асосий ойнани кўрсатиш ёки яшириш</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Ҳамёнингизга тегишли махфий калитларни кодлаш</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Syscoin манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Хабарларни махсус Syscoin манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Файл</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp; Созламалар</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Ёрдам</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Ички ойналар асбоблар панели</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>Тўловлар (QR кодлари ва syscoin ёрдамида яратишлар: URI’лар) сўраш</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>Syscoin Core &amp;ҳақида</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Фойдаланилган жўнатилган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Фойдаланилган қабул қилинган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
-    </message>
-    <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>Syscoin’ни очиш: URI ёки тўлов сўрови</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Буйруқлар сатри мосламалари</translation>
-    </message>
-    <message>
-        <source>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</source>
-        <translation>Мавжуд Syscoin буйруқлар матни мосламалари билан  Syscoin Core ёрдам хабарларини олиш рўйхатини кўрсатиш</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Syscoin network</source>
-        <translation><numerusform>%n та Syscoin тармоғига фаол уланиш мавжуд</numerusform></translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Блок манбалари мавжуд эмас...</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n соат</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n кун</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n ҳафта</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 ва %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n йил</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 орқада</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Сўнги қабул қилинган блок %1 олдин яратилган.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Бундан кейинги пул ўтказмалари кўринмайдиган бўлади.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Хатолик</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Диққат</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Маълумот</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Янгиланган</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Банд қилинмоқда...</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Жўнатилган операция</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Кирувчи операция</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Ҳамён &lt;b&gt;кодланган&lt;/b&gt; ва вақтинча &lt;b&gt;қулфдан чиқарилган&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Ҳамён &lt;b&gt;кодланган&lt;/b&gt; ва вақтинча &lt;b&gt;қулфланган&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Тармоқ огоҳлантиргичи</translation>
-    </message>
-</context>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -510,10 +268,6 @@
     <message>
         <source>Amount:</source>
         <translation>Миқдори:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Муҳимлиги:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -560,10 +314,6 @@
         <translation>Тасдиқланди</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Муҳимлиги</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Манзилни нусхалаш</translation>
     </message>
@@ -604,10 +354,6 @@
         <translation>Нусха байти</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Нусха муҳимлиги</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Нусха чангги</translation>
     </message>
@@ -616,52 +362,8 @@
         <translation>Нусха қайтими</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>энг юқори</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>юқорирок</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>юқори</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>ўртача-юқори</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>ўрта</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>паст-юқори</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>паст</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>пастроқ</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>энг паст</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 қулфланган)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>йўқ</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Ҳар бир кирим +/- %1 сатоши(лар) билан ўзгариши мумкин.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -672,16 +374,8 @@
         <translation>йўқ</translation>
     </message>
     <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Бу дегани солиқ ҳар кб учун камида %1  талаб қилинади.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Ҳар бир кирим +/- 1 байт билан ўзгариши мумкин.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Юқори муҳимликка эга бўлган ўтказмалар тезда блокнинг ичига қўшимча олади.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Ҳар бир кирим +/- %1 сатоши(лар) билан ўзгариши мумкин.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -735,12 +429,12 @@
         <translation>Жунатилувчи манзилни тахрирлаш</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Киритилган "%1" манзили аллақачон манзил китобида.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Киритилган "%1" манзили тўғри Syscoin манзили эмас.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Киритилган "%1" манзили аллақачон манзил китобида.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -751,6 +445,102 @@
         <translation>Янги калит яратиш амалга ошмади.</translation>
     </message>
 </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Асосий</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ҳа</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Йўқ</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ҳамён қулфдан чиқмади.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Ҳа</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Йўқ</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ҳамён қулфдан чиқмади.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Асосий</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Сони:</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Йўқ</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ҳа</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ҳамён қулфдан чиқмади.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Ўчириш</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Асосий</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Жами:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -777,20 +567,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>версияси</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
-    </message>
-    <message>
-        <source>About Syscoin Core</source>
-        <translation>Syscoin Core ҳақида</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -806,22 +588,29 @@
     </message>
     </context>
 <context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Дан</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Га</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Хабар</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Хуш келибсиз</translation>
-    </message>
-    <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>"Syscoin Core"га хуш келибсиз.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>Биринчи марта дастур ишга тушгани каби сиз Syscoin Core маълумотларини жойлаштирадиган жойни танлашингиз мумкин.</translation>
-    </message>
-    <message>
-        <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Syscoin Core юклаб олинади ва Syscoin блок занжири нусхаси жойлаштирилади. Камида %1GB  маълумот ушбу директорияга жойлаштирилади ва вақт давомида ўсиб боради. Ҳамён ҳам ушбу директорияда жойлашади.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -832,10 +621,6 @@
         <translation>Бошқа маълумотлар директориясида фойдаланинг:</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>Хато: кўрсатилган "%1" маълумотлар директориясини яратиб бўлмайди.</translation>
     </message>
@@ -843,6 +628,215 @@
         <source>Error</source>
         <translation>Хатолик</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>йўқ</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Хабар</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>Дан</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Га</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Хабар</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Шакл</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Сўнгги блок вақти</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>No</source>
+        <translation>Йўқ</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ҳа</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ҳамён қулфдан чиқмади.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ҳамён қулфдан чиқмади.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>to</source>
+        <translation>Кимга</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>to</source>
+        <translation>Кимга</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Сони:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Жами:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -987,6 +981,32 @@
     </message>
 </context>
 <context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Вергул билан ажратилган файл (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Дан</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Га</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Хабар</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -1060,6 +1080,10 @@
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>Payment request error</source>
+        <translation>Тўлов сўрови хато</translation>
+    </message>
+    <message>
         <source>URI handling</source>
         <translation>URI осилиб қолмоқда</translation>
     </message>
@@ -1075,10 +1099,6 @@
         <source>Payment request network doesn't match client network.</source>
         <translation>Тўлов сўрови тармоғи мижоз тармоғига мос келмайди.</translation>
     </message>
-    <message>
-        <source>Payment request error</source>
-        <translation>Тўлов сўрови хато</translation>
-    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -1090,16 +1110,12 @@
         <source>Ping Time</source>
         <translation>Ping вақти</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Миқдори</translation>
-    </message>
-    <message>
-        <source>Enter a Syscoin address (e.g. %1)</source>
-        <translation>Syscoin манзилини киритинг (масалан.  %1)</translation>
     </message>
     <message>
         <source>%1 m</source>
@@ -1120,6 +1136,14 @@
     <message>
         <source>%1 ms</source>
         <translation>%1 мс</translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ва %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Барча</translation>
     </message>
 </context>
 <context>
@@ -1144,10 +1168,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Мижоз номи</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>Тўғри келмайди</translation>
     </message>
@@ -1166,10 +1186,6 @@
     <message>
         <source>General</source>
         <translation>Асосий</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Фойдаланилаётган OpenSSL версияси</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
@@ -1262,10 +1278,6 @@
     <message>
         <source>Out:</source>
         <translation>Ташқарига:</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>Тузилган санаси</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1461,10 +1473,6 @@
         <translation>Хабар</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Миқдори</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(Ёрлик мавжуд эмас)</translation>
     </message>
@@ -1472,11 +1480,10 @@
         <source>(no message)</source>
         <translation>(Хабар йўқ)</translation>
     </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(Миқдор мавжуд эмас)</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1506,10 +1513,6 @@
     <message>
         <source>Amount:</source>
         <translation>Миқдори:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Муҳимлиги:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1588,14 +1591,6 @@
         <translation>Жў&amp;натиш</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Тангалар жўнаишни тасдиқлаш</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 дан %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Нусха сони</translation>
     </message>
@@ -1616,16 +1611,32 @@
         <translation>Нусха байти</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Нусха муҳимлиги</translation>
+        <source>Copy dust</source>
+        <translation>Нусха чангги</translation>
     </message>
     <message>
         <source>Copy change</source>
         <translation>Нусха қайтими</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1 дан %2</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Жўнатишни хоҳлашингизга ишончингиз комилми?</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>ўтказма солиғи қўшилди</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>ёки</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Тангалар жўнаишни тасдиқлаш</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1636,24 +1647,12 @@
         <translation>Диққат: Нотўғр Syscoin манзили</translation>
     </message>
     <message>
-        <source>(no label)</source>
-        <translation>(Ёрлик мавжуд эмас)</translation>
-    </message>
-    <message>
         <source>Warning: Unknown change address</source>
         <translation>Диққат: Номаълум ўзгариш манзили</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>Нусха чангги</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Жўнатишни хоҳлашингизга ишончингиз комилми?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>ўтказма солиғи қўшилди</translation>
+        <source>(no label)</source>
+        <translation>(Ёрлик мавжуд эмас)</translation>
     </message>
 </context>
 <context>
@@ -1665,10 +1664,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>&amp;Тўлов олувчи:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Манзил китобингизга қўшиш учун ушбу манзил учун ёрлиқ киритинг</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1702,9 +1697,27 @@
         <source>Pay To:</source>
         <translation>Тўлов олувчи:</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Манзил китобингизга қўшиш учун ушбу манзил учун ёрлиқ киритинг</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Ҳа</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Асосий</translation>
+    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1740,16 +1753,231 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoin Core дастурчилари</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>&amp;Хабар ёзиш...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Тармоқ билан синхронланмоқда...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Улам</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Ҳамённинг умумий кўринишини кўрсатиш</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Пул ўтказмалари</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Пул ўтказмалари тарихини кўриш</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>Ч&amp;иқиш</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Иловадан чиқиш</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>&amp;Qt ҳақида</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Qt ҳақидаги маълумотларни кўрсатиш</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Мосламалар...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>Ҳамённи &amp;кодлаш...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>Ҳамённи &amp;заҳиралаш...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>Махфий сўзни &amp;ўзгартириш...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Жўнатилувчи манзиллар...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Қабул қилувчи манзиллар...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Интернет манзилни очиш</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Дискдаги блоклар қайта индексланмоқда...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Тангаларни Syscoin манзилига жўнатиш</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Ҳамённи бошқа манзилга заҳиралаш</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Паролни ўзгартириш ҳамённи кодлашда фойдаланилади</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Носозликни ҳал қилиш ойнаси</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Носозликни ҳал қилиш ва ташхис терминали</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>Хабарни &amp;тасдиқлаш...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Ҳамён</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Кўрсатиш / Яшириш</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Асосий ойнани кўрсатиш ёки яшириш</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Ҳамёнингизга тегишли махфий калитларни кодлаш</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Syscoin манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Хабарларни махсус Syscoin манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Файл</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp; Созламалар</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Ёрдам</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Ички ойналар асбоблар панели</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Тўловлар (QR кодлари ва syscoin ёрдамида яратишлар: URI’лар) сўраш</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Фойдаланилган жўнатилган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Фойдаланилган қабул қилинган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Syscoin’ни очиш: URI ёки тўлов сўрови</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Буйруқлар сатри мосламалари</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n та Syscoin тармоғига фаол уланиш мавжуд</numerusform></translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>Блок манбалари мавжуд эмас...</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 орқада</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Сўнги қабул қилинган блок %1 олдин яратилган.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Бундан кейинги пул ўтказмалари кўринмайдиган бўлади.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Хатолик</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Диққат</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Маълумот</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Янгиланган</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>Syscoin Core &amp;ҳақида</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Банд қилинмоқда...</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Жўнатилган операция</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Кирувчи операция</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Ҳамён &lt;b&gt;кодланган&lt;/b&gt; ва вақтинча &lt;b&gt;қулфдан чиқарилган&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Ҳамён &lt;b&gt;кодланган&lt;/b&gt; ва вақтинча &lt;b&gt;қулфланган&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -1770,6 +1998,10 @@
         <translation>%1 тасдиқлашлар</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, ҳалигача трансляция қилингани йўқ</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Сана</translation>
     </message>
@@ -1784,6 +2016,10 @@
     <message>
         <source>From</source>
         <translation>Дан</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>Номаълум</translation>
     </message>
     <message>
         <source>To</source>
@@ -1845,14 +2081,6 @@
         <source>false</source>
         <translation>ёлғон</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, ҳалигача трансляция қилингани йўқ</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>Номаълум</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1864,7 +2092,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ушбу ойна операциянинг батафсил таърифини кўрсатади</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1876,8 +2104,20 @@
         <translation>Тури</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Ёрлиқ</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>%1 гача очиш</translation>
+    </message>
+    <message>
+        <source>Offline</source>
+        <translation>Оффлайн</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>Тасдиқланмаган</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
@@ -1890,18 +2130,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Яратилди, аммо қабул қилинмади</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Оффлайн</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Ёрлиқ</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>Тасдиқланмаган</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1926,6 +2154,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(қ/қ)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(Ёрлик мавжуд эмас)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -2031,24 +2263,16 @@
         <translation>Ўтказмалар тарихини экспорт қилиш</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation>Фақат кўришга</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Экспорт қилиб бўлмади</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>Ўтказмалар тарихи %1 га муваффаққиятли сақланди.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Вергул билан ажратилган файл (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>Тасдиқланди</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Фақат кўришга</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2069,6 +2293,14 @@
     <message>
         <source>ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Экспорт қилиб бўлмади</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Ўтказмалар тарихи %1 га муваффаққиятли сақланди.</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2095,13 +2327,9 @@
         <source>Send Coins</source>
         <translation>Тангаларни жунат</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Экспорт</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Жорий ички ойна ичидаги маълумотларни файлга экспорт қилиш</translation>
@@ -2126,6 +2354,10 @@
         <translation>Демон сифатида орқа фонда ишга туширинг ва буйруқларга рози бўлинг</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
+    </message>
+    <message>
         <source>Connection options:</source>
         <translation>Уланиш кўрсаткичлари:</translation>
     </message>
@@ -2144,10 +2376,6 @@
     <message>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC уланишлари учун парол</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>Бу ёрдам хабари</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

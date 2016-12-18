@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>760</width>
+    <width>805</width>
     <height>380</height>
    </rect>
   </property>
@@ -15,14 +15,31 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="labelExplanation">
-     <property name="textFormat">
-      <enum>Qt::PlainText</enum>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="labelExplanation">
+       <property name="textFormat">
+        <enum>Qt::PlainText</enum>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="displayListAlias">
+       <property name="maximumSize">
+        <size>
+         <width>250</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="editable">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTableView" name="tableView">
@@ -66,7 +83,7 @@
         <string>Refresh your accepted offer list</string>
        </property>
        <property name="text">
-        <string>&amp;Refresh</string>
+        <string>Refresh</string>
        </property>
       </widget>
      </item>
@@ -76,7 +93,7 @@
         <string>Copy the currently selected offer to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Offer ID</string>
+        <string>Copy Offer ID</string>
        </property>
       </widget>
      </item>
@@ -91,6 +108,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="ackButton">
+       <property name="text">
+        <string>Acknowledge Payment</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="messageButton">
        <property name="toolTip">
         <string>Send message to buyer</string>
@@ -101,12 +125,19 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btcButton">
+      <widget class="QPushButton" name="feedbackButton">
+       <property name="text">
+        <string>Leave Feedback</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="extButton">
        <property name="toolTip">
-        <string>Check Bitcoin payment for this offer</string>
+        <string>Check payment for this offer from an external chain</string>
        </property>
        <property name="text">
-        <string>Check BTC Payment</string>
+        <string>Check External Payment</string>
        </property>
       </widget>
      </item>
@@ -129,20 +160,7 @@
         <string>Export the data in the current tab to a file</string>
        </property>
        <property name="text">
-        <string>&amp;Export</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Ok</set>
+        <string>Export</string>
        </property>
       </widget>
      </item>

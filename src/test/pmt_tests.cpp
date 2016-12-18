@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 The Syscoin Core developers
+// Copyright (c) 2012-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,9 +35,10 @@ BOOST_FIXTURE_TEST_SUITE(pmt_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(pmt_test1)
 {
     seed_insecure_rand(false);
-	static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
-    for (int n = 0; n < 12; n++) {
-        unsigned int nTx = nTxCounts[n];
+    static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
+
+    for (int i = 0; i < 12; i++) {
+        unsigned int nTx = nTxCounts[i];
 
         // build a block with some dummy transactions
         CBlock block;
@@ -87,7 +88,8 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
 
             // extract merkle root and matched txids from copy
             std::vector<uint256> vMatchTxid2;
-            uint256 merkleRoot2 = pmt2.ExtractMatches(vMatchTxid2);
+            std::vector<unsigned int> vIndex;
+            uint256 merkleRoot2 = pmt2.ExtractMatches(vMatchTxid2, vIndex);
 
             // check that it has the same merkle root as the original, and a valid one
             BOOST_CHECK(merkleRoot1 == merkleRoot2);
@@ -101,7 +103,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
                 CPartialMerkleTreeTester pmt3(pmt2);
                 pmt3.Damage();
                 std::vector<uint256> vMatchTxid3;
-                uint256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3);
+                uint256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3, vIndex);
                 BOOST_CHECK(merkleRoot3 != merkleRoot1);
             }
         }
@@ -120,8 +122,8 @@ BOOST_AUTO_TEST_CASE(pmt_malleability)
     std::vector<bool> vMatch = boost::assign::list_of(false)(false)(false)(false)(false)(false)(false)(false)(false)(true)(true)(false);
 
     CPartialMerkleTree tree(vTxid, vMatch);
-    std::vector<uint256> vTxid2;
-    BOOST_CHECK(tree.ExtractMatches(vTxid).IsNull());
+    std::vector<unsigned int> vIndex;
+    BOOST_CHECK(tree.ExtractMatches(vTxid, vIndex).IsNull());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

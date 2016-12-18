@@ -66,7 +66,7 @@
         <string>Refresh affiliate list</string>
        </property>
        <property name="text">
-        <string>&amp;Refresh</string>
+        <string>Refresh</string>
        </property>
       </widget>
      </item>
@@ -76,7 +76,7 @@
         <string>Add a new affiliate</string>
        </property>
        <property name="text">
-        <string>&amp;Add</string>
+        <string>Add</string>
        </property>
       </widget>
      </item>
@@ -101,13 +101,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="exclusiveButton">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -126,20 +119,7 @@
         <string>Export the data in the current tab to a file</string>
        </property>
        <property name="text">
-        <string>&amp;Export</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Ok</set>
+        <string>Export</string>
        </property>
       </widget>
      </item>

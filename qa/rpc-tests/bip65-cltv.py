@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2015 The Syscoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,10 +9,12 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
-import os
-import shutil
 
 class BIP65Test(SyscoinTestFramework):
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 3
+        self.setup_clean_chain = False
 
     def setup_network(self):
         self.nodes = []
@@ -28,13 +30,14 @@ class BIP65Test(SyscoinTestFramework):
         cnt = self.nodes[0].getblockcount()
 
         # Mine some old-version blocks
-        self.nodes[1].generate(100)
+        self.nodes[1].generate(200)
+        cnt += 100
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 100):
             raise AssertionError("Failed to mine 100 version=3 blocks")
 
         # Mine 750 new-version blocks
-        for i in xrange(15):
+        for i in range(15):
             self.nodes[2].generate(50)
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 850):
@@ -46,12 +49,12 @@ class BIP65Test(SyscoinTestFramework):
         self.nodes[2].generate(1)
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 851):
-            raise AssertionFailure("Failed to mine a version=4 blocks")
+            raise AssertionError("Failed to mine a version=4 blocks")
 
         # TODO: check that new CHECKLOCKTIMEVERIFY rules are enforced
 
         # Mine 198 new-version blocks
-        for i in xrange(2):
+        for i in range(2):
             self.nodes[2].generate(99)
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 1049):

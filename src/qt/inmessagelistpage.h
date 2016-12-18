@@ -65,8 +65,7 @@ private Q_SLOTS:
     void contextualMenu(const QPoint &point);
     /** New entry/entries were added to message table */
     void selectNewMessage(const QModelIndex &parent, int begin, int /*end*/);
-
-
+	
 };
 
 #endif // INMESSAGELISTPAGE_H

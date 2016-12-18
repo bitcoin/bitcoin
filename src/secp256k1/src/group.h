@@ -47,7 +47,7 @@ static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const se
  *  and a Y coordinate that is a quadratic residue modulo p. The return value
  *  is true iff a coordinate with the given X coordinate exists.
  */
-static int secp256k1_ge_set_xquad_var(secp256k1_ge *r, const secp256k1_fe *x);
+static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x);
 
 /** Set a group element (affine) equal to the point with the given X coordinate, and given oddness
  *  for Y. Return value indicates whether the result is valid. */
@@ -93,6 +93,9 @@ static void secp256k1_gej_neg(secp256k1_gej *r, const secp256k1_gej *a);
 
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_gej_is_infinity(const secp256k1_gej *a);
+
+/** Check whether a group element's y coordinate is a quadratic residue. */
+static int secp256k1_gej_has_quad_y_var(const secp256k1_gej *a);
 
 /** Set r equal to the double of a. If rzr is not-NULL, r->z = a->z * *rzr (where infinity means an implicit z = 0).
  * a may not be zero. Constant time. */

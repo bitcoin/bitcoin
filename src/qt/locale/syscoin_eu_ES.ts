@@ -1,5 +1,23 @@
 <TS language="eu_ES" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +42,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;Itxi</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopiatu helbidea</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -74,6 +88,10 @@
         <translation>Hauek dira zure Syscoin helbideak dirua jasotzeko. Gomendagarria da erabiltzea jasotzeko helbide berri bat operazio bakoitzeko.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopiatu helbidea</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Kopiatu &amp;Etiketa</translation>
     </message>
@@ -90,14 +108,14 @@
         <translation>Komaz bereizitako artxiboa (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Esportatua okerra</translation>
+        <source>Label</source>
+        <translation>Etiketa</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Errakuntza bat egon da gordetzen %1 helbide listan. Mesedez, saiatu berriro.</translation>
+        <source>Address</source>
+        <translation>Helbidea</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -113,6 +131,15 @@
         <translation>(etiketarik ez)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -168,16 +195,12 @@
         <translation>Seguru zaude nahi duzula zure diruzorroa enkriptatu?</translation>
     </message>
     <message>
-        <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>Syscoin Core orain itxiko da enkriptazio prozezua amaitzeko. Gogoratu enkriptatzean zure diruzorroa ez duzula guztiz babesten zure Syscoinak lapurretatik infektatzen zure ordenagailua Malwareekin.</translation>
+        <source>Wallet encrypted</source>
+        <translation>Zorroa enkriptatuta</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>GARRANTZITSUA: Aurreko seguritate-kopiak ordeztuko dire berriekin, enkriptatutak. Segurtasun arrazoigaitik, aurreko kopiak ezin dira erabili hasiko zarenean zure diruzorro enkriptatu berriarekin.</translation>
-    </message>
-    <message>
-        <source>Wallet encrypted</source>
-        <translation>Zorroa enkriptatuta</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -208,14 +231,549 @@
     <name>BanTableModel</name>
     </context>
 <context>
+    <name>CertListPage</name>
+    </context>
+<context>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopiatu helbidea</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopiatu etiketa</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiketarik ez)</translation>
+    </message>
+    </context>
+<context>
+    <name>EditAddressDialog</name>
+    <message>
+        <source>Edit Address</source>
+        <translation>Editatu helbidea</translation>
+    </message>
+    <message>
+        <source>&amp;Label</source>
+        <translation>&amp;Etiketa</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp;Helbidea</translation>
+    </message>
+    <message>
+        <source>New receiving address</source>
+        <translation>Jasotzeko helbide berria</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>Bidaltzeko helbide berria</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>Editatu jasotzeko helbidea</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>Editatu bidaltzeko helbidea</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Sartu berri den helbidea, "%1", helbide-liburuan dago jadanik.</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin desblokeatu zorroa.</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Gako berriaren sorrerak huts egin du.</translation>
+    </message>
+</context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin desblokeatu zorroa.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin desblokeatu zorroa.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin desblokeatu zorroa.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
+    <name>FreespaceChecker</name>
+    </context>
+<context>
+    <name>HelpMessageDialog</name>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
+    </context>
+<context>
+    <name>Intro</name>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Mezua</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Inprimakia</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Esportatu datuak uneko fitxategian</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin desblokeatu zorroa.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ezin desblokeatu zorroa.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Options</source>
+        <translation>Aukerak</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Komaz bereizitako artxiboa (*.csv)</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
+    </context>
+<context>
+    <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation>Inprimakia</translation>
+    </message>
+    </context>
+<context>
+    <name>PaymentServer</name>
+    </context>
+<context>
+    <name>PeerTableModel</name>
+    </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Denak</translation>
+    </message>
+</context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Etiketa:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Mezua</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopiatu etiketa</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopiatu helbidea</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Helbidea</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiketa</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiketa</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiketarik ez)</translation>
+    </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
+<context>
+    <name>SendCoinsDialog</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Bidali txanponak</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation>Bidali hainbat jasotzaileri batera</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation>Saldoa:</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation>Berretsi bidaltzeko ekintza</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Berretsi txanponak bidaltzea</translation>
+    </message>
+    <message>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation>Ordaintzeko kopurua 0 baino handiagoa izan behar du.</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiketarik ez)</translation>
+    </message>
+</context>
+<context>
+    <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>K&amp;opurua:</translation>
+    </message>
+    <message>
+        <source>Pay &amp;To:</source>
+        <translation>Ordaindu &amp;honi:</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Etiketa:</translation>
+    </message>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>Itsatsi helbidea arbeletik</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mezua</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Ordaindu honi:</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Sartu etiketa bat helbide honetarako, eta gehitu zure helbide-liburuan</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
+    </context>
+<context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>Itsatsi helbidea arbeletik</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    </context>
+<context>
+    <name>SplashScreen</name>
+    <message>
+        <source>[testnet]</source>
+        <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
     <name>SyscoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Sarearekin sinkronizatzen...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Gainbegiratu</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -299,288 +857,6 @@
     </message>
 </context>
 <context>
-    <name>ClientModel</name>
-    </context>
-<context>
-    <name>CoinControlDialog</name>
-    <message>
-        <source>Amount:</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>Date</source>
-        <translation>Data</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopiatu helbidea</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopiatu etiketa</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(etiketarik ez)</translation>
-    </message>
-    </context>
-<context>
-    <name>EditAddressDialog</name>
-    <message>
-        <source>Edit Address</source>
-        <translation>Editatu helbidea</translation>
-    </message>
-    <message>
-        <source>&amp;Label</source>
-        <translation>&amp;Etiketa</translation>
-    </message>
-    <message>
-        <source>&amp;Address</source>
-        <translation>&amp;Helbidea</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Jasotzeko helbide berria</translation>
-    </message>
-    <message>
-        <source>New sending address</source>
-        <translation>Bidaltzeko helbide berria</translation>
-    </message>
-    <message>
-        <source>Edit receiving address</source>
-        <translation>Editatu jasotzeko helbidea</translation>
-    </message>
-    <message>
-        <source>Edit sending address</source>
-        <translation>Editatu bidaltzeko helbidea</translation>
-    </message>
-    <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Sartu berri den helbidea, "%1", helbide-liburuan dago jadanik.</translation>
-    </message>
-    <message>
-        <source>Could not unlock wallet.</source>
-        <translation>Ezin desblokeatu zorroa.</translation>
-    </message>
-    <message>
-        <source>New key generation failed.</source>
-        <translation>Gako berriaren sorrerak huts egin du.</translation>
-    </message>
-</context>
-<context>
-    <name>FreespaceChecker</name>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    </context>
-<context>
-    <name>Intro</name>
-    </context>
-<context>
-    <name>OpenURIDialog</name>
-    </context>
-<context>
-    <name>OptionsDialog</name>
-    <message>
-        <source>Options</source>
-        <translation>Aukerak</translation>
-    </message>
-    </context>
-<context>
-    <name>OverviewPage</name>
-    <message>
-        <source>Form</source>
-        <translation>Inprimakia</translation>
-    </message>
-    </context>
-<context>
-    <name>PaymentServer</name>
-    </context>
-<context>
-    <name>PeerTableModel</name>
-    </context>
-<context>
-    <name>QObject</name>
-    <message>
-        <source>Amount</source>
-        <translation>Kopurua</translation>
-    </message>
-    </context>
-<context>
-    <name>QRImageWidget</name>
-    </context>
-<context>
-    <name>RPCConsole</name>
-    </context>
-<context>
-    <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>&amp;Amount:</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>&amp;Label:</source>
-        <translation>&amp;Etiketa:</translation>
-    </message>
-    <message>
-        <source>&amp;Message:</source>
-        <translation>Mezua</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopiatu etiketa</translation>
-    </message>
-    </context>
-<context>
-    <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Copy &amp;Address</source>
-        <translation>&amp;Kopiatu helbidea</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Helbidea</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiketa</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mezua</translation>
-    </message>
-    </context>
-<context>
-    <name>RecentRequestsTableModel</name>
-    <message>
-        <source>Date</source>
-        <translation>Data</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiketa</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mezua</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(etiketarik ez)</translation>
-    </message>
-    </context>
-<context>
-    <name>SendCoinsDialog</name>
-    <message>
-        <source>Send Coins</source>
-        <translation>Bidali txanponak</translation>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation>Kopurua</translation>
-    </message>
-    <message>
-        <source>Send to multiple recipients at once</source>
-        <translation>Bidali hainbat jasotzaileri batera</translation>
-    </message>
-    <message>
-        <source>Balance:</source>
-        <translation>Saldoa:</translation>
-    </message>
-    <message>
-        <source>Confirm the send action</source>
-        <translation>Berretsi bidaltzeko ekintza</translation>
-    </message>
-    <message>
-        <source>Confirm send coins</source>
-        <translation>Berretsi txanponak bidaltzea</translation>
-    </message>
-    <message>
-        <source>The amount to pay must be larger than 0.</source>
-        <translation>Ordaintzeko kopurua 0 baino handiagoa izan behar du.</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(etiketarik ez)</translation>
-    </message>
-    </context>
-<context>
-    <name>SendCoinsEntry</name>
-    <message>
-        <source>A&amp;mount:</source>
-        <translation>K&amp;opurua:</translation>
-    </message>
-    <message>
-        <source>Pay &amp;To:</source>
-        <translation>Ordaindu &amp;honi:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Sartu etiketa bat helbide honetarako, eta gehitu zure helbide-liburuan</translation>
-    </message>
-    <message>
-        <source>&amp;Label:</source>
-        <translation>&amp;Etiketa:</translation>
-    </message>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
-    </message>
-    <message>
-        <source>Paste address from clipboard</source>
-        <translation>Itsatsi helbidea arbeletik</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation>Mezua</translation>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation>Ordaindu honi:</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    </context>
-<context>
-    <name>SignVerifyMessageDialog</name>
-    <message>
-        <source>Alt+A</source>
-        <translation>Alt+A</translation>
-    </message>
-    <message>
-        <source>Paste address from clipboard</source>
-        <translation>Itsatsi helbidea arbeletik</translation>
-    </message>
-    <message>
-        <source>Alt+P</source>
-        <translation>Alt+P</translation>
-    </message>
-    </context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
@@ -598,8 +874,16 @@
         <translation>%1 konfirmazioak</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, ez da arrakastaz emititu oraindik</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Data</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ezezaguna</translation>
     </message>
     <message>
         <source>Message</source>
@@ -613,15 +897,7 @@
         <source>Amount</source>
         <translation>Kopurua</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, ez da arrakastaz emititu oraindik</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>ezezaguna</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
@@ -632,7 +908,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Panel honek transakzioaren deskribapen xehea erakusten du</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -642,6 +918,10 @@
     <message>
         <source>Type</source>
         <translation>Mota</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiketa</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -658,10 +938,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Sortua, baina ez onartua</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etiketa</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -682,6 +958,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiketarik ez)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -767,10 +1047,6 @@
         <translation>Kopiatu etiketa</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Esportatua okerra</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Komaz bereizitako artxiboa (*.csv)</translation>
     </message>
@@ -790,6 +1066,10 @@
         <source>Address</source>
         <translation>Helbidea</translation>
     </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Esportatua okerra</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -803,13 +1083,9 @@
         <source>Send Coins</source>
         <translation>Bidali txanponak</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Esportatu</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Esportatu datuak uneko fitxategian</translation>
@@ -820,10 +1096,6 @@
     <message>
         <source>Options:</source>
         <translation>Aukerak</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>Laguntza mezu hau</translation>
     </message>
     <message>
         <source>Rescanning...</source>

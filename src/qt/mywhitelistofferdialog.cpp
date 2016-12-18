@@ -19,14 +19,14 @@
 #include <QModelIndex>
 #include <QMenu>
 #include <QItemSelection>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "tinyformat.h"
 
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 MyWhitelistOfferDialog::MyWhitelistOfferDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyWhitelistOfferDialog),
@@ -46,11 +46,10 @@ MyWhitelistOfferDialog::MyWhitelistOfferDialog(const PlatformStyle *platformStyl
 	}
 
 	
-	ui->buttonBox->setVisible(false);
     ui->labelExplanation->setText(tr("You are an affiliate for these offers. Affiliate operations take 2-5 minutes to become active. The owner of the offer may add you as to his affiliate list and your affiliate entry will show up here."));
 	
     // Context menu actions
-	QAction *copyAction = new QAction(tr("&Copy Alias"), this);
+	QAction *copyAction = new QAction(tr("Copy Alias"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAction);
@@ -60,8 +59,6 @@ MyWhitelistOfferDialog::MyWhitelistOfferDialog(const PlatformStyle *platformStyl
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	on_refreshButton_clicked();
 	
 }
@@ -85,7 +82,6 @@ void MyWhitelistOfferDialog::setModel(WalletModel *walletModel)
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
 	ui->tableView->setModel(proxyModel);
-	ui->tableView->sortByColumn(0, Qt::AscendingOrder);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     // Set column widths
@@ -130,9 +126,8 @@ void MyWhitelistOfferDialog::on_refreshButton_clicked()
 			this->model->clear();
 			string offer_str = "";
 			string alias_str = "";
-			string expiresin_str = "";
+			int64_t expires_on = 0;
 			string offer_discount_percentage_str = "";
-			int expiresin = 0;
 			const UniValue &arr = result.get_array();
 		    for (unsigned int idx = 0; idx < arr.size(); idx++) {
 			    const UniValue& input = arr[idx];
@@ -145,15 +140,15 @@ void MyWhitelistOfferDialog::on_refreshButton_clicked()
 				const UniValue& alias_value = find_value(o, "alias");
 				if (alias_value.type() == UniValue::VSTR)
 					alias_str = alias_value.get_str();
-				const UniValue& expiresin_value = find_value(o, "expiresin");
-				if (expiresin_value.type() == UniValue::VNUM)
-					expiresin = expiresin_value.get_int();
 				const UniValue& offer_discount_percentage_value = find_value(o, "offer_discount_percentage");
 				if (offer_discount_percentage_value.type() == UniValue::VSTR)
 					offer_discount_percentage_str = offer_discount_percentage_value.get_str();
-				expiresin_str = strprintf("%d Blocks", expiresin);
-				model->addRow(QString::fromStdString(offer_str), QString::fromStdString(alias_str), QString::fromStdString(expiresin_str), QString::fromStdString(offer_discount_percentage_str));
-				model->updateEntry(QString::fromStdString(offer_str), QString::fromStdString(alias_str), QString::fromStdString(expiresin_str), QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
+				const UniValue& expires_on_value = find_value(o, "expires_on");
+				if (expires_on_value.type() == UniValue::VNUM)
+					expires_on = expires_on_value.get_int64();
+				const QString& dateTimeString = GUIUtil::dateTimeStr(expires_on);	
+				model->addRow(QString::fromStdString(offer_str), QString::fromStdString(alias_str),  dateTimeString, QString::fromStdString(offer_discount_percentage_str));
+				model->updateEntry(QString::fromStdString(offer_str), QString::fromStdString(alias_str),  dateTimeString, QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
 			}
 		}
 	}
@@ -161,7 +156,7 @@ void MyWhitelistOfferDialog::on_refreshButton_clicked()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not refresh the affiliate list: %1").arg(QString::fromStdString(strError)),
+			tr("Could not refresh the affiliate list: ") + QString::fromStdString(strError),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
@@ -189,14 +184,14 @@ void MyWhitelistOfferDialog::on_exportButton_clicked()
     CSVModelWriter writer(filename);
     // name, column, role
     writer.setModel(proxyModel);
-	writer.addColumn("Offer", MyOfferWhitelistTableModel::Offer, Qt::EditRole);
-	writer.addColumn("Alias", MyOfferWhitelistTableModel::Alias, Qt::EditRole);
-	writer.addColumn("Expires", MyOfferWhitelistTableModel::Expires, Qt::EditRole);
-	writer.addColumn("Discount", MyOfferWhitelistTableModel::Discount, Qt::EditRole);
+	writer.addColumn(tr("Offer"), MyOfferWhitelistTableModel::Offer, Qt::EditRole);
+	writer.addColumn(tr("Alias"), MyOfferWhitelistTableModel::Alias, Qt::EditRole);
+	writer.addColumn(tr("Expires"), MyOfferWhitelistTableModel::Expires, Qt::EditRole);
+	writer.addColumn(tr("Discount"), MyOfferWhitelistTableModel::Discount, Qt::EditRole);
 	
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }

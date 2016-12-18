@@ -51,7 +51,8 @@ public:
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
-
+    int getHeaderTipHeight() const;
+    int64_t getHeaderTipTime() const;
     //! Return number of transactions in the mempool
     long getMempoolSize() const;
     //! Return the dynamic memory usage of the mempool
@@ -72,10 +73,9 @@ public:
 
     QString formatFullVersion() const;
     QString formatSubVersion() const;
-    QString formatBuildDate() const;
     bool isReleaseVersion() const;
-    QString clientName() const;
     QString formatClientStartupTime() const;
+    QString dataDir() const;
 
 private:
     OptionsModel *optionsModel;
@@ -89,7 +89,7 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
@@ -103,7 +103,7 @@ Q_SIGNALS:
 public Q_SLOTS:
     void updateTimer();
     void updateNumConnections(int numConnections);
-    void updateAlert(const QString &hash, int status);
+    void updateAlert();
     void updateBanlist();
 };
 

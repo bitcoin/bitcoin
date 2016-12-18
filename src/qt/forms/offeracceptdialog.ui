@@ -30,6 +30,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="acceptZecButton">
+       <property name="text">
+        <string>Pay With ZEC</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="acceptBtcButton">
        <property name="toolTip">
         <string>Pay with Bitcoin</string>
@@ -48,7 +55,7 @@
         <string>Pay with Syscoin</string>
        </property>
        <property name="text">
-        <string>&amp;Pay with SYS</string>
+        <string>Pay with SYS</string>
        </property>
       </widget>
      </item>
@@ -61,15 +68,15 @@
        <property name="font">
         <font>
          <pointsize>12</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="cursor">
         <cursorShape>IBeamCursor</cursorShape>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Please wait...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string/>
        </property>
        <property name="wordWrap">
         <bool>true</bool>

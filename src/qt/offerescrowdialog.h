@@ -16,7 +16,7 @@ class OfferEscrowDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferEscrowDialog(const PlatformStyle *platformStyle, QString title, QString quantity, QString price, QWidget *parent = 0);
+    explicit OfferEscrowDialog(const PlatformStyle *platformStyle, QString title, QString quantity, QString price, QString currency, QWidget *parent = 0);
     ~OfferEscrowDialog();
 
 

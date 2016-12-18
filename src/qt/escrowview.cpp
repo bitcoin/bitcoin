@@ -30,8 +30,8 @@ EscrowView::EscrowView(const PlatformStyle *platformStyle, QStackedWidget *paren
     myEscrowListPage = new MyEscrowListPage(platformStyle);
 	QString theme = GUIUtil::getThemeName();
 
-	tabWidget->addTab(myEscrowListPage, tr("&My Escrows"));
-	tabWidget->addTab(escrowListPage, tr("&Search"));
+	tabWidget->addTab(myEscrowListPage, tr("My Escrows"));
+	tabWidget->addTab(escrowListPage, tr("Search"));
 	tabWidget->setTabIcon(0, QIcon(":/icons/" + theme + "/escrow"));
 	tabWidget->setTabIcon(1, QIcon(":/icons/" + theme + "/search"));
 

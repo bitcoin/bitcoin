@@ -36,11 +36,14 @@ public:
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
-	bool lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId);
-	void CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
+	bool lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& extTxId, QString& paymentOption);
+	void CheckPaymentInBTC(const QString &strExtTxId, const QString& address, const QString& price);
+	void CheckPaymentInZEC(const QString &strExtTxId, const QString& address, const QString& price);
+	void loadAliasList();
+	QString convertAddress(const QString &sysAddress);
+
 public Q_SLOTS:
     void done(int retval);
-
 private:
 	const PlatformStyle *platformStyle;
 	ClientModel* clientModel;
@@ -54,8 +57,9 @@ private:
     QAction *deleteAction; // to be able to explicitly disable it
     QString newOfferToSelect;
 	QString m_buttonText;
-	QString m_strBTCTxId;
+	QString m_strExtTxId;
 	QString m_strAddress;
+	QString m_paymentOption;
 	double dblPrice;
 private Q_SLOTS:
 	void slotConfirmedFinished(QNetworkReply *);
@@ -65,11 +69,14 @@ private Q_SLOTS:
     void on_exportButton_clicked();
 	void on_refreshButton_clicked();
 	void on_messageButton_clicked();
-	void on_btcButton_clicked();
+	void on_feedbackButton_clicked();
+	void on_extButton_clicked();
     void selectionChanged();
     void contextualMenu(const QPoint &point);
     void selectNewOffer(const QModelIndex &parent, int begin, int /*end*/);
 	void on_detailButton_clicked();
+	void on_ackButton_clicked();
+	void displayListChanged(const QString& alias);
 
 };
 

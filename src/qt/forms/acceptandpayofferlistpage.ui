@@ -9,14 +9,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>529</width>
-    <height>661</height>
+    <width>611</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>700</height>
+    <height>768</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -122,7 +122,7 @@
           <string>Lookup the OfferID from the blockchain DB</string>
          </property>
          <property name="text">
-          <string>&amp;Lookup Offer</string>
+          <string>Lookup Offer</string>
          </property>
         </widget>
        </item>
@@ -159,6 +159,16 @@
        <item row="5" column="1">
         <widget class="QComboBox" name="aliasEdit"/>
        </item>
+       <item row="6" column="1">
+        <widget class="QLabel" name="aliasDisclaimer">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item row="8" column="0">
         <widget class="QLabel" name="label_11">
          <property name="text">
@@ -173,13 +183,6 @@
            <width>16777215</width>
            <height>90</height>
           </size>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QLabel" name="aliasDisclaimer">
-         <property name="text">
-          <string/>
          </property>
         </widget>
        </item>
@@ -215,99 +218,156 @@
      <item row="4" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_2"/>
      </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Merchant:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="sellerEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
      <item row="6" column="0">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>Merchant Rating:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="sellerRatingEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>Title:</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="7" column="1">
       <widget class="QLineEdit" name="infoTitle">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
+     <item row="8" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_3"/>
      </item>
-     <item row="8" column="0">
+     <item row="9" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
         <string>Category:</string>
        </property>
       </widget>
      </item>
-     <item row="8" column="1">
+     <item row="9" column="1">
       <widget class="QLineEdit" name="infoCategory">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="9" column="1">
+     <item row="10" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_4"/>
      </item>
-     <item row="10" column="0">
+     <item row="11" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
         <string>Price:</string>
        </property>
       </widget>
      </item>
-     <item row="10" column="1">
+     <item row="11" column="1">
       <widget class="QLineEdit" name="infoPrice">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="11" column="1">
+     <item row="12" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_5"/>
      </item>
-     <item row="12" column="0">
+     <item row="13" column="0">
       <widget class="QLabel" name="label_12">
        <property name="text">
         <string>Currency:</string>
        </property>
       </widget>
      </item>
-     <item row="12" column="1">
+     <item row="13" column="1">
       <widget class="QLineEdit" name="infoCurrency">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="13" column="1">
+     <item row="14" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_6"/>
      </item>
      <item row="15" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Alias for Exchange Rate Peg:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="1">
+      <widget class="QLineEdit" name="aliasPegEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="0">
       <widget class="QLabel" name="label_7">
        <property name="text">
         <string>Quantity Remaining:</string>
        </property>
       </widget>
      </item>
-     <item row="15" column="1">
+     <item row="16" column="1">
       <widget class="QLineEdit" name="infoQty">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="16" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_7"/>
-     </item>
      <item row="17" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Quantity Sold:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QLineEdit" name="infoSold">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="18" column="0">
       <widget class="QLabel" name="label_9">
        <property name="text">
         <string>Description:</string>
        </property>
       </widget>
      </item>
-     <item row="17" column="1">
+     <item row="18" column="1">
       <widget class="QPlainTextEdit" name="infoDescription">
        <property name="enabled">
         <bool>true</bool>
@@ -320,53 +380,11 @@
        </property>
       </widget>
      </item>
-     <item row="18" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_8"/>
-     </item>
-     <item row="19" column="0">
-      <widget class="QLabel" name="certLabel">
-       <property name="text">
-        <string>Certificate:</string>
-       </property>
-      </widget>
-     </item>
      <item row="19" column="1">
-      <widget class="QLineEdit" name="infoCert">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_8"/>
      </item>
      <item row="20" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_9"/>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>Seller:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLineEdit" name="sellerEdit">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>Alias for Exchange Rate Peg:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="1">
-      <widget class="QLineEdit" name="aliasPegEdit">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
@@ -376,7 +394,7 @@
       <string>Purchase this offer</string>
      </property>
      <property name="text">
-      <string>&amp;Accept Offer</string>
+      <string>Accept Offer</string>
      </property>
     </widget>
    </item>

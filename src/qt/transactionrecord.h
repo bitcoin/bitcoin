@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Syscoin Core developers
+// Copyright (c) 2011-2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,6 +33,7 @@ public:
         Unconfirmed,        /**< Not yet mined into a block **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
+        Abandoned,          /**< Abandoned from the wallet **/
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
         MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
@@ -79,6 +80,8 @@ public:
         SendToSelf,
 		// SYSCOIN
         AliasActivate,
+		AliasPaymentSent,
+		AliasPaymentRecv,
         AliasUpdate,
         AliasTransfer,
 		AliasRecv,
@@ -86,6 +89,7 @@ public:
         OfferActivate,
         OfferUpdate,
         OfferAccept,
+		OfferAcceptAcknowledge,
 		OfferAcceptRecv,
       
         CertActivate,
@@ -94,13 +98,20 @@ public:
 		CertRecv,
 
         EscrowActivate,
+		EscrowAcknowledge,
         EscrowRelease,
+		EscrowReleaseRecv,
         EscrowRefund,
 		EscrowRefundRecv,
-		EscrowComplete,
+		EscrowReleaseComplete,
+		EscrowRefundComplete,
+		EscrowFeedback,
 
 		MessageActivate,
-		MessageRecv
+		MessageRecv,
+		EscrowFeedbackRecv,
+        OfferAcceptFeedback,
+		OfferAcceptFeedbackRecv
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -111,16 +122,16 @@ public:
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time):
-            hash(hash), time(time), type(Other), address(""), debit(0),
+    TransactionRecord(uint256 _hash, qint64 _time):
+            hash(_hash), time(_time), type(Other), address(""), debit(0),
             credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time,
-                Type type, const std::string &address,
-                const CAmount& debit, const CAmount& credit):
-            hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
+    TransactionRecord(uint256 _hash, qint64 _time,
+                Type _type, const std::string &_address,
+                const CAmount& _debit, const CAmount& _credit):
+            hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit),
             idx(0)
     {
     }
@@ -152,8 +163,8 @@ public:
     /** Return the unique identifier for this transaction (part) */
     QString getTxID() const;
 
-    /** Format subtransaction id */
-    static QString formatSubTxId(const uint256 &hash, int vout);
+    /** Return the output index of the subtransaction  */
+    int getOutputIndex() const;
 
     /** Update status from core wallet tx.
      */

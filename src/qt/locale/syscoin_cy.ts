@@ -1,5 +1,11 @@
 <TS language="cy" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -22,10 +28,6 @@
         <translation>C&amp;au</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Cyfeiriad Copi</translation>
-    </message>
-    <message>
         <source>&amp;Export</source>
         <translation>&amp;Allforio</translation>
     </message>
@@ -46,6 +48,10 @@
         <translation>Cyfeiriadau derbyn</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Cyfeiriad Copi</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Copïo &amp;Label</translation>
     </message>
@@ -58,8 +64,12 @@
         <translation>Allforio Rhestr Cyfeiriad</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Methodd Allfor</translation>
+        <source>Label</source>
+        <translation>Label</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Cyfeiriad</translation>
     </message>
     </context>
 <context>
@@ -77,6 +87,15 @@
         <translation>(heb label)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -152,198 +171,13 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Cysoni â'r rhwydwaith...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Trosolwg</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Dangos trosolwg cyffredinol y waled</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Trafodion</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Pori hanes trafodion</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>A&amp;llanfa</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Gadael rhaglen</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Ynghylch &amp;Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Opsiynau</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Amgryptio'r waled...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Newid cyfrinymadrodd...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Cyfeiriadau anfon...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Cyfeiriadau derbyn...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Agor &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Newid y cyfrinymadrodd a ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Waled</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Anfon</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Derbyn</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Dangos gwybodaeth am Graidd Syscoin</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Dangos / Cuddio</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Ffeil</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Gosodiadau</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Cymorth</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Bar offer tabiau</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Craidd Syscoin</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;Ynghylch Craidd Syscoin</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 a %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform></translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Gwall</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Rhybudd</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Gwybodaeth</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Cyfamserol</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Dal i fyny</translation>
-    </message>
-    <message>
-        <source>Date: %1
-</source>
-        <translation>Dyddiad: %1
-</translation>
-    </message>
-    <message>
-        <source>Type: %1
-</source>
-        <translation>Math: %1
-</translation>
-    </message>
-    <message>
-        <source>Label: %1
-</source>
-        <translation>Label: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Cyfeiriad: %1
-</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Trafodiad a anfonwyd</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Trafodiad sy'n cyrraedd</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;heb ei gloi&lt;/b&gt; ar hyn o bryd</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;ar glo&lt;/b&gt; ar hyn o bryd</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -416,6 +250,42 @@
     </message>
 </context>
 <context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Methodd ddatgloi'r waled.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Methodd ddatgloi'r waled.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Methodd ddatgloi'r waled.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <source>name</source>
@@ -425,16 +295,15 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Craidd Syscoin</translation>
-    </message>
-    <message>
-        <source>About Syscoin Core</source>
-        <translation>Ynghylch Craidd Syscoin</translation>
-    </message>
-    <message>
         <source>Usage:</source>
         <translation>Cynefod:</translation>
+    </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Message</source>
+        <translation>Neges</translation>
     </message>
     </context>
 <context>
@@ -444,17 +313,110 @@
         <translation>Croeso</translation>
     </message>
     <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>Croeso i Graidd Syscoin</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Craidd Syscoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Gwall</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Neges:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    </context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>Message</source>
+        <translation>Neges</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Ffurflen</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Methodd ddatgloi'r waled.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Methodd ddatgloi'r waled.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -503,6 +465,16 @@
     </message>
     </context>
 <context>
+    <name>OptionsModel</name>
+    </context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Message</source>
+        <translation>Neges</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -517,6 +489,10 @@
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 a %2</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -586,6 +562,9 @@
     </message>
     </context>
 <context>
+    <name>ResellOfferDialog</name>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
@@ -615,7 +594,7 @@
         <source>(no label)</source>
         <translation>(heb label)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -644,7 +623,13 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -664,16 +649,159 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Craidd Syscoin</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Datblygwyr Graidd Syscoin</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Cysoni â'r rhwydwaith...</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Dangos trosolwg cyffredinol y waled</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Trafodion</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Pori hanes trafodion</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>A&amp;llanfa</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Gadael rhaglen</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Ynghylch &amp;Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Opsiynau</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Amgryptio'r waled...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Newid cyfrinymadrodd...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Cyfeiriadau anfon...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Cyfeiriadau derbyn...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Agor &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Newid y cyfrinymadrodd a ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Waled</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Dangos / Cuddio</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Ffeil</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Gosodiadau</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Cymorth</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Bar offer tabiau</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Gwall</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Rhybudd</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Gwybodaeth</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Cyfamserol</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>&amp;Ynghylch Craidd Syscoin</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Dal i fyny</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Dyddiad: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Math: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Label: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Cyfeiriad: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Trafodiad a anfonwyd</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Trafodiad sy'n cyrraedd</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;heb ei gloi&lt;/b&gt; ar hyn o bryd</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;ar glo&lt;/b&gt; ar hyn o bryd</translation>
     </message>
 </context>
 <context>
@@ -708,12 +836,16 @@
         <translation>Math</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Label</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>Agor tan %1</translation>
     </message>
     <message>
-        <source>Label</source>
-        <translation>Label</translation>
+        <source>(no label)</source>
+        <translation>(heb label)</translation>
     </message>
     </context>
 <context>
@@ -735,10 +867,6 @@
         <translation>Copïo label</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Methodd Allfor</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Dyddiad</translation>
     </message>
@@ -754,6 +882,10 @@
         <source>Address</source>
         <translation>Cyfeiriad</translation>
     </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Methodd Allfor</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -767,19 +899,19 @@
         <source>Send Coins</source>
         <translation>Anfon arian</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Allforio</translation>
-    </message>
     </context>
 <context>
     <name>syscoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opsiynau:</translation>
+    </message>
+    <message>
+        <source>Syscoin Core</source>
+        <translation>Craidd Syscoin</translation>
     </message>
     <message>
         <source>Information</source>

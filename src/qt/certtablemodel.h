@@ -23,18 +23,23 @@ public:
         Name = 0,   /**< cert name */
         Title = 1,  /**< Cert value */
 		Data = 2,
-		Private = 3,
-		ExpiresOn = 4,
-		ExpiresIn = 5,
+		PubData = 3,
+		Category = 4,
+		ExpiresOn = 5,
 		Expired = 6,
-		Alias = 7
+		Alias = 7,
+		SafeSearch = 8,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {
         TypeRole = Qt::UserRole, /**< Type of cert (#Send or #Receive) */
 		NameRole,
 		PrivateRole,
-		AliasRole
+		ExpiredRole,
+		AliasRole,
+		SafeSearchRole,
+		CategoryRole,
     };
 
     /** Return status of edit/insert operation */
@@ -62,7 +67,7 @@ public:
     /* Add an cert to the model.
        Returns the added cert on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &cert, const QString &value, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired, const QString &privatecert,const QString &alias);
+    QString addRow(const QString &type, const QString &cert, const QString &value, const QString &data, const QString &pubdata, const QString &category, const QString &expires_on, const QString &expired,const QString &alias, const QString &safesearch);
 
 
     /* Look up row index of an cert in the model.
@@ -85,7 +90,7 @@ private:
 public Q_SLOTS:
     /* Update cert list from core.
      */
-    void updateEntry(const QString &cert, const QString &value, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired, const QString &privatecert, const QString &alias, CertModelType type, int status);
+    void updateEntry(const QString &cert, const QString &value, const QString &data, const QString &pubdata,const QString &category, const QString &expires_on, const QString &expired, const QString &alias, const QString &safesearch, CertModelType type, int status);
 
     friend class CertTablePriv;
 };

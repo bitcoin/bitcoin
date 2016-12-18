@@ -7,7 +7,7 @@ translations. Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 How to Upgrade
 ===============

@@ -1,5 +1,31 @@
 <TS language="nb" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Mengde:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +50,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;Lukk</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopier Adresse</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -74,6 +96,10 @@
         <translation>Dette er dine Syscoin-adresser for å sende betalinger. Det er anbefalt å bruk en ny mottaksadresse for hver transaksjon.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopier Adresse</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Kopier &amp;Merkelapp</translation>
     </message>
@@ -90,14 +116,14 @@
         <translation>Kommaseparert fil (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Eksportering feilet</translation>
+        <source>Label</source>
+        <translation>Merkelapp</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Det oppstod en feil under lagring av adresselisten til %1. Vennligst prøv på nytt.</translation>
+        <source>Address</source>
+        <translation>Adresse</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -113,6 +139,15 @@
         <translation>(ingen merkelapp)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -130,6 +165,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Gjenta ny adgangsfrase</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Oppgi adgangsfrasen til lommeboken.&lt;br/&gt;Vennligst bruk en adgangsfrase med &lt;b&gt;ti eller flere tilfeldige tegn&lt;/b&gt;, eller &lt;b&gt;åtte eller flere ord&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -156,6 +195,10 @@
         <translation>Endre adgangsfrase</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Oppgi gammel og ny adgangsfrase til lommeboken.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Bekreft kryptering av lommebok</translation>
     </message>
@@ -168,28 +211,12 @@
         <translation>Er du sikker på at du vil kryptere lommeboken?</translation>
     </message>
     <message>
-        <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>Syscoin Core vil nå avslutte for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke kan beskytte fullstendig mot tyveri av dine syscoins hvis datamaskinen din er infisert av skadevare.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>VIKTIG: Tidligere sikkerhetskopier av din lommebokfil bør erstattes med den nylig genererte og krypterte filen, da de blir ugyldiggjort av sikkerhetshensyn så snart du begynner å bruke den nye krypterte lommeboken.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Advarsel: Caps Lock er på!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Lommebok kryptert</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Oppgi adgangsfrasen til lommeboken.&lt;br/&gt;Vennligst bruk en adgangsfrase med &lt;b&gt;ti eller flere tilfeldige tegn&lt;/b&gt;, eller &lt;b&gt;åtte eller flere ord&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Oppgi gammel og ny adgangsfrase til lommeboken.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>VIKTIG: Tidligere sikkerhetskopier av din lommebokfil bør erstattes med den nylig genererte og krypterte filen, da de blir ugyldiggjort av sikkerhetshensyn så snart du begynner å bruke den nye krypterte lommeboken.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -219,6 +246,10 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Adgangsfrase for lommebok endret.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Advarsel: Caps Lock er på!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
@@ -232,325 +263,18 @@
     </message>
 </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Signer &amp;melding...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Synkroniserer med nettverk...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Oversikt</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Vis generell oversikt over lommeboken</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transaksjoner</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Vis transaksjonshistorikk</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>&amp;Avslutt</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Avslutt applikasjonen</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Om &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Vis informasjon om Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Innstillinger...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Krypter Lommebok...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>Lag &amp;Sikkerhetskopi av Lommebok...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Endre Adgangsfrase...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Utsendingsadresser...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Mottaksadresser...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Åpne &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Syscoin Core-klient</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Importere blokker...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Reindekserer blokker på harddisk...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Send til en Syscoin-adresse</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>Sikkerhetskopier lommebok til annet sted</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Endre adgangsfrasen brukt for kryptering av lommebok</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Feilsøkingsvindu</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Åpne konsoll for feilsøk og diagnostikk</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Verifiser melding...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Lommebok</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Send</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Motta</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Vis informasjon om Syscoin Core</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Vis / Skjul</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Vis eller skjul hovedvinduet</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Krypter de private nøklene som tilhører lommeboken din</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Signer en melding med Syscoin-adressene dine for å bevise at du eier dem</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Bekreft meldinger for å være sikker på at de ble signert av en angitt Syscoin-adresse</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;Fil</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Innstillinger</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Hjelp</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Verktøylinje for faner</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>Forespør betalinger (genererer QR-koder og syscoin: URIer)</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;Om Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Syscoin Core</source>
-        <translation>Endre konfigurasjonsvalg for Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Vis listen av brukte utsendingsadresser og merkelapper</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Vis listen over bruke mottaksadresser og merkelapper</translation>
-    </message>
-    <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>Åpne en Syscoin: URI eller betalingsetterspørring</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Kommandolinjevalg</translation>
-    </message>
-    <message>
-        <source>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</source>
-        <translation>Vis Syscoin Core hjelpemeldingen for å få en liste med mulige kommandolinjevalg</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Syscoin network</source>
-        <translation><numerusform>%n aktiv forbindelse til Syscoin-nettverket</numerusform><numerusform>%n aktive forbindelser til Syscoin-nettverket</numerusform></translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Ingen kilde for blokker tilgjengelig...</translation>
-    </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Lastet %n blokk med transaksjonshistorikk.</numerusform><numerusform>Lastet %n blokker med transaksjonshistorikk.</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n time</numerusform><numerusform>%n timer</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dag</numerusform><numerusform>%n dager</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n uke</numerusform><numerusform>%n uker</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 og %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n år</numerusform><numerusform>%n år</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 bak</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Siste mottatte blokk ble generert for %1 siden.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Transaksjoner etter dette vil ikke være synlige enda.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Feil</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Advarsel</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informasjon</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Oppdatert</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Laster ned...</translation>
-    </message>
-    <message>
-        <source>Date: %1
-</source>
-        <translation>Dato: %1
-</translation>
-    </message>
-    <message>
-        <source>Amount: %1
-</source>
-        <translation>Beløp: %1:
-</translation>
-    </message>
-    <message>
-        <source>Type: %1
-</source>
-        <translation>Type: %1
-</translation>
-    </message>
-    <message>
-        <source>Label: %1
-</source>
-        <translation>Merkelapp: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Adresse: %1
-</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Sendt transaksjon</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Innkommende transaksjon</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst opp&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Nettverksvarsel</translation>
+        <source>Status</source>
+        <translation>Status</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -568,10 +292,6 @@
     <message>
         <source>Amount:</source>
         <translation>Beløp:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritet:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -626,10 +346,6 @@
         <translation>Bekreftet</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Prioritet</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Kopier adresse</translation>
     </message>
@@ -670,10 +386,6 @@
         <translation>Kopier bytes</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Kopier prioritet</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Kopier støv</translation>
     </message>
@@ -682,64 +394,8 @@
         <translation>Kopier veksel</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>høyest</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>høyere</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>høy</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>medium-høy</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>medium</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>lav-medium</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>lav</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>lavere</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>lavest</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 låst)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>ingen</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Denne teksten blir rød hvis transaksjonsstørrelsen er større enn 1000 bytes.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>Denne teksten blir rød hvis prioriteten er lavere enn "medium".</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>Denne teksten blir rød dersom en mottaker mottar et beløp mindre enn %1.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Kan variere +/- %1 satoshi(er) per input.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -750,16 +406,8 @@
         <translation>nei</translation>
     </message>
     <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Dette betyr at et gebyr på minst %1 per KB er påkrevd.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Kan variere +/- 1 byte per input.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Transaksjoner med høyere prioritet har mer sannsynlighet for å bli inkludert i en blokk.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Kan variere +/- %1 satoshi(er) per input.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -813,12 +461,12 @@
         <translation>Rediger utsendingsadresse</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Den oppgitte adressen "%1" er allerede i adresseboken.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Den angitte adressed "%1" er ikke en gyldig Syscoin-adresse.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Den oppgitte adressen "%1" er allerede i adresseboken.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -829,6 +477,106 @@
         <translation>Generering av ny nøkkel feilet.</translation>
     </message>
 </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Generelt</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nei</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse opp lommeboken.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nei</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse opp lommeboken.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Generelt</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Mengde:</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nei</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse opp lommeboken.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Fjern</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Generelt</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Totalt:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -855,20 +603,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>versjon</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
         <translation> (%1-bit)</translation>
-    </message>
-    <message>
-        <source>About Syscoin Core</source>
-        <translation>Om Syscoin Core</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -906,28 +646,31 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Vis velkomstbilde ved oppstart (default: %u)</translation>
     </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
     <message>
-        <source>Reset all settings changes made over the GUI</source>
-        <translation>Nullstill alle oppsettendringer gjort via det grafiske grensesnittet</translation>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
     </message>
-</context>
+    <message>
+        <source>From</source>
+        <translation>Fra</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Til</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Melding</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Velkommen</translation>
-    </message>
-    <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>Velkommen til Syscoin Core.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>Siden dette er første gang programmet starter, kan du nå velge hvor Syscoin Core skal lagre sine data.</translation>
-    </message>
-    <message>
-        <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Syscoin Core vil laste ned og lagre en kopi av Syscoin sin blokkjede. Minst %1GB av data vil bli lagret i denne mappen, og det vil vokse over tid. Lommeboken vil også bli lagret i denne mappen.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -936,10 +679,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Bruk en egendefinert datamappe:</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -958,6 +697,251 @@
         <translation><numerusform>(av %n GB som trengs)</numerusform><numerusform>(av %n GB som trengs)</numerusform></translation>
     </message>
 </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>ingen</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Melding:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>Fra</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Til</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Melding</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Skjema</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Tidspunkt for siste blokk</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Skjul</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Eksporter data fra nåværende fane til fil</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>No</source>
+        <translation>Nei</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse opp lommeboken.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunne ikke låse opp lommeboken.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resultat URI for lang, prøv å redusere teksten for merkelapp / melding.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Feil ved koding av URI til QR-kode.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>til</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resultat URI for lang, prøv å redusere teksten for merkelapp / melding.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Feil ved koding av URI til QR-kode.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>til</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Mengde:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Totalt:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1184,6 +1168,10 @@
         <translation>standardverdi</translation>
     </message>
     <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Feil i kommunikasjonen med %1: %2</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>ingen</translation>
     </message>
@@ -1208,6 +1196,32 @@
         <translation>Angitt proxyadresse er ugyldig.</translation>
     </message>
 </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommaseparert fil (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Fra</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Til</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Melding</translation>
+    </message>
+    </context>
 <context>
     <name>OverviewPage</name>
     <message>
@@ -1286,30 +1300,6 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI handling</source>
-        <translation>URI-håndtering</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Ugyldig betalingsadresse %1</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Betalingsetterspørring avvist</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Nettverk for betalingsetterspørring er ikke i overensstemmelse med klientnettverket.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Betalingsetterspørringen er ikke initialisert.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Forespurt betalingsmengde på %1 er for liten (betraktet som støv).</translation>
-    </message>
-    <message>
         <source>Payment request error</source>
         <translation>Betalingsetterspørringsfeil</translation>
     </message>
@@ -1318,8 +1308,16 @@
         <translation>Kan ikke starte Syscoin: klikk-og-betal håndterer</translation>
     </message>
     <message>
+        <source>URI handling</source>
+        <translation>URI-håndtering</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Hentelenke for betalingsetterspørring er ugyldig: %1</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Ugyldig betalingsadresse %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
@@ -1334,8 +1332,20 @@
         <translation>Betalingsetterspørringsfil kan ikke leses! Dette kan være forårsaket av en ugyldig betalingsetterspørringsfil.</translation>
     </message>
     <message>
+        <source>Payment request rejected</source>
+        <translation>Betalingsetterspørring avvist</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Nettverk for betalingsetterspørring er ikke i overensstemmelse med klientnettverket.</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Betalingsetterspørringen har utløpt.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Betalingsetterspørringen er ikke initialisert.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
@@ -1344,6 +1354,10 @@
     <message>
         <source>Invalid payment request.</source>
         <translation>Ugyldig betalingsetterspørring.</translation>
+    </message>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>Forespurt betalingsmengde på %1 er for liten (betraktet som støv).</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1366,12 +1380,12 @@
         <translation>Dårlig svar fra server %1</translation>
     </message>
     <message>
-        <source>Payment acknowledged</source>
-        <translation>Betaling erkjent</translation>
-    </message>
-    <message>
         <source>Network request error</source>
         <translation>Nettverksforespørsel feil</translation>
+    </message>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>Betaling erkjent</translation>
     </message>
 </context>
 <context>
@@ -1388,16 +1402,12 @@
         <source>Ping Time</source>
         <translation>Ping-tid</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Beløp</translation>
-    </message>
-    <message>
-        <source>Enter a Syscoin address (e.g. %1)</source>
-        <translation>Oppgi en Syscoin-adresse (f.eks. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1427,6 +1437,14 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 og %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1450,10 +1468,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Klientnavn</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>-</translation>
     </message>
@@ -1472,10 +1486,6 @@
     <message>
         <source>General</source>
         <translation>Generelt</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Bruker OpenSSL versjon</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
@@ -1516,10 +1526,6 @@
     <message>
         <source>Memory usage</source>
         <translation>Minnebruk</translation>
-    </message>
-    <message>
-        <source>Open the Syscoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Åpne Syscoin Core sin loggfil for feilsøk fra gjeldende datamappe. Dette kan ta noen sekunder for store loggfiler.</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1638,10 +1644,6 @@
         <translation>Ut:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Byggedato</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Loggfil for feilsøk</translation>
     </message>
@@ -1676,10 +1678,6 @@
     <message>
         <source>&amp;Unban Node</source>
         <translation>Fjern &amp;Utestengning av Node</translation>
-    </message>
-    <message>
-        <source>Welcome to the Syscoin Core RPC console.</source>
-        <translation>Velkommen til Syscoin Core sin RPC-konsoll.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1891,10 +1889,6 @@
         <translation>Melding</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Beløp</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(ingen merkelapp)</translation>
     </message>
@@ -1902,11 +1896,10 @@
         <source>(no message)</source>
         <translation>(ingen melding)</translation>
     </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(intet beløp)</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1940,10 +1933,6 @@
     <message>
         <source>Amount:</source>
         <translation>Beløp:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritet:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -2026,14 +2015,6 @@
         <translation>rask</translation>
     </message>
     <message>
-        <source>Send as zero-fee transaction if possible</source>
-        <translation>Send uten transaksjonsgebyr hvis mulig</translation>
-    </message>
-    <message>
-        <source>(confirmation may take longer)</source>
-        <translation>(bekreftelse kan ta lengre tid)</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Send til flere enn en mottaker</translation>
     </message>
@@ -2066,14 +2047,6 @@
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Bekreft sending av syscoins</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 til %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Kopier mengde</translation>
     </message>
@@ -2094,12 +2067,24 @@
         <translation>Kopier bytes</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Kopier prioritet</translation>
+        <source>Copy dust</source>
+        <translation>Kopier støv</translation>
     </message>
     <message>
         <source>Copy change</source>
         <translation>Kopier veksel</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 til %2</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Er du sikker på at du vil sende?</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>lagt til som transaksjonsgebyr</translation>
     </message>
     <message>
         <source>Total Amount %1</source>
@@ -2108,6 +2093,14 @@
     <message>
         <source>or</source>
         <translation>eller</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Bekreft sending av syscoins</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Mottakeradressen er ikke gyldig. Vennligst kontroller på nytt.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -2120,6 +2113,10 @@
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Totalbeløpet overstiger saldo etter at %1 transaksjonsgebyr er lagt til.</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Gjenbruk av adresse funnet: adresser skal bare brukes en gang hver.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2141,41 +2138,17 @@
         <source>Pay only the required fee of %1</source>
         <translation>Betal kun påkrevd gebyr på %1</translation>
     </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Anslått til å begynne bekreftelse innen %n blokk.</numerusform><numerusform>Anslått til å begynne bekreftelse innen %n blokker.</numerusform></translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>Mottakeradressen er ikke gyldig. Vennligst kontroller på nytt.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Gjenbruk av adresse funnet: adresser skal bare brukes en gang hver.</translation>
-    </message>
     <message>
         <source>Warning: Invalid Syscoin address</source>
         <translation>Advarsel: Ugyldig Syscoin-adresse</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(ingen merkelapp)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
         <translation>Advarsel: Ukjent adresse for veksel</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>Kopier støv</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Er du sikker på at du vil sende?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>lagt til som transaksjonsgebyr</translation>
+        <source>(no label)</source>
+        <translation>(ingen merkelapp)</translation>
     </message>
 </context>
 <context>
@@ -2187,10 +2160,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Betal &amp;Til:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Skriv inn en merkelapp for denne adressen for å legge den til i din adressebok</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2260,18 +2229,32 @@
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Skriv inn en merkelapp for denne adressen for å legge den til i din adressebok</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Syscoin Core lukker...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Slå ikke av datamaskinen før dette vinduet forsvinner.</translation>
     </message>
 </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>Generelt</translation>
+    </message>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -2414,16 +2397,265 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoin Core utviklerne</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnett]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Signer &amp;melding...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Synkroniserer med nettverk...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Node</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Vis generell oversikt over lommeboken</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transaksjoner</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Vis transaksjonshistorikk</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>&amp;Avslutt</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Avslutt applikasjonen</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Om &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Vis informasjon om Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Innstillinger...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Krypter Lommebok...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>Lag &amp;Sikkerhetskopi av Lommebok...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Endre Adgangsfrase...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Utsendingsadresser...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Mottaksadresser...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Åpne &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Reindekserer blokker på harddisk...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Send til en Syscoin-adresse</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Sikkerhetskopier lommebok til annet sted</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Endre adgangsfrasen brukt for kryptering av lommebok</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Feilsøkingsvindu</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Åpne konsoll for feilsøk og diagnostikk</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Verifiser melding...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Lommebok</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Vis / Skjul</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Vis eller skjul hovedvinduet</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Krypter de private nøklene som tilhører lommeboken din</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Signer en melding med Syscoin-adressene dine for å bevise at du eier dem</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Bekreft meldinger for å være sikker på at de ble signert av en angitt Syscoin-adresse</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;Fil</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Innstillinger</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Hjelp</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Verktøylinje for faner</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Forespør betalinger (genererer QR-koder og syscoin: URIer)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Vis listen av brukte utsendingsadresser og merkelapper</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Vis listen over bruke mottaksadresser og merkelapper</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Åpne en Syscoin: URI eller betalingsetterspørring</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Kommandolinjevalg</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n aktiv forbindelse til Syscoin-nettverket</numerusform><numerusform>%n aktive forbindelser til Syscoin-nettverket</numerusform></translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>Ingen kilde for blokker tilgjengelig...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Lastet %n blokk med transaksjonshistorikk.</numerusform><numerusform>Lastet %n blokker med transaksjonshistorikk.</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 bak</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Siste mottatte blokk ble generert for %1 siden.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Transaksjoner etter dette vil ikke være synlige enda.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Feil</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Advarsel</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Informasjon</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Oppdatert</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>&amp;Om Syscoin Core</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Laster ned...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Dato: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Beløp: %1:
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Type: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Merkelapp: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adresse: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Sendt transaksjon</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Innkommende transaksjon</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst opp&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -2438,10 +2670,6 @@
     <message>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>konflikt</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2459,9 +2687,9 @@
         <source>Status</source>
         <translation>Status</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, kringkast gjennom %n node</numerusform><numerusform>, kringkast gjennom %n noder</numerusform></translation>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, har ikke blitt kringkastet med hell enda</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2478,6 +2706,10 @@
     <message>
         <source>From</source>
         <translation>Fra</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ukjent</translation>
     </message>
     <message>
         <source>To</source>
@@ -2498,10 +2730,6 @@
     <message>
         <source>Credit</source>
         <translation>Kredit</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>blir moden om %n blokk</numerusform><numerusform>blir moden om %n blokker</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2571,18 +2799,6 @@
         <source>false</source>
         <translation>usann</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, har ikke blitt kringkastet med hell enda</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Åpen for %n blokk til</numerusform><numerusform>Åpen for %n blokker til</numerusform></translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>ukjent</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -2594,7 +2810,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Her vises en detaljert beskrivelse av transaksjonen</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2606,36 +2822,16 @@
         <translation>Type</translation>
     </message>
     <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Umoden (%1 bekreftelser, vil være tilgjengelig etter %2)</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Åpen for %n blokk til</numerusform><numerusform>Åpen for %n blokker til</numerusform></translation>
+        <source>Label</source>
+        <translation>Merkelapp</translation>
     </message>
     <message>
         <source>Open until %1</source>
         <translation>Åpen til %1</translation>
     </message>
     <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Bekreftet (%1 bekreftelser)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Denne blokken har ikke blitt mottatt av noen andre noder og vil sannsynligvis ikke bli akseptert!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>Generert men ikke akseptert</translation>
-    </message>
-    <message>
         <source>Offline</source>
         <translation>Frakoblet</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Merkelapp</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2646,8 +2842,24 @@
         <translation>Bekrefter (%1 av %2 anbefalte bekreftelser)</translation>
     </message>
     <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Bekreftet (%1 bekreftelser)</translation>
+    </message>
+    <message>
         <source>Conflicted</source>
         <translation>Konflikt</translation>
+    </message>
+    <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Umoden (%1 bekreftelser, vil være tilgjengelig etter %2)</translation>
+    </message>
+    <message>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>Denne blokken har ikke blitt mottatt av noen andre noder og vil sannsynligvis ikke bli akseptert!</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation>Generert men ikke akseptert</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2676,6 +2888,10 @@
     <message>
         <source>(n/a)</source>
         <translation>-</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ingen merkelapp)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -2793,32 +3009,16 @@
         <translation>Eksporter Transaksjonshistorikk</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation>Kun observer</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Ekport Feilet</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>En feil oppstod ved lagring av transaksjonshistorikken til %1.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Ekport Fullført</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>Transaksjonshistorikken ble lagret til %1.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Kommaseparert fil (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>Bekreftet</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Kun observer</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2839,6 +3039,22 @@
     <message>
         <source>ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Ekport Feilet</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>En feil oppstod ved lagring av transaksjonshistorikken til %1.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Ekport Fullført</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Transaksjonshistorikken ble lagret til %1.</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2869,13 +3085,9 @@
         <source>Send Coins</source>
         <translation>Send Syscoins</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Eksporter</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporter data fra nåværende fane til fil</translation>
@@ -2897,12 +3109,12 @@
         <translation>En feil oppstod ved lagring av lommebok til %1.</translation>
     </message>
     <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>Lommeboken ble lagret til %1.</translation>
-    </message>
-    <message>
         <source>Backup Successful</source>
         <translation>Sikkerhetskopiering Fullført</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Lommeboken ble lagret til %1.</translation>
     </message>
 </context>
 <context>
@@ -2930,14 +3142,6 @@
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Hvis &lt;category&gt; ikke er oppgitt eller hvis &lt;category&gt; = 1, ta ut all informasjon for feilsøking.</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Maksimalt samlede gebyrer (i %s) til å bruke i en enkelt lommeboktransaksjon; settes dette for lavt kan store transaksjoner kanskje avbrytes (standardverdi: %s)</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong Syscoin Core will not work properly.</source>
-        <translation>Vennligst undersøk at din datamaskin har riktig dato og klokkeslett! Hvis klokken er stilt feil vil ikke Syscoin Core fungere riktig.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -2980,6 +3184,10 @@
         <translation>Ta imot tilkoblinger fra utsiden (standardverdi: 1 hvis uten -proxy eller -connect)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind til angitt adresse. Bruk [vertsmaskin]:port notasjon for IPv6</translation>
     </message>
@@ -3008,20 +3216,8 @@
         <translation>Dette er en forhåndssluppet testversjon - bruk på egen risiko - ikke for bruk til blokkutvinning eller bedriftsapplikasjoner</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Syscoin Core is probably already running.</source>
-        <translation>Ute av stand til å binde til %s på denne datamaskinen. Syscoin Core kjører sannsynligvis allerede.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Bruk UPnP for lytteport (standardverdi: 1 ved lytting og uten -proxy)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>ADVARSEL: unormalt høyt antall blokker generert, %d blokker mottatt de siste %d timene (%d forventet)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>ADVARSEL: kontroller nettverkstilkoblingen, mottok %d blokker i de siste %d timene (%d forventet)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -3030,10 +3226,6 @@
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Advarsel: Vi ser ikke ut til å være enige med våre noder! Du må oppgradere, eller andre noder må oppgradere.</translation>
-    </message>
-    <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Advarsel: wallet.dat korrupt, data reddet! Original wallet.dat lagret som wallet.{timestamp}.bak i %s; hvis din saldo eller dine transaksjoner ikke er korrekte bør du gjenopprette fra en backup.</translation>
     </message>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
@@ -3196,14 +3388,6 @@
         <translation>Valg for lommebok:</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Advarsel: Denne versjonen er utdatert; oppgradering er påkrevd!</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Du må gjenoppbygge databasen med å bruke -reindex for å endre -txindex</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Tillat JSON-RPC-tilkoblinger fra angitt kilde. Gyldig for &lt;ip&gt; er en enkelt IP (f. eks. 1.2.3.4), et nettverk/nettmaske (f. eks. 1.2.3.4/255.255.255.0) eller et nettverk/CIDR (f. eks. 1.2.3.4/24). Dette alternativet kan angis flere ganger</translation>
     </message>
@@ -3214,10 +3398,6 @@
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
         <translation>Bind til gitt adresse for å lytte for JSON-RPC-tilkoblinger. Bruk [host]:port notasjon for IPv6. Dette alternativet kan angis flere ganger (standardverdi: bind til alle grensesnitt)</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. Syscoin Core is probably already running.</source>
-        <translation>Ute av stand til å låse datamappen %s. Syscoin Core kjører sannsynligvis allerede.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3264,10 +3444,6 @@
         <translation>Sett maksimum størrelse for transaksjoner med høy prioritet / lavt gebyr, i bytes (standardverdi: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>Angi antall tråder for mynt generering hvis aktivert (-1 = alle kjerner, standardverdi: %d)</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Transaksjonsbeløpet er for lite til å sendes etter at gebyret er fratrukket</translation>
     </message>
@@ -3292,36 +3468,12 @@
         <translation>Godta offentlige REST forespørsler (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Activating best chain...</source>
-        <translation>Aktiverer beste kjede...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Alltid videresend transaksjoner mottatt fra hvitlistede noder (standardverdi: %d)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
-        <translation>Forsøk å berge private nøkler fra en korrupt wallet.dat ved oppstart</translation>
-    </message>
-    <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Automatisk opprette Tor skjult tjeneste (standardverdi: %d)</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Kan ikke løse -whitebind-adresse: '%s'</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Koble til via SOCKS5-proxy</translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2009-%i The Syscoin Core Developers</source>
-        <translation>Copyright (C) 2009-%i utviklerne av Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Syscoin Core</source>
-        <translation>Feil ved lasting av wallet.dat: Lommeboken krever en nyere versjon av Syscoin Core</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3334,22 +3486,6 @@
     <message>
         <source>Information</source>
         <translation>Informasjon</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. Syscoin Core is shutting down.</source>
-        <translation>Sunnhetssjekk ved oppstart feilet. Syscoin Core stenges ned.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ugyldig beløp for -maxtxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ugyldig mengde for -minrelaytxfee=&lt;beløp&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ugyldig mengde for -mintxfee=&lt;beløp&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3374,14 +3510,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>Innstillinger for RPC-server:</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
-        <translation>Gjenopprett blokkjedeindeks fra gjeldende blk000??.dat filer ved oppstart</translation>
-    </message>
-    <message>
-        <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Motta og vis P2P nettverksvarsler (standardvalg: %u)</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
@@ -3456,10 +3584,6 @@
         <translation>Brukernavn for JSON-RPC forbindelser</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Syscoin Core to complete</source>
-        <translation>Lommeboken måtte skrives på nytt: start Syscoin Core på nytt for å fullføre</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Advarsel</translation>
     </message>
@@ -3476,10 +3600,6 @@
         <translation>Valg for ZeroMQ-meldinger:</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat korrupt, bergning feilet</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Passord for JSON-RPC forbindelser</translation>
     </message>
@@ -3488,20 +3608,12 @@
         <translation>Utfør kommando når beste blokk endrer seg (%s i kommandoen erstattes med blokkens hash)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Denne hjelpemeldingen</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Tillat oppslag i DNS for -addnode, -seednode og -connect</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
         <translation>Laster adresser...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
@@ -3518,10 +3630,6 @@
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Ikke hold transaksjoner i minnet lenger enn &lt;n&gt; timer (standard: %u)</translation>
-    </message>
-    <message>
-        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Feil ved lesing av wallet.dat! Alle nøkler lest riktig, men transaksjonsdataene eller oppføringer i adresseboken mangler kanskje eller er feil.</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
@@ -3576,12 +3684,8 @@
         <translation>Alltid søk etter nodeadresser via DNS-oppslag (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Feil ved lasting av wallet.dat</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: %u)</source>
-        <translation>Generer mynter (standardverdi: %u)</translation>
+        <source>Copyright (C) 2009-%i The Syscoin Core Developers</source>
+        <translation>Copyright (C) 2009-%i utviklerne av Syscoin Core</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -3636,10 +3740,6 @@
         <translation>Angi størrelse på nøkkel-lager til &lt;n&gt; (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Sett minimum blokkstørrelse i bytes (standardverdi: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Sett antall tråder til betjening av RPC-kall (standardverdi: %d)</translation>
     </message>
@@ -3666,18 +3766,6 @@
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Ukjent nettverk angitt i -onlynet '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Kunne ikke slå opp -bind adresse: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Kunne ikke slå opp -externalip adresse: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ugyldig beløp for -paytxfee=&lt;beløp&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

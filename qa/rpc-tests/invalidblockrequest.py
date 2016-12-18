@@ -1,15 +1,12 @@
-#!/usr/bin/env python2
-#
-# Distributed under the MIT/X11 software license, see the accompanying
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.comptool import TestManager, TestInstance, RejectResult
-from test_framework.mininode import *
 from test_framework.blocktools import *
-import logging
 import copy
 import time
 
@@ -28,6 +25,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
     def __init__(self):
+        super().__init__()
         self.num_nodes = 1
 
     def run_test(self):
@@ -40,7 +38,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
 
     def get_tests(self):
         if self.tip is None:
-            self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
+            self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.block_time = int(time.time())+1
 
         '''
@@ -60,7 +58,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         Now we need that block to mature so we can spend the coinbase.
         '''
         test = TestInstance(sync_every_block=False)
-        for i in xrange(100):
+        for i in range(100):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.tip = block.sha256
@@ -79,9 +77,9 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         block2 = create_block(self.tip, create_coinbase(height), self.block_time)
         self.block_time += 1
 
-        # chr(81) is OP_TRUE
-        tx1 = create_transaction(self.block1.vtx[0], 0, chr(81), 50*100000000)
-        tx2 = create_transaction(tx1, 0, chr(81), 50*100000000)
+        # b'0x51' is OP_TRUE
+        tx1 = create_transaction(self.block1.vtx[0], 0, b'\x51', 50 * COIN)
+        tx2 = create_transaction(tx1, 0, b'\x51', 50 * COIN)
 
         block2.vtx.extend([tx1, tx2])
         block2.hashMerkleRoot = block2.calc_merkle_root()
@@ -97,7 +95,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         assert(block2_orig.vtx != block2.vtx)
 
         self.tip = block2.sha256
-        yield TestInstance([[block2, RejectResult(16,'bad-txns-duplicate')], [block2_orig, True]])
+        yield TestInstance([[block2, RejectResult(16, b'bad-txns-duplicate')], [block2_orig, True]])
         height += 1
 
         '''
@@ -105,14 +103,14 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         '''
         block3 = create_block(self.tip, create_coinbase(height), self.block_time)
         self.block_time += 1
-        block3.vtx[0].vout[0].nValue = 100*100000000 # Too high!
+        block3.vtx[0].vout[0].nValue = 100 * COIN # Too high!
         block3.vtx[0].sha256=None
         block3.vtx[0].calc_sha256()
         block3.hashMerkleRoot = block3.calc_merkle_root()
         block3.rehash()
         block3.solve()
 
-        yield TestInstance([[block3, RejectResult(16,'bad-cb-amount')]])
+        yield TestInstance([[block3, RejectResult(16, b'bad-cb-amount')]])
 
 
 if __name__ == '__main__':

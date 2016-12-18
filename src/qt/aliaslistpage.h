@@ -2,6 +2,8 @@
 #define ALIASLISTPAGE_H
 
 #include <QDialog>
+#include <map>
+#include <utility>
 class PlatformStyle;
 namespace Ui {
     class AliasListPage;
@@ -12,7 +14,6 @@ class WalletModel;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
-class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
 class QKeyEvent;
@@ -42,21 +43,20 @@ private:
     OptionsModel *optionsModel;
 	WalletModel* walletModel;
     QString returnValue;
-    QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newAliasToSelect;
-
+	std::map<int, std::pair<std::string, std::string> > pageMap;
+	int currentPage;
 private Q_SLOTS:
-    void on_searchAlias_clicked();
+	void on_signMultisigButton_clicked();
+	void on_searchAlias_clicked(std::string offer="");
+	void on_prevButton_clicked();
+	void on_nextButton_clicked();
     /** Create a new alias for receiving coins and / or add a new alias book entry */
     /** Copy alias of currently selected alias entry to clipboard */
     void on_copyAlias_clicked();
-    /** Copy value of currently selected alias entry to clipboard (no button) */
-    void onCopyAliasValueAction();
 	void on_messageButton_clicked();
-    /** Export button clicked */
-    void on_exportButton_clicked();
 
     /** Set button states based on selected tab and selection */
     void selectionChanged();

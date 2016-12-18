@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
-#include "rpcclient.h"
+#include "rpc/server.h"
+#include "rpc/client.h"
 
 #include "base58.h"
 #include "netbase.h"
@@ -11,23 +11,12 @@
 #include "test/test_syscoin.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
 
 using namespace std;
-
-UniValue
-createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
-{
-    UniValue result(UniValue::VARR);
-    result.push_back(nRequired);
-    UniValue addresses(UniValue::VARR);
-    if (address1) addresses.push_back(address1);
-    if (address2) addresses.push_back(address2);
-    result.push_back(addresses);
-    return result;
-}
 
 UniValue CallRPC(string args)
 {
@@ -36,7 +25,7 @@ UniValue CallRPC(string args)
     string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
     UniValue params = RPCConvertValues(strMethod, vArgs);
-
+    BOOST_CHECK(tableRPC[strMethod]);
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
         UniValue result = (*method)(params, false);
@@ -177,15 +166,16 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0")), 0LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000000")), 0LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000001")), 1LL);
-    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.17622195")), 17622195LL); 
-
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.17622195")), 17622195LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.5")), 50000000LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.50000000")), 50000000LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.89898989")), 89898989LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("1.00000000")), 100000000LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.9999999")), 2099999999999990LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.99999999")), 2099999999999999LL);
 	// SYSCOIN max money
-	BOOST_CHECK_THROW(AmountFromValue(ValueFromString("900000001")), UniValue); //should fail
-    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("900000000")), 900000000*COIN);
+	BOOST_CHECK_THROW(AmountFromValue(ValueFromString("888000001")), UniValue); //should fail
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("888000000")), 888000000*COIN);
 
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("1e-8")), COIN/100000000);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.1e-7")), COIN/100000000);
@@ -262,7 +252,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     adr = find_value(o1, "address");
     banned_until = find_value(o1, "banned_until");
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
-    int64_t now = GetTime();    
+    int64_t now = GetTime();
     BOOST_CHECK(banned_until.get_int64() > now);
     BOOST_CHECK(banned_until.get_int64()-now <= 200);
 
@@ -308,6 +298,29 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
+{
+    UniValue result;
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("101")("mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 101);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a");
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("101")("mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 101);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU");
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("1")("mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a")("9")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 1);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a");
+    BOOST_CHECK_EQUAL(result[2].get_int(), 9);
+
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", boost::assign::list_of("1")("mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU")("9")));
+    BOOST_CHECK_EQUAL(result[0].get_int(), 1);
+    BOOST_CHECK_EQUAL(result[1].get_str(), "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU");
+    BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

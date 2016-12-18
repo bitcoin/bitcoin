@@ -13,6 +13,7 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QSettings>
 #include <QMenu>
 
 using namespace std;
@@ -44,14 +45,14 @@ OutMessageListPage::OutMessageListPage(const PlatformStyle *platformStyle, QWidg
 		
 	}
 
-    ui->labelExplanation->setText(tr("These are Syscoin messages you sent out."));
+    ui->labelExplanation->setText(tr("These are Syscoin messages you have sent. You can choose which aliases to view related messages using the dropdown to the right."));
 	
     // Context menu actions
     QAction *copyGuidAction = new QAction(ui->copyMessage->text(), this);
-    QAction *copySubjectAction = new QAction(tr("Copy &Subject"), this);
-	QAction *copyMessageAction = new QAction(tr("Copy &Msg"), this);
-	QAction *newMessageAction = new QAction(tr("&New Msg"), this);
-	QAction *detailsAction = new QAction(tr("&Details"), this);
+    QAction *copySubjectAction = new QAction(tr("Copy Subject"), this);
+	QAction *copyMessageAction = new QAction(tr("Copy Msg"), this);
+	QAction *newMessageAction = new QAction(tr("New Msg"), this);
+	QAction *detailsAction = new QAction(tr("Details"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -108,9 +109,15 @@ void OutMessageListPage::setModel(WalletModel* walletModel, MessageTableModel *m
 
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
-    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    proxyModel->setDynamicSortFilter(true);
+    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+	proxyModel->setFilterRole(MessageTableModel::TypeRole);
+
     ui->tableView->setModel(proxyModel);
-    ui->tableView->sortByColumn(1, Qt::DescendingOrder);
+    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     // Set column widths
     ui->tableView->setColumnWidth(0, 75); //guid
@@ -128,7 +135,6 @@ void OutMessageListPage::setModel(WalletModel* walletModel, MessageTableModel *m
 
     // Select row for newly created outmessage
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewMessage(QModelIndex,int,int)));
-
     selectionChanged();
 
 }
@@ -204,15 +210,15 @@ void OutMessageListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("GUID", MessageTableModel::GUID, Qt::EditRole);
-    writer.addColumn("Time", MessageTableModel::Time, Qt::EditRole);
-    writer.addColumn("From", MessageTableModel::From, Qt::EditRole);
-	writer.addColumn("To", MessageTableModel::To, Qt::EditRole);
-	writer.addColumn("Subject", MessageTableModel::Subject, Qt::EditRole);
-	writer.addColumn("Message", MessageTableModel::Message, Qt::EditRole);
+    writer.addColumn(tr("GUID"), MessageTableModel::GUID, Qt::EditRole);
+    writer.addColumn(tr("Time"), MessageTableModel::Time, Qt::EditRole);
+    writer.addColumn(tr("From"), MessageTableModel::From, Qt::EditRole);
+	writer.addColumn(tr("To"), MessageTableModel::To, Qt::EditRole);
+	writer.addColumn(tr("Subject"), MessageTableModel::Subject, Qt::EditRole);
+	writer.addColumn(tr("Message"), MessageTableModel::Message, Qt::EditRole);
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }
