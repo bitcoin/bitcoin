@@ -103,18 +103,23 @@ public:
  */
 class CSyscoinAddress : public CBase58Data {
 public:
+	// SYSCOIN
 	bool isAlias;
+	unsigned char safetyLevel;
+	bool safeSearch;
 	std::string aliasName;
-	// SYSCOIN support old sys
-    bool Set(const CKeyID &id, bool oldSys = false);
-    bool Set(const CScriptID &id);
-    bool Set(const CTxDestination &dest, bool oldSys = false);
+	std::vector<unsigned char> vchRedeemScript;
+	std::vector<unsigned char> vchPubKey;
+
+    bool Set(const CKeyID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+    bool Set(const CScriptID &id, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
+    bool Set(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
 	// SYSCOIN aliases as addresses
     CSyscoinAddress();
-	CSyscoinAddress(const CTxDestination &dest, bool oldSys = false);
+	CSyscoinAddress(const CTxDestination &dest, CChainParams::AddressType sysVer = CChainParams::ADDRESS_SYS);
     CSyscoinAddress(const std::string& strAddress);
     CSyscoinAddress(const char* pszAddress);
 
@@ -168,7 +173,7 @@ public:
     CSyscoinExtKeyBase() {}
 };
 
-typedef CSyscoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
-typedef CSyscoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
+typedef CSyscoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
+typedef CSyscoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
 
 #endif // SYSCOIN_BASE58_H

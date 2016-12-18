@@ -7,13 +7,13 @@ project at Transifex to help:
 https://www.transifex.net/projects/p/syscoin/
 
 Please report bugs using the issue tracker at github:
-https://github.com/syscoin/syscoin/issues
+https://github.com/syscoin/syscoin2/issues
 
 Project source code is hosted at github; we are no longer
 distributing .tar.gz files here, you can get them
 directly from github:
-https://github.com/syscoin/syscoin/tarball/v0.6.0  # .tar.gz
-https://github.com/syscoin/syscoin/zipball/v0.6.0  # .zip
+https://github.com/syscoin/syscoin2/tarball/v0.6.0  # .tar.gz
+https://github.com/syscoin/syscoin2/zipball/v0.6.0  # .zip
 
 For Ubuntu users, there is a ppa maintained by Matt Corallo which
 you can add to your system so that it will automatically keep

@@ -1,5 +1,67 @@
 <TS language="en_GB" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Pay Offer</source>
+        <translation>Pay Offer</translation>
+    </message>
+    <message>
+        <source>Offer ID:</source>
+        <translation>Offer ID:</translation>
+    </message>
+    <message>
+        <source>The value associated with this offer.</source>
+        <translation>The value associated with this offer.</translation>
+    </message>
+    <message>
+        <source>Lookup the OfferID from the blockchain DB</source>
+        <translation>Lookup the OfferID from the blockchain DB</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Quantity:</translation>
+    </message>
+    <message>
+        <source>Alias:</source>
+        <translation>Alias:</translation>
+    </message>
+    <message>
+        <source>Notes:</source>
+        <translation>Notes:</translation>
+    </message>
+    <message>
+        <source>Offer Details</source>
+        <translation>Offer Details</translation>
+    </message>
+    <message>
+        <source>Merchant:</source>
+        <translation>Merchant:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +86,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>C&amp;lose</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Copy Address</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -74,6 +132,10 @@
         <translation>These are your Syscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Copy Address</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Copy &amp;Label</translation>
     </message>
@@ -90,14 +152,18 @@
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>Exporting Failed</translation>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>There was an error trying to save the address list to %1. Please try again.</translation>
+        <source>Address</source>
+        <translation>Address</translation>
     </message>
-</context>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -113,6 +179,15 @@
         <translation>(no label)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -130,6 +205,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Repeat new passphrase</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -156,6 +235,10 @@
         <translation>Change passphrase</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Enter the old passphrase and new passphrase to the wallet.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirm wallet encryption</translation>
     </message>
@@ -168,28 +251,12 @@
         <translation>Are you sure you wish to encrypt your wallet?</translation>
     </message>
     <message>
-        <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Warning: The Caps Lock key is on!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Wallet encrypted</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Enter the old passphrase and new passphrase to the wallet.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -219,6 +286,10 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Wallet passphrase was successfully changed.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Warning: The Caps Lock key is on!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
@@ -232,325 +303,18 @@
     </message>
 </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Sign &amp;message...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Synchronising with network...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Overview</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Show general overview of wallet</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transactions</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Browse transaction history</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>E&amp;xit</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Quit application</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>About &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Show information about Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Options...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Encrypt Wallet...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup Wallet...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Change Passphrase...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Sending addresses...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Receiving addresses...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Open &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>Syscoin Core client</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Importing blocks from disk...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Reindexing blocks on disk...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Send coins to a Syscoin address</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>Backup wallet to another location</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Change the passphrase used for wallet encryption</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Debug window</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Open debugging and diagnostic console</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Verify message...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Wallet</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Send</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Receive</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>Show information about Syscoin Core</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Show / Hide</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Show or hide the main Window</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Encrypt the private keys that belong to your wallet</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Sign messages with your Syscoin addresses to prove you own them</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Verify messages to ensure they were signed with specified Syscoin addresses</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;File</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Settings</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Help</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Tabs toolbar</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>Request payments (generates QR codes and syscoin: URIs)</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;About Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Syscoin Core</source>
-        <translation>Modify configuration options for Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Show the list of used sending addresses and labels</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Show the list of used receiving addresses and labels</translation>
-    </message>
-    <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>Open a syscoin: URI or payment request</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Command-line options</translation>
-    </message>
-    <message>
-        <source>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</source>
-        <translation>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Syscoin network</source>
-        <translation><numerusform>%n active connection to Syscoin network</numerusform><numerusform>%n active connections to Syscoin network</numerusform></translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>No block source available...</translation>
-    </message>
-    <message numerus="yes">
-        <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Processed %n block of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n hour</numerusform><numerusform>%n hours</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n day</numerusform><numerusform>%n days</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n week</numerusform><numerusform>%n weeks</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 and %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n year</numerusform><numerusform>%n years</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 behind</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Last received block was generated %1 ago.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Transactions after this will not yet be visible.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Warning</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Information</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Up to date</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Catching up...</translation>
-    </message>
-    <message>
-        <source>Date: %1
-</source>
-        <translation>Date: %1
-</translation>
-    </message>
-    <message>
-        <source>Amount: %1
-</source>
-        <translation>Amount: %1
-</translation>
-    </message>
-    <message>
-        <source>Type: %1
-</source>
-        <translation>Type: %1
-</translation>
-    </message>
-    <message>
-        <source>Label: %1
-</source>
-        <translation>Label: %1
-</translation>
-    </message>
-    <message>
-        <source>Address: %1
-</source>
-        <translation>Address: %1
-</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Sent transaction</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Incoming transaction</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Network Alert</translation>
+        <source>Status</source>
+        <translation>Status</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -568,10 +332,6 @@
     <message>
         <source>Amount:</source>
         <translation>Amount:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Priority:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -626,10 +386,6 @@
         <translation>Confirmed</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Priority</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>Copy address</translation>
     </message>
@@ -670,10 +426,6 @@
         <translation>Copy bytes</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Copy priority</translation>
-    </message>
-    <message>
         <source>Copy dust</source>
         <translation>Copy dust</translation>
     </message>
@@ -682,64 +434,8 @@
         <translation>Copy change</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>highest</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>higher</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>high</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>medium-high</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>medium</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>low-medium</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>low</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>lower</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>lowest</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 locked)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>none</translation>
-    </message>
-    <message>
-        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>This label turns red if the transaction size is greater than 1000 bytes.</translation>
-    </message>
-    <message>
-        <source>This label turns red if the priority is smaller than "medium".</source>
-        <translation>This label turns red if the priority is smaller than "medium".</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
-        <translation>This label turns red if any recipient receives an amount smaller than %1.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Can vary +/- %1 satoshi(s) per input.</translation>
     </message>
     <message>
         <source>yes</source>
@@ -750,16 +446,8 @@
         <translation>no</translation>
     </message>
     <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>This means a fee of at least %1 per kB is required.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Can vary +/- 1 byte per input.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Transactions with higher priority are more likely to get included into a block.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Can vary +/- %1 satoshi(s) per input.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -813,12 +501,12 @@
         <translation>Edit sending address</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>The entered address "%1" is already in the address book.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>The entered address "%1" is not a valid Syscoin address.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>The entered address "%1" is already in the address book.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -829,6 +517,122 @@
         <translation>New key generation failed.</translation>
     </message>
 </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Alias:</source>
+        <translation>Alias:</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Could not unlock wallet.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Alias:</source>
+        <translation>Alias:</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Could not unlock wallet.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Quantity:</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Could not unlock wallet.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Remove</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Offer ID:</source>
+        <translation>Offer ID:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Total:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -855,10 +659,6 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>version</translation>
     </message>
@@ -867,8 +667,8 @@
         <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>About Syscoin Core</translation>
+        <source>About %1</source>
+        <translation>About %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -907,10 +707,33 @@
         <translation>Show splash screen on startup (default: %u)</translation>
     </message>
     <message>
-        <source>Reset all settings changes made over the GUI</source>
-        <translation>Reset all settings changes made over the GUI</translation>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Reset all settings changed in the GUI</translation>
     </message>
 </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>From</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>To</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Message</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -918,16 +741,16 @@
         <translation>Welcome</translation>
     </message>
     <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>Welcome to Syscoin Core.</translation>
+        <source>Welcome to %1.</source>
+        <translation>Welcome to %1.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</translation>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>As this is the first time the program is launched, you can choose where %1 will store its data.</translation>
     </message>
     <message>
-        <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</translation>
+        <source>%1 will download and store a copy of the Syscoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 will download and store a copy of the Syscoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -936,10 +759,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Use a custom data directory:</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -958,6 +777,287 @@
         <translation><numerusform>(of %n GB needed)</numerusform><numerusform>(of %n GB needed)</numerusform></translation>
     </message>
 </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>none</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Message:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>From</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>To</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Message</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Last block time</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Hide</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+</context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+</context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+</context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+</context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Export the data in the current tab to a file</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Could not unlock wallet.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Could not unlock wallet.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resulting URI too long, try to reduce the text for label / message.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Error encoding URI into QR Code.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>to</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resulting URI too long, try to reduce the text for label / message.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Error encoding URI into QR Code.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>to</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>Quantity:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Total:</translation>
+    </message>
+    <message>
+        <source>Offer Details</source>
+        <translation>Offer Details</translation>
+    </message>
+    <message>
+        <source>Offer ID:</source>
+        <translation>Offer ID:</translation>
+    </message>
+    <message>
+        <source>Merchant:</source>
+        <translation>Merchant:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1140,6 +1240,14 @@
         <translation>&amp;Window</translation>
     </message>
     <message>
+        <source>&amp;Hide the icon from the system tray.</source>
+        <translation>&amp;Hide the icon from the system tray.</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>Hide tray icon</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Show on a tray icon after minimising the window.</translation>
     </message>
@@ -1184,6 +1292,10 @@
         <translation>default</translation>
     </message>
     <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Error communicating with %1: %2</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>none</translation>
     </message>
@@ -1208,6 +1320,36 @@
         <translation>The supplied proxy address is invalid.</translation>
     </message>
 </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>From</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>To</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Message</translation>
+    </message>
+    <message>
+        <source>Error exporting</source>
+        <translation>Error exporting</translation>
+    </message>
+    </context>
 <context>
     <name>OverviewPage</name>
     <message>
@@ -1286,30 +1428,6 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI handling</source>
-        <translation>URI handling</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Invalid payment address %1</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Payment request rejected</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Payment request network doesn't match client network.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Payment request is not initialised.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Requested payment amount of %1 is too small (considered dust).</translation>
-    </message>
-    <message>
         <source>Payment request error</source>
         <translation>Payment request error</translation>
     </message>
@@ -1318,8 +1436,16 @@
         <translation>Cannot start syscoin: click-to-pay handler</translation>
     </message>
     <message>
+        <source>URI handling</source>
+        <translation>URI handling</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Payment request fetch URL is invalid: %1</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Invalid payment address %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
@@ -1334,8 +1460,20 @@
         <translation>Payment request file cannot be read! This can be caused by an invalid payment request file.</translation>
     </message>
     <message>
+        <source>Payment request rejected</source>
+        <translation>Payment request rejected</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Payment request network doesn't match client network.</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Payment request expired.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Payment request is not initialised.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
@@ -1344,6 +1482,10 @@
     <message>
         <source>Invalid payment request.</source>
         <translation>Invalid payment request.</translation>
+    </message>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>Requested payment amount of %1 is too small (considered dust).</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1366,12 +1508,12 @@
         <translation>Bad response from server %1</translation>
     </message>
     <message>
-        <source>Payment acknowledged</source>
-        <translation>Payment acknowledged</translation>
-    </message>
-    <message>
         <source>Network request error</source>
         <translation>Network request error</translation>
+    </message>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>Payment acknowledged</translation>
     </message>
 </context>
 <context>
@@ -1388,16 +1530,12 @@
         <source>Ping Time</source>
         <translation>Ping Time</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Amount</translation>
-    </message>
-    <message>
-        <source>Enter a Syscoin address (e.g. %1)</source>
-        <translation>Enter a Syscoin address (e.g. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1427,6 +1565,14 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 and %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1450,10 +1596,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>Client name</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -1474,12 +1616,12 @@
         <translation>General</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>Using OpenSSL version</translation>
-    </message>
-    <message>
         <source>Using BerkeleyDB version</source>
         <translation>Using BerkeleyDB version</translation>
+    </message>
+    <message>
+        <source>Datadir</source>
+        <translation>Datadir</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1516,10 +1658,6 @@
     <message>
         <source>Memory usage</source>
         <translation>Memory usage</translation>
-    </message>
-    <message>
-        <source>Open the Syscoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Open the Syscoin Core debug log file from the current data directory. This can take a few seconds for large log files.</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1568,6 +1706,18 @@
     <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Decrease font size</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Increase font size</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1638,10 +1788,6 @@
         <translation>Out:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>Build date</translation>
-    </message>
-    <message>
         <source>Debug log file</source>
         <translation>Debug log file</translation>
     </message>
@@ -1678,8 +1824,8 @@
         <translation>&amp;Unban Node</translation>
     </message>
     <message>
-        <source>Welcome to the Syscoin Core RPC console.</source>
-        <translation>Welcome to the Syscoin Core RPC console.</translation>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>Welcome to the %1 RPC console.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1891,10 +2037,6 @@
         <translation>Message</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Amount</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(no label)</translation>
     </message>
@@ -1902,11 +2044,14 @@
         <source>(no message)</source>
         <translation>(no message)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     <message>
-        <source>(no amount)</source>
-        <translation>(no amount)</translation>
+        <source>Alias:</source>
+        <translation>Alias:</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1940,10 +2085,6 @@
     <message>
         <source>Amount:</source>
         <translation>Amount:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Priority:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -2026,14 +2167,6 @@
         <translation>fast</translation>
     </message>
     <message>
-        <source>Send as zero-fee transaction if possible</source>
-        <translation>Send as zero-fee transaction if possible</translation>
-    </message>
-    <message>
-        <source>(confirmation may take longer)</source>
-        <translation>(confirmation may take longer)</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Send to multiple recipients at once</translation>
     </message>
@@ -2066,14 +2199,6 @@
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Confirm send coins</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 to %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>Copy quantity</translation>
     </message>
@@ -2094,12 +2219,24 @@
         <translation>Copy bytes</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Copy priority</translation>
+        <source>Copy dust</source>
+        <translation>Copy dust</translation>
     </message>
     <message>
         <source>Copy change</source>
         <translation>Copy change</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 to %2</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Are you sure you want to send?</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>added as transaction fee</translation>
     </message>
     <message>
         <source>Total Amount %1</source>
@@ -2108,6 +2245,14 @@
     <message>
         <source>or</source>
         <translation>or</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Confirm send coins</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>The recipient address is not valid. Please recheck.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -2120,6 +2265,10 @@
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>The total exceeds your balance when the %1 transaction fee is included.</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Duplicate address found: addresses should only be used once each.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2141,41 +2290,17 @@
         <source>Pay only the required fee of %1</source>
         <translation>Pay only the required fee of %1</translation>
     </message>
-    <message numerus="yes">
-        <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Estimated to begin confirmation within %n block.</numerusform><numerusform>Estimated to begin confirmation within %n blocks.</numerusform></translation>
-    </message>
-    <message>
-        <source>The recipient address is not valid. Please recheck.</source>
-        <translation>The recipient address is not valid. Please recheck.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Duplicate address found: addresses should only be used once each.</translation>
-    </message>
     <message>
         <source>Warning: Invalid Syscoin address</source>
         <translation>Warning: Invalid Syscoin address</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(no label)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
         <translation>Warning: Unknown change address</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation>Copy dust</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>Are you sure you want to send?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>added as transaction fee</translation>
+        <source>(no label)</source>
+        <translation>(no label)</translation>
     </message>
 </context>
 <context>
@@ -2187,10 +2312,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Pay &amp;To:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Enter a label for this address to add it to your address book</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2260,18 +2381,36 @@
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Enter a label for this address to add it to your address book</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Yes</translation>
+    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Syscoin Core is shutting down...</translation>
+        <source>%1 is shutting down...</source>
+        <translation>%1 is shutting down...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Do not shut down the computer until this window disappears.</translation>
     </message>
 </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -2414,16 +2553,289 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>The Syscoin Core developers</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Sign &amp;message...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Synchronising with network...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Node</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Show general overview of wallet</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transactions</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Browse transaction history</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>E&amp;xit</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Quit application</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Show information about %1</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>About &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Show information about Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Options...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Modify configuration options for %1</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Encrypt Wallet...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;Backup Wallet...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Change Passphrase...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Sending addresses...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Receiving addresses...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Open &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Reindexing blocks on disk...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Send coins to a Syscoin address</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Backup wallet to another location</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Change the passphrase used for wallet encryption</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Debug window</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Open debugging and diagnostic console</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Verify message...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Show / Hide</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Show or hide the main Window</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Encrypt the private keys that belong to your wallet</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Sign messages with your Syscoin addresses to prove you own them</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Verify messages to ensure they were signed with specified Syscoin addresses</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;File</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Settings</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Help</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Tabs toolbar</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Request payments (generates QR codes and syscoin: URIs)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Show the list of used sending addresses and labels</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Show the list of used receiving addresses and labels</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Open a syscoin: URI or payment request</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Command-line options</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n active connection to Syscoin network</numerusform><numerusform>%n active connections to Syscoin network</numerusform></translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Indexing blocks on disk...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Processing blocks on disk...</translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>No block source available...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Processed %n block of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 behind</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Last received block was generated %1 ago.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Transactions after this will not yet be visible.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Warning</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Information</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Up to date</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>&amp;About Syscoin Core</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Syscoin command-line options</source>
+        <translation>Show the %1 help message to get a list with possible Syscoin command-line options</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 client</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Catching up...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Date: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Amount: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Type: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Label: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Address: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Sent transaction</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Incoming transaction</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -2438,10 +2850,6 @@
     <message>
         <source>Open until %1</source>
         <translation>Open until %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>conflicted</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2459,9 +2867,9 @@
         <source>Status</source>
         <translation>Status</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, broadcast through %n node</numerusform><numerusform>, broadcast through %n nodes</numerusform></translation>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, has not been successfully broadcast yet</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2478,6 +2886,10 @@
     <message>
         <source>From</source>
         <translation>From</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>unknown</translation>
     </message>
     <message>
         <source>To</source>
@@ -2498,10 +2910,6 @@
     <message>
         <source>Credit</source>
         <translation>Credit</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>matures in %n more block</numerusform><numerusform>matures in %n more blocks</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2571,18 +2979,6 @@
         <source>false</source>
         <translation>false</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, has not been successfully broadcast yet</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Open for %n more block</numerusform><numerusform>Open for %n more blocks</numerusform></translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>unknown</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -2594,7 +2990,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>This pane shows a detailed description of the transaction</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2606,36 +3002,16 @@
         <translation>Type</translation>
     </message>
     <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Immature (%1 confirmations, will be available after %2)</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Open for %n more block</numerusform><numerusform>Open for %n more blocks</numerusform></translation>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Open until %1</source>
         <translation>Open until %1</translation>
     </message>
     <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>Confirmed (%1 confirmations)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>This block was not received by any other nodes and will probably not be accepted!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>Generated but not accepted</translation>
-    </message>
-    <message>
         <source>Offline</source>
         <translation>Offline</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2646,8 +3022,24 @@
         <translation>Confirming (%1 of %2 recommended confirmations)</translation>
     </message>
     <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>Confirmed (%1 confirmations)</translation>
+    </message>
+    <message>
         <source>Conflicted</source>
         <translation>Conflicted</translation>
+    </message>
+    <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Immature (%1 confirmations, will be available after %2)</translation>
+    </message>
+    <message>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>This block was not received by any other nodes and will probably not be accepted!</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation>Generated but not accepted</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2676,6 +3068,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(no label)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -2793,32 +3189,16 @@
         <translation>Export Transaction History</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation>Watch-only</translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation>Exporting Failed</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>There was an error trying to save the transaction history to %1.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>Exporting Successful</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>The transaction history was successfully saved to %1.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>Confirmed</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Watch-only</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2839,6 +3219,22 @@
     <message>
         <source>ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exporting Failed</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>There was an error trying to save the transaction history to %1.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Exporting Successful</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>The transaction history was successfully saved to %1.</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2869,13 +3265,9 @@
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Export the data in the current tab to a file</translation>
@@ -2897,12 +3289,12 @@
         <translation>There was an error trying to save the wallet data to %1.</translation>
     </message>
     <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>The wallet data was successfully saved to %1.</translation>
-    </message>
-    <message>
         <source>Backup Successful</source>
         <translation>Backup Successful</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>The wallet data was successfully saved to %1.</translation>
     </message>
 </context>
 <context>
@@ -2930,14 +3322,6 @@
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong Syscoin Core will not work properly.</source>
-        <translation>Please check that your computer's date and time are correct! If your clock is wrong Syscoin Core will not work properly.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -2980,8 +3364,32 @@
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
+    </message>
+    <message>
+        <source>The %s developers</source>
+        <translation>The %s developers</translation>
+    </message>
+    <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</translation>
+    </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -2992,8 +3400,28 @@
         <translation>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
+        <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
+        <translation>Error loading %s: You can't enable HD on a already existing non-HD wallet</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
+    </message>
+    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
+    </message>
+    <message>
+        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
+        <translation>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -3008,20 +3436,12 @@
         <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Syscoin Core is probably already running.</source>
-        <translation>Unable to bind to %s on this computer. Syscoin Core is probably already running.</translation>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Unable to rewind the database to a pre-fork state. You will need to re-download the blockchain</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</translation>
-    </message>
-    <message>
-        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</translation>
-    </message>
-    <message>
-        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -3032,12 +3452,16 @@
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
     </message>
     <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
-    </message>
-    <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>You need to rebuild the database using -reindex-chainstate to change -txindex</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrupt, salvage failed</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3048,8 +3472,24 @@
         <translation>&lt;category&gt; can be:</translation>
     </message>
     <message>
+        <source>Append comment to the user agent string</source>
+        <translation>Append comment to the user agent string</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Attempt to recover private keys from a corrupt wallet on startup</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Block creation options:</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Cannot resolve -%s address: '%s'</translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation>Change index out of range</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
@@ -3092,12 +3532,32 @@
         <translation>Enable publish raw transaction in &lt;address&gt;</translation>
     </message>
     <message>
+        <source>Enable transaction replacement in the memory pool (default: %u)</source>
+        <translation>Enable transaction replacement in the memory pool (default: %u)</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Error initialising block database</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
         <translation>Error initialising wallet database environment %s!</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation>Error loading %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Error loading %s: Wallet corrupted</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Error loading %s: Wallet requires newer version of %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
+        <translation>Error loading %s: You can't disable HD on a already existing HD wallet</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -3124,12 +3584,32 @@
         <translation>Incorrect or no genesis block found. Wrong datadir for network?</translation>
     </message>
     <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>Initialisation sanity check failed. %s is shutting down.</translation>
+    </message>
+    <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>Invalid -onion address: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Loading banlist...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Location of the auth cookie (default: data dir)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3140,12 +3620,32 @@
         <translation>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Print this help message and exit</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Print version and exit</translation>
+    </message>
+    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Prune cannot be configured with a negative value.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
         <translation>Prune mode is incompatible with -txindex.</translation>
+    </message>
+    <message>
+        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
+        <translation>Rebuild chain state and block index from the blk*.dat files on disk</translation>
+    </message>
+    <message>
+        <source>Rebuild chain state from the currently indexed blocks</source>
+        <translation>Rebuild chain state from the currently indexed blocks</translation>
+    </message>
+    <message>
+        <source>Rewinding blocks...</source>
+        <translation>Rewinding blocks...</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3158,6 +3658,10 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Specify wallet file (within data directory)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -3192,16 +3696,16 @@
         <translation>Wallet %s resides outside data directory %s</translation>
     </message>
     <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>Wallet debugging/testing options:</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Wallet needed to be rewritten: restart %s to complete</translation>
+    </message>
+    <message>
         <source>Wallet options:</source>
         <translation>Wallet options:</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete; upgrade required!</source>
-        <translation>Warning: This version is obsolete; upgrade required!</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>You need to rebuild the database using -reindex to change -txindex</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3214,10 +3718,6 @@
     <message>
         <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
         <translation>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. Syscoin Core is probably already running.</source>
-        <translation>Cannot obtain a lock on data directory %s. Syscoin Core is probably already running.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3264,16 +3764,16 @@
         <translation>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>The transaction amount is too small to send after the fee has been deducted</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start</source>
+        <translation>Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -3292,36 +3792,12 @@
         <translation>Accept public REST requests (default: %u)</translation>
     </message>
     <message>
-        <source>Activating best chain...</source>
-        <translation>Activating best chain...</translation>
-    </message>
-    <message>
-        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
-        <translation>Always relay transactions received from whitelisted peers (default: %d)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
-        <translation>Attempt to recover private keys from a corrupt wallet.dat on startup</translation>
-    </message>
-    <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Automatically create Tor hidden service (default: %d)</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Cannot resolve -whitebind address: '%s'</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connect through SOCKS5 proxy</translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2009-%i The Syscoin Core Developers</source>
-        <translation>Copyright (C) 2009-%i The Syscoin Core Developers</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Syscoin Core</source>
-        <translation>Error loading wallet.dat: Wallet requires newer version of Syscoin Core</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3334,22 +3810,6 @@
     <message>
         <source>Information</source>
         <translation>Information</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. Syscoin Core is shutting down.</source>
-        <translation>Initialisation sanity check failed. Syscoin Core is shutting down.</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
@@ -3374,14 +3834,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>RPC server options:</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
-        <translation>Rebuild block chain index from current blk000??.dat files on startup</translation>
-    </message>
-    <message>
-        <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Receive and display P2P network alerts (default: %u)</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
@@ -3456,12 +3908,12 @@
         <translation>Username for JSON-RPC connections</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart Syscoin Core to complete</source>
-        <translation>Wallet needed to be rewritten: restart Syscoin Core to complete</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Warning</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Warning: unknown new rules activated (versionbit %i)</translation>
     </message>
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>
@@ -3476,10 +3928,6 @@
         <translation>ZeroMQ notification options:</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat corrupt, salvage failed</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Password for JSON-RPC connections</translation>
     </message>
@@ -3488,20 +3936,12 @@
         <translation>Execute command when the best block changes (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>This help message</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Allow DNS lookups for -addnode, -seednode and -connect</translation>
     </message>
     <message>
         <source>Loading addresses...</source>
         <translation>Loading addresses...</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Error loading wallet.dat: Wallet corrupted</translation>
     </message>
     <message>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
@@ -3518,10 +3958,6 @@
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</translation>
-    </message>
-    <message>
-        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
@@ -3560,12 +3996,24 @@
         <translation>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</translation>
     </message>
     <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</translation>
     </message>
     <message>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
         <translation>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -3576,12 +4024,8 @@
         <translation>Always query for peer addresses via DNS lookup (default: %u)</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Error loading wallet.dat</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: %u)</source>
-        <translation>Generate coins (default: %u)</translation>
+        <source>Copyright (C) 2009-%i The Syscoin Core Developers</source>
+        <translation>Copyright (C) 2009-%i The Syscoin Core Developers</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
@@ -3636,10 +4080,6 @@
         <translation>Set key pool size to &lt;n&gt; (default: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Set minimum block size in bytes (default: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Set the number of threads to service RPC calls (default: %d)</translation>
     </message>
@@ -3666,18 +4106,6 @@
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Unknown network specified in -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Cannot resolve -bind address: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Cannot resolve -externalip address: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -2,7 +2,8 @@
 #define OFFERLISTPAGE_H
 
 #include <QDialog>
-
+#include <map>
+#include <utility>
 namespace Ui {
     class OfferListPage;
 }
@@ -14,10 +15,10 @@ class PlatformStyle;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
-class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
 class QKeyEvent;
+class QStandardItemModel;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned certs.
@@ -32,6 +33,9 @@ public:
     explicit OfferListPage(const PlatformStyle *platformStyle, OfferView *parent);
     ~OfferListPage();
 
+    void addParentItem(QStandardItemModel * model, const QString& text, const QVariant& data );
+    void addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data );
+
 
     void setModel(WalletModel*, OfferTableModel *model);
     void setOptionsModel(OptionsModel *optionsModel);
@@ -39,19 +43,23 @@ public:
 	void keyPressEvent(QKeyEvent * event);
 	void showEvent ( QShowEvent * event );
 private:
+	void loadCategories();
     Ui::OfferListPage *ui;
     OfferTableModel *model;
     OptionsModel *optionsModel;
 	WalletModel* walletModel;
     QString returnValue;
-    QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newOfferToSelect;
 	OfferView* offerView;
+	std::map<int, std::pair<std::string, std::string> > pageMap;
+	int currentPage;
 private Q_SLOTS:
 	void on_resellButton_clicked();
-    void on_searchOffer_clicked();
+	void on_searchOffer_clicked(std::string offer="");
+	void on_prevButton_clicked();
+	void on_nextButton_clicked();
 	void on_purchaseButton_clicked();
 	void on_messageButton_clicked();
     /** Create a new Offer for receiving coins and / or add a new Offer book entry */
@@ -60,8 +68,6 @@ private Q_SLOTS:
     /** Copy value of currently selected Offer entry to clipboard (no button) */
     void onCopyOfferValueAction();
 	void onCopyOfferDescriptionAction();
-    /** Export button clicked */
-    void on_exportButton_clicked();
 
     /** Set button states based on selected tab and selection */
     void selectionChanged();

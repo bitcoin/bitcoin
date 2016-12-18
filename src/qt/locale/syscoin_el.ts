@@ -1,9 +1,23 @@
 <TS language="el" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
         <translation>Δημιουργία νέου λογαριασμού</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Ετικέτα</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Διεύθυνση</translation>
     </message>
     </context>
 <context>
@@ -16,6 +30,15 @@
         <source>Address</source>
         <translation>Διεύθυνση</translation>
     </message>
+    </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -40,22 +63,13 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Quit application</source>
-        <translation>Κλείσιμο εφαρμογής</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Σφάλμα</translation>
-    </message>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -92,6 +106,34 @@
     </message>
     </context>
 <context>
+    <name>EditAliasDialog</name>
+    </context>
+<context>
+    <name>EditCertDialog</name>
+    </context>
+<context>
+    <name>EditOfferDialog</name>
+    </context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>Αφαίρεση</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     </context>
 <context>
@@ -99,6 +141,13 @@
     <message>
         <source>version</source>
         <translation>έκδοση</translation>
+    </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
     </message>
     </context>
 <context>
@@ -113,6 +162,95 @@
     </message>
     </context>
 <context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Μήνυμα:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    </context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    </context>
+<context>
+    <name>NewWhitelistDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     </context>
 <context>
@@ -120,6 +258,16 @@
     <message>
         <source>W&amp;allet</source>
         <translation>Πορτοφόλι</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    </context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Message</source>
+        <translation>Μήνυμα</translation>
     </message>
     </context>
 <context>
@@ -194,6 +342,9 @@
     </message>
     </context>
 <context>
+    <name>ResellOfferDialog</name>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Insufficient funds!</source>
@@ -224,13 +375,34 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     </context>
 <context>
     <name>SplashScreen</name>
+    </context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Quit application</source>
+        <translation>Κλείσιμο εφαρμογής</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Πορτοφόλι</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Σφάλμα</translation>
+    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>

@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 How to Upgrade
 --------------
@@ -378,7 +378,7 @@ Thanks to everyone who contributed to this release:
 - paveljanik
 - Peter Todd
 - phantomcircuit
-- phelixbtc
+- phelixsys
 - Philip Kaufmann
 - Pieter Wuille
 - Rav3nPL

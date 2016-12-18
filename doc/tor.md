@@ -3,7 +3,7 @@ TOR SUPPORT IN SYSCOIN
 
 It is possible to run Syscoin as a Tor hidden service, and connect to such services.
 
-The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on a random port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
+The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
 
 
@@ -42,17 +42,17 @@ reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equiv
 config file):
 
 	HiddenServiceDir /var/lib/tor/syscoin-service/
-	HiddenServicePort 8333 127.0.0.1:8333
-	HiddenServicePort 18333 127.0.0.1:18333
+	HiddenServicePort 8369 127.0.0.1:8369
+	HiddenServicePort 18369 127.0.0.1:18369
 
 The directory can be different of course, but (both) port numbers should be equal to
-your syscoind's P2P listen port (8333 by default).
+your syscoind's P2P listen port (8369 by default).
 
 	-externalip=X   You can tell syscoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
 	                configuration, you can find your onion address in
 	                /var/lib/tor/syscoin-service/hostname. Onion addresses are given
-	                preference for your node to advertize itself with, for connections
+	                preference for your node to advertise itself with, for connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
 	                Tor proxy typically runs).
 
@@ -81,7 +81,7 @@ as well, use `discover` instead:
 
 	./syscoind ... -discover
 
-and open port 8333 on your firewall (or use -upnp).
+and open port 8369 on your firewall (or use -upnp).
 
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
@@ -95,12 +95,22 @@ Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' hidden services programmatically.
 Syscoin Core has been updated to make use of this.
 
-This means that if Tor is running (and proper authorization is available),
-Syscoin Core automatically creates a hidden service to listen on, without
-manual configuration. This will positively affect the number of available
-.onion nodes.
+This means that if Tor is running (and proper authentication has been configured),
+Syscoin Core automatically creates a hidden service to listen on. This will positively 
+affect the number of available .onion nodes.
 
 This new feature is enabled by default if Syscoin Core is listening, and
 a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
+
+Connecting to Tor's control socket API requires one of two authentication methods to be 
+configured. For cookie authentication the user running syscoind must have write access 
+to the `CookieAuthFile` specified in Tor configuration. In some cases this is 
+preconfigured and the creation of a hidden service is automatic. If permission problems 
+are seen with `-debug=tor` they can be resolved by adding both the user running tor and 
+the user running syscoind to the same group and setting permissions appropriately. On 
+Debian-based systems the user running syscoind can be added to the debian-tor group, 
+which has the appropriate permissions. An alternative authentication method is the use 
+of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
+Tor configuration.

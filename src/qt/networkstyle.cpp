@@ -23,9 +23,9 @@ static const struct {
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
 // titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText):
-    appName(appName),
-    titleAddText(qApp->translate("SplashScreen", titleAddText))
+NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
+    appName(_appName),
+    titleAddText(qApp->translate("SplashScreen", _titleAddText))
 {
 	// SYSCOIN
 	QString theme = GUIUtil::getThemeName();
@@ -38,6 +38,7 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
     {
         // generate QImage from QPixmap
         QImage img = pixmap.toImage();
+		// SYSCOIN
 		QImage splashImageImg = splashImagePixmap.toImage();
         int h,s,l,a;
 
@@ -75,15 +76,18 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
         //convert back to QPixmap
 #if QT_VERSION >= 0x040700
         pixmap.convertFromImage(img);
+		// SYSOIN
 		splashImagePixmap.convertFromImage(splashImageImg);
 #else
         pixmap = QPixmap::fromImage(img);
+		// SYSCOIN
 		splashImagePixmap = QPixmap::fromImage(splashImageImg);
 #endif
     }
 
     appIcon             = QIcon(pixmap);
     trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
+	// SYSCOIN
 	splashImage         = splashImagePixmap;
 }
 

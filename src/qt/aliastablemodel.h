@@ -23,15 +23,27 @@ public:
 
     enum ColumnIndex {
         Name = 0,   /**< alias name */
-        Value = 1,  /**< Alias value */
+		Multisig = 1,
 		ExpiresOn = 2,
-		ExpiresIn = 3,
-		Expired = 4
+		Expired = 3,
+		RatingAsBuyer = 4,
+		RatingAsSeller = 5,
+		RatingAsArbiter = 6,
+		SafeSearch = 7,
+		Value = 8,  /**< Alias value */
+		PrivValue = 9,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {
         TypeRole = Qt::UserRole, /**< Type of alias (#Send or #Receive) */
-		NameRole
+		NameRole,
+		MultisigRole,
+		ExpiredRole,
+		SafeSearchRole,
+		BuyerRatingRole,
+		SellerRatingRole,
+		ArbiterRatingRole
 	};
 
     /** Return status of edit/insert operation */
@@ -44,7 +56,6 @@ public:
     };
 
     static const QString Alias;      /**< Specifies send alias */
-    static const QString DataAlias;   /**< Specifies receive alias */
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
@@ -61,7 +72,7 @@ public:
     /* Add an alias to the model.
        Returns the added alias on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &alias, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired);
+    QString addRow(const QString &type, const QString &alias, const QString &multisig,const QString &value, const QString &privvalue, const QString &expires_on, const QString &expired, const QString &safesearch,const QString &buyer_rating, const QString &seller_rating, const QString &arbiter_rating);
 
     /* Look up row index of an alias in the model.
        Return -1 if not found.
@@ -84,7 +95,7 @@ private:
 public Q_SLOTS:
     /* Update alias list from core.
      */
-    void updateEntry(const QString &alias, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status);
+    void updateEntry(const QString &alias, const QString &multisig,const QString &value, const QString &privvalue, const QString &expires_on, const QString &expired, const QString &safesearch, const QString &buyer_rating, const QString &seller_rating, const QString &arbiter_rating, AliasModelType type, int status);
 
     friend class AliasTablePriv;
 };

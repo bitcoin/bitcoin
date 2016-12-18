@@ -22,9 +22,9 @@ static const unsigned char REJECT_CHECKPOINT = 0x43;
 class CValidationState {
 private:
     enum mode_state {
-        MODE_VALID,   //! everything ok
-        MODE_INVALID, //! network rule violation (DoS value may be set)
-        MODE_ERROR,   //! run-time error
+        MODE_VALID,   //!< everything ok
+        MODE_INVALID, //!< network rule violation (DoS value may be set)
+        MODE_ERROR,   //!< run-time error
     } mode;
     int nDoS;
     std::string strRejectReason;
@@ -76,6 +76,9 @@ public:
     }
     bool CorruptionPossible() const {
         return corruptionPossible;
+    }
+    void SetCorruptionPossible() {
+        corruptionPossible = true;
     }
     unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }

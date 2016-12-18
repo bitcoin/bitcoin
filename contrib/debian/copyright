@@ -2,10 +2,10 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Syscoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#syscoin@freenode.net
-Source: https://github.com/syscoin/syscoin
+Source: https://github.com/syscoin/syscoin2
 
 Files: *
-Copyright: 2009-2015, Syscoin Core Developers
+Copyright: 2009-2016, Syscoin Core Developers
 License: Expat
 Comment: The Syscoin Core Developers encompasses the current developers listed on syscoin.org,
          as well as the numerous contributors to the project.
@@ -21,6 +21,7 @@ License: GPL-3+
 
 Files: src/qt/res/icons/add.png
        src/qt/res/icons/address-book.png
+       src/qt/res/icons/chevron.png
        src/qt/res/icons/configure.png
        src/qt/res/icons/debugwindow.png
        src/qt/res/icons/edit.png
@@ -56,6 +57,12 @@ Comment: Inspired by Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
+       src/qt/res/icons/fontbigger.png
+       src/qt/res/icons/fontsmaller.png
+       src/qt/res/icons/hd_disabled.png
+       src/qt/res/src/hd_disabled.svg
+       src/qt/res/icons/hd_enabled.png
+       src/qt/res/src/hd_enabled.svg
 Copyright: Jonas Schnelli
 License: Expat
 Comment:

@@ -11,8 +11,7 @@
 #include "scheduler.h"
 
 extern const std::string DEFAULT_TOR_CONTROL;
-// SYSCOIN no tor default
-static const bool DEFAULT_LISTEN_ONION = false;
+static const bool DEFAULT_LISTEN_ONION = true;
 
 void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler);
 void InterruptTorControl();

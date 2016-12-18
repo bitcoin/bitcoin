@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/syscoin/syscoin/issues>
+  <https://github.com/syscoin/syscoin2/issues>
 
 Upgrading and downgrading
 =========================
@@ -429,7 +429,7 @@ Thanks to everyone who directly contributed to this release:
 - bikinibabe
 - SyscoinPRReadingGroup
 - Blake Jakopovic
-- SysDrak
+- BtcDrak
 - charlescharles
 - Chris Arnesen
 - Ciemon

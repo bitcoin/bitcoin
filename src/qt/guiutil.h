@@ -50,21 +50,19 @@ namespace GUIUtil
     QString formatSyscoinURI(const SendCoinsRecipient &info);
 	// SYSCOIN
 	QString formatBitcoinURI(const SendCoinsRecipient &info);
-
+	QString formatZCashURI(const SendCoinsRecipient &info);
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
 
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);
     QString HtmlEscape(const std::string& str, bool fMultiLine=false);
-
 	// SYSCOIN
     /** Load global CSS theme */
     QString loadStyleSheet();
 
     /** Return name of current CSS theme */
     QString getThemeName();
-
     /** Copy a field of the currently selected entry of a view to the clipboard. Does nothing if nothing
         is selected.
        @param[in] column  Data column to extract from the model
@@ -79,7 +77,7 @@ namespace GUIUtil
        @param[in] role    Data role to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    QString getEntryData(QAbstractItemView *view, int column, int role);
+    QVariant getEntryData(QAbstractItemView *view, int column, int role);
 
     void setClipboard(const QString& str);
 
@@ -208,6 +206,8 @@ namespace GUIUtil
 
     /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
+
+    QString formateNiceTimeOffset(qint64 secs);
 
 #if defined(Q_OS_MAC) && QT_VERSION >= 0x050000
     // workaround for Qt OSX Bug:

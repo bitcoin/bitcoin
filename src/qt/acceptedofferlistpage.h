@@ -34,6 +34,7 @@ public:
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
+	void loadAliasList();
 public Q_SLOTS:
     void done(int retval);
 
@@ -60,6 +61,7 @@ private Q_SLOTS:
     void on_exportButton_clicked();
 	void on_refreshButton_clicked();
 	void on_messageButton_clicked();
+	void on_feedbackButton_clicked();
     /** Set button states based on selected tab and selection */
     void selectionChanged();
     /** Spawn contextual menu (right mouse menu) for cert book entry */
@@ -67,6 +69,7 @@ private Q_SLOTS:
     /** New entry/entries were added to cert table */
     void selectNewOffer(const QModelIndex &parent, int begin, int /*end*/);
 	void on_detailButton_clicked();
+	void displayListChanged(const QString& alias);
 
 };
 

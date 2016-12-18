@@ -4,7 +4,7 @@ http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.5.2/
 This is a bugfix-only release based on 0.5.1.
 
 Please report bugs using the issue tracker at github:
-https://github.com/syscoin/syscoin/issues
+https://github.com/syscoin/syscoin2/issues
 
 Stable source code is hosted at Gitorious:
 http://gitorious.org/syscoin/syscoind-stable/archive-tarball/v0.5.2#.tar.gz

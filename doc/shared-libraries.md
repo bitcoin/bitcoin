@@ -11,7 +11,7 @@ The interface is defined in the C header `syscoinconsensus.h` located in  `src/s
 
 #### Version
 
-`syscoinconsensus_version` returns an `unsigned int` with the the API version *(currently at an experimental `0`)*.
+`syscoinconsensus_version` returns an `unsigned int` with the API version *(currently at an experimental `0`)*.
 
 #### Script Validation
 

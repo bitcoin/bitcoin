@@ -17,6 +17,7 @@
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QSettings>
 #include <QMenu>
 MyCertListPage::MyCertListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
@@ -49,17 +50,15 @@ MyCertListPage::MyCertListPage(const PlatformStyle *platformStyle, QWidget *pare
 		
 	}
 
-	ui->buttonBox->setVisible(false);
-
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Certificates. Certificate operations (create, update, transfer) take 2-5 minutes to become active."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Certificates. Certificate operations (create, update, transfer) take 2-5 minutes to become active.  You can choose which aliases to view related certificates using the dropdown to the right."));
 	
 	
     // Context menu actions
     QAction *copyCertAction = new QAction(ui->copyCert->text(), this);
-    QAction *copyCertValueAction = new QAction(tr("&Copy Title"), this);
-    QAction *editAction = new QAction(tr("&Edit"), this);
-    QAction *transferCertAction = new QAction(tr("&Transfer"), this);
-	QAction *sellCertAction = new QAction(tr("&Sell"), this);
+    QAction *copyCertValueAction = new QAction(tr("Copy Title"), this);
+    QAction *editAction = new QAction(tr("Edit"), this);
+    QAction *transferCertAction = new QAction(tr("Transfer"), this);
+	QAction *sellCertAction = new QAction(tr("Sell"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -79,8 +78,35 @@ MyCertListPage::MyCertListPage(const PlatformStyle *platformStyle, QWidget *pare
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+	connect(ui->displayListAlias,SIGNAL(currentIndexChanged(const QString&)),this,SLOT(displayListChanged(const QString&)));
+	loadAliasList();
+
+}
+void MyCertListPage::loadAliasList()
+{
+	QSettings settings;
+	QString oldListAlias = settings.value("defaultListAlias", "").toString();
+	ui->displayListAlias->clear();
+	ui->displayListAlias->addItem(tr("All"));
+	
+	
+	UniValue aliasList(UniValue::VARR);
+	appendListAliases(aliasList, true);
+	for(unsigned int i = 0;i<aliasList.size();i++)
+	{
+		const QString& aliasName = QString::fromStdString(aliasList[i].get_str());
+		ui->displayListAlias->addItem(aliasName);
+	}
+	int currentIndex = ui->displayListAlias->findText(oldListAlias);
+	if(currentIndex >= 0)
+		ui->displayListAlias->setCurrentIndex(currentIndex);
+	settings.setValue("defaultListAlias", oldListAlias);
+}
+void MyCertListPage::displayListChanged(const QString& alias)
+{
+	QSettings settings;
+	settings.setValue("defaultListAlias", alias);
+	settings.sync();
 }
 MyCertListPage::~MyCertListPage()
 {
@@ -97,7 +123,16 @@ void MyCertListPage::on_sellCertButton_clicked()
         return;
 
 	QString certGUID = indexes.at(0).data(CertTableModel::NameRole).toString();
-    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, certGUID);
+	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
+	QString category = indexes.at(0).data(CertTableModel::CategoryRole).toString();
+	if(status == QString("expired"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("You cannot sell this certificate because it has expired"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
+    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, "", certGUID, category);
     dlg.setModel(walletModel,0);
     dlg.exec();
 }
@@ -130,18 +165,17 @@ void MyCertListPage::setModel(WalletModel *walletModel, CertTableModel *model)
 
 
     ui->tableView->setModel(proxyModel);
-    ui->tableView->sortByColumn(0, Qt::AscendingOrder);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     // Set column widths
     ui->tableView->setColumnWidth(0, 75); //cert
-    ui->tableView->setColumnWidth(1, 300); //title
-    ui->tableView->setColumnWidth(2, 300); //data
-    ui->tableView->setColumnWidth(3, 75); //private
-    ui->tableView->setColumnWidth(4, 75); //expires on
-    ui->tableView->setColumnWidth(5, 75); //expires in
-    ui->tableView->setColumnWidth(6, 100); //cert state
+    ui->tableView->setColumnWidth(1, 150); //title
+    ui->tableView->setColumnWidth(2, 100); //data
+	ui->tableView->setColumnWidth(3, 200); //pubdata
+	ui->tableView->setColumnWidth(4, 150); //category
+    ui->tableView->setColumnWidth(5, 150); //expires on
+    ui->tableView->setColumnWidth(6, 75); //cert state
     ui->tableView->setColumnWidth(7, 0); //owner
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
@@ -178,11 +212,18 @@ void MyCertListPage::on_editButton_clicked()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
-
+	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
+	if(status == QString("expired"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("You cannot edit this certificate because it has expired"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
     EditCertDialog dlg(EditCertDialog::EditCert);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
-    dlg.loadRow(origIndex.row(), indexes.at(0).data(CertTableModel::PrivateRole).toString());
+    dlg.loadRow(origIndex.row());
     dlg.exec();
 }
 
@@ -193,7 +234,14 @@ void MyCertListPage::on_transferButton_clicked()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
-
+	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
+	if(status == QString("expired"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("You cannot transfer this certificate because it has expired"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
     EditCertDialog dlg(EditCertDialog::TransferCert);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
@@ -204,6 +252,7 @@ void MyCertListPage::on_refreshButton_clicked()
 {
     if(!model)
         return;
+	loadAliasList();
     model->refreshCertTable();
 }
 void MyCertListPage::on_newCert_clicked()
@@ -279,17 +328,17 @@ void MyCertListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Cert", CertTableModel::Name, Qt::EditRole);
-    writer.addColumn("Title", CertTableModel::Title, Qt::EditRole);
-	writer.addColumn("Data", CertTableModel::Data, Qt::EditRole);
-	writer.addColumn("Private", CertTableModel::Data, Qt::EditRole);
-	writer.addColumn("Expires On", CertTableModel::ExpiresOn, Qt::EditRole);
-	writer.addColumn("Expires In", CertTableModel::ExpiresIn, Qt::EditRole);
-	writer.addColumn("Expired", CertTableModel::Expired, Qt::EditRole);
-	writer.addColumn("Alias", CertTableModel::Alias, Qt::EditRole);
+    writer.addColumn(tr("Cert"), CertTableModel::Name, Qt::EditRole);
+    writer.addColumn(tr("Title"), CertTableModel::Title, Qt::EditRole);
+	writer.addColumn(tr("Private Data"), CertTableModel::Data, Qt::EditRole);
+	writer.addColumn(tr("Public Data"), CertTableModel::PubData, Qt::EditRole);
+	writer.addColumn(tr("Category"), CertTableModel::Category, Qt::EditRole);
+	writer.addColumn(tr("Expires On"), CertTableModel::ExpiresOn, Qt::EditRole);
+	writer.addColumn(tr("Status"), CertTableModel::Expired, Qt::EditRole);
+	writer.addColumn(tr("Owner"), CertTableModel::Alias, Qt::EditRole);
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }

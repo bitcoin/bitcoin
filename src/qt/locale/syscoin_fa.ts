@@ -1,5 +1,31 @@
 <TS language="fa" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>تعداد:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>وضعیت</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -15,27 +41,23 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>کپی نشانی انتخاب شده به حافظهٔ سیستم</translation>
+        <translation>کپی نشانی انتخاب شده کنونی به حافظه‌ی سیستم</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;رونوشت</translation>
+        <translation>&amp;کپی</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;بستن</translation>
     </message>
     <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;کپی نشانی</translation>
-    </message>
-    <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>حذف نشانی انتخاب‌شده از لیست</translation>
+        <translation>حذف نشانی انتخاب‌شده کنونی از لیست</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>خروجی گرفتن داده‌های برگهٔ فعلی به یک پرونده</translation>
+        <translation>خروجی گرفتن داده‌های برگه‌ی فعلی به یک فایل</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -70,6 +92,10 @@
         <translation>این‌ها نشانی‌های بیت‌کوین شما برای دریافت وجوه هستند. توصیه می‌شود یک نشانی دریافت جدید برای هر تبادل استفاده کنید.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;کپی نشانی</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>کپی و برچسب‌&amp;گذاری</translation>
     </message>
@@ -86,14 +112,14 @@
         <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>استخراج انجام نشد</translation>
+        <source>Label</source>
+        <translation>برچسب</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>خطایی هنگام تلاش برای ذخیرهٔ لیست آدرس ها در %1 رخ داد.</translation>
+        <source>Address</source>
+        <translation>نشانی</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -109,6 +135,15 @@
         <translation>(بدون برچسب)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -126,6 +161,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>تکرار گذرواژهٔ جدید</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>رمز جدید کیف پول خود را وارد کنید.&lt;br/&gt;از رمز عبوری استفاده کنید که&lt;b&gt; حداقل 10  کاراکتر تصادفی &lt;/b&gt; و یا &lt;b&gt; حداقل 8 حرف داشته باشد.&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -152,6 +191,10 @@
         <translation>تغییر گذرواژه</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>رمز عبور قدیمی و رمز عبور جدید کیف پول خود را وارد گنید.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>تأیید رمزنگاری کیف پول</translation>
     </message>
@@ -164,28 +207,12 @@
         <translation>آیا مطمئن هستید که می‌خواهید کیف پول خود را رمزنگاری کنید؟</translation>
     </message>
     <message>
-        <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>هسته بیت‌کوین هم اکنون بسته می‌شود تا فرایند رمزگذاری را تمام کند. به خاطر داشته باشید که رمزگذاری کردن کیف پول‌تان نمی‌تواند به طور کامل بیت‌کوین‌های شما را در برابر دزدیده شدن توسط بدافزارهایی که رایانه‌ی شما را آلوده می‌کنند، محافظت نماید.</translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>مهم: هر نسخهٔ پشتیبانی که تا کنون از کیف پول خود تهیه کرده‌اید، باید با کیف پول رمزنگاری شدهٔ جدید جایگزین شود. به دلایل امنیتی، پروندهٔ قدیمی کیف پول بدون رمزنگاری، تا زمانی که از کیف پول رمزنگاری‌شدهٔ جدید استفاده نکنید، غیرقابل استفاده خواهد بود.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>هشدار: کلید Caps Lock روشن است!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>کیف پول رمزنگاری شد</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>رمز جدید کیف پول خود را وارد کنید.&lt;br/&gt;از رمز عبوری استفاده کنید که&lt;b&gt; حداقل 10  کاراکتر تصادفی &lt;/b&gt; و یا &lt;b&gt; حداقل 8 حرف داشته باشد.&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>رمز عبور قدیمی و رمز عبور جدید کیف پول خود را وارد گنید.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>مهم: هر نسخهٔ پشتیبانی که تا کنون از کیف پول خود تهیه کرده‌اید، باید با کیف پول رمزنگاری شدهٔ جدید جایگزین شود. به دلایل امنیتی، پروندهٔ قدیمی کیف پول بدون رمزنگاری، تا زمانی که از کیف پول رمزنگاری‌شدهٔ جدید استفاده نکنید، غیرقابل استفاده خواهد بود.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -215,276 +242,35 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>گذرواژهٔ کیف پول با موفقیت عوض شد.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>هشدار: کلید Caps Lock روشن است!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>آی‌پی/نت‌ماسک</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>مسدود شده تا</translation>
+    </message>
+</context>
+<context>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>&amp;امضای پیام...</translation>
+        <source>Status</source>
+        <translation>وضعیت</translation>
     </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>همگام‌سازی با شبکه...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;بررسی اجمالی</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>گره</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>نمایش بررسی اجمالی کیف پول</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;تراکنش‌ها</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>مرور تاریخچهٔ تراکنش‌ها</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>&amp;خروج</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>خروج از برنامه</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>دربارهٔ &amp;کیوت</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>نمایش اطلاعات دربارهٔ کیوت</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;تنظیمات...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;رمزنگاری کیف پول...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;پیشتیبان‌گیری از کیف پول...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;تغییر گذرواژه...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;در حال ارسال آدرس ها...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;در حال دریافت آدرس ها...</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>باز کردن &amp;آدرس</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>دریافت بلوک‌ها از دیسک...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>بازنشانی بلوک‌ها روی دیسک...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>ارسال وجه به نشانی بیت‌کوین</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>تهیهٔ پشتیبان از کیف پول در یک مکان دیگر</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>تغییر گذرواژهٔ مورد استفاده در رمزنگاری کیف پول</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>پنجرهٔ ا&amp;شکال‌زدایی</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>باز کردن کنسول خطایابی و اشکال‌زدایی</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>با&amp;زبینی پیام...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>بیت‌کوین</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>کیف پول</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;ارسال</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;دریافت</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>نمایش اطلاعات در مورد بیت‌کوین</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;نمایش/ عدم نمایش</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>نمایش یا مخفی‌کردن پنجرهٔ اصلی</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>رمزنگاری کلیدهای خصوصی متعلق به کیف پول شما</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>برای اثبات اینکه پیام‌ها به شما تعلق دارند، آن‌ها را با نشانی بیت‌کوین خود امضا کنید</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;فایل</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;تنظیمات</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;کمک‌رسانی</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>نوارابزار برگه‌ها</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation> هسته Syscoin </translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>درباره هسته ی بیت کوین</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>نمایش لیست آدرس های ارسال و لیبل ها</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>گزینه‌های خط‌فرمان</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Syscoin network</source>
-        <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>منبعی برای دریافت بلاک در دسترس نیست...</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n ساعت</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n روز</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n هفته</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 و %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n سال</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 عقب‌تر</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>آخرین بلاک دریافتی %1 پیش ایجاد شده است.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>تراکنش‌های بعد از این هنوز قابل مشاهده نیستند.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>خطا</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>هشدار</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>اطلاعات</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>وضعیت به‌روز</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>به‌روز رسانی...</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>تراکنش ارسال شد</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>تراکنش دریافت شد</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>کیف پول &lt;b&gt;رمزنگاری شده&lt;/b&gt; است و هم‌اکنون &lt;b&gt;باز&lt;/b&gt; است</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>کیف پول &lt;b&gt;رمزنگاری شده&lt;/b&gt; است و هم‌اکنون &lt;b&gt;قفل&lt;/b&gt; است</translation>
-    </message>
-</context>
+    </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>پیام شبکه</translation>
-    </message>
-</context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -504,10 +290,6 @@
         <translation>مبلغ:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>اولویت:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>هزینه:</translation>
     </message>
@@ -518,6 +300,10 @@
     <message>
         <source>Change:</source>
         <translation>پول خورد:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>(لغو)انتخاب همه</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -552,10 +338,6 @@
         <translation>تأیید شده</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>اولویت</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>کپی نشانی</translation>
     </message>
@@ -570,46 +352,6 @@
     <message>
         <source>Copy transaction ID</source>
         <translation>کپی شناسهٔ تراکنش</translation>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation>بیشترین</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>بیشتر</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>زیاد</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>متوسط متمایل به زیاد</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>متوسط</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>متوسط متمایل به کم</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>کم</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>کمتر</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>کمترین</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>هیچکدام</translation>
     </message>
     <message>
         <source>yes</source>
@@ -659,12 +401,12 @@
         <translation>ویرایش نشانی ارسالی</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>نشانی وارد شده «%1» در حال حاضر در دفترچه وجود دارد.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>نشانی وارد شده «%1» یک نشانی معتبر بیت‌کوین نیست.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>نشانی وارد شده «%1» در حال حاضر در دفترچه وجود دارد.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -675,6 +417,106 @@
         <translation>ایجاد کلید جدید با شکست مواجه شد.</translation>
     </message>
 </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عمومی</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>بله</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>خیر</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمی‌توان کیف پول را رمزگشایی کرد.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>بله</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>خیر</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمی‌توان کیف پول را رمزگشایی کرد.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عمومی</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>تعداد:</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>خیر</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>بله</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمی‌توان کیف پول را رمزگشایی کرد.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>حذف کردن</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عمومی</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>شناسه</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>جمع کل:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>وضعیت</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -701,16 +543,12 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation> هسته Syscoin </translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>نسخه</translation>
     </message>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>درباره هسته ی بیت کوین</translation>
+        <source>About %1</source>
+        <translation>درباره %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -726,18 +564,33 @@
     </message>
     </context>
 <context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>فرستنده</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>گیرنده</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>پیام</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>خوش‌آمدید</translation>
     </message>
     <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>به هسته بیت کوین خوش آمدید.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>از آنجایی که این اولین اجرای برنامه است، شما می‌توانید مسیر ذخیرهٔ داده‌ها را انتخاب کنید.</translation>
+        <source>Welcome to %1.</source>
+        <translation>به %1 خوش‌آمدید.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -746,10 +599,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>استفاده از یک مسیر سفارشی:</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation> هسته Syscoin </translation>
     </message>
     <message>
         <source>Error</source>
@@ -761,7 +610,256 @@
     </message>
     </context>
 <context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>هیچکدام</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>پیام:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>فرستنده</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>گیرنده</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>پیام</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>فرم</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>زمان آخرین بلوک</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>پنهان کردن</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>وضعیت</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>وضعیت</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>No</source>
+        <translation>خیر</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>بله</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمی‌توان کیف پول را رمزگشایی کرد.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمی‌توان کیف پول را رمزگشایی کرد.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URL ایجاد شده خیلی طولانی است. سعی کنید طول برچسب و یا پیام را کمتر کنید.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>خطا در تبدیل نشانی اینترنتی به صورت کد QR.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>به</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URL ایجاد شده خیلی طولانی است. سعی کنید طول برچسب و یا پیام را کمتر کنید.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>خطا در تبدیل نشانی اینترنتی به صورت کد QR.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>به</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>تعداد:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>جمع کل:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>وضعیت</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>وضعیت</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open URI</source>
+        <translation>بازکردن آدرس</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -772,6 +870,14 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;عمومی</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>پذیرش اتصالات از بیرون</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>اجازه دادن به اتصالات دریافتی</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -812,6 +918,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>درگاه پراکسی (مثال 9050)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>آی‌پی نسخه 4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>آی‌پی نسخه 6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>تور</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -875,6 +993,32 @@
     </message>
 </context>
 <context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>فرستنده</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>گیرنده</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>پیام</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -928,20 +1072,20 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI handling</source>
-        <translation>مدیریت URI</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>درخواست پرداخت رد شد.</translation>
-    </message>
-    <message>
         <source>Payment request error</source>
         <translation>خطای درخواست پرداخت</translation>
     </message>
     <message>
         <source>Cannot start syscoin: click-to-pay handler</source>
         <translation>نمی‌توان بیت‌کوین را اجرا کرد: کنترل‌کنندهٔ کلیک-و-پرداخت</translation>
+    </message>
+    <message>
+        <source>URI handling</source>
+        <translation>مدیریت URI</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>درخواست پرداخت رد شد.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -954,12 +1098,32 @@
     </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>Ping Time</source>
+        <translation>زمان پینگ</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>مبلغ</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 روز</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 ساعت</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 دقیقه</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 ثانیه</translation>
     </message>
     <message>
         <source>None</source>
@@ -969,9 +1133,25 @@
         <source>N/A</source>
         <translation>ناموجود</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 میلیونم ثانیه</translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>همه</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;ذخیره عکس...</translation>
+    </message>
     <message>
         <source>Save QR Code</source>
         <translation>ذخیرهٔ کد QR</translation>
@@ -979,10 +1159,6 @@
     </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Client name</source>
-        <translation>نام کلاینت</translation>
-    </message>
     <message>
         <source>N/A</source>
         <translation>ناموجود</translation>
@@ -1000,8 +1176,8 @@
         <translation>پنجرهٔ اشکالزدایی</translation>
     </message>
     <message>
-        <source>Using OpenSSL version</source>
-        <translation>نسخهٔ OpenSSL استفاده شده</translation>
+        <source>General</source>
+        <translation>عمومی</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1028,6 +1204,10 @@
         <translation>تعداد فعلی بلوک‌ها</translation>
     </message>
     <message>
+        <source>Memory usage</source>
+        <translation>مصرف حافظه</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>دریافتی</translation>
     </message>
@@ -1042,6 +1222,18 @@
     <message>
         <source>Services</source>
         <translation>سرویس ها</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>آخرین دریافتی</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>زمان پینگ</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>انتظار پینگ</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1060,8 +1252,8 @@
         <translation>جمع کل:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>ساخت تاریخ</translation>
+        <source>In:</source>
+        <translation>در:</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1072,16 +1264,40 @@
         <translation>پاکسازی کنسول</translation>
     </message>
     <message>
-        <source>Welcome to the Syscoin Core RPC console.</source>
-        <translation>به کنسول RPC هسته بیت کوین خوش آمدید.</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>دکمه‌های بالا و پایین برای پیمایش تاریخچه و &lt;b&gt;Ctrl-L&lt;/b&gt; برای پاک کردن صفحه.</translation>
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>برای نمایش یک مرور کلی از دستورات ممکن، عبارت &lt;b&gt;help&lt;/b&gt; را بنویسید.</translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 بایت</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 کیلوبایت</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 مگابایت</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 گیگابایت</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>هرگز</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>بله</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>خیر</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1101,6 +1317,10 @@
     <message>
         <source>&amp;Message:</source>
         <translation>پیام:</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>پاک‌کردن</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1128,6 +1348,10 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;کپی نشانی</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;ذخیره عکس...</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1169,13 +1393,12 @@
         <translation>پیام</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>مبلغ</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1200,10 +1423,6 @@
         <translation>مبلغ:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>اولویت:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>هزینه:</translation>
     </message>
@@ -1218,6 +1437,26 @@
     <message>
         <source>Transaction Fee:</source>
         <translation>هزینهٔ تراکنش:</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>پنهان کردن</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>توصیه شده:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>سفارشی:</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>روز تایید:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>نرمال</translation>
     </message>
     <message>
         <source>fast</source>
@@ -1248,16 +1487,20 @@
         <translation>&amp;ارسال</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>ارسال سکه را تأیید کنید</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>کپی مقدار</translation>
     </message>
     <message>
+        <source>Are you sure you want to send?</source>
+        <translation>آیا مطمئن هستید که می خواهید ارسال کنید؟</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>یا</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>ارسال سکه را تأیید کنید</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1279,11 +1522,7 @@
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
     </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation>آیا مطمئن هستید که می خواهید ارسال کنید؟</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1293,10 +1532,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>پرداخ&amp;ت به:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>برای این نشانی یک برچسب وارد کنید تا در دفترچهٔ آدرس ذخیره شود</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1338,9 +1573,35 @@
         <source>Pay To:</source>
         <translation>پرداخت به:</translation>
     </message>
-    </context>
+    <message>
+        <source>Memo:</source>
+        <translation>یادداشت:</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>برای این نشانی یک برچسب وارد کنید تا در دفترچهٔ آدرس ذخیره شود</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>بله</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down...</source>
+        <translation>%1 در حال خاموش شدن است...</translation>
+    </message>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عمومی</translation>
+    </message>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1476,16 +1737,257 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation> هسته Syscoin </translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>توسعه‌دهندگان هسته بیت‌کوین</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>آزمایش شبکه</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>&amp;امضای پیام...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>همگام‌سازی با شبکه...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>گره</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>نمایش بررسی اجمالی کیف پول</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;تراکنش‌ها</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>مرور تاریخچهٔ تراکنش‌ها</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>&amp;خروج</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>خروج از برنامه</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>نمایش اطلاعات دربارهٔ %1</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>دربارهٔ &amp;کیوت</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>نمایش اطلاعات دربارهٔ کیوت</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;تنظیمات...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;رمزنگاری کیف پول...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;پیشتیبان‌گیری از کیف پول...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;تغییر گذرواژه...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;در حال ارسال آدرس ها...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;در حال دریافت آدرس ها...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>باز کردن &amp;آدرس</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>بازنشانی بلوک‌ها روی دیسک...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>ارسال وجه به نشانی بیت‌کوین</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>تهیهٔ پشتیبان از کیف پول در یک مکان دیگر</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>تغییر گذرواژهٔ مورد استفاده در رمزنگاری کیف پول</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>پنجرهٔ ا&amp;شکال‌زدایی</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>باز کردن کنسول خطایابی و اشکال‌زدایی</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>با&amp;زبینی پیام...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>بیت‌کوین</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>کیف پول</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;نمایش/ عدم نمایش</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>نمایش یا مخفی‌کردن پنجرهٔ اصلی</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>رمزنگاری کلیدهای خصوصی متعلق به کیف پول شما</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>برای اثبات اینکه پیام‌ها به شما تعلق دارند، آن‌ها را با نشانی بیت‌کوین خود امضا کنید</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>برای حصول اطمینان از اینکه پیام با نشانی بیت‌کوین مشخص شده امضا است یا خیر، پیام را شناسایی کنید</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;فایل</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;تنظیمات</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;کمک‌رسانی</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>نوارابزار برگه‌ها</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>نمایش لیست آدرس های ارسال و لیبل ها</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>گزینه‌های خط‌فرمان</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>منبعی برای دریافت بلاک در دسترس نیست...</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 عقب‌تر</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>آخرین بلاک دریافتی %1 پیش ایجاد شده است.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>تراکنش‌های بعد از این هنوز قابل مشاهده نیستند.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>خطا</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>هشدار</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>اطلاعات</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>وضعیت به‌روز</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>درباره هسته ی بیت کوین</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>به‌روز رسانی...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>تاریخ: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>مقدار: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>نوع: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>برچسب: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>نشانی: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>تراکنش ارسال شد</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>تراکنش دریافت شد</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>کیف پول &lt;b&gt;رمزنگاری شده&lt;/b&gt; است و هم‌اکنون &lt;b&gt;باز&lt;/b&gt; است</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>کیف پول &lt;b&gt;رمزنگاری شده&lt;/b&gt; است و هم‌اکنون &lt;b&gt;قفل&lt;/b&gt; است</translation>
     </message>
 </context>
 <context>
@@ -1517,9 +2019,9 @@
         <source>Status</source>
         <translation>وضعیت</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>، پخش از طریق %n گره</numerusform></translation>
+    <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>، هنوز با موفقیت ارسال نشده</translation>
     </message>
     <message>
         <source>Date</source>
@@ -1538,6 +2040,10 @@
         <translation>فرستنده</translation>
     </message>
     <message>
+        <source>unknown</source>
+        <translation>ناشناس</translation>
+    </message>
+    <message>
         <source>To</source>
         <translation>گیرنده</translation>
     </message>
@@ -1552,10 +2058,6 @@
     <message>
         <source>Credit</source>
         <translation>بدهی</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>بلوغ در %n بلوک دیگر</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -1609,18 +2111,6 @@
         <source>false</source>
         <translation>نادرست</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>، هنوز با موفقیت ارسال نشده</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>باز برای %n بلوک دیگر</numerusform></translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>ناشناس</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1632,7 +2122,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>این پانل شامل توصیف کاملی از جزئیات تراکنش است</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1643,13 +2133,21 @@
         <source>Type</source>
         <translation>نوع</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>باز برای %n بلوک دیگر</numerusform></translation>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
     </message>
     <message>
         <source>Open until %1</source>
         <translation>باز شده تا %1</translation>
+    </message>
+    <message>
+        <source>Offline</source>
+        <translation>آفلاین</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>تایید نشده</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
@@ -1662,18 +2160,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>تولید شده ولی قبول نشده</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>آفلاین</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>برچسب</translation>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation>تایید نشده</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1698,6 +2184,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(ناموجود)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بدون برچسب)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -1799,14 +2289,6 @@
         <translation>نمایش جزئیات تراکنش</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>استخراج انجام نشد</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>استخراج موفق</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
     </message>
@@ -1835,6 +2317,14 @@
         <translation>شناسه</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>استخراج انجام نشد</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>استخراج موفق</translation>
+    </message>
+    <message>
         <source>Range:</source>
         <translation>محدوده:</translation>
     </message>
@@ -1855,13 +2345,9 @@
         <source>Send Coins</source>
         <translation>ارسال وجه</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;صدور</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>داده ها  نوارِ جاری را به فایل انتقال دهید</translation>
@@ -1882,7 +2368,7 @@
         <source>Backup Successful</source>
         <translation>پشتیبان‌گیری موفق</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>syscoin-core</name>
     <message>
@@ -1914,6 +2400,10 @@
         <translation>پذیرش اتصالات از بیرون (پیش فرض:1 بدون پراکسی یا اتصال)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation> هسته Syscoin </translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>مقید به نشانی داده شده باشید و همیشه از آن پیروی کنید. از نشانه گذاری استاندار IPv6 به صورت Host]:Port] استفاده کنید.</translation>
     </message>
@@ -1934,6 +2424,10 @@
         <translation>تنها در گره (های) مشخص شده متصل شوید</translation>
     </message>
     <message>
+        <source>Connection options:</source>
+        <translation>گزینه‌های اتصال:</translation>
+    </message>
+    <message>
         <source>Corrupted block database detected</source>
         <translation>یک پایگاه داده ی بلوک خراب یافت شد</translation>
     </message>
@@ -1944,6 +2438,10 @@
     <message>
         <source>Error initializing block database</source>
         <translation>خطا در آماده سازی پایگاه داده ی بلوک</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation>خطا در بارگیری %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -1966,28 +2464,36 @@
         <translation>در حال پیاده‌سازی...</translation>
     </message>
     <message>
+        <source>Loading banlist...</source>
+        <translation>بارگذاری لیست‌سیاه...</translation>
+    </message>
+    <message>
+        <source>Print this help message and exit</source>
+        <translation>چاپ ایت پیام کمک و خروج</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>چاپ نسخه و خروج</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
-        <translation>در حال بازبینی بلوک ها...</translation>
+        <translation>در حال بازبینی بلوک‌ها...</translation>
     </message>
     <message>
         <source>Verifying wallet...</source>
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
+        <source>Wallet options:</source>
+        <translation>گزینه‌های کیف پول:</translation>
+    </message>
+    <message>
+        <source>(default: %u)</source>
+        <translation>(پیش‌فرض %u)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>اطلاعات</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>میزان وجه اشتباه برای maxtxfee=&lt;میزان وجه&gt;: %s</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>میزان وجه اشتباه برای minrelaytxfee=&lt;میزان وجه&gt;: %s</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>میزان وجه اشتباه برای mintxfee=&lt;میزان وجه&gt;: %s</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -1998,12 +2504,28 @@
         <translation>فایل debug.log  را در startup مشتری کوچک کن (پیش فرض:1 اگر اشکال زدایی روی نداد)</translation>
     </message>
     <message>
+        <source>Transaction amount too small</source>
+        <translation>مقدار تراکنش بسیار کم است</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must be positive</source>
+        <translation>مقادیر تراکنش باید مثبت باشد</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation>تراکنش بسیار بزرگ است</translation>
+    </message>
+    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC شناسه برای ارتباطات</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>هشدار</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>هشدار: قوانین جدید ناشناخته‌ای فعال شده‌اند (نسخه‌بیت %i)</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
@@ -2014,10 +2536,6 @@
         <translation>زمانی که بهترین بلاک تغییر کرد، دستور را اجرا کن (%s در cmd با block hash جایگزین شده است)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>پیام کمکی</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>به DNS اجازه بده تا برای addnode ، seednode و اتصال جستجو کند</translation>
     </message>
@@ -2026,32 +2544,12 @@
         <translation>بار گیری آدرس ها</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>خطا در بارگیری wallet.dat: کیف پول خراب شده است</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>خطا در بارگیری wallet.dat</translation>
-    </message>
-    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>آدرس پراکسی اشتباه %s</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>شبکه مشخص شده غیرقابل شناسایی در onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>آدرس قابل اتصال- شناسایی نیست %s</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>آدرس خارجی قابل اتصال- شناسایی نیست %s</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>میزان وجه اشتباه برای paytxfee=&lt;میزان وجه&gt;: %s</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

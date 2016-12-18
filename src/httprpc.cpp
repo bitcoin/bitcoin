@@ -1,10 +1,14 @@
+// Copyright (c) 2015 The Syscoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "httprpc.h"
 
 #include "base58.h"
 #include "chainparams.h"
 #include "httpserver.h"
-#include "rpcprotocol.h"
-#include "rpcserver.h"
+#include "rpc/protocol.h"
+#include "rpc/server.h"
 #include "random.h"
 #include "sync.h"
 #include "util.h"
@@ -16,6 +20,9 @@
 
 #include <boost/algorithm/string.hpp> // boost::trim
 #include <boost/foreach.hpp> //BOOST_FOREACH
+
+/** WWW-Authenticate to present with 401 Unauthorized response */
+static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
  * re-lock the wellet.
@@ -38,7 +45,7 @@ private:
 class HTTPRPCTimerInterface : public RPCTimerInterface
 {
 public:
-    HTTPRPCTimerInterface(struct event_base* base) : base(base)
+    HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
     {
     }
     const char* Name()
@@ -147,6 +154,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
     // Check authorization
     std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
     if (!authHeader.first) {
+        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
         req->WriteReply(HTTP_UNAUTHORIZED);
         return false;
     }
@@ -159,6 +167,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
            shouldn't have their RPC port exposed. */
         MilliSleep(250);
 
+        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
         req->WriteReply(HTTP_UNAUTHORIZED);
         return false;
     }
@@ -210,7 +219,7 @@ static bool InitRPCAuthentication()
             return false;
         }
     } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcuser for rpcauth auth generation.");
+        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcuser for rpcauth auth generation.\n");
         strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     }
     return true;

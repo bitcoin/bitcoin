@@ -30,7 +30,8 @@ public:
 		Total = 7,
 		Alias = 8,
 		Buyer = 9,
-		Status = 10
+		Status = 10,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {

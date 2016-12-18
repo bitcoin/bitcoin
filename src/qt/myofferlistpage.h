@@ -35,6 +35,7 @@ public:
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
+	void loadAliasList();
 public Q_SLOTS:
     void done(int retval);
 
@@ -52,6 +53,8 @@ private:
     QString newOfferToSelect;
 	const PlatformStyle *platformStyle;
 private Q_SLOTS:
+	void onToggleShowSoldOut(bool toggled);
+	void onToggleShowDigitalOffers(bool toggled);
 	void on_whitelistButton_clicked();
 	void onEditWhitelistAction();
     void on_newOffer_clicked();
@@ -68,6 +71,7 @@ private Q_SLOTS:
     void contextualMenu(const QPoint &point);
 
     void selectNewOffer(const QModelIndex &parent, int begin, int /*end*/);
+	void displayListChanged(const QString& alias);
 
 };
 

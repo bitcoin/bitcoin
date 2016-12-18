@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1180</width>
-    <height>380</height>
+    <height>385</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,11 +15,35 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="labelExplanation">
-     <property name="textFormat">
-      <enum>Qt::PlainText</enum>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="labelExplanation">
+       <property name="textFormat">
+        <enum>Qt::PlainText</enum>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="displayListAlias">
+       <property name="maximumSize">
+        <size>
+         <width>250</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="completeCheck">
+     <property name="text">
+      <string>Show Completed/ Refunded/Expired Escrows</string>
      </property>
-     <property name="wordWrap">
+     <property name="checked">
       <bool>true</bool>
      </property>
     </widget>
@@ -55,12 +79,35 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>48</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Refresh your list of escrows</string>
+       </property>
+       <property name="text">
+        <string>Refresh</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="copyEscrow">
        <property name="toolTip">
         <string>Copy the currently selected escrow to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Escrow ID</string>
+        <string>Copy Escrow ID</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="detailButton">
+       <property name="text">
+        <string>Details</string>
        </property>
       </widget>
      </item>
@@ -77,6 +124,20 @@
          <width>16</width>
          <height>16</height>
         </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="ackButton">
+       <property name="text">
+        <string>Acknowledge Payment</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="extButton">
+       <property name="text">
+        <string>Check External Payment</string>
        </property>
       </widget>
      </item>
@@ -111,22 +172,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="refreshButton">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>48</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>Refresh your list of escrows</string>
-       </property>
-       <property name="text">
-        <string>&amp;Refresh</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -145,20 +190,7 @@
         <string>Export the data in the current tab to a file</string>
        </property>
        <property name="text">
-        <string>&amp;Export</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Ok</set>
+        <string>Export</string>
        </property>
       </widget>
      </item>

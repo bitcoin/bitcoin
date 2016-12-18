@@ -15,9 +15,11 @@
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 
+
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QSettings>
 #include <QMenu>
 MyOfferListPage::MyOfferListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
@@ -49,17 +51,15 @@ MyOfferListPage::MyOfferListPage(const PlatformStyle *platformStyle, QWidget *pa
 		
 	}
 
-	ui->buttonBox->setVisible(false);
-
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Offers. Offer operations (create, update) take 2-5 minutes to become active."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Offers. Offer operations (create, update) take 2-5 minutes to become active. You can choose which aliases to view related offers using the dropdown to the right."));
 	
 	
     // Context menu actions
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
-    QAction *copyOfferValueAction = new QAction(tr("&Copy Title"), this);
-	QAction *copyOfferDescriptionAction = new QAction(tr("&Copy Description"), this);
-    QAction *editAction = new QAction(tr("&Edit"), this);
-	QAction *editWhitelistAction = new QAction(tr("&Manage Affiliates"), this);
+    QAction *copyOfferValueAction = new QAction(tr("Copy Title"), this);
+	QAction *copyOfferDescriptionAction = new QAction(tr("Copy Description"), this);
+    QAction *editAction = new QAction(tr("Edit"), this);
+	QAction *editWhitelistAction = new QAction(tr("Manage Affiliates"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyOfferAction);
@@ -77,15 +77,56 @@ MyOfferListPage::MyOfferListPage(const PlatformStyle *platformStyle, QWidget *pa
 	connect(editWhitelistAction, SIGNAL(triggered()), this, SLOT(onEditWhitelistAction()));
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+	connect(ui->soldOutCheck,SIGNAL(clicked(bool)),SLOT(onToggleShowSoldOut(bool)));
+	connect(ui->showDigitalOffers,SIGNAL(clicked(bool)),SLOT(onToggleShowDigitalOffers(bool)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+
 	offerWhitelistTableModel = 0;
-}
+	connect(ui->displayListAlias,SIGNAL(currentIndexChanged(const QString&)),this,SLOT(displayListChanged(const QString&)));
+	loadAliasList();
 
+}
+void MyOfferListPage::loadAliasList()
+{
+	QSettings settings;
+	QString oldListAlias = settings.value("defaultListAlias", "").toString();
+	ui->displayListAlias->clear();
+	ui->displayListAlias->addItem(tr("All"));
+	
+	
+	UniValue aliasList(UniValue::VARR);
+	appendListAliases(aliasList, true);
+	for(unsigned int i = 0;i<aliasList.size();i++)
+	{
+		const QString& aliasName = QString::fromStdString(aliasList[i].get_str());
+		ui->displayListAlias->addItem(aliasName);
+	}
+	int currentIndex = ui->displayListAlias->findText(oldListAlias);
+	if(currentIndex >= 0)
+		ui->displayListAlias->setCurrentIndex(currentIndex);
+	settings.setValue("defaultListAlias", oldListAlias);
+}
+void MyOfferListPage::displayListChanged(const QString& alias)
+{
+	QSettings settings;
+	settings.setValue("defaultListAlias", alias);
+	settings.sync();
+}
 MyOfferListPage::~MyOfferListPage()
 {
     delete ui;
+}
+void MyOfferListPage::onToggleShowSoldOut(bool toggled)
+{
+	if(!model)
+		return;
+	model->filterOffers(ui->soldOutCheck->isChecked(), ui->showDigitalOffers->isChecked());
+}
+void MyOfferListPage::onToggleShowDigitalOffers(bool toggled)
+{
+	if(!model)
+		return;
+	model->filterOffers(ui->soldOutCheck->isChecked(), ui->showDigitalOffers->isChecked());
 }
 void MyOfferListPage::showEvent ( QShowEvent * event )
 {
@@ -116,7 +157,6 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
        
     
 		ui->tableView->setModel(proxyModel);
-		ui->tableView->sortByColumn(0, Qt::AscendingOrder);
         ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
@@ -129,11 +169,13 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
         ui->tableView->setColumnWidth(5, 50); //price
         ui->tableView->setColumnWidth(6, 75); //currency
         ui->tableView->setColumnWidth(7, 75); //qty
-        ui->tableView->setColumnWidth(8, 50); //status
-        ui->tableView->setColumnWidth(9, 75); //exclusive resell
+		ui->tableView->setColumnWidth(8, 75); //sold
+        ui->tableView->setColumnWidth(9, 50); //status
         ui->tableView->setColumnWidth(10, 50); //private
         ui->tableView->setColumnWidth(11, 100); //seller alias
-        ui->tableView->setColumnWidth(12, 0); //btc only
+		ui->tableView->setColumnWidth(12, 150); //seller rating
+        ui->tableView->setColumnWidth(13, 0); //btc only
+	
 
         ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -178,8 +220,17 @@ void MyOfferListPage::on_editButton_clicked()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
+	QString offerGUID = indexes.at(0).data(OfferTableModel::NameRole).toString();
 	QString certGUID = indexes.at(0).data(OfferTableModel::CertRole).toString();
-    EditOfferDialog dlg(EditOfferDialog::EditOffer, certGUID);
+	QString status = indexes.at(0).data(OfferTableModel::ExpiredRole).toString();
+	if(status == QString("expired"))
+	{
+           QMessageBox::information(this, windowTitle(),
+           tr("You cannot edit this offer because it has expired"),
+               QMessageBox::Ok, QMessageBox::Ok);
+		   return;
+	}
+    EditOfferDialog dlg(EditOfferDialog::EditOffer, offerGUID, certGUID);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
@@ -213,6 +264,7 @@ void MyOfferListPage::on_refreshButton_clicked()
 {
     if(!model)
         return;
+	loadAliasList();
     model->refreshOfferTable();
 }
 void MyOfferListPage::on_newOffer_clicked()
@@ -286,20 +338,23 @@ void MyOfferListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Offer", OfferTableModel::Name, Qt::EditRole);
-	writer.addColumn("Cert", OfferTableModel::Cert, Qt::EditRole);
-    writer.addColumn("Title", OfferTableModel::Title, Qt::EditRole);
-	writer.addColumn("Description", OfferTableModel::Description, Qt::EditRole);
-	writer.addColumn("Category", OfferTableModel::Category, Qt::EditRole);
-	writer.addColumn("Price", OfferTableModel::Price, Qt::EditRole);
-	writer.addColumn("Currency", OfferTableModel::Currency, Qt::EditRole);
-	writer.addColumn("Qty", OfferTableModel::Qty, Qt::EditRole);
-	writer.addColumn("Exclusive Resell", OfferTableModel::ExclusiveResell, Qt::EditRole);
-	writer.addColumn("Private", OfferTableModel::Private, Qt::EditRole);
-	writer.addColumn("Expired", OfferTableModel::Expired, Qt::EditRole);
+    writer.addColumn(tr("Offer"), OfferTableModel::Name, Qt::EditRole);
+	writer.addColumn(tr("Cert"), OfferTableModel::Cert, Qt::EditRole);
+    writer.addColumn(tr("Title"), OfferTableModel::Title, Qt::EditRole);
+	writer.addColumn(tr("Description"), OfferTableModel::Description, Qt::EditRole);
+	writer.addColumn(tr("Category"), OfferTableModel::Category, Qt::EditRole);
+	writer.addColumn(tr("Price"), OfferTableModel::Price, Qt::EditRole);
+	writer.addColumn(tr("Currency"), OfferTableModel::Currency, Qt::EditRole);
+	writer.addColumn(tr("Qty"), OfferTableModel::Qty, Qt::EditRole);
+	writer.addColumn(tr("Sold"), OfferTableModel::Sold, Qt::EditRole);
+	writer.addColumn(tr("Private"), OfferTableModel::Private, Qt::EditRole);
+	writer.addColumn(tr("Expired"), OfferTableModel::Expired, Qt::EditRole);
+	writer.addColumn(tr("Seller Alias"), OfferTableModel::Alias, Qt::EditRole);
+	writer.addColumn(tr("Seller Rating"), OfferTableModel::AliasRating, OfferTableModel::AliasRatingRole);
+	writer.addColumn(tr("Payment Options"), OfferTableModel::PaymentOptions, Qt::EditRole);
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }

@@ -9,43 +9,61 @@
 
 #include <QFont>
 #include <QDateTime>
-#include "rpcserver.h"
+#include <QSettings>
+#include "rpc/server.h"
+#include "clientmodel.h"
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct MessageTableEntry
 {
 
     QString guid;
     QString time;
+	int itime;
 	QString subject;
 	QString message;
 	QString from;
 	QString to;
 
     MessageTableEntry() {}
-    MessageTableEntry(const QString &guid, const QString &time,const QString &from, const QString &to, const QString &subject, const QString &message):
-        guid(guid), time(time), from(from), to(to), subject(subject), message(message) {}
+    MessageTableEntry(const QString &guid, const int itime, const QString &time,const QString &from, const QString &to, const QString &subject, const QString &message):
+        guid(guid), itime(itime), time(time), from(from), to(to), subject(subject), message(message) {}
 };
 
 struct MessageTableEntryLessThan
 {
     bool operator()(const MessageTableEntry &a, const MessageTableEntry &b) const
     {
-        return a.time < b.time;
+        return a.guid < b.guid;
     }
     bool operator()(const MessageTableEntry &a, const QString &b) const
     {
-        return a.time < b;
+        return a.guid < b;
     }
     bool operator()(const QString &a, const MessageTableEntry &b) const
     {
-        return a < b.time;
+        return a < b.guid;
     }
 };
 
+struct MessageEntryLessThan
+{
+    bool operator()(const MessageTableEntry &a, const MessageTableEntry &b) const
+    {
+        return a.itime < b.itime;
+    }
+    bool operator()(const MessageTableEntry &a, const int &b) const
+    {
+        return a.itime > b;
+    }
+    bool operator()(const int &a, const MessageTableEntry &b) const
+    {
+        return a < b.itime;
+    }
+};
 // Private implementation
 class MessageTablePriv
 {
@@ -59,16 +77,14 @@ public:
 
     void refreshMessageTable(MessageModelType type)
     {
-
         cachedMessageTable.clear();
         {
 			string strMethod;
-			
+			UniValue params(UniValue::VARR); 
 			if(type == OutMessage)
 				strMethod = string("messagesentlist");
 			else if(type == InMessage)
-				strMethod = string("messagelist");
-	        UniValue params(UniValue::VARR); 
+				strMethod = string("messagereceivelist");
 			UniValue result ;
 			string guid_str;
 			string time_str;
@@ -127,7 +143,7 @@ public:
 						if (message_value.type() == UniValue::VSTR)
 							message_str = message_value.get_str();
 				
-						updateEntry(QString::fromStdString(guid_str), QString::fromStdString(time_str), QString::fromStdString(from_str), QString::fromStdString(to_str), QString::fromStdString(subject_str), QString::fromStdString(message_str), type, CT_NEW); 
+						updateEntry(QString::fromStdString(guid_str), unixTime, QString::fromStdString(time_str), QString::fromStdString(from_str), QString::fromStdString(to_str), QString::fromStdString(subject_str), QString::fromStdString(message_str), type, CT_NEW); 
 					}
 				}
  			}
@@ -140,24 +156,28 @@ public:
 				return;
 			}           
          }
-        // qLowerBound() and qUpperBound() require our cachedMessageTable list to be sorted in asc order
-        qSort(cachedMessageTable.begin(), cachedMessageTable.end(), MessageTableEntryLessThan());
     }
 
-    void updateEntry(const QString &guid, const QString &time, const QString &from, const QString &to, const QString &subject, const QString &message, MessageModelType type,int status)
+    void updateEntry(const QString &guid, const int itime, const QString &time, const QString &from, const QString &to, const QString &subject, const QString &message, MessageModelType type,int status)
     {
 		if(!parent || parent->modelType != type)
 		{
 			return;
 		}
         // Find message / value in model
-        QList<MessageTableEntry>::iterator lower = qLowerBound(
+        QList<MessageTableEntry>::iterator lowerGuid = qLowerBound(
             cachedMessageTable.begin(), cachedMessageTable.end(), guid, MessageTableEntryLessThan());
+        QList<MessageTableEntry>::iterator upperGuid = qUpperBound(
+            cachedMessageTable.begin(), cachedMessageTable.end(), guid, MessageTableEntryLessThan());
+
+		QList<MessageTableEntry>::iterator lower = qLowerBound(
+            cachedMessageTable.begin(), cachedMessageTable.end(), itime, MessageEntryLessThan());
         QList<MessageTableEntry>::iterator upper = qUpperBound(
-            cachedMessageTable.begin(), cachedMessageTable.end(), guid, MessageTableEntryLessThan());
+            cachedMessageTable.begin(), cachedMessageTable.end(), itime, MessageEntryLessThan());
         int lowerIndex = (lower - cachedMessageTable.begin());
         int upperIndex = (upper - cachedMessageTable.begin());
-        bool inModel = (lower != upper);
+
+        bool inModel = (lowerGuid != upperGuid);
 		int index;
         switch(status)
         {
@@ -169,7 +189,7 @@ public:
             
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedMessageTable.insert(lowerIndex, MessageTableEntry(guid, time, from, to, subject, message));
+            cachedMessageTable.insert(lowerIndex, MessageTableEntry(guid, itime, time, from, to, subject, message));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -178,6 +198,7 @@ public:
                 break;
             }
             lower->guid = guid;
+			lower->itime = itime;
 			lower->time = time;
 			lower->from = from;
 			lower->to = to;
@@ -392,29 +413,6 @@ QModelIndex MessageTableModel::index(int row, int column, const QModelIndex &par
     }
 }
 
-void MessageTableModel::updateEntry(const QString &guid, const QString &time, const QString &from, const QString &to, const QString &subject, const QString &message, MessageModelType type, int status)
-{
-    // Update message book model from Syscoin core
-    priv->updateEntry(guid, time, from, to, subject, message, type, status);
-}
-
-QString MessageTableModel::addRow(const QString &guid, const QString &time, const QString &from, const QString &to, const QString &subject, const QString &message)
-{
-    editStatus = OK;
-    // Check for duplicate messagees
-    {
-        LOCK(wallet->cs_wallet);
-        if(lookupMessage(guid) != -1)
-        {
-            editStatus = DUPLICATE_MESSAGE;
-            return QString();
-        }
-    }
-
-    // Add entry
-
-    return guid;
-}
 void MessageTableModel::clear()
 {
 	beginResetModel();

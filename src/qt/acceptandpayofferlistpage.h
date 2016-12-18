@@ -14,6 +14,7 @@ namespace Ui {
 class JSONRequest;
 
 class OptionsModel;
+class WalletModel;
 class COffer;
 QT_BEGIN_NAMESPACE
 class QTableView;
@@ -43,33 +44,41 @@ public:
 
     const QString &getReturnValue() const { return returnValue; }
 	bool handlePaymentRequest(const SendCoinsRecipient *rv);
-	void setValue(const QString& strAlias, const QString& strRand, COffer &offer, QString price, QString address);
+	bool getProfileData(QString& publicData, QString& privateData);
+	void setValue(const QString& strAlias, const QString& strRand, const QString& strSold,  const QString& strRating, COffer &offer, QString price, QString address, QString aliasPeg);
 	void updateCaption();
 	void OpenPayDialog();
 	void OpenBTCPayDialog();
+	void OpenZECPayDialog();
 	void RefreshImage();
 	void loadAliases();
+	void setModel(WalletModel* model);
 public Q_SLOTS:
+	void on_pubProfile();
+	void on_privProfile();
     void acceptOffer();
 	bool lookup(const QString &id = QString(""));
 	void resetState();
 	void netwManagerFinished();
 	void on_imageButton_clicked();
+    /** Spawn contextual menu (right mouse menu) for escrow book entry */
+    void contextualMenu(const QPoint &point);
 private:
+	WalletModel* walletModel;
 	const PlatformStyle *platformStyle;
     Ui::AcceptandPayOfferListPage *ui;
 	bool URIHandled;
     QString returnValue;
 	bool offerPaid;
-    QMenu *contextMenu;
-    QAction *deleteAction; // to be able to explicitly disable it
+	QMenu *contextMenu;
 	QNetworkAccessManager* m_netwManager;
 	QPixmap m_placeholderImage;
 	QUrl m_url;
 	QStringList m_imageList;
 	QString sAddress;
-	bool bOnlyAcceptBTC;
-	
+	unsigned char paymentOptions;
+	bool usedProfileInfo;
+	bool isOfferCert;
 };
 
 #endif // ACCEPTANDPAYOFFERLISTPAGE_H

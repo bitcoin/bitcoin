@@ -3,6 +3,7 @@
 
 #include <QDialog>
 class PlatformStyle;
+class WalletModel;
 namespace Ui {
     class OfferAcceptDialog;
 }
@@ -11,12 +12,12 @@ class OfferAcceptDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferAcceptDialog(const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, QWidget *parent=0);
+    explicit OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, unsigned char paymentOptions, QWidget *parent=0);
     ~OfferAcceptDialog();
-
     bool getPaymentStatus();
 
 private:
+	WalletModel* walletModel;
 	const PlatformStyle *platformStyle;
 	void setupEscrowCheckboxState();
     Ui::OfferAcceptDialog *ui;
@@ -24,8 +25,10 @@ private:
 	QString alias;
 	QString offer;
 	QString notes;
-	QString price;
-	QString fprice;
+	QString qstrPrice;
+	QString strSYSPrice;
+	QString strBTCPrice;
+	QString strZECPrice;
 	QString title;
 	QString currency;
 	QString seller;
@@ -41,6 +44,7 @@ private Q_SLOTS:
     void acceptOffer();
 	void acceptEscrow();
 	void acceptBTCPayment();
+	void acceptZECPayment();
 };
 
 #endif // OFFERACCEPTDIALOG_H

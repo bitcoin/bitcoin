@@ -5,7 +5,7 @@ This is a major release designed to improve performance and handle the
 increasing volume of transactions on the network.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 How to Upgrade
 --------------

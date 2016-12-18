@@ -14,7 +14,59 @@
 
 #include <vector>
 
-#include <boost/foreach.hpp>
+class CBlockFileInfo
+{
+public:
+    unsigned int nBlocks;      //!< number of blocks stored in file
+    unsigned int nSize;        //!< number of used bytes of block file
+    unsigned int nUndoSize;    //!< number of used bytes in the undo file
+    unsigned int nHeightFirst; //!< lowest height of block in file
+    unsigned int nHeightLast;  //!< highest height of block in file
+    uint64_t nTimeFirst;       //!< earliest time of block in file
+    uint64_t nTimeLast;        //!< latest time of block in file
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(VARINT(nBlocks));
+        READWRITE(VARINT(nSize));
+        READWRITE(VARINT(nUndoSize));
+        READWRITE(VARINT(nHeightFirst));
+        READWRITE(VARINT(nHeightLast));
+        READWRITE(VARINT(nTimeFirst));
+        READWRITE(VARINT(nTimeLast));
+    }
+
+     void SetNull() {
+         nBlocks = 0;
+         nSize = 0;
+         nUndoSize = 0;
+         nHeightFirst = 0;
+         nHeightLast = 0;
+         nTimeFirst = 0;
+         nTimeLast = 0;
+     }
+
+     CBlockFileInfo() {
+         SetNull();
+     }
+
+     std::string ToString() const;
+
+     /** update statistics (does not update nSize) */
+     void AddBlock(unsigned int nHeightIn, uint64_t nTimeIn) {
+         if (nBlocks==0 || nHeightFirst > nHeightIn)
+             nHeightFirst = nHeightIn;
+         if (nBlocks==0 || nTimeFirst > nTimeIn)
+             nTimeFirst = nTimeIn;
+         nBlocks++;
+         if (nHeightIn > nHeightLast)
+             nHeightLast = nHeightIn;
+         if (nTimeIn > nTimeLast)
+             nTimeLast = nTimeIn;
+     }
+};
 
 struct CDiskBlockPos
 {
@@ -56,7 +108,7 @@ struct CDiskBlockPos
 
 };
 
-enum BlockStatus {
+enum BlockStatus: uint32_t {
     //! Unused.
     BLOCK_VALID_UNKNOWN      =    0,
 
@@ -85,13 +137,15 @@ enum BlockStatus {
     BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, //! full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, //! undo data available in rev*.dat
+    BLOCK_HAVE_DATA          =    8, //!< full block available in blk*.dat
+    BLOCK_HAVE_UNDO          =   16, //!< undo data available in rev*.dat
     BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
-    BLOCK_FAILED_VALID       =   32, //! stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, //! descends from failed block
+    BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
+    BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
+
+    BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -111,7 +165,7 @@ public:
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
-    //! SYSCOIN pointer to the AuxPoW header, if this block has one
+    // SYSCOIN pointer to the AuxPoW header, if this block has one
     boost::shared_ptr<CAuxPow> pauxpow;
 
     //! height of the entry in the chain. The genesis block has height 0
@@ -157,6 +211,7 @@ public:
         phashBlock = NULL;
         pprev = NULL;
         pskip = NULL;
+		// SYSCOIN
 		pauxpow.reset();
         nHeight = 0;
         nFile = 0;
@@ -167,7 +222,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
-
+		// SYSCOIN
         nVersion.SetNull();
         hashMerkleRoot = uint256();
         nTime          = 0;
@@ -277,6 +332,10 @@ public:
     const CBlockIndex* GetAncestor(int height) const;
 };
 
+arith_uint256 GetBlockProof(const CBlockIndex& block);
+/** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
+int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
+
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
@@ -315,6 +374,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+		// SYSCOIN
         if (this->nVersion.IsAuxpow()) {
             if (ser_action.ForRead())
                 pauxpow.reset(new CAuxPow());

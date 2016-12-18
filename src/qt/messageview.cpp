@@ -30,9 +30,9 @@ MessageView::MessageView(const PlatformStyle *platformStyle, QStackedWidget *par
     inMessageListPage = new InMessageListPage(platformStyle);
 	outMessageListPage = new OutMessageListPage(platformStyle);
 	QString theme = GUIUtil::getThemeName();
-	tabWidget->addTab(inMessageListPage, tr("&Inbox"));
+	tabWidget->addTab(inMessageListPage, tr("Inbox"));
 	tabWidget->setTabIcon(0, platformStyle->SingleColorIcon(":/icons/" + theme + "/inmail"));
-	tabWidget->addTab(outMessageListPage, tr("&Outbox"));
+	tabWidget->addTab(outMessageListPage, tr("Outbox"));
 	tabWidget->setTabIcon(1, platformStyle->SingleColorIcon(":/icons/" + theme + "/outmail"));
 	parent->addWidget(tabWidget);
 

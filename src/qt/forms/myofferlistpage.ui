@@ -15,14 +15,46 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="labelExplanation">
-     <property name="textFormat">
-      <enum>Qt::PlainText</enum>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="labelExplanation">
+       <property name="textFormat">
+        <enum>Qt::PlainText</enum>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="displayListAlias">
+       <property name="maximumSize">
+        <size>
+         <width>250</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QCheckBox" name="soldOutCheck">
+       <property name="text">
+        <string>Show Sold Out/ Expired Offers</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="showDigitalOffers">
+       <property name="text">
+        <string>Show Digital Offers Only</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QTableView" name="tableView">
@@ -55,12 +87,28 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>48</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Refresh your list of offers</string>
+       </property>
+       <property name="text">
+        <string>Refresh</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="newOffer">
        <property name="toolTip">
         <string>Create a new offer</string>
        </property>
        <property name="text">
-        <string>&amp;New Offer</string>
+        <string>New Offer</string>
        </property>
       </widget>
      </item>
@@ -70,7 +118,7 @@
         <string>Copy the currently selected offer to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Offer ID</string>
+        <string>Copy Offer ID</string>
        </property>
       </widget>
      </item>
@@ -90,23 +138,7 @@
         <string>Manage affiliates for this offer</string>
        </property>
        <property name="text">
-        <string>&amp;Manage Affiliates</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="refreshButton">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>48</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>Refresh your list of offers</string>
-       </property>
-       <property name="text">
-        <string>&amp;Refresh</string>
+        <string>Manage Affiliates</string>
        </property>
       </widget>
      </item>
@@ -129,20 +161,7 @@
         <string>Export the data in the current tab to a file</string>
        </property>
        <property name="text">
-        <string>&amp;Export</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Ok</set>
+        <string>Export</string>
        </property>
       </widget>
      </item>

@@ -29,7 +29,16 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
-
+#include "qzecjsonrpcclient.h"
+#include "qbtcjsonrpcclient.h"
+#if QT_VERSION < 0x050000
+#include <QUrl>
+#else
+#include <QUrlQuery>
+#endif
+using namespace std;
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
@@ -75,13 +84,25 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     if (!enableWallet) {
         ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
     }
-
     /* Display elements init */
     // SYSCOIN Theme selector
-     ui->theme->addItem(tr("shade"), QVariant(""));
-
-     
+    ui->theme->addItem(tr("shade"), QVariant(""));
+	ui->theme->addItem(tr("solid"), QVariant("1"));
+	ui->theme->addItem(tr("white"), QVariant("2"));
+	ui->defaultPegAlias->setPlaceholderText("sysrates.peg");
+	ui->zecEndPoint->setPlaceholderText("http://zec.syscoin.org:8080/");
+	ui->btcEndPoint->setPlaceholderText("http://btc.syscoin.org:8080/");
+	ui->zecRPCLogin->setPlaceholderText("sysuser");
+	ui->btcRPCLogin->setPlaceholderText("sysuser");
+	ui->zecRPCPassword->setPlaceholderText("JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
+	ui->btcRPCPassword->setPlaceholderText("JcfJqiyhVVRsYJo0MQKjBJxOZMCrXPqQjUt2Kte2qU");
+    /* Display elements init */
     QDir translations(":translations");
+
+    ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(tr(PACKAGE_NAME)));
+
+    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     Q_FOREACH(const QString &langStr, translations.entryList())
     {
@@ -133,23 +154,64 @@ OptionsDialog::~OptionsDialog()
 {
     delete ui;
 }
-
-void OptionsDialog::setModel(OptionsModel *model)
+// SYSCOIN
+void OptionsDialog::on_testZECButton_clicked()
 {
-    this->model = model;
+	ZecRpcClient zecClient(ui->zecEndPoint->text(), ui->zecRPCLogin->text(), ui->zecRPCPassword->text());
+	ui->testZECButton->setText(tr("Please Wait..."));	
+	ui->testBTCButton->setEnabled(false);
+	ui->testZECButton->setEnabled(false);
+	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
+	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
+	zecClient.sendRequest(nam, "getinfo");
+}
+void OptionsDialog::on_testBTCButton_clicked()
+{
+	BtcRpcClient btcClient(ui->btcEndPoint->text(), ui->btcRPCLogin->text(), ui->btcRPCPassword->text());
+	ui->testBTCButton->setText(tr("Please Wait..."));	
+	ui->testBTCButton->setEnabled(false);
+	ui->testZECButton->setEnabled(false);
+	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
+	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
+	btcClient.sendRequest(nam, "getinfo");
+}
+void OptionsDialog::slotConfirmedFinished(QNetworkReply * reply)
+{
+	ui->testBTCButton->setText(tr("Test Connection"));	
+	ui->testZECButton->setText(tr("Test Connection"));	
+	ui->testBTCButton->setEnabled(true);
+	ui->testZECButton->setEnabled(true);
+	if(reply->error() != QNetworkReply::NoError) {
+        QString msg = tr("Error communicating with %1: %2")
+            .arg(reply->request().url().toString())
+            .arg(reply->errorString());
 
-    if(model)
+        QMessageBox::critical(this, windowTitle(),msg,QMessageBox::Ok, QMessageBox::Ok);
+	}
+	else
+	{
+        QMessageBox::information(this, windowTitle(),
+            tr("Connection successfully established!"),
+                QMessageBox::Ok, QMessageBox::Ok);
+	}
+	reply->deleteLater();
+}
+void OptionsDialog::setModel(OptionsModel *_model)
+{
+    this->model = _model;
+
+    if(_model)
     {
         /* check if client restart is needed and show persistent message */
-        if (model->isRestartRequired())
+        if (_model->isRestartRequired())
             showRestartWarning(true);
 
-        QString strLabel = model->getOverriddenByCommandLine();
+        QString strLabel = _model->getOverriddenByCommandLine();
         if (strLabel.isEmpty())
             strLabel = tr("none");
         ui->overriddenByCommandLineLabel->setText(strLabel);
 
-        mapper->setModel(model);
+        mapper->setModel(_model);
         setMapper();
         mapper->toFirst();
 
@@ -169,7 +231,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
 	// SYSCOIN
-	connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
+	connect(ui->theme, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -199,13 +261,24 @@ void OptionsDialog::setMapper()
 
     /* Window */
 #ifndef Q_OS_MAC
+    mapper->addMapping(ui->hideTrayIcon, OptionsModel::HideTrayIcon);
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
 #endif
 
-    /* Display */
+   /* Display */
 	// SYSCOIN
+	mapper->addMapping(ui->zecEndPoint, OptionsModel::ZecEndPoint);
+	mapper->addMapping(ui->btcEndPoint, OptionsModel::BTCEndPoint);
+	mapper->addMapping(ui->zecRPCLogin, OptionsModel::ZecRPCLogin);
+	mapper->addMapping(ui->btcRPCLogin, OptionsModel::BTCRPCLogin);
+	mapper->addMapping(ui->zecRPCPassword, OptionsModel::ZecRPCPassword);
+	mapper->addMapping(ui->btcRPCPassword, OptionsModel::BTCRPCPassword);
+
 	mapper->addMapping(ui->theme, OptionsModel::Theme);
+	mapper->addMapping(ui->defaultAlias, OptionsModel::DefaultAlias);
+	mapper->addMapping(ui->defaultPegAlias, OptionsModel::DefaultPegAlias);
+	mapper->addMapping(ui->safeSearch, OptionsModel::SafeSearch);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
@@ -244,6 +317,19 @@ void OptionsDialog::on_okButton_clicked()
 void OptionsDialog::on_cancelButton_clicked()
 {
     reject();
+}
+
+void OptionsDialog::on_hideTrayIcon_stateChanged(int fState)
+{
+    if(fState)
+    {
+        ui->minimizeToTray->setChecked(false);
+        ui->minimizeToTray->setEnabled(false);
+    }
+    else
+    {
+        ui->minimizeToTray->setEnabled(true);
+    }
 }
 
 void OptionsDialog::showRestartWarning(bool fPersistent)
@@ -316,7 +402,8 @@ QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) cons
 {
     Q_UNUSED(pos);
     // Validate the proxy
-    proxyType addrProxy = proxyType(CService(input.toStdString(), 9050), true);
+    CService serv(LookupNumeric(input.toStdString().c_str(), 9050));
+    proxyType addrProxy = proxyType(serv, true);
     if (addrProxy.IsValid())
         return QValidator::Acceptable;
 

@@ -26,16 +26,6 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="currencyDisclaimer">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
       <widget class="QLabel" name="fromDisclaimer">
        <property name="text">
@@ -108,6 +98,37 @@
      </item>
      <item row="0" column="1">
       <widget class="QComboBox" name="aliasEdit"/>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Hex Data:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QComboBox" name="hexEdit">
+       <item>
+        <property name="text">
+         <string>No</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Yes</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="12" column="1">
+      <widget class="QLabel" name="hexDisclaimer">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
