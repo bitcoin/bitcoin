@@ -159,12 +159,12 @@ public:
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
         vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(  0);                    // Crown addresses start with 'X'
-        base58Prefixes[SCRIPT_ADDRESS] = list_of(  5);                    // Crown script addresses start with '7'
-        base58Prefixes[SECRET_KEY] =     list_of(128);                    // Crown private keys start with '7' or 'X'
-        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E);
-        base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4);
-        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005);             // Crown BIP44 coin type is '5'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '7'
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);                    // Crown private keys start with '7' or 'X'
+        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005).convert_to_container<std::vector<unsigned char> >();             // Crown BIP44 coin type is '5'
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
@@ -232,12 +232,12 @@ public:
         //vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
         //vSeeds.push_back(CDNSSeedData("throne.io", "test.dnsseed.throne.io"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(111);                    // Testnet crown addresses start with 'x' or 'y'
-        base58Prefixes[SCRIPT_ADDRESS] = list_of(196);                    // Testnet crown script addresses start with '8' or '9'
-        base58Prefixes[SECRET_KEY]     = list_of(239);                    // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
-        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
-        base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
-        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000001);             // Testnet crown BIP44 coin type is '5' (All coin's testnet default)
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);                    // Testnet crown addresses start with 'x' or 'y'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);                    // Testnet crown script addresses start with '8' or '9'
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,239);                    // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
+        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000001).convert_to_container<std::vector<unsigned char> >();             // Testnet crown BIP44 coin type is '5' (All coin's testnet default)
 
         convertSeed6(vFixedSeeds, pnSeed6_test, ARRAYLEN(pnSeed6_test));
 
