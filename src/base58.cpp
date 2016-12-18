@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Syscoin Core developers
+// Copyright (c) 2014-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,8 +15,8 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 // SYSCOIN use aliases as addresses
-extern void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress);
-extern void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias);
+extern bool GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, std::vector<unsigned char> &vchRedeemScript, std::vector<unsigned char> &vchPubKey);
+extern bool GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, std::vector<unsigned char> &vchRedeemScript, std::vector<unsigned char> &vchPubKey);
 /** All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -70,26 +70,31 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
 {
     // Skip & count leading zeroes.
     int zeroes = 0;
+    int length = 0;
     while (pbegin != pend && *pbegin == 0) {
         pbegin++;
         zeroes++;
     }
     // Allocate enough space in big-endian base58 representation.
-    std::vector<unsigned char> b58((pend - pbegin) * 138 / 100 + 1); // log(256) / log(58), rounded up.
+    int size = (pend - pbegin) * 138 / 100 + 1; // log(256) / log(58), rounded up.
+    std::vector<unsigned char> b58(size);
     // Process the bytes.
     while (pbegin != pend) {
         int carry = *pbegin;
+        int i = 0;
         // Apply "b58 = b58 * 256 + ch".
-        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); it != b58.rend(); it++) {
+        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
             carry += 256 * (*it);
             *it = carry % 58;
             carry /= 58;
         }
+
         assert(carry == 0);
+        length = i;
         pbegin++;
     }
     // Skip leading zeroes in base58 result.
-    std::vector<unsigned char>::iterator it = b58.begin();
+    std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
     while (it != b58.end() && *it == 0)
         it++;
     // Translate the result into a string.
@@ -170,11 +175,22 @@ bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes)
         vchVersion.clear();
         return false;
     }
+	// SYSCOIN
+	if(vchTemp.size() >= 2)
+	{
+		std::vector<unsigned char> vchVersionTemp;
+		vchVersionTemp.assign(vchTemp.begin(), vchTemp.begin() + 2);
+		if(vchVersionTemp == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC) ||
+			vchVersionTemp == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC))
+			nVersionBytes = 2;
+	}
+	
+
     vchVersion.assign(vchTemp.begin(), vchTemp.begin() + nVersionBytes);
     vchData.resize(vchTemp.size() - nVersionBytes);
     if (!vchData.empty())
         memcpy(&vchData[0], &vchTemp[nVersionBytes], vchData.size());
-    memory_cleanse(&vchTemp[0], vchData.size());
+    memory_cleanse(&vchTemp[0], vchTemp.size());
     return true;
 }
 
@@ -210,13 +226,13 @@ class CSyscoinAddressVisitor : public boost::static_visitor<bool>
 private:
     CSyscoinAddress* addr;
 	// SYSCOIN support old sys
-	bool bOldSys;
+	CChainParams::AddressType nSysVer;
 public:
     CSyscoinAddressVisitor(CSyscoinAddress* addrIn) : addr(addrIn) {}
-	CSyscoinAddressVisitor(CSyscoinAddress* addrIn, bool oldSys) : bOldSys(oldSys), addr(addrIn) {}
+	CSyscoinAddressVisitor(CSyscoinAddress* addrIn, CChainParams::AddressType nSysVer) : nSysVer(nSysVer), addr(addrIn) {}
 
-    bool operator()(const CKeyID& id) const { return addr->Set(id, bOldSys); }
-    bool operator()(const CScriptID& id) const { return addr->Set(id); }
+    bool operator()(const CKeyID& id) const { return addr->Set(id, nSysVer); }
+    bool operator()(const CScriptID& id) const { return addr->Set(id, nSysVer); }
     bool operator()(const CNoDestination& no) const { return false; }
 };
 
@@ -225,12 +241,20 @@ public:
 CSyscoinAddress::CSyscoinAddress() {
 	isAlias = false;
 	aliasName = "";
+	safeSearch = false;
+	safetyLevel = 0;
+	vchRedeemScript.clear();
+	vchPubKey.clear();
 }
 // SYSCOIN support old sys
-CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, bool oldSys) { 
+CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, CChainParams::AddressType sysVer) { 
 	isAlias = false;
+	safeSearch = false;
+	safetyLevel = 0;
 	aliasName = "";
-    Set(dest, oldSys);
+	vchRedeemScript.clear();
+	vchPubKey.clear();
+    Set(dest, sysVer);
 }
 CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) { 
 	isAlias = false;
@@ -239,31 +263,27 @@ CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
 	// try to resolve alias address from alias name
 	if (!IsValid())
 	{
-		try 
+	
+		std::string strAliasAddress;
+		if(GetAddressFromAlias(strAddress, strAliasAddress, safetyLevel, safeSearch, vchRedeemScript, vchPubKey))
 		{
-			std::string strAliasAddress;
-			GetAddressFromAlias(strAddress, strAliasAddress);
 			SetString(strAliasAddress);
 			aliasName = strAddress;
 			isAlias = true;
 		}
-		catch(...)
-		{
-		}
+
 	}
 	// try to resolve alias name from alias address
 	else
 	{
-		try 
+		
+		std::string strAliasAddress = strAddress;
+		SetString(strAliasAddress);
+		if(GetAliasFromAddress(strAliasAddress, aliasName, safetyLevel, safeSearch, vchRedeemScript, vchPubKey))
 		{
-			std::string strAlias;
-			GetAliasFromAddress(strAddress, strAlias);
-			aliasName = strAlias;
+			SetString(strAliasAddress);
 			isAlias = true;
-		}
-		catch(...)
-		{
-		}
+		}	
 	}
 			
 }
@@ -273,49 +293,50 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 	// try to resolve alias address
 	if (!IsValid())
 	{
-		try 
+		
+		std::string strAliasAddress;
+		if(GetAddressFromAlias(std::string(pszAddress), strAliasAddress, safetyLevel, safeSearch, vchRedeemScript, vchPubKey))
 		{
-			std::string strAliasAddress;
-			GetAddressFromAlias(std::string(pszAddress), strAliasAddress);
 			SetString(strAliasAddress);
 			aliasName = std::string(pszAddress);
 			isAlias = true;
-			
-		}
-		catch(...)
-		{
-		}
+		}			
 	}
 	else
 	{
-		try 
+		
+		std::string strAliasAddress = std::string(pszAddress);
+		SetString(strAliasAddress);
+		if(GetAliasFromAddress(strAliasAddress, aliasName, safetyLevel, safeSearch, vchRedeemScript, vchPubKey))
 		{
-			std::string strAlias;
-			GetAliasFromAddress(std::string(pszAddress), strAlias);
-			aliasName = strAlias;
 			isAlias = true;
-		}
-		catch(...)
-		{
-		}
+		}	
 	}
 }
 // SYSCOIN support old sys
-bool CSyscoinAddress::Set(const CKeyID& id, bool oldSys)
-{
-	SetData(Params().Base58Prefix(oldSys? CChainParams::PUBKEY_ADDRESS_SYS: CChainParams::PUBKEY_ADDRESS), &id, 20);
+bool CSyscoinAddress::Set(const CKeyID& id, CChainParams::AddressType sysVer)
+{   
+    if(sysVer == CChainParams::ADDRESS_OLDSYS)
+        SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS), &id, 20);
+    else if(sysVer == CChainParams::ADDRESS_SYS)
+        SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
+    else if(sysVer == CChainParams::ADDRESS_ZEC)
+        SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC), &id, 20);
     return true;
 }
 
-bool CSyscoinAddress::Set(const CScriptID& id)
+bool CSyscoinAddress::Set(const CScriptID& id, CChainParams::AddressType sysVer)
 {
-    SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
+    if(sysVer == CChainParams::ADDRESS_SYS || sysVer == CChainParams::ADDRESS_OLDSYS)
+        SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
+    else if(sysVer == CChainParams::ADDRESS_ZEC)
+        SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC), &id, 20);
     return true;
 }
 // SYSCOIN support old sys
-bool CSyscoinAddress::Set(const CTxDestination& dest, bool oldSys)
+bool CSyscoinAddress::Set(const CTxDestination& dest, CChainParams::AddressType sysVer)
 {
-    return boost::apply_visitor(CSyscoinAddressVisitor(this, oldSys), dest);
+    return boost::apply_visitor(CSyscoinAddressVisitor(this, sysVer), dest);
 }
 
 bool CSyscoinAddress::IsValid() const
@@ -329,7 +350,9 @@ bool CSyscoinAddress::IsValid(const CChainParams& params) const
 	// SYSCOIN allow old SYSCOIN address scheme
     bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS)     ||
 						 vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
-                         vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+                         vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC) ||
+                         vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS)     ||
+						 vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC);
     return fCorrectSize && fKnownVersion;
 }
 
@@ -341,9 +364,11 @@ CTxDestination CSyscoinAddress::Get() const
     memcpy(&id, &vchData[0], 20);
 	// SYSCOIN allow old SYSCOIN address scheme
     if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
-		vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS))
+		vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
+        vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC))
         return CKeyID(id);
-    else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
+    else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS) ||
+            vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC))
         return CScriptID(id);
     else
         return CNoDestination();
@@ -352,7 +377,7 @@ CTxDestination CSyscoinAddress::Get() const
 bool CSyscoinAddress::GetKeyID(CKeyID& keyID) const
 {
 	// SYSCOIN allow old SYSCOIN address scheme
-    if (!IsValid() || (vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS)))
+    if (!IsValid() || (vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_ZEC)))
         return false;
     uint160 id;
     memcpy(&id, &vchData[0], 20);
@@ -362,7 +387,7 @@ bool CSyscoinAddress::GetKeyID(CKeyID& keyID) const
 
 bool CSyscoinAddress::IsScript() const
 {
-    return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+    return IsValid() && (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS) || vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS_ZEC));
 }
 
 void CSyscoinSecret::SetKey(const CKey& vchSecret)

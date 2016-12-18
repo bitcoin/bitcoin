@@ -32,13 +32,20 @@ public:
 
     void setModel(WalletModel*,AliasTableModel *model);
     void loadRow(int row);
+	void loadAliasDetails();
 
     QString getAlias() const;
     void setAlias(const QString &alias);
 
 public Q_SLOTS:
     void accept();
-
+	void on_okButton_clicked();
+	void on_cancelButton_clicked();
+	void on_addButton_clicked();
+	void on_deleteButton_clicked();
+	void reqSigsChanged();
+	void expiryChanged(const QString& alias);
+	void onCustomExpireCheckBoxChanged(bool toggled);
 private:
     bool saveCurrentRow();
 
@@ -48,6 +55,7 @@ private:
     AliasTableModel *model;
 	WalletModel* walletModel;
     QString alias;
+	QString expiredStr;
 };
 
 #endif // EDITALIASDIALOG_H

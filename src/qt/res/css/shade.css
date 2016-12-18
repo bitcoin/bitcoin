@@ -139,9 +139,7 @@ background:#f2f2f2;
 }
 
 QComboBox:editable {
-background: #3398CC;
 color:#616161;
-border:0px solid transparent;
 }
 
 QComboBox::drop-down {
@@ -741,7 +739,9 @@ QWidget .QFrame#frame .QLabel#label_5 { /* Wallet Label */
 qproperty-alignment: 'AlignVCenter | AlignRight';
 min-width:160px;
 background-color:transparent;
-color:#fff;
+color:#3398CC;
+font-weight:bold;
+font-size:16px;
 margin-right:5px;
 padding-right:5px;
 }
@@ -856,34 +856,24 @@ margin-left:16px;
 
 QWidget .QFrame#frame_2 { /* Transactions Widget */
 min-width:410px;
-margin-right:20px;
 margin-left:0;
 margin-top:0;
 background-image: url(':/images/shade/shade_logo_horizontal');
 background-size: 100%;
 background-repeat:none;
 }
-
 QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
-min-width:180px;
-color:#3398CC;
-margin-left:67px;
-margin-top:83px;
-margin-right:5px;
-padding-right:5px;
-font-weight:bold;
-font-size:15px;
-min-height:24px;
-}
-
-QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
 qproperty-alignment: 'AlignBottom | AlignRight';
-min-width:93px;
+min-width:180px;
 margin-top:83px;
 margin-left:16px;
 margin-right:5px;
-min-height:16px;
+min-height:24px;
+color:#3398CC;
+font-weight:bold;
+font-size:16px;
 }
+
 
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
 font-weight:normal;

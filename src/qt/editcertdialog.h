@@ -10,6 +10,7 @@ class CertTableModel;
 class WalletModel;
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
+class QStandardItemModel;
 QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
@@ -29,23 +30,29 @@ public:
     ~EditCertDialog();
 
     void setModel(WalletModel*,CertTableModel *model);
-    void loadRow(int row, const QString &privatecert="");
-
+    void loadRow(int row);
+    void addParentItem(QStandardItemModel * model, const QString& text, const QVariant& data );
+    void addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data );
+	void setCertNotSafeBecauseOfAlias(const QString &alias);
+	void resetSafeSearch();
     QString getCert() const;
     void setCert(const QString &cert);
 
 public Q_SLOTS:
     void accept();
+	void aliasChanged(const QString& text);
 
 private:
     bool saveCurrentRow();
 	void loadAliases();
+	void loadCategories();
     Ui::EditCertDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;
     CertTableModel *model;
 	WalletModel* walletModel;
     QString cert;
+	QString expiredStr;
 };
 
 #endif // EDITCERTDIALOG_H

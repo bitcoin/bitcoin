@@ -48,7 +48,7 @@
         <cursorShape>IBeamCursor</cursorShape>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Please wait...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Please wait...</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -63,7 +63,7 @@
    <item row="2" column="0">
     <widget class="QPushButton" name="finishButton">
      <property name="text">
-      <string>&amp;Finish</string>
+      <string>Finish</string>
      </property>
     </widget>
    </item>

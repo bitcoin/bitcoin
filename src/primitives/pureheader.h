@@ -51,10 +51,8 @@ public:
      * Extract the base version (without modifiers and chain ID).
      * @return The base version./
      */
-    inline int32_t GetBaseVersion() const
-    {
-        return nVersion % VERSION_AUXPOW;
-    }
+    int32_t GetBaseVersion() const;
+	int32_t GetAuxVersion()  const;
 
     /**
      * Set the base version (apart from chain ID and auxpow flag) to
@@ -63,25 +61,21 @@ public:
      * @param nBaseVersion The base version.
      */
     void SetBaseVersion(int32_t nBaseVersion);
-
+	
     /**
      * Extract the chain ID.
      * @return The chain ID encoded in the version.
      */
     inline int32_t GetChainId() const
     {
-        return nVersion / VERSION_CHAIN_START;
+        return GetAuxVersion() / VERSION_CHAIN_START;
     }
 
     /**
-     * Set the chain ID.  This is used for the test suite.
+     * Set the chain ID.
      * @param ch The chain ID to set.
      */
-    inline void SetChainId(int32_t chainId)
-    {
-        nVersion %= VERSION_CHAIN_START;
-        nVersion |= chainId * VERSION_CHAIN_START;
-    }
+    void SetChainId(int32_t chainId);
 
     /**
      * Extract the full version.  Used for RPC results and debug prints.
@@ -90,16 +84,6 @@ public:
     inline int32_t GetFullVersion() const
     {
         return nVersion;
-    }
-
-    /**
-     * Set the genesis block version.  This must be a literal write
-     * through, to get the correct historic version.
-     * @param nGenesisVersion The version to set.
-     */
-    inline void SetGenesisVersion(int32_t nGenesisVersion)
-    {
-        nVersion = nGenesisVersion;
     }
 
     /**
@@ -115,13 +99,7 @@ public:
      * Set the auxpow flag.  This is used for testing.
      * @param auxpow Whether to mark auxpow as true.
      */
-    inline void SetAuxpow (bool auxpow)
-    {
-        if (auxpow)
-            nVersion |= VERSION_AUXPOW;
-        else
-            nVersion &= ~VERSION_AUXPOW;
-    }
+    void SetAuxpow(bool auxpow);
 
     /**
      * Check whether this is a "legacy" block without chain ID.

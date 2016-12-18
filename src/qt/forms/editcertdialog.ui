@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>427</height>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,22 @@
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Alias:</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="1">
       <widget class="QComboBox" name="aliasEdit"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="aliasDisclaimer">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="certLabel">
@@ -63,6 +77,20 @@
       <layout class="QVBoxLayout" name="verticalLayout_3"/>
      </item>
      <item row="6" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Category:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="categoryEdit">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
       <widget class="QLabel" name="transferLabel">
        <property name="text">
         <string>Transfer To:</string>
@@ -72,10 +100,10 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="7" column="1">
       <widget class="QLineEdit" name="transferEdit"/>
      </item>
-     <item row="7" column="1">
+     <item row="8" column="1">
       <widget class="QLabel" name="transferDisclaimer">
        <property name="text">
         <string/>
@@ -85,47 +113,99 @@
        </property>
       </widget>
      </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="certDataLabel">
+     <item row="9" column="0">
+      <widget class="QLabel" name="viewOnlyLabel">
        <property name="text">
-        <string>Data:</string>
+        <string>View-Only After Transfer:</string>
        </property>
       </widget>
      </item>
-     <item row="8" column="1">
-      <widget class="QTextEdit" name="certDataEdit"/>
-     </item>
      <item row="9" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_5"/>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="privateLabel">
-       <property name="text">
-        <string>Private:</string>
-       </property>
+      <widget class="QComboBox" name="viewOnlyBox">
+       <item>
+        <property name="text">
+         <string>No</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Yes</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item row="10" column="1">
-      <widget class="QComboBox" name="privateBox">
-       <property name="maxVisibleItems">
-        <number>2</number>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_6"/>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Alias:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="aliasDisclaimer">
+      <widget class="QLabel" name="viewOnlyDisclaimer">
        <property name="text">
         <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="viewLabel">
+       <property name="text">
+        <string>View Alias:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLabel" name="certDataLabel">
+       <property name="text">
+        <string>Private Data:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="1">
+      <widget class="QTextEdit" name="certDataEdit"/>
+     </item>
+     <item row="15" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_5"/>
+     </item>
+     <item row="16" column="0">
+      <widget class="QLabel" name="labelSafeSearch">
+       <property name="text">
+        <string>Safe Search:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QComboBox" name="safeSearchEdit">
+         <item>
+          <property name="text">
+           <string>Yes</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>No</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="safeSearchDisclaimer">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="14" column="1">
+      <widget class="QTextEdit" name="certPubDataEdit"/>
+     </item>
+     <item row="14" column="0">
+      <widget class="QLabel" name="certPubDataLabel">
+       <property name="text">
+        <string>Public Data:</string>
        </property>
       </widget>
      </item>

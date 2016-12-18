@@ -36,6 +36,8 @@ class COutput;
 class CPubKey;
 class CWallet;
 class uint256;
+// SYSCOIN
+class UniValue;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -45,8 +47,8 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
+        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -122,7 +124,10 @@ public:
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
         AbsurdFee,
-        PaymentRequestExpired
+        PaymentRequestExpired,
+		// SYSCOIN
+		OKMultisig,
+		InvalidMultisig
     };
 
     enum EncryptionStatus
@@ -165,8 +170,8 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode status = OK):
-            status(status) {}
+        SendCoinsReturn(StatusCode _status = OK):
+            status(_status) {}
         StatusCode status;
     };
 
@@ -220,6 +225,12 @@ public:
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
+    bool transactionCanBeAbandoned(uint256 hash) const;
+    bool abandonTransaction(uint256 hash) const;
+
+    static bool isWalletEnabled();
+
+    bool hdEnabled() const;
 private:
     CWallet *wallet;
     bool fHaveWatchOnly;
@@ -305,5 +316,6 @@ public Q_SLOTS:
 	void updateOffer();
 	void updateMessage();
 };
-
+// SYSCOIN
+extern void appendListAliases(UniValue& defaultAliasArray, bool allAliases=false);
 #endif // SYSCOIN_QT_WALLETMODEL_H

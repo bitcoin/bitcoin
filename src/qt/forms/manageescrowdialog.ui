@@ -7,20 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>313</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Manage Your Escrow</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="aboutEscrow">
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QLabel" name="manageInfo">
      <property name="text">
@@ -28,6 +21,13 @@
      </property>
      <property name="wordWrap">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="aboutEscrow">
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </item>
@@ -45,9 +45,6 @@
        <property name="cursor">
         <cursorShape>IBeamCursor</cursorShape>
        </property>
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
        <property name="wordWrap">
         <bool>true</bool>
        </property>
@@ -58,7 +55,7 @@
      </item>
     </layout>
    </item>
-   <item row="6" column="0">
+   <item row="9" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QPushButton" name="cancelButton">
@@ -70,7 +67,7 @@
      <item>
       <widget class="QPushButton" name="releaseButton">
        <property name="toolTip">
-        <string>Open your local Bitcoin client</string>
+        <string>Release this escrow to the seller</string>
        </property>
        <property name="text">
         <string>Release Escrow</string>
@@ -80,12 +77,87 @@
      <item>
       <widget class="QPushButton" name="refundButton">
        <property name="toolTip">
-        <string>Confirm this payment on the Bitcoin blockchain</string>
+        <string>Refund this escrow back to the buyer</string>
        </property>
        <property name="text">
         <string>Refund Escrow</string>
        </property>
       </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="7" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="4" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QTextEdit" name="primaryFeedback"/>
+     </item>
+    </layout>
+   </item>
+   <item row="5" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="secondaryLabel">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="secondaryRating">
+       <property name="suffix">
+        <string> Stars</string>
+       </property>
+       <property name="maximum">
+        <number>5</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="primaryLabel">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="primaryRating">
+       <property name="suffix">
+        <string> Stars</string>
+       </property>
+       <property name="maximum">
+        <number>5</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="6" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <widget class="QTextEdit" name="secondaryFeedback"/>
      </item>
     </layout>
    </item>

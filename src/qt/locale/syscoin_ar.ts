@@ -1,5 +1,31 @@
 <TS language="ar" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>الكمية :</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +50,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;اغلاق</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>انسخ العنوان</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -74,6 +96,10 @@
         <translation>هذه هي عناوين Bitcion التابعة لك من أجل إستقبال الدفعات. ينصح استخدام عنوان جديد من أجل كل صفقة</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>انسخ العنوان</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>نسخ &amp;الوصف</translation>
     </message>
@@ -90,14 +116,14 @@
         <translation>ملف مفصول بفواصل (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>فشل التصدير</translation>
+        <source>Label</source>
+        <translation>وصف</translation>
     </message>
     <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>لقد حدث خطأ أثناء  حفظ قائمة العناوين إلى %1. يرجى المحاولة مرة أخرى.</translation>
+        <source>Address</source>
+        <translation>عنوان</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -113,6 +139,15 @@
         <translation>(لا وصف)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -130,6 +165,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>ادخل كلمة المرور الجديدة مرة أخرى</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10 حروف عشوائية على الاقل, أو أكثر من 7 كلمات</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -156,6 +195,10 @@
         <translation>تغيير كلمة المرور</translation>
     </message>
     <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>أدخل كلمة المرور القديمة والجديدة للمحفظة.</translation>
+    </message>
+    <message>
         <source>Confirm wallet encryption</source>
         <translation>تأكيد تشفير المحفظة</translation>
     </message>
@@ -168,28 +211,12 @@
         <translation>هل أنت متأكد من رغبتك في تشفير محفظتك ؟</translation>
     </message>
     <message>
-        <source>Syscoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>بتكوين سوف يغلق الآن لإنهاء عملية التشفير. تذكر أن التشفير لا يستطيع حماية محفظتك تمامًا من السرقة من خلال البرمجيات الخبيثة التي تصيب جهازك </translation>
-    </message>
-    <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>هام: أي نسخة إحتياطية سابقة  قمت بها لمحفظتك يجب استبدالها  بأخرى حديثة، مشفرة. لأسباب أمنية، النسخ الاحتياطية السابقة لملفات المحفظة الغير مشفرة تصبح عديمة الفائدة مع بداية استخدام المحفظة المشفرة الجديدة.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>تحذير: مفتاح الحروف الكبيرة مفعل</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>محفظة مشفرة</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10 حروف عشوائية على الاقل, أو أكثر من 7 كلمات</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>أدخل كلمة المرور القديمة والجديدة للمحفظة.</translation>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>هام: أي نسخة إحتياطية سابقة  قمت بها لمحفظتك يجب استبدالها  بأخرى حديثة، مشفرة. لأسباب أمنية، النسخ الاحتياطية السابقة لملفات المحفظة الغير مشفرة تصبح عديمة الفائدة مع بداية استخدام المحفظة المشفرة الجديدة.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -219,237 +246,60 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>لقد تم تغير عبارة مرور المحفظة بنجاح</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>تحذير: مفتاح الحروف الكبيرة مفعل</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>عنوان البروتوكول/قناع</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>محظور حتى</translation>
+    </message>
+</context>
+<context>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>التوقيع و الرسائل</translation>
+        <source>Status</source>
+        <translation>الحالة.</translation>
     </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>مزامنة مع الشبكة ...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;نظرة عامة</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>جهاز</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>إظهار نظرة عامة على المحفظة</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;المعاملات</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>تصفح سجل المعاملات</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>خروج</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>الخروج من التطبيق</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>عن</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>اظهر المعلومات</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;خيارات ...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;تشفير المحفظة</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;نسخ احتياط للمحفظة</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;تغيير كلمة المرور</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>ارسال العناوين.</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>استقبال العناوين</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>افتح &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Syscoin Core client</source>
-        <translation>عميل bitcion core</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>استيراد كتل من القرص ...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>إعادة الفهرسة الكتل على القرص ...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>ارسل عملات الى عنوان بيتكوين</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>احفظ نسخة احتياطية للمحفظة في مكان آخر</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>تغيير كلمة المرور المستخدمة لتشفير المحفظة</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;نافذة المعالجة</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;التحقق من الرسالة...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>بت كوين</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>محفظة</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;ارسل</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;استقبل</translation>
-    </message>
-    <message>
-        <source>Show information about Syscoin Core</source>
-        <translation>  اظهار معلومات حول bitcion core</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;عرض / اخفاء</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>عرض او اخفاء النافذة الرئيسية</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>تشفير المفتاح الخاص بمحفظتك</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;ملف</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;الاعدادات</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;مساعدة</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>شريط أدوات علامات التبويب</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>حول syscoin core</translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 و %2</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>خطأ</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>تحذير</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>معلومات</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>محدث</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>اللحاق بالركب ...</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>المعاملات  المرسلة</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>المعاملات الواردة</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مفتوحة&lt;/b&gt; حاليا</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مقفلة&lt;/b&gt; حاليا</translation>
-    </message>
-</context>
+    </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>تنبيه من الشبكة</translation>
-    </message>
-</context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>اختيار العمله</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>الكمية :</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>بايت</translation>
     </message>
     <message>
         <source>Amount:</source>
         <translation>القيمة :</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>افضلية :</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>رسوم :</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>غبار:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -460,24 +310,40 @@
         <translation>تعديل :</translation>
     </message>
     <message>
+        <source>(un)select all</source>
+        <translation>عدم اختيار الجميع</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation>صيغة الشجرة</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation>صيغة القائمة</translation>
+    </message>
+    <message>
         <source>Amount</source>
-        <translation>المبلغ</translation>
+        <translation>مبلغ</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>مستقبل مع ملصق</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>مستقبل مع عنوان</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>التاريخ</translation>
+        <translation>تاريخ</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>تأكيد</translation>
+        <translation>تأكيدات</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>تأكيد</translation>
-    </message>
-    <message>
-        <source>Priority</source>
-        <translation>أفضلية</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -508,44 +374,8 @@
         <translation>نسخ بعد الرسوم</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>نسخ الافضلية</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>نسخ التعديل</translation>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation>الاعلى</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>اعلى</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>عالي</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>متوسط-مرتفع</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>منخفض</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>أدنى</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>الأدنى</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>لا شيء</translation>
     </message>
     <message>
         <source>yes</source>
@@ -573,6 +403,14 @@
     <message>
         <source>&amp;Label</source>
         <translation>&amp;وصف</translation>
+    </message>
+    <message>
+        <source>The label associated with this address list entry</source>
+        <translation>الملصق المرتبط بقائمة العناوين المدخلة</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>العنوان المرتبط بقائمة العناوين المدخلة. و التي يمكن تعديلها فقط بواسطة ارسال العناوين</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -608,6 +446,106 @@
     </message>
 </context>
 <context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عام</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>نعم</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>لا</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation> يمكن فتح المحفظة.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>نعم</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>لا</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation> يمكن فتح المحفظة.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عام</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>الكمية :</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>لا</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>نعم</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation> يمكن فتح المحفظة.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>ازل</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عام</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>العنوان</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>المجموع:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
@@ -618,6 +556,14 @@
         <translation>الاسم</translation>
     </message>
     <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>الدليل موجوج بالفعل. أضف %1 لو نويت إنشاء دليل جديد هنا.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>المسار موجود بالفعل، وهو ليس دليلاً.</translation>
+    </message>
+    <message>
         <source>Cannot create data directory here.</source>
         <translation>لا يمكن انشاء دليل بيانات هنا .</translation>
     </message>
@@ -625,20 +571,67 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>النسخة</translation>
     </message>
     <message>
-        <source>About Syscoin Core</source>
-        <translation>عن جوهر البيت كوين</translation>
+        <source>Command-line options</source>
+        <translation>خيارات سطر الأوامر</translation>
     </message>
     <message>
         <source>Usage:</source>
         <translation>المستخدم</translation>
+    </message>
+    <message>
+        <source>command-line options</source>
+        <translation>خيارات سطر الأوامر</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>خيارات واجهة المستخدم</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>اختر دليل البيانات عند بدء التشغير (افتراضي: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>أضع لغة, على سبيل المثال " de_DE "  (افتراضي:- مكان النظام)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>الدخول مصغر</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>أضع شهادة بروتوكول الشبقة الأمنية لطلب المدفوع (افتراضي: -نظام-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>أظهر شاشة البداية عند بدء التشغيل (افتراضي: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>اعد تعديل جميع النظم المتغيرة في GUI</translation>
+    </message>
+</context>
+<context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>من</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>الى</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>رسالة </translation>
     </message>
     </context>
 <context>
@@ -656,16 +649,245 @@
         <translation>استخدام دليل بيانات مخصص:</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>خطأ</translation>
     </message>
     </context>
 <context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>لا شيء</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>الرسائل</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>من</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>الى</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>رسالة </translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>نمودج</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>إخفاء</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>No</source>
+        <translation>لا</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>نعم</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation> يمكن فتح المحفظة.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation> يمكن فتح المحفظة.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>to</source>
+        <translation>الى</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>to</source>
+        <translation>الى</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>الكمية :</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>المجموع:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open URI</source>
+        <translation>افتح URL</translation>
+    </message>
+    <message>
+        <source>Open payment request from URI or file</source>
+        <translation>حدد طلب الدفع من ملف او URI</translation>
+    </message>
     <message>
         <source>Select payment request file</source>
         <translation>حدد ملف طلب الدفع</translation>
@@ -726,8 +948,16 @@
         <translation>منفذ البروكسي (مثلا 9050)</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>مستخدم للاتصال بالاصدقاء من خلال:</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>نافذه</translation>
+    </message>
+    <message>
+        <source>Hide tray icon</source>
+        <translation>اخفاء لوحة الايقون</translation>
     </message>
     <message>
         <source>&amp;Display</source>
@@ -762,6 +992,32 @@
         <translation>عنوان الوكيل توفيره غير صالح.</translation>
     </message>
 </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>من</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>الى</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>رسالة </translation>
+    </message>
+    </context>
 <context>
     <name>OverviewPage</name>
     <message>
@@ -817,7 +1073,15 @@
         <source>N/A</source>
         <translation>غير معروف</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -839,10 +1103,6 @@
 </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Client name</source>
-        <translation>اسم العميل</translation>
-    </message>
     <message>
         <source>N/A</source>
         <translation>غير معروف</translation>
@@ -888,6 +1148,10 @@
         <translation>تم الإرسال</translation>
     </message>
     <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;اصدقاء</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <translation>جهة</translation>
     </message>
@@ -928,8 +1192,20 @@
         <translation>خارج:</translation>
     </message>
     <message>
-        <source>Build date</source>
-        <translation>وقت البناء</translation>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;ساعة</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp; يوم</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp; اسبوع</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp; سنة</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -950,6 +1226,18 @@
     <message>
         <source>%1 GB</source>
         <translation>%1 قيقا بايت</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>ابدا</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>داخل</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>خارجي</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -1069,10 +1357,6 @@
         <translation>رسالة </translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>المبلغ</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(لا وصف)</translation>
     </message>
@@ -1080,6 +1364,9 @@
         <source>(no message)</source>
         <translation>( لا رسائل )</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1100,12 +1387,12 @@
         <translation>الكمية :</translation>
     </message>
     <message>
-        <source>Amount:</source>
-        <translation>القيمة :</translation>
+        <source>Bytes:</source>
+        <translation>بايت</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>افضلية :</translation>
+        <source>Amount:</source>
+        <translation>القيمة :</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1124,6 +1411,18 @@
         <translation>رسوم المعاملة:</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>إخفاء</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>طبيعي</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>سريع</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>إرسال إلى عدة مستلمين في وقت واحد</translation>
     </message>
@@ -1134,6 +1433,10 @@
     <message>
         <source>Clear all fields of the form.</source>
         <translation>مسح كل حقول النموذج المطلوبة</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>غبار</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1152,14 +1455,6 @@
         <translation>&amp;ارسال</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>تأكيد الإرسال Coins</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1 الى %2</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>نسخ الكمية </translation>
     </message>
@@ -1176,16 +1471,20 @@
         <translation>نسخ بعد الرسوم</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>نسخ الافضلية</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>نسخ التعديل</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1 الى %2</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>أو</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>تأكيد الإرسال Coins</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1203,7 +1502,7 @@
         <source>(no label)</source>
         <translation>(لا وصف)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1215,12 +1514,20 @@
         <translation>ادفع &amp;الى :</translation>
     </message>
     <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>إدخال تسمية لهذا العنوان لإضافته إلى دفتر العناوين الخاص بك</translation>
-    </message>
-    <message>
         <source>&amp;Label:</source>
         <translation>&amp;وصف :</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>اختر عنوانا مستخدم سابقا</translation>
+    </message>
+    <message>
+        <source>This is a normal payment.</source>
+        <translation>هذا دفع اعتيادي</translation>
+    </message>
+    <message>
+        <source>The Syscoin address to send the payment to</source>
+        <translation>عنوان البت كوين المرسل اليه الدفع</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1235,6 +1542,10 @@
         <translation>Alt+P</translation>
     </message>
     <message>
+        <source>Remove this entry</source>
+        <translation>ازل هذه المداخله</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>الرسائل</translation>
     </message>
@@ -1242,7 +1553,18 @@
         <source>Pay To:</source>
         <translation>ادفع &amp;الى :</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>إدخال تسمية لهذا العنوان لإضافته إلى دفتر العناوين الخاص بك</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>نعم</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1251,10 +1573,21 @@
     </message>
 </context>
 <context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>عام</translation>
+    </message>
+    </context>
+<context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;توقيع الرسالة</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>اختر عنوانا مستخدم سابقا</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1344,16 +1677,253 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>جوهر البيت كوين</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>مطوري جوهر البيت كوين</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>التوقيع و الرسائل</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>مزامنة مع الشبكة ...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>جهاز</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>إظهار نظرة عامة على المحفظة</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;المعاملات</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>تصفح سجل المعاملات</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>خروج</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>الخروج من التطبيق</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>أظهر المعلومات حولة %1</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>عن &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>اظهر المعلومات</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;خيارات ...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;تشفير المحفظة</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>&amp;نسخ احتياط للمحفظة</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;تغيير كلمة المرور</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>ارسال العناوين.</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>استقبال العناوين</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>افتح &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>إعادة الفهرسة الكتل على القرص ...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>ارسل عملات الى عنوان بيتكوين</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>احفظ نسخة احتياطية للمحفظة في مكان آخر</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>تغيير كلمة المرور المستخدمة لتشفير المحفظة</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;نافذة المعالجة</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>إفتح وحدة التصحيح و التشخيص</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;التحقق من الرسالة...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>بت كوين</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>محفظة</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;عرض / اخفاء</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>عرض او اخفاء النافذة الرئيسية</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>تشفير المفتاح الخاص بمحفظتك</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>وقَع الرسائل بواسطة ال: Syscoin الخاص بك لإثبات امتلاكك لهم</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>تحقق من الرسائل للتأكد من أنَها وُقعت برسائل Syscoin محدَدة</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;ملف</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;الاعدادات</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;مساعدة</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>شريط أدوات علامات التبويب</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>أطلب دفعات (يولد كودات الرمز المربع وبيت كوين: العناوين المعطاة)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>عرض قائمة عناوين الإرسال المستخدمة والملصقات</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>عرض قائمة عناوين الإستقبال المستخدمة والملصقات</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>فتح URI : Syscoin أو طلب دفع</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;خيارات سطر الأوامر</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>ترتيب الفهرسة الكتل على القرص...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>معالجة الكتل على القرص...</translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>لا يوجد أي مصدر الكتلة</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>لم يتم معالجة أي كتلة سجل المعاملات</numerusform><numerusform>تم معالجة كتلة واحدة سجل المعاملات</numerusform><numerusform>تم معالجة كتلتين سجل المعاملات</numerusform><numerusform>تم معالجة %n كتل سجل المعاملات</numerusform><numerusform>تم معالجة %n كتلة سجل المعاملات</numerusform><numerusform>تم معالجة %n كتلة سجل المعاملات</numerusform></translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>تم توليد الكتلة المستقبلة الأخيرة منذ %1.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>المعاملات بعد ذلك لن تكون مريئة بعد.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>خطأ</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>تحذير</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>معلومات</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>محدث</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>حول syscoin core</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>اللحاق بالركب ...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>التاريخ %1
+
+
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>علامه: %1
+</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>المعاملات  المرسلة</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>المعاملات الواردة</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مفتوحة&lt;/b&gt; حاليا</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مقفلة&lt;/b&gt; حاليا</translation>
     </message>
 </context>
 <context>
@@ -1364,10 +1934,6 @@
     <message>
         <source>Open until %1</source>
         <translation>مفتوح حتى %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>يتعارض</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -1386,6 +1952,10 @@
         <translation>الحالة.</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>,  لم يتم حتى الآن البث بنجاح</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>التاريخ</translation>
     </message>
@@ -1400,6 +1970,10 @@
     <message>
         <source>From</source>
         <translation>من</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>غير معروف</translation>
     </message>
     <message>
         <source>To</source>
@@ -1457,14 +2031,6 @@
         <source>false</source>
         <translation>خاطئ</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>,  لم يتم حتى الآن البث بنجاح</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>غير معروف</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1476,7 +2042,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>يبين هذا الجزء وصفا مفصلا لهده المعاملة</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1488,8 +2054,20 @@
         <translation>النوع</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>وصف</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>مفتوح حتى %1</translation>
+    </message>
+    <message>
+        <source>Offline</source>
+        <translation>غير متصل</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>يتعارض</translation>
     </message>
     <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
@@ -1498,18 +2076,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>ولدت ولكن لم تقبل</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>غير متصل</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>وصف</translation>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation>يتعارض</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1534,6 +2100,10 @@
     <message>
         <source>(n/a)</source>
         <translation>غير متوفر</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(لا وصف)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -1635,14 +2205,6 @@
         <translation>عرض تفاصيل المعاملة</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>فشل التصدير</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>نجح التصدير</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>ملف مفصول بفواصل (*.csv)</translation>
     </message>
@@ -1671,6 +2233,14 @@
         <translation>العنوان</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>فشل التصدير</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>نجح التصدير</translation>
+    </message>
+    <message>
         <source>Range:</source>
         <translation>المدى:</translation>
     </message>
@@ -1691,13 +2261,9 @@
         <source>Send Coins</source>
         <translation>إرسال Coins</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;تصدير</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
@@ -1714,7 +2280,7 @@
         <source>Backup Successful</source>
         <translation>نجاح  النسخ الاحتياطي</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>syscoin-core</name>
     <message>
@@ -1728,6 +2294,10 @@
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>قبول الاتصالات من خارج</translation>
+    </message>
+    <message>
+        <source>Syscoin Core</source>
+        <translation>جوهر البيت كوين</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -1774,32 +2344,32 @@
         <translation>تحذير</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>رسالة المساعدة هذه</translation>
-    </message>
-    <message>
         <source>Loading addresses...</source>
         <translation>تحميل العنوان</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>خطأ عند تنزيل wallet.dat: المحفظة تالفة</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>خطأ عند تنزيل wallet.dat</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>عنوان البروكسي غير صحيح : '%s'</translation>
     </message>
     <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>إنتاج معاملات بث المحفظة</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation>اموال غير كافية</translation>
     </message>
     <message>
+        <source>Loading block index...</source>
+        <translation>تحميل مؤشر الكتلة</translation>
+    </message>
+    <message>
         <source>Loading wallet...</source>
         <translation>تحميل المحفظه</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>لا يمكن تخفيض قيمة المحفظة</translation>
     </message>
     <message>
         <source>Cannot write default address</source>

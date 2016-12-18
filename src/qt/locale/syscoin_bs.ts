@@ -1,9 +1,28 @@
 <TS language="bs" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     </context>
 <context>
     <name>AddressTableModel</name>
+    </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -12,18 +31,13 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Jezrga</translation>
-    </message>
+    <name>CertListPage</name>
     </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
+    </context>
+<context>
+    <name>CertView</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -32,27 +46,153 @@
     <name>EditAddressDialog</name>
     </context>
 <context>
+    <name>EditAliasDialog</name>
+    </context>
+<context>
+    <name>EditCertDialog</name>
+    </context>
+<context>
+    <name>EditOfferDialog</name>
+    </context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    </context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     </context>
 <context>
     <name>HelpMessageDialog</name>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Jezrga</translation>
-    </message>
+    </context>
+<context>
+    <name>InMessageListPage</name>
     </context>
 <context>
     <name>Intro</name>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    </context>
+<context>
+    <name>MessageTableModel</name>
+    </context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Jezrga</translation>
+        <source>All</source>
+        <translation>Sve</translation>
     </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    </context>
+<context>
+    <name>NewWhitelistDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    </context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
     </context>
 <context>
     <name>OptionsDialog</name>
+    </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -65,7 +205,11 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
+    <message>
+        <source>All</source>
+        <translation>Sve</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     </context>
@@ -82,6 +226,9 @@
     <name>RecentRequestsTableModel</name>
     </context>
 <context>
+    <name>ResellOfferDialog</name>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     </context>
 <context>
@@ -96,7 +243,13 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -111,9 +264,12 @@
     </context>
 <context>
     <name>SplashScreen</name>
+    </context>
+<context>
+    <name>SyscoinGUI</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Jezrga</translation>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
     </message>
     </context>
 <context>
@@ -165,5 +321,9 @@
     </context>
 <context>
     <name>syscoin-core</name>
+    <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Jezrga</translation>
+    </message>
     </context>
 </TS>

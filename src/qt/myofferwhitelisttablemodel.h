@@ -22,6 +22,7 @@ public:
 		Alias = 1,
 		Discount = 2,
 		Expires = 3,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {

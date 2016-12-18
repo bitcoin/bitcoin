@@ -27,7 +27,8 @@ public:
         From = 2,  
 		To = 3,  
 		Subject = 4,
-		Message = 5
+		Message = 5,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {
@@ -57,11 +58,6 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
 
-    /* Add an message to the model.
-       Returns the added message on success, and an empty string otherwise.
-     */
-    QString addRow(const QString &guid, const QString &time, const QString &from, const QString &to, const QString &subject, const QString &message);
-
     /* Look up row index of an message in the model.
        Return -1 if not found.
      */
@@ -80,10 +76,6 @@ private:
     void emitDataChanged(int index);
 
 public Q_SLOTS:
-    /* Update message list from core.
-     */
-    void updateEntry(const QString &guid, const QString &time, const QString &from, const QString &to, const QString &subject, const QString &message, MessageModelType type, int status);
-
     friend class MessageTablePriv;
 };
 

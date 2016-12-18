@@ -1,5 +1,31 @@
 <TS language="ka" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>რაოდენობა:</translation>
+    </message>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
@@ -20,10 +46,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>&amp;დახურვა</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;მისამართის კოპირება</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -70,6 +92,10 @@
         <translation>ეს არის თქვენი Syscoin-მისამართები გადახდების მისაღებად. რეკომენდებულია ყოველი ტრანსაქციისათვის ახალი მიღების მისამართის გამოყენება.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;მისამართის კოპირება</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>ნიშნუ&amp;ლის კოპირება</translation>
     </message>
@@ -86,8 +112,12 @@
         <translation>CSV-ფაილი (*.csv)</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>ექსპორტი ვერ განხორციელდა</translation>
+        <source>Label</source>
+        <translation>ნიშნული</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>მისამართი</translation>
     </message>
     </context>
 <context>
@@ -105,6 +135,15 @@
         <translation>(არ არის ნიშნული)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -160,16 +199,12 @@
         <translation>დარწმუნებული ხართ, რომ გინდათ საფულის დაშიფრვა?</translation>
     </message>
     <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>მნიშვნელოვანია: თქვენი საფულის ყველა ადრინდელი არქივი შეიცვლება ახლადგენერირებული დაშიფრული საფულის ფაილით. უსაფრთხოების მოსაზრებებით დაუშიფრავი საფულის ძველი არქივები ძალას დაკარგავს, როგორც კი დაიწყებთ ახალი, დაშიფრული საფულის გამოყენებას.</translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>ყურადღება: ჩართულია Caps Lock რეჟიმი!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>საფულე დაშიფრულია</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>მნიშვნელოვანია: თქვენი საფულის ყველა ადრინდელი არქივი შეიცვლება ახლადგენერირებული დაშიფრული საფულის ფაილით. უსაფრთხოების მოსაზრებებით დაუშიფრავი საფულის ძველი არქივები ძალას დაკარგავს, როგორც კი დაიწყებთ ახალი, დაშიფრული საფულის გამოყენებას.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -199,264 +234,27 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>საფულის ფრაზა-პაროლი შეცვლილია.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>ყურადღება: ჩართულია Caps Lock რეჟიმი!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>ხელ&amp;მოწერა</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>ქსელთან სინქრონიზება...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>მიმ&amp;ოხილვა</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>კვანძი</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>საფულის ზოგადი მიმოხილვა</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;ტრანსაქციები</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>ტრანსაქციების ისტორიის დათვალიერება</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>&amp;გასვლა</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>გასვლა</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>&amp;Qt-ს შესახებ</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>ინფორმაცია Qt-ს შესახებ</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;ოპციები</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>საფულის &amp;დაშიფრვა</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>საფულის &amp;არქივირება</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>ფრაზა-პაროლის შე&amp;ცვლა</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>გაგზავნის მი&amp;სამართი</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>მიღების მისამა&amp;რთი</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>&amp;URI-ის გახსნა...</translation>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation>ბლოკების იმპორტი დისკიდან...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>დისკზე ბლოკების რეინდექსაცია...</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>მონეტების გაგზავნა Syscoin-მისამართზე</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>საფულის არქივირება სხვა ადგილზე</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>საფულის დაშიფრვის ფრაზა-პაროლის შეცვლა</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>და&amp;ხვეწის ფანჯარა</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>დახვეწისა და გიაგნოსტიკის კონსოლის გაშვება</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;ვერიფიკაცია</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>საფულე</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;გაგზავნა</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;მიღება</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;ჩვენება/დაფარვა</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>მთავარი ფანჯრის ჩვენება/დაფარვა</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>თქვენი საფულის პირადი გასაღებების დაშიფრვა</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>მესიჯებზე ხელმოწერა თქვენი Syscoin-მისამართებით იმის დასტურად, რომ ის თქვენია</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>შეამოწმეთ, რომ მესიჯები ხელმოწერილია მითითებული Syscoin-მისამართით</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;ფაილი</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;პარამეტრები</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;დახმარება</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>ბარათების პანელი</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>გადახდის მოთხოვნა (შეიქმნება QR-კოდები და syscoin: ბმულები)</translation>
-    </message>
-    <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>Syscoin Core-ს შეს&amp;ახებ</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>გამოყენებული გაგზავნის მისამართებისა და ნიშნულების სიის ჩვენება</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>გამოყენებული მიღების მისამართებისა და ნიშნულების სიის ჩვენება</translation>
-    </message>
-    <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>syscoin: URI-ის ან გადახდის მოთხოვნის გახსნა</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>საკომანდო სტრიქონის ოპ&amp;ციები</translation>
-    </message>
-    <message>
-        <source>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</source>
-        <translation>Syscoin Core-ს დახმარების ჩვენება Syscoin-ის საკომანდო სტრიქონის დასაშვები ოპციების სანახავად</translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>ბლოკების წყარო მიუწვდომელია...</translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 და %2</translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation>%1 გავლილია</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>ბოლო მიღებული ბლოკის გენერირებიდან გასულია %1</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>შემდგომი ტრანსაქციები ნაჩვენები ჯერ არ იქნება.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>შეცდომა</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>გაფრთხილება</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>ინფორმაცია</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>განახლებულია</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>ჩართვა...</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>გაგზავნილი ტრანსაქციები</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>მიღებული ტრანსაქციები</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>საფულე &lt;b&gt;დაშიფრულია&lt;/b&gt; და ამჟამად &lt;b&gt;განბლოკილია&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>საფულე &lt;b&gt;დაშიფრულია&lt;/b&gt; და ამჟამად &lt;b&gt;დაბლოკილია&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>ქსელური განგაში</translation>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -470,10 +268,6 @@
     <message>
         <source>Amount:</source>
         <translation>თანხა:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>პრიორიტეტი:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -516,10 +310,6 @@
         <translation>დადასტურებულია</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>პრიორიტეტი</translation>
-    </message>
-    <message>
         <source>Copy address</source>
         <translation>მისამართის კოპირება</translation>
     </message>
@@ -560,56 +350,12 @@
         <translation>ბაიტების კოპირება</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>პრიორიტეტის კოპირება</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>ხურდის კოპირება</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>უმაღლესი</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>უფრო მაღალი</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>მაღალი</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>საშუალოზე მაღალი</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>საშუალო</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>საშუალოზე დაბალი</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>დაბალი</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>უფრო დაბალი</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>უდაბლესი</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 დაბლოკილია)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>ცარიელი</translation>
     </message>
     <message>
         <source>yes</source>
@@ -618,18 +364,6 @@
     <message>
         <source>no</source>
         <translation>არა</translation>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>ეს ნიშნავს, რომ კილობაიტზე საკომისიო იქნება მინიმუმ %1</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>შეიძლება იყოს +/- 1 ბაიტი ყოველ შესავალზე.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>მეტი პრიორიტეტის ტრანსაქციებს მეტი შანსი აქვს მოხვდეს ბლოკში.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -683,12 +417,12 @@
         <translation>გაგზავნის მისამართის შეცვლა</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>მისამართი "%1" უკვე არის მისამართების წიგნში.</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>შეყვანილი მისამართი "%1" არ არის ვალიდური Syscoin-მისამართი.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>მისამართი "%1" უკვე არის მისამართების წიგნში.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -699,6 +433,82 @@
         <translation>ახალი გასაღების გენერირება ვერ მოხერხდა</translation>
     </message>
 </context>
+<context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>General</source>
+        <translation>საერთო</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>საფულის განბლოკვა ვერ მოხერხდა.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>საფულის განბლოკვა ვერ მოხერხდა.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>General</source>
+        <translation>საერთო</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>რაოდენობა:</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>საფულის განბლოკვა ვერ მოხერხდა.</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Remove</source>
+        <translation>წაშლა</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>General</source>
+        <translation>საერთო</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>სულ:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -725,16 +535,8 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>ვერსია</translation>
-    </message>
-    <message>
-        <source>About Syscoin Core</source>
-        <translation>Syscoin Core-ს შესახებ</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -750,22 +552,29 @@
     </message>
     </context>
 <context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>გამგზავნი</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>მიმღები</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>მესიჯი</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>მოგესალმებით</translation>
-    </message>
-    <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>მოგესალმებათ Syscoin Core.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>ეს პროგრამის პირველი გაშვებაა; შეგიძლიათ მიუთითოთ, სად შეინახოს მონაცემები Syscoin Core-მ.</translation>
-    </message>
-    <message>
-        <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Syscoin Core გადმოტვირთავს და შეინახავს Syscoin-ის ბლოკთა ჯაჭვს. მითითებულ კატალოგში დაგროვდება სულ ცოტა %1 გბ მონაცემები, და მომავალში უფრო გაიზრდება. საფულეც ამავე კატალოგში შეინახება.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -776,13 +585,242 @@
         <translation>მითითებული კატალოგის გამოყენება:</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>შეცდომა</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    <message>
+        <source>none</source>
+        <translation>ცარიელი</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>მესიჯი:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+</context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>გამგზავნი</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>მიმღები</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>მესიჯი</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>ფორმა</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>ბოლო ბლოკის დრო</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>საფულის განბლოკვა ვერ მოხერხდა.</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>საფულის განბლოკვა ვერ მოხერხდა.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URI ძალიან გრძელი გამოდის, შეამოკლეთ ნიშნულის/მესიჯის ტექსტი.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>შედომა URI-ის QR-კოდში გადაყვანისას.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>-</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URI ძალიან გრძელი გამოდის, შეამოკლეთ ნიშნულის/მესიჯის ტექსტი.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>შედომა URI-ის QR-კოდში გადაყვანისას.</translation>
+    </message>
+    <message>
+        <source>to</source>
+        <translation>-</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>რაოდენობა:</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>სულ:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>სტატუსი</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -926,6 +964,10 @@
         <translation>ნაგულისხმევი</translation>
     </message>
     <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>ვერ გამოდის კავშირზე %1: %2</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>ცარიელი</translation>
     </message>
@@ -946,6 +988,32 @@
         <translation>პროქსის მისამართი არასწორია.</translation>
     </message>
 </context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>CSV-ფაილი (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>გამგზავნი</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>მიმღები</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>მესიჯი</translation>
+    </message>
+    </context>
 <context>
     <name>OverviewPage</name>
     <message>
@@ -992,18 +1060,6 @@
 <context>
     <name>PaymentServer</name>
     <message>
-        <source>URI handling</source>
-        <translation>URI-ების დამუშავება</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>გადახდის მისამართი არასწორია: %1</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>მოთხოვნილი გადახდის %1 მოცულობა ძალიან მცირეა (ითვლება "მტვრად")</translation>
-    </message>
-    <message>
         <source>Payment request error</source>
         <translation>გადახდის მოთხოვნის შეცდომა</translation>
     </message>
@@ -1012,8 +1068,16 @@
         <translation>ვერ გაიშვა syscoin: click-to-pay</translation>
     </message>
     <message>
+        <source>URI handling</source>
+        <translation>URI-ების დამუშავება</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>არასწორია გადახდის მოთხოვნის URL: %1</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>გადახდის მისამართი არასწორია: %1</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1022,6 +1086,10 @@
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>არავერიფიცირებული გადახდის მოთხოვნები გადახდის სამომხმარებლო სკრიპტებისათვის არ არის მხარდაჭერილი.</translation>
+    </message>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>მოთხოვნილი გადახდის %1 მოცულობა ძალიან მცირეა (ითვლება "მტვრად")</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1036,12 +1104,12 @@
         <translation>ცუდი პასუხი სერვერისაგან %1</translation>
     </message>
     <message>
-        <source>Payment acknowledged</source>
-        <translation>გადახდა მიღებულია</translation>
-    </message>
-    <message>
         <source>Network request error</source>
         <translation>ქსელური მოთხოვნის შეცდომა</translation>
+    </message>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>გადახდა მიღებულია</translation>
     </message>
 </context>
 <context>
@@ -1065,7 +1133,15 @@
         <source>N/A</source>
         <translation>მიუწვდ.</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 და %2</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>ყველა</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1088,10 +1164,6 @@
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Client name</source>
-        <translation>კლიენტი</translation>
-    </message>
-    <message>
         <source>N/A</source>
         <translation>მიუწვდ.</translation>
     </message>
@@ -1110,10 +1182,6 @@
     <message>
         <source>General</source>
         <translation>საერთო</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>OpenSSL-ის ვერსია</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1170,10 +1238,6 @@
     <message>
         <source>Out:</source>
         <translation>გამავალი:</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>შექმნის დრო</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -1361,10 +1425,6 @@
         <translation>მესიჯი</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>თანხა</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(არ არის ნიშნული)</translation>
     </message>
@@ -1372,11 +1432,10 @@
         <source>(no message)</source>
         <translation>(მესიჯები არ არის)</translation>
     </message>
-    <message>
-        <source>(no amount)</source>
-        <translation>(თანხა არ არის)</translation>
-    </message>
-</context>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1410,10 +1469,6 @@
     <message>
         <source>Amount:</source>
         <translation>თანხა:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>პრიორიტეტი:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1468,14 +1523,6 @@
         <translation>გაგ&amp;ზავნა</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>მონეტების გაგზავნის დადასტურება</translation>
-    </message>
-    <message>
-        <source>%1 to %2</source>
-        <translation>%1-დან %2-ში</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation>რაოდენობის კოპირება</translation>
     </message>
@@ -1496,16 +1543,28 @@
         <translation>ბაიტების კოპირება</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>პრიორიტეტის კოპირება</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>ხურდის კოპირება</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1-დან %2-ში</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>დარწმუნებული ხართ, რომ გინდათ გაგზავნა?</translation>
+    </message>
+    <message>
+        <source>added as transaction fee</source>
+        <translation>დამატებულია საკომისიო</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>ან</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>მონეტების გაგზავნის დადასტურება</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1532,20 +1591,12 @@
         <translation>ყურადღება: არასწორია Syscoin-მისამართი</translation>
     </message>
     <message>
-        <source>(no label)</source>
-        <translation>(არ არის ნიშნული)</translation>
-    </message>
-    <message>
         <source>Warning: Unknown change address</source>
         <translation>ყურადღება: უცნობია ხურდის მისამართი</translation>
     </message>
     <message>
-        <source>Are you sure you want to send?</source>
-        <translation>დარწმუნებული ხართ, რომ გინდათ გაგზავნა?</translation>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation>დამატებულია საკომისიო</translation>
+        <source>(no label)</source>
+        <translation>(არ არის ნიშნული)</translation>
     </message>
 </context>
 <context>
@@ -1557,10 +1608,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>ადრესა&amp;ტი:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>შეიყვანეთ ამ მისამართის ნიშნული მისამართების წიგნში დასამატებლად</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1610,18 +1657,28 @@
         <source>Memo:</source>
         <translation>შენიშვნა:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>შეიყვანეთ ამ მისამართის ნიშნული მისამართების წიგნში დასამატებლად</translation>
+    </message>
 </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Syscoin Core იხურება...</translation>
-    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>არ გამორთოთ კომპიუტერი ამ ფანჯრის გაქრობამდე.</translation>
     </message>
 </context>
+<context>
+    <name>SignRawTxDialog</name>
+    <message>
+        <source>General</source>
+        <translation>საერთო</translation>
+    </message>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1748,16 +1805,227 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoin Core-ს ავტორები</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>ხელ&amp;მოწერა</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>ქსელთან სინქრონიზება...</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>კვანძი</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>საფულის ზოგადი მიმოხილვა</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;ტრანსაქციები</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>ტრანსაქციების ისტორიის დათვალიერება</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>&amp;გასვლა</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>გასვლა</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>&amp;Qt-ს შესახებ</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>ინფორმაცია Qt-ს შესახებ</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;ოპციები</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>საფულის &amp;დაშიფრვა</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>საფულის &amp;არქივირება</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>ფრაზა-პაროლის შე&amp;ცვლა</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>გაგზავნის მი&amp;სამართი</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>მიღების მისამა&amp;რთი</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>&amp;URI-ის გახსნა...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>დისკზე ბლოკების რეინდექსაცია...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>მონეტების გაგზავნა Syscoin-მისამართზე</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>საფულის არქივირება სხვა ადგილზე</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>საფულის დაშიფრვის ფრაზა-პაროლის შეცვლა</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>და&amp;ხვეწის ფანჯარა</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>დახვეწისა და გიაგნოსტიკის კონსოლის გაშვება</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;ვერიფიკაცია</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>საფულე</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;ჩვენება/დაფარვა</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>მთავარი ფანჯრის ჩვენება/დაფარვა</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>თქვენი საფულის პირადი გასაღებების დაშიფრვა</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>მესიჯებზე ხელმოწერა თქვენი Syscoin-მისამართებით იმის დასტურად, რომ ის თქვენია</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>შეამოწმეთ, რომ მესიჯები ხელმოწერილია მითითებული Syscoin-მისამართით</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;ფაილი</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;პარამეტრები</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;დახმარება</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>ბარათების პანელი</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>გადახდის მოთხოვნა (შეიქმნება QR-კოდები და syscoin: ბმულები)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>გამოყენებული გაგზავნის მისამართებისა და ნიშნულების სიის ჩვენება</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>გამოყენებული მიღების მისამართებისა და ნიშნულების სიის ჩვენება</translation>
+    </message>
+    <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>syscoin: URI-ის ან გადახდის მოთხოვნის გახსნა</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>საკომანდო სტრიქონის ოპ&amp;ციები</translation>
+    </message>
+    <message>
+        <source>No block source available...</source>
+        <translation>ბლოკების წყარო მიუწვდომელია...</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 გავლილია</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>ბოლო მიღებული ბლოკის გენერირებიდან გასულია %1</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>შემდგომი ტრანსაქციები ნაჩვენები ჯერ არ იქნება.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>შეცდომა</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>გაფრთხილება</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>ინფორმაცია</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>განახლებულია</translation>
+    </message>
+    <message>
+        <source>&amp;About Syscoin Core</source>
+        <translation>Syscoin Core-ს შეს&amp;ახებ</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>ჩართვა...</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>გაგზავნილი ტრანსაქციები</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>მიღებული ტრანსაქციები</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>საფულე &lt;b&gt;დაშიფრულია&lt;/b&gt; და ამჟამად &lt;b&gt;განბლოკილია&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>საფულე &lt;b&gt;დაშიფრულია&lt;/b&gt; და ამჟამად &lt;b&gt;დაბლოკილია&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -1772,10 +2040,6 @@
     <message>
         <source>Open until %1</source>
         <translation>ღია იქნება სანამ %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation>კონფლიქტშია</translation>
     </message>
     <message>
         <source>%1/offline</source>
@@ -1794,6 +2058,10 @@
         <translation>სტატუსი</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, დაგზავნა არ არის წარმატებით დასრულებული</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>თარიღი</translation>
     </message>
@@ -1808,6 +2076,10 @@
     <message>
         <source>From</source>
         <translation>გამგზავნი</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>უცნობია</translation>
     </message>
     <message>
         <source>To</source>
@@ -1885,14 +2157,6 @@
         <source>false</source>
         <translation>მცდარი</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, დაგზავნა არ არის წარმატებით დასრულებული</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>უცნობია</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1904,7 +2168,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>ტრანსაქციის დაწვრილებითი აღწერილობა</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1916,32 +2180,16 @@
         <translation>ტიპი</translation>
     </message>
     <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>არ არის მომწიფებული (%1 დასტური, საჭიროა სულ %2)</translation>
+        <source>Label</source>
+        <translation>ნიშნული</translation>
     </message>
     <message>
         <source>Open until %1</source>
         <translation>ღია იქნება სანამ %1</translation>
     </message>
     <message>
-        <source>Confirmed (%1 confirmations)</source>
-        <translation>დადასტურებულია (%1დასტური)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>ეს ბლოკი არ არის მიღებული არცერთი კვანძის მიერ და სავარაუდოდ უარყოფილია!</translation>
-    </message>
-    <message>
-        <source>Generated but not accepted</source>
-        <translation>გენერირებულია, მაგრამ უარყოფილია</translation>
-    </message>
-    <message>
         <source>Offline</source>
         <translation>ოფლაინშია</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ნიშნული</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -1952,8 +2200,24 @@
         <translation>დადასტურებულია (%1,  რეკომენდებულია %2)</translation>
     </message>
     <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>დადასტურებულია (%1დასტური)</translation>
+    </message>
+    <message>
         <source>Conflicted</source>
         <translation>კონფლიქტშია</translation>
+    </message>
+    <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>არ არის მომწიფებული (%1 დასტური, საჭიროა სულ %2)</translation>
+    </message>
+    <message>
+        <source>This block was not received by any other nodes and will probably not be accepted!</source>
+        <translation>ეს ბლოკი არ არის მიღებული არცერთი კვანძის მიერ და სავარაუდოდ უარყოფილია!</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation>გენერირებულია, მაგრამ უარყოფილია</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1978,6 +2242,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(მიუწვდ.)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(არ არის ნიშნული)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -2083,22 +2351,6 @@
         <translation>ტრანსაქციების ისტორიის ექსპორტი</translation>
     </message>
     <message>
-        <source>Exporting Failed</source>
-        <translation>ექსპორტი ვერ განხორციელდა</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>შეცდომა %1-ში ტრანსაქციების შენახვის მცდელობისას.</translation>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation>ეხპორტი განხორციელებულია</translation>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation>ტრანსაქციების ისტორია შენახულია %1-ში.</translation>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>CSV-ფაილი (*.csv)</translation>
     </message>
@@ -2127,6 +2379,22 @@
         <translation>ID</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>ექსპორტი ვერ განხორციელდა</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the transaction history to %1.</source>
+        <translation>შეცდომა %1-ში ტრანსაქციების შენახვის მცდელობისას.</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>ეხპორტი განხორციელებულია</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>ტრანსაქციების ისტორია შენახულია %1-ში.</translation>
+    </message>
+    <message>
         <source>Range:</source>
         <translation>შუალედი:</translation>
     </message>
@@ -2151,13 +2419,9 @@
         <source>Send Coins</source>
         <translation>მონეტების გაგზავნა</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation>&amp;ექსპორტი</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>ამ ბარათიდან მონაცემების ექსპორტი ფაილში</translation>
@@ -2179,12 +2443,12 @@
         <translation>შეცდომა %1-ში საფულის მონაცემების შენახვის მცდელობისას.</translation>
     </message>
     <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation>საფულის მონაცემები შენახულია %1-ში.</translation>
-    </message>
-    <message>
         <source>Backup Successful</source>
         <translation>არქივირება შესრულებულია</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>საფულის მონაცემები შენახულია %1-ში.</translation>
     </message>
 </context>
 <context>
@@ -2218,6 +2482,10 @@
         <translation>გარედან შეერთებების დაშვება (ნაგულისხმევი: 1 თუ არ გამოიყენება -proxy ან -connect)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>მოცემულ მისამართზე მიჯაჭვა მუდმივად მასზე მიყურადებით. გამოიყენეთ [host]:port ფორმა IPv6-სათვის</translation>
     </message>
@@ -2236,10 +2504,6 @@
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>ყურადღება: ჩვენ არ ვეთანხმებით ყველა პირს. შესაძლოა თქვენ ან სხვა კვანძებს განახლება გჭირდებათ.</translation>
-    </message>
-    <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>ყურადღება: wallet.dat დაზიანებულია! ორიგინალური wallet.dat შენახულია როგორც wallet.{timestamp}.bak %s-ში; თუ შეამჩნიეთ უზუსტობა ნაშთში ან ტრანსაქციებში, აღადგინეთ არქივიდან.</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2326,10 +2590,6 @@
         <translation>სფულის ოპციები:</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>საჭიროა ბაზის ხელახალი აგება, გამოიყენეთ -reindex რათა შეცვალოთ -txindex</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>ბრძანების შესრულება შესაბამისი უწყების მიღებისას ან როცა შეინიშნება საგრძნობი გახლეჩა (cmd-ში %s შეიცვლება მესიჯით)</translation>
     </message>
@@ -2338,24 +2598,8 @@
         <translation>მაღალპრიორიტეტული/დაბალსაკომისიოიანი ტრანსაქციების მაქსიმალური ზომა ბაიტებში (ნაგულისხმევი: %d)</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>ვერ ხერხდება -whitebind მისამართის გარკვევა: '%s'</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>ინფორმაცია</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>დაუშვებელი მნიშვნელობა -pmaxtxfee&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>დაუშვებელი მნიშვნელობა -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>დაუშვებელი მნიშვნელობა -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2394,20 +2638,12 @@
         <translation>ტრანსაქციების ჩახსნა საფულიდან...</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat დაზიანებულია, აღდგენა ვერ მოხერხდა</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>პაროლი JSON-RPC-შეერთებისათვის</translation>
     </message>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>კომანდის შესრულება უკეთესი ბლოკის გამოჩენისას (%s კომანდაში ჩანაცვლდება ბლოკის ჰეშით)</translation>
-    </message>
-    <message>
-        <source>This help message</source>
-        <translation>ეს ტექსტი</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
@@ -2418,32 +2654,12 @@
         <translation>მისამართების ჩატვირთვა...</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>არ იტვირთება wallet.dat: საფულე დაზიანებულია</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>არ იტვირთება wallet.dat</translation>
-    </message>
-    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>არასწორია მისამართი -proxy: '%s'</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>-onlynet-ში მითითებულია უცნობი ქსელი: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>ვერ ხერხდება -bind მისამართის გარკვევა: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>ვერ ხერხდება -externalip მისამართის გარკვევა: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>დაუშვებელი მნიშვნელობა -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

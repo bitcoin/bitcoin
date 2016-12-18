@@ -1,5 +1,23 @@
 <TS language="pam" version="2.1">
 <context>
+    <name>AcceptandPayOfferListPage</name>
+    </context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Kabilian</translation>
+    </message>
+    </context>
+<context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
@@ -24,10 +42,6 @@
     <message>
         <source>C&amp;lose</source>
         <translation>I&amp;sara</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation>&amp;Kopyan ing address</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -66,6 +80,10 @@
         <translation>Reni reng kekang Syscoin addresses keng pamananggap bayad. Rerekomenda mi na gumamit kang bayung address keng balang transaksiyon.</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopyan ing address</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Kopyan ing &amp;Label</translation>
     </message>
@@ -76,6 +94,14 @@
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Address</translation>
     </message>
     </context>
 <context>
@@ -93,6 +119,15 @@
         <translation>(alang label)</translation>
     </message>
 </context>
+<context>
+    <name>AliasListPage</name>
+    </context>
+<context>
+    <name>AliasTableModel</name>
+    </context>
+<context>
+    <name>AliasView</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -148,16 +183,12 @@
         <translation>Siguradu na kang buri meng i-encrypt ing kekang wallet?</translation>
     </message>
     <message>
-        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>Mayalaga: Reng milabas a backups a gewa mu gamit ing wallet file mu dapat lamung mialilan bayung gawang encrypted wallet file. Para keng seguridad , reng milabas a backups dareng ali maka encrypt a wallet file ma-ala nala istung inumpisan mu nalang gamitan reng bayu, at me encrypt a wallet. </translation>
-    </message>
-    <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Kapabaluan: Makabuklat ya ing Caps Lock key!</translation>
-    </message>
-    <message>
         <source>Wallet encrypted</source>
         <translation>Me-encrypt ne ing wallet</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>Mayalaga: Reng milabas a backups a gewa mu gamit ing wallet file mu dapat lamung mialilan bayung gawang encrypted wallet file. Para keng seguridad , reng milabas a backups dareng ali maka encrypt a wallet file ma-ala nala istung inumpisan mu nalang gamitan reng bayu, at me encrypt a wallet. </translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -187,188 +218,27 @@
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Mi-alilan ne ing passphrase na ning wallet.</translation>
     </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Kapabaluan: Makabuklat ya ing Caps Lock key!</translation>
+    </message>
 </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>SyscoinGUI</name>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>I-sign ing &amp;mensayi</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Mag-sychronize ne king network...</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Overview</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation>Ipakit ing kabuuang lawe ning wallet</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transaksion</translation>
-    </message>
-    <message>
-        <source>Browse transaction history</source>
-        <translation>Lawan ing kasalesayan ning transaksion</translation>
-    </message>
-    <message>
-        <source>E&amp;xit</source>
-        <translation>L&amp;umwal</translation>
-    </message>
-    <message>
-        <source>Quit application</source>
-        <translation>Tuknangan ing aplikasyon</translation>
-    </message>
-    <message>
-        <source>About &amp;Qt</source>
-        <translation>Tungkul &amp;Qt</translation>
-    </message>
-    <message>
-        <source>Show information about Qt</source>
-        <translation>Magpakit impormasion tungkul king Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Pipamilian...</translation>
-    </message>
-    <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>I-&amp;Encrypt in Wallet...</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>I-&amp;Backup ing Wallet...</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Alilan ing Passphrase...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Address king pamag-Tanggap</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Magpadalang barya king Syscoin address</translation>
-    </message>
-    <message>
-        <source>Backup wallet to another location</source>
-        <translation>I-backup ing wallet king aliwang lugal</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Alilan ya ing passphrase a gagamitan para king wallet encryption</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>I-&amp;Debug ing awang</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Ibuklat ing debugging at diagnostic console</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Beripikan ing message...</translation>
-    </message>
-    <message>
-        <source>Syscoin</source>
-        <translation>Syscoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Wallet</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Ipalto / Isalikut</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Ipalto o isalikut ing pun a awang</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation>&amp;File</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Pamag-ayus</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation>&amp;Saup</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation>Gamit para king Tabs</translation>
-    </message>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Kapilubluban ning Syscoin</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation>Pipamilian command-line</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>Ing tatauling block a metanggap,  me-generate ya %1 ing milabas</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation>Ing transaksion kaibat na nini ali yapa magsilbing ipakit.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Mali</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Kapabaluan</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>&amp;Impormasion</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation>Makatuki ya king aldo</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Catching up...</translation>
-    </message>
-    <message>
-        <source>Sent transaction</source>
-        <translation>Mipadalang transaksion</translation>
-    </message>
-    <message>
-        <source>Incoming transaction</source>
-        <translation>Paparatang a transaksion</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;unlocked&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;locked&lt;/b&gt;</translation>
-    </message>
-</context>
+    <name>CertListPage</name>
+    </context>
 <context>
-    <name>ClientModel</name>
+    <name>CertTableModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Alertu ning Network</translation>
+        <source>Status</source>
+        <translation>Kabilian</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>CertView</name>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -435,12 +305,12 @@
         <translation>Alilan ya ing address king pamagpadala</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Ing pepalub yung address "%1" ati na yu king aklat dareng address</translation>
-    </message>
-    <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Ing pepalub yung address "%1" ali ya katanggap-tanggap a Syscoin address.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Ing pepalub yung address "%1" ati na yu king aklat dareng address</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -452,14 +322,62 @@
     </message>
 </context>
 <context>
+    <name>EditAliasDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ali ya bisang mag-unlock ing wallet</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ali ya bisang mag-unlock ing wallet</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ali ya bisang mag-unlock ing wallet</translation>
+    </message>
+</context>
+<context>
+    <name>EditWhitelistOfferDialog</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowInfoDialog</name>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <source>Total:</source>
+        <translation>Kabuuan:</translation>
+    </message>
+    </context>
+<context>
+    <name>EscrowListPage</name>
+    </context>
+<context>
+    <name>EscrowTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Kabilian</translation>
+    </message>
+</context>
+<context>
+    <name>EscrowView</name>
+    </context>
+<context>
     <name>FreespaceChecker</name>
     </context>
 <context>
     <name>HelpMessageDialog</name>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Kapilubluban ning Syscoin</translation>
-    </message>
     <message>
         <source>version</source>
         <translation>bersion</translation>
@@ -478,19 +396,215 @@
     </message>
     </context>
 <context>
+    <name>InMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Menibat</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Para kang</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensayi</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Malaus ka</translation>
     </message>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Kapilubluban ning Syscoin</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Mali</translation>
     </message>
+    </context>
+<context>
+    <name>ManageEscrowDialog</name>
+    </context>
+<context>
+    <name>MessageInfoDialog</name>
+    <message>
+        <source>Message:</source>
+        <translation>Mensayi:</translation>
+    </message>
+    </context>
+<context>
+    <name>MessageListPage</name>
+    </context>
+<context>
+    <name>MessageTableModel</name>
+    <message>
+        <source>From</source>
+        <translation>Menibat</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Para kang</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensayi</translation>
+    </message>
+</context>
+<context>
+    <name>MessageView</name>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Tatauling oras na ning block</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAcceptedOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Kabilian</translation>
+    </message>
+    </context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyCertListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Kabilian</translation>
+    </message>
+    </context>
+<context>
+    <name>MyEscrowListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>MyOfferWhitelistTableModel</name>
+    </context>
+<context>
+    <name>MyWhitelistOfferDialog</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    </context>
+<context>
+    <name>NewMessageDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ali ya bisang mag-unlock ing wallet</translation>
+    </message>
+</context>
+<context>
+    <name>NewWhitelistDialog</name>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Ali ya bisang mag-unlock ing wallet</translation>
+    </message>
+</context>
+<context>
+    <name>OfferAcceptDialog</name>
+    </context>
+<context>
+    <name>OfferAcceptDialogBTC</name>
+    <message>
+        <source>to</source>
+        <translation>para kang</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptDialogZEC</name>
+    <message>
+        <source>to</source>
+        <translation>para kang</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptInfoDialog</name>
+    <message>
+        <source>Total:</source>
+        <translation>Kabuuan:</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferAcceptTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Kabilian</translation>
+    </message>
+</context>
+<context>
+    <name>OfferEscrowDialog</name>
+    </context>
+<context>
+    <name>OfferFeedbackDialog</name>
+    </context>
+<context>
+    <name>OfferListPage</name>
+    </context>
+<context>
+    <name>OfferPayDialog</name>
+    </context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <source>Status</source>
+        <translation>Kabilian</translation>
+    </message>
+    </context>
+<context>
+    <name>OfferView</name>
+    </context>
+<context>
+    <name>OfferWhitelistTableModel</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -579,6 +693,32 @@
     </message>
 </context>
 <context>
+    <name>OptionsModel</name>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+</context>
+<context>
+    <name>OutMessageListPage</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Comma separated file (*.csv)</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Menibat</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Para kang</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensayi</translation>
+    </message>
+    </context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -629,16 +769,16 @@
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
-    </context>
+    <message>
+        <source>All</source>
+        <translation>Eganagana</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Client name</source>
-        <translation>Lagyu ning kliente</translation>
-    </message>
     <message>
         <source>N/A</source>
         <translation>N/A</translation>
@@ -654,10 +794,6 @@
     <message>
         <source>Debug window</source>
         <translation>I-Debug ing awang</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Gagamit bersion na ning OpenSSL</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -694,10 +830,6 @@
     <message>
         <source>Totals</source>
         <translation>Kabuuan:</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>Kaaldauan ning pamaglalang</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -769,13 +901,12 @@
         <translation>Mensayi</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Alaga</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(alang label)</translation>
     </message>
+    </context>
+<context>
+    <name>ResellOfferDialog</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -820,12 +951,12 @@
         <translation>Ipadala</translation>
     </message>
     <message>
-        <source>Confirm send coins</source>
-        <translation>Kumpirman ing pamagpadalang barya</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Kopyan ing alaga</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Kumpirman ing pamagpadalang barya</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -843,7 +974,7 @@
         <source>(no label)</source>
         <translation>(alang label)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -853,10 +984,6 @@
     <message>
         <source>Pay &amp;To:</source>
         <translation>Ibayad &amp;kang:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Magpalub kang label para king address a ini ban a-iabe me king aklat dareng address</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -882,9 +1009,19 @@
         <source>Pay To:</source>
         <translation>Ibayad kang:</translation>
     </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>Magpalub kang label para king address a ini ban a-iabe me king aklat dareng address</translation>
+    </message>
+</context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
+    </context>
+<context>
+    <name>SignRawTxDialog</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
@@ -1008,12 +1145,171 @@
 <context>
     <name>SplashScreen</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Kapilubluban ning Syscoin</translation>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>SyscoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>I-sign ing &amp;mensayi</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Mag-sychronize ne king network...</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Ipakit ing kabuuang lawe ning wallet</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Transaksion</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Lawan ing kasalesayan ning transaksion</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation>L&amp;umwal</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Tuknangan ing aplikasyon</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Tungkul &amp;Qt</translation>
+    </message>
+    <message>
+        <source>Show information about Qt</source>
+        <translation>Magpakit impormasion tungkul king Qt</translation>
+    </message>
+    <message>
+        <source>&amp;Options...</source>
+        <translation>&amp;Pipamilian...</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>I-&amp;Encrypt in Wallet...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet...</source>
+        <translation>I-&amp;Backup ing Wallet...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Alilan ing Passphrase...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Address king pamag-Tanggap</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Magpadalang barya king Syscoin address</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>I-backup ing wallet king aliwang lugal</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Alilan ya ing passphrase a gagamitan para king wallet encryption</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>I-&amp;Debug ing awang</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Ibuklat ing debugging at diagnostic console</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Beripikan ing message...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Ipalto / Isalikut</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Ipalto o isalikut ing pun a awang</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;File</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;Pamag-ayus</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Saup</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation>Gamit para king Tabs</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>Pipamilian command-line</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Ing tatauling block a metanggap,  me-generate ya %1 ing milabas</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Ing transaksion kaibat na nini ali yapa magsilbing ipakit.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Mali</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Kapabaluan</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>&amp;Impormasion</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Makatuki ya king aldo</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Catching up...</translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Mipadalang transaksion</translation>
+    </message>
+    <message>
+        <source>Incoming transaction</source>
+        <translation>Paparatang a transaksion</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;unlocked&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Maka-&lt;b&gt;encrypt&lt;/b&gt; ya ing wallet at kasalukuyan yang maka-&lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -1042,6 +1338,10 @@
         <translation>Kabilian</translation>
     </message>
     <message>
+        <source>, has not been successfully broadcast yet</source>
+        <translation>, eya matagumpeng mibalita</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Kaaldauan</translation>
     </message>
@@ -1056,6 +1356,10 @@
     <message>
         <source>From</source>
         <translation>Menibat</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>e miya balu</translation>
     </message>
     <message>
         <source>To</source>
@@ -1121,14 +1425,6 @@
         <source>false</source>
         <translation>e tutu</translation>
     </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, eya matagumpeng mibalita</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>e miya balu</translation>
-    </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1140,7 +1436,7 @@
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ining pane a ini magpakit yang detalyadung description ning transaksion</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -1150,6 +1446,10 @@
     <message>
         <source>Type</source>
         <translation>Klase</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -1166,10 +1466,6 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Me-generate ya oneng ali ya metanggap</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Label</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1194,6 +1490,10 @@
     <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(alang label)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
@@ -1339,7 +1639,7 @@
         <source>Send Coins</source>
         <translation>Magpadalang Barya</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     </context>
@@ -1374,6 +1674,10 @@
         <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
+        <source>Syscoin Core</source>
+        <translation>Kapilubluban ning Syscoin</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Pipamilian king pamag-gawang block:</translation>
     </message>
@@ -1406,24 +1710,8 @@
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Eya me-resolve ing -whitebind address: '%s'</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -maxtxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -1450,10 +1738,6 @@
         <translation>I-execute ing command istung mialilan ya ing best block (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Ining saup a mensayi</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Payagan ing pamaglawe DNS para king -addnode, -seednode and -connect</translation>
     </message>
@@ -1462,32 +1746,12 @@
         <translation>Lo-load da ne ing address...</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Me-mali ya ing pamag-load king wallet.dat: Me-corrupt ya ing wallet</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Me-mali ya ing pamag-load king wallet.dat</translation>
-    </message>
-    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ali katanggap-tanggap a -proxy addresss: '%s'</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>E kilalang network ing mepili king -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Eya me-resolve ing -bind address: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Eya me-resolve ing -externalip address: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Eya maliari ing alaga keng -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -11,55 +11,72 @@
 #include "guiutil.h"
 #include "ui_interface.h"
 #include "platformstyle.h"
-#include <QSortFilterProxyModel>
+#include "escrowinfodialog.h"
+#include "manageescrowdialog.h"
 #include <QClipboard>
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QMenu>
 #include "main.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
+
 using namespace std;
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 
-extern int GetEscrowExpirationDepth();
 EscrowListPage::EscrowListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EscrowListPage),
     model(0),
-    optionsModel(0)
+    optionsModel(0),
+	currentPage(0),
+	platformStyle(platformStyle)
 {
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
 	if (!platformStyle->getImagesOnButtons())
 	{
-		ui->exportButton->setIcon(QIcon());
 		ui->copyEscrow->setIcon(QIcon());
 		ui->searchEscrow->setIcon(QIcon());
+		ui->detailButton->setIcon(QIcon());
+		ui->manageButton->setIcon(QIcon());
+		ui->ackButton->setIcon(QIcon());
 	}
 	else
 	{
-		ui->exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/export"));
 		ui->copyEscrow->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
 		ui->searchEscrow->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/search"));
+		ui->detailButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/details"));
+		ui->manageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/escrow1"));
+		ui->ackButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/synced"));
 	}
-    ui->labelExplanation->setText(tr("Search for Syscoin Escrows. Select the number of results desired from the dropdown box and click Search."));
+    ui->labelExplanation->setText(tr("Search for Syscoin Escrows."));
 	
     // Context menu actions
     QAction *copyEscrowAction = new QAction(ui->copyEscrow->text(), this);
-    QAction *copyOfferAction = new QAction(tr("&Copy Offer ID"), this);
+    QAction *copyOfferAction = new QAction(tr("Copy Offer ID"), this);
+	QAction *detailsAction = new QAction(tr("Details"), this);
+	QAction *manageAction = new QAction(tr("Manage Escrow"), this);
+	QAction *ackAction = new QAction(tr("Acknowledge Payment"), this);
 
-
+	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_detailButton_clicked()));
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyEscrowAction);
     contextMenu->addAction(copyOfferAction);
+	contextMenu->addSeparator();
+	contextMenu->addAction(detailsAction);
+	contextMenu->addAction(manageAction);
+	contextMenu->addAction(ackAction);
 
     // Connect signals for context menu actions
     connect(copyEscrowAction, SIGNAL(triggered()), this, SLOT(on_copyEscrow_clicked()));
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
+	connect(detailsAction, SIGNAL(triggered()), this, SLOT(on_detailButton_clicked()));
+	connect(manageAction, SIGNAL(triggered()), this, SLOT(on_manageButton_clicked()));
+	connect(ackAction, SIGNAL(triggered()), this, SLOT(on_ackButton_clicked()));
    
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -82,15 +99,8 @@ void EscrowListPage::setModel(WalletModel* walletModel, EscrowTableModel *model)
 	this->walletModel = walletModel;
     if(!model) return;
 
-    proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(model);
-    proxyModel->setDynamicSortFilter(true);
-    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    proxyModel->setFilterRole(EscrowTableModel::TypeRole);
-    ui->tableView->setModel(proxyModel);
-    ui->tableView->sortByColumn(1, Qt::DescendingOrder);
-
+    ui->tableView->setModel(model);
+	ui->tableView->setSortingEnabled(false);
     // Set column widths
     ui->tableView->setColumnWidth(0, 50); //escrow id
     ui->tableView->setColumnWidth(1, 50); //time
@@ -99,8 +109,10 @@ void EscrowListPage::setModel(WalletModel* walletModel, EscrowTableModel *model)
     ui->tableView->setColumnWidth(4, 150); //buyer
     ui->tableView->setColumnWidth(5, 80); //offer
 	ui->tableView->setColumnWidth(6, 250); //offer title
-    ui->tableView->setColumnWidth(7, 80); //offeraccept
-    ui->tableView->setColumnWidth(8, 0); //status
+    ui->tableView->setColumnWidth(7, 80); //total
+	ui->tableView->setColumnWidth(8, 150); //rating
+    ui->tableView->setColumnWidth(9, 50); //status
+	
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -110,7 +122,6 @@ void EscrowListPage::setModel(WalletModel* walletModel, EscrowTableModel *model)
 
     // Select row for newly created escrow
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewEscrow(QModelIndex,int,int)));
-
     selectionChanged();
 
 }
@@ -119,7 +130,62 @@ void EscrowListPage::setOptionsModel(OptionsModel *optionsModel)
 {
     this->optionsModel = optionsModel;
 }
+void EscrowListPage::on_ackButton_clicked()
+{
+ 	if(!model)	
+		return;
+	if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(selection.isEmpty())
+    {
+        return;
+    }
+	QString escrow = selection.at(0).data(EscrowTableModel::EscrowRole).toString();
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Escrow Acknowledgement"),
+         tr("Warning: You are about to acknowledge this payment from the buyer. If you are shipping an item, please communicate a tracking number to the buyer via a Syscoin message.") + "<br><br>" + tr("Are you sure you wish to acknowledge this payment?"),
+         QMessageBox::Yes|QMessageBox::Cancel,
+         QMessageBox::Cancel);
+    if(retval == QMessageBox::Yes)
+    {
+		UniValue params(UniValue::VARR);
+		string strMethod = string("escrowacknowledge");
+		params.push_back(escrow.toStdString());
 
+		try {
+			UniValue result = tableRPC.execute(strMethod, params);
+			const UniValue& resArray = result.get_array();
+			if(resArray.size() > 1)
+			{
+				const UniValue& complete_value = resArray[1];
+				bool bComplete = false;
+				if (complete_value.isStr())
+					bComplete = complete_value.get_str() == "true";
+				if(!bComplete)
+				{
+					string hex_str = resArray[0].get_str();
+					GUIUtil::setClipboard(QString::fromStdString(hex_str));
+					QMessageBox::information(this, windowTitle(),
+						tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed."),
+							QMessageBox::Ok, QMessageBox::Ok);
+				}
+			}
+		}
+		catch (UniValue& objError)
+		{
+			string strError = find_value(objError, "message").get_str();
+			QMessageBox::critical(this, windowTitle(),
+			tr("Error acknowledging escrow payment: ") + QString::fromStdString(strError),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+		catch(std::exception& e)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("General exception acknowledging escrow payment"),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+	}    
+}
 void EscrowListPage::on_copyEscrow_clicked()
 {
    
@@ -131,7 +197,21 @@ void EscrowListPage::on_copyOffer_clicked()
     GUIUtil::copyEntryData(ui->tableView, EscrowTableModel::Offer);
 }
 
-
+void EscrowListPage::on_manageButton_clicked()
+{
+ 	if(!model || !walletModel)	
+		return;
+	if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(selection.isEmpty())
+    {
+        return;
+    }
+	QString escrow = selection.at(0).data(EscrowTableModel::EscrowRole).toString();
+	ManageEscrowDialog dlg(walletModel, escrow);   
+	dlg.exec();
+}
 void EscrowListPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
@@ -158,38 +238,17 @@ void EscrowListPage::keyPressEvent(QKeyEvent * event)
   else
     QDialog::keyPressEvent( event );
 }
-void EscrowListPage::on_exportButton_clicked()
+void EscrowListPage::on_detailButton_clicked()
 {
-    // CSV is currently the only supported format
-    QString filename = GUIUtil::getSaveFileName(
-            this,
-            tr("Export Escrow Data"), QString(),
-            tr("Comma separated file (*.csv)"), NULL);
-
-    if (filename.isNull()) return;
-
-    CSVModelWriter writer(filename);
-
-    // name, column, role
-    writer.setModel(proxyModel);
-    writer.addColumn("Escrow", EscrowTableModel::Escrow, Qt::EditRole);
-	writer.addColumn("Time", EscrowTableModel::Time, Qt::EditRole);
-    writer.addColumn("Arbiter", EscrowTableModel::Arbiter, Qt::EditRole);
-	writer.addColumn("Seller", EscrowTableModel::Seller, Qt::EditRole);
-	writer.addColumn("Offer", EscrowTableModel::Offer, Qt::EditRole);
-	writer.addColumn("OfferTitle", EscrowTableModel::OfferTitle, Qt::EditRole);
-	writer.addColumn("Confirmation", EscrowTableModel::OfferAccept, Qt::EditRole);
-	writer.addColumn("Total", EscrowTableModel::Total, Qt::EditRole);
-	writer.addColumn("Status", EscrowTableModel::Status, Qt::EditRole);
-    if(!writer.write())
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
-                              QMessageBox::Abort, QMessageBox::Abort);
+        EscrowInfoDialog dlg(platformStyle, selection.at(0));
+        dlg.exec();
     }
 }
-
-
-
 void EscrowListPage::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->tableView->indexAt(point);
@@ -200,7 +259,7 @@ void EscrowListPage::contextualMenu(const QPoint &point)
 
 void EscrowListPage::selectNewEscrow(const QModelIndex &parent, int begin, int /*end*/)
 {
-    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, EscrowTableModel::Escrow, parent));
+    QModelIndex idx = model->index(begin, EscrowTableModel::Escrow, parent);
     if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newEscrowToSelect))
     {
         // Select row of newly created escrow, once
@@ -209,10 +268,41 @@ void EscrowListPage::selectNewEscrow(const QModelIndex &parent, int begin, int /
         newEscrowToSelect.clear();
     }
 }
-
-void EscrowListPage::on_searchEscrow_clicked()
+void EscrowListPage::on_prevButton_clicked()
+{
+	if(pageMap.empty())
+	{
+		ui->nextButton->setEnabled(false);
+		ui->prevButton->setEnabled(false);
+		return;
+	}
+	currentPage--;
+	const pair<string, string> &escrowPair = pageMap[currentPage];
+	on_searchEscrow_clicked(escrowPair.first);
+}
+void EscrowListPage::on_nextButton_clicked()
+{
+	if(pageMap.empty())
+	{
+		ui->nextButton->setEnabled(false);
+		ui->prevButton->setEnabled(false);
+		return;
+	}
+	const pair<string, string> &escrowPair = pageMap[currentPage];
+	currentPage++;
+	on_searchEscrow_clicked(escrowPair.second);
+	ui->prevButton->setEnabled(true);
+}
+void EscrowListPage::on_searchEscrow_clicked(string GUID)
 {
     if(!walletModel) return;
+	if(GUID == "")
+	{
+		ui->nextButton->setEnabled(false);
+		ui->prevButton->setEnabled(false);
+		pageMap.clear();
+		currentPage = 0;
+	}
        UniValue params(UniValue::VARR);
         UniValue valError;
         UniValue valResult;
@@ -221,24 +311,22 @@ void EscrowListPage::on_searchEscrow_clicked()
         string strReply;
         string strError;
         string strMethod = string("escrowfilter");
+		string firstEscrow = "";
+		string lastEscrow = "";
 		string name_str;
 		string time_str;
 		string seller_str;
 		string arbiter_str;
 		string status_str;
-		string offeraccept_str;
 		string offer_str;
 		string offertitle_str;
 		string total_str;	
 		string buyer_str;
+		string rating_str;
 		int unixTime;
 		QDateTime dateTime;
         params.push_back(ui->lineEditEscrowSearch->text().toStdString());
-        params.push_back(GetEscrowExpirationDepth());
-		UniValue num;
-		num.setInt(0);
-		params.push_back(num);
-		params.push_back(ui->comboBox->currentText().toInt());
+		params.push_back(GUID);
 
         try {
             result = tableRPC.execute(strMethod, params);
@@ -247,7 +335,7 @@ void EscrowListPage::on_searchEscrow_clicked()
         {
             strError = find_value(objError, "message").get_str();
             QMessageBox::critical(this, windowTitle(),
-            tr("Error searching Escrow: \"%1\"").arg(QString::fromStdString(strError)),
+            tr("Error searching Escrow: ") + QString::fromStdString(strError),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
@@ -263,6 +351,14 @@ void EscrowListPage::on_searchEscrow_clicked()
 				this->model->clear();
 			
 			  const UniValue &arr = result.get_array();
+			  if(arr.size() >= 25)
+				  ui->nextButton->setEnabled(true);
+			  else
+				  ui->nextButton->setEnabled(false);
+			  if(currentPage <= 0)
+				  ui->prevButton->setEnabled(false);
+			  else
+				  ui->prevButton->setEnabled(true);
 		      for (unsigned int idx = 0; idx < arr.size(); idx++) {
 			    const UniValue& input = arr[idx];
 				if (input.type() != UniValue::VOBJ)
@@ -273,15 +369,18 @@ void EscrowListPage::on_searchEscrow_clicked()
 				seller_str = "";
 				arbiter_str = "";
 				status_str = "";
-				offeraccept_str = "";
 				offer_str = "";
 				offertitle_str = "";
 				total_str = "";
 				buyer_str = "";
+				rating_str = "";
 				
 				const UniValue& name_value = find_value(o, "escrow");
 				if (name_value.type() == UniValue::VSTR)
 					name_str = name_value.get_str();
+				if(firstEscrow == "")
+					firstEscrow = name_str;
+				lastEscrow = name_str;
 				const UniValue& time_value = find_value(o, "time");
 				if (time_value.type() == UniValue::VSTR)
 					time_str = time_value.get_str();
@@ -300,42 +399,47 @@ void EscrowListPage::on_searchEscrow_clicked()
 				const UniValue& offertitle_value = find_value(o, "offertitle");
 				if (offertitle_value.type() == UniValue::VSTR)
 					offertitle_str = offertitle_value.get_str();
-
-				const UniValue& offeraccept_value = find_value(o, "offeracceptlink");
-				if (offeraccept_value.type() == UniValue::VSTR)
-					offeraccept_str = offeraccept_value.get_str();
+				string currency_str = "";
+				const UniValue& currency_value = find_value(o, "currency");
+				if (currency_value.type() == UniValue::VSTR)
+					currency_str = currency_value.get_str();
 				const UniValue& total_value = find_value(o, "total");
 				if (total_value.type() == UniValue::VSTR)
-					total_str = total_value.get_str();
+					total_str = total_value.get_str() + string(" ") + currency_str;
 				const UniValue& status_value = find_value(o, "status");
 				if (status_value.type() == UniValue::VSTR)
 					status_str = status_value.get_str();
+				const UniValue& rating_value = find_value(o, "avg_rating_display");
+				if (rating_value.type() == UniValue::VSTR)
+					rating_str = rating_value.get_str();
+
 
 				unixTime = atoi(time_str.c_str());
 				dateTime.setTime_t(unixTime);
 				time_str = dateTime.toString().toStdString();
 
-				model->addRow(QString::fromStdString(name_str), QString::fromStdString(time_str),
+				model->addRow(QString::fromStdString(name_str), unixTime, QString::fromStdString(time_str),
 						QString::fromStdString(seller_str),
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(offeraccept_str),
 						QString::fromStdString(total_str),
+						QString::fromStdString(rating_str),
 						QString::fromStdString(status_str),
 						QString::fromStdString(buyer_str));
-					this->model->updateEntry(QString::fromStdString(name_str), QString::fromStdString(time_str),
+					this->model->updateEntry(QString::fromStdString(name_str), unixTime, QString::fromStdString(time_str),
 						QString::fromStdString(seller_str),
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(offeraccept_str),
 						QString::fromStdString(total_str),
+						QString::fromStdString(rating_str),
 						QString::fromStdString(status_str), 
 						QString::fromStdString(buyer_str), AllEscrow, CT_NEW);	
 			  }
 
-            
+  		  pageMap[currentPage] = make_pair(firstEscrow, lastEscrow);  
+		  ui->labelPage->setText(tr("Current Page: ") + QString("<b>%1</b>").arg(currentPage+1));
          }   
         else
         {

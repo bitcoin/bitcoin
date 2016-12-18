@@ -13,6 +13,7 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QSettings>
 #include <QMenu>
 using namespace std;
 
@@ -43,15 +44,15 @@ InMessageListPage::InMessageListPage(const PlatformStyle *platformStyle, QWidget
 		
 	}
 
-    ui->labelExplanation->setText(tr("These are Syscoin messages sent to you."));
+    ui->labelExplanation->setText(tr("These are Syscoin messages you have received. You can choose which aliases to view related messages using the dropdown to the right."));
 	
     // Context menu actions
     QAction *copyGuidAction = new QAction(ui->copyMessage->text(), this);
-    QAction *copySubjectAction = new QAction(tr("Copy &Subject"), this);
-	QAction *copyMessageAction = new QAction(tr("Copy &Msg"), this);
-	QAction *newMessageAction = new QAction(tr("&New Msg"), this);
-	QAction *replyMessageAction = new QAction(tr("&Reply Msg"), this);
-	QAction *detailsAction = new QAction(tr("&Details"), this);
+    QAction *copySubjectAction = new QAction(tr("Copy Subject"), this);
+	QAction *copyMessageAction = new QAction(tr("Copy Msg"), this);
+	QAction *newMessageAction = new QAction(tr("New Msg"), this);
+	QAction *replyMessageAction = new QAction(tr("Reply Msg"), this);
+	QAction *detailsAction = new QAction(tr("Details"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyGuidAction);
@@ -71,6 +72,7 @@ InMessageListPage::InMessageListPage(const PlatformStyle *platformStyle, QWidget
    
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_detailButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+
 
 }
 void InMessageListPage::on_detailButton_clicked()
@@ -127,12 +129,19 @@ void InMessageListPage::setModel(WalletModel* walletModel, MessageTableModel *mo
 	this->walletModel = walletModel;
     if(!model) return;
 
+
+
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
     proxyModel->setDynamicSortFilter(true);
-    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+	proxyModel->setFilterRole(MessageTableModel::TypeRole);
+
     ui->tableView->setModel(proxyModel);
-    ui->tableView->sortByColumn(1, Qt::DescendingOrder);
+    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     // Set column widths
     ui->tableView->setColumnWidth(0, 75); //guid
@@ -150,7 +159,6 @@ void InMessageListPage::setModel(WalletModel* walletModel, MessageTableModel *mo
 
     // Select row for newly created inmessage
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewMessage(QModelIndex,int,int)));
-
     selectionChanged();
 
 }
@@ -220,15 +228,15 @@ void InMessageListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("GUID", MessageTableModel::GUID, Qt::EditRole);
-    writer.addColumn("Time", MessageTableModel::Time, Qt::EditRole);
-    writer.addColumn("From", MessageTableModel::From, Qt::EditRole);
-	writer.addColumn("To", MessageTableModel::To, Qt::EditRole);
-	writer.addColumn("Subject", MessageTableModel::Subject, Qt::EditRole);
-	writer.addColumn("Message", MessageTableModel::Message, Qt::EditRole);
+    writer.addColumn(tr("GUID"), MessageTableModel::GUID, Qt::EditRole);
+    writer.addColumn(tr("Time"), MessageTableModel::Time, Qt::EditRole);
+    writer.addColumn(tr("From"), MessageTableModel::From, Qt::EditRole);
+	writer.addColumn(tr("To"), MessageTableModel::To, Qt::EditRole);
+	writer.addColumn(tr("Subject"), MessageTableModel::Subject, Qt::EditRole);
+	writer.addColumn(tr("Message"), MessageTableModel::Message, Qt::EditRole);
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }

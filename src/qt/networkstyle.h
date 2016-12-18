@@ -25,10 +25,10 @@ public:
 
 private:
     NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
-
+	// SYSCOIN
+	QPixmap splashImage;
     QString appName;
     QIcon appIcon;
-	QPixmap splashImage;
     QIcon trayAndWindowIcon;
     QString titleAddText;
 };

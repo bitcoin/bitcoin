@@ -8,10 +8,10 @@
 #include "ui_interface.h"
 #include <QDataWidgetMapper>
 #include <QMessageBox>
-#include "rpcserver.h"
+#include "rpc/server.h"
 using namespace std;
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 MessageInfoDialog::MessageInfoDialog( QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MessageInfoDialog), mapper(0), model(0)

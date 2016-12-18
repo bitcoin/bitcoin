@@ -20,14 +20,14 @@
 #include <QModelIndex>
 #include <QMenu>
 #include <QItemSelection>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "tinyformat.h"
 
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platformStyle, QModelIndex *idx, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditWhitelistOfferDialog),
@@ -38,7 +38,6 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 	if (!platformStyle->getImagesOnButtons())
 	{
 		ui->exportButton->setIcon(QIcon());
-		ui->exclusiveButton->setIcon(QIcon());
 		ui->removeAllButton->setIcon(QIcon());
 		ui->removeButton->setIcon(QIcon());
 		ui->newEntry->setIcon(QIcon());
@@ -47,7 +46,6 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 	else
 	{
 		ui->exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/export"));
-		ui->exclusiveButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/key"));
 		ui->removeAllButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/remove"));
 		ui->removeButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/remove"));
 		ui->newEntry->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
@@ -55,21 +53,21 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 	}
 
 	offerGUID = idx->data(OfferTableModel::NameRole).toString();
-	exclusiveWhitelist = idx->data(OfferTableModel::ExclusiveWhitelistRole).toString();
 	offerCategory = idx->data(OfferTableModel::CategoryRole).toString();
 	offerTitle = idx->data(OfferTableModel::TitleRole).toString();
 	offerQty = idx->data(OfferTableModel::QtyRole).toString();
 	offerPrice = idx->data(OfferTableModel::PriceRole).toString();
 	offerDescription = idx->data(OfferTableModel::DescriptionRole).toString();
 	offerPrivate = idx->data(OfferTableModel::PrivateRole).toString();
+	offerCurrency = idx->data(OfferTableModel::CurrencyRole).toString();
 	
-	ui->buttonBox->setVisible(false);
+
 	ui->removeAllButton->setEnabled(false);
-    ui->labelExplanation->setText(tr("These are the affiliates for your offer. Affiliate operations take 2-5 minutes to become active. You may specify discount levels for each affiliate or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own an alias that you've added to your affiliate list. Click the button at the bottom of this dialog to toggle the exclusive mode."));
+    ui->labelExplanation->setText(tr("These are the affiliates for your offer. Affiliate operations take 2-5 minutes to become active. You may specify discount levels for each affiliate or control who may resell your offer."));
 	
     // Context menu actions
-    QAction *removeAction = new QAction(tr("&Remove"), this);
-	QAction *copyAction = new QAction(tr("&Copy Alias"), this);
+    QAction *removeAction = new QAction(tr("Remove"), this);
+	QAction *copyAction = new QAction(tr("Copy Alias"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAction);
@@ -84,8 +82,6 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	
 }
 
@@ -106,7 +102,6 @@ void EditWhitelistOfferDialog::setModel(WalletModel *walletModel, OfferWhitelist
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
 	ui->tableView->setModel(proxyModel);
-	ui->tableView->sortByColumn(0, Qt::AscendingOrder);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     // Set column widths
@@ -139,68 +134,15 @@ void EditWhitelistOfferDialog::on_copy()
 {
     GUIUtil::copyEntryData(ui->tableView, OfferWhitelistTableModel::Alias);
 }
-void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
-{
-	QString tmpExclusiveWhitelist = exclusiveWhitelist;
-	string strError;
-	string strMethod = string("offerupdate");
-	UniValue params(UniValue::VARR);
-	UniValue result;
-	try {
-		params.push_back("");
-		params.push_back("");
-		params.push_back(offerGUID.toStdString());
-		params.push_back(offerCategory.toStdString());
-		params.push_back(offerTitle.toStdString());
-		params.push_back(offerQty.toStdString());
-		params.push_back(offerPrice.toStdString());
-		params.push_back(offerDescription.toStdString());
-		// keep it the same as what's in the database
-		params.push_back(offerPrivate.toStdString());
-		params.push_back("");
-		if(tmpExclusiveWhitelist == QString("ON"))
-			params.push_back("0");
-		else 
-			params.push_back("1");
-		result = tableRPC.execute(strMethod, params);
-		QMessageBox::information(this, windowTitle(),
-		tr("Affiliate exclusive mode changed successfully!"),
-			QMessageBox::Ok, QMessageBox::Ok);
-		if(tmpExclusiveWhitelist == QString("ON"))
-			exclusiveWhitelist = QString("OFF");
-		else
-			exclusiveWhitelist = QString("ON");
-
-		if(exclusiveWhitelist == QString("ON"))
-		{
-			ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
-		}
-		else
-		{
-			ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
-		}
-	}
-	catch (UniValue& objError)
-	{
-		string strError = find_value(objError, "message").get_str();
-		QMessageBox::critical(this, windowTitle(),
-			tr("Could not change the affiliate mode: %1").arg(QString::fromStdString(strError)),
-				QMessageBox::Ok, QMessageBox::Ok);
-
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to change the affiliate mode: ") + QString::fromStdString(e.what()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
-	
-}
-
 void EditWhitelistOfferDialog::on_removeButton_clicked()
 {
-	if(!model)
-		return;
+    if(!model || !walletModel) return;
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
+    {
+		model->editStatus = OfferWhitelistTableModel::WALLET_UNLOCK_FAILURE;
+        return;
+    }
 	if(!ui->tableView->selectionModel())
         return;
     QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
@@ -220,6 +162,23 @@ void EditWhitelistOfferDialog::on_removeButton_clicked()
 
 	try {
 		result = tableRPC.execute(strMethod, params);
+		const UniValue& resArray = result.get_array();
+		if(resArray.size() > 1)
+		{
+			const UniValue& complete_value = resArray[1];
+			bool bComplete = false;
+			if (complete_value.isStr())
+				bComplete = complete_value.get_str() == "true";
+			if(!bComplete)
+			{
+				string hex_str = resArray[0].get_str();
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				QMessageBox::information(this, windowTitle(),
+					tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed."),
+						QMessageBox::Ok, QMessageBox::Ok);
+				return;
+			}
+		}
 		QMessageBox::information(this, windowTitle(),
 		tr("Entry removed successfully!"),
 			QMessageBox::Ok, QMessageBox::Ok);
@@ -229,7 +188,7 @@ void EditWhitelistOfferDialog::on_removeButton_clicked()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not remove this entry: %1").arg(QString::fromStdString(strError)),
+			tr("Could not remove this entry: ") + QString::fromStdString(strError),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
@@ -244,8 +203,13 @@ void EditWhitelistOfferDialog::on_removeButton_clicked()
 }
 void EditWhitelistOfferDialog::on_removeAllButton_clicked()
 {
-	if(!model)
-		return;
+    if(!model || !walletModel) return;
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
+    {
+		model->editStatus = OfferWhitelistTableModel::WALLET_UNLOCK_FAILURE;
+        return;
+    }
 	string strError;
 	string strMethod = string("offerclearwhitelist");
 	UniValue params(UniValue::VARR);
@@ -253,6 +217,23 @@ void EditWhitelistOfferDialog::on_removeAllButton_clicked()
 	params.push_back(offerGUID.toStdString());
 	try {
 		result = tableRPC.execute(strMethod, params);
+		const UniValue& resArray = result.get_array();
+		if(resArray.size() > 1)
+		{
+			const UniValue& complete_value = resArray[1];
+			bool bComplete = false;
+			if (complete_value.isStr())
+				bComplete = complete_value.get_str() == "true";
+			if(!bComplete)
+			{
+				string hex_str = resArray[0].get_str();
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				QMessageBox::information(this, windowTitle(),
+					tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed."),
+						QMessageBox::Ok, QMessageBox::Ok);
+				return;
+			}
+		}
 		QMessageBox::information(this, windowTitle(),
 		tr("Affiliate list cleared successfully!"),
 			QMessageBox::Ok, QMessageBox::Ok);
@@ -262,7 +243,7 @@ void EditWhitelistOfferDialog::on_removeAllButton_clicked()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not clear the affiliate list: %1").arg(QString::fromStdString(strError)),
+			tr("Could not clear the affiliate list: ") + QString::fromStdString(strError),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
@@ -288,9 +269,8 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 		{
 			this->model->clear();
 			string alias_str = "";
-			string expiresin_str = "";
 			string offer_discount_percentage_str = "";
-			int expiresin = 0;
+			int64_t expires_on = 0;
 			const UniValue &arr = result.get_array();
 		    for (unsigned int idx = 0; idx < arr.size(); idx++) {
 			    const UniValue& input = arr[idx];
@@ -300,32 +280,25 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 				const UniValue& alias_value = find_value(o, "alias");
 				if (alias_value.type() == UniValue::VSTR)
 					alias_str = alias_value.get_str();
-				const UniValue& expiresin_value = find_value(o, "expiresin");
-				if (expiresin_value.type() == UniValue::VNUM)
-					expiresin = expiresin_value.get_int();
 				const UniValue& offer_discount_percentage_value = find_value(o, "offer_discount_percentage");
 				if (offer_discount_percentage_value.type() == UniValue::VSTR)
 					offer_discount_percentage_str = offer_discount_percentage_value.get_str();
-				expiresin_str = strprintf("%d Blocks", expiresin);
-				model->addRow(QString::fromStdString(alias_str), QString::fromStdString(expiresin_str), QString::fromStdString(offer_discount_percentage_str));
-				model->updateEntry(QString::fromStdString(alias_str), QString::fromStdString(expiresin_str), QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
+				const UniValue& expires_on_value = find_value(o, "expires_on");
+				if (expires_on_value.type() == UniValue::VNUM)
+					expires_on = expires_on_value.get_int64();
+				const QString& dateTimeString = GUIUtil::dateTimeStr(expires_on);		
+				model->addRow(QString::fromStdString(alias_str),  dateTimeString, QString::fromStdString(offer_discount_percentage_str));
+				model->updateEntry(QString::fromStdString(alias_str),  dateTimeString, QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
 				ui->removeAllButton->setEnabled(true);
 			}
 		}
-		if(exclusiveWhitelist == QString("ON"))
-		{
-			ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
-		}
-		else
-		{
-			ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
-		}
+
 	}
 	catch (UniValue& objError)
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not refresh the affiliate list: %1").arg(QString::fromStdString(strError)),
+			tr("Could not refresh the affiliate list: ") + QString::fromStdString(strError),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
@@ -377,13 +350,13 @@ void EditWhitelistOfferDialog::on_exportButton_clicked()
     CSVModelWriter writer(filename);
     // name, column, role
     writer.setModel(proxyModel);
-	writer.addColumn("Alias", OfferWhitelistTableModel::Alias, Qt::EditRole);
-	writer.addColumn("Expires", OfferWhitelistTableModel::Expires, Qt::EditRole);
-	writer.addColumn("Discount", OfferWhitelistTableModel::Discount, Qt::EditRole);
+	writer.addColumn(tr("Alias"), OfferWhitelistTableModel::Alias, Qt::EditRole);
+	writer.addColumn(tr("Expires On"), OfferWhitelistTableModel::Expires, Qt::EditRole);
+	writer.addColumn(tr("Discount"), OfferWhitelistTableModel::Discount, Qt::EditRole);
 	
     if(!writer.write())
     {
-        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+		QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file: ") + filename,
                               QMessageBox::Abort, QMessageBox::Abort);
     }
 }

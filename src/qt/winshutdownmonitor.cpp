@@ -27,7 +27,7 @@ bool WinShutdownMonitor::nativeEventFilter(const QByteArray &eventType, void *pM
             // Warn only once as this is performance-critical
             static bool warned = false;
             if (!warned) {
-                LogPrint("%s: OpenSSL RAND_event() failed to seed OpenSSL PRNG with enough data.\n", __func__);
+                LogPrintf("%s: OpenSSL RAND_event() failed to seed OpenSSL PRNG with enough data.\n", __func__);
                 warned = true;
             }
        }

@@ -9,18 +9,18 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 #include <QStringList>
-#include "rpcserver.h"
+#include "rpc/server.h"
 using namespace std;
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 NewWhitelistDialog::NewWhitelistDialog(const QString &offerGUID, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewWhitelistDialog), model(0)
 {
     ui->setupUi(this);
 	ui->offerGUIDLabel->setText(offerGUID);
-	ui->discountDisclaimer->setText(tr("<font color='blue'>Enter the alias and discount level of your affiliate. This is a percentage of price for your offer you want to allow your affiliate to purchase your offer for. Typically given to wholesalers or for special arrangements with an affiliate. </font>"));
+	ui->discountDisclaimer->setText(QString("<font color='blue'>") + tr("Enter the alias and discount level of your affiliate. This is a percentage of price for your offer you want to allow your affiliate to purchase your offer for. Typically given to wholesalers or for special arrangements with an affiliate.") + QString("</font>"));
 }
 
 NewWhitelistDialog::~NewWhitelistDialog()
@@ -54,7 +54,23 @@ bool NewWhitelistDialog::saveCurrentRow()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-
+		const UniValue& resArray = result.get_array();
+		if(resArray.size() > 1)
+		{
+			const UniValue& complete_value = resArray[1];
+			bool bComplete = false;
+			if (complete_value.isStr())
+				bComplete = complete_value.get_str() == "true";
+			if(!bComplete)
+			{
+				string hex_str = resArray[0].get_str();
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				QMessageBox::information(this, windowTitle(),
+					tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed."),
+						QMessageBox::Ok, QMessageBox::Ok);
+				return true;
+			}
+		}
 		entry = ui->aliasEdit->text();
 
 		QMessageBox::information(this, windowTitle(),
@@ -67,13 +83,13 @@ bool NewWhitelistDialog::saveCurrentRow()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-		tr("Error creating new affiliate: \"%1\"").arg(QString::fromStdString(strError)),
+		tr("Error creating new affiliate: ") + QString::fromStdString(strError),
 			QMessageBox::Ok, QMessageBox::Ok);
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("General exception creating new affiliate: \"%1\"").arg(QString::fromStdString(e.what())),
+			tr("General exception creating new affiliate: ") + QString::fromStdString(e.what()),
 			QMessageBox::Ok, QMessageBox::Ok);
 	}							
 
@@ -96,12 +112,7 @@ void NewWhitelistDialog::accept()
             break;
         case OfferWhitelistTableModel::INVALID_ENTRY:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered entry \"%1\" is not a valid affiliate.").arg(ui->aliasEdit->text()),
-                QMessageBox::Ok, QMessageBox::Ok);
-            break;
-        case OfferWhitelistTableModel::DUPLICATE_ENTRY:
-            QMessageBox::warning(this, windowTitle(),
-                tr("The entered entry \"%1\" is already taken.").arg(ui->aliasEdit->text()),
+                tr("The entered entry is not a valid affiliate"),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case OfferWhitelistTableModel::WALLET_UNLOCK_FAILURE:

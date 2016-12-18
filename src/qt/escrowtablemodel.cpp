@@ -3,18 +3,18 @@
 
 #include "guiutil.h"
 #include "walletmodel.h"
-
 #include "wallet/wallet.h"
 #include "base58.h"
 
 #include <QFont>
 #include <QDateTime>
-#include "rpcserver.h"
+#include <QSettings>
+#include "rpc/server.h"
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct EscrowTableEntry
 {
     enum Type {
@@ -24,19 +24,19 @@ struct EscrowTableEntry
     Type type;
     QString escrow;
 	QString time;
+	int itime;
 	QString seller;
 	QString arbiter;
 	QString offer;
 	QString offertitle;
-	QString offeraccept;
 	QString total;
 	QString status;
 	QString buyer;
+	QString rating;
     EscrowTableEntry() {}
-    EscrowTableEntry(Type type, const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer):
-        type(type), escrow(escrow), time(time), seller(seller), arbiter(arbiter), offer(offer), offertitle(offertitle), offeraccept(offeraccept), total(total), status(status), buyer(buyer){}
+    EscrowTableEntry(Type type, const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const QString &rating, const QString &status, const QString &buyer):
+        type(type), escrow(escrow), itime(itime), time(time), seller(seller), arbiter(arbiter), offer(offer), offertitle(offertitle), total(total), status(status), buyer(buyer), rating(rating){}
 };
-
 struct EscrowTableEntryLessThan
 {
     bool operator()(const EscrowTableEntry &a, const EscrowTableEntry &b) const
@@ -53,6 +53,21 @@ struct EscrowTableEntryLessThan
     }
 };
 
+struct EscrowEntryLessThan
+{
+    bool operator()(const EscrowTableEntry &a, const EscrowTableEntry &b) const
+    {
+        return a.itime < b.itime;
+    }
+    bool operator()(const EscrowTableEntry &a, const int &b) const
+    {
+        return a.itime > b;
+    }
+    bool operator()(const int &a, const EscrowTableEntry &b) const
+    {
+        return a < b.itime;
+    }
+};
 
 // Private implementation
 class EscrowTablePriv
@@ -61,29 +76,32 @@ public:
     CWallet *wallet;
     QList<EscrowTableEntry> cachedEscrowTable;
     EscrowTableModel *parent;
-
+	bool showComplete;
     EscrowTablePriv(CWallet *wallet, EscrowTableModel *parent):
-        wallet(wallet), parent(parent) {}
+        wallet(wallet), parent(parent), showComplete(true) {}
 
     void refreshEscrowTable(EscrowModelType type)
     {
-
         cachedEscrowTable.clear();
         {
 			string strMethod = string("escrowlist");
-	        UniValue params(UniValue::VARR); 
+			UniValue params(UniValue::VARR);
+			UniValue listAliases(UniValue::VARR);
+			appendListAliases(listAliases);
+			params.push_back(listAliases);
 			UniValue result ;
 			string name_str;
 			string time_str;
 			string seller_str;
 			string arbiter_str;
 			string status_str;
-			string offeraccept_str;
+			string txid_str;
 			string offer_str;
 			string offertitle_str;
 			string total_str;
 			string buyer_str;
-			int unixTime;
+			string rating_str;
+			int unixTime, expired;
 			QDateTime dateTime;	
 			try {
 				result = tableRPC.execute(strMethod, params);
@@ -94,11 +112,12 @@ public:
 					seller_str = "";
 					arbiter_str = "";
 					status_str = "";
-					offeraccept_str = "";
 					offer_str = "";
 					offertitle_str = "";
 					total_str = "";	
 					buyer_str = "";
+					expired = 0;
+					rating_str = "";
 					const UniValue &arr = result.get_array();
 				    for (unsigned int idx = 0; idx < arr.size(); idx++) {
 					    const UniValue& input = arr[idx];
@@ -110,9 +129,10 @@ public:
 						seller_str = "";
 						arbiter_str = "";
 						status_str = "";
-						offeraccept_str = "";
 						offer_str = "";
 						total_str = "";
+						expired = 0;
+						rating_str = "";
 			
 				
 						const UniValue& name_value = find_value(o, "escrow");
@@ -136,21 +156,29 @@ public:
 						const UniValue& offertitle_value = find_value(o, "offertitle");
 						if (offertitle_value.type() == UniValue::VSTR)
 							offertitle_str = offertitle_value.get_str();
-						const UniValue& offeraccept_value = find_value(o, "offeracceptlink");
-						if (offeraccept_value.type() == UniValue::VSTR)
-							offeraccept_str = offeraccept_value.get_str();
+						string currency_str = "";
+						const UniValue& currency_value = find_value(o, "currency");
+						if (currency_value.type() == UniValue::VSTR)
+							currency_str = currency_value.get_str();
 						const UniValue& total_value = find_value(o, "total");
 						if (total_value.type() == UniValue::VSTR)
-							total_str = total_value.get_str();
+							total_str = total_value.get_str() + string(" ") + currency_str;
 						const UniValue& status_value = find_value(o, "status");
 						if (status_value.type() == UniValue::VSTR)
 							status_str = status_value.get_str();
-						
+						const UniValue& rating_value = find_value(o, "avg_rating_display");
+						if (rating_value.type() == UniValue::VSTR)
+							rating_str = rating_value.get_str();
+						const UniValue& expired_value = find_value(o, "expired");
+						if (expired_value.type() == UniValue::VNUM)
+							expired = expired_value.get_int();
+						if((expired == 1 || status_str.find("complete") != std::string::npos ) && !showComplete)
+							continue;
 						unixTime = atoi(time_str.c_str());
 						dateTime.setTime_t(unixTime);
 						time_str = dateTime.toString().toStdString();	
 
-						updateEntry(QString::fromStdString(name_str), QString::fromStdString(time_str), QString::fromStdString(seller_str), QString::fromStdString(arbiter_str), QString::fromStdString(offer_str), QString::fromStdString(offertitle_str), QString::fromStdString(offeraccept_str), QString::fromStdString(total_str), QString::fromStdString(status_str), QString::fromStdString(buyer_str), type, CT_NEW); 
+						updateEntry(QString::fromStdString(name_str), unixTime, QString::fromStdString(time_str), QString::fromStdString(seller_str), QString::fromStdString(arbiter_str), QString::fromStdString(offer_str), QString::fromStdString(offertitle_str), QString::fromStdString(total_str), QString::fromStdString(rating_str), QString::fromStdString(status_str), QString::fromStdString(buyer_str), type, CT_NEW); 
 					}
 				}
  			}
@@ -163,24 +191,28 @@ public:
 				return;
 			}           
          }
-        // qLowerBound() and qUpperBound() require our cachedEscrowTable list to be sorted in asc order
-        qSort(cachedEscrowTable.begin(), cachedEscrowTable.end(), EscrowTableEntryLessThan());
     }
 
-    void updateEntry(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
+    void updateEntry(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const QString &rating, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
     {
 		if(!parent || parent->modelType != type)
 		{
 			return;
 		}
         // Find escrow / value in model
+        QList<EscrowTableEntry>::iterator lowerGuid = qLowerBound(
+            cachedEscrowTable.begin(), cachedEscrowTable.end(), escrow, EscrowTableEntryLessThan());
+        QList<EscrowTableEntry>::iterator upperGuid = qUpperBound(
+            cachedEscrowTable.begin(), cachedEscrowTable.end(), escrow, EscrowTableEntryLessThan());
+
         QList<EscrowTableEntry>::iterator lower = qLowerBound(
-            cachedEscrowTable.begin(), cachedEscrowTable.end(), escrow, EscrowTableEntryLessThan());
+            cachedEscrowTable.begin(), cachedEscrowTable.end(), itime, EscrowEntryLessThan());
         QList<EscrowTableEntry>::iterator upper = qUpperBound(
-            cachedEscrowTable.begin(), cachedEscrowTable.end(), escrow, EscrowTableEntryLessThan());
+            cachedEscrowTable.begin(), cachedEscrowTable.end(), itime, EscrowEntryLessThan());
         int lowerIndex = (lower - cachedEscrowTable.begin());
         int upperIndex = (upper - cachedEscrowTable.begin());
-        bool inModel = (lower != upper);
+
+        bool inModel = (lowerGuid != upperGuid);
 		int index;
         EscrowTableEntry::Type newEntryType = /*isData ? EscrowTableEntry::DataEscrow :*/ EscrowTableEntry::Escrow;
 
@@ -193,7 +225,7 @@ public:
                 break; 
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedEscrowTable.insert(lowerIndex, EscrowTableEntry(newEntryType, escrow, time, seller, arbiter, offer, offertitle, offeraccept, total, status, buyer));
+            cachedEscrowTable.insert(lowerIndex, EscrowTableEntry(newEntryType, escrow, itime, time, seller, arbiter, offer, offertitle, total, rating, status, buyer));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -202,15 +234,17 @@ public:
                 break;
             }
             lower->type = newEntryType;
+			lower->itime = itime;
 			lower->time = time;
             lower->seller = seller;
 			lower->arbiter = arbiter;
 			lower->offer = offer;
 			lower->offertitle = offertitle;
-			lower->offeraccept = offeraccept;
 			lower->total = total;
 			lower->status = status;
 			lower->buyer = buyer;
+			lower->rating = rating;
+			
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -247,7 +281,7 @@ EscrowTableModel::EscrowTableModel(CWallet *wallet, WalletModel *parent,  Escrow
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
 
-	columns << tr("Escrow") << tr("Time") <<  tr("Seller") << tr("Arbiter") << tr("Buyer") << tr("Offer") << tr("Title") << tr("Confirmation") << tr("Total") << tr("Status");		 
+	columns << tr("Escrow") << tr("Time") <<  tr("Seller") << tr("Arbiter") << tr("Buyer") << tr("Offer") << tr("Title") << tr("Total") << tr("Rating") << tr("Status");		 
     priv = new EscrowTablePriv(wallet, this);
 	refreshEscrowTable();
 }
@@ -255,6 +289,14 @@ EscrowTableModel::EscrowTableModel(CWallet *wallet, WalletModel *parent,  Escrow
 EscrowTableModel::~EscrowTableModel()
 {
     delete priv;
+}
+void EscrowTableModel::showComplete(bool show)
+{
+	if(modelType != MyEscrow)
+		return;
+	clear();
+	priv->showComplete = show;
+	priv->refreshEscrowTable(modelType);
 }
 void EscrowTableModel::refreshEscrowTable() 
 {
@@ -298,14 +340,14 @@ QVariant EscrowTableModel::data(const QModelIndex &index, int role) const
             return rec->offer;
         case OfferTitle:
             return rec->offertitle;
-        case OfferAccept:
-            return rec->offeraccept;
         case Total:
             return rec->total;
         case Status:
             return rec->status;
         case Buyer:
             return rec->buyer;
+        case Rating:
+			 return rec->rating;
         }
     }
     else if (role == EscrowRole)
@@ -335,6 +377,10 @@ QVariant EscrowTableModel::data(const QModelIndex &index, int role) const
     else if (role == TotalRole)
     {
         return rec->total;
+    }
+   else if (role == RatingRole)
+    {
+        return rec->rating;
     }
     return QVariant();
 }
@@ -376,16 +422,6 @@ bool EscrowTableModel::setData(const QModelIndex &index, const QVariant &value, 
                 editStatus = NO_CHANGES;
                 return false;
             }
-           
-            break;
-        case OfferAccept:
-            // Do nothing, if old value == new value
-            if(rec->offeraccept == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-           
             break;
         case Offer:
             // Do nothing, if old value == new value
@@ -426,6 +462,14 @@ bool EscrowTableModel::setData(const QModelIndex &index, const QVariant &value, 
         case Arbiter:
             // Do nothing, if old value == new value
             if(rec->arbiter == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+            break;
+       case Rating:
+            // Do nothing, if old value == new value
+            if(rec->rating == value.toString())
             {
                 editStatus = NO_CHANGES;
                 return false;
@@ -487,13 +531,13 @@ QModelIndex EscrowTableModel::index(int row, int column, const QModelIndex &pare
     }
 }
 
-void EscrowTableModel::updateEntry(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
+void EscrowTableModel::updateEntry(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const QString &rating, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
 {
     // Update escrow book model from Syscoin core
-    priv->updateEntry(escrow, time, seller, arbiter, offer, offertitle, offeraccept, total, status, buyer, type, statusi);
+    priv->updateEntry(escrow, itime, time, seller, arbiter, offer, offertitle, total, rating, status, buyer, type, statusi);
 }
 
-QString EscrowTableModel::addRow(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status,  const QString &buyer)
+QString EscrowTableModel::addRow(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const QString &rating,  const QString &status,  const QString &buyer)
 {
     std::string strEscrow = escrow.toStdString();
     editStatus = OK;
