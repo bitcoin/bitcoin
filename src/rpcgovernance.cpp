@@ -159,12 +159,12 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         CMasternode mn;
-        bool mnFound = mnodeman.Get(activeMasternode.vin, mn);
+        bool fMnFound = mnodeman.Get(activeMasternode.vin, mn);
 
         DBG( cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
              << ", vin = " << activeMasternode.vin.prevout.ToStringShort()
              << ", params.size() = " << params.size()
-             << ", mnFound = " << mnFound << endl; );
+             << ", fMnFound = " << fMnFound << endl; );
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -205,7 +205,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // Attempt to sign triggers if we are a MN
         if((govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) ||
            (govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG)) {
-            if(mnFound) {
+            if(fMnFound) {
                 govobj.SetMasternodeInfo(mn.vin);
                 govobj.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode);
             }
@@ -259,8 +259,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
         }
 
-        int success = 0;
-        int failed = 0;
+        int nSuccessful = 0;
+        int nFailed = 0;
 
         UniValue resultsObj(UniValue::VOBJ);
 
@@ -271,43 +271,43 @@ UniValue gobject(const UniValue& params, bool fHelp)
         UniValue returnObj(UniValue::VOBJ);
 
         CMasternode mn;
-        bool mnFound = mnodeman.Get(activeMasternode.vin, mn);
+        bool fMnFound = mnodeman.Get(activeMasternode.vin, mn);
 
-        if(!mnFound) {
-            failed++;
+        if(!fMnFound) {
+            nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
             resultsObj.push_back(Pair("dash.conf", statusObj));
-            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
             returnObj.push_back(Pair("detail", resultsObj));
             return returnObj;
         }
 
         CGovernanceVote vote(mn.vin, hash, eVoteSignal, eVoteOutcome);
         if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)) {
-            failed++;
+            nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
             resultsObj.push_back(Pair("dash.conf", statusObj));
-            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+            returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
             returnObj.push_back(Pair("detail", resultsObj));
             return returnObj;
         }
 
         CGovernanceException exception;
         if(governance.ProcessVoteAndRelay(vote, exception)) {
-            success++;
+            nSuccessful++;
             statusObj.push_back(Pair("result", "success"));
         }
         else {
-            failed++;
+            nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
         }
 
         resultsObj.push_back(Pair("dash.conf", statusObj));
 
-        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
         return returnObj;
@@ -338,8 +338,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
         }
 
-        int success = 0;
-        int failed = 0;
+        int nSuccessful = 0;
+        int nFailed = 0;
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
@@ -359,7 +359,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             UniValue statusObj(UniValue::VOBJ);
 
             if(!darkSendSigner.GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
-                failed++;
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly"));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -377,10 +377,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
             CTxIn vin(COutPoint(nTxHash, nOutputIndex));
 
             CMasternode mn;
-            bool mnFound = mnodeman.Get(vin, mn);
+            bool fMnFound = mnodeman.Get(vin, mn);
 
-            if(!mnFound) {
-                failed++;
+            if(!fMnFound) {
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -389,7 +389,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             CGovernanceVote vote(mn.vin, hash, eVoteSignal, eVoteOutcome);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-                failed++;
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -398,11 +398,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             CGovernanceException exception;
             if(governance.ProcessVoteAndRelay(vote, exception)) {
-                success++;
+                nSuccessful++;
                 statusObj.push_back(Pair("result", "success"));
             }
             else {
-                failed++;
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
             }
@@ -411,7 +411,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         UniValue returnObj(UniValue::VOBJ);
-        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
         return returnObj;
@@ -450,8 +450,8 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // EXECUTE VOTE FOR EACH MASTERNODE, COUNT SUCCESSES VS FAILURES
 
-        int success = 0;
-        int failed = 0;
+        int nSuccessful = 0;
+        int nFailed = 0;
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
@@ -478,7 +478,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
             UniValue statusObj(UniValue::VOBJ);
 
             if(!darkSendSigner.GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)) {
-                failed++;
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", strprintf("Invalid masternode key %s.", mne.getPrivKey())));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -498,10 +498,10 @@ UniValue gobject(const UniValue& params, bool fHelp)
             CTxIn vin(COutPoint(nTxHash, nOutputIndex));
 
             CMasternode mn;
-            bool mnFound = mnodeman.Get(vin, mn);
+            bool fMnFound = mnodeman.Get(vin, mn);
 
-            if(!mnFound) {
-                failed++;
+            if(!fMnFound) {
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Masternode must be publically available on network to vote. Masternode not found."));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -512,7 +512,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             CGovernanceVote vote(vin, hash, eVoteSignal, eVoteOutcome);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)) {
-                failed++;
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
@@ -523,11 +523,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             CGovernanceException exception;
             if(governance.ProcessVoteAndRelay(vote, exception)) {
-                success++;
+                nSuccessful++;
                 statusObj.push_back(Pair("result", "success"));
             }
             else {
-                failed++;
+                nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
             }
@@ -538,7 +538,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         // REPORT STATS TO THE USER
 
         UniValue returnObj(UniValue::VOBJ);
-        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
         return returnObj;
@@ -730,7 +730,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
     // GETVOTES FOR SPECIFIC GOVERNANCE OBJECT
     if(strCommand == "getcurrentvotes")
     {
-        if (params.size() < 2 || params.size() == 3 || params.size() > 4)
+        if (params.size() != 2 && params.size() != 4)
             throw std::runtime_error(
                 "Correct usage is 'gobject getcurrentvotes <governance-hash> [txid vout_index]'"
                 );
@@ -812,10 +812,10 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     }
 
     CMasternode mn;
-    bool mnFound = mnodeman.Get(vin, mn);
+    bool fMnFound = mnodeman.Get(vin, mn);
 
-    if(!mnFound) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
+    if(!fMnFound) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.prevout.ToStringShort());
     }
 
     CGovernanceVote vote(vin, hashGovObj, eVoteSignal, eVoteOutcome);
@@ -898,11 +898,11 @@ UniValue getsuperblockbudget(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1) {
         throw std::runtime_error(
             "getsuperblockbudget index\n"
-            "\nReturns the absolute minimum number of votes needed to trigger a governance action.\n"
+            "\nReturns the absolute maximum sum of superblock payments allowed.\n"
             "\nArguments:\n"
             "1. index         (numeric, required) The block index\n"
             "\nResult:\n"
-            "n    (numeric) The current minimum governance quorum\n"
+            "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n"
             "\nExamples:\n"
             + HelpExampleCli("getsuperblockbudget", "1000")
             + HelpExampleRpc("getsuperblockbudget", "1000")
