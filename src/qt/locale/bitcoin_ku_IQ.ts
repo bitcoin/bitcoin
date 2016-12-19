@@ -28,6 +28,10 @@
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -91,6 +95,22 @@
     <message>
         <source>Priority</source>
         <translation>لەپێشی</translation>
+    </message>
+    <message>
+        <source>high</source>
+        <translation>بەرز</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>نزم</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>بەڵێ</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>نەخێر</translation>
     </message>
     </context>
 <context>
@@ -161,12 +181,28 @@
         <translation>&amp;زانیاری</translation>
     </message>
     <message>
+        <source>General</source>
+        <translation>گشتی</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>تۆڕ</translation>
+    </message>
+    <message>
         <source>Name</source>
         <translation>ناو</translation>
     </message>
     <message>
+        <source>Sent</source>
+        <translation>نێدرا</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>وەشان</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>خزمەتگوزاریەکان</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -179,6 +215,34 @@
     <message>
         <source>Totals</source>
         <translation>گشتییەکان</translation>
+    </message>
+    <message>
+        <source>In:</source>
+        <translation>لە ناو</translation>
+    </message>
+    <message>
+        <source>Out:</source>
+        <translation>لەدەرەوە</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1&amp;سات</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1&amp;ڕۆژ</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1&amp;هەفتە</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1&amp;ساڵ</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>هەرگیز</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -214,6 +278,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -270,6 +338,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Address</source>
+        <translation>ناوونیشان</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

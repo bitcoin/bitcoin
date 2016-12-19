@@ -41,9 +41,21 @@
         <source>&amp;Delete</source>
         <translation>삭제(&amp;D)</translation>
     </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>선택 (&amp;H)</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>편집 (&amp;E)</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>주소</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -465,6 +477,10 @@
     <message>
         <source>Priority</source>
         <translation>우선순위</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>주소 복사</translation>
     </message>
     </context>
 <context>
@@ -1380,6 +1396,10 @@
         <source>&amp;Save Image...</source>
         <translation>이미지 저장(&amp;S)...</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation>주소</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -1744,6 +1764,14 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Copy address</source>
+        <translation>주소 복사</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>주소</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

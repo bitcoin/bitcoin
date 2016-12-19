@@ -619,6 +619,10 @@
     </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>$Lưu hình ảnh...</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -646,6 +650,58 @@
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1&amp;giờ</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1&amp;ngày</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1&amp;tuần</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1&amp;năm</translation>
+    </message>
+    <message>
+        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
+        <translation>Sử dụng phím lên và xuống để di chuyển lịch sử, và &lt;b&gt;Ctrl-L&lt;/b&gt; để xóa màn hình</translation>
+    </message>
+    <message>
+        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
+        <translation>Gõ &lt;b&gt;help&lt;/b&gt; để xem nhưng câu lệnh có sẵn</translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>không bao giờ</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Đồng ý</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Không</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -653,19 +709,119 @@
         <source>&amp;Amount:</source>
         <translation>Lượng:</translation>
     </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Nhãn</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;Tin nhắn:</translation>
+    </message>
+    <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>Sử dụng form này để yêu cầu thanh toán. Tất cả các trường &lt;b&gt;không bắt buộc&lt;b&gt;</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Xóa tất cả các trường trong biểu mẫu</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Xóa</translation>
+    </message>
+    <message>
+        <source>Requested payments history</source>
+        <translation>Lịch sử yêu cầu thanh toán</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>&amp;Yêu cầu thanh toán</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Hiển thị</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>Xóa khỏi danh sách</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Xóa</translation>
+    </message>
+    <message>
+        <source>Copy message</source>
+        <translation>Copy tin nhắn</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>QR Code</source>
+        <translation>QR Code</translation>
+    </message>
+    <message>
+        <source>Copy &amp;URI</source>
+        <translation>Copy &amp;URI</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Copy Địa Chỉ</translation>
     </message>
-    </context>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>$Lưu hình ảnh...</translation>
+    </message>
+    <message>
+        <source>Request payment to %1</source>
+        <translation>Yêu cầu thanh toán cho %1</translation>
+    </message>
+    <message>
+        <source>Payment information</source>
+        <translation>Thông tin thanh toán</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Tin nhắn</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Lỗi khi encode từ URI thành QR Code</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Message</source>
+        <translation>Tin nhắn</translation>
+    </message>
+    <message>
+        <source>(no message)</source>
+        <translation>(không tin nhắn)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Gửi Coins</translation>
+    </message>
+    <message>
+        <source>Coin Control Features</source>
+        <translation>Tính năng Control Coin</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>Nhập...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation>Tự động chọn</translation>
+    </message>
     <message>
         <source>Insufficient funds!</source>
         <translation>Không đủ tiền</translation>
@@ -698,6 +854,86 @@
         <source>Change:</source>
         <translation>Thay đổi:</translation>
     </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Phí giao dịch</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation>Chọn...</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>Thu gọn fee-settings</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>trên KB</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Ẩn</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>Tổng cộng ít nhất</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(Đọc hướng dẫn)</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Thời gian xác nhận</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>Bình thường</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>Nhanh</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation>Gửi đến nhiều người nhận trong một lần</translation>
+    </message>
+    <message>
+        <source>Add &amp;Recipient</source>
+        <translation>Thêm &amp;Người nhận</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Xóa tất cả các trường trong biểu mẫu</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation>Xóa &amp;Tất cả</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation>Tài khoản</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation>Xác nhận sự gửi</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 đến %2</translation>
+    </message>
+    <message>
+        <source>Total Amount %1</source>
+        <translation>Tổng cộng %1</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>hoặc</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Xác nhận gửi coins</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -705,15 +941,27 @@
         <source>A&amp;mount:</source>
         <translation>Lượng:</translation>
     </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Nhãn</translation>
+    </message>
     </context>
 <context>
     <name>SendConfirmationDialog</name>
-    </context>
+    <message>
+        <source>Yes</source>
+        <translation>Đồng ý</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation>Xóa &amp;Tất cả</translation>
+    </message>
     </context>
 <context>
     <name>SplashScreen</name>
@@ -723,6 +971,10 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Message</source>
+        <translation>Tin nhắn</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -741,7 +993,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>Send Coins</source>
+        <translation>Gửi Coins</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     </context>

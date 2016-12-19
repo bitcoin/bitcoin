@@ -25,9 +25,21 @@
         <source>&amp;Delete</source>
         <translation>&amp;அழி</translation>
     </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>முகவரிகள் அனுப்பப்படுகின்றன</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>முகவரிகள் பெறப்படுகின்றன</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation>முகவரி</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -558,6 +570,10 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;படத்தை சேமி...</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation>முகவரி</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -678,6 +694,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Address</source>
+        <translation>முகவரி</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
