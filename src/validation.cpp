@@ -3030,12 +3030,14 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 }
 
 // Exposed wrapper for AcceptBlockHeader
-bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
+bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex)
 {
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
-            if (!AcceptBlockHeader(header, state, chainparams, ppindex)) {
+            // cast away the ppindex-returns-const CBlockIndex - we're just assigning it to a CBlockIndex*
+            // that we own and is updated non-const anyway
+            if (!AcceptBlockHeader(header, state, chainparams, const_cast<CBlockIndex**>(ppindex))) {
                 return false;
             }
         }
