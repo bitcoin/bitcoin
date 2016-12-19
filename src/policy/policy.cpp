@@ -158,11 +158,13 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
 int32_t Policy::blockSizeAcceptLimit()
 {
-    auto limit = -1;
+    int limit = -1;
     auto userlimit = mapArgs.find("-blocksizeacceptlimit");
-    if (userlimit == mapArgs.end()) // fallback to the BitcoinUnlimited name.
-       userlimit = mapArgs.find("-excessiveblocksize");
-    if (userlimit != mapArgs.end()) {
+    if (userlimit == mapArgs.end()) { // fallback to the BitcoinUnlimited name.
+       limit = GetArg("-excessiveblocksize", -1);
+    }
+    else {
+        // this is in fractions of a megabyte (for instance "3.2")
         double limitInMB = atof(userlimit->second.c_str());
         if (limitInMB <= 0) {
             LogPrintf("Failed to understand blocksizeacceptlimit: '%s'\n", userlimit->second.c_str());

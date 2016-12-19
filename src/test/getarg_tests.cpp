@@ -4,6 +4,7 @@
 
 #include "util.h"
 #include "test/test_bitcoin.h"
+#include <policy/policy.h>
 
 #include <string>
 #include <vector>
@@ -157,6 +158,22 @@ BOOST_AUTO_TEST_CASE(boolargno)
     ResetArgs("-nofoo -foo"); // foo always wins:
     BOOST_CHECK(GetBoolArg("-foo", true));
     BOOST_CHECK(GetBoolArg("-foo", false));
+}
+
+BOOST_AUTO_TEST_CASE(blockSizeAcceptLimit)
+{
+    ResetArgs("-excessiveblocksize=5004000");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 5004000);
+
+    // blocksizeacceptlimit always wins
+    ResetArgs("-excessiveblocksize=5004000 -blocksizeacceptlimit=1.2");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
+
+    ResetArgs("-blocksizeacceptlimit=1.2");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
+
+    ResetArgs("-blocksizeacceptlimit=1.25");
+    BOOST_CHECK_EQUAL(Policy::blockSizeAcceptLimit(), 1200000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
