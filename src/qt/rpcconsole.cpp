@@ -137,6 +137,8 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
     enum CmdParseState
     {
         STATE_EATING_SPACES,
+        STATE_EATING_SPACES_IN_ARG,
+        STATE_EATING_SPACES_IN_BRACKETS,
         STATE_ARGUMENT,
         STATE_SINGLEQUOTED,
         STATE_DOUBLEQUOTED,
@@ -220,6 +222,8 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     break;
             }
             case STATE_ARGUMENT: // In or after argument
+            case STATE_EATING_SPACES_IN_ARG:
+            case STATE_EATING_SPACES_IN_BRACKETS:
             case STATE_EATING_SPACES: // Handle runs of whitespace
                 switch(ch)
             {
@@ -227,19 +231,20 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                 case '\'': state = STATE_SINGLEQUOTED; break;
                 case '\\': state = STATE_ESCAPE_OUTER; break;
                 case '(': case ')': case '\n':
+                    if (state == STATE_EATING_SPACES_IN_ARG)
+                        throw std::runtime_error("Invalid Syntax");
                     if (state == STATE_ARGUMENT)
                     {
                         if (ch == '(' && stack.size() && stack.back().size() > 0)
                             stack.push_back(std::vector<std::string>());
-                        if (curarg.size())
-                        {
-                            // don't allow commands after executed commands on baselevel
-                            if (!stack.size())
-                                throw std::runtime_error("Invalid Syntax");
-                            stack.back().push_back(curarg);
-                        }
+
+                        // don't allow commands after executed commands on baselevel
+                        if (!stack.size())
+                            throw std::runtime_error("Invalid Syntax");
+
+                        stack.back().push_back(curarg);
                         curarg.clear();
-                        state = STATE_EATING_SPACES;
+                        state = STATE_EATING_SPACES_IN_BRACKETS;
                     }
                     if ((ch == ')' || ch == '\n') && stack.size() > 0)
                     {
@@ -256,11 +261,18 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     }
                     break;
                 case ' ': case ',': case '\t':
-                    if(state == STATE_ARGUMENT) // Space ends argument
+                    if(state == STATE_EATING_SPACES_IN_ARG && curarg.empty() && ch == ',')
+                        throw std::runtime_error("Invalid Syntax");
+
+                    else if(state == STATE_ARGUMENT) // Space ends argument
                     {
-                        if (curarg.size())
-                            stack.back().push_back(curarg);
+                        stack.back().push_back(curarg);
                         curarg.clear();
+                    }
+                    if ((state == STATE_EATING_SPACES_IN_BRACKETS || state == STATE_ARGUMENT) && ch == ',')
+                    {
+                        state = STATE_EATING_SPACES_IN_ARG;
+                        break;
                     }
                     state = STATE_EATING_SPACES;
                     break;
