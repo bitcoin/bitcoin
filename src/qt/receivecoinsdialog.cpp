@@ -104,6 +104,7 @@ void ReceiveCoinsDialog::clear()
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
     ui->freezeBlock->setText("");
+    ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
     updateDisplayUnit();
 }
 
@@ -125,6 +126,18 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
+void ReceiveCoinsDialog::on_freezeDateTime_editingFinished()
+{
+	if (ui->freezeDateTime->dateTime() > QDateTime::fromMSecsSinceEpoch(0))
+		ui->freezeBlock->setText("");
+}
+
+void ReceiveCoinsDialog::on_freezeBlock_editingFinished()
+{
+	if (ui->freezeBlock->text() != "")
+		ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
+}
+
 void ReceiveCoinsDialog::on_receiveButton_clicked()
 {
     if(!model || !model->getOptionsModel() || !model->getAddressTableModel() || !model->getRecentRequestsTableModel())
@@ -132,8 +145,17 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     QString address;
     QString label = ui->reqLabel->text();
-    std::string freezeText = ui->freezeBlock->text().toStdString();
-    int64_t nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);  // Get the Freeze number from the ui
+    std::string sFreezeLockTime = "";
+
+    // Get the Freeze number from the ui
+    int64_t nFreezeLockTime = 0;
+	// try freezeBlock
+	std::string freezeText = ui->freezeBlock->text().toStdString();
+	if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
+	// try freezeDateTime
+	if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch();
+
+
     if(ui->reuseAddress->isChecked())
     {
         /* Choose existing receiving address */
@@ -153,12 +175,17 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         /* Generate new receiving address and add to the address table */
         address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", 0);
         if (nFreezeLockTime > 0)
+        {
         	/* Generate the freeze redeemScript and add to the address table.
         	 * The address variable needs to show the freeze P2SH public key  */
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
+            sFreezeLockTime = nFreezeLockTime < LOCKTIME_THRESHOLD ?
+            					"Block: " + std::to_string(nFreezeLockTime) : ui->freezeDateTime->dateTime().toString().toStdString();
+
+        }
     }
     SendCoinsRecipient info(address, label,
-        ui->reqAmount->value(), ui->reqMessage->text());
+        ui->reqAmount->value(), ui->reqMessage->text(), sFreezeLockTime);
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model->getOptionsModel());
