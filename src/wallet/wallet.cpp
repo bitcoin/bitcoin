@@ -2844,7 +2844,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, CAmoun
 bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount amount, bool fUseInstantSend)
 {
     // make our change address
-    CReserveKey reservekey(pwalletMain);
+    CReserveKey reservekey(this);
 
     CScript scriptChange;
     scriptChange << OP_RETURN << ToByteVector(hash);
