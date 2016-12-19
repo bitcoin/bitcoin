@@ -154,6 +154,7 @@ testScripts = [
     'bumpfee.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
+    'auxiliaryblockrequests.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
