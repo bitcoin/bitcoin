@@ -90,7 +90,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     lastPing(mnb.lastPing),
     vchSig(mnb.vchSig),
     sigTime(mnb.sigTime),
-    nLastDsq(mnb.nLastDsq),
+    nLastDsq(0),
     nTimeLastChecked(0),
     nTimeLastPaid(0),
     nTimeLastWatchdogVote(mnb.sigTime),

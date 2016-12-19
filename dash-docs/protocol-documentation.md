@@ -67,7 +67,7 @@ Whenever a masternode comes online or a client is syncing, they will send this m
 | 8 | sigTime | int64_t | Time which the signature was created
 | 4 | nProtocolVersion | int | The protocol version of the masternode
 | # | lastPing | CMasternodePing | The last known ping of the masternode
-| 8 | nLastDsq | int64_t | The last time the masternode sent a DSQ message (for mixing)
+| 8 | nLastDsq | int64_t | The last time the masternode sent a DSQ message (for mixing) (DEPRECATED)
 
 ### MNPING - "mnp"
 

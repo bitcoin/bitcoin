@@ -19,7 +19,7 @@
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
-const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-1";
+const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-2";
 
 struct CompareLastPaidBlock
 {
@@ -699,6 +699,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
+
+        // backward compatibility patch
+        if(pfrom->nVersion < 70204) {
+            int64_t nLastDsqDummy;
+            vRecv >> nLastDsqDummy;
+        }
 
         int nDos = 0;
 
