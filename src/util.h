@@ -19,6 +19,7 @@
 #include "tinyformat.h"
 #include "utiltime.h"
 #include "amount.h"
+#include "warnings.h"
 
 #include <atomic>
 #include <exception>
@@ -66,7 +67,7 @@ extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;
-extern std::string strMiscWarning;
+
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
 extern bool fLogThreadNames;

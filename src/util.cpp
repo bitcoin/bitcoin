@@ -124,7 +124,7 @@ map<string, vector<string> > mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
-string strMiscWarning;
+
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
 bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
 bool fLogThreadNames = DEFAULT_LOGTHREADNAMES;
@@ -592,7 +592,7 @@ const boost::filesystem::path &GetBackupsDir()
         if (fs::is_directory(backupsDir)) return backupsDir;
         // Fallback to default path if it doesn't
         LogPrintf("%s: Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.\n", __func__);
-        strMiscWarning = _("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path.");
+        SetMiscWarning(_("Warning: incorrect parameter -walletbackupsdir, path must exist! Using default path."));
     }
     // Default path
     backupsDir = GetDataDir() / "backups";
