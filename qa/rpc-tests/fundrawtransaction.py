@@ -651,7 +651,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
 
         inputs = []
-        outputs = {self.nodes[2].getnewaddress() : 1}
+        outputs = {self.nodes[3].getnewaddress() : 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
         result = self.nodes[3].fundrawtransaction(rawtx) # uses min_relay_tx_fee (set by settxfee)
         result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2*min_relay_tx_fee})
@@ -659,6 +659,32 @@ class RawTransactionsTest(BitcoinTestFramework):
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+
+        #############################
+        # Test address reuse option #
+        #############################
+
+        result3 = self.nodes[3].fundrawtransaction(rawtx, {"reserveChangeKey": False})
+        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
+        changeaddress = ""
+        for out in res_dec['vout']:
+            if out['value'] > 1.0:
+                changeaddress += out['scriptPubKey']['addresses'][0]
+        assert(changeaddress != "")
+        nextaddr = self.nodes[3].getnewaddress()
+        # frt should not have removed the key from the keypool
+        assert(changeaddress == nextaddr)
+
+        result3 = self.nodes[3].fundrawtransaction(rawtx)
+        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
+        changeaddress = ""
+        for out in res_dec['vout']:
+            if out['value'] > 1.0:
+                changeaddress += out['scriptPubKey']['addresses'][0]
+        assert(changeaddress != "")
+        nextaddr = self.nodes[3].getnewaddress()
+        # Now the change address key should be removed from the keypool
+        assert(changeaddress != nextaddr)
 
         ######################################
         # Test subtractFeeFromOutputs option #
