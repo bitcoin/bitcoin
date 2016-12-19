@@ -114,6 +114,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getmempooldescendants", 1 },
     { "requestblocks", 1 },
     { "requestblocks", 2 },
+    { "setautorequestblocks", 0 },
 };
 
 class CRPCConvertTable

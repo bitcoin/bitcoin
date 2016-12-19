@@ -62,6 +62,8 @@ void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 static const uint64_t RANDOMIZER_ID_ADDRESS_RELAY = 0x3cac0035b5866b90ULL; // SHA256("main address relay")[0:8]
 
+std::atomic<bool> fAutoRequestBlocks(DEFAULT_AUTOMATIC_BLOCK_REQUESTS);
+
 // Internal stuff
 namespace {
     /** Number of nodes with fSyncStarted. */
@@ -498,6 +500,10 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
         // if we haven't completed the individual CAuxiliaryBlockRequest, we wont continue with "normal" IBD
         return;
     }
+
+    // don't request any other blocks if we are in non autorequest mode (usefull for non-validation mode)
+    if (!fAutoRequestBlocks)
+        return;
 
     if (state->pindexBestKnownBlock == NULL || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork) {
         // This peer has nothing interesting.

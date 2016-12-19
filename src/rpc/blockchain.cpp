@@ -11,6 +11,7 @@
 #include "coins.h"
 #include "consensus/validation.h"
 #include "validation.h"
+#include "net_processing.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "rpc/server.h"
@@ -1464,6 +1465,30 @@ UniValue requestblocks(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unkown action");
 }
 
+UniValue setautorequestblocks(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+                            "setautorequestblocks (true|false)\n"
+                            "\nIf set to false, blocks will no longer be requested automatically\n"
+                            "Useful for a pure non-validation mode in conjunction with requestblocks.\n"
+                            "\nArguments:\n"
+                            "1. state             (boolean, optional) enables or disables the automatic block download\n"
+                            "\nResult:\n"
+                            "   status: <true|false> (\"true\" if a automatic blockdownloads are enabled)\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("setautorequestblocks", "\"false\"")
+                            + HelpExampleRpc("setautorequestblocks", "\"false\"")
+                            );
+
+    if (request.params.size() == 1)
+        fAutoRequestBlocks = request.params[0].get_bool();
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("status", UniValue(fAutoRequestBlocks));
+    return ret;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1492,6 +1517,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitfornewblock",        &waitfornewblock,        true  },
     { "hidden",             "waitforblock",           &waitforblock,           true  },
     { "hidden",             "waitforblockheight",     &waitforblockheight,     true  },
+    { "hidden",             "setautorequestblocks",   &setautorequestblocks,   true  },
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
