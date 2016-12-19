@@ -41,6 +41,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
+#include "warnings.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
