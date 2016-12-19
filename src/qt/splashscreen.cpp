@@ -41,8 +41,8 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     // define text to place
     QString titleText       = tr("Bitcoin Classic");
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
-    QString copyrightCore   = QChar(0xA9)+QString(" 2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Core developers"));
-    QString copyrightClassic   = QChar(0xA9)+QString(" %1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Classic developers"));
+    QString copyrightCore   = QString("© 2009-2016 ") + tr("The Bitcoin Core developers");
+    QString copyrightClassic   = QString("© 2016-%1 ").arg(COPYRIGHT_YEAR) + tr("The Bitcoin Classic developers");
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();

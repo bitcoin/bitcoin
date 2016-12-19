@@ -248,4 +248,15 @@ BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) {
                    "b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58");
 }
 
+BOOST_AUTO_TEST_CASE(tomsTest) {
+    CSHA256 hasher;
+    std::vector<char> data;
+    data.resize(1E6);
+    for (int i = 0; i < 1000; ++i) {
+        hasher.Write((unsigned char*)&data[0], data.size());
+    }
+    unsigned char hash[100];
+    hasher.Finalize(hash);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

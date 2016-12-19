@@ -1111,6 +1111,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
+
+        // don't allow negative fees into the mempool.
+        if (nFees < 0)
+            return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-negative-fee");
+
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
         CAmount nModifiedFees = nFees;
         double nPriorityDummy = 0;

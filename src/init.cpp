@@ -516,22 +516,21 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE));
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
+    strUsage += HelpMessageGroup("Admin server options: (Experimental!)");
+    strUsage += HelpMessageOpt("-adminserver", "Accept connections on the admin-server (default 0)");
+    strUsage += HelpMessageOpt("-admincookiefile=<loc>", "Location of the adminserver auth cookie (default: data dir)");
     return strUsage;
 }
 
 std::string LicenseInfo()
 {
-    // todo: remove urls from translations on next change
-    return FormatParagraph(strprintf(_("Copyright (C) 2009-%i The Bitcoin Core Developers"), COPYRIGHT_YEAR)) + "\n" +
+    return FormatParagraph("Copyright (C) 2009-2016 The Bitcoin Core developers") + "\n" +
            "\n" +
-           FormatParagraph(strprintf(_("Copyright (C) %i The Bitcoin Classic Developers"), COPYRIGHT_YEAR)) + "\n" +
+           FormatParagraph(strprintf("Copyright (C) 2016-%i The Bitcoin Classic developers", COPYRIGHT_YEAR)) + "\n" +
            "\n" +
-           FormatParagraph(_("This is experimental software.")) + "\n" +
+           FormatParagraph("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.\n") +
            "\n" +
-           FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
-           "\n" +
-           FormatParagraph(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.")) +
-           "\n";
+           FormatParagraph("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.\n");
 }
 
 static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex)
