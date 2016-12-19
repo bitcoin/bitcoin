@@ -136,6 +136,13 @@ void ReceiveCoinsDialog::on_freezeBlock_editingFinished()
 {
 	if (ui->freezeBlock->text() != "")
 		ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
+
+	/* limit check */
+	std::string freezeText = ui->freezeBlock->text().toStdString();
+	int64_t nFreezeLockTime = 0;
+	if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
+	if (nFreezeLockTime < 1 || nFreezeLockTime > LOCKTIME_THRESHOLD-1)
+			ui->freezeBlock->setText("");
 }
 
 void ReceiveCoinsDialog::on_receiveButton_clicked()
@@ -179,8 +186,11 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         	/* Generate the freeze redeemScript and add to the address table.
         	 * The address variable needs to show the freeze P2SH public key  */
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
-            sFreezeLockTime = nFreezeLockTime < LOCKTIME_THRESHOLD ?
-            					"Block: " + std::to_string(nFreezeLockTime) : ui->freezeDateTime->dateTime().toString().toStdString();
+
+            if (nFreezeLockTime < LOCKTIME_THRESHOLD)
+            	sFreezeLockTime = "Block: " + ui->freezeBlock->text().toStdString();
+            else
+            	ui->freezeDateTime->dateTime().toString().toStdString();
 
         }
     }
