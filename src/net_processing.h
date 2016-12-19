@@ -23,6 +23,10 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
 void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
+/** if disabled, blocks will not be requested automatically, usefull for non-validation mode */
+static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
+extern std::atomic<bool> fAutoRequestBlocks;
+
 class PeerLogicValidation : public CValidationInterface {
 private:
     CConnman* connman;

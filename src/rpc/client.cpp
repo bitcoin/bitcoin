@@ -120,6 +120,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "bumpfee", 1, "options" },
     { "requestblocks", 1, "blockhashes" },
     { "requestblocks", 2, "pass-internally" },
+    { "setautorequestblocks", 0, "state" },
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },

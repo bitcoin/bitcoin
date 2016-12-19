@@ -11,6 +11,7 @@
 #include "coins.h"
 #include "consensus/validation.h"
 #include "validation.h"
+#include "net_processing.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "rpc/server.h"
@@ -192,7 +193,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
         latestblock.hash = pindex->GetBlockHash();
         latestblock.height = pindex->nHeight;
     }
-	cond_blockchange.notify_all();
+    cond_blockchange.notify_all();
 }
 
 UniValue waitfornewblock(const JSONRPCRequest& request)
@@ -1204,7 +1205,7 @@ UniValue getchaintips(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     /*
-     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them. 
+     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them.
      * Algorithm:
      *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
      *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
@@ -1511,6 +1512,30 @@ UniValue requestblocks(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unkown action");
 }
 
+UniValue setautorequestblocks(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+                            "setautorequestblocks (true|false)\n"
+                            "\nIf set to false, blocks will no longer be requested automatically\n"
+                            "Useful for a pure non-validation mode in conjunction with requestblocks.\n"
+                            "\nArguments:\n"
+                            "1. state             (boolean, optional) enables or disables the automatic block download\n"
+                            "\nResult:\n"
+                            "   status: <true|false> (\"true\" if a automatic blockdownloads are enabled)\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("setautorequestblocks", "\"false\"")
+                            + HelpExampleRpc("setautorequestblocks", "\"false\"")
+                            );
+
+    if (request.params.size() == 1)
+        fAutoRequestBlocks = request.params[0].get_bool();
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("status", UniValue(fAutoRequestBlocks));
+    return ret;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
@@ -1540,6 +1565,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitfornewblock",        &waitfornewblock,        true,  {"timeout"} },
     { "hidden",             "waitforblock",           &waitforblock,           true,  {"blockhash","timeout"} },
     { "hidden",             "waitforblockheight",     &waitforblockheight,     true,  {"height","timeout"} },
+    { "hidden",             "setautorequestblocks",   &setautorequestblocks,   true,  {"state"} },
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
