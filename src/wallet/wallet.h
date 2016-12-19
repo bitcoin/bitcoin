@@ -886,7 +886,16 @@ public:
     DBErrors ReorderTransactions();
 
     void MarkDirty();
-    bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
+
+    //! Callback for updating transaction metadata in mapWallet.
+    //!
+    //! @param wtx - reference to mapWallet transaction to update
+    //! @param new_tx - true if wtx is newly inserted, false if it previously existed
+    //!
+    //! @return true if wtx is changed and needs to be saved to disk, otherwise false
+    using UpdateWalletTxFn = std::function<bool(CWalletTx& wtx, bool new_tx)>;
+
+    CWalletTx* AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true);
     void LoadToWallet(CWalletTx& wtxIn) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
     void blockConnected(const CBlock& block, int height) override;
