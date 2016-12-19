@@ -111,6 +111,7 @@ void ReceiveCoinsDialog::clear()
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
     ui->freezeBlock->setText("");
+    ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
     updateDisplayUnit();
 }
 
@@ -132,52 +133,16 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
-void ReceiveCoinsDialog::on_freezeDialog_hide()
+void ReceiveCoinsDialog::on_freezeDateTime_editingFinished()
 {
-    freezeDialog->getFreezeLockTime(nFreezeLockTime);
-
-    if (nFreezeLockTime == 0)
-    {
-        // user cancelled freeze
-        ui->freezeCheck->setChecked(false);
-        ui->freezeCheck->setText("Coin Freeze");
-    }
-    else
-    {
-        // user selected freeze
-        ui->freezeCheck->setChecked(true);
-
-        QString freezeLabel;
-        if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
-          {
-            uint64_t height = GetBlockchainHeight();
-            uint64_t freezeHeight = nFreezeLockTime.getint();
-            uint64_t approxTimeMs = ((freezeHeight-height)*10*60*1000) + QDateTime::currentDateTime().toMSecsSinceEpoch();
-            
-            freezeLabel = (QString)("block: ") +  QString::number(freezeHeight) + (QString)(" (approximately: ") + QDateTime::fromMSecsSinceEpoch(approxTimeMs).date().toString() + ")";
-          }
-        else
-            freezeLabel = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString("yyyy/MM/dd hh:mm");
-        ui->freezeCheck->setText("Coin freeze until " + freezeLabel);
-    }
+	if (ui->freezeDateTime->dateTime() > QDateTime::fromMSecsSinceEpoch(0))
+		ui->freezeBlock->setText("");
 }
 
-void ReceiveCoinsDialog::on_freezeCheck_clicked()
+void ReceiveCoinsDialog::on_freezeBlock_editingFinished()
 {
-  if (ui->freezeCheck->isChecked())  // If the user clicked on coin freeze, bring up the freeze dialog box
-    {
-      if (!freezeDialog)
-        {
-          freezeDialog = new ReceiveFreezeDialog(this);
-          freezeDialog->setModel(model->getOptionsModel());
-        }
-      freezeDialog->show();
-    }
-  else  // if the user unchecked, then hide the freeze dialog if its still showing
-    {
-      if (freezeDialog) freezeDialog->hide();
-    }
-
+	if (ui->freezeBlock->text() != "")
+		ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
 }
 
 void ReceiveCoinsDialog::on_receiveButton_clicked()
@@ -187,8 +152,17 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     QString address;
     QString label = ui->reqLabel->text();
-    std::string freezeText = ui->freezeBlock->text().toStdString();
-    int64_t nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);  // Get the Freeze number from the ui
+    std::string sFreezeLockTime = "";
+
+    // Get the Freeze number from the ui
+    int64_t nFreezeLockTime = 0;
+	// try freezeBlock
+	std::string freezeText = ui->freezeBlock->text().toStdString();
+	if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
+	// try freezeDateTime
+	if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch();
+
+
     if(ui->reuseAddress->isChecked())
     {
         /* Choose existing receiving address */
@@ -208,12 +182,21 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         /* Generate new receiving address and add to the address table */
         address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", 0);
         if (nFreezeLockTime > 0)
+        {
         	/* Generate the freeze redeemScript and add to the address table.
         	 * The address variable needs to show the freeze P2SH public key  */
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
+            sFreezeLockTime = nFreezeLockTime < LOCKTIME_THRESHOLD ?
+            					"Block: " + std::to_string(nFreezeLockTime) : ui->freezeDateTime->dateTime().toString().toStdString();
+
+        }
     }
     SendCoinsRecipient info(address, label,
+<<<<<<< HEAD
         ui->reqAmount->value(), ui->reqMessage->text(), sFreezeLockTime, "");
+=======
+        ui->reqAmount->value(), ui->reqMessage->text(), sFreezeLockTime);
+>>>>>>> Add freezeDateTime with calendar. Add Freeze to SendCoinsRecipient.
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model->getOptionsModel());
