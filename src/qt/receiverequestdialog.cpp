@@ -150,7 +150,7 @@ void ReceiveRequestDialog::update()
         html += "<b>"+tr("Label")+"</b>: " + GUIUtil::HtmlEscape(info.label) + "<br>";
     if(!info.message.isEmpty())
         html += "<b>"+tr("Message")+"</b>: " + GUIUtil::HtmlEscape(info.message) + "<br>";
-    if(info.freezeLockTime != "")
+    if(!info.freezeLockTime.isEmpty())
     	html += "<b>"+tr("Freeze until")+"</b> " + GUIUtil::HtmlEscape(info.freezeLockTime) + "<br>";
     ui->outUri->setText(html);
 

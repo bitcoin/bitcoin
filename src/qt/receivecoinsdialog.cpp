@@ -159,7 +159,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     QString address;
     QString label = ui->reqLabel->text();
-    std::string sFreezeLockTime = "";
+    QString sFreezeLockTime = "";
 
     // Get the Freeze number from the ui
     int64_t nFreezeLockTime = 0;
@@ -195,9 +195,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
 
             if (nFreezeLockTime < LOCKTIME_THRESHOLD)
-            	sFreezeLockTime = "Block: " + ui->freezeBlock->text().toStdString();
+            	sFreezeLockTime = "Block: " + ui->freezeBlock->text();
             else
-            	ui->freezeDateTime->dateTime().toString().toStdString();
+            	ui->freezeDateTime->dateTime().toString();
 
         }
     }
