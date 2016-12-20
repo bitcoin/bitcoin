@@ -3,23 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core_io.h"
-#include "main.h"
-#include "init.h"
-
-#include "flat-database.h"
+#include "darksend.h"
 #include "governance.h"
+#include "governance-classes.h"
 #include "governance-object.h"
 #include "governance-vote.h"
-#include "governance-classes.h"
-#include "masternode.h"
-#include "governance.h"
-#include "darksend.h"
 #include "masternodeman.h"
-#include "masternode-sync.h"
-#include "netfulfilledman.h"
 #include "util.h"
-#include "addrman.h"
-#include <boost/lexical_cast.hpp>
+
 #include <univalue.h>
 
 CGovernanceObject::CGovernanceObject()

@@ -13,7 +13,6 @@
 #include "guiutil.h"
 
 #include "amount.h"
-#include "darksend.h"
 #include "init.h"
 #include "main.h" // For DEFAULT_SCRIPTCHECK_THREADS
 #include "net.h"
@@ -22,6 +21,10 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
+#endif
+
+#include "darksend.h"
+#ifdef ENABLE_WALLET
 #include "masternodeconfig.h"
 #endif
 

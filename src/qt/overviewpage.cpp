@@ -8,17 +8,19 @@
 
 #include "bitcoinunits.h"
 #include "clientmodel.h"
-#include "darksend.h"
-#include "darksendconfig.h"
 #include "guiconstants.h"
 #include "guiutil.h"
+#include "init.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "transactionfilterproxy.h"
 #include "transactiontablemodel.h"
 #include "utilitydialog.h"
 #include "walletmodel.h"
-#include "init.h"
+
+#include "darksend.h"
+#include "instantx.h"
+#include "darksendconfig.h"
 #include "masternode-sync.h"
 
 #include <QAbstractItemDelegate>

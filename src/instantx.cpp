@@ -2,19 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "consensus/validation.h"
-#include "sync.h"
-#include "net.h"
-#include "key.h"
-#include "util.h"
-#include "base58.h"
-#include "protocol.h"
-#include "instantx.h"
+
 #include "activemasternode.h"
 #include "darksend.h"
+#include "instantx.h"
+#include "key.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "net.h"
+#include "protocol.h"
 #include "spork.h"
+#include "sync.h"
+#include "util.h"
+#include "consensus/validation.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/lexical_cast.hpp>

@@ -2,22 +2,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core_io.h"
-#include "main.h"
-#include "init.h"
-
-#include "flat-database.h"
-#include "governance.h"
-#include "masternode.h"
-#include "governance.h"
 #include "darksend.h"
+#include "governance-vote.h"
 #include "masternodeman.h"
-#include "masternode-sync.h"
 #include "util.h"
-#include "addrman.h"
+
 #include <boost/lexical_cast.hpp>
-
-
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {

@@ -1,16 +1,16 @@
 #include "masternodelist.h"
 #include "ui_masternodelist.h"
 
-#include "sync.h"
-#include "clientmodel.h"
-#include "walletmodel.h"
 #include "activemasternode.h"
+#include "clientmodel.h"
+#include "init.h"
+#include "guiutil.h"
 #include "masternode-sync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
+#include "sync.h"
 #include "wallet/wallet.h"
-#include "init.h"
-#include "guiutil.h"
+#include "walletmodel.h"
 
 #include <QTimer>
 #include <QMessageBox>

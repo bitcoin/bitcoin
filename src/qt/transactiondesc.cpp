@@ -19,6 +19,8 @@
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 
+#include "instantx.h"
+
 #include <stdint.h>
 #include <string>
 

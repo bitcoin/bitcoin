@@ -9,9 +9,10 @@
 #include "consensus/consensus.h"
 #include "main.h"
 #include "timedata.h"
+#include "wallet/wallet.h"
+
 #include "darksend.h"
 #include "instantx.h"
-#include "wallet/wallet.h"
 
 #include <stdint.h>
 

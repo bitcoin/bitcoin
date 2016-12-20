@@ -13,13 +13,14 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
-#include "darksend.h"
 #include "net.h"
 #include "txmempool.h"
 #include "ui_interface.h"
+#include "util.h"
+
+#include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"
-#include "util.h"
 
 #include <stdint.h>
 

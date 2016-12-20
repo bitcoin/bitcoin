@@ -17,12 +17,6 @@
 #include "consensus/validation.h"
 #include "hash.h"
 #include "init.h"
-#include "instantx.h"
-#include "darksend.h"
-#include "governance.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "policy/policy.h"
@@ -43,6 +37,13 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "versionbits.h"
+
+#include "darksend.h"
+#include "governance.h"
+#include "instantx.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
 
 #include <sstream>
 

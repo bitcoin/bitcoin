@@ -34,25 +34,31 @@
 #include "torcontrol.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "activemasternode.h"
-#include "instantx.h"
-#include "darksend.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
-#include "masternodeconfig.h"
-#include "flat-database.h"
-#include "governance.h"
-#include "spork.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
-#include "keepass.h"
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
+
+#include "activemasternode.h"
+#include "darksend.h"
+#include "dsnotificationinterface.h"
+#include "flat-database.h"
+#include "governance.h"
+#include "instantx.h"
+#ifdef ENABLE_WALLET
+#include "keepass.h"
+#endif
+#include "masternode-payments.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
+#include "masternodeconfig.h"
+#include "netfulfilledman.h"
+#include "spork.h"
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -74,8 +80,6 @@
 #if ENABLE_ZMQ
 #include "zmq/zmqnotificationinterface.h"
 #endif
-
-#include "dsnotificationinterface.h"
 
 using namespace std;
 

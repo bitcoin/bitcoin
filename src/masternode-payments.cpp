@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
-#include "addrman.h"
 #include "darksend.h"
 #include "governance-classes.h"
 #include "masternode-payments.h"

@@ -4,12 +4,8 @@
 #ifndef INSTANTX_H
 #define INSTANTX_H
 
-#include "sync.h"
 #include "net.h"
-#include "key.h"
-#include "util.h"
-#include "base58.h"
-#include "main.h"
+#include "primitives/transaction.h"
 
 class CTransaction;
 class CTxLockVote;

@@ -6,8 +6,9 @@
 #define GOVERNANCE_EXCEPTIONS_H
 
 #include <exception>
-#include <string>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 enum governance_exception_type_enum_t {
     /// Default value, normally indicates no exception condition occurred

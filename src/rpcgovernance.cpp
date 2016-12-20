@@ -4,29 +4,22 @@
 
 //#define ENABLE_DASH_DEBUG
 
-#include "util.h"
-#include "main.h"
-#include "db.h"
-#include "init.h"
 #include "activemasternode.h"
 #include "darksend.h"
 #include "governance.h"
+#include "governance-vote.h"
+#include "governance-classes.h"
+#include "init.h"
+#include "main.h"
 #include "masternode.h"
-#include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "rpcserver.h"
+#include "util.h"
 #include "utilmoneystr.h"
-#include "governance-vote.h"
-#include "governance-classes.h"
+
 #include <boost/lexical_cast.hpp>
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-
-using namespace std;
 
 UniValue gobject(const UniValue& params, bool fHelp)
 {
