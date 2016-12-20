@@ -60,6 +60,7 @@ void EnsureWalletIsUnlocked()
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
+    entry.push_back(Pair("validated", wtx.fValidated));
     entry.push_back(Pair("confirmations", confirms));
     if (wtx.IsCoinBase())
         entry.push_back(Pair("generated", true));
@@ -585,7 +586,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx, -1, !wtx.fValidated))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
@@ -639,7 +640,7 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx, -1, !wtx.fValidated))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
@@ -703,7 +704,7 @@ UniValue getbalance(const JSONRPCRequest& request)
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
-            if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
+            if (!CheckFinalTx(wtx, -1, !wtx.fValidated) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
                 continue;
 
             CAmount allFee;
@@ -1151,7 +1152,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
     {
         const CWalletTx& wtx = (*it).second;
 
-        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
+        if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx, -1, wtx.fValidated))
             continue;
 
         int nDepth = wtx.GetDepthInMainChain();
@@ -2883,6 +2884,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CReserveKey reservekey(pwalletMain);
     CWalletTx wtxBumped(pwalletMain, MakeTransactionRef(std::move(tx)));
     wtxBumped.mapValue["replaces_txid"] = hash.ToString();
+    wtxBumped.fValidated = wtx.fValidated;
     CValidationState state;
     if (!pwalletMain->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state) || !state.IsValid()) {
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason()));
