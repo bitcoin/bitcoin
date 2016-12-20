@@ -329,7 +329,12 @@ class WalletTest (BitcoinTestFramework):
             '-zapwallettxes=2',
             # disabled until issue is fixed: https://github.com/bitcoin/bitcoin/issues/7463
             # '-salvagewallet',
+            # enabled to check for regression: https://github.com/bitcoin/bitcoin/issues/2480
+            '-salvagewallet',
         ]
+        [self.nodes[i].encryptwallet(str(i)) for i in range(3)]
+        wait_bitcoinds()
+        self.nodes = start_nodes(3, self.options.tmpdir)
         for m in maintenance:
             print("check " + m)
             stop_nodes(self.nodes)

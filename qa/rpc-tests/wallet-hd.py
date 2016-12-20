@@ -38,6 +38,11 @@ class WalletHDTest(BitcoinTestFramework):
         non_hd_add = self.nodes[0].getnewaddress()
         self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
 
+        # salvagewallet should be a noop
+        self.stop_node(1)
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1] + ['-salvagewallet'])
+        connect_nodes_bi(self.nodes, 0, 1)
+
         # This should be enough to keep the master key and the non-HD key 
         self.nodes[1].backupwallet(tmpdir + "/hd.bak")
         #self.nodes[1].dumpwallet(tmpdir + "/hd.dump")
