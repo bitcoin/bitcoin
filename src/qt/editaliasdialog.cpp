@@ -90,7 +90,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 		ui->transferDisclaimer->setVisible(true);
 		ui->passwordDisclaimer->setVisible(false);
 		ui->passwordEdit->setEnabled(false);
-		ui->EditAliasDialog->setCurrentIndex(1);
+		ui->EditAliasDialogTab->setCurrentIndex(1);
         break;
     }
     mapper = new QDataWidgetMapper(this);
