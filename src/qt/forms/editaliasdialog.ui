@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="EditAliasDialogTab">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
@@ -312,19 +312,6 @@
           <bool>true</bool>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item>
         <layout class="QFormLayout" name="formLayout">
