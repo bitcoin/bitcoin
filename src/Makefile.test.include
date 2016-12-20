@@ -21,7 +21,7 @@ EXTRA_DIST += \
 	test/data/txcreate2.hex \
 	test/data/txcreatedata1.hex \
 	test/data/txcreatedata2.hex \
-	test/data/txcreatesign.hex \
+	test/data/txcreatesignv1.hex \
 	test/data/txcreatedata_seq0.hex \
 	test/data/txcreatedata_seq1.hex
 
