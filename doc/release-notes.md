@@ -118,6 +118,7 @@ git merge commit are mentioned.
 - #9290 `35174a0` Make RelayWalletTransaction attempt to AcceptToMemoryPool (gmaxwell)
 - #9295 `43bcfca` Bugfix: Fundrawtransaction: don't terminate when keypool is empty (jonasschnelli)
 - #9302 `f5d606e` Return txid even if ATMP fails for new transaction (sipa)
+- #9262 `fe39f26` Prefer coins that have fewer ancestors, sanity check txn before ATMP (instagibbs)
 
 ### Tests and QA
 - #9159 `eca9b46` Wait for specific block announcement in p2p-compactblocks (ryanofsky)
