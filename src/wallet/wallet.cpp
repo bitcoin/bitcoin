@@ -1185,6 +1185,14 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex,
     }
 }
 
+void CWallet::GetNonMempoolTransaction(const uint256 &hash, CTransactionRef &txsp)
+{
+    map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hash);
+    if (mi != mapWallet.end())
+    {
+        txsp = MakeTransactionRef(mi->second);
+    }
+}
 
 isminetype CWallet::IsMine(const CTxIn &txin) const
 {

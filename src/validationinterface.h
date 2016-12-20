@@ -34,6 +34,7 @@ class CValidationInterface {
 protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock, bool validated = true) {}
+    virtual void GetNonMempoolTransaction(const uint256 &hash,  std::shared_ptr<const CTransaction> &txsp) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void UpdatedTransaction(const uint256 &hash) {}
     virtual void Inventory(const uint256 &hash) {}
@@ -61,6 +62,8 @@ struct CMainSignals {
      * removal was due to conflict from connected block), or appeared in a
      * disconnected block.*/
     boost::signals2::signal<void (const CTransaction &, const CBlockIndex *pindex, int posInBlock, bool validated)> SyncTransaction;
+    /** Signal used to find transactions if the node has the inv-hash but not the transaction in its mempool (non-validation mode) */
+    boost::signals2::signal<void (const uint256 &, std::shared_ptr<const CTransaction> &)> FindTransaction;
     /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */

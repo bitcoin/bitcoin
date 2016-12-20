@@ -765,6 +765,7 @@ public:
     bool LoadToWallet(const CWalletTx& wtxIn);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
     void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock, bool validated);
+    void GetNonMempoolTransaction(const uint256 &hash, CTransactionRef &txsp);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman);

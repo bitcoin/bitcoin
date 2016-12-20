@@ -3121,13 +3121,16 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                     }
                     // Not in the mempool anymore? don't bother sending it.
                     auto txinfo = mempool.info(hash);
-                    if (!txinfo.tx) {
+                    CTransactionRef txsp = txinfo.tx;
+                    if (!txsp)
+                        GetMainSignals().FindTransaction(hash, txsp);
+                    if (!txsp)
+                        continue;
+
+                    if (filterrate && txinfo.tx && txinfo.feeRate.GetFeePerK() < filterrate) {
                         continue;
                     }
-                    if (filterrate && txinfo.feeRate.GetFeePerK() < filterrate) {
-                        continue;
-                    }
-                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txsp)) continue;
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
@@ -3139,7 +3142,7 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
+                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txsp)));
                         if (ret.second) {
                             vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
                         }
