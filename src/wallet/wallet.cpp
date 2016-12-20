@@ -2407,8 +2407,22 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							scriptChange = GetScriptForDestination(payDest);
 							address = CSyscoinAddress(payDest);
 							address = CSyscoinAddress(address.ToString());
-							if(!address.vchRedeemScript.empty())
-								scriptChange = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
+							// if paying from an alias then send change back to sender
+							if(address.isAlias)
+							{
+								scriptChange = GetScriptForDestination(payDest);
+								if(!address.vchRedeemScript.empty())
+									scriptChange = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
+							}
+							// otherwise resolve back to new change address functionality
+							else
+							{
+								CPubKey vchPubKey;
+								bool ret;
+								ret = reservekey.GetReservedKey(vchPubKey);
+								assert(ret); // should never fail, as we just unlocked
+								scriptChange = GetScriptForDestination(vchPubKey.GetID());
+							}
 						}
 						else
 						{
