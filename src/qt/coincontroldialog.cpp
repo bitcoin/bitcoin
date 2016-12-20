@@ -444,11 +444,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     CAmount nChange             = 0;
     unsigned int nBytes         = 0;
     unsigned int nBytesInputs   = 0;
-    double dPriority            = 0;
-    double dPriorityInputs      = 0;
     unsigned int nQuantity      = 0;
-    int nQuantityUncompressed   = 0;
-    bool fAllowFree             = false;
     bool fWitness               = false;
 
     std::vector<COutPoint> vCoinControl;
@@ -473,9 +469,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         // Amount
         nAmount += out.tx->tx->vout[out.i].nValue;
 
-        // Priority
-        dPriorityInputs += (double)out.tx->tx->vout[out.i].nValue * (out.nDepth+1);
-
         // Bytes
         CTxDestination address;
         int witnessversion = 0;
@@ -492,8 +485,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (keyid && model->getPubKey(*keyid, pubkey))
             {
                 nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
-                if (!pubkey.IsCompressed())
-                    nQuantityUncompressed++;
             }
             else
                 nBytesInputs += 148; // in all error cases, simply assume 148 here
@@ -524,17 +515,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
         if (nPayFee > 0 && coinControl->nMinimumTotalFee > nPayFee)
             nPayFee = coinControl->nMinimumTotalFee;
-
-
-        // Allow free? (require at least hard-coded threshold and default to that if no estimate)
-        double mempoolEstimatePriority = mempool.estimateSmartPriority(nTxConfirmTarget);
-        dPriority = dPriorityInputs / (nBytes - nBytesInputs + (nQuantityUncompressed * 29)); // 29 = 180 - 151 (uncompressed public keys are over the limit. max 151 bytes of the input are ignored for priority)
-        double dPriorityNeeded = std::max(mempoolEstimatePriority, AllowFreeThreshold());
-        fAllowFree = (dPriority >= dPriorityNeeded);
-
-        if (fSendFreeTransactions)
-            if (fAllowFree && nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE)
-                nPayFee = 0;
 
         if (nPayAmount > 0)
         {
