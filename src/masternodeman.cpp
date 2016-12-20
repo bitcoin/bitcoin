@@ -136,17 +136,29 @@ void CMasternodeMan::AskForMN(CNode* pnode, const CTxIn &vin)
 {
     if(!pnode) return;
 
-    std::map<COutPoint, int64_t>::iterator it = mWeAskedForMasternodeListEntry.find(vin.prevout);
-    if (it != mWeAskedForMasternodeListEntry.end() && GetTime() < (*it).second) {
-        // we've asked recently, should not repeat too often or we could get banned
-        return;
+    LOCK(cs);
+
+    std::map<COutPoint, std::map<CNetAddr, int64_t> >::iterator it1 = mWeAskedForMasternodeListEntry.find(vin.prevout);
+    if (it1 != mWeAskedForMasternodeListEntry.end()) {
+        std::map<CNetAddr, int64_t>::iterator it2 = it1->second.find(pnode->addr);
+        if (it2 != it1->second.end()) {
+            if (GetTime() < it2->second) {
+                // we've asked recently, should not repeat too often or we could get banned
+                return;
+            }
+            // we asked this node for this outpoint but it's ok to ask again already
+            LogPrintf("CMasternodeMan::AskForMN -- Asking same peer %s for missing masternode entry again: %s\n", pnode->addr.ToString(), vin.prevout.ToStringShort());
+        } else {
+            // we already asked for this outpoint but not this node
+            LogPrintf("CMasternodeMan::AskForMN -- Asking new peer %s for missing masternode entry: %s\n", pnode->addr.ToString(), vin.prevout.ToStringShort());
+        }
+    } else {
+        // we never asked any node for this outpoint
+        LogPrintf("CMasternodeMan::AskForMN -- Asking peer %s for missing masternode entry for the first time: %s\n", pnode->addr.ToString(), vin.prevout.ToStringShort());
     }
+    mWeAskedForMasternodeListEntry[vin.prevout][pnode->addr] = GetTime() + DSEG_UPDATE_SECONDS;
 
-    // ask for the mnb info once from the node that sent mnp
-
-    LogPrintf("CMasternodeMan::AskForMN -- Asking node for missing masternode entry: %s\n", vin.prevout.ToStringShort());
     pnode->PushMessage(NetMsgType::DSEG, vin);
-    mWeAskedForMasternodeListEntry[vin.prevout] = GetTime() + DSEG_UPDATE_SECONDS;;
 }
 
 void CMasternodeMan::Check()
@@ -214,9 +226,17 @@ void CMasternodeMan::CheckAndRemove()
         }
 
         // check which Masternodes we've asked for
-        std::map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
+        std::map<COutPoint, std::map<CNetAddr, int64_t> >::iterator it2 = mWeAskedForMasternodeListEntry.begin();
         while(it2 != mWeAskedForMasternodeListEntry.end()){
-            if((*it2).second < GetTime()){
+            std::map<CNetAddr, int64_t>::iterator it3 = it2->second.begin();
+            while(it3 != it2->second.end()){
+                if(it3->second < GetTime()){
+                    it2->second.erase(it3++);
+                } else {
+                    ++it3;
+                }
+            }
+            if(it2->second.empty()) {
                 mWeAskedForMasternodeListEntry.erase(it2++);
             } else {
                 ++it2;
