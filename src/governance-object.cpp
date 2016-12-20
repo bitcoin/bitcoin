@@ -223,6 +223,19 @@ void CGovernanceObject::ClearMasternodeVotes()
     }
 }
 
+std::string CGovernanceObject::GetSignatureMessage() const
+{
+    LOCK(cs);
+    std::string strMessage = nHashParent.ToString() + "|" +
+        boost::lexical_cast<std::string>(nRevision) + "|" +
+        boost::lexical_cast<std::string>(nTime) + "|" +
+        strData + "|" +
+        vinMasternode.prevout.ToStringShort() + "|" +
+        nCollateralHash.ToString();
+
+    return strMessage;
+}
+
 void CGovernanceObject::SetMasternodeInfo(const CTxIn& vin)
 {
     vinMasternode = vin;
@@ -230,11 +243,10 @@ void CGovernanceObject::SetMasternodeInfo(const CTxIn& vin)
 
 bool CGovernanceObject::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
-    LOCK(cs);
-
     std::string strError;
-    uint256 nHash = GetHash();
-    std::string strMessage = nHash.ToString();
+    std::string strMessage = GetSignatureMessage();
+
+    LOCK(cs);
 
     if(!darkSendSigner.SignMessage(strMessage, vchSig, keyMasternode)) {
         LogPrintf("CGovernanceObject::Sign -- SignMessage() failed\n");
@@ -255,11 +267,11 @@ bool CGovernanceObject::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 
 bool CGovernanceObject::CheckSignature(CPubKey& pubKeyMasternode)
 {
-    LOCK(cs);
     std::string strError;
-    uint256 nHash = GetHash();
-    std::string strMessage = nHash.ToString();
 
+    std::string strMessage = GetSignatureMessage();
+
+    LOCK(cs);
     if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
         LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
         return false;
@@ -286,6 +298,8 @@ uint256 CGovernanceObject::GetHash() const
     ss << nRevision;
     ss << nTime;
     ss << strData;
+    ss << vinMasternode;
+    ss << vchSig;
     // fee_tx is left out on purpose
     uint256 h1 = ss.GetHash();
 

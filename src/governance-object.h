@@ -35,7 +35,7 @@ class CGovernanceObject;
 class CGovernanceVote;
 
 static const int MAX_GOVERNANCE_OBJECT_DATA_SIZE = 16 * 1024;
-static const int MIN_GOVERNANCE_PEER_PROTO_VERSION = 70203;
+static const int MIN_GOVERNANCE_PEER_PROTO_VERSION = 70204;
 
 static const int GOVERNANCE_OBJECT_UNKNOWN = 0;
 static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
@@ -261,6 +261,8 @@ public:
     void SetMasternodeInfo(const CTxIn& vin);
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool CheckSignature(CPubKey& pubKeyMasternode);
+
+    std::string GetSignatureMessage() const;
 
     // CORE OBJECT FUNCTIONS
 

@@ -28,7 +28,7 @@ std::map<uint256, int64_t> mapAskedForGovernanceObject;
 
 int nSubmittedFinalBudget;
 
-const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-5";
+const std::string CGovernanceManager::SERIALIZATION_VERSION_STRING = "CGovernanceManager-Version-6";
 
 CGovernanceManager::CGovernanceManager()
     : pCurrentBlockIndex(NULL),
