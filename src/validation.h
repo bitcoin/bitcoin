@@ -399,7 +399,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckFinalTx(const CTransaction &tx, int flags = -1);
+bool CheckFinalTx(const CTransaction &tx, int flags = -1, bool calcHeightFromHeaders = false);
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
