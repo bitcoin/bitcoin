@@ -497,11 +497,14 @@
   <tabstop>reqLabel</tabstop>
   <tabstop>reqAmount</tabstop>
   <tabstop>reqMessage</tabstop>
+  <tabstop>freezeBlock</tabstop>
+  <tabstop>freezeDateTime</tabstop>
+  <tabstop>reuseAddress</tabstop>
   <tabstop>receiveButton</tabstop>
   <tabstop>clearButton</tabstop>
-  <tabstop>recentRequestsView</tabstop>
   <tabstop>showRequestButton</tabstop>
   <tabstop>removeRequestButton</tabstop>
+  <tabstop>recentRequestsView</tabstop>
  </tabstops>
  <resources>
   <include location="../bitcoin.qrc"/>
