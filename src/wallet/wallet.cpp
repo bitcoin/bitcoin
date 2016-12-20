@@ -953,6 +953,12 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
             wtx.fFromMe = wtxIn.fFromMe;
             fUpdated = true;
         }
+        // If validation state has changed, update
+        if (wtxIn.fValidated != wtx.Validated)
+        {
+             wtx.Validated = wtxIn.Validated;
+             fUpdated = true;
+        }
     }
 
     //// debug print
@@ -1015,7 +1021,7 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
  * Abandoned state should probably be more carefuly tracked via different
  * posInBlock signals or by checking mempool presence when necessary.
  */
-bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate, bool fValidated)
 {
     {
         AssertLockHeld(cs_wallet);
@@ -1038,7 +1044,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
             CWalletTx wtx(this, MakeTransactionRef(tx));
-
+            wtx.fValidated = fValidated;
             // Get merkle branch if transaction was found in a block
             if (posInBlock != -1)
                 wtx.SetMerkleBranch(pIndex, posInBlock);
@@ -1172,7 +1178,7 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex,
     if (!validated)
         return;
 
-    if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true))
+    if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true, validated))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1569,7 +1575,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             int posInBlock;
             for (posInBlock = 0; posInBlock < (int)block.vtx.size(); posInBlock++)
             {
-                if (AddToWalletIfInvolvingMe(*block.vtx[posInBlock], pindex, posInBlock, fUpdate))
+                if (AddToWalletIfInvolvingMe(*block.vtx[posInBlock], pindex, posInBlock, fUpdate, true))
                     ret++;
             }
             pindex = chainActive.Next(pindex);
