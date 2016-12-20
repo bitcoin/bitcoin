@@ -52,7 +52,7 @@ static void CoinSelection(benchmark::State& state)
 
         set<pair<const CWalletTx*, unsigned int> > setCoinsRet;
         CAmount nValueRet;
-        bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet);
+        bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
