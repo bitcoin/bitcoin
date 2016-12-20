@@ -52,6 +52,7 @@ std::string EncodeBase32(const std::string& str);
 
 std::string i64tostr(int64_t n);
 std::string itostr(int n);
+std::string strAge(const int64_t nAge);
 int64_t atoi64(const char* psz);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
