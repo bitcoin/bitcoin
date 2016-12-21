@@ -12,6 +12,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#include <cmath>
 #include <boost/foreach.hpp>
 
     /**
@@ -169,7 +170,8 @@ int32_t Policy::blockSizeAcceptLimit()
         if (limitInMB <= 0) {
             LogPrintf("Failed to understand blocksizeacceptlimit: '%s'\n", userlimit->second.c_str());
         } else {
-            limit = static_cast<int32_t>(limitInMB * 10) * 1E5;
+            limit = static_cast<int32_t>(round(limitInMB * 1000000));
+            limit -= (limit % 100000); // only one digit behind the dot was allowed
         }
     }
     if (limit <= 0)
