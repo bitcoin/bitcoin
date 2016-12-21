@@ -156,11 +156,11 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     // Get the Freeze number from the ui
     int64_t nFreezeLockTime = 0;
-	// try freezeBlock
-	std::string freezeText = ui->freezeBlock->text().toStdString();
-	if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
-	// try freezeDateTime
-	if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000;
+    // try freezeBlock
+    std::string freezeText = ui->freezeBlock->text().toStdString();
+    if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
+    // try freezeDateTime
+    if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000;
 
 
     if(ui->reuseAddress->isChecked())
