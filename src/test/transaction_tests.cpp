@@ -530,14 +530,14 @@ BOOST_AUTO_TEST_CASE(test_serialization_order_simple)
     CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
     ser_writedata32(s, 4);
     CMFToken ph(Consensus::TxInPrevHash, baseIn.prevout.hash);
-    ::Serialize<CDataStream,CMFToken>(s, ph, nType, nVersion);
+    ph.Serialize<CDataStream>(s, nType, nVersion);
     CMFToken index(Consensus::TxInPrevIndex, (uint64_t) baseIn.prevout.n);
-    ::Serialize<CDataStream,CMFToken>(s, index, nType, nVersion);
+    index.Serialize<CDataStream>(s, nType, nVersion);
     CMFToken token(Consensus::TxOutValue, (uint64_t) baseOut.nValue);
-    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+    token.Serialize<CDataStream>(s, nType, nVersion);
     std::vector<char> script(baseOut.scriptPubKey.begin(), baseOut.scriptPubKey.end());
     token = CMFToken(Consensus::TxOutScript, script);
-    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+    token.Serialize<CDataStream>(s, nType, nVersion);
 
     std::vector<char> data(s.begin(), s.end());
     CTransaction tx;
@@ -569,20 +569,20 @@ BOOST_AUTO_TEST_CASE(test_serialization_order_mixed)
     CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
     ser_writedata32(s, 4);
     CMFToken ph(Consensus::TxInPrevHash, baseIn.prevout.hash);
-    ::Serialize<CDataStream,CMFToken>(s, ph, nType, nVersion);
+    ph.Serialize<CDataStream>(s, nType, nVersion);
     CMFToken index(Consensus::TxInPrevIndex, (uint64_t) baseIn.prevout.n);
-    ::Serialize<CDataStream,CMFToken>(s, index, nType, nVersion);
+    index.Serialize<CDataStream>(s, nType, nVersion);
     std::vector<char> script(baseOut.scriptPubKey.begin(), baseOut.scriptPubKey.end());
     CMFToken token(Consensus::TxOutScript, script); // swap with next
-    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+    token.Serialize<CDataStream>(s, nType, nVersion);
     token = CMFToken(Consensus::TxOutValue, (uint64_t) baseOut.nValue);
-    ::Serialize<CDataStream,CMFToken>(s, token, nType, nVersion);
+    token.Serialize<CDataStream>(s, nType, nVersion);
 
     // an in after an out.
     ph = CMFToken(Consensus::TxInPrevHash, baseIn2.prevout.hash);
-    ::Serialize<CDataStream,CMFToken>(s, ph, nType, nVersion);
+    ph.Serialize<CDataStream>(s, nType, nVersion);
     index = CMFToken(Consensus::TxInPrevIndex, (uint64_t) baseIn2.prevout.n);
-    ::Serialize<CDataStream,CMFToken>(s, index, nType, nVersion);
+    index.Serialize<CDataStream>(s, nType, nVersion);
 
     std::vector<char> data(s.begin(), s.end());
     CTransaction tx;
