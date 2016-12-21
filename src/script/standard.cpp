@@ -160,9 +160,9 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             else if (opcode2 == OP_BIGINTEGER)
             {
             	try {
-            		int64_t n = CScriptNum(vch1, false).getint64();
+            		CScriptNum n(vch1, true, 5);
 
-            		LogPrintf("Freeze Solver BIGINT=%d \n", n);
+            		LogPrintf("Freeze Solver BIGINT=%d \n", n.getint64());
             		// if try reaches here without scriptnum_error
             		// then vch1 is a valid bigint
             		vSolutionsRet.push_back(vch1);

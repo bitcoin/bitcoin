@@ -33,6 +33,30 @@ unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
     return nResult;
 }
 
+bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, int64_t& nFreezeLockTime)
+{
+	vector<valtype> vSolutions;
+	txnouttype whichType;
+	if (Solver(scriptPubKey, whichType, vSolutions))
+	{
+		if (whichType == TX_SCRIPTHASH)
+		{
+			CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+			CScript subscript;
+			if (keystore.GetCScript(scriptID, subscript))
+				Solver(subscript, whichType, vSolutions);
+		}
+
+		if (whichType == TX_CLTV)
+		{
+			CScriptNum sn(vSolutions[0], true, 5);
+			nFreezeLockTime = sn.getint64();
+			return true;
+		}
+		else return false;
+	}
+}
+
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, CBlockIndex* bestBlock)
 {
     CScript script = GetScriptForDestination(dest);
@@ -96,9 +120,9 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, CBlock
 			keyID = CPubKey(vSolutions[1]).GetID();
 			if (keystore.HaveKey(keyID))
 			{
-				int64_t nFreezeLockTime = CScriptNum(vSolutions[0], false).getint64();
+				CScriptNum nFreezeLockTime(vSolutions[0], true, 5);
 
-				LogPrintf("Found Freeze Have Key. nFreezeLockTime=%d \n", nFreezeLockTime);
+				LogPrintf("Found Freeze Have Key. nFreezeLockTime=%d \n", nFreezeLockTime.getint64());
 				if (nFreezeLockTime < LOCKTIME_THRESHOLD)
 				{
 					// locktime is a block
