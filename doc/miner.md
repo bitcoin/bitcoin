@@ -47,6 +47,26 @@ $ bitcoin-cli getexcessiveblock
 ```
 
 
+Setting your subversion string (spoofing the user agent)
+--------------------------------------------------------
+
+To hide that this is a Bitcoin Unlimited node, set the "net.subversionOverride" to a string of your choice, in the bitcoin.conf file or using ./bitcoin-cli:
+
+```sh
+ bitcoin-cli set net.subversionOverride="Your Choice Here"
+```
+
+To show the current string:
+
+```sh
+bitcoin-cli get net.subversionOverride
+```
+
+To change this field in bitcoin.conf or on the command line, use:
+ > net.subversionOverride=<YourChoiceHere>
+
+
+
 Setting your maximum mined block
 --------------------------------
 
