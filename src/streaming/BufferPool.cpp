@@ -110,7 +110,6 @@ Streaming::ConstBuffer Streaming::BufferPool::createBufferSlice(char const* star
 
 void Streaming::BufferPool::change_capacity(int bytes)
 {
-    auto old_buffer = std::move(m_buffer);
     int unprocessed = m_writePointer - m_readPointer;
     assert(unprocessed >= 0);
     if (unprocessed + bytes <= m_defaultSize) // unprocessed > buffer_size
@@ -133,10 +132,13 @@ void Streaming::BufferPool::change_capacity(int bytes)
 void Streaming::BufferPool::reserve(int bytes)
 {
     assert(bytes >= 0);
-    if (capacity() < bytes || m_readPointer == nullptr)
-    {
-        change_capacity(bytes);
+    if (m_readPointer == nullptr) {
+        m_buffer = std::shared_ptr<char>(new char[m_size], std::default_delete<char[]>());
+        m_readPointer = m_buffer.get();
+        m_writePointer = m_readPointer;
     }
+    if (capacity() < bytes)
+        change_capacity(bytes);
 }
 
 std::shared_ptr<char> Streaming::BufferPool::internal_buffer() const
