@@ -390,6 +390,7 @@ public:
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    CCoinsViewCursor* Cursor() const override;
 
     /**
      * Check if we have the given tx already loaded in this cache.
@@ -464,6 +465,7 @@ public:
 
     const CTxOut &GetOutputFor(const CTxIn& input) const;
 
+    friend class CCoinsViewCacheCursor;
     friend class CCoinsModifier;
 
 private:
@@ -473,6 +475,32 @@ private:
      * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
      */
     CCoinsViewCache(const CCoinsViewCache &);
+};
+
+/**
+ * Cursor view of cache. First returns dirty, non-pruned rows in cache, then
+ * returns rows from the underlying base cursor.
+ */
+class CCoinsViewCacheCursor : public CCoinsViewCursor
+{
+public:
+    CCoinsViewCacheCursor(const CCoinsViewCache& cache);
+    void AdvanceToNonPruned();
+    bool GetKey(uint256& key) const override;
+    bool GetValue(CCoins& coins) const override;
+    unsigned int GetValueSize() const override;
+    bool Valid() const override;
+    void Next() override;
+
+private:
+    const CCoinsViewCache& cache;
+    std::unique_ptr<CCoinsViewCursor> base;
+
+    /**
+     * Current cache entry during the initial scan of the cache, before
+     * resorting to underlying base cursor.
+     */
+    CCoinsMap::iterator it;
 };
 
 #endif // BITCOIN_COINS_H

@@ -14,7 +14,7 @@ import functools
 
 Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")
-ImportNode = collections.namedtuple("ImportNode", "rescan")
+ImportNode = collections.namedtuple("ImportNode", "prune rescan")
 
 
 def call_import_rpc(call, data, address, scriptPubKey, pubkey, key, label, node, rescan):
@@ -46,10 +46,7 @@ def call_import_rpc(call, data, address, scriptPubKey, pubkey, key, label, node,
 IMPORT_RPCS = [functools.partial(call_import_rpc, call, data) for call, data in itertools.product(Call, Data)]
 
 # List of bitcoind nodes that will import keys.
-IMPORT_NODES = [
-    ImportNode(rescan=True),
-    ImportNode(rescan=False),
-]
+IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((True, False), repeat=2)]
 
 
 class ImportRescanTest(BitcoinTestFramework):
@@ -59,6 +56,10 @@ class ImportRescanTest(BitcoinTestFramework):
 
     def setup_network(self):
         extra_args = [["-debug=1"] for _ in range(self.num_nodes)]
+        for i, import_node in enumerate(IMPORT_NODES, 1):
+            if import_node.prune:
+                extra_args[i] += ["-prune=550"]
+
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
@@ -102,8 +103,12 @@ class ImportRescanTest(BitcoinTestFramework):
                     assert_equal(txs[0]["category"], "receive")
                     assert_equal(txs[0]["label"], label)
                     assert_equal(txs[0]["txid"], txid)
-                    assert_equal(txs[0]["confirmations"], 1)
-                    assert_equal("trusted" not in txs[0], True)
+                    if import_node.prune:
+                        assert_equal(txs[0]["confirmations"], 0)
+                        assert_equal(txs[0]["trusted"], False)
+                    else:
+                        assert_equal(txs[0]["confirmations"], 1)
+                        assert_equal("trusted" not in txs[0], True)
                     if watchonly:
                         assert_equal(txs[0]["involvesWatchonly"], True)
                     else:

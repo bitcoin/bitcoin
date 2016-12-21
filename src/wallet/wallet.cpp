@@ -971,7 +971,7 @@ bool CWallet::LoadToWallet(const CWalletTx& wtxIn)
  * pblock is optional, but should be provided if the transaction is known to be in a block.
  * If fUpdate is true, existing transactions will be updated.
  */
-bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, bool fIncomplete, const CBlockIndex* pIndex, int posInBlock, bool fUpdate)
 {
     {
         AssertLockHeld(cs_wallet);
@@ -994,6 +994,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
             CWalletTx wtx(this, MakeTransactionRef(tx));
+            wtx.fIncomplete = fIncomplete;
 
             // Get merkle branch if transaction was found in a block
             if (posInBlock != -1)
@@ -1125,7 +1126,7 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex,
 {
     LOCK2(cs_main, cs_wallet);
 
-    if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true))
+    if (!AddToWalletIfInvolvingMe(tx, false /* fIncomplete */, pindex, posInBlock, true /* fUpdate */))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1491,7 +1492,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             int posInBlock;
             for (posInBlock = 0; posInBlock < (int)block.vtx.size(); posInBlock++)
             {
-                if (AddToWalletIfInvolvingMe(*block.vtx[posInBlock], pindex, posInBlock, fUpdate))
+                if (AddToWalletIfInvolvingMe(*block.vtx[posInBlock], false /* fIncomplete */, pindex, posInBlock, fUpdate))
                     ret++;
             }
             pindex = chainActive.Next(pindex);
@@ -1503,6 +1504,24 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
     return ret;
+}
+
+bool CWallet::ScanForWalletUTXOs()
+{
+    for (auto pcursor = coinsCursor(); pcursor->Valid(); pcursor->Next()) {
+        boost::this_thread::interruption_point();
+        uint256 hash;
+        CCoins coins;
+        if (pcursor->GetKey(hash) && pcursor->GetValue(coins)) {
+            CMutableTransaction mtx;
+            mtx.vout = coins.vout;
+            mtx.nVersion = coins.nVersion;
+            AddToWalletIfInvolvingMe(CTransaction(mtx, hash), true /* fIncomplete */, nullptr /* pIndex */, -1 /* posInBlock */, false /* fUpdate */);
+        } else {
+            return error("%s: unable to read value", __func__);
+        }
+    }
+    return true;
 }
 
 void CWallet::ReacceptWalletTransactions()
@@ -1531,6 +1550,10 @@ void CWallet::ReacceptWalletTransactions()
     BOOST_FOREACH(PAIRTYPE(const int64_t, CWalletTx*)& item, mapSorted)
     {
         CWalletTx& wtx = *(item.second);
+
+        // Do not send incomplete transactions that can't validate.
+        if (wtx.fIncomplete)
+            continue;
 
         LOCK(mempool.cs);
         CValidationState state;
@@ -3405,7 +3428,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     return strUsage;
 }
 
-bool CWallet::InitLoadWallet()
+bool CWallet::InitLoadWallet(CoinsCursorCallback coinsCursor)
 {
     if (GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         pwalletMain = NULL;
@@ -3436,6 +3459,7 @@ bool CWallet::InitLoadWallet()
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
     CWallet *walletInstance = new CWallet(walletFile);
+    walletInstance->coinsCursor = std::move(coinsCursor);
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK)
     {

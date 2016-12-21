@@ -75,6 +75,7 @@ uint256 CTransaction::GetWitnessHash() const
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0), hash() {}
 CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), wit(tx.wit), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
+CTransaction::CTransaction(const CMutableTransaction &tx, const uint256 &hash) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), wit(tx.wit), nLockTime(tx.nLockTime), hash(hash) {}
 CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), wit(std::move(tx.wit)), nLockTime(tx.nLockTime), hash(ComputeHash()) {}
 
 CAmount CTransaction::GetValueOut() const

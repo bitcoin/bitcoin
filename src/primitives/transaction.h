@@ -394,6 +394,7 @@ public:
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
+    CTransaction(const CMutableTransaction &tx, const uint256 &hash);
     CTransaction(CMutableTransaction &&tx);
 
     template <typename Stream>

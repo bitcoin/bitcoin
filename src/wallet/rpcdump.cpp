@@ -75,6 +75,16 @@ std::string DecodeDumpString(const std::string &str) {
     return ret.str();
 }
 
+static void Rescan()
+{
+    if (fPruneMode) {
+        if (!pwalletMain->ScanForWalletUTXOs())
+            throw JSONRPCError(RPC_WALLET_ERROR, "UTXO rescan failed.");
+    } else {
+        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+    }
+}
+
 UniValue importprivkey(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -115,9 +125,6 @@ UniValue importprivkey(const JSONRPCRequest& request)
     if (request.params.size() > 2)
         fRescan = request.params[2].get_bool();
 
-    if (fRescan && fPruneMode)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
-
     CBitcoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
@@ -145,9 +152,8 @@ UniValue importprivkey(const JSONRPCRequest& request)
         // whenever a key is imported, we need to scan the whole chain
         pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
-        if (fRescan) {
-            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
-        }
+        if (fRescan)
+            Rescan();
     }
 
     return NullUniValue;
@@ -222,9 +228,6 @@ UniValue importaddress(const JSONRPCRequest& request)
     if (request.params.size() > 2)
         fRescan = request.params[2].get_bool();
 
-    if (fRescan && fPruneMode)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
-
     // Whether to import a p2sh version, too
     bool fP2SH = false;
     if (request.params.size() > 3)
@@ -245,10 +248,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     }
 
     if (fRescan)
-    {
-        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
-        pwalletMain->ReacceptWalletTransactions();
-    }
+        Rescan();
 
     return NullUniValue;
 }
@@ -381,9 +381,6 @@ UniValue importpubkey(const JSONRPCRequest& request)
     if (request.params.size() > 2)
         fRescan = request.params[2].get_bool();
 
-    if (fRescan && fPruneMode)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
-
     if (!IsHex(request.params[0].get_str()))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey must be a hex string");
     std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
@@ -397,10 +394,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
     ImportScript(GetScriptForRawPubKey(pubKey), strLabel, false);
 
     if (fRescan)
-    {
-        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
-        pwalletMain->ReacceptWalletTransactions();
-    }
+        Rescan();
 
     return NullUniValue;
 }
@@ -1051,10 +1045,8 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     if (fRescan && fRunScan && requests.size() && nLowestTimestamp <= chainActive.Tip()->GetBlockTime()) {
         CBlockIndex* pindex = nLowestTimestamp > minimumTimestamp ? chainActive.FindLatestBefore(nLowestTimestamp) : chainActive.Genesis();
 
-        if (pindex) {
-            pwalletMain->ScanForWalletTransactions(pindex, true);
-            pwalletMain->ReacceptWalletTransactions();
-        }
+        if (pindex)
+            Rescan();
     }
 
     return response;
