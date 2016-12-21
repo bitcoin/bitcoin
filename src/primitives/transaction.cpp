@@ -111,7 +111,7 @@ uint256 CTransaction::CalculateSignaturesHash() const
     ss << hash;
     SerialiseScriptSig4(vin, ss, 0, 0);
     CMFToken end(Consensus::TxEnd);
-    ::Serialize<CHashWriter,CMFToken>(ss, end, 0, 0);
+    end.Serialize<CHashWriter>(ss, 0, 0);
     return ss.GetHash();
 }
 
