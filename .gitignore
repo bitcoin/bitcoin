@@ -62,7 +62,6 @@ libconftest.dylib*
 *.o
 *.o-*
 *.patch
-.dash
 *.a
 *.pb.cc
 *.pb.h
