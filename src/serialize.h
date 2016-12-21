@@ -382,6 +382,8 @@ class CMFToken
 {
 public:
     CMFToken() : tag(0), format(PositiveNumber) {}
+    CMFToken(const CMFToken &other) = default;
+    CMFToken(CMFToken &&other) = default;
     CMFToken(uint32_t tag, const uint256& inData)
         : tag(tag),
         format(ByteArray)
@@ -396,6 +398,10 @@ public:
     CMFToken(uint32_t tag, uint64_t in) : tag(tag), format(PositiveNumber), data(in) {}
     CMFToken(uint32_t tag, std::string in) : tag(tag), format(String), data(in) {}
     CMFToken(uint32_t tag, std::vector<char> in) : tag(tag), format(ByteArray), data(in) {}
+
+    CMFToken& operator=(const CMFToken &other) = default;
+    CMFToken& operator=(CMFToken &&other) = default;
+
     typedef boost::variant<int32_t, bool, uint64_t, std::string, std::vector<char>, double> variant;
     enum Format {
         PositiveNumber = 0,
@@ -470,8 +476,8 @@ public:
         }
         case BoolTrue: data = true; break;
         case BoolFalse: data = false; break;
-        case Double:
-            // TODO
+        case Double: // This class is only used for transactions, which doesn't need or want Doubles
+            throw std::runtime_error("Unsupported");
             break;
         }
     }
@@ -504,16 +510,16 @@ public:
             s.write(&bytes[0], bytes.size());
             break;
         }
-        case BoolTrue: // TODO
-        case BoolFalse: // TODO
-        case Double:
-            // TODO
+        case BoolTrue: break;
+        case BoolFalse: break;
+        case Double: // This class is only used for transactions, which doesn't need or want Doubles
+            assert(false);
             break;
         }
     }
 };
 
-#define STORECMF(_1_) ::Serialize<Stream,CMFToken>(s, _1_, nType, nVersion)
+#define STORECMF(_1_) _1_.Serialize<Stream>(s, nType, nVersion)
 
 
 template<typename Stream>
