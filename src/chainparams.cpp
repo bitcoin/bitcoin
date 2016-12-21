@@ -225,7 +225,9 @@ public:
         //assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // BITCOINUNLIMITED START
-        //vSeeds.push_back(CDNSSeedData("btcc.com", "seed.btcc.com"));    // BTCC
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        vSeeds.push_back(CDNSSeedData("bitcoinunlimited.info", "nol-seed.bitcoinunlimited.info"));
         //vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));      // Bitnodes (Addy Yeow)
         //vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
         // BITCOINUNLIMITED END
