@@ -36,7 +36,6 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
     txSpend.nLockTime = 0;
     txSpend.vin.resize(1);
     txSpend.vout.resize(1);
-    txSpend.wit.vtxinwit.resize(1);
     txSpend.vin[0].prevout.hash = txCredit.GetHash();
     txSpend.vin[0].prevout.n = 0;
     txSpend.vin[0].scriptSig = scriptSig;
@@ -68,7 +67,7 @@ static void VerifyScriptBench(benchmark::State& state)
     CScript witScriptPubkey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkeyHash) << OP_EQUALVERIFY << OP_CHECKSIG;
     CTransaction txCredit = BuildCreditingTransaction(scriptPubKey);
     CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, txCredit);
-    CScriptWitness& witness = txSpend.wit.vtxinwit[0].scriptWitness;
+    CScriptWitness& witness = txSpend.vin[0].scriptWitness;
     witness.stack.emplace_back();
     key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].nValue, SIGVERSION_WITNESS_V0), witness.stack.back(), 0);
     witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
@@ -80,7 +79,7 @@ static void VerifyScriptBench(benchmark::State& state)
         bool success = VerifyScript(
             txSpend.vin[0].scriptSig,
             txCredit.vout[0].scriptPubKey,
-            &txSpend.wit.vtxinwit[0].scriptWitness,
+            &txSpend.vin[0].scriptWitness,
             flags,
             MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue),
             &err);
