@@ -163,7 +163,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     {
         // We don't care if witness for this input is empty, since it must not be bloated.
         // If the script is invalid without witness, it would be caught sooner or later during validation.
-        if (tx.wit.vtxinwit[i].IsNull())
+        if (tx.vin[i].scriptWitness.IsNull())
             continue;
 
         const CTxOut &prev = mapInputs.GetOutputFor(tx.vin[i]);
@@ -192,13 +192,13 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == 32) {
-            if (tx.wit.vtxinwit[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
+            if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                 return false;
-            size_t sizeWitnessStack = tx.wit.vtxinwit[i].scriptWitness.stack.size() - 1;
+            size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
                 return false;
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {
-                if (tx.wit.vtxinwit[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
+                if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
                     return false;
             }
         }
