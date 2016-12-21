@@ -76,6 +76,8 @@ class ExcessiveBlockTest (BitcoinTestFramework):
             if counts == blockHeights: return True # success!
             time.sleep(1)
             loop += 1
+            if ((loop%30)==0):
+                logging.info("...waiting %s" % loop)
         return False
           
 
@@ -140,7 +142,8 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       # create a MB worth of tx
       blkLen = 0
       i = 0
-      while blkLen <= 1500000:
+      lastPrint=0
+      while blkLen <= 1100000:
           if len(wallet) == 0:
               pdb.set_trace()
           (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0],addrs[i:i+3],txfeePer=60)
@@ -148,6 +151,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           i = i + 1
           if i>=len(addrs)-2: i = 0
           blkLen += len(binascii.unhexlify(tx))
+          if blkLen-lastPrint > 50000:
+              logging.info("...working %d" % blkLen)
+              lastPrint=blkLen
 
       counts = [ x.getblockcount() for x in self.nodes ]
       base = counts[0]
