@@ -354,6 +354,10 @@ def runtests():
                                                                    len(test_passed))
         print "%d test(s) disabled / %d test(s) skipped due to platform" % (len(disabled), len(skipped))
 
+        # signal that tests have failed using exit code
+        if test_passed.values().count(False):
+            sys.exit(1)
+
     else:
         print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
 
