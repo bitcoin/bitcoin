@@ -311,13 +311,9 @@ public:
         return m_value;
     }
     int64_t getint64() const
-    {
-    	if (m_value > std::numeric_limits<int64_t>::max())
-			return std::numeric_limits<int64_t>::max();
-		else if (m_value < std::numeric_limits<int64_t>::min())
-			return std::numeric_limits<int64_t>::min();
+	{
 		return m_value;
-    }
+	}
     std::vector<unsigned char> getvch() const
     {
         return serialize(m_value);

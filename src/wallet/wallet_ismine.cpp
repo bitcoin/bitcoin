@@ -72,7 +72,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, CBlock
 			CScript subscript;
 			if (keystore.GetCScript(scriptID, subscript)) {
 				isminetype ret = IsMine(keystore, subscript, bestBlock);
-				LogPrintf("Freeze SUBSCRIPT isMine=%d! **** MINE=%d  *****  \n", ::ScriptToAsmStr(subscript), ret);
+				LogPrintf("Freeze SUBSCRIPT = %s! **** MINE=%d  *****  \n", ::ScriptToAsmStr(subscript), ret);
 				//if (ret == ISMINE_SPENDABLE) TODO Don't understand why this line was required. Had to comment it so all minetypes in subscripts (eg CLTV) are recognizable
 					return ret;
 			}
@@ -97,7 +97,8 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, CBlock
 			if (keystore.HaveKey(keyID))
 			{
 				int64_t nFreezeLockTime = CScriptNum(vSolutions[0], false).getint64();
-				LogPrintf("Found Freeze Have Key %d \n", nFreezeLockTime);
+
+				LogPrintf("Found Freeze Have Key. nFreezeLockTime=%d \n", nFreezeLockTime);
 				if (nFreezeLockTime < LOCKTIME_THRESHOLD)
 				{
 					// locktime is a block

@@ -199,7 +199,7 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
-bool CWallet::LoadFreezeScript(CPubKey newKey, unsigned int nLockTime, std::string strLabel, std::string& address)
+bool CWallet::LoadFreezeScript(CPubKey newKey, int64_t nLockTime, std::string strLabel, std::string& address)
 {
 	// Template rpcdump.cpp::ImportAddress();
 
