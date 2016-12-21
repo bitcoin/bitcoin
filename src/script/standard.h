@@ -79,6 +79,6 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
-CScript GetScriptForFreeze(int64_t nLockTime, const CPubKey& pubKey);
+CScript GetScriptForFreeze(CScriptNum nLockTime, const CPubKey& pubKey);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

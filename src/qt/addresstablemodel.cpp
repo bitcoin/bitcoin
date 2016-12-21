@@ -343,7 +343,7 @@ void AddressTableModel::updateEntry(const QString &address,
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
-QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, const int64_t nFreezeLockTime)
+QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address, const CScriptNum nFreezeLockTime)
 {
     std::string strLabel = label.toStdString();
     std::string strAddress = address.toStdString();
@@ -387,7 +387,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             }
         }
         // Generate and load freeze script if nFreezeLockTime > 0
-        if (nFreezeLockTime >0)
+        if (nFreezeLockTime > 0)
         {
         	if (!wallet->LoadFreezeScript(newKey, nFreezeLockTime, strLabel, strAddress))
         		return QString();

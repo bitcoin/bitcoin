@@ -155,12 +155,12 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString sFreezeLockTime = "";
 
     // Get the Freeze number from the ui
-    int64_t nFreezeLockTime = 0;
+    CScriptNum nFreezeLockTime(0);
     // try freezeBlock
     std::string freezeText = ui->freezeBlock->text().toStdString();
-    if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
+    if (freezeText != "") nFreezeLockTime = CScriptNum(std::strtoul(freezeText.c_str(),0,10));
     // try freezeDateTime
-    if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000;
+    if (nFreezeLockTime == 0) nFreezeLockTime = CScriptNum(ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000);
 
 
     if(ui->reuseAddress->isChecked())
@@ -180,7 +180,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         }
     } else {
         /* Generate new receiving address and add to the address table */
-        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", 0);
+        address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", CScriptNum(0));
         if (nFreezeLockTime > 0)
         {
         	/* Generate the freeze redeemScript and add to the address table.
@@ -188,9 +188,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
 
             if (nFreezeLockTime < LOCKTIME_THRESHOLD)
-            	sFreezeLockTime = (QString)(printf("Block: %ld",nFreezeLockTime));
+            	sFreezeLockTime = (QString)("Block:") +  QString::number(nFreezeLockTime.getint());
             else
-            	sFreezeLockTime = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime * 1000).toString();
+            	sFreezeLockTime = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
 
         }
     }

@@ -316,9 +316,9 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
-CScript GetScriptForFreeze(int64_t nFreezeLockTime, const CPubKey& pubKey)
+CScript GetScriptForFreeze(CScriptNum nFreezeLockTime, const CPubKey& pubKey)
 {
 	// TODO Perhaps add limit tests for nLockTime eg. 10 year max lock
-	return CScript() << CScriptNum(nFreezeLockTime) << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
+	return CScript() << nFreezeLockTime << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
 
 }
