@@ -693,7 +693,7 @@ public:
     bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddCScript(const CScript& redeemScript);
     bool LoadCScript(const CScript& redeemScript);
-    bool LoadFreezeScript(CPubKey newKey, unsigned int nFreezeLockTime, std::string strLabel, std::string& address);
+    bool LoadFreezeScript(CPubKey newKey, int64_t nFreezeLockTime, std::string strLabel, std::string& address);
 
     //! Adds a destination data tuple to the store, and saves it to disk
     bool AddDestData(const CTxDestination &dest, const std::string &key, const std::string &value);

@@ -159,17 +159,17 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             }
             else if (opcode2 == OP_BIGINTEGER)
             {
-            	//if (vch.size() <= static_cast<vector<unsigned char>::size_type>(4))
             	try {
-            		char n = (char)CScriptNum(vch1, false).getint64();
+            		int64_t n = CScriptNum(vch1, false).getint64();
+
+            		LogPrintf("Freeze Solver BIGINT=%d \n", n);
             		// if try reaches here without scriptnum_error
             		// then vch1 is a valid bigint
             		vSolutionsRet.push_back(vch1);
-            	} catch (scriptnum_error) {
-            		LogPrintf("Freeze Solver BIGINT ERROR! %s=%s \n", opcode2, opcode1);
+            	} catch (scriptnum_error&) {
+            		LogPrintf("Freeze Solver BIGINT ERROR! %s \n", ::ScriptToAsmStr(CScript(vch1)));
             		break;
             	} // end try/catch
-
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
@@ -316,9 +316,9 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     return script;
 }
 
-CScript GetScriptForFreeze(int64_t nLockTime, const CPubKey& pubKey)
+CScript GetScriptForFreeze(int64_t nFreezeLockTime, const CPubKey& pubKey)
 {
-	// TODO Perhaps add limit tests for nLockTime
-	return CScript() << CScriptNum(nLockTime) << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
+	// TODO Perhaps add limit tests for nLockTime eg. 10 year max lock
+	return CScript() << CScriptNum(nFreezeLockTime) << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
 
 }

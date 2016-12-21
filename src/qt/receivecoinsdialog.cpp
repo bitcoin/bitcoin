@@ -160,7 +160,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 	std::string freezeText = ui->freezeBlock->text().toStdString();
 	if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
 	// try freezeDateTime
-	if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch();
+	if (nFreezeLockTime == 0) nFreezeLockTime = ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000;
 
 
     if(ui->reuseAddress->isChecked())
@@ -188,9 +188,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
 
             if (nFreezeLockTime < LOCKTIME_THRESHOLD)
-            	sFreezeLockTime = "Block: " + ui->freezeBlock->text();
+            	sFreezeLockTime = (QString)(printf("Block: %ld",nFreezeLockTime));
             else
-            	ui->freezeDateTime->dateTime().toString();
+            	sFreezeLockTime = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime * 1000).toString();
 
         }
     }
