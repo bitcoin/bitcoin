@@ -6,6 +6,7 @@ suites:
 architectures:
 - "amd64"
 packages:
+- "curl"
 - "g++-arm-linux-gnueabihf"
 - "git-core"
 - "pkg-config"
