@@ -342,13 +342,13 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
     // check cltv solve for block
     CPubKey newKey1 = ToByteVector(key[0].GetPubKey());
     CBitcoinAddress newAddr1(newKey1.GetID());
-    int64_t nFreezeLockTime = 50000;
+    CScriptNum nFreezeLockTime(50000);
     CScript s1 = GetScriptForFreeze(nFreezeLockTime, newKey1);
 
 	BOOST_CHECK(Solver(s1, whichType, solutions));
 	BOOST_CHECK(whichType == TX_CLTV);
 	BOOST_CHECK(solutions.size() == 2);
-	BOOST_CHECK(CScriptNum(solutions[0], false).getint64() == nFreezeLockTime);
+	BOOST_CHECK(CScriptNum(solutions[0], false) == nFreezeLockTime);
 
 	nRequiredReturn = 0;
     ExtractDestinations(s1, type, addresses, nRequiredReturn);
@@ -362,13 +362,13 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
 	// check cltv solve for datetime
     CPubKey newKey2 = ToByteVector(key[0].GetPubKey());
     CBitcoinAddress newAddr2(newKey2.GetID());
-	nFreezeLockTime = 1482255731;
+	nFreezeLockTime = CScriptNum(1482255731);
 	CScript s2 = GetScriptForFreeze(nFreezeLockTime, newKey2);
 
 	BOOST_CHECK(Solver(s2, whichType, solutions));
 	BOOST_CHECK(whichType == TX_CLTV);
 	BOOST_CHECK(solutions.size() == 2);
-	BOOST_CHECK(CScriptNum(solutions[0],false).getint64() == nFreezeLockTime);
+	BOOST_CHECK(CScriptNum(solutions[0],false) == nFreezeLockTime);
 
 	nRequiredReturn = 0;
 	ExtractDestinations(s2, type, addresses, nRequiredReturn);
