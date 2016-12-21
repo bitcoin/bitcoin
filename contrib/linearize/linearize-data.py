@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
@@ -8,29 +8,33 @@
 #
 
 from __future__ import print_function, division
+try: # Python 3
+    import http.client as httplib
+except ImportError: # Python 2
+    import httplib
 import json
 import struct
 import re
 import os
 import os.path
 import base64
-import httplib
 import sys
 import hashlib
 import datetime
 import time
 from collections import namedtuple
+from binascii import hexlify, unhexlify
 
 settings = {}
 
 ##### Switch endian-ness #####
 def hex_switchEndian(s):
 	""" Switches the endianness of a hex string (in pairs of hex chars) """
-	pairList = [s[i]+s[i+1] for i in range(0,len(s),2)]
-	return ''.join(pairList[::-1])
+	pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
+	return b''.join(pairList[::-1]).decode()
 
 def uint32(x):
-	return x & 0xffffffffL
+	return x & 0xffffffff
 
 def bytereverse(x):
 	return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) |
@@ -41,14 +45,14 @@ def bufreverse(in_buf):
 	for i in range(0, len(in_buf), 4):
 		word = struct.unpack('@I', in_buf[i:i+4])[0]
 		out_words.append(struct.pack('@I', bytereverse(word)))
-	return ''.join(out_words)
+	return b''.join(out_words)
 
 def wordreverse(in_buf):
 	out_words = []
 	for i in range(0, len(in_buf), 4):
 		out_words.append(in_buf[i:i+4])
 	out_words.reverse()
-	return ''.join(out_words)
+	return b''.join(out_words)
 
 def calc_hdr_hash(blk_hdr):
 	hash1 = hashlib.sha256()
@@ -65,7 +69,7 @@ def calc_hash_str(blk_hdr):
 	hash = calc_hdr_hash(blk_hdr)
 	hash = bufreverse(hash)
 	hash = wordreverse(hash)
-	hash_str = hash.encode('hex')
+	hash_str = hexlify(hash).decode('utf-8')
 	return hash_str
 
 def get_blk_dt(blk_hdr):
@@ -217,7 +221,7 @@ class BlockDataCopier:
 
 			inMagic = inhdr[:4]
 			if (inMagic != self.settings['netmagic']):
-				print("Invalid magic: " + inMagic.encode('hex'))
+				print("Invalid magic: " + hexlify(inMagic).decode('utf-8'))
 				return
 			inLenLE = inhdr[4:]
 			su = struct.unpack("<I", inLenLE)
@@ -294,14 +298,14 @@ if __name__ == '__main__':
 	if 'split_timestamp' not in settings:
 		settings['split_timestamp'] = 0
 	if 'max_out_sz' not in settings:
-		settings['max_out_sz'] = 1000L * 1000 * 1000
+		settings['max_out_sz'] = 1000 * 1000 * 1000
 	if 'out_of_order_cache_sz' not in settings:
 		settings['out_of_order_cache_sz'] = 100 * 1000 * 1000
 
-	settings['max_out_sz'] = long(settings['max_out_sz'])
+	settings['max_out_sz'] = int(settings['max_out_sz'])
 	settings['split_timestamp'] = int(settings['split_timestamp'])
 	settings['file_timestamp'] = int(settings['file_timestamp'])
-	settings['netmagic'] = settings['netmagic'].decode('hex')
+	settings['netmagic'] = unhexlify(settings['netmagic'].encode('utf-8'))
 	settings['out_of_order_cache_sz'] = int(settings['out_of_order_cache_sz'])
 
 	if 'output_file' not in settings and 'output' not in settings:
