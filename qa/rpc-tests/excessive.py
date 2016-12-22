@@ -131,19 +131,20 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       mpool = self.nodes[0].getmempoolinfo()
       assert_equal(mpool["size"],0) 
 
-      
-      self.createUtxos(self.nodes[0], addrs, 10000) # we need a lot to generate 1MB+ blocks
-      
-      wallet = self.nodes[0].listunspent()
-      wallet.sort(key=lambda x: x["amount"],reverse=True)
-      self.nodes[0].set("net.excessiveSigopsPerMb=100000")  # Set this huge so all txns are accepted by this node
 
-      logging.info("Generate > 1MB block with excessive sigops")
-      # create a MB worth of tx
-      blkLen = 0
-      i = 0
-      lastPrint=0
-      while blkLen <= 1100000:
+      if self.extended:  # creating 1MB+ blocks is too slow for travis due to the signing cost
+        self.createUtxos(self.nodes[0], addrs, 10000) # we need a lot to generate 1MB+ blocks
+      
+        wallet = self.nodes[0].listunspent()
+        wallet.sort(key=lambda x: x["amount"],reverse=True)
+        self.nodes[0].set("net.excessiveSigopsPerMb=100000")  # Set this huge so all txns are accepted by this node
+
+        logging.info("Generate > 1MB block with excessive sigops")
+        # create a MB worth of tx
+        blkLen = 0
+        i = 0
+        lastPrint=0
+        while blkLen <= 1100000:
           if len(wallet) == 0:
               pdb.set_trace()
           (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0],addrs[i:i+3],txfeePer=60)
@@ -155,21 +156,21 @@ class ExcessiveBlockTest (BitcoinTestFramework):
               logging.info("...working %d" % blkLen)
               lastPrint=blkLen
 
-      counts = [ x.getblockcount() for x in self.nodes ]
-      base = counts[0]
+        counts = [ x.getblockcount() for x in self.nodes ]
+        base = counts[0]
 
-      self.nodes[0].generate(1)
-      assert_equal(True, self.expectHeights([base+1,base,base,base],30))
+        self.nodes[0].generate(1)
+        assert_equal(True, self.expectHeights([base+1,base,base,base],30))
 
-      logging.info("Test excessive block propagation to nodes with different AD")
-      self.nodes[0].generate(1)
-      assert_equal(True, self.expectHeights([base+2,base+2,base,base],500))  # it takes a while to sync all the txns
+        logging.info("Test excessive block propagation to nodes with different AD")
+        self.nodes[0].generate(1)
+        assert_equal(True, self.expectHeights([base+2,base+2,base,base],500))  # it takes a while to sync all the txns
 
-      self.nodes[0].generate(1)
-      assert_equal(True, self.expectHeights([base+3,base+3,base+3,base],90))
+        self.nodes[0].generate(1)
+        assert_equal(True, self.expectHeights([base+3,base+3,base+3,base],90))
 
-      self.nodes[0].generate(1)
-      assert_equal(True, self.expectHeights([base+4,base+4,base+4,base+4],90))
+        self.nodes[0].generate(1)
+        assert_equal(True, self.expectHeights([base+4,base+4,base+4,base+4],90))
 
       logging.info("Excessive sigops test completed")
 
@@ -246,7 +247,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=True)
 
-          if len(wallet) < 2000:
+          while len(wallet) < 3000:
     	    # Create a LOT of UTXOs
             logging.info("Create lots of UTXOs...")
             n=0
