@@ -852,7 +852,7 @@ if config.dmg is not None:
             "items_positions" : "\n                   ".join(items_positions)
             }
         if "window_bounds" in fancy:
-            params["window.bounds"] = ",".join([str(p) for p in fancy["window_bounds"]])
+            params["window_bounds"] = ",".join([str(p) for p in fancy["window_bounds"]])
         if "icon_size" in fancy:
             params["icon_size"] = str(fancy["icon_size"])
         if bg_path is not None:
