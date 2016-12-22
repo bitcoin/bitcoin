@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+if [ "$1" = "purge" ]; then
+    echo "Purging blockchain for bitcoin"
+    rm -rf /var/lib/bitcoind
+fi
+
+#DEBHELPER#

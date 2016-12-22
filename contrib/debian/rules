@@ -15,10 +15,15 @@ override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
 	rm -rf Makefile.in aclocal.m4 configure src/Makefile.in src/bitcoin-config.h.in src/build-aux src/qt/Makefile.in src/qt/test/Makefile.in src/test/Makefile.in
 
-# Yea, autogen should be run on the source archive, but I like doing git archive
 override_dh_auto_configure:
 	./autogen.sh
-	./configure
+	./configure --prefix=/usr --with-incompatible-bdb --with-gui=qt5 --enable-hardening \
+	     --enable-reduce-exports --disable-gui-tests --disable-maintainer-mode \
+	     --sbindir=/usr/bin \
+	     --libexecdir=/usr/lib/bitcoin \
+	     --sysconfdir=/etc \
+	     --sharedstatedir=/usr/share/bitcoin \
+	     --localstatedir=/var/lib/bitcoin
 
 override_dh_auto_test:
-	make check
+	src/test/test_bitcoin --log_level=test_suite

@@ -1,0 +1,51 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# add users
+adduser --system --group --quiet bitcoin
+
+chaindir="/var/lib/bitcoind"
+mkdir -p "$chaindir"
+if test ! -f /etc/bitcoin/bitcoin.conf; then
+ cp /etc/bitcoin/bitcoin.conf.dist /etc/bitcoin/bitcoin.conf
+fi
+chown -R bitcoin:bitcoin /etc/bitcoin "$chaindir"
+
+cat <<'EOF'
+########################################################################
+########################################################################
+##                                                                    ##
+##  Bitcoin Classic                                                   ##
+##  ____________                                                      ##
+##                                                                    ##
+##  To start bitcoin-classic:                                         ##
+##                                                                    ##
+##      # systemctl start bitcoind                                    ##
+##                                                                    ##
+##  To communicate with bitcoin-classic as a normal user:             ##
+##                                                                    ##
+##      $ mkdir -p ~/.bitcoin                                         ##
+##      $ echo rpccookiefile=/etc/bitcoin/.cookie \                   ##
+##            > ~/.bitcoin/bitcoin.conf <<'EOF'                       ##
+##                                                                    ##
+##      $ bitcoin-cli getmininginfo                                   ##
+##                                                                    ##
+##  Config:        /etc/bitcoin/bitcoin.conf                          ##
+##  Blockchain:    /var/lib/bitcoind                                  ##
+##                                                                    ##
+##  --rpccookiefile--                                                 ##
+##  The daemon uses a special 'cookie' file for authentication.       ##
+##  This file is generated with random content when the daemon        ##
+##  starts, and deleted when it exits. Its contents are used as       ##
+##  authentication token. Read access to this file controls who can   ##
+##  access through RPC.  Users pass --rpccookiefile to their calls    ##
+##  of bitcoin-cli                                                    ##
+##  You can find the cookie at /etc/bitcoin/.cookie                   ##
+##                                                                    ##
+########################################################################
+########################################################################
+EOF
+
+#DEBHELPER#

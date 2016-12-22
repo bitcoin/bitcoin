@@ -1,2 +1,5 @@
-usr/local/bin/bitcoind usr/bin
-usr/local/bin/bitcoin-cli usr/bin
+usr/bin/bitcoind usr/bin
+usr/bin/bitcoin-cli usr/bin
+usr/bin/bitcoin-tx usr/bin
+debian/bitcoin.conf.dist etc/bitcoin
+debian/rpcuser.py etc/bitcoin

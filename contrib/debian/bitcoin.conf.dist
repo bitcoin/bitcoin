@@ -1,0 +1,31 @@
+# See a longer example at; /usr/share/doc/bitcoin/examples/bitcoin.conf
+
+# Defaults that are also passed in by systemd
+datadir=/var/lib/bitcoind
+pid=/var/lib/bitcoind/bitcoind.pid
+disablewallet=1
+
+# make the cookie go to /etc/bitcoin
+rpccookiefile=/etc/bitcoin/.cookie
+# make sure the cookie is readable by users able to read /etc/bitcoin
+sysperms=1
+
+#  --rpcauth--
+#  There additionally is the config option "rpcauth" to allow
+#  multiple different users to use different credentials for login.
+#
+#  The config option comes in the format:
+#  rpcauth=USERNAME:SALT$HASH
+#
+#  Where:
+#  1-USERNAME is desired username. Name doesn't have to be unique.
+#  2-SALT is the salt for the HMAC_SHA256 function
+#  3-HASH is a hex string that is the result of the HMAC_SHA256
+#  function on the user's secret password plus the SALT as the key.
+#
+#  A "canonical" password generating python script has been supplied
+#  at "/etc/bitcoin/rpcuser.py". From the client-side, one connects
+#  using the standard -rpcuser/-rpcpassword options.
+#
+#  How to create an RPC user login credential.
+#  $ python2 /etc/bitcoin/rpcuser.py <username>
