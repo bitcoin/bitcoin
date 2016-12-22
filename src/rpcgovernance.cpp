@@ -592,6 +592,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("DataString",  pGovObj->GetDataAsString()));
             bObj.push_back(Pair("Hash",  pGovObj->GetHash().ToString()));
             bObj.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
+            bObj.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
+            const CTxIn& masternodeVin = pGovObj->GetMasternodeVin();
+            if(masternodeVin != CTxIn()) {
+                bObj.push_back(Pair("SigningMasternode", masternodeVin.prevout.ToStringShort()));
+            }
 
             // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
             bObj.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING)));
@@ -638,6 +643,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
         objResult.push_back(Pair("DataString",  pGovObj->GetDataAsString()));
         objResult.push_back(Pair("Hash",  pGovObj->GetHash().ToString()));
         objResult.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
+        objResult.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
+        const CTxIn& masternodeVin = pGovObj->GetMasternodeVin();
+        if(masternodeVin != CTxIn()) {
+            objResult.push_back(Pair("SigningMasternode", masternodeVin.prevout.ToStringShort()));
+        }
 
         // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
         // -- FUNDING VOTING RESULTS
