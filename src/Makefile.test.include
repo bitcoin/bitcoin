@@ -13,6 +13,20 @@ EXTRA_DIST += \
 	test/bctest.py \
 	test/bitcoin-util-test.py \
 	test/data/bitcoin-util-test.json \
+	test/data/blanktxv1.json \
+	test/data/blanktxv2.json \
+	test/data/tt-delin1-out.json \
+	test/data/tt-delout1-out.json \
+	test/data/tt-locktime317000-out.json \
+	test/data/txcreate1.json \
+	test/data/txcreate2.json \
+	test/data/txcreatedata1.json \
+	test/data/txcreatedata2.json \
+	test/data/txcreatedata_seq0.json \
+	test/data/txcreatedata_seq1.json \
+	test/data/txcreatesignv1.json \
+	test/data/blanktxv1.hex \
+	test/data/blanktxv2.hex \
 	test/data/tt-delin1-out.hex \
 	test/data/tt-delout1-out.hex \
 	test/data/tt-locktime317000-out.hex \
@@ -22,6 +36,7 @@ EXTRA_DIST += \
 	test/data/txcreatedata1.hex \
 	test/data/txcreatedata2.hex \
 	test/data/txcreatesignv1.hex \
+	test/data/txcreatesignv2.hex \
 	test/data/txcreatedata_seq0.hex \
 	test/data/txcreatedata_seq1.hex
 
