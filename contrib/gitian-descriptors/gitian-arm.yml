@@ -34,7 +34,7 @@ remotes:
 files: []
 script: |
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  HOSTS="arm-linux-gnueabihf aarch64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
@@ -168,10 +168,6 @@ script: |
     make install DESTDIR=${INSTALLPATH}
     # BU save the executables with debug symbols
     cp -f src/bitcoind ${OUTDIR}/bitcoind-${i}.debug
-    if [ -f src/qt/bitcoin-qt ]
-    then
-      cp -f src/qt/bitcoin-qt ${OUTDIR}/bitcoin-qt-${i}.debug
-    fi
     #BU clean and tar up the output files
     cd installed
     find . -name "lib*.la" -delete
@@ -182,8 +178,6 @@ script: |
   done
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-linux64.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-i686-*.tar.gz ${OUTDIR}/${DISTNAME}-linux32.tar.gz
   mv ${OUTDIR}/${DISTNAME}-aarch64-*.tar.gz ${OUTDIR}/${DISTNAME}-arm64.tar.gz
   mv ${OUTDIR}/${DISTNAME}-arm-*.tar.gz ${OUTDIR}/${DISTNAME}-arm32.tar.gz
 
