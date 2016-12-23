@@ -773,9 +773,10 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
         return -1;
     }
 
+    // BU this is handled in the readHeader caller
     // reject messages larger than MAX_SIZE
-    if (hdr.nMessageSize > MAX_SIZE)
-        return -1;
+    // if (hdr.nMessageSize > MAX_SIZE)
+    //    return -1;
 
     // switch state to reading message data
     in_data = true;
@@ -2335,6 +2336,13 @@ void RelayTransaction(const CTransaction& tx)
 
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
+    uint64_t len = ::GetSerializeSize(tx,SER_NETWORK, PROTOCOL_VERSION);
+    if (len > maxTxSize.value)
+      {
+        LogPrintf("Will not announce (INV) excessive transaction %s.  Size: %llu, Limit: %llu\n", tx.GetHash().ToString(), len,(uint64_t) maxTxSize.value);
+	return;
+      }
+
     CInv inv(MSG_TX, tx.GetHash());
     {
         LOCK(cs_mapRelay);

@@ -32,6 +32,7 @@
 
 #include <boost/unordered_map.hpp>
 
+class ValidationResourceTracker;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -344,7 +345,8 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
+                 unsigned int flags, bool cacheStore, ValidationResourceTracker* resourceTracker,
+                 std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
@@ -392,12 +394,45 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
 bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL, bool useExistingLockPoints = false);
 
 /**
+ * Class that keeps track of number of signature operations
+ * and bytes hashed to compute signature hashes.
+ */
+class ValidationResourceTracker
+{
+private:
+    mutable CCriticalSection cs;
+    uint64_t nSigops;
+    uint64_t nSighashBytes;
+
+public:
+    ValidationResourceTracker() :
+                             nSigops(0),
+                             nSighashBytes(0) { }
+
+    void Update(const uint256& txid, uint64_t nSigopsIn, uint64_t nSighashBytesIn) {
+        LOCK(cs);
+        nSigops += nSigopsIn;
+        nSighashBytes += nSighashBytesIn;
+        return;
+    }
+    uint64_t GetSigOps() const {
+        LOCK(cs);
+        return nSigops;
+    }
+    uint64_t GetSighashBytes() const {
+        LOCK(cs);
+        return nSighashBytes;
+    }
+};
+
+/**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction 
  */
 class CScriptCheck
 {
 private:
+    ValidationResourceTracker* resourceTracker;
     CScript scriptPubKey;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -406,14 +441,15 @@ private:
     ScriptError error;
 
 public:
-    CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+    CScriptCheck(): resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
+    CScriptCheck(ValidationResourceTracker* resourceTrackerIn, const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
+        resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
 
     bool operator()();
 
     void swap(CScriptCheck &check) {
+        std::swap(resourceTracker, check.resourceTracker);
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
         std::swap(nIn, check.nIn);
@@ -444,7 +480,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
 /** Context-independent validity checks */
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true, bool conservative = false);
+bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true, bool conservative = false); // BU: returns the blocksize if block is valid.  Otherwise 0
 
 /** Context-dependent validity checks */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex *pindexPrev);

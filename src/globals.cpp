@@ -153,6 +153,10 @@ map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_orphancache);
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_orphancache);
 
 CTweakRef<unsigned int> ebTweak("net.excessiveBlock","Excessive block size in bytes", &excessiveBlockSize,&ExcessiveBlockValidator);
+CTweak<uint64_t> blockSigopsPerMb("net.excessiveSigopsPerMb","Excessive effort per block, denoted in cost (# inputs * txsize) per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
+CTweak<uint64_t> blockMiningSigopsPerMb("mining.excessiveSigopsPerMb","Excessive effort per block, denoted in cost (# inputs * txsize) per MB",BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS);
+
+CTweak<unsigned int> maxTxSize("net.excessiveTx","Largest transaction size in bytes", DEFAULT_LARGEST_TRANSACTION);
 CTweakRef<unsigned int> eadTweak("net.excessiveAcceptDepth","Excessive block chain acceptance depth in blocks", &excessiveAcceptDepth);
 CTweakRef<int> maxOutConnectionsTweak("net.maxOutboundConnections","Maximum number of outbound connections", &nMaxOutConnections,&OutboundConnectionValidator);
 CTweakRef<int> maxConnectionsTweak("net.maxConnections","Maximum number of connections connections",&nMaxConnections);
@@ -161,12 +165,31 @@ CTweakRef<unsigned int> briTweak("net.blockRetryInterval","How long to wait in m
 
 CTweakRef<std::string> subverOverrideTweak("net.subversionOverride","If set, this field will override the normal subversion field.  This is useful if you need to hide your node.",&subverOverride,&SubverValidator);
 
+/** Number of blocks that can be requested at any given time from a single peer. */
+CTweak<unsigned int> maxBlocksInTransitPerPeer("net.maxBlocksInTransitPerPeer","Number of blocks that can be requested at any given time from a single peer. 0 means use algorithm.",0);
+/** Size of the "block download window": how far ahead of our current height do we fetch?
+ *  Larger windows tolerate larger download speed differences between peer, but increase the potential
+ *  degree of disordering of blocks on disk (which make reindexing and in the future perhaps pruning
+ *  harder). We'll probably want to make this a per-peer adaptive value at some point. */
+CTweak<unsigned int> blockDownloadWindow("net.blockDownloadWindow","How far ahead of our current height do we fetch? 0 means use algorithm.",0);
+
+/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A 
+larger size will result in a tiny bit better performance if blocks are that 
+size.
+The real purpose of this parameter is to exhaustively test dynamic buffer resizes
+during reindexing by allowing the size to be set to low and random values.
+*/
+CTweak<uint64_t> reindexTypicalBlockSize("reindex.typicalBlockSize","Set larger than the typical block size.  The block data file's RAM buffer will initally be 2x this size.",TYPICAL_BLOCK_SIZE);
+
+
 CRequestManager requester;  // after the maps nodes and tweaks
 
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 CStatHistory<uint64_t > recvAmt; 
 CStatHistory<uint64_t > sendAmt; 
+CStatHistory<uint64_t> nTxValidationTime("txValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
+CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 
 // Thin block statistics need to be located here to ensure that the "statistics" global variable is constructed first
 CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_SUM | STAT_KEEP);
@@ -174,6 +197,7 @@ CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM |
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nTotalBloomFilterBytes("nSizeBloom", STAT_OP_SUM | STAT_KEEP);
+
 CCriticalSection cs_thinblockstats;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
 std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;

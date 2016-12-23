@@ -40,6 +40,9 @@ public:
         sha.Reset();
         return *this;
     }
+
+    /** Return the total number of bytes hashed since the last Reset() (or object construction) */
+    size_t GetNumBytesHashed() const { return sha.GetNumBytesHashed(); }
 };
 
 /** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
@@ -149,6 +152,11 @@ public:
         uint256 result;
         ctx.Finalize((unsigned char*)&result);
         return result;
+    }
+
+    /** Return the total number of bytes hashed by this object */
+    size_t GetNumBytesHashed() const {
+        return ctx.GetNumBytesHashed();
     }
 
     template<typename T>

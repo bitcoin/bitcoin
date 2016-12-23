@@ -18,10 +18,11 @@
 #include <vector>
 
 enum {
-    DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
+    TYPICAL_BLOCK_SIZE = 200000,   // used for initial buffer size
+    DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,  // default for the maximum size of mined blocks
     DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4,
     DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
-    DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10,
+    DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 16,    // Allowed messages lengths will be this * the excessive block size
     MAX_COINBASE_SCRIPTSIG_SIZE = 100,
     EXCESSIVE_BLOCK_CHAIN_RESET = 6*24,  // After 1 day of non-excessive blocks, reset the checker
 };
@@ -87,7 +88,7 @@ extern void UnlimitedLogBlock(const CBlock& block, const std::string& hash, uint
 extern bool TestConservativeBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot);
 
 // Check whether this block is bigger in some metric than we really want to accept
-extern bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx);
+extern bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx,uint64_t largestTx);
 
 // Check whether this chain qualifies as excessive.
 extern int isChainExcessive(const CBlockIndex* blk, unsigned int checkDepth = excessiveAcceptDepth);
@@ -211,8 +212,11 @@ std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item
 std::string OutboundConnectionValidator(const int& value,int* item,bool validate);
 std::string SubverValidator(const std::string& value,std::string* item,bool validate);
 
-// Protocol changes:
+extern CTweak<unsigned int> maxTxSize;
+extern CTweak<uint64_t> blockSigopsPerMb;
+extern CTweak<uint64_t> blockMiningSigopsPerMb;
 
+// Protocol changes:
 
 enum {
   EXPEDITED_STOP   = 1,

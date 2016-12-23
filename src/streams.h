@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include "util.h"
+
 /** Double ended buffer combining vector and stream-like interfaces.
  *
  * >> and << read and write unformatted data using the above serialization templates.
@@ -442,6 +444,7 @@ public:
     }
 };
 
+
 /** Non-refcounted RAII wrapper around a FILE* that implements a ring buffer to
  *  deserialize from. It guarantees the ability to rewind a given number of bytes.
  *
@@ -460,17 +463,17 @@ private:
 
     FILE *src;            // source file
     uint64_t nSrcPos;     // how many bytes have been read from source
-    uint64_t nReadPos;    // how many bytes have been read from this
+    uint64_t nReadPos;    // how many bytes caller has read from this
     uint64_t nReadLimit;  // up to which position we're allowed to read
     uint64_t nRewind;     // how many bytes we guarantee to rewind
     std::vector<char> vchBuf; // the buffer
-
+    enum { RESIZE_EXTRA = 200000 };  // BU how much additional to allocate if forced to resize
 protected:
     // read data from the source to fill the buffer
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
-        unsigned int readNow = vchBuf.size() - pos;
-        unsigned int nAvail = vchBuf.size() - (nSrcPos - nReadPos) - nRewind;
+        unsigned int readNow = vchBuf.size() - pos;  // how much to go until the end
+        unsigned int nAvail = vchBuf.size() - (nSrcPos - nReadPos) - nRewind;  // how much do we need to preserve
         if (nAvail < readNow)
             readNow = nAvail;
         if (readNow == 0)
@@ -486,7 +489,7 @@ protected:
 
 public:
     CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
-        nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
+    nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
     {
         src = fileIn;
         nType = nTypeIn;
@@ -515,8 +518,13 @@ public:
     CBufferedFile& read(char *pch, size_t nSize) {
         if (nSize + nReadPos > nReadLimit)
             throw std::ios_base::failure("Read attempted past buffer limit");
-        if (nSize + nRewind > vchBuf.size())
-            throw std::ios_base::failure("Read larger than buffer size");
+        if (nSize + nRewind > vchBuf.size())  // What's already read + what I want to read + how far I want to rewind
+          {
+            LogPrint("reindex","Large read, growing buffer\n", nSize);
+            GrowTo(nSize + nRewind + RESIZE_EXTRA);
+            if (nSize + nRewind > vchBuf.size())  // make sure it worked
+	      throw std::ios_base::failure("Read larger than buffer size");
+	  }
         while (nSize > 0) {
             if (nReadPos == nSrcPos)
                 Fill();
@@ -543,9 +551,11 @@ public:
     bool SetPos(uint64_t nPos) {
         nReadPos = nPos;
         if (nReadPos + nRewind < nSrcPos) {
+	    LogPrint("reindex","Short SetPos: desired %lld actual %lld srcpos %lld buffer size %lld, rewind %lld\n", nPos, nReadPos, nSrcPos, vchBuf.size(), nRewind);
             nReadPos = nSrcPos - nRewind;
             return false;
         } else if (nReadPos > nSrcPos) {
+	    LogPrint("reindex","Long SetPos: desired %lld actual %lld srcpos %lld buffer size %lld, rewind %lld\n", nPos, nReadPos, nSrcPos, vchBuf.size(), nRewind);
             nReadPos = nSrcPos;
             return false;
         } else {
@@ -553,6 +563,7 @@ public:
         }
     }
 
+#if 0  // BU: commented because this function is unused, and not correct -- after seeking, you can't SetPos and therefore correctly rewind...
     bool Seek(uint64_t nPos) {
         long nLongPos = nPos;
         if (nPos != (uint64_t)nLongPos)
@@ -564,6 +575,7 @@ public:
         nReadPos = nLongPos;
         return true;
     }
+#endif
 
     // prevent reading beyond a certain position
     // no argument removes the limit
@@ -590,6 +602,46 @@ public:
                 break;
             nReadPos++;
         }
+    }
+
+    // if the current buffer doesn't have amt more data, then extend it by that much
+    void GrowTo(uint64_t amt)
+    {
+      if (vchBuf.size() < amt)  // We want as much data as we are currently saving, plus the new data
+	{
+          amt = std::max(amt, ((uint64_t)vchBuf.size())*2);  // Resize is inefficient, so at a minimum double the buffer to make # resizes log(n)
+          vchBuf.resize(amt,0);
+          LogPrint("reindex","File buffer resize to %s\n", vchBuf.size());
+
+          // Now at this new buffer size the boundaries will be different so I have to reload the rewinded data
+          uint64_t readPos = 0;  // Position the data to be read at the start of the old maximum rewind (or the file beginning)
+          if (nRewind < nReadPos)
+            readPos = nReadPos - nRewind;
+
+          // Now expand the rewind         
+          nRewind = amt/2;
+
+          if (fseek(src, readPos, SEEK_SET))
+	    {
+            throw std::ios_base::failure("CBufferedFile::GrowTo: fseek error");
+	    }
+          unsigned int pos = readPos % vchBuf.size();
+          unsigned int readNow = std::min((uint64_t)(vchBuf.size() - pos), nRewind);  // the amount to read is the minimum of what's left over or the max we can read
+          size_t read = fread((void*)&vchBuf[pos], 1, readNow, src);
+          assert (read != 0);  // We MUST be able to read something because we rewound by nRewind so we've already read this once.
+          nSrcPos = readPos + read;
+          if ((nReadPos > nSrcPos)&&(read==readNow))  // I filled to the buffer end, but that wasn't enough
+            {
+	      readNow = std::min(pos,(unsigned int) (nRewind-read));  // The limit of this read is the prior start position in the buffer, or the maximum ahead the read is allowed to get
+              read = fread((void*)&vchBuf[0], 1, readNow, src);
+              if (read == 0) 
+                {
+                throw std::ios_base::failure(feof(src) ? "CBufferedFile::GrowTo: end of file" : "CBufferedFile::GrowTo: fread failed");
+                }
+              nSrcPos += read;
+            }
+          assert(nReadPos <= nSrcPos);  // By the end of the above logic, we must have filled the buffer up to the current read position.
+	}
     }
 };
 

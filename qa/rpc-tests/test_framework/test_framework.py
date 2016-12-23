@@ -11,7 +11,6 @@ import os
 import sys
 import time       # BU added
 import random     # BU added
-
 import shutil
 import tempfile
 import traceback
@@ -43,9 +42,19 @@ class BitcoinTestFramework(object):
     def add_options(self, parser):
         pass
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
+        """
+        Sets up the blockchain for the bitcoin nodes.  It also sets up the daemon configuration.
+        bitcoinConfDict:  Pass a dictionary of values you want written to bitcoin.conf.  If you have a key with multiple values, pass a list of the values as the value, for example:
+        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }        
+        This framework provides values for the necessary fields (like regtest=1).  But you can override these
+        defaults by setting them in this dictionary.
+
+        wallets: Pass a list of wallet filenames.  Each wallet file will be copied into the node's directory
+        before starting the node.
+        """
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+        initialize_chain(self.options.tmpdir,bitcoinConfDict, wallets)
 
     def setup_nodes(self):
         return start_nodes(4, self.options.tmpdir)
@@ -79,6 +88,7 @@ class BitcoinTestFramework(object):
         self.setup_network(True)
 
     def sync_all(self):
+        """Synchronizes blocks and mempools"""
         if self.is_network_split:
             sync_blocks(self.nodes[:2])
             sync_blocks(self.nodes[2:])
@@ -87,6 +97,14 @@ class BitcoinTestFramework(object):
         else:
             sync_blocks(self.nodes)
             sync_mempools(self.nodes)
+
+    def sync_blocks(self):
+        """Synchronizes blocks"""
+        if self.is_network_split:
+            sync_blocks(self.nodes[:2])
+            sync_blocks(self.nodes[2:])
+        else:
+            sync_blocks(self.nodes)
 
     def join_network(self):
         """
@@ -97,7 +115,17 @@ class BitcoinTestFramework(object):
         wait_bitcoinds()
         self.setup_network(False)
 
-    def main(self):
+    def main(self,argsOverride=None,bitcoinConfDict=None,wallets=None):
+        """
+        argsOverride: pass your own values for sys.argv in this field (or pass None) to use sys.argv
+        bitcoinConfDict:  Pass a dictionary of values you want written to bitcoin.conf.  If you have a key with multiple values, pass a list of the values as the value, for example:
+        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }        
+        This framework provides values for the necessary fields (like regtest=1).  But you can override these
+        defaults by setting them in this dictionary.
+
+        wallets: Pass a list of wallet filenames.  Each wallet file will be copied into the node's directory
+        before starting the node.
+        """
         import optparse
 
         parser = optparse.OptionParser(usage="%prog [options]")
@@ -117,7 +145,7 @@ class BitcoinTestFramework(object):
         parser.add_option("--randomseed", dest="randomseed",
                           help="Set RNG seed for tests that use randomness (ignored otherwise)")
         self.add_options(parser)
-        (self.options, self.args) = parser.parse_args()
+        (self.options, self.args) = parser.parse_args(argsOverride)
 
         # BU: initialize RNG seed based on time if no seed specified
         if self.options.randomseed:
@@ -142,7 +170,14 @@ class BitcoinTestFramework(object):
         try:
             if not os.path.isdir(self.options.tmpdir):
                 os.makedirs(self.options.tmpdir)
-            self.setup_chain()
+
+            # Not pretty but, I changed the function signature
+            # of setup_chain to allow customization of the setup.
+            # However derived object may still use the old format
+	    if self.setup_chain.__defaults__ is None:
+              self.setup_chain()
+            else:
+              self.setup_chain(bitcoinConfDict, wallets)
 
             self.setup_network()
 
@@ -199,9 +234,9 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
-    def setup_chain(self):
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):
         print "Initializing test directory "+self.options.tmpdir
-        initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+        initialize_chain_clean(self.options.tmpdir, self.num_nodes,bitcoinConfDict, wallets)
 
     def setup_network(self):
         self.nodes = start_nodes(

@@ -73,7 +73,23 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
+CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn,bool blockstreamCoreCompatible);
+
 CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn)
+{
+  CBlockTemplate* tmpl = NULL;
+  if (maxGeneratedBlock >  BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
+    tmpl = CreateNewBlock(chainparams, scriptPubKeyIn, false);
+  
+  if ((!tmpl) || (tmpl->block.nBlockSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE))  // If the block is too small we need to drop back to the 1MB ruleset
+    {
+      tmpl = CreateNewBlock(chainparams, scriptPubKeyIn, true);
+    }
+
+  return tmpl;
+}
+
+CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn,bool blockstreamCoreCompatible)
 {
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
@@ -121,7 +137,14 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
     std::priority_queue<CTxMemPool::txiter, std::vector<CTxMemPool::txiter>, ScoreCompare> clearedTxs;
     bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
-    uint64_t nBlockSize = 1000;
+    uint64_t nBlockSize = 0;  // BU add the proper block size quantity to the actual size
+    {
+      CBlockHeader h;
+      nBlockSize += h.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+    }
+    assert(nBlockSize == 80);  // BU always 80 bytes
+    nBlockSize += MAX_COINBASE_SCRIPTSIG_SIZE;  // BU Miners may take the block we give them and add additional strings to the coinbase
+    
     uint64_t nBlockTx = 0;
     unsigned int nBlockSigOps = 100;
     int lastFewTxs = 0;
@@ -201,7 +224,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 continue;
             }
 
-            unsigned int nTxSize = iter->GetTxSize();
+            unsigned int nTxSize = iter->GetTxSize();            
             if (fPriorityBlock &&
                 (nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
                 fPriorityBlock = false;
@@ -227,12 +250,27 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 continue;
 
             unsigned int nTxSigOps = iter->GetSigOpCount();
-            if (nBlockSigOps + nTxSigOps >= BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS) {  // BU: be conservative about what is generated
-                if (nBlockSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS - 2) {
-                    break;
+            if (nBlockSize + nTxSize <= BLOCKSTREAM_CORE_MAX_BLOCK_SIZE) // Enforce the "old" sigops for <= 1MB blocks
+              {      
+                if (nBlockSigOps + nTxSigOps >= BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS) {  // BU: be conservative about what is generated
+                  if (nBlockSigOps > BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS - 2) {  // BU: so a block that is near the sigops limit might be shorter than it could be if the high sigops tx was backed out and other tx added.
+                      break;
+                  }
+                  continue;
                 }
-                continue;
-            }
+              }
+            else if (nBlockSize + nTxSize > BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)
+              {
+                uint64_t blockMbSize = 1+((nBlockSize + nTxSize - 1)/1000000);
+                if (nBlockSigOps + nTxSigOps > blockMiningSigopsPerMb.value*blockMbSize)
+                  {
+                  if (nBlockSigOps >  blockMiningSigopsPerMb.value*blockMbSize - 2)
+                    {
+                    break;  // very close to the limit, so the block is finished.  So a block that is near the sigops limit might be shorter than it could be if the high sigops tx was backed out and other tx added.
+                    }
+                  continue;  // find another TX
+                  }
+              }
 
             CAmount nTxFees = iter->GetFee();
             // Added
@@ -307,9 +345,24 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
-        if (!TestConservativeBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
-            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
-        }
+        if (blockstreamCoreCompatible)
+          {
+            if (!TestConservativeBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
+              throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+            }
+          }
+        else
+          {
+            if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false))
+              {
+                throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+              }
+            if (pblock->fExcessive)
+              {
+                throw std::runtime_error(strprintf("%s: Excessive block generated: %s", __func__, FormatStateMessage(state)));
+              }
+          }
+           
     }
 
     return pblocktemplate.release();

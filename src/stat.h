@@ -21,6 +21,7 @@ enum StatOperation
     STAT_OP_MIN = 8,
     STAT_KEEP = 0x10,  // Do not clear the value when it it moved into history
     STAT_KEEP_COUNT = 0x20,  // do not reset the sample count when it it moved into history
+    STAT_INDIVIDUAL = 0x40,  // Every sample is a data point, do not aggregate by time
   };
 
 //typedef boost::reference_wrapper<std::string> CStatKey;
@@ -233,6 +234,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 
   CStatHistory& operator << (const DataType& rhs) 
     {
+      if (op&STAT_INDIVIDUAL) timeout(boost::system::error_code());  // If each call is an individual datapoint, simulate a timeout every time data arrives to advance.
       if (op & STAT_OP_SUM) 
 	{
         this->value += rhs;
@@ -256,18 +258,17 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
         if (this->value > rhs) this->value = rhs; 
         //if (this->total > rhs) this->total = rhs; 
         }
-
     return *this; 
     }
 
   void Start()
   {
-    wait();
+    if (!(op&STAT_INDIVIDUAL)) wait();
   }
 
   void Stop()
   {
-    timer.cancel();
+    if (!op&STAT_INDIVIDUAL) timer.cancel();
   }
 
   int Series(int series, DataType* array, int len)
@@ -384,7 +385,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
             if (len[i+1] >= STATISTICS_SAMPLES) len[i+1]=STATISTICS_SAMPLES;  // full              
 	  }
       }
-    wait();
+    if (!(op&STAT_INDIVIDUAL)) wait();
   }
 
 protected:

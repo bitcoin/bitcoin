@@ -9,19 +9,28 @@ import pdb
 # Add python-bitcoinrpc to module search path:
 import os
 import sys
-
+import math
+import binascii
 from decimal import Decimal, ROUND_DOWN
+import decimal
 import json
 import random
 import shutil
 import subprocess
 import time
 import re
+import urlparse
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 
 COVERAGE_DIR = None
+
+DEFAULT_TX_FEE_PER_BYTE = 50
+PerfectFractions = True
+BTC = 100000000
+mBTC = 100000
+uBTC = 100
 
 
 def enable_coverage(dirname):
@@ -134,27 +143,32 @@ def sync_mempools(rpc_connections, wait=1):
 
 bitcoind_processes = {}
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n,bitcoinConfDict=None,wallet=None):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
+    
+    defaults = {"server":1, "discover":0, "regtest":1,"rpcuser":"rt","rpcpassword":"rt",
+                "port":p2p_port(n),"rpcport":str(rpc_port(n)),"listenonion":0,"maxlimitertxfee":0}
+    if bitcoinConfDict: defaults.update(bitcoinConfDict)
+
     with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
-        f.write("regtest=1\n")
-        f.write("rpcuser=rt\n")
-        f.write("rpcpassword=rt\n")
-        f.write("port="+str(p2p_port(n))+"\n")
-        f.write("rpcport="+str(rpc_port(n))+"\n")
-        f.write("listenonion=0\n")
-        f.write("debug=net\n")
-        f.write("debug=blk\n")
-        f.write("debug=thin\n")
-        f.write("debug=lck\n")
-        f.write("debug=mempool\n")
-        f.write("debug=req\n")
-        f.write("maxlimitertxfee=0\n")
+        for (key,val) in defaults.items():
+          if type(val) is type([]):
+            for v in val:
+              f.write("%s=%s\n" % (str(key), str(v)))
+          else:
+            f.write("%s=%s\n"% (str(key), str(val)))
+
+    if wallet:
+      regtestdir = os.path.join(datadir,"regtest")
+      if not os.path.isdir(regtestdir):
+        os.makedirs(regtestdir)
+      shutil.copyfile(wallet,os.path.join(regtestdir, "wallet.dat"))
+      
     return datadir
 
-def initialize_chain(test_dir):
+def initialize_chain(test_dir,bitcoinConfDict=None,wallets=None):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
@@ -175,7 +189,7 @@ def initialize_chain(test_dir):
         # Create cache directories, run bitcoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("BITCOIND", "bitcoind"), "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
@@ -224,15 +238,15 @@ def initialize_chain(test_dir):
         from_dir = os.path.join("cache", "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
-        initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
+        initialize_datadir(test_dir, i,bitcoinConfDict,wallets[i] if wallets else None) # Overwrite port/rpcport in bitcoin.conf
 
-def initialize_chain_clean(test_dir, num_nodes):
+def initialize_chain_clean(test_dir, num_nodes, bitcoinConfDict=None, wallets=None):
     """
     Create an empty blockchain and num_nodes wallets.
     Useful if a test case wants complete control over initialization.
     """
     for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
+        datadir=initialize_datadir(test_dir, i, bitcoinConfDict, wallets)
 
 
 def _rpchost_to_args(rpchost):
@@ -263,7 +277,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
     # RPC tests still depend on free transactions
-    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000" ]
+    args = [ binary, "-datadir="+datadir, "-keypool=1", "-rest"] # , "-blockprioritysize=50000" ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     devnull = open(os.devnull, "w")
@@ -284,13 +298,13 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
     return proxy
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None,timewait=None):
     """
     Start multiple bitcoinds, return RPC connections to them
     """
     if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
     if binary is None: binary = [ None for i in range(num_nodes) ]
-    return [ start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]) for i in range(num_nodes) ]
+    return [ start_node(i, dirname, extra_args[i], rpchost, binary=binary[i],timewait=timewait) for i in range(num_nodes) ]
 
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
@@ -326,6 +340,15 @@ def connect_nodes(from_connection, node_num):
 def connect_nodes_bi(nodes, a, b):
     connect_nodes(nodes[a], b)
     connect_nodes(nodes[b], a)
+
+def interconnect_nodes(nodes):
+    """Connect every node in this list to every other node in the list"""
+    for frm in nodes:
+      for to in nodes:
+        if frm == to: continue
+        up = urlparse.urlparse(to.url)
+        ip_port = up.hostname + ":" + str(up.port-1000)  # this is the RPC port but we want the p2p port so -1000
+        frm.addnode(ip_port, "onetry")
 
 def find_output(node, txid, amount):
     """
@@ -432,6 +455,96 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
     txid = from_node.sendrawtransaction(signresult["hex"], True)
 
     return (txid, signresult["hex"], fee)
+
+def split_transaction(node, prevouts, toAddrs, txfeePer=DEFAULT_TX_FEE_PER_BYTE,**kwargs):
+    """
+      Create a transaction that divides the sum of all the passed utxos into all the destination addresses
+      pass:
+           node: (node object) where to send the RPC calls 
+           prevouts: a single UTXO description dictionary, or a list of them
+           toAddrs: a list of strings specifying the output addresses
+           "sendtx=False" if you don't want to transaction to be submitted.
+      Returns (transaction in hex, Vin list, Vout list)
+    """
+    if type(prevouts) == type({}): prevouts = [prevouts]  # If the user passes just one transaction then put a list around it 
+    txid = None
+    inp = []
+    decContext = decimal.getcontext().prec
+    try:  # try finally block to put the decimal precision back to what it was prior to this routine
+      decimal.getcontext().prec = 8 + 8 # 8 digits to get to 21million, and each bitcoin is 100 million satoshis
+      amount = Decimal(0)
+      iamount = 0
+      count = 0
+      for tx in prevouts:
+        inp.append({"txid":str(tx["txid"]),"vout":tx["vout"]})
+	amount += tx["amount"]*Decimal(BTC)
+        iamount += int(tx["amount"]*Decimal(BTC))
+        count += 1
+
+      assert(amount == iamount) # make sure Decimal and integer math is consistent
+      txLen = (len(prevouts)*100) + (len(toAddrs)*100)  # Guess the tx Size
+
+      while 1:
+	  outp = {}
+          if amount - Decimal(txfeePer*txLen) < 0:  # fee too big, find something smaller
+            txfeePer = (float(amount)/txLen)/1.5
+          
+          txfee = int(math.ceil(txfeePer*txLen))
+	  amtPer = (Decimal(amount-txfee)/len(toAddrs)).to_integral_value()
+	  # print "amount: ", amount, " amount per: ", amtPer, "from :", len(prevouts), "to: ", len(toAddrs), "tx fee: ", txfeePer, txfee
+
+	  for a in toAddrs[0:-1]:
+	    if PerfectFractions:
+	      outp[str(a)] = str(amtPer/Decimal(BTC))
+	    else:
+	      outp[str(a)] = float(amtPer/BTC)
+
+	  a = toAddrs[-1]
+	  amtPer = (amount - ((len(toAddrs)-1)*amtPer)) - txfee
+	  # print "final amt: ", amtPer
+	  if PerfectFractions:
+	      outp[str(a)] = str(amtPer/BTC)
+	  else:
+	      outp[str(a)] = float(amtPer/BTC)
+
+          totalOutputs = sum([Decimal(x) for x in outp.values()])
+          assert(totalOutputs < amount)
+          txn = node.createrawtransaction(inp, outp)
+          if kwargs.get("sendtx",True):
+              #print time.strftime('%X %x %Z')
+              try:
+                  s = str(txn)
+                  # print "tx len: ", len(binascii.unhexlify(s))
+                  signedtxn = node.signrawtransaction(s)
+                  txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
+              finally:
+                  #print time.strftime('%X %x %Z')
+                  pass
+
+              if signedtxn["complete"]:
+                  try:
+                      txid = node.sendrawtransaction(signedtxn["hex"],True)  # In the unit tests, we'll just allow high fees
+                      return (txn,inp,outp,txid)
+                  except JSONRPCException as e:
+                      tmp = e.error["message"]
+                      (code, msg) = tmp.split(":")
+                      if code == 64: raise # bad transaction
+                      print tmp
+                      if e.error["code"] == -26:  # insufficient priority
+                          txfeePer = txfeePer * 2
+                          print str(e)
+                          pdb.set_trace()
+                          print "Insufficient priority, raising tx fee per byte to: ", txfeePer 
+                          continue
+                      else:
+                          raise
+              else:
+                  for err in signedtxn["errors"]:
+                      print err["error"]
+	  else:
+              return (txn,inp,outp,txid)
+    finally:
+      decimal.getcontext().prec = decContext
 
 def assert_equal(thing1, thing2):
     if thing1 != thing2:

@@ -57,6 +57,8 @@ class JSONRPCException(Exception):
     def __init__(self, rpc_error):
         Exception.__init__(self)
         self.error = rpc_error
+    def __str__(self):
+	return "%d: %s" % (self.error["code"],self.error["message"])
 
 
 def EncodeDecimal(o):

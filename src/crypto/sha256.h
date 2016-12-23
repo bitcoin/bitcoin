@@ -24,6 +24,7 @@ public:
     CSHA256& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA256& Reset();
+    size_t GetNumBytesHashed() const { return bytes; }
 };
 
 #endif // BITCOIN_CRYPTO_SHA256_H

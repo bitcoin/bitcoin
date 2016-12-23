@@ -1,6 +1,7 @@
 #include "unlimited.h"
 
 #include "test/test_bitcoin.h"
+#include "../consensus/consensus.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -80,6 +81,49 @@ BOOST_AUTO_TEST_CASE(buip005)
     BOOST_CHECK_MESSAGE(BUComments.front() == exceptedEB,
                         "EB ought to have been rounded to " << exceptedEB << " when excessiveBlockSize = "
                         << excessiveBlockSize << " but was " << BUComments.front());
+
+    // set back to defaults
+    excessiveBlockSize = 1000000;
+    excessiveAcceptDepth = 4;
 }
+
+
+BOOST_AUTO_TEST_CASE(excessiveChecks)
+{
+  CBlock block;
+
+  excessiveBlockSize = 16000000;  // Ignore excessive block size when checking sigops and block effort
+
+  // Check sigops values
+
+  // Maintain compatibility with the old sigops calculator for blocks <= 1MB
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE-1,BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS,100,100), "improper sigops");
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE-1,BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS,100,100), "improper sigops");
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE,BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS,100,100), "improper sigops");
+
+  BOOST_CHECK_MESSAGE(true == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE-1,BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS+1,100,100), "improper sigops");
+  BOOST_CHECK_MESSAGE(true == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE,BLOCKSTREAM_CORE_MAX_BLOCK_SIGOPS+1,100,100), "improper sigops");
+
+
+  // Check sigops > 1MB.
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,1000000+1,(blockSigopsPerMb.value*2),100,100), "improper sigops");
+  BOOST_CHECK_MESSAGE(true == CheckExcessive(block,1000000+1,(blockSigopsPerMb.value*2)+1,100,100), "improper sigops");
+  BOOST_CHECK_MESSAGE(true == CheckExcessive(block,(2*1000000),(blockSigopsPerMb.value*2)+1,100,100), "improper sigops");
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,(2*1000000)+1,(blockSigopsPerMb.value*2)+1,100,100), "improper sigops");
+
+  
+  // Check tx size values
+  maxTxSize.value = DEFAULT_LARGEST_TRANSACTION;
+
+  // Within a 1 MB block, a 1MB transaction is not excessive
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE,1,1,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE), "improper max tx");
+
+  // With a > 1 MB block, use the maxTxSize to determine
+  BOOST_CHECK_MESSAGE(false == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE+1,1,1,maxTxSize.value), "improper max tx");
+  BOOST_CHECK_MESSAGE(true == CheckExcessive(block,BLOCKSTREAM_CORE_MAX_BLOCK_SIZE+1,1,1,maxTxSize.value+1), "improper max tx");
+
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
