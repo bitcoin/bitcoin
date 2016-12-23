@@ -296,16 +296,31 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           assert_equal(counts, [latest,latest,latest,latest]) # Verify that all nodes accepted the block, even if some of them didn't have the transaction.  They should all accept a <= 1MB block with a tx <= 1MB
 
         if self.extended:  # this test checks the behavior of > 1MB blocks with excessive transactions.  it takes a LONG time to generate and propagate 1MB+ txs.
-          # Create a LOT of UTXOs for the next test
+
+          logging.info("Creating addresses...")
+	  addrs = [ self.nodes[0].getnewaddress() for _ in range(2000)]
+            # Create a LOT of UTXOs for the next test
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=True)
-          logging.info("Create lots of UTXOs...")
-          n=0
+          wlen = len(wallet)
+          while wlen < 8000:
+            logging.info("Create lots of UTXOs by 100...")
+            n=0  
+            for w in wallet:
+                split_transaction(self.nodes[0], [w], addrs[n:100+n])
+                logging.info(str(wlen))
+                n+=100
+                if n >= len(addrs): n=0
+                wlen += 99
+                if wlen > 8000: break
 
-          for w in wallet:
-            split_transaction(self.nodes[0], [w], addrs[n:100+n])
-            n+=100
-            if n >= len(addrs): n=0
+            blk = self.nodes[0].generate(1)
+            blkinfo = self.nodes[0].getblock(blk[0])                        
+            logging.info("Generated block %d size: %d, num tx: %d" % (blkinfo["height"], blkinfo["size"], len(blkinfo["tx"])))
+            wallet = self.nodes[0].listunspent()
+            wallet.sort(key=lambda x: x["amount"],reverse=True)
+            wlen = len(wallet)
+            
 	
           self.nodes[0].generate(1)
           self.sync_all()
@@ -315,7 +330,8 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=False)
-
+          logging.info("Wallet length is %d" % len(wallet))
+           
           # Generate 1 MB worth of transactions        
           size = 0
           count = 0
@@ -332,12 +348,15 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           # Now generate a > 100kb transaction & mine it into a > 1MB block
 
           self.nodes[0].setminingmaxblock(2000000)
+          self.nodes[0].set("net.excessiveBlock=2000000")
+
           wallet.sort(key=lambda x: x["amount"],reverse=True)
           (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0:2000],[addrs[0]],txfeePer=60)
           logging.debug("Transaction Length is: ", len(binascii.unhexlify(tx)))
           assert(binascii.unhexlify(tx) > 100000) # txn has to be big for the test to work
 
           origCounts = [ x.getblockcount() for x in self.nodes ]
+          base = origCounts[0]
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
           logging.debug(str(mpool))
           largeBlock = self.nodes[0].generate(1)
@@ -349,28 +368,17 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           sync_blocks(self.nodes[0:2])
           mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
           logging.debug(str(mpool))
-          latest = counts[0]
-          assert_equal(counts, [latest,latest,excess,excess]) 
-          print ""
+          self.expectHeights([base+2,base+2, base, base],30)
 
           logging.info("Syncing node2")
           largeBlock3 = self.nodes[0].generate(1)
           sync_blocks(self.nodes[0:3])
-          mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
-          print mpool
-          counts = [ x.getblockcount() for x in self.nodes ]
-          latest = counts[0]
-          assert_equal(counts, [latest,latest,latest,excess]) 
-          print ""
-
+          self.expectHeights([base+3,base+3, base+3, base],30)
+          
           logging.info("Syncing node3")          
           largeBlock4 = self.nodes[0].generate(1)
           sync_blocks(self.nodes)
-          mpool = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]
-          print mpool
-          counts = [ x.getblockcount() for x in self.nodes ]
-          latest = counts[0]
-          assert_equal(counts, [latest,latest,latest,latest]) 
+          self.expectHeights([base+4,base+4, base+4, base+4],30)
 
         # Put it back to the default
         self.nodes[0].set("net.excessiveTx=1000000")
@@ -546,7 +554,7 @@ def info(type, value, tb):
 sys.excepthook = info
 
 def Test():
-  t = ExcessiveBlockTest()
+  t = ExcessiveBlockTest(True)
   bitcoinConf = {
     "debug":["net","blk","thin","mempool","req","bench","evict"], # "lck"
     "blockprioritysize":2000000  # we don't want any transactions rejected due to insufficient fees...

@@ -137,7 +137,14 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
     std::priority_queue<CTxMemPool::txiter, std::vector<CTxMemPool::txiter>, ScoreCompare> clearedTxs;
     bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
-    uint64_t nBlockSize = 0;  // BU starting at 1000 knocks the block size calc off by 1000
+    uint64_t nBlockSize = 0;  // BU add the proper block size quantity to the actual size
+    {
+      CBlockHeader h;
+      nBlockSize += h.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+    }
+    assert(nBlockSize == 80);  // BU always 80 bytes
+    nBlockSize += MAX_COINBASE_SCRIPTSIG_SIZE;  // BU Miners may take the block we give them and add additional strings to the coinbase
+    
     uint64_t nBlockTx = 0;
     unsigned int nBlockSigOps = 100;
     int lastFewTxs = 0;
