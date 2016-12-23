@@ -74,14 +74,15 @@ bool LogAcceptCategory(const char* category);
 /** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
-#define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
+#define LogPrint(category, ...) do { \
+    if (LogAcceptCategory((category))) { \
+        LogPrintStr(tfm::format(__VA_ARGS__)); \
+    } \
+} while(0)
 
-template<typename... Args>
-static inline int LogPrint(const char* category, const char* fmt, const Args&... args)
-{
-    if(!LogAcceptCategory(category)) return 0;                            \
-    return LogPrintStr(tfm::format(fmt, args...));
-}
+#define LogPrintf(...) do { \
+    LogPrintStr(tfm::format(__VA_ARGS__)); \
+} while(0)
 
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
