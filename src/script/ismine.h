@@ -30,7 +30,7 @@ enum isminetype
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
 
-bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, int64_t& nFreezeLockTime); // Freeze
+bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, CScriptNum& nFreezeLockTime); // Freeze
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, CBlockIndex* bestBlock); // bestBlock - Freeze CLTV
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, CBlockIndex* bestBlock);
 

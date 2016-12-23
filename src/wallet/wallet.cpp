@@ -2241,10 +2241,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
                     // If the input is a Freeze CLTV lock-by-blocktime then update the txNew.nLockTime
-                    int64_t nFreezeLockTime = 0;
+                    CScriptNum nFreezeLockTime(0);
                     if (isFreezeCLTV(*this, coin.first->vout[coin.second].scriptPubKey, nFreezeLockTime))
                     {
-                        if (nFreezeLockTime > LOCKTIME_THRESHOLD)
+                        if (nFreezeLockTime.getint64() > LOCKTIME_THRESHOLD)
                             txNew.nLockTime = chainActive.Tip()->GetMedianTimePast();
                     }
                 }

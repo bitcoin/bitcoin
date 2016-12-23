@@ -33,7 +33,7 @@ unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
     return nResult;
 }
 
-bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, int64_t& nFreezeLockTime)
+bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, CScriptNum& nFreezeLockTime)
 {
 	vector<valtype> vSolutions;
 	txnouttype whichType;
@@ -50,11 +50,11 @@ bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, int64_
 		if (whichType == TX_CLTV)
 		{
 			CScriptNum sn(vSolutions[0], true, 5);
-			nFreezeLockTime = sn.getint64();
+			nFreezeLockTime = sn;
 			return true;
 		}
-		else return false;
 	}
+	return false;
 }
 
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest, CBlockIndex* bestBlock)
