@@ -1827,6 +1827,7 @@ void CConnman::ThreadMessageHandler()
 
     while (true)
     {
+        boost::system_time start_time = boost::posix_time::microsec_clock::universal_time();
         std::vector<CNode*> vNodesCopy;
         {
             LOCK(cs_vNodes);
@@ -1878,7 +1879,7 @@ void CConnman::ThreadMessageHandler()
         }
 
         if (fSleep)
-            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
+            messageHandlerCondition.timed_wait(lock, start_time + boost::posix_time::milliseconds(100));
     }
 }
 
