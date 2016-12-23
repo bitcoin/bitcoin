@@ -5,15 +5,20 @@
     "description": "Creates a blank v1 transaction"
   },
   { "exec": "./bitcoin-tx",
-    "args": ["-json","-create"],
-    "output_cmp": "blanktxv2.json",
-    "description": "Creates a blank transaction (output in json)"
+    "args": ["-json","-create", "nversion=1"],
+    "output_cmp": "blanktxv1.json",
+    "description": "Creates a blank v1 transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-"],
     "input": "blanktxv2.hex",
     "output_cmp": "blanktxv2.hex",
     "description": "Creates a blank transaction when nothing is piped into bitcoin-tx"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json","-create"],
+    "output_cmp": "blanktxv2.json",
+    "description": "Creates a blank transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
     "args": ["-json","-"],
