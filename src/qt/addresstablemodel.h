@@ -69,6 +69,7 @@ public:
     /* Look up label for address in address book, if not found return empty string.
      */
     QString labelForAddress(const QString &address) const;
+    QString labelForFreeze(const QString &address) const;
 
     /* Look up row index of an address in the model.
        Return -1 if not found.

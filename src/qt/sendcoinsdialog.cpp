@@ -285,6 +285,11 @@ void SendCoinsDialog::on_sendButton_clicked()
         {
             recipientElement = tr("%1 to %2").arg(amount, address);
         }
+        if (!rcp.freezeLockTime.isEmpty()) // freeze payment
+        {
+            recipientElement.append(tr("<br><br><b>WARNING!!! DESTINATION IS A FREEZE ADDRESS<br>UNSPENDABLE UNTIL</b> %1 <br>*********************************************<br>").arg(GUIUtil::HtmlEscape(rcp.freezeLockTime)));
+        }
+
 
         formatted.append(recipientElement);
     }

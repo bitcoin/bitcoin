@@ -187,10 +187,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         	 * The address variable needs to show the freeze P2SH public key  */
         	address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", nFreezeLockTime);
 
-            if (nFreezeLockTime < LOCKTIME_THRESHOLD)
-            	sFreezeLockTime = (QString)("Block:") +  QString::number(nFreezeLockTime.getint());
-            else
-            	sFreezeLockTime = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
+            sFreezeLockTime = model->getAddressTableModel()->labelForFreeze(address);
 
         }
     }

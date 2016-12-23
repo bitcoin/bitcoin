@@ -15,6 +15,7 @@
 
 #include <QFont>
 #include <QDebug>
+#include <QDateTime>
 
 const QString AddressTableModel::Send = "S";
 const QString AddressTableModel::Receive = "R";
@@ -438,6 +439,27 @@ QString AddressTableModel::labelForAddress(const QString &address) const
         {
             return QString::fromStdString(mi->second.name);
         }
+    }
+    return QString();
+}
+
+/* Look up label for freeze in wallet, if not found return empty string.
+ */
+QString AddressTableModel::labelForFreeze(const QString &address) const
+{
+    {
+        LOCK(wallet->cs_wallet);
+        CBitcoinAddress address_parsed(address.toStdString());
+        CScript dest = GetScriptForDestination(address_parsed.Get());
+        CScriptNum nFreezeLockTime(0);
+        if (isFreezeCLTV(*wallet, dest, nFreezeLockTime))
+        {
+            if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
+                return (QString)("Block:") +  QString::number(nFreezeLockTime.getint());
+            else
+                return QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
+        }
+
     }
     return QString();
 }
