@@ -165,7 +165,7 @@ void CMasternodeMan::Check()
 {
     LOCK(cs);
 
-    LogPrint("masternode", "CMasternodeMan::Check nLastWatchdogVoteTime = %d, IsWatchdogActive() = %d\n", nLastWatchdogVoteTime, IsWatchdogActive());
+    LogPrint("masternode", "CMasternodeMan::Check -- nLastWatchdogVoteTime=%d, IsWatchdogActive()=%d\n", nLastWatchdogVoteTime, IsWatchdogActive());
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -184,17 +184,12 @@ void CMasternodeMan::CheckAndRemove()
         // Remove inactive and outdated masternodes
         std::vector<CMasternode>::iterator it = vMasternodes.begin();
         while(it != vMasternodes.end()) {
-            bool fRemove =  // If it's marked to be removed from the list by CMasternode::Check for whatever reason ...
-                    (*it).nActiveState == CMasternode::MASTERNODE_REMOVE ||
-                    // or collateral was spent ...
-                    (*it).nActiveState == CMasternode::MASTERNODE_OUTPOINT_SPENT;
-
-            if (fRemove) {
-                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).GetStatus(), (*it).addr.ToString(), size() - 1);
+            // If collateral was spent ...
+            if ((*it).IsOutpointSpent()) {
+                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", (*it).GetStateString(), (*it).addr.ToString(), size() - 1);
 
                 // erase all of the broadcasts we've seen from this txin, ...
                 mapSeenMasternodeBroadcast.erase(CMasternodeBroadcast(*it).GetHash());
-                // allow us to ask for this masternode again if we see another ping ...
                 mWeAskedForMasternodeListEntry.erase((*it).vin.prevout);
 
                 // and finally remove it from the list
@@ -243,30 +238,21 @@ void CMasternodeMan::CheckAndRemove()
             }
         }
 
-        std::map<CNetAddr, CMasternodeVerification>::iterator itv1 = mWeAskedForVerification.begin();
-        while(itv1 != mWeAskedForVerification.end()){
-            if(itv1->second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS) {
-                mWeAskedForVerification.erase(itv1++);
-            } else {
-                ++itv1;
-            }
-        }
-
-        // remove expired mapSeenMasternodeBroadcast
-        std::map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
-        while(it3 != mapSeenMasternodeBroadcast.end()){
-            if((*it3).second.lastPing.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
-                LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode broadcast: hash=%s\n", (*it3).second.GetHash().ToString());
-                mapSeenMasternodeBroadcast.erase(it3++);
+        std::map<CNetAddr, CMasternodeVerification>::iterator it3 = mWeAskedForVerification.begin();
+        while(it3 != mWeAskedForVerification.end()){
+            if(it3->second.nBlockHeight < pCurrentBlockIndex->nHeight - MAX_POSE_BLOCKS) {
+                mWeAskedForVerification.erase(it3++);
             } else {
                 ++it3;
             }
         }
 
+        // NOTE: do not expire mapSeenMasternodeBroadcast entries here, clean them on mnb updates!
+
         // remove expired mapSeenMasternodePing
         std::map<uint256, CMasternodePing>::iterator it4 = mapSeenMasternodePing.begin();
         while(it4 != mapSeenMasternodePing.end()){
-            if((*it4).second.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
+            if((*it4).second.IsExpired()) {
                 LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Removing expired Masternode ping: hash=%s\n", (*it4).second.GetHash().ToString());
                 mapSeenMasternodePing.erase(it4++);
             } else {
@@ -530,7 +516,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
     //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
     //  -- (chance per block * chances before IsScheduled will fire)
-    int nTenthNetwork = CountEnabled()/10;
+    int nTenthNetwork = nMnCount/10;
     int nCountTenth = 0;
     arith_uint256 nHighest = 0;
     BOOST_FOREACH (PAIRTYPE(int, CMasternode*)& s, vecMasternodeLastPaid){
@@ -716,6 +702,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
+        LogPrint("masternode", "MNANNOUNCE -- Masternode announce, masternode=%s\n", mnb.vin.prevout.ToStringShort());
+
         // backward compatibility patch
         if(pfrom->nVersion < 70204) {
             int64_t nLastDsqDummy;
@@ -735,8 +723,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             NotifyMasternodeUpdates();
         }
     } else if (strCommand == NetMsgType::MNPING) { //Masternode Ping
-        // ignore masternode pings until masternode list is synced
-        if (!masternodeSync.IsMasternodeListSynced()) return;
 
         CMasternodePing mnp;
         vRecv >> mnp;
@@ -751,17 +737,21 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s new\n", mnp.vin.prevout.ToStringShort());
 
+        // see if we have this Masternode
+        CMasternode* pmn = mnodeman.Find(mnp.vin);
+
+        // too late, new MNANNOUNCE is required
+        if(pmn && pmn->IsNewStartRequired()) return;
+
         int nDos = 0;
-        if(mnp.CheckAndUpdate(nDos)) return;
+        if(mnp.CheckAndUpdate(pmn, nDos)) return;
 
         if(nDos > 0) {
             // if anything significant failed, mark that node
             Misbehaving(pfrom->GetId(), nDos);
-        } else {
-            // if nothing significant failed, search existing Masternode list
-            CMasternode* pmn = Find(mnp.vin);
-            // if it's known, don't ask for the mnb, just return
-            if(pmn != NULL) return;
+        } else if(pmn != NULL) {
+            // nothing significant failed, mn is a known one too
+            return;
         }
 
         // something significant is broken or mn is unknown,
@@ -810,6 +800,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             CMasternodeBroadcast mnb = CMasternodeBroadcast(mn);
             uint256 hash = mnb.GetHash();
             pfrom->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hash));
+            pfrom->PushInventory(CInv(MSG_MASTERNODE_PING, mn.lastPing.GetHash()));
             nInvCount++;
 
             if (!mapSeenMasternodeBroadcast.count(hash)) {
@@ -1300,8 +1291,12 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb)
         if(Add(mn)) {
             masternodeSync.AddedMasternodeList();
         }
-    } else if(pmn->UpdateFromNewBroadcast(mnb)) {
-        masternodeSync.AddedMasternodeList();
+    } else {
+        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()];
+        if(pmn->UpdateFromNewBroadcast(mnb)) {
+            masternodeSync.AddedMasternodeList();
+            mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
+        }
     }
 }
 
@@ -1314,6 +1309,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.vin.prevout.ToStringShort());
 
     if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.vin.prevout.ToStringShort());
         return true;
     }
     mapSeenMasternodeBroadcast.insert(std::make_pair(mnb.GetHash(), mnb));
@@ -1328,9 +1324,13 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     // search Masternode list
     CMasternode* pmn = Find(mnb.vin);
     if(pmn) {
+        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()];
         if(!mnb.Update(pmn, nDos)) {
             LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
             return false;
+        }
+        if(mnb.GetHash() != mnbOld.GetHash()) {
+            mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
         }
     } else {
         if(mnb.CheckOutpoint(nDos)) {
@@ -1471,7 +1471,7 @@ int CMasternodeMan::GetMasternodeState(const CTxIn& vin)
     LOCK(cs);
     CMasternode* pMN = Find(vin);
     if(!pMN)  {
-        return CMasternode::MASTERNODE_REMOVE;
+        return CMasternode::MASTERNODE_NEW_START_REQUIRED;
     }
     return pMN->nActiveState;
 }
@@ -1481,7 +1481,7 @@ int CMasternodeMan::GetMasternodeState(const CPubKey& pubKeyMasternode)
     LOCK(cs);
     CMasternode* pMN = Find(pubKeyMasternode);
     if(!pMN)  {
-        return CMasternode::MASTERNODE_REMOVE;
+        return CMasternode::MASTERNODE_NEW_START_REQUIRED;
     }
     return pMN->nActiveState;
 }

@@ -94,7 +94,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     nTimeLastChecked(0),
     nTimeLastPaid(0),
     nTimeLastWatchdogVote(mnb.sigTime),
-    nActiveState(MASTERNODE_ENABLED),
+    nActiveState(mnb.nActiveState),
     nCacheCollateralBlock(0),
     nBlockLastPaid(0),
     nProtocolVersion(mnb.nProtocolVersion),
@@ -121,7 +121,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     nTimeLastChecked = 0;
     nTimeLastWatchdogVote = mnb.sigTime;
     int nDos = 0;
-    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDos))) {
+    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(this, nDos))) {
         lastPing = mnb.lastPing;
         mnodeman.mapSeenMasternodePing.insert(std::make_pair(lastPing.GetHash(), lastPing));
     }
@@ -166,8 +166,6 @@ void CMasternode::Check(bool fForce)
 {
     LOCK(cs);
 
-    static int64_t nTimeStart = GetTime();
-
     if(ShutdownRequested()) return;
 
     if(!fForce && (GetTime() - nTimeLastChecked < MASTERNODE_CHECK_SECONDS)) return;
@@ -176,7 +174,7 @@ void CMasternode::Check(bool fForce)
     LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state\n", vin.prevout.ToStringShort(), GetStateString());
 
     //once spent, stop doing the checks
-    if(nActiveState == MASTERNODE_OUTPOINT_SPENT) return;
+    if(IsOutpointSpent()) return;
 
     int nHeight = 0;
     if(!fUnitTest) {
@@ -195,7 +193,7 @@ void CMasternode::Check(bool fForce)
         nHeight = chainActive.Height();
     }
 
-    if(nActiveState == MASTERNODE_POSE_BAN) {
+    if(IsPoSeBanned()) {
         if(nHeight < nPoSeBanHeight) return; // too early?
         // Otherwise give it a chance to proceed further to do all the usual checks and to change its state.
         // Masternode still will be on the edge and can be banned back easily if it keeps ignoring mnverify
@@ -211,15 +209,15 @@ void CMasternode::Check(bool fForce)
     }
 
     int nActiveStatePrev = nActiveState;
+    bool fOurMasternode = fMasterNode && activeMasternode.pubKeyMasternode == pubKeyMasternode;
 
                    // masternode doesn't meet payment protocol requirements ...
-    bool fRemove = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
+    bool fRequireUpdate = nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto() ||
                    // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
-                   (pubKeyMasternode == activeMasternode.pubKeyMasternode && nProtocolVersion < PROTOCOL_VERSION);
+                   (fOurMasternode && nProtocolVersion < PROTOCOL_VERSION);
 
-    if(fRemove) {
-        // it should be removed from the list
-        nActiveState = MASTERNODE_REMOVE;
+    if(fRequireUpdate) {
+        nActiveState = MASTERNODE_UPDATE_REQUIRED;
         if(nActiveStatePrev != nActiveState) {
             LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
             // RESCAN AFFECTED VOTES
@@ -228,34 +226,69 @@ void CMasternode::Check(bool fForce)
         return;
     }
 
-    bool fWatchdogActive = mnodeman.IsWatchdogActive();
-    bool fWatchdogExpired = (fWatchdogActive && ((GetTime() - nTimeLastWatchdogVote) > MASTERNODE_WATCHDOG_MAX_SECONDS));
+    // keep old masternodes on start, give them a chance to receive updates...
+    bool fWaitForPing = !masternodeSync.IsMasternodeListSynced() && !IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS);
 
-    LogPrint("masternode", "CMasternode::Check -- vin %s, nTimeLastWatchdogVote %d, GetTime() %d, fWatchdogExpired %d\n",
-            vin.prevout.ToStringShort(), nTimeLastWatchdogVote, GetTime(), fWatchdogExpired);
+    //
+    // REMOVE AFTER MIGRATION TO 12.1
+    //
+    // Old nodes don't send pings on dseg, so they could switch to one of the expired states
+    // if we were offline for too long even if they are actually enabled for the rest
+    // of the network. Postpone their check for MASTERNODE_MIN_MNP_SECONDS seconds.
+    // This could be usefull for 12.1 migration, can be removed after it's done.
+    static int64_t nTimeStart = GetTime();
+    if(nProtocolVersion < 70204) {
+        if(!masternodeSync.IsMasternodeListSynced()) nTimeStart = GetTime();
+        fWaitForPing = GetTime() - nTimeStart < MASTERNODE_MIN_MNP_SECONDS;
+    }
+    //
+    // END REMOVE
+    //
 
-    if(fWatchdogExpired) {
-        nActiveState = MASTERNODE_WATCHDOG_EXPIRED;
-        if(nActiveStatePrev != nActiveState) {
-            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+    if(fWaitForPing && !fOurMasternode) {
+        // ...but if it was already expired before the initial check - return right away
+        if(IsExpired() || IsWatchdogExpired() || IsNewStartRequired()) {
+            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state, waiting for ping\n", vin.prevout.ToStringShort(), GetStateString());
+            return;
         }
-        return;
     }
 
-    // keep old masternodes on start, give them a chance to receive an updated ping without removal/expiry
-    if(!masternodeSync.IsMasternodeListSynced()) nTimeStart = GetTime();
-    bool fWaitForPing = (GetTime() - nTimeStart < MASTERNODE_MIN_MNP_SECONDS);
-    // but if it was already expired before the check - don't wait, check it again now
-    if(nActiveState == MASTERNODE_EXPIRED) fWaitForPing = false;
+    // don't expire if we are still in "waiting for ping" mode unless it's our own masternode
+    if(!fWaitForPing || fOurMasternode) {
 
-    if(!fWaitForPing && !IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
-        nActiveState = MASTERNODE_EXPIRED;
-        if(nActiveStatePrev != nActiveState) {
-            LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
-            // RESCAN AFFECTED VOTES
-            FlagGovernanceItemsAsDirty();
+        if(!IsPingedWithin(MASTERNODE_NEW_START_REQUIRED_SECONDS)) {
+            nActiveState = MASTERNODE_NEW_START_REQUIRED;
+            if(nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+                // RESCAN AFFECTED VOTES
+                FlagGovernanceItemsAsDirty();
+            }
+            return;
         }
-        return;
+
+        bool fWatchdogActive = masternodeSync.IsSynced() && mnodeman.IsWatchdogActive();
+        bool fWatchdogExpired = (fWatchdogActive && ((GetTime() - nTimeLastWatchdogVote) > MASTERNODE_WATCHDOG_MAX_SECONDS));
+
+        LogPrint("masternode", "CMasternode::Check -- outpoint=%s, nTimeLastWatchdogVote=%d, GetTime()=%d, fWatchdogExpired=%d\n",
+                vin.prevout.ToStringShort(), nTimeLastWatchdogVote, GetTime(), fWatchdogExpired);
+
+        if(fWatchdogExpired) {
+            nActiveState = MASTERNODE_WATCHDOG_EXPIRED;
+            if(nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+            }
+            return;
+        }
+
+        if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)) {
+            nActiveState = MASTERNODE_EXPIRED;
+            if(nActiveStatePrev != nActiveState) {
+                LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
+                // RESCAN AFFECTED VOTES
+                FlagGovernanceItemsAsDirty();
+            }
+            return;
+        }
     }
 
     if(lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
@@ -306,14 +339,15 @@ masternode_info_t CMasternode::GetInfo()
 std::string CMasternode::StateToString(int nStateIn)
 {
     switch(nStateIn) {
-        case CMasternode::MASTERNODE_PRE_ENABLED:       return "PRE_ENABLED";
-        case CMasternode::MASTERNODE_ENABLED:           return "ENABLED";
-        case CMasternode::MASTERNODE_EXPIRED:           return "EXPIRED";
-        case CMasternode::MASTERNODE_OUTPOINT_SPENT:    return "OUTPOINT_SPENT";
-        case CMasternode::MASTERNODE_REMOVE:            return "REMOVE";
-        case CMasternode::MASTERNODE_WATCHDOG_EXPIRED:  return "WATCHDOG_EXPIRED";
-        case CMasternode::MASTERNODE_POSE_BAN:          return "POSE_BAN";
-        default:                                        return "UNKNOWN";
+        case MASTERNODE_PRE_ENABLED:            return "PRE_ENABLED";
+        case MASTERNODE_ENABLED:                return "ENABLED";
+        case MASTERNODE_EXPIRED:                return "EXPIRED";
+        case MASTERNODE_OUTPOINT_SPENT:         return "OUTPOINT_SPENT";
+        case MASTERNODE_UPDATE_REQUIRED:        return "UPDATE_REQUIRED";
+        case MASTERNODE_WATCHDOG_EXPIRED:       return "WATCHDOG_EXPIRED";
+        case MASTERNODE_NEW_START_REQUIRED:     return "NEW_START_REQUIRED";
+        case MASTERNODE_POSE_BAN:               return "POSE_BAN";
+        default:                                return "UNKNOWN";
     }
 }
 
@@ -490,7 +524,8 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 
     // empty ping or incorrect sigTime/unknown blockhash
     if(lastPing == CMasternodePing() || !lastPing.SimpleCheck(nDos)) {
-        return false;
+        // one of us is probably forked or smth, just mark it as expired and check the rest of the rules
+        nActiveState = MASTERNODE_EXPIRED;
     }
 
     if(nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
@@ -518,11 +553,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 
     if(!vin.scriptSig.empty()) {
         LogPrintf("CMasternodeBroadcast::SimpleCheck -- Ignore Not Empty ScriptSig %s\n",vin.ToString());
-        return false;
-    }
-
-    if (!CheckSignature(nDos)) {
-        LogPrintf("CMasternodeBroadcast::SimpleCheck -- CheckSignature() failed, masternode=%s\n", vin.prevout.ToStringShort());
+        nDos = 100;
         return false;
     }
 
@@ -536,10 +567,12 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
 
 bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
 {
+    nDos = 0;
+
     if(pmn->sigTime == sigTime) {
         // mapSeenMasternodeBroadcast in CMasternodeMan::CheckMnbAndUpdateMasternodeList should filter legit duplicates
         // but this still can happen if we just started, which is ok, just do nothing here.
-        return true;
+        return false;
     }
 
     // this broadcast is older than the one that we already have - it's bad and should never happen
@@ -560,8 +593,13 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
 
     // IsVnAssociatedWithPubkey is validated once in CheckOutpoint, after that they just need to match
     if(pmn->pubKeyCollateralAddress != pubKeyCollateralAddress) {
-        LogPrintf("CMasternodeMan::Update -- Got mismatched pubKeyCollateralAddress and vin\n");
+        LogPrintf("CMasternodeBroadcast::Update -- Got mismatched pubKeyCollateralAddress and vin\n");
         nDos = 33;
+        return false;
+    }
+
+    if (!CheckSignature(nDos)) {
+        LogPrintf("CMasternodeBroadcast::Update -- CheckSignature() failed, masternode=%s\n", vin.prevout.ToStringShort());
         return false;
     }
 
@@ -584,6 +622,11 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
     // we are a masternode with the same vin (i.e. already activated) and this mnb is ours (matches our Masternode privkey)
     // so nothing to do here for us
     if(fMasterNode && vin.prevout == activeMasternode.vin.prevout && pubKeyMasternode == activeMasternode.pubKeyMasternode) {
+        return false;
+    }
+
+    if (!CheckSignature(nDos)) {
+        LogPrintf("CMasternodeBroadcast::CheckOutpoint -- CheckSignature() failed, masternode=%s\n", vin.prevout.ToStringShort());
         return false;
     }
 
@@ -813,7 +856,7 @@ bool CMasternodePing::SimpleCheck(int& nDos)
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(int& nDos)
+bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, int& nDos)
 {
     // don't ban by default
     nDos = 0;
@@ -822,22 +865,30 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
         return false;
     }
 
+    if (pmn == NULL) {
+        LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Couldn't find Masternode entry, masternode=%s\n", vin.prevout.ToStringShort());
+        return false;
+    }
+
     {
         LOCK(cs_main);
         BlockMap::iterator mi = mapBlockIndex.find(blockHash);
         if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
             LogPrintf("CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", vin.prevout.ToStringShort(), blockHash.ToString());
+            // nDos = 1;
             return false;
         }
     }
 
     LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- New ping: masternode=%s  blockHash=%s  sigTime=%d\n", vin.prevout.ToStringShort(), blockHash.ToString(), sigTime);
 
-    // see if we have this Masternode
-    CMasternode* pmn = mnodeman.Find(vin);
+    if (pmn->IsUpdateRequired()) {
+        LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- masternode protocol is outdated, masternode=%s\n", vin.prevout.ToStringShort());
+        return false;
+    }
 
-    if (pmn == NULL || pmn->nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
-        LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- Couldn't find compatible Masternode entry, masternode=%s\n", vin.prevout.ToStringShort());
+    if (pmn->IsNewStartRequired()) {
+        LogPrint("masternode", "CMasternodePing::CheckAndUpdate -- masternode is completely expired, new start is required, masternode=%s\n", vin.prevout.ToStringShort());
         return false;
     }
 

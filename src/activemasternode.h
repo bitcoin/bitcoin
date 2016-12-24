@@ -55,6 +55,10 @@ public:
     CActiveMasternode()
         : eType(MASTERNODE_UNKNOWN),
           fPingerEnabled(false),
+          pubKeyMasternode(),
+          keyMasternode(),
+          vin(),
+          service(),
           nState(ACTIVE_MASTERNODE_INITIAL)
     {}
 

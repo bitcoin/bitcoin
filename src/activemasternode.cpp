@@ -243,21 +243,18 @@ void CActiveMasternode::ManageStateRemote()
             LogPrintf("CActiveMasternode::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);
             return;
         }
-        vin = infoMn.vin;
-        service = infoMn.addr;
-        fPingerEnabled = true;
-        if(((infoMn.nActiveState == CMasternode::MASTERNODE_ENABLED) ||
-            (infoMn.nActiveState == CMasternode::MASTERNODE_PRE_ENABLED) ||
-            (infoMn.nActiveState == CMasternode::MASTERNODE_WATCHDOG_EXPIRED))) {
-            if(nState != ACTIVE_MASTERNODE_STARTED) {
-                LogPrintf("CActiveMasternode::ManageStateRemote -- STARTED!\n");
-            }
-            nState = ACTIVE_MASTERNODE_STARTED;
-        }
-        else {
+        if(!CMasternode::IsValidStateForAutoStart(infoMn.nActiveState)) {
             nState = ACTIVE_MASTERNODE_NOT_CAPABLE;
             strNotCapableReason = strprintf("Masternode in %s state", CMasternode::StateToString(infoMn.nActiveState));
             LogPrintf("CActiveMasternode::ManageStateRemote -- %s: %s\n", GetStateString(), strNotCapableReason);
+            return;
+        }
+        if(nState != ACTIVE_MASTERNODE_STARTED) {
+            LogPrintf("CActiveMasternode::ManageStateRemote -- STARTED!\n");
+            vin = infoMn.vin;
+            service = infoMn.addr;
+            fPingerEnabled = true;
+            nState = ACTIVE_MASTERNODE_STARTED;
         }
     }
     else {
@@ -301,6 +298,12 @@ void CActiveMasternode::ManageStateLocal()
             return;
         }
 
+        fPingerEnabled = true;
+        nState = ACTIVE_MASTERNODE_STARTED;
+
+        masternode_info_t infoMn = mnodeman.GetMasternodeInfo(pubKeyMasternode);
+        if(infoMn.fInfoValid && CMasternode::IsValidStateForAutoStart(infoMn.nActiveState)) return; // sending ping should be enough
+
         //update to masternode list
         LogPrintf("CActiveMasternode::ManageStateLocal -- Update Masternode List\n");
         mnodeman.UpdateMasternodeList(mnb);
@@ -309,7 +312,5 @@ void CActiveMasternode::ManageStateLocal()
         //send to all peers
         LogPrintf("CActiveMasternode::ManageStateLocal -- Relay broadcast, vin=%s\n", vin.ToString());
         mnb.Relay();
-        fPingerEnabled = true;
-        nState = ACTIVE_MASTERNODE_STARTED;
     }
 }

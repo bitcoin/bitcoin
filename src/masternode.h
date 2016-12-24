@@ -15,14 +15,14 @@ class CMasternode;
 class CMasternodeBroadcast;
 class CMasternodePing;
 
-static const int MASTERNODE_MIN_MNP_SECONDS         = 10 * 60;
-static const int MASTERNODE_MIN_MNB_SECONDS         =  5 * 60;
-static const int MASTERNODE_EXPIRATION_SECONDS      = 65 * 60;
-static const int MASTERNODE_REMOVAL_SECONDS         = 75 * 60;
-static const int MASTERNODE_CHECK_SECONDS           = 5;
-static const int MASTERNODE_WATCHDOG_MAX_SECONDS    = 2 * 60 * 60;
+static const int MASTERNODE_CHECK_SECONDS               =   5;
+static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
+static const int MASTERNODE_MIN_MNP_SECONDS             =  10 * 60;
+static const int MASTERNODE_EXPIRATION_SECONDS          =  65 * 60;
+static const int MASTERNODE_WATCHDOG_MAX_SECONDS        = 120 * 60;
+static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
 
-static const int MASTERNODE_POSE_BAN_MAX_SCORE      = 5;
+static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
@@ -76,10 +76,12 @@ public:
         return ss.GetHash();
     }
 
+    bool IsExpired() { return GetTime() - sigTime > MASTERNODE_NEW_START_REQUIRED_SECONDS; }
+
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool CheckSignature(CPubKey& pubKeyMasternode, int &nDos);
     bool SimpleCheck(int& nDos);
-    bool CheckAndUpdate(int& nDos);
+    bool CheckAndUpdate(CMasternode* pmn, int& nDos);
     void Relay();
 
     CMasternodePing& operator=(CMasternodePing from)
@@ -98,8 +100,8 @@ public:
 
 };
 
-struct masternode_info_t {
-
+struct masternode_info_t
+{
     masternode_info_t()
         : vin(),
           addr(),
@@ -145,8 +147,9 @@ public:
         MASTERNODE_ENABLED,
         MASTERNODE_EXPIRED,
         MASTERNODE_OUTPOINT_SPENT,
-        MASTERNODE_REMOVE,
+        MASTERNODE_UPDATE_REQUIRED,
         MASTERNODE_WATCHDOG_EXPIRED,
+        MASTERNODE_NEW_START_REQUIRED,
         MASTERNODE_POSE_BAN
     };
 
@@ -256,9 +259,21 @@ public:
     bool IsEnabled() { return nActiveState == MASTERNODE_ENABLED; }
     bool IsPreEnabled() { return nActiveState == MASTERNODE_PRE_ENABLED; }
     bool IsPoSeBanned() { return nActiveState == MASTERNODE_POSE_BAN; }
+    // NOTE: this one relies on nPoSeBanScore, not on nActiveState as everything else here
     bool IsPoSeVerified() { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
-
+    bool IsExpired() { return nActiveState == MASTERNODE_EXPIRED; }
+    bool IsOutpointSpent() { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
+    bool IsUpdateRequired() { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
     bool IsWatchdogExpired() { return nActiveState == MASTERNODE_WATCHDOG_EXPIRED; }
+    bool IsNewStartRequired() { return nActiveState == MASTERNODE_NEW_START_REQUIRED; }
+
+    static bool IsValidStateForAutoStart(int nActiveStateIn)
+    {
+        return  nActiveStateIn == MASTERNODE_ENABLED ||
+                nActiveStateIn == MASTERNODE_PRE_ENABLED ||
+                nActiveStateIn == MASTERNODE_EXPIRED ||
+                nActiveStateIn == MASTERNODE_WATCHDOG_EXPIRED;
+    }
 
     bool IsValidForPayment()
     {
