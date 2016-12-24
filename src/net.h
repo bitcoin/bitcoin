@@ -154,7 +154,7 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
-    void WakeMessageHandler() { messageHandlerCondition.notify_one(); };
+    void WakeMessageHandler() { fMessageHandlerWork.store(true, std::memory_order_relaxed); messageHandlerCondition.notify_one(); };
 
     template<typename Callable>
     bool ForEachNodeContinueIf(Callable&& func)
@@ -405,6 +405,7 @@ private:
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
     boost::condition_variable messageHandlerCondition;
+    std::atomic<bool> fMessageHandlerWork;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;

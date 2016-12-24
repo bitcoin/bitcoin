@@ -2608,8 +2608,11 @@ bool SendMessages(CNode* pto, CConnman& connman)
         }
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
-        if (!lockMain)
+        if (!lockMain) {
+            // Couldn't make progress here, so we want to try again after handling other peers.
+            connman.WakeMessageHandler();
             return true;
+        }
 
         CNodeState &state = *State(pto->GetId());
 

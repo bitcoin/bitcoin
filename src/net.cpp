@@ -1241,7 +1241,7 @@ void CConnman::ThreadSocketHandler()
                             if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
                                 pnode->CloseSocketDisconnect();
                             if(notify)
-                                messageHandlerCondition.notify_one();
+                                WakeMessageHandler();
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
                             RecordBytesRecv(nBytes);
@@ -1827,6 +1827,7 @@ void CConnman::ThreadMessageHandler()
 
     while (true)
     {
+        fMessageHandlerWork.store(false, std::memory_order_relaxed);
         boost::system_time start_time = boost::posix_time::microsec_clock::universal_time();
         std::vector<CNode*> vNodesCopy;
         {
@@ -1878,7 +1879,7 @@ void CConnman::ThreadMessageHandler()
                 pnode->Release();
         }
 
-        if (fSleep)
+        if (fSleep && !fMessageHandlerWork.load(std::memory_order_relaxed))
             messageHandlerCondition.timed_wait(lock, start_time + boost::posix_time::milliseconds(100));
     }
 }
@@ -2071,6 +2072,7 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     nMaxOutbound = 0;
     nBestHeight = 0;
     clientInterface = NULL;
+    fMessageHandlerWork = false;
 }
 
 NodeId CConnman::GetNewNodeId()
