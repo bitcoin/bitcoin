@@ -154,6 +154,8 @@ public:
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
+    void WakeMessageHandler() { messageHandlerCondition.notify_one(); };
+
     template<typename Callable>
     bool ForEachNodeContinueIf(Callable&& func)
     {
