@@ -33,8 +33,6 @@
 std::unique_ptr<CConnman> g_connman;
 FastRandomContext insecure_rand_ctx(true);
 
-extern std::map<std::string, std::string> mapArgs;
-
 extern bool fPrintToConsole;
 extern void noui_connect();
 
@@ -66,7 +64,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
-        mapArgs["-datadir"] = pathTemp.string();
+        ForceSetArg("-datadir", pathTemp.string());
         mempool.setSanityCheck(1.0);
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
