@@ -437,7 +437,7 @@ bool MarkBlockAsReceived(const uint256& hash) {
                     // Only update thinstats if this is actually a thinblock and not a regular block.
                     // Sometimes we request a thinblock but then revert to requesting a regular block
                     // as can happen when the thinblock preferential timer is exceeded.
-                    CThinBlockStats::UpdateResponseTime(nResponseTime);
+                    thindata.UpdateResponseTime(nResponseTime);
                     break;
                 }
             }
@@ -1429,7 +1429,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             // At default rate it would take over a month to fill 1GB
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
             if ((dFreeCount + nSize) >= (nFreeLimit*10*1000 * nLargestBlockSeen / BLOCKSTREAM_CORE_MAX_BLOCK_SIZE)) {
-                CThinBlockStats::UpdateMempoolLimiterBytesSaved(nSize);
+                thindata.UpdateMempoolLimiterBytesSaved(nSize);
                 LogPrint("mempool", "AcceptToMemoryPool : free transaction %s rejected by rate limiter\n", hash.ToString());
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
             }
@@ -5844,8 +5844,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      );
 
             // Update run-time statistics of thin block bandwidth savings
-            CThinBlockStats::UpdateInBound(nSizeThinBlock, blockSize);
-            LogPrint("thin", "thin block stats: %s\n", CThinBlockStats::ToString());
+            thindata.UpdateInBound(nSizeThinBlock, blockSize);
+            LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
 
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
             LOCK(cs_orphancache);
@@ -5861,7 +5861,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
             LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
                        pfrom->thinBlockWaitingForTxns);
-            CThinBlockStats::UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
+            thindata.UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
 
         }
     }
@@ -5920,8 +5920,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // Update run-time statistics of thin block bandwidth savings.
             // We add the original thinblock size with the size of transactions that were re-requested.
             // This is NOT double counting since we never accounted for the original thinblock due to the re-request.
-            CThinBlockStats::UpdateInBound(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
-            LogPrint("thin", "thin block stats: %s\n", CThinBlockStats::ToString());
+            thindata.UpdateInBound(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
+            LogPrint("thin", "thin block stats: %s\n", thindata.ToString());
 
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
@@ -6755,7 +6755,7 @@ bool SendMessages(CNode* pto)
                 if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                     CBloomFilter filterMemPool;
-                    if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
+                    if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && thindata.CheckThinblockTimer(pindex->GetBlockHash()))) {
                         // Must download a block from a ThinBlock peer
                         if (pto->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pto)) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();

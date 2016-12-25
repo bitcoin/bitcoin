@@ -1102,7 +1102,7 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
     }
     uint64_t nSizeFilter = ::GetSerializeSize(*pfrom->pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION);
     LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
-    CThinBlockStats::UpdateInBoundBloomFilter(nSizeFilter);
+    thindata.UpdateInBoundBloomFilter(nSizeFilter);
 }
 
 void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)
@@ -1138,7 +1138,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
         if (strCommand != NetMsgType::BLOCK) {
             LogPrint("thin", "Processed ThinBlock %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
-            CThinBlockStats::UpdateValidationTime(nValidationTime);
+            thindata.UpdateValidationTime(nValidationTime);
         }
         else
             LogPrint("thin", "Processed Regular Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
@@ -1173,7 +1173,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     }
 
     // Clear the thinblock timer used for preferential download
-    ClearThinBlockTimer(inv.hash);
+    thindata.ClearThinBlockTimer(inv.hash);
 }
 
 bool CheckAndRequestExpeditedBlocks(CNode* pfrom)

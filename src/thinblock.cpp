@@ -254,8 +254,8 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
 	       );
 
         // Update run-time statistics of thin block bandwidth savings
-        CThinBlockStats::UpdateInBound(pfrom->nSizeThinBlock, blockSize);
-        string ss = CThinBlockStats::ToString();
+        thindata.UpdateInBound(pfrom->nSizeThinBlock, blockSize);
+        string ss = thindata.ToString();
         LogPrint("thin", "thin block stats: %s\n", ss.c_str());
         requester.Received(GetInv(), pfrom, pfrom->nSizeThinBlock);
         HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock,  GetInv());  // clears the thin block
@@ -276,160 +276,160 @@ bool CXThinBlock::process(CNode* pfrom, int nSizeThinBlock, string strCommand)  
         CXRequestThinBlockTx thinBlockTx(header.GetHash(), setHashesToRequest);
         pfrom->PushMessage(NetMsgType::GET_XBLOCKTX, thinBlockTx);
         LogPrint("thin", "Missing %d transactions for xthinblock, re-requesting\n", pfrom->thinBlockWaitingForTxns);
-        CThinBlockStats::UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
+        thindata.UpdateInBoundReRequestedTx(pfrom->thinBlockWaitingForTxns);
     }
 
     return true;
 }
 
-void CThinBlockStats::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
+void CThinBlockData::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
 {
     LOCK(cs_thinblockstats);
 
     // Update InBound thinblock tracking information
-    CThinBlockStats::nOriginalSize += nOriginalBlockSize;
-    CThinBlockStats::nThinSize += nThinBlockSize;
-    CThinBlockStats::nBlocks += 1;
-    CThinBlockStats::mapThinBlocksInBound[GetTimeMillis()] = pair<uint64_t, uint64_t>(nThinBlockSize, nOriginalBlockSize);
+    nOriginalSize += nOriginalBlockSize;
+    nThinSize += nThinBlockSize;
+    nBlocks += 1;
+    mapThinBlocksInBound[GetTimeMillis()] = pair<uint64_t, uint64_t>(nThinBlockSize, nOriginalBlockSize);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksInBound.begin();
-    while (iter != CThinBlockStats::mapThinBlocksInBound.end())
+    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = mapThinBlocksInBound.begin();
+    while (iter != mapThinBlocksInBound.end())
     {
         map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlocksInBound.erase(mi);
+            mapThinBlocksInBound.erase(mi);
     }
 }
 
-void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
+void CThinBlockData::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
 {
     LOCK(cs_thinblockstats);
 
-    CThinBlockStats::nOriginalSize += nOriginalBlockSize;
-    CThinBlockStats::nThinSize += nThinBlockSize;
-    CThinBlockStats::nBlocks += 1;
-    CThinBlockStats::mapThinBlocksOutBound[GetTimeMillis()] = pair<uint64_t, uint64_t>(nThinBlockSize, nOriginalBlockSize);
+    nOriginalSize += nOriginalBlockSize;
+    nThinSize += nThinBlockSize;
+    nBlocks += 1;
+    mapThinBlocksOutBound[GetTimeMillis()] = pair<uint64_t, uint64_t>(nThinBlockSize, nOriginalBlockSize);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksOutBound.begin();
-    while (iter != CThinBlockStats::mapThinBlocksOutBound.end())
+    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = mapThinBlocksOutBound.begin();
+    while (iter != mapThinBlocksOutBound.end())
     {
         map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlocksOutBound.erase(mi);
+            mapThinBlocksOutBound.erase(mi);
     }
 }
 
-void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
+void CThinBlockData::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
 {
     LOCK(cs_thinblockstats);
 
-    CThinBlockStats::mapBloomFiltersOutBound[GetTimeMillis()] = nBloomFilterSize;
-    CThinBlockStats::nTotalBloomFilterBytes += nBloomFilterSize;
+    mapBloomFiltersOutBound[GetTimeMillis()] = nBloomFilterSize;
+    nTotalBloomFilterBytes += nBloomFilterSize;
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersOutBound.begin();
-    while (iter != CThinBlockStats::mapBloomFiltersOutBound.end())
+    map<int64_t, uint64_t>::iterator iter = mapBloomFiltersOutBound.begin();
+    while (iter != mapBloomFiltersOutBound.end())
     {
         map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapBloomFiltersOutBound.erase(mi);
+            mapBloomFiltersOutBound.erase(mi);
     }
 }
 
-void CThinBlockStats::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
+void CThinBlockData::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
 {
     LOCK(cs_thinblockstats);
 
-    CThinBlockStats::mapBloomFiltersInBound[GetTimeMillis()] = nBloomFilterSize;
-    CThinBlockStats::nTotalBloomFilterBytes += nBloomFilterSize;
+    mapBloomFiltersInBound[GetTimeMillis()] = nBloomFilterSize;
+    nTotalBloomFilterBytes += nBloomFilterSize;
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersInBound.begin();
-    while (iter != CThinBlockStats::mapBloomFiltersInBound.end())
+    map<int64_t, uint64_t>::iterator iter = mapBloomFiltersInBound.begin();
+    while (iter != mapBloomFiltersInBound.end())
     {
         map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapBloomFiltersInBound.erase(mi);
+            mapBloomFiltersInBound.erase(mi);
     }
 }
 
-void CThinBlockStats::UpdateResponseTime(double nResponseTime)
+void CThinBlockData::UpdateResponseTime(double nResponseTime)
 {
     LOCK(cs_thinblockstats);
 
     // only update stats if IBD is complete
     if (IsChainNearlySyncd() && IsThinBlocksEnabled()) {
-        CThinBlockStats::mapThinBlockResponseTime[GetTimeMillis()] = nResponseTime;
+        mapThinBlockResponseTime[GetTimeMillis()] = nResponseTime;
 
         // Delete any entries that are more than 24 hours old
         int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-        map<int64_t, double>::iterator iter = CThinBlockStats::mapThinBlockResponseTime.begin();
-        while (iter != CThinBlockStats::mapThinBlockResponseTime.end())
+        map<int64_t, double>::iterator iter = mapThinBlockResponseTime.begin();
+        while (iter != mapThinBlockResponseTime.end())
         {
             map<int64_t, double>::iterator mi = iter++; // increment to avoid iterator becoming invalid
             if ((*mi).first < nTimeCutoff)
-                CThinBlockStats::mapThinBlockResponseTime.erase(mi);
+                mapThinBlockResponseTime.erase(mi);
         }
     }
 }
 
-void CThinBlockStats::UpdateValidationTime(double nValidationTime)
+void CThinBlockData::UpdateValidationTime(double nValidationTime)
 {
     LOCK(cs_thinblockstats);
 
     // only update stats if IBD is complete
     if (IsChainNearlySyncd() && IsThinBlocksEnabled()) {
-        CThinBlockStats::mapThinBlockValidationTime[GetTimeMillis()] = nValidationTime;
+        mapThinBlockValidationTime[GetTimeMillis()] = nValidationTime;
 
         // Delete any entries that are more than 24 hours old
         int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-        map<int64_t, double>::iterator iter = CThinBlockStats::mapThinBlockValidationTime.begin();
-        while (iter != CThinBlockStats::mapThinBlockValidationTime.end())
+        map<int64_t, double>::iterator iter = mapThinBlockValidationTime.begin();
+        while (iter != mapThinBlockValidationTime.end())
         {
             map<int64_t, double>::iterator mi = iter++; // increment to avoid iterator becoming invalid
             if ((*mi).first < nTimeCutoff)
-                CThinBlockStats::mapThinBlockValidationTime.erase(mi);
+                mapThinBlockValidationTime.erase(mi);
         }
     }
 }
 
-void CThinBlockStats::UpdateInBoundReRequestedTx(int nReRequestedTx)
+void CThinBlockData::UpdateInBoundReRequestedTx(int nReRequestedTx)
 {
     LOCK(cs_thinblockstats);
 
     // Update InBound thinblock tracking information
-    CThinBlockStats::mapThinBlocksInBoundReRequestedTx[GetTimeMillis()] = nReRequestedTx;
+    mapThinBlocksInBoundReRequestedTx[GetTimeMillis()] = nReRequestedTx;
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, int>::iterator iter = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin();
-    while (iter != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end())
+    map<int64_t, int>::iterator iter = mapThinBlocksInBoundReRequestedTx.begin();
+    while (iter != mapThinBlocksInBoundReRequestedTx.end())
     {
         map<int64_t, int>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
+            mapThinBlocksInBoundReRequestedTx.erase(mi);
     }
 }
 
-void CThinBlockStats::UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved)
+void CThinBlockData::UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved)
 {
     LOCK(cs_thinblockstats);
-    CThinBlockStats::nMempoolLimiterBytesSaved += nBytesSaved;
+    nMempoolLimiterBytesSaved += nBytesSaved;
 }
 
-string CThinBlockStats::ToString()
+string CThinBlockData::ToString()
 {
     LOCK(cs_thinblockstats);
 
     static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     int i = 0;
-    double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() - CThinBlockStats::nTotalBloomFilterBytes());
+    double size = double( nOriginalSize() - nThinSize() - nTotalBloomFilterBytes());
     while (size > 1000) {
 	size /= 1000;
 	i++;
@@ -437,35 +437,35 @@ string CThinBlockStats::ToString()
 
     ostringstream ss;
     ss << fixed << setprecision(2);
-    ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks() > 1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
+    ss << nBlocks() << " thin " << ((nBlocks() > 1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
     return ss.str();
 }
 
 // Calculate the xthin percentage compression over the last 24 hours
-string CThinBlockStats::InBoundPercentToString()
+string CThinBlockData::InBoundPercentToString()
 {
     LOCK(cs_thinblockstats);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksInBound.begin();
-    while (iter != CThinBlockStats::mapThinBlocksInBound.end())
+    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = mapThinBlocksInBound.begin();
+    while (iter != mapThinBlocksInBound.end())
     {
         map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlocksInBound.erase(mi);
+            mapThinBlocksInBound.erase(mi);
     }
 
     double nCompressionRate = 0;
     uint64_t nThinSizeTotal = 0;
     uint64_t nOriginalSizeTotal = 0;
-    for (map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
+    for (map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = mapThinBlocksInBound.begin(); mi != mapThinBlocksInBound.end(); ++mi) {
         nThinSizeTotal += (*mi).second.first;
         nOriginalSizeTotal += (*mi).second.second;
     }
     // We count up the outbound bloom filters. Outbound bloom filters go with Inbound xthins.
     uint64_t nOutBoundBloomFilterSize = 0;
-    for (map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+    for (map<int64_t, uint64_t>::iterator mi = mapBloomFiltersOutBound.begin(); mi != mapBloomFiltersOutBound.end(); ++mi) {
         nOutBoundBloomFilterSize += (*mi).second;
     }
 
@@ -475,35 +475,35 @@ string CThinBlockStats::InBoundPercentToString()
 
     ostringstream ss;
     ss << fixed << setprecision(1);
-    ss << "Compression for " << CThinBlockStats::mapThinBlocksInBound.size() << " Inbound  thinblocks (last 24hrs): " << nCompressionRate << "%";
+    ss << "Compression for " << mapThinBlocksInBound.size() << " Inbound  thinblocks (last 24hrs): " << nCompressionRate << "%";
     return ss.str();
 }
 
 // Calculate the xthin percentage compression over the last 24 hours
-string CThinBlockStats::OutBoundPercentToString()
+string CThinBlockData::OutBoundPercentToString()
 {
     LOCK(cs_thinblockstats);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = CThinBlockStats::mapThinBlocksOutBound.begin();
-    while (iter != CThinBlockStats::mapThinBlocksOutBound.end())
+    map<int64_t, pair<uint64_t, uint64_t> >::iterator iter = mapThinBlocksOutBound.begin();
+    while (iter != mapThinBlocksOutBound.end())
     {
         map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlocksOutBound.erase(mi);
+            mapThinBlocksOutBound.erase(mi);
     }
 
     double nCompressionRate = 0;
     uint64_t nThinSizeTotal = 0;
     uint64_t nOriginalSizeTotal = 0;
-    for (map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
+    for (map<int64_t, pair<uint64_t, uint64_t> >::iterator mi = mapThinBlocksOutBound.begin(); mi != mapThinBlocksOutBound.end(); ++mi) {
         nThinSizeTotal += (*mi).second.first;
         nOriginalSizeTotal += (*mi).second.second;
     }
     // We count up the inbound bloom filters. Inbound bloom filters go with Outbound xthins.
     uint64_t nInBoundBloomFilterSize = 0;
-    for (map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+    for (map<int64_t, uint64_t>::iterator mi = mapBloomFiltersInBound.begin(); mi != mapBloomFiltersInBound.end(); ++mi) {
         nInBoundBloomFilterSize += (*mi).second;
     }
 
@@ -512,29 +512,29 @@ string CThinBlockStats::OutBoundPercentToString()
 
     ostringstream ss;
     ss << fixed << setprecision(1);
-    ss << "Compression for " << CThinBlockStats::mapThinBlocksOutBound.size() << " Outbound thinblocks (last 24hrs): " << nCompressionRate << "%";
+    ss << "Compression for " << mapThinBlocksOutBound.size() << " Outbound thinblocks (last 24hrs): " << nCompressionRate << "%";
     return ss.str();
 }
 
 // Calculate the average inbound xthin bloom filter size
-string CThinBlockStats::InBoundBloomFiltersToString()
+string CThinBlockData::InBoundBloomFiltersToString()
 {
     LOCK(cs_thinblockstats);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersInBound.begin();
-    while (iter != CThinBlockStats::mapBloomFiltersInBound.end())
+    map<int64_t, uint64_t>::iterator iter = mapBloomFiltersInBound.begin();
+    while (iter != mapBloomFiltersInBound.end())
     {
         map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapBloomFiltersInBound.erase(mi);
+            mapBloomFiltersInBound.erase(mi);
     }
 
     uint64_t nInBoundBloomFilters = 0;
     uint64_t nInBoundBloomFilterSize = 0;
     double avgBloomSize = 0;
-    for (map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+    for (map<int64_t, uint64_t>::iterator mi = mapBloomFiltersInBound.begin(); mi != mapBloomFiltersInBound.end(); ++mi) {
         nInBoundBloomFilterSize += (*mi).second;
         nInBoundBloomFilters += 1;
     }
@@ -555,24 +555,24 @@ string CThinBlockStats::InBoundBloomFiltersToString()
 }
 
 // Calculate the average inbound xthin bloom filter size
-string CThinBlockStats::OutBoundBloomFiltersToString()
+string CThinBlockData::OutBoundBloomFiltersToString()
 {
     LOCK(cs_thinblockstats);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, uint64_t>::iterator iter = CThinBlockStats::mapBloomFiltersOutBound.begin();
-    while (iter != CThinBlockStats::mapBloomFiltersOutBound.end())
+    map<int64_t, uint64_t>::iterator iter = mapBloomFiltersOutBound.begin();
+    while (iter != mapBloomFiltersOutBound.end())
     {
         map<int64_t, uint64_t>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapBloomFiltersOutBound.erase(mi);
+            mapBloomFiltersOutBound.erase(mi);
     }
 
     uint64_t nOutBoundBloomFilters = 0;
     uint64_t nOutBoundBloomFilterSize = 0;
     double avgBloomSize = 0;
-    for (map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+    for (map<int64_t, uint64_t>::iterator mi = mapBloomFiltersOutBound.begin(); mi != mapBloomFiltersOutBound.end(); ++mi) {
         nOutBoundBloomFilterSize += (*mi).second;
         nOutBoundBloomFilters += 1;
     }
@@ -592,7 +592,7 @@ string CThinBlockStats::OutBoundBloomFiltersToString()
     return ss.str();
 }
 // Calculate the xthin percentage compression over the last 24 hours
-string CThinBlockStats::ResponseTimeToString()
+string CThinBlockData::ResponseTimeToString()
 {
     LOCK(cs_thinblockstats);
 
@@ -602,7 +602,7 @@ string CThinBlockStats::ResponseTimeToString()
     double nPercentile = 0;
     double nTotalResponseTime = 0;
     double nTotalEntries = 0;
-    for (map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockResponseTime.begin(); mi != CThinBlockStats::mapThinBlockResponseTime.end(); ++mi) {
+    for (map<int64_t, double>::iterator mi = mapThinBlockResponseTime.begin(); mi != mapThinBlockResponseTime.end(); ++mi) {
         nTotalEntries += 1;
         nTotalResponseTime += (*mi).second;
         vResponseTime.push_back((*mi).second);
@@ -624,7 +624,7 @@ string CThinBlockStats::ResponseTimeToString()
 }
 
 // Calculate the xthin percentage compression over the last 24 hours
-string CThinBlockStats::ValidationTimeToString()
+string CThinBlockData::ValidationTimeToString()
 {
     LOCK(cs_thinblockstats);
 
@@ -634,7 +634,7 @@ string CThinBlockStats::ValidationTimeToString()
     double nPercentile = 0;
     double nTotalValidationTime = 0;
     double nTotalEntries = 0;
-    for (map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockValidationTime.begin(); mi != CThinBlockStats::mapThinBlockValidationTime.end(); ++mi) {
+    for (map<int64_t, double>::iterator mi = mapThinBlockValidationTime.begin(); mi != mapThinBlockValidationTime.end(); ++mi) {
         nTotalEntries += 1;
         nTotalValidationTime += (*mi).second;
         vValidationTime.push_back((*mi).second);
@@ -656,30 +656,30 @@ string CThinBlockStats::ValidationTimeToString()
 }
 
 // Calculate the xthin percentage compression over the last 24 hours
-string CThinBlockStats::ReRequestedTxToString()
+string CThinBlockData::ReRequestedTxToString()
 {
     LOCK(cs_thinblockstats);
 
     // Delete any entries that are more than 24 hours old
     int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    map<int64_t, int>::iterator iter = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin();
-    while (iter != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end())
+    map<int64_t, int>::iterator iter = mapThinBlocksInBoundReRequestedTx.begin();
+    while (iter != mapThinBlocksInBoundReRequestedTx.end())
     {
         map<int64_t, int>::iterator mi = iter++; // increment to avoid iterator becoming invalid
         if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
+            mapThinBlocksInBoundReRequestedTx.erase(mi);
     }
 
     double nReRequestRate = 0;
     uint64_t nTotalReRequests = 0;
     uint64_t nTotalReRequestedTxs = 0;
-    for (map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
+    for (map<int64_t, int>::iterator mi = mapThinBlocksInBoundReRequestedTx.begin(); mi != mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
         nTotalReRequests += 1;
         nTotalReRequestedTxs += (*mi).second;
     }
 
-    if ( CThinBlockStats::mapThinBlocksInBound.size() > 0)
-        nReRequestRate = 100 * (double)nTotalReRequests / CThinBlockStats::mapThinBlocksInBound.size();
+    if ( mapThinBlocksInBound.size() > 0)
+        nReRequestRate = 100 * (double)nTotalReRequests / mapThinBlocksInBound.size();
 
     ostringstream ss;
     ss << fixed << setprecision(1);
@@ -687,13 +687,13 @@ string CThinBlockStats::ReRequestedTxToString()
     return ss.str();
 }
 
-string CThinBlockStats::MempoolLimiterBytesSavedToString()
+string CThinBlockData::MempoolLimiterBytesSavedToString()
 {
     LOCK(cs_thinblockstats);
 
     static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     int i = 0;
-    double size = (double)CThinBlockStats::nMempoolLimiterBytesSaved();
+    double size = (double)nMempoolLimiterBytesSaved();
     while (size > 1000) {
 	size /= 1000;
 	i++;
@@ -705,6 +705,34 @@ string CThinBlockStats::MempoolLimiterBytesSavedToString()
     return ss.str();
 }
 
+bool CThinBlockData::CheckThinblockTimer(uint256 hash)
+{
+    LOCK(cs_mapThinBlockTimer);
+    if (!mapThinBlockTimer.count(hash)) {
+        mapThinBlockTimer[hash] = GetTimeMillis();
+        LogPrint("thin", "Starting Preferential Thinblock timer\n");
+    }
+    else {
+        // Check that we have not exceeded the 10 second limit.
+        // If we have then we want to return false so that we can
+        // proceed to download a regular block instead.
+        uint64_t elapsed = GetTimeMillis() - mapThinBlockTimer[hash];
+        if (elapsed > 10000) {
+            LogPrint("thin", "Preferential Thinblock timer exceeded - downloading regular block instead\n");
+            return false;
+        }
+    }
+    return true;
+}
+
+void CThinBlockData::ClearThinBlockTimer(uint256 hash)
+{
+    LOCK(cs_mapThinBlockTimer);
+    if (mapThinBlockTimer.count(hash)) {
+        mapThinBlockTimer.erase(hash);
+        LogPrint("thin", "Clearing Preferential Thinblock timer\n");
+    }
+}
 
 
 bool HaveConnectThinblockNodes()
@@ -765,33 +793,6 @@ bool HaveThinblockNodes()
                 return true;
     }
     return false;
-}
-
-bool CheckThinblockTimer(uint256 hash)
-{
-    if (!mapThinBlockTimer.count(hash)) {
-        mapThinBlockTimer[hash] = GetTimeMillis();
-        LogPrint("thin", "Starting Preferential Thinblock timer\n");
-    }
-    else {
-        // Check that we have not exceeded the 10 second limit.
-        // If we have then we want to return false so that we can
-        // proceed to download a regular block instead.
-        uint64_t elapsed = GetTimeMillis() - mapThinBlockTimer[hash];
-        if (elapsed > 10000) {
-            LogPrint("thin", "Preferential Thinblock timer exceeded - downloading regular block instead\n");
-            return false;
-        }
-    }
-    return true;
-}
-
-void ClearThinBlockTimer(uint256 hash)
-{
-    if (mapThinBlockTimer.count(hash)) {
-        mapThinBlockTimer.erase(hash);
-        LogPrint("thin", "Clearing Preferential Thinblock timer\n");
-    }
 }
 
 bool IsThinBlocksEnabled() 
@@ -865,7 +866,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
                 pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
-                CThinBlockStats::UpdateOutBound(nSizeThinBlock, nSizeBlock);
+                thindata.UpdateOutBound(nSizeThinBlock, nSizeBlock);
                 LogPrint("thin", "TX HASH COLLISION: Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peer: %s (%d)\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->addrName.c_str(), pfrom->id);
             }
             else {
@@ -878,7 +879,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             // Only send a thinblock if smaller than a regular block
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
-                CThinBlockStats::UpdateOutBound(nSizeThinBlock, nSizeBlock);
+                thindata.UpdateOutBound(nSizeThinBlock, nSizeBlock);
                 pfrom->PushMessage(NetMsgType::XTHINBLOCK, xThinBlock);
                 LogPrint("thin", "Sent xthinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d peer: %s (%d)\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->addrName.c_str(), pfrom->id);
             }
@@ -894,7 +895,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         if (nSizeThinBlock < nSizeBlock) { // Only send a thinblock if smaller than a regular block
-            CThinBlockStats::UpdateOutBound(nSizeThinBlock, nSizeBlock);
+            thindata.UpdateOutBound(nSizeThinBlock, nSizeBlock);
             pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
             LogPrint("thin", "Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peer: %s (%d)\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(), pfrom->addrName.c_str(), pfrom->id);
         }
@@ -1100,7 +1101,7 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool, vector<uint256>& vOrpha
         filterMemPool.insert(txHash);
     uint64_t nSizeFilter = ::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION);
     LogPrint("thin", "Created bloom filter: %d bytes for block: %s in:%d (ms)\n", nSizeFilter, hash.ToString(), GetTimeMillis() - nStartTimer);
-    CThinBlockStats::UpdateOutBoundBloomFilter(nSizeFilter);
+    thindata.UpdateOutBoundBloomFilter(nSizeFilter);
 }
 
 

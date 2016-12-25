@@ -112,48 +112,53 @@ public:
 };
 
 // This class stores statistics for thin block derived protocols.
-class CThinBlockStats
+class CThinBlockData
 {
 private:
-	static CStatHistory<uint64_t> nOriginalSize;
-	static CStatHistory<uint64_t> nThinSize;
-	static CStatHistory<uint64_t> nBlocks;
-	static CStatHistory<uint64_t> nMempoolLimiterBytesSaved;
-	static CStatHistory<uint64_t> nTotalBloomFilterBytes;
-        static map<int64_t, pair<uint64_t, uint64_t> > mapThinBlocksInBound;
-        static map<int64_t, pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
-        static map<int64_t, uint64_t> mapBloomFiltersOutBound;
-        static map<int64_t, uint64_t> mapBloomFiltersInBound;
-        static map<int64_t, double> mapThinBlockResponseTime;
-        static map<int64_t, double> mapThinBlockValidationTime;
-        static map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
+    CCriticalSection cs_mapThinBlockTimer;
+    map<uint256, uint64_t> mapThinBlockTimer;
+
+    CCriticalSection cs_thinblockstats;
+    CStatHistory<uint64_t> nOriginalSize;
+    CStatHistory<uint64_t> nThinSize;
+    CStatHistory<uint64_t> nBlocks;
+    CStatHistory<uint64_t> nMempoolLimiterBytesSaved;
+    CStatHistory<uint64_t> nTotalBloomFilterBytes;
+    map<int64_t, pair<uint64_t, uint64_t> > mapThinBlocksInBound;
+    map<int64_t, pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
+    map<int64_t, uint64_t> mapBloomFiltersOutBound;
+    map<int64_t, uint64_t> mapBloomFiltersInBound;
+    map<int64_t, double> mapThinBlockResponseTime;
+    map<int64_t, double> mapThinBlockValidationTime;
+    map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
  
 public:
-	static void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
-	static void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
-        static void UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize);
-        static void UpdateInBoundBloomFilter(uint64_t nBloomFilterSize);
-	static void UpdateResponseTime(double nResponseTime);
-	static void UpdateValidationTime(double nValidationTime);
-	static void UpdateInBoundReRequestedTx(int nReRequestedTx);
-        static void UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved);
-	static string ToString();
-        static string InBoundPercentToString();
-        static string OutBoundPercentToString();
-        static string InBoundBloomFiltersToString();
-        static string OutBoundBloomFiltersToString();
-        static string ResponseTimeToString();
-        static string ValidationTimeToString();
-        static string ReRequestedTxToString();
-        static string MempoolLimiterBytesSavedToString();
-};
+    void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+    void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+    void UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize);
+    void UpdateInBoundBloomFilter(uint64_t nBloomFilterSize);
+    void UpdateResponseTime(double nResponseTime);
+    void UpdateValidationTime(double nValidationTime);
+    void UpdateInBoundReRequestedTx(int nReRequestedTx);
+    void UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved);
+    string ToString();
+    string InBoundPercentToString();
+    string OutBoundPercentToString();
+    string InBoundBloomFiltersToString();
+    string OutBoundBloomFiltersToString();
+    string ResponseTimeToString();
+    string ValidationTimeToString();
+    string ReRequestedTxToString();
+    string MempoolLimiterBytesSavedToString();
 
-extern map<uint256, uint64_t> mapThinBlockTimer;
+    bool CheckThinblockTimer(uint256 hash);
+    void ClearThinBlockTimer(uint256 hash);
+};
+extern CThinBlockData thindata; // Singleton class
+
 
 bool HaveConnectThinblockNodes();
 bool HaveThinblockNodes();
-bool CheckThinblockTimer(uint256 hash);
-void ClearThinBlockTimer(uint256 hash);
 bool IsThinBlocksEnabled();
 bool CanThinBlockBeDownloaded(CNode* pto);
 void ConnectToThinBlockNodes();

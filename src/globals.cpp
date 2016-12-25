@@ -191,28 +191,9 @@ CStatHistory<uint64_t > sendAmt;
 CStatHistory<uint64_t> nTxValidationTime("txValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 CStatHistory<uint64_t> nBlockValidationTime("blockValidationTime", STAT_OP_MAX | STAT_INDIVIDUAL);
 
-// Thin block statistics need to be located here to ensure that the "statistics" global variable is constructed first
-CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nTotalBloomFilterBytes("nSizeBloom", STAT_OP_SUM | STAT_KEEP);
-
-CCriticalSection cs_thinblockstats;
-std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
-std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
-std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
-std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersInBound;
-std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersOutBound;
-std::map<int64_t, double> CThinBlockStats::mapThinBlockResponseTime;
-std::map<int64_t, double> CThinBlockStats::mapThinBlockValidationTime;
-
-
+CThinBlockData thindata; // Singleton class
 
 // Expedited blocks
 std::vector<CNode*> xpeditedBlk; // (256,(CNode*)NULL);    // Who requested expedited blocks from us
 std::vector<CNode*> xpeditedBlkUp; //(256,(CNode*)NULL);  // Who we requested expedited blocks from
 std::vector<CNode*> xpeditedTxn; // (256,(CNode*)NULL);  
-
-// BUIP010 Xtreme Thinblocks Variables
-std::map<uint256, uint64_t> mapThinBlockTimer;

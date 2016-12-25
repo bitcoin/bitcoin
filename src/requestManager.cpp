@@ -335,7 +335,7 @@ void RequestBlock(CNode* pfrom, CInv obj)
       CBloomFilter filterMemPool;
       if (IsThinBlocksEnabled() && IsChainNearlySyncd()) 
 	{
-	  if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(obj.hash))) 
+	  if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && thindata.CheckThinblockTimer(obj.hash))) 
 	    {
 	      // Must download a block from a ThinBlock peer
 	      if (pfrom->mapThinBlocksInFlight.size() < 1 && CanThinBlockBeDownloaded(pfrom)) 

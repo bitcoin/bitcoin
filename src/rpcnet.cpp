@@ -436,15 +436,15 @@ static UniValue GetThinBlockStats()
     bool enabled = IsThinBlocksEnabled();
     obj.push_back(Pair("enabled", enabled));
     if (enabled) {
-        obj.push_back(Pair("summary", CThinBlockStats::ToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::MempoolLimiterBytesSavedToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::InBoundPercentToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::OutBoundPercentToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::ResponseTimeToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::ValidationTimeToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::OutBoundBloomFiltersToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::InBoundBloomFiltersToString()));
-        obj.push_back(Pair("summary", CThinBlockStats::ReRequestedTxToString()));
+        obj.push_back(Pair("summary", thindata.ToString()));
+        obj.push_back(Pair("summary", thindata.MempoolLimiterBytesSavedToString()));
+        obj.push_back(Pair("summary", thindata.InBoundPercentToString()));
+        obj.push_back(Pair("summary", thindata.OutBoundPercentToString()));
+        obj.push_back(Pair("summary", thindata.ResponseTimeToString()));
+        obj.push_back(Pair("summary", thindata.ValidationTimeToString()));
+        obj.push_back(Pair("summary", thindata.OutBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", thindata.InBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", thindata.ReRequestedTxToString()));
     }
     return obj;
 }
