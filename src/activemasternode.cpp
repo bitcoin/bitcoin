@@ -14,9 +14,9 @@ CActiveMasternode activeMasternode;
 
 void CActiveMasternode::ManageState(CConnman& connman)
 {
-    LogPrint("masternode", "CActiveMasternode::ManageState -- Start\n");
+    LogPrint(BCLog::MNODE, "CActiveMasternode::ManageState -- Start\n");
     if(!fMasternodeMode) {
-        LogPrint("masternode", "CActiveMasternode::ManageState -- Not a masternode, returning\n");
+        LogPrint(BCLog::MNODE, "CActiveMasternode::ManageState -- Not a masternode, returning\n");
         return;
     }
 
@@ -30,7 +30,7 @@ void CActiveMasternode::ManageState(CConnman& connman)
         nState = ACTIVE_MASTERNODE_INITIAL;
     }
 
-    LogPrint("masternode", "CActiveMasternode::ManageState -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
+    LogPrint(BCLog::MNODE, "CActiveMasternode::ManageState -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
     if(eType == MASTERNODE_UNKNOWN) {
         ManageStateInitial(connman);
@@ -84,7 +84,7 @@ std::string CActiveMasternode::GetTypeString() const
 bool CActiveMasternode::SendMasternodePing(CConnman& connman)
 {
     if(!fPingerEnabled) {
-        LogPrint("masternode", "CActiveMasternode::SendMasternodePing -- %s: masternode ping service is disabled, skipping...\n", GetStateString());
+        LogPrint(BCLog::MNODE, "CActiveMasternode::SendMasternodePing -- %s: masternode ping service is disabled, skipping...\n", GetStateString());
         return false;
     }
 
@@ -128,7 +128,7 @@ bool CActiveMasternode::UpdateSentinelPing(int version)
 
 void CActiveMasternode::ManageStateInitial(CConnman& connman)
 {
-    LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
+    LogPrint(BCLog::MNODE, "CActiveMasternode::ManageStateInitial -- status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 
     // Check that our local network configuration is correct
     if (!fListen) {
@@ -197,12 +197,12 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
     // Default to REMOTE
     eType = MASTERNODE_REMOTE;
 
-    LogPrint("masternode", "CActiveMasternode::ManageStateInitial -- End status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
+    LogPrint(BCLog::MNODE, "CActiveMasternode::ManageStateInitial -- End status = %s, type = %s, pinger enabled = %d\n", GetStatus(), GetTypeString(), fPingerEnabled);
 }
 
 void CActiveMasternode::ManageStateRemote()
 {
-    LogPrint("masternode", "CActiveMasternode::ManageStateRemote -- Start status = %s, type = %s, pinger enabled = %d, pubKeyMasternode.GetID() = %s\n", 
+    LogPrint(BCLog::MNODE, "CActiveMasternode::ManageStateRemote -- Start status = %s, type = %s, pinger enabled = %d, pubKeyMasternode.GetID() = %s\n",
              GetStatus(), GetTypeString(), fPingerEnabled, pubKeyMasternode.GetID().ToString());
 
     mnodeman.CheckMasternode(pubKeyMasternode, true);

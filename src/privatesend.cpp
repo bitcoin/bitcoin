@@ -156,7 +156,7 @@ void CPrivateSendBase::CheckQueue()
     std::vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
     while(it != vecDarksendQueue.end()) {
         if((*it).IsExpired()) {
-            LogPrint("privatesend", "CPrivateSendBase::%s -- Removing expired queue (%s)\n", __func__, (*it).ToString());
+            LogPrint(BCLog::PRIVSEND, "CPrivateSendBase::%s -- Removing expired queue (%s)\n", __func__, (*it).ToString());
             it = vecDarksendQueue.erase(it);
         } else ++it;
     }
@@ -225,7 +225,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto txin : txCollateral.vin) {
         Coin coin;
         if(!GetUTXOCoin(txin.prevout, coin)) {
-            LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
+            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString());
             return false;
         }
         nValueIn += coin.out.nValue;
@@ -233,17 +233,17 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
     //collateral transactions are required to pay out a small fee to the miners
     if(nValueIn - nValueOut < GetCollateralAmount()) {
-        LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s", nValueOut - nValueIn, txCollateral.ToString());
+        LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- did not include enough fees in transaction: fees: %d, txCollateral=%s", nValueOut - nValueIn, txCollateral.ToString());
         return false;
     }
 
-    LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- %s", txCollateral.ToString());
+    LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- %s", txCollateral.ToString());
 
     {
         LOCK(cs_main);
         CValidationState validationState;
         if(!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), false, nullptr, nullptr, false, maxTxFee, true)) {
-            LogPrint("privatesend", "CPrivateSend::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
+            LogPrint(BCLog::PRIVSEND, "CPrivateSend::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }
     }
@@ -429,7 +429,7 @@ void CPrivateSend::CheckDSTXes(int nHeight)
             ++it;
         }
     }
-    LogPrint("privatesend", "CPrivateSend::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
+    LogPrint(BCLog::PRIVSEND, "CPrivateSend::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
 }
 
 void CPrivateSend::UpdatedBlockTip(const CBlockIndex *pindex)
@@ -450,7 +450,7 @@ void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pi
 
     // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nConfirmedHeight should be set to -1
     mapDSTX[txHash].SetConfirmedHeight(posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK ? -1 : pindex->nHeight);
-    LogPrint("privatesend", "CPrivateSendClient::SyncTransaction -- txid=%s\n", txHash.ToString());
+    LogPrint(BCLog::PRIVSEND, "CPrivateSendClient::SyncTransaction -- txid=%s\n", txHash.ToString());
 }
 
 //TODO: Rename/move to core

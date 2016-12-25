@@ -56,7 +56,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
     // Add data
     static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
     vTimeOffsets.input(nOffsetSample);
-    LogPrint("net","added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
+    LogPrint(BCLog::NET,"added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
 
     // There is a known issue here (see issue #4521):
     //
@@ -107,10 +107,13 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
             }
         }
 
-        for (int64_t n : vSorted)
-            LogPrint("net", "%+d  ", n);
-        LogPrint("net", "|  ");
+        if (LogAcceptCategory(BCLog::NET)) {
+            BOOST_FOREACH(int64_t n, vSorted) {
+                LogPrint(BCLog::NET, "%+d  ", n);
+            }
+            LogPrint(BCLog::NET, "|  ");
 
-        LogPrint("net", "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
+            LogPrint(BCLog::NET, "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
+        }
     }
 }
