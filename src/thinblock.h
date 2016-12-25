@@ -10,9 +10,12 @@
 #include "primitives/block.h"
 #include "bloom.h"
 #include "stat.h"
+#include "sync.h"
 #include "consensus/validation.h"
 #include "protocol.h"
 #include <vector>
+
+using namespace std;
 
 class CNode;
 
@@ -20,8 +23,8 @@ class CThinBlock
 {
 public:
     CBlockHeader header;
-    std::vector<uint256> vTxHashes; // List of all transactions id's in the block
-    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
+    vector<uint256> vTxHashes; // List of all transactions id's in the block
+    vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
 
 public:
     CThinBlock(const CBlock& block, CBloomFilter& filter);
@@ -41,8 +44,8 @@ class CXThinBlock
 {
 public:
     CBlockHeader header;
-    std::vector<uint64_t> vTxHashes; // List of all transactions id's in the block
-    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
+    vector<uint64_t> vTxHashes; // List of all transactions id's in the block
+    vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
     bool collision;
 
 public:
@@ -59,7 +62,7 @@ public:
         READWRITE(vMissingTx);
     }
     CInv GetInv() { return CInv(MSG_BLOCK, header.GetHash()); }
-    bool process(CNode* pfrom, int nSizeThinbBlock, std::string strCommand);
+    bool process(CNode* pfrom, int nSizeThinbBlock, string strCommand);
     bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state);
 };
 
@@ -71,10 +74,10 @@ class CXThinBlockTx
 public:
     /** Public only for unit testing */
     uint256 blockhash;
-    std::vector<CTransaction> vMissingTx; // map of missing transactions
+    vector<CTransaction> vMissingTx; // map of missing transactions
 
 public:
-    CXThinBlockTx(uint256 blockHash, std::vector<CTransaction>& vTx);
+    CXThinBlockTx(uint256 blockHash, vector<CTransaction>& vTx);
     CXThinBlockTx() {}
 
     ADD_SERIALIZE_METHODS;
@@ -93,10 +96,10 @@ class CXRequestThinBlockTx
 public:
     /** Public only for unit testing */
     uint256 blockhash;
-    std::set<uint64_t> setCheapHashesToRequest; // map of missing transactions
+    set<uint64_t> setCheapHashesToRequest; // map of missing transactions
 
 public:
-    CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>& setHashesToRequest);
+    CXRequestThinBlockTx(uint256 blockHash, set<uint64_t>& setHashesToRequest);
     CXRequestThinBlockTx() {}
 
     ADD_SERIALIZE_METHODS;
@@ -117,13 +120,13 @@ private:
 	static CStatHistory<uint64_t> nBlocks;
 	static CStatHistory<uint64_t> nMempoolLimiterBytesSaved;
 	static CStatHistory<uint64_t> nTotalBloomFilterBytes;
-        static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
-        static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
-        static std::map<int64_t, uint64_t> mapBloomFiltersOutBound;
-        static std::map<int64_t, uint64_t> mapBloomFiltersInBound;
-        static std::map<int64_t, double> mapThinBlockResponseTime;
-        static std::map<int64_t, double> mapThinBlockValidationTime;
-        static std::map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
+        static map<int64_t, pair<uint64_t, uint64_t> > mapThinBlocksInBound;
+        static map<int64_t, pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
+        static map<int64_t, uint64_t> mapBloomFiltersOutBound;
+        static map<int64_t, uint64_t> mapBloomFiltersInBound;
+        static map<int64_t, double> mapThinBlockResponseTime;
+        static map<int64_t, double> mapThinBlockValidationTime;
+        static map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
  
 public:
 	static void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
@@ -134,19 +137,41 @@ public:
 	static void UpdateValidationTime(double nValidationTime);
 	static void UpdateInBoundReRequestedTx(int nReRequestedTx);
         static void UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved);
-	static std::string ToString();
-        static std::string InBoundPercentToString();
-        static std::string OutBoundPercentToString();
-        static std::string InBoundBloomFiltersToString();
-        static std::string OutBoundBloomFiltersToString();
-        static std::string ResponseTimeToString();
-        static std::string ValidationTimeToString();
-        static std::string ReRequestedTxToString();
-        static std::string MempoolLimiterBytesSavedToString();
+	static string ToString();
+        static string InBoundPercentToString();
+        static string OutBoundPercentToString();
+        static string InBoundBloomFiltersToString();
+        static string OutBoundBloomFiltersToString();
+        static string ResponseTimeToString();
+        static string ValidationTimeToString();
+        static string ReRequestedTxToString();
+        static string MempoolLimiterBytesSavedToString();
 };
 
+extern map<uint256, uint64_t> mapThinBlockTimer;
 
+bool HaveConnectThinblockNodes();
+bool HaveThinblockNodes();
+bool CheckThinblockTimer(uint256 hash);
+void ClearThinBlockTimer(uint256 hash);
+bool IsThinBlocksEnabled();
+bool CanThinBlockBeDownloaded(CNode* pto);
+void ConnectToThinBlockNodes();
+void CheckNodeSupportForThinBlocks();
+void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
+void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, vector<uint256>& vOrphanHashes, uint256 hash);
 
+// Xpress Validation: begin
+// Transactions that have already been accepted into the memory pool do not need to be
+// re-verified and can avoid having to do a second and expensive CheckInputs() when 
+// processing a new block.  (Protected by cs_xval)
+extern set<uint256> setPreVerifiedTxHash;
 
+// Orphans that are added to the thinblock must be verifed since they have never been
+// accepted into the memory pool.  (Protected by cs_xval)
+extern set<uint256> setUnVerifiedOrphanTxHash;
+
+extern CCriticalSection cs_xval;
+// Xpress Validation: end
 
 #endif // BITCOIN_THINBLOCK_H
