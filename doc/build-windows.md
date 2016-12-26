@@ -16,11 +16,13 @@ Compiling with Windows Subsystem For Linux
 
 With Windows 10, Microsoft has released a new feature named the [Windows
 Subsystem for Linux](https://msdn.microsoft.com/commandline/wsl/about). This
-feature allows you to run a bash shell directly on Windows in an Ubuntu based
+feature allows you to run a bash shell directly on Windows in an Ubuntu-based
 environment. Within this environment you can cross compile for Windows without
-the need for a separate Linux VM or Server.
+the need for a separate Linux VM or server.
 
-This feature is not supported in versions of Windows prior to Windows 10 or on Windows Server SKUs.
+This feature is not supported in versions of Windows prior to Windows 10 or on
+Windows Server SKUs. In addition, it is available [only for 64-bit versions of
+Windows](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide).
 
 To get the bash shell, you must first activate the feature in Windows.
 
@@ -38,7 +40,9 @@ To get the bash shell, you must first activate the feature in Windows.
   * Accept the license
   * Create a new UNIX user account (this is a separate account from your Windows account)
 
-After the bash shell is active, you can follow the instructions below for Windows 64-bit Cross-compilation.
+After the bash shell is active, you can follow the instructions below, starting
+with the "Cross-compilation" section. Compiling the 64-bit version is
+recommended but it is possible to compile the 32-bit version.
 
 Cross-compilation
 -------------------
@@ -64,7 +68,7 @@ To build executables for Windows 64-bit, install the following dependencies:
 Then build using:
 
     cd depends
-    make HOST=x86_64-w64-mingw32 -j4
+    make HOST=x86_64-w64-mingw32
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
@@ -79,7 +83,7 @@ To build executables for Windows 32-bit, install the following dependencies:
 Then build using:
 
     cd depends
-    make HOST=i686-w64-mingw32 -j4
+    make HOST=i686-w64-mingw32
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
@@ -98,4 +102,3 @@ as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
 
     make install DESTDIR=/mnt/c/workspace/bitcoin
-
