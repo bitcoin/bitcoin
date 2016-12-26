@@ -2692,16 +2692,12 @@ bool ConnectBlock(const CBlock &block,
         return true;
     }
 
-    bool fScriptChecks = true;
-    if (fCheckpointsEnabled)
-    {
-        CBlockIndex *pindexLastCheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
-        if (pindexLastCheckpoint && pindexLastCheckpoint->GetAncestor(pindex->nHeight) == pindex)
-        {
-            // This block is an ancestor of a checkpoint: disable script checks
-            fScriptChecks = false;
-        }
-    }
+    const int64_t timeBarrier = GetTime() - 24 * 3600 * DEFAULT_CHECKPOINT_DAYS;
+    // Blocks that have various days of POW behind them makes them secure in that
+    // real online nodes have checked the scripts.  Therefore, during initial block
+    // download we don't need to check most of those scripts except for the most 
+    // recent ones.
+    bool fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier;
 
     int64_t nTime1 = GetTimeMicros();
     nTimeCheck += nTime1 - nTimeStart;

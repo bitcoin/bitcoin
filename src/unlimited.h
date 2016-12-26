@@ -62,6 +62,10 @@ static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
 static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
 // BU - Xtreme Thinblocks Auto Mempool Limiter - end section
 
+// The number of days in the past we check scripts during initial block download
+static const uint8_t DEFAULT_CHECKPOINT_DAYS = 30;
+
+
 // print out a configuration warning during initialization
 // bool InitWarning(const std::string &str);
 
