@@ -11,7 +11,11 @@
 // c++11 #include <type_traits>
 #include <univalue.h>
 
+#include "sync.h"
+
 class CStatBase;
+
+extern CCriticalSection cs_statMap;
 
 enum StatOperation
   {
@@ -76,17 +80,20 @@ public:
 
   CStat(const char* namep):name(namep)
     {
+      LOCK(cs_statMap);
       value = RecordType(); // = 0;
       statistics[CStatKey(name)] = this;
     }
   CStat(const std::string& namep):name(namep)
     {
+      LOCK(cs_statMap);
       value = RecordType(); // = 0;
       statistics[CStatKey(name)] = this;
     }
 
 void init(const char* namep)
 {
+  LOCK(cs_statMap);
   name = namep;
   value = RecordType(); // = 0;
   statistics[CStatKey(name)] = this;
@@ -94,6 +101,7 @@ void init(const char* namep)
 
 void init(const std::string& namep)
 {
+  LOCK(cs_statMap);
   name = namep;
   value = RecordType(); // = 0;
   statistics[CStatKey(name)] = this;
@@ -101,8 +109,9 @@ void init(const std::string& namep)
 
 void cleanup()
 {
-statistics.erase(CStatKey(name));
-name = "";
+  LOCK(cs_statMap);
+  statistics.erase(CStatKey(name));
+  name = "";
 }
 
   CStat& operator=(const DataType& arg) { value=arg; return *this;}
@@ -129,7 +138,8 @@ name = "";
 
   ~CStat()
     {
-      if (name.size())
+  LOCK(cs_statMap);
+  if (name.size())
         statistics.erase(CStatKey(name));
     }
 };
@@ -148,27 +158,6 @@ enum
     STATISTICS_SAMPLES = 300,
   };
 
-#if 0
-template<typename T>
-struct HasShiftLeft
-{
-    template<typename U, size_t (U::*)() const> struct SFINAE {};
-    template<typename U> static char Test(SFINAE<U, &U::operator<< >*);
-    template<typename U> static int Test(...);
-    static const bool Has = sizeof(Test<T>(0)) == sizeof(char);
-};
-
-template<typename DataType>
-void custom(DataType& lhs, const DataType& rhs, std::true_type)
-{
-  lhs <<= rhs;
-}
-
-template<typename DataType>
-void custom(DataType& lhs, const DataType& rhs, std::false_type)
-{
-}
-#endif
 
 template <class DataType,class RecordType=DataType> class CStatHistory:public CStat<DataType,RecordType>
 {
@@ -229,7 +218,6 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 
   ~CStatHistory()
     {
-      // TODO: statistics.erase(this);
     }
 
   CStatHistory& operator << (const DataType& rhs) 

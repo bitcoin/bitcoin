@@ -130,6 +130,7 @@ void UpdateSendStats(CNode* pfrom, const char* strCommand, int msgSize, int64_t 
   sendAmt += msgSize;
   std::string name("net/send/msg/");
   name.append(strCommand);
+  LOCK(cs_statMap);
   CStatMap::iterator obj = statistics.find(name);
   CStatMap::iterator end = statistics.end();
   if (obj != end)
@@ -148,6 +149,7 @@ void UpdateRecvStats(CNode* pfrom, const std::string& strCommand, int msgSize, i
 {
   recvAmt += msgSize;
   std::string name = "net/recv/msg/" + strCommand;
+  LOCK(cs_statMap);
   CStatMap::iterator obj = statistics.find(name);
   CStatMap::iterator end = statistics.end();
   if (obj != end)
@@ -1655,6 +1657,7 @@ bool TestConservativeBlockValidity(CValidationState& state, const CChainParams& 
 
 CStatBase* FindStatistic(const char* name)
 {
+  LOCK(cs_statMap);
   CStatMap::iterator item = statistics.find(name);
   if (item != statistics.end())
     return item->second;
@@ -1679,6 +1682,7 @@ UniValue getstatlist(const UniValue& params, bool fHelp)
   CStatMap::iterator it;
 
   UniValue ret(UniValue::VARR);
+  LOCK(cs_statMap);
   for (it = statistics.begin(); it != statistics.end(); ++it)
     {
     ret.push_back(it->first);
@@ -1746,6 +1750,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
     //uint_t series = 0; 
     //if (series == "now") series |= 1;
     //if (series == "all") series = 0xfffffff;
+    LOCK(cs_statMap);
 
     CStatBase* base = FindStatistic(params[0].get_str().c_str());
     if (base)
