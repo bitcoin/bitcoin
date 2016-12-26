@@ -15,7 +15,7 @@
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
-const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-2";
+const std::string CMasternodeMan::SERIALIZATION_VERSION_STRING = "CMasternodeMan-Version-3";
 
 struct CompareLastPaidBlock
 {
@@ -804,7 +804,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             nInvCount++;
 
             if (!mapSeenMasternodeBroadcast.count(hash)) {
-                mapSeenMasternodeBroadcast.insert(std::make_pair(hash, mnb));
+                mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(GetTime(), mnb)));
             }
 
             if (vin == mn.vin) {
@@ -1281,7 +1281,7 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb)
 {
     LOCK(cs);
     mapSeenMasternodePing.insert(std::make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
-    mapSeenMasternodeBroadcast.insert(std::make_pair(mnb.GetHash(), mnb));
+    mapSeenMasternodeBroadcast.insert(std::make_pair(mnb.GetHash(), std::make_pair(GetTime(), mnb)));
 
     LogPrintf("CMasternodeMan::UpdateMasternodeList -- masternode=%s  addr=%s\n", mnb.vin.prevout.ToStringShort(), mnb.addr.ToString());
 
@@ -1292,7 +1292,7 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb)
             masternodeSync.AddedMasternodeList();
         }
     } else {
-        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()];
+        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
         if(pmn->UpdateFromNewBroadcast(mnb)) {
             masternodeSync.AddedMasternodeList();
             mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
@@ -1308,11 +1308,18 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     nDos = 0;
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.vin.prevout.ToStringShort());
 
-    if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+    uint256 hash = mnb.GetHash();
+    if(mapSeenMasternodeBroadcast.count(hash)) { //seen
         LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.vin.prevout.ToStringShort());
+        // less then 2 pings left before this MN goes into non-recoverable state, bump sync timeout
+        if(GetTime() - mapSeenMasternodeBroadcast[hash].first > MASTERNODE_NEW_START_REQUIRED_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2) {
+            LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen update\n", mnb.vin.prevout.ToStringShort());
+            mapSeenMasternodeBroadcast[hash].first = GetTime();
+            masternodeSync.AddedMasternodeList();
+        }
         return true;
     }
-    mapSeenMasternodeBroadcast.insert(std::make_pair(mnb.GetHash(), mnb));
+    mapSeenMasternodeBroadcast.insert(std::make_pair(hash, std::make_pair(GetTime(), mnb)));
 
     LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s new\n", mnb.vin.prevout.ToStringShort());
 
@@ -1324,12 +1331,12 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
     // search Masternode list
     CMasternode* pmn = Find(mnb.vin);
     if(pmn) {
-        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()];
+        CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
         if(!mnb.Update(pmn, nDos)) {
             LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.vin.prevout.ToStringShort());
             return false;
         }
-        if(mnb.GetHash() != mnbOld.GetHash()) {
+        if(hash != mnbOld.GetHash()) {
             mapSeenMasternodeBroadcast.erase(mnbOld.GetHash());
         }
     } else {
@@ -1509,7 +1516,7 @@ void CMasternodeMan::SetMasternodeLastPing(const CTxIn& vin, const CMasternodePi
     CMasternodeBroadcast mnb(*pMN);
     uint256 hash = mnb.GetHash();
     if(mapSeenMasternodeBroadcast.count(hash)) {
-        mapSeenMasternodeBroadcast[hash].lastPing = mnp;
+        mapSeenMasternodeBroadcast[hash].second.lastPing = mnp;
     }
 }
 

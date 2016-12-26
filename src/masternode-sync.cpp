@@ -17,22 +17,51 @@
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
-bool CMasternodeSync::IsBlockchainSynced()
+bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
 {
     static bool fBlockchainSynced = false;
     static int64_t nTimeLastProcess = GetTime();
+    static int nSkipped = 0;
+    static bool fFirstBlockAccepted = false;
 
     // if the last call to this function was more than 60 minutes ago (client was in sleep mode) reset the sync process
     if(GetTime() - nTimeLastProcess > 60*60) {
         Reset();
         fBlockchainSynced = false;
     }
+
+    if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
+
+    if(fBlockAccepted) {
+        // this should be only triggered while we are still syncing
+        if(!IsSynced()) {
+            // we are trying to download smth, reset blockchain sync status
+            if(fDebug) LogPrintf("CMasternodeSync::IsBlockchainSynced -- reset\n");
+            fFirstBlockAccepted = true;
+            fBlockchainSynced = false;
+            nTimeLastProcess = GetTime();
+            return false;
+        }
+    } else {
+        // skip if we already checked less than 1 tick ago
+        if(GetTime() - nTimeLastProcess < MASTERNODE_SYNC_TICK_SECONDS) {
+            nSkipped++;
+            return fBlockchainSynced;
+        }
+    }
+
+    if(fDebug) LogPrintf("CMasternodeSync::IsBlockchainSynced -- state before check: %ssynced, skipped %d times\n", fBlockchainSynced ? "" : "not ", nSkipped);
+
     nTimeLastProcess = GetTime();
+    nSkipped = 0;
 
     if(fBlockchainSynced) return true;
-    if(!pCurrentBlockIndex || !pindexBestHeader || fImporting || fReindex) return false;
+
     if(fCheckpointsEnabled && pCurrentBlockIndex->nHeight < Checkpoints::GetTotalBlocksEstimate(Params().Checkpoints()))
         return false;
+
+    // wait for at least one new block to be accepted
+    if(!fFirstBlockAccepted) return false;
 
     // same as !IsInitialBlockDownload() but no cs_main needed here
     int64_t nMaxBlockTime = std::max(pCurrentBlockIndex->GetBlockTime(), pindexBestHeader->GetBlockTime());
@@ -172,7 +201,7 @@ void ReleaseNodes(const std::vector<CNode*> &vNodesCopy)
 void CMasternodeSync::ProcessTick()
 {
     static int nTick = 0;
-    if(nTick++ % 6 != 0) return;
+    if(nTick++ % MASTERNODE_SYNC_TICK_SECONDS != 0) return;
     if(!pCurrentBlockIndex) return;
 
     //the actual count of masternodes we have currently
@@ -214,6 +243,9 @@ void CMasternodeSync::ProcessTick()
             !IsBlockchainSynced() && nRequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS)
     {
         LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nRequestedMasternodeAttempt %d -- blockchain is not synced yet\n", nTick, nRequestedMasternodeAssets, nRequestedMasternodeAttempt);
+        nTimeLastMasternodeList = GetTime();
+        nTimeLastPaymentVote = GetTime();
+        nTimeLastGovernanceItem = GetTime();
         return;
     }
 

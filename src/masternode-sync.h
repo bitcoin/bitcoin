@@ -21,6 +21,7 @@ static const int MASTERNODE_SYNC_GOVOBJ          = 10;
 static const int MASTERNODE_SYNC_GOVOBJ_VOTE     = 11;
 static const int MASTERNODE_SYNC_FINISHED        = 999;
 
+static const int MASTERNODE_SYNC_TICK_SECONDS    = 6;
 static const int MASTERNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
 
 extern CMasternodeSync masternodeSync;
@@ -64,7 +65,7 @@ public:
     void AddedGovernanceItem() { nTimeLastGovernanceItem = GetTime(); };
 
     bool IsFailed() { return nRequestedMasternodeAssets == MASTERNODE_SYNC_FAILED; }
-    bool IsBlockchainSynced();
+    bool IsBlockchainSynced(bool fBlockAccepted = false);
     bool IsMasternodeListSynced() { return nRequestedMasternodeAssets > MASTERNODE_SYNC_LIST; }
     bool IsWinnersListSynced() { return nRequestedMasternodeAssets > MASTERNODE_SYNC_MNW; }
     bool IsSynced() { return nRequestedMasternodeAssets == MASTERNODE_SYNC_FINISHED; }

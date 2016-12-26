@@ -911,7 +911,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, int& nDos)
     CMasternodeBroadcast mnb(*pmn);
     uint256 hash = mnb.GetHash();
     if (mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
-        mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = *this;
+        mnodeman.mapSeenMasternodeBroadcast[hash].second.lastPing = *this;
     }
 
     pmn->Check(true); // force update, ignoring cache
