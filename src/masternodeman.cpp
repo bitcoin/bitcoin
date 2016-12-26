@@ -744,7 +744,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(pmn && pmn->IsNewStartRequired()) return;
 
         int nDos = 0;
-        if(mnp.CheckAndUpdate(pmn, nDos)) return;
+        if(mnp.CheckAndUpdate(pmn, false, nDos)) return;
 
         if(nDos > 0) {
             // if anything significant failed, mark that node
