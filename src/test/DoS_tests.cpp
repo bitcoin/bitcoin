@@ -12,6 +12,7 @@
 #include "script/sign.h"
 #include "serialize.h"
 #include "util.h"
+#include "validation.h"
 
 #include "test/test_bitcoin.h"
 
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
     connman->ClearBanned();
-    mapArgs["-banscore"] = "111"; // because 11 is my favorite number
+    ForceSetArg("-banscore", "111"); // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode1(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr1, 3, 1, "", true);
     dummyNode1.SetSendVersion(PROTOCOL_VERSION);
@@ -89,7 +90,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     Misbehaving(dummyNode1.GetId(), 1);
     SendMessages(&dummyNode1, *connman);
     BOOST_CHECK(connman->IsBanned(addr1));
-    mapArgs.erase("-banscore");
+    ForceSetArg("-banscore", std::to_string(DEFAULT_BANSCORE_THRESHOLD));
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)

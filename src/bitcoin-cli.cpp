@@ -76,9 +76,9 @@ static int AppInitRPC(int argc, char* argv[])
     // Parameters
     //
     ParseParameters(argc, argv);
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version")) {
+    if (argc<2 || IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help") || IsArgSet("-version")) {
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
-        if (!mapArgs.count("-version")) {
+        if (!IsArgSet("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  bitcoin-cli [options] <command> [params]  " + strprintf(_("Send command to %s"), _(PACKAGE_NAME)) + "\n" +
                   "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
@@ -95,11 +95,11 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
     if (!boost::filesystem::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
+        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     try {
-        ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME), mapArgs, mapMultiArgs);
+        ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
@@ -211,7 +211,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 
     // Get credentials
     std::string strRPCUserColonPass;
-    if (mapArgs["-rpcpassword"] == "") {
+    if (GetArg("-rpcpassword", "") == "") {
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             throw std::runtime_error(strprintf(
@@ -220,7 +220,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params)
 
         }
     } else {
-        strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
+        strRPCUserColonPass = GetArg("-rpcuser", "") + ":" + GetArg("-rpcpassword", "");
     }
 
     struct evkeyvalq *output_headers = evhttp_request_get_output_headers(req);
