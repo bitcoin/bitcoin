@@ -35,8 +35,6 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
-#include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 
 #include <math.h>
 

@@ -16,21 +16,14 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#ifdef HAVE_GETADDRINFO_A
-#include <netdb.h>
-#endif
 #include <atomic>
 
 #ifndef WIN32
-#if HAVE_INET_PTON
-#include <arpa/inet.h>
-#endif
 #include <fcntl.h>
 #endif
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
-#include <boost/thread.hpp>
 
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
