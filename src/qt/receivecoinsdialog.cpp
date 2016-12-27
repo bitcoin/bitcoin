@@ -13,8 +13,10 @@
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "receiverequestdialog.h"
+#include "receivefreezedialog.h"
 #include "recentrequeststablemodel.h"
 #include "walletmodel.h"
+
 
 #include <QAction>
 #include <QCursor>
@@ -22,6 +24,7 @@
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QTextDocument>
+#include <QCheckBox>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
@@ -103,8 +106,6 @@ void ReceiveCoinsDialog::clear()
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
-    ui->freezeBlock->setText("");
-    ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
     updateDisplayUnit();
 }
 
@@ -126,23 +127,15 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
-void ReceiveCoinsDialog::on_freezeDateTime_editingFinished()
+void ReceiveCoinsDialog::on_freezeCheck_clicked()
 {
-	if (ui->freezeDateTime->dateTime() > QDateTime::fromMSecsSinceEpoch(0))
-		ui->freezeBlock->setText("");
-}
 
-void ReceiveCoinsDialog::on_freezeBlock_editingFinished()
-{
-	if (ui->freezeBlock->text() != "")
-		ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
+    ReceiveFreezeDialog *dialog = new ReceiveFreezeDialog(this);
+    //dialog->setAttribute(Qt::WA_DeleteOnClose);
+    //dialog->setModel(model->getOptionsModel());
+    //dialog->show();
+    //clear();
 
-	/* limit check */
-	std::string freezeText = ui->freezeBlock->text().toStdString();
-	int64_t nFreezeLockTime = 0;
-	if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
-	if (nFreezeLockTime < 1 || nFreezeLockTime > LOCKTIME_THRESHOLD-1)
-			ui->freezeBlock->setText("");
 }
 
 void ReceiveCoinsDialog::on_receiveButton_clicked()
@@ -157,10 +150,10 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     // Get the Freeze number from the ui
     CScriptNum nFreezeLockTime(0);
     // try freezeBlock
-    std::string freezeText = ui->freezeBlock->text().toStdString();
-    if (freezeText != "") nFreezeLockTime = CScriptNum(std::strtoul(freezeText.c_str(),0,10));
+    //std::string freezeText = ui->freezeBlock->text().toStdString();
+    //if (freezeText != "") nFreezeLockTime = CScriptNum(std::strtoul(freezeText.c_str(),0,10));
     // try freezeDateTime
-    if (nFreezeLockTime == 0) nFreezeLockTime = CScriptNum(ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000);
+    //if (nFreezeLockTime == 0) nFreezeLockTime = CScriptNum(ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000);
 
 
     if(ui->reuseAddress->isChecked())
