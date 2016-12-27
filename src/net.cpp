@@ -1856,7 +1856,7 @@ void CConnman::ThreadMessageHandler()
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 if (lockRecv)
                 {
-                    if (!GetNodeSignals().ProcessMessages(pnode, *this))
+                    if (!GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc))
                         pnode->CloseSocketDisconnect();
 
                     if (pnode->nSendSize < GetSendBufferSize())
@@ -1875,7 +1875,7 @@ void CConnman::ThreadMessageHandler()
             {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend)
-                    GetNodeSignals().SendMessages(pnode, *this);
+                    GetNodeSignals().SendMessages(pnode, *this, flagInterruptMsgProc);
             }
             if (flagInterruptMsgProc)
                 return;
