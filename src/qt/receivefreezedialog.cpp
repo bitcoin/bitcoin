@@ -9,6 +9,8 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "walletmodel.h"
+
 
 
 #include <QClipboard>
@@ -29,7 +31,7 @@ ReceiveFreezeDialog::ReceiveFreezeDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    //connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
 }
 
@@ -46,7 +48,7 @@ void ReceiveFreezeDialog::setModel(OptionsModel *model)
 
 void ReceiveFreezeDialog::clear()
 {
-    ui->freezeBlock->setText("");
+    ui->freezeBlock->clear();
     ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
 }
 
@@ -54,7 +56,7 @@ void ReceiveFreezeDialog::clear()
 void ReceiveFreezeDialog::on_freezeDateTime_editingFinished()
 {
     if (ui->freezeDateTime->dateTime() > QDateTime::fromMSecsSinceEpoch(0))
-        ui->freezeBlock->setText("");
+        ui->freezeBlock->clear();
 }
 
 void ReceiveFreezeDialog::on_freezeBlock_editingFinished()
@@ -67,5 +69,5 @@ void ReceiveFreezeDialog::on_freezeBlock_editingFinished()
     int64_t nFreezeLockTime = 0;
     if (freezeText != "") nFreezeLockTime = std::strtoul(freezeText.c_str(),0,10);
     if (nFreezeLockTime < 1 || nFreezeLockTime > LOCKTIME_THRESHOLD-1)
-            ui->freezeBlock->setText("");
+            ui->freezeBlock->clear();
 }
