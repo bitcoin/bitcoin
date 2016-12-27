@@ -2551,9 +2551,6 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
                 PrintExceptionContinue(&e, "ProcessMessages()");
             }
         }
-        catch (const boost::thread_interrupted&) {
-            throw;
-        }
         catch (const std::exception& e) {
             PrintExceptionContinue(&e, "ProcessMessages()");
         } catch (...) {
