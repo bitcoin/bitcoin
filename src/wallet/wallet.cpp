@@ -169,6 +169,17 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
     return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
 }
 
+bool CWallet::EraseKey(const CPubKey &pubKey)
+{
+    AssertLockHeld(cs_wallet);
+    CCryptoKeyStore::RemoveKey(pubKey.GetID());
+    mapKeyMetadata.erase(pubKey.GetID());
+    CWalletDB walletDB(strWalletFile);
+    walletDB.EraseKey(pubKey);
+    walletDB.Flush();
+    return true;
+}
+
 bool CWallet::AddCScript(const CScript& redeemScript)
 {
     if (!CCryptoKeyStore::AddCScript(redeemScript))
@@ -1225,6 +1236,46 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
     return ret;
+}
+
+bool CWallet::EraseFromWallet(const uint256& hash, CWalletDB* walletdb)
+{
+    AssertLockHeld(cs_wallet);
+
+    std::map<uint256, CWalletTx>::iterator i;
+    i = mapWallet.find(hash);
+    if (i == mapWallet.end())
+        return false;
+    const CWalletTx& wtx = i->second;
+
+    // Remove from mapTxSpends
+    if (!wtx.IsCoinBase())
+    {
+        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+        {
+            pair<TxSpends::iterator, TxSpends::iterator> range =
+                 mapTxSpends.equal_range(txin.prevout);
+
+            for (TxSpends::iterator it = range.first; it != range.second; ++it)
+            {
+                if (hash == it->second)
+                {
+                    mapTxSpends.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
+    mapWallet.erase(i);
+
+    if (fFileBacked)
+        walletdb->EraseTx(hash);
+
+    NotifyTransactionChanged(this, hash, CT_DELETED);
+    LogPrintf("EraseFromWallet %s\n", hash.ToString());
+
+    return true;
 }
 
 void CWallet::ReacceptWalletTransactions()

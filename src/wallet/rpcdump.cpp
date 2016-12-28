@@ -150,6 +150,50 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue deleteprivkey(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 1 || params.size() > 1)
+        throw runtime_error(
+            "deleteprivkey \"pubkey\"\n"
+            "\nRemove the private key corresponding to the provided pubkey, making that address become watch-only (as if it was imported with importaddress). For security reasons the wallet must be unlocked.\n"
+            "\nArguments:\n"
+            "1. \"pubkey\"        (string, required) The pubkey corresponding to the private key to be removed.\n"
+            "\nExamples:\n"
+            "\nConvert a spendable address to watch-only\n"
+            + HelpExampleCli("deleteprivkey", "\"mypubkey\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("deleteprivkey", "\"mypubkey\"")
+        );
+
+    std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+    CPubKey pubKey(data.begin(), data.end());
+    if (!pubKey.IsFullyValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
+    CKeyID keyID = pubKey.GetID();
+    CScript script = GetScriptForDestination(keyID);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // Wallet must be unlocked not because we need access to key material, but
+    // because otherwise some joker that finds an unattended Bitcoin Core could
+    // delete the keys.
+    EnsureWalletIsUnlocked();
+
+    if (!pwalletMain->HaveKey(keyID))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not in the wallet");
+
+    // Erase the key material
+    pwalletMain->EraseKey(pubKey);
+
+    // Re-add the pubkey to the wallet as a watch-only address
+    pwalletMain->AddWatchOnly(script);
+
+    return NullUniValue;
+}
+
 void ImportAddress(const CBitcoinAddress& address, const string& strLabel);
 void ImportScript(const CScript& script, const string& strLabel, bool isRedeemScript)
 {
@@ -241,6 +285,204 @@ UniValue importaddress(const UniValue& params, bool fHelp)
     }
 
     return NullUniValue;
+}
+
+void RemoveAddress(const CBitcoinAddress& address);
+void RemoveScript(const CScript& script, bool isRedeemScript)
+{
+    pwalletMain->MarkDirty();
+
+    if (pwalletMain->HaveWatchOnly(script) && !pwalletMain->RemoveWatchOnly(script))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error removing address from wallet");
+
+    if (isRedeemScript) {
+        //if (pwalletMain->HaveCScript(script) && !pwalletMain->RemoveCScript(script))
+        //    throw JSONRPCError(RPC_WALLET_ERROR, "Error removing p2sh redeemScript to wallet");
+        RemoveAddress(CBitcoinAddress(CScriptID(script)));
+    }
+}
+
+void RemoveAddress(const CBitcoinAddress& address)
+{
+    CScript script = GetScriptForDestination(address.Get());
+    RemoveScript(script, false);
+    // add to address book or update label
+    if (address.IsValid())
+        pwalletMain->DelAddressBook(address.Get());
+}
+
+UniValue forgetaddress(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 1 || params.size() > 3)
+        throw runtime_error(
+            "forgetaddress \"address\" ( purge p2sh )\n"
+            "\nRemoves a script (in hex) or address from the wallet and (optionally) purges transactions which as a result are no longer considered as belonging to the wallet.\n"
+            "\nArguments:\n"
+            "1. \"address\"          (string, required) The hex-encoded script (or address)\n"
+            "2. purge              (boolean, optional, default=true) Remove transactions whose last remaining link to the wallet was this script/address\n"
+            "3. p2sh               (boolean, optional, default=false) Remove the P2SH version of the script as well\n"
+            "\nNote: This call only works on watch-only scripts or addresses. To forget a private key known to the wallet, first call deleteprivkey.\n"
+            "\nNote: This call will take two full passes through the wallet and compact the wallet database if purge is true.\n"
+            "\nExamples:\n"
+            "\nRemove a script with purge\n"
+            + HelpExampleCli("forgetaddress", "\"myscript\"") +
+            "\nRemove an address without purge\n"
+            + HelpExampleCli("forgetaddress", "\"myaddress\" false") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("forgetaddress", "\"myaddress\", false")
+        );
+
+    // Whether to perform purge after removal
+    bool fPurge = true;
+    if (params.size() > 1)
+        fPurge = params[1].get_bool();
+
+    // Whether to remove a p2sh version, too
+    bool fP2SH = false;
+    if (params.size() > 2)
+        fP2SH = params[2].get_bool();
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    set<uint256> setNotMine;
+
+    if (fPurge)
+    {
+        for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.begin(); i != pwalletMain->mapWallet.end(); ++i)
+        {
+            if (!pwalletMain->IsMine(i->second)
+             && !pwalletMain->IsFromMe(i->second))
+                setNotMine.insert(i->first);
+        }
+    }
+
+    CBitcoinAddress address(params[0].get_str());
+    if (address.IsValid()) {
+        if (fP2SH)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
+        CKeyID keyID;
+        CPubKey vchPubKey;
+        if (address.GetKeyID(keyID) && pwalletMain->GetPubKey(keyID, vchPubKey))
+        {
+            //throw JSONRPCError(RPC_WALLET_HAVE_KEY, "Refusing to forget address associated with a known key. Make sure you know what you are doing, then call deleteprivkey first.");
+            UniValue args(UniValue::VARR);
+            args.push_back(HexStr(vchPubKey));
+            deleteprivkey(args, false);
+        }
+        RemoveAddress(address);
+    } else if (IsHex(params[0].get_str())) {
+        std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+        RemoveScript(CScript(data.begin(), data.end()), fP2SH);
+    } else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
+
+    vector<uint256> vDeletes;
+
+    if (fPurge)
+    {
+        // Sort the array of transaction hashes so that the order of operations
+        // and output are deterministic, for testing purposes.
+        sort(vDeletes.begin(), vDeletes.end());
+
+        for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.begin(); i != pwalletMain->mapWallet.end(); ++i)
+        {
+            if (!pwalletMain->IsMine(i->second)
+             && !pwalletMain->IsFromMe(i->second)
+             && !setNotMine.count(i->first))
+            {
+                vDeletes.push_back(i->first);
+            }
+        }
+    }
+
+    if (!vDeletes.empty())
+    {
+        CWalletDB walletdb(pwalletMain->strWalletFile);
+        for (vector<uint256>::const_iterator pTxID = vDeletes.begin(); pTxID != vDeletes.end(); ++pTxID)
+            pwalletMain->EraseFromWallet(*pTxID, &walletdb);
+        walletdb.Flush();
+        walletdb.Compact();
+    }
+
+    if (fPurge)
+    {
+        UniValue ret(UniValue::VARR);
+        BOOST_FOREACH(const uint256& hash, vDeletes)
+            ret.push_back(hash.ToString());
+        return ret;
+    }
+
+    return NullUniValue;
+}
+
+UniValue purgetransactions(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "purgetransactions compact\n"
+            "\nRemoves transactions from the wallet which are not known to correspond to any keys or watch-only scripts in to the wallet. It is not normally the case that a wallet ends up with transactions unrelated to its keys, but this can happen if forgetaddress is called with purge=false. A common use case is to forget a large number of transactions and then purge them all in one pass.\n"
+            "\nArguments:\n"
+            "1. compact        (boolean, optional, default=true) Compact the wallet database if any transactions are removed\n"
+            "\nNote: This call will take a single full passes through the wallet and then compact the wallet database if and only if transactions are removed and compact=true.\n"
+            "\nExamples:\n"
+            "\nRemove unlinked transactions from the wallet\n"
+            + HelpExampleCli("purgetransactions", "") +
+            "\nRemove unlinked transactions without compacting the wallet\n"
+            + HelpExampleCli("purgetransactions", "false") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("purgetransactions", "false")
+        );
+
+    // Whether to perform compaction after purge
+    bool fCompact = true;
+    if (params.size() > 0)
+        fCompact = params[0].get_bool();
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    vector<uint256> vDeletes;
+
+    for (map<uint256, CWalletTx>::const_iterator i = pwalletMain->mapWallet.begin(); i != pwalletMain->mapWallet.end(); ++i)
+    {
+        if (!pwalletMain->IsMine(i->second)
+         && !pwalletMain->IsFromMe(i->second))
+        {
+            vDeletes.push_back(i->first);
+        }
+    }
+
+    if (!vDeletes.empty())
+    {
+        // Sort the array of transaction hashes so that the order of operations
+        // and output are deterministic, for testing purposes.
+        sort(vDeletes.begin(), vDeletes.end());
+
+        // Open the wallet database before entering the loop..
+        CWalletDB walletdb(pwalletMain->strWalletFile);
+
+        // Remove each transaction.
+        for (vector<uint256>::const_iterator pTxID = vDeletes.begin(); pTxID != vDeletes.end(); ++pTxID)
+            pwalletMain->EraseFromWallet(*pTxID, &walletdb);
+
+        // Write to the database and the perform a compaction operation --
+        // hopefully shrinking the size of the database files to reduce the
+        // size of the wallet on disk.
+        walletdb.Flush();
+        if (fCompact)
+            walletdb.Compact();
+    }
+
+    UniValue ret(UniValue::VARR);
+    BOOST_FOREACH(const uint256& hash, vDeletes)
+        ret.push_back(hash.ToString());
+    return ret;
 }
 
 UniValue importpubkey(const UniValue& params, bool fHelp)

@@ -104,6 +104,18 @@ bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
+bool CWalletDB::EraseKey(const CPubKey& vchPubKey)
+{
+    ++nWalletDBUpdated;
+
+    Erase(std::make_pair(std::string("key"), vchPubKey));
+    Erase(std::make_pair(std::string("wkey"), vchPubKey));
+    Erase(std::make_pair(std::string("ckey"), vchPubKey));
+    Erase(std::make_pair(std::string("keymeta"), vchPubKey));
+
+    return true;
+}
+
 bool CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 {
     nWalletDBUpdated++;
