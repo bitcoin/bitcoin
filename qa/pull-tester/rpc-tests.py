@@ -29,7 +29,10 @@ import subprocess
 import tempfile
 import re
 
+sys.path.append("qa/pull-tester/")
 from tests_config import *
+
+RPC_TESTS_DIR = SRCDIR + '/qa/rpc-tests/'
 
 #If imported values are not defined then set to zero (or disabled)
 if 'ENABLE_WALLET' not in vars():
