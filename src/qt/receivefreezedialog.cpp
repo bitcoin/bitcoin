@@ -1,4 +1,3 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -9,20 +8,6 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "walletmodel.h"
-
-
-
-#include <QClipboard>
-#include <QDrag>
-#include <QMenu>
-#include <QMimeData>
-#include <QMouseEvent>
-#include <QPixmap>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
-
 
 ReceiveFreezeDialog::ReceiveFreezeDialog(QWidget *parent) :
     QDialog(parent),
@@ -31,7 +16,10 @@ ReceiveFreezeDialog::ReceiveFreezeDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    on_resetButton_clicked();
+
+    connect(this, SIGNAL(accepted()), parent, SLOT(on_freezeDialog_hide()));
+    connect(this, SIGNAL(rejected()), parent, SLOT(on_freezeDialog_hide()));
 
 }
 
@@ -43,15 +31,7 @@ ReceiveFreezeDialog::~ReceiveFreezeDialog()
 void ReceiveFreezeDialog::setModel(OptionsModel *model)
 {
     this->model = model;
-
 }
-
-void ReceiveFreezeDialog::clear()
-{
-    ui->freezeBlock->clear();
-    ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
-}
-
 
 void ReceiveFreezeDialog::on_freezeDateTime_editingFinished()
 {
@@ -61,7 +41,7 @@ void ReceiveFreezeDialog::on_freezeDateTime_editingFinished()
 
 void ReceiveFreezeDialog::on_freezeBlock_editingFinished()
 {
-    if (ui->freezeBlock->text() != "")
+    if (ui->freezeBlock->value() > 0)
         ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
 
     /* limit check */
@@ -71,3 +51,38 @@ void ReceiveFreezeDialog::on_freezeBlock_editingFinished()
     if (nFreezeLockTime < 1 || nFreezeLockTime > LOCKTIME_THRESHOLD-1)
             ui->freezeBlock->clear();
 }
+
+void ReceiveFreezeDialog::on_resetButton_clicked()
+{
+    ui->freezeBlock->clear();
+    ui->freezeDateTime->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
+}
+
+void ReceiveFreezeDialog::on_okButton_clicked()
+{
+    accept();
+}
+
+void ReceiveFreezeDialog::on_ReceiveFreezeDialog_rejected()
+{
+    // this signal is also called by the ESC key
+
+    on_resetButton_clicked();
+}
+
+void ReceiveFreezeDialog::getFreezeLockTime(CScriptNum &nFreezeLockTime)
+{
+    nFreezeLockTime = CScriptNum(0);
+
+    // try freezeBlock
+    std::string freezeText = ui->freezeBlock->text().toStdString();
+    if (freezeText != "") nFreezeLockTime = CScriptNum(std::strtoul(freezeText.c_str(),0,10));
+
+    // try freezeDateTime
+    if (nFreezeLockTime == 0) nFreezeLockTime = CScriptNum(ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000);
+
+}
+
+
+
+

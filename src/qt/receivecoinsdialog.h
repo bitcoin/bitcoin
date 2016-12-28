@@ -7,6 +7,8 @@
 #define BITCOIN_QT_RECEIVECOINSDIALOG_H
 
 #include "guiutil.h"
+#include "walletmodel.h"
+
 
 #include <QDialog>
 #include <QHeaderView>
@@ -46,10 +48,13 @@ public:
 
     void setModel(WalletModel *model);
 
+    CScriptNum nFreezeLockTime = CScriptNum(0);
+
 public Q_SLOTS:
     void clear();
     void reject();
     void accept();
+    void on_freezeDialog_hide();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
@@ -63,6 +68,7 @@ private:
 
     void copyColumnToClipboard(int column);
     virtual void resizeEvent(QResizeEvent *event);
+
 
 private Q_SLOTS:
     void on_receiveButton_clicked();

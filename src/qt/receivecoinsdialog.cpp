@@ -15,8 +15,8 @@
 #include "receiverequestdialog.h"
 #include "receivefreezedialog.h"
 #include "recentrequeststablemodel.h"
-#include "walletmodel.h"
 
+ReceiveFreezeDialog *freezeDialog;
 
 #include <QAction>
 #include <QCursor>
@@ -64,6 +64,9 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidg
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+
+    // initialize freeze
+    nFreezeLockTime = CScriptNum(0);
 }
 
 void ReceiveCoinsDialog::setModel(WalletModel *model)
@@ -106,6 +109,10 @@ void ReceiveCoinsDialog::clear()
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
     ui->reuseAddress->setChecked(false);
+    ui->freezeCheck->setChecked(false);
+    ui->freezeCheck->setText("Coin &Freeze");
+    nFreezeLockTime = CScriptNum(0);
+    freezeDialog = NULL;
     updateDisplayUnit();
 }
 
@@ -127,14 +134,38 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
+void ReceiveCoinsDialog::on_freezeDialog_hide()
+{
+    freezeDialog->getFreezeLockTime(nFreezeLockTime);
+
+    if (nFreezeLockTime == 0)
+    {
+        // user cancelled freeze
+        ui->freezeCheck->setChecked(false);
+        ui->freezeCheck->setText("Coin Freeze");
+    }
+    else
+    {
+        // user selected freeze
+        ui->freezeCheck->setChecked(true);
+
+        QString freezeLabel;
+        if (nFreezeLockTime.getint64() < LOCKTIME_THRESHOLD)
+            freezeLabel = (QString)("Block: ") +  QString::number(nFreezeLockTime.getint());
+        else
+            freezeLabel = QDateTime::fromMSecsSinceEpoch(nFreezeLockTime.getint64() * 1000).toString();
+        ui->freezeCheck->setText("Coin Freeze until " + freezeLabel);
+    }
+}
+
 void ReceiveCoinsDialog::on_freezeCheck_clicked()
 {
-
-    ReceiveFreezeDialog *dialog = new ReceiveFreezeDialog(this);
-    //dialog->setAttribute(Qt::WA_DeleteOnClose);
-    //dialog->setModel(model->getOptionsModel());
-    //dialog->show();
-    //clear();
+    if (!freezeDialog)
+    {
+        freezeDialog = new ReceiveFreezeDialog(this);
+        freezeDialog->setModel(model->getOptionsModel());
+    }
+    freezeDialog->show();
 
 }
 
@@ -146,15 +177,6 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString address;
     QString label = ui->reqLabel->text();
     QString sFreezeLockTime = "";
-
-    // Get the Freeze number from the ui
-    CScriptNum nFreezeLockTime(0);
-    // try freezeBlock
-    //std::string freezeText = ui->freezeBlock->text().toStdString();
-    //if (freezeText != "") nFreezeLockTime = CScriptNum(std::strtoul(freezeText.c_str(),0,10));
-    // try freezeDateTime
-    //if (nFreezeLockTime == 0) nFreezeLockTime = CScriptNum(ui->freezeDateTime->dateTime().toMSecsSinceEpoch() / 1000);
-
 
     if(ui->reuseAddress->isChecked())
     {
