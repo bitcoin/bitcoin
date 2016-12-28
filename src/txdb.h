@@ -40,7 +40,9 @@ static const int64_t nMaxTxIndexCache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;
 
-/** CCoinsView backed by the coin database (chainstate/) */
+/** CCoinsView backed by the coin database (chainstate/)
+ * Cursor requires FlushStateToDisk for consistency.
+ */
 class CCoinsViewDB final : public CCoinsView
 {
 protected:
