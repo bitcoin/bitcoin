@@ -27,7 +27,9 @@ env:
     - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
   matrix:
-# ARM
+# ARM64
+    - HOST=aarch64-linux-gnu PACKAGES="g++-aarch64-linux-gnu" DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+# ARMHF
     - HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Win32
     - HOST=i686-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PACKAGES="python nsis g++-mingw-w64-i686 wine1.6 bc openjdk-7-jre-headless" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-reduce-exports"
