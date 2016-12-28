@@ -52,6 +52,18 @@ public:
      */
     Admin::Server* adminServer();
 
+    /**
+     * @brief userAgent creates the user-agent string as it is send over the wire.
+     * This includes the client name, the version number and any parameters
+     * like -uacomments (user-agent-comments)
+     */
+    static std::string userAgent();
+
+    /**
+     * @returns the name of the client, in this case "Classic".
+     */
+    static const char * clientName();
+
 private:
     std::shared_ptr<boost::asio::io_service> m_ioservice;
     std::unique_ptr<boost::asio::io_service::work> m_work;

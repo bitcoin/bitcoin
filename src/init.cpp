@@ -1134,20 +1134,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     RegisterNodeSignals(GetNodeSignals());
 
-    // sanitize comments per BIP-0014, format user agent and check total size
-    std::vector<string> uacomments;
-    BOOST_FOREACH(string cmt, mapMultiArgs["-uacomment"])
-    {
-        if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
-            return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
-        uacomments.push_back(SanitizeString(cmt, SAFE_CHARS_UA_COMMENT));
-    }
-    strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
-    if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
-        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
-            strSubVersion.size(), MAX_SUBVERSION_LENGTH));
-    }
-
     if (mapArgs.count("-onlynet")) {
         std::set<CNetAddr::Network> nets;
         BOOST_FOREACH(const std::string& snet, mapMultiArgs["-onlynet"]) {

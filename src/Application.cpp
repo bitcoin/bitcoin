@@ -17,6 +17,16 @@
  */
 #include "Application.h"
 
+#include "policy/policy.h"
+#include "util.h"
+#include "clientversion.h"
+#include "utilstrencodings.h"
+#include "clientversion.h"
+#include "net.h"
+
+#include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+
 // static
 Application * Application::instance()
 {
@@ -78,4 +88,51 @@ Admin::Server* Application::adminServer()
         }
     }
     return m_adminServer.get();
+}
+
+std::string Application::userAgent()
+{
+    // sanitize comments per BIP-0014, format user agent and check total size
+    std::string eb = std::string("EB") + boost::lexical_cast<std::string>(Policy::blockSizeAcceptLimit() / 100000);
+    if (eb.at(eb.size()-1) == '0')
+        eb = eb.substr(0, eb.size()-1);
+    else
+        eb.insert(eb.size() - 1, ".", 1);
+    std::vector<std::string> comments;
+    comments.push_back(eb);
+    for (const std::string &comment : mapMultiArgs["-uacomment"]) {
+        if (comment == SanitizeString(comment, SAFE_CHARS_UA_COMMENT))
+            comments.push_back(comment);
+        else
+            LogPrintf("User Agent comment (%s) contains unsafe characters.", comment);
+    }
+
+    std::ostringstream ss;
+    ss << "/";
+    ss << clientName() << ":"
+       << CLIENT_VERSION_MAJOR << "."
+       << CLIENT_VERSION_MINOR << "."
+       << CLIENT_VERSION_REVISION;
+    if (CLIENT_VERSION_BUILD != 0)
+        ss << "." << CLIENT_VERSION_BUILD;
+    if (!comments.empty()) {
+        auto it(comments.begin());
+        ss << "(" << *it;
+        for (++it; it != comments.end(); ++it)
+            ss << "; " << *it;
+        ss << ")";
+    }
+    ss << "/";
+    std::string answer = ss.str();
+    if (answer.size() > MAX_SUBVERSION_LENGTH) {
+        LogPrintf("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.",
+            answer.size(), MAX_SUBVERSION_LENGTH);
+        answer = answer.substr(0, MAX_SUBVERSION_LENGTH);
+    }
+    return answer;
+}
+
+const char *Application::clientName()
+{
+    return "Classic";
 }

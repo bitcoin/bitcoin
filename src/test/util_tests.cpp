@@ -4,7 +4,6 @@
 
 #include "util.h"
 
-#include "clientversion.h"
 #include "primitives/transaction.h"
 #include "random.h"
 #include "sync.h"
@@ -13,7 +12,6 @@
 #include "test/test_bitcoin.h"
 
 #include <stdint.h>
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -410,18 +408,6 @@ BOOST_AUTO_TEST_CASE(test_FormatParagraph)
     BOOST_CHECK_EQUAL(FormatParagraph("testerde test ", 4, 0), "testerde\ntest");
     BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 4), "test\n    test");
     BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string. This is a second sentence in the very long test string."), "This is a very long test string. This is a second sentence in the very long\ntest string.");
-}
-
-BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
-{
-    std::vector<std::string> comments;
-    comments.push_back(std::string("comment1"));
-    std::vector<std::string> comments2;
-    comments2.push_back(std::string("comment1"));
-    comments2.push_back(SanitizeString(std::string("Comment2; .,_?@-; !\"#$%&'()*+/<=>[]\\^`{|}~"), SAFE_CHARS_UA_COMMENT)); // Semicolon is discouraged but not forbidden by BIP-0014
-    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, std::vector<std::string>()),std::string("/Test:0.9.99/"));
-    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:0.9.99(comment1)/"));
-    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments2),std::string("/Test:0.9.99(comment1; Comment2; .,_?@-; )/"));
 }
 
 BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)

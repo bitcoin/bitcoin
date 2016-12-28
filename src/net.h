@@ -176,9 +176,6 @@ extern CCriticalSection cs_vAddedNodes;
 extern NodeId nLastNodeId;
 extern CCriticalSection cs_nLastNodeId;
 
-/** Subversion as sent to the P2P network in `version` messages */
-extern std::string strSubVersion;
-
 struct LocalServiceInfo {
     int nScore;
     int nPort;

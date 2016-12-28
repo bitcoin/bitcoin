@@ -15,6 +15,7 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include <Application.h>
 
 #include <stdint.h>
 
@@ -170,7 +171,7 @@ QString ClientModel::formatFullVersion() const
 
 QString ClientModel::formatSubVersion() const
 {
-    return QString::fromStdString(strSubVersion);
+    return QString::fromStdString(Application::userAgent());
 }
 
 QString ClientModel::formatBuildDate() const
@@ -185,7 +186,7 @@ bool ClientModel::isReleaseVersion() const
 
 QString ClientModel::clientName() const
 {
-    return QString::fromStdString(CLIENT_NAME);
+    return QString::fromLatin1(Application::clientName());
 }
 
 QString ClientModel::formatClientStartupTime() const

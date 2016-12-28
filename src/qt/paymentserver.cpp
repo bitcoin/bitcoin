@@ -14,6 +14,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "wallet/wallet.h"
+#include <Application.h>
 
 #include <cstdlib>
 
@@ -615,7 +616,7 @@ void PaymentServer::fetchRequest(const QUrl& url)
     QNetworkRequest netRequest;
     netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTREQUEST);
     netRequest.setUrl(url);
-    netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("User-Agent", Application::clientName());
     netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTREQUEST);
     netManager->get(netRequest);
 }
@@ -630,7 +631,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTACK);
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
     netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BIP71_MIMETYPE_PAYMENT);
-    netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
+    netRequest.setRawHeader("User-Agent", Application::clientName());
     netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTACK);
 
     payments::Payment payment;
