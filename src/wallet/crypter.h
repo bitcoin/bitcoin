@@ -123,9 +123,6 @@ private:
     //! if fUseCrypto is false, vMasterKey must be empty
     bool fUseCrypto;
 
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
-
 protected:
     bool SetCrypted();
 
@@ -135,7 +132,7 @@ protected:
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
-    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
+    CCryptoKeyStore() : fUseCrypto(false)
     {
     }
 
@@ -158,7 +155,7 @@ public:
 
     bool Lock();
 
-    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, const uint256 &hash);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool HaveKey(const CKeyID &address) const
     {

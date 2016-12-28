@@ -180,17 +180,27 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         for (; mi != mapCryptedKeys.end(); ++mi)
         {
-            const CPubKey &vchPubKey = (*mi).second.first;
-            const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
-            CKey key;
-            if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
-            {
-                keyFail = true;
-                break;
+            const CPubKey &vchPubKey = (*mi).second.get<0>();
+            const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.get<1>();
+            const uint256 &hash = (*mi).second.get<2>();
+
+            if (!hash.IsNull()) {
+                uint256 check_hash = Hash(vchPubKey.begin(), vchPubKey.end(), vchCryptedSecret.begin(), vchCryptedSecret.end());
+                if (hash != check_hash) {
+                    keyFail = true;
+                    break;
+                }
+            }
+
+            if (hash.IsNull() || !keyPass) {
+                CKey key;
+                if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
+                {
+                    keyFail = true;
+                    break;
+                }
             }
             keyPass = true;
-            if (fDecryptionThoroughlyChecked)
-                break;
         }
         if (keyPass && keyFail)
         {
@@ -200,7 +210,6 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         if (keyFail || !keyPass)
             return false;
         vMasterKey = vMasterKeyIn;
-        fDecryptionThoroughlyChecked = true;
     }
     NotifyStatusChanged(this);
     return true;
@@ -221,21 +230,22 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
         if (!EncryptSecret(vMasterKey, vchSecret, pubkey.GetHash(), vchCryptedSecret))
             return false;
 
-        if (!AddCryptedKey(pubkey, vchCryptedSecret))
+        uint256 hash = Hash(pubkey.begin(), pubkey.end(), vchCryptedSecret.begin(), vchCryptedSecret.end());
+        if (!AddCryptedKey(pubkey, vchCryptedSecret, hash))
             return false;
     }
     return true;
 }
 
 
-bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, const uint256 &hash)
 {
     {
         LOCK(cs_KeyStore);
         if (!SetCrypted())
             return false;
 
-        mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
+        mapCryptedKeys[vchPubKey.GetID()] = boost::make_tuple(vchPubKey, vchCryptedSecret, hash);
     }
     return true;
 }
@@ -250,8 +260,8 @@ bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
-            const CPubKey &vchPubKey = (*mi).second.first;
-            const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
+            const CPubKey &vchPubKey = (*mi).second.get<0>();
+            const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.get<1>();
             return DecryptKey(vMasterKey, vchCryptedSecret, vchPubKey, keyOut);
         }
     }
@@ -268,7 +278,7 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
         {
-            vchPubKeyOut = (*mi).second.first;
+            vchPubKeyOut = (*mi).second.get<0>();
             return true;
         }
         // Check for watch-only pubkeys
@@ -293,7 +303,8 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
             std::vector<unsigned char> vchCryptedSecret;
             if (!EncryptSecret(vMasterKeyIn, vchSecret, vchPubKey.GetHash(), vchCryptedSecret))
                 return false;
-            if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
+            uint256 hash = Hash(vchPubKey.begin(), vchPubKey.end(), vchCryptedSecret.begin(), vchCryptedSecret.end());
+            if (!AddCryptedKey(vchPubKey, vchCryptedSecret, hash))
                 return false;
         }
         mapKeys.clear();

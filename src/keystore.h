@@ -14,6 +14,7 @@
 
 #include <boost/signals2/signal.hpp>
 #include <boost/variant.hpp>
+#include <boost/tuple/tuple.hpp>
 
 /** A virtual base class for key stores */
 class CKeyStore
@@ -109,6 +110,6 @@ public:
 };
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
-typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
+typedef std::map<CKeyID, boost::tuple<CPubKey, std::vector<unsigned char>, uint256 > > CryptedKeyMap;
 
 #endif // BITCOIN_KEYSTORE_H
