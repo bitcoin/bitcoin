@@ -920,6 +920,9 @@ private:
  * It also allows you to sign a double-spend directly in
  * signrawtransactionwithkey and signrawtransactionwithwallet,
  * as long as the conflicting transaction is not yet confirmed.
+ *
+ * Its Cursor also doesn't work. In general, it is broken as a CCoinsView
+ * implementation outside of a few use cases.
  */
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
