@@ -160,9 +160,12 @@ script: |
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     case $i in
-       aarch64-*) : ;;
-       arm-*) : ;;
-       *) make ${MAKEOPTS} -C src check-symbols ;;
+       aarch64-*) STRIP=/usr/bin/aarch64-linux-gnu-strip make install-strip DESTDIR=${INSTALLPATH} ;;
+       arm-*) STRIP=/usr/bin/arm-linux-gnueabihf-strip make install-strip DESTDIR=${INSTALLPATH} ;;
+       *)
+          make ${MAKEOPTS} -C src check-symbols
+          make install-strip DESTDIR=${INSTALLPATH}
+          ;;
     esac
 
     make install DESTDIR=${INSTALLPATH}
