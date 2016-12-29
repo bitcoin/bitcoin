@@ -9,6 +9,8 @@
 #include "net.h"
 #include "validationinterface.h"
 
+/** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
+static const int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 2;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Expiration time for orphan transactions in seconds */
