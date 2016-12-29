@@ -2392,6 +2392,20 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 }
                 pindexWalk = pindexWalk->pprev;
             }
+            // Special case for second cmpctblock request of tip
+            // Must match all conditions to add to vToFetch above (except mmapBlocksInFlight.count)
+            // and conditions to do CMPCT_BLOCK announcement below.
+            if (vToFetch.size() == 0 && pindexLast->pprev == chainActive.Tip() &&
+                mmapBlocksInFlight.size() == mmapBlocksInFlight.count(pindexLast->GetBlockHash()) &&
+                mmapBlocksInFlight.count(pindexLast->GetBlockHash()) < MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK &&
+                !(pindexLast->nStatus & BLOCK_HAVE_DATA) &&
+                (!IsWitnessEnabled(pindexLast->pprev, chainparams.GetConsensus()) || State(pfrom->GetId())->fHaveWitness) &&
+                nodestate->fSupportsDesiredCmpctVersion) {
+                vToFetch.push_back(pindexLast);
+                LogPrint("net", "Trying opportunistic second request of block %s from  peer=%d\n",
+                         pindexLast->GetBlockHash().ToString(), pfrom->id);
+            }
+
             // If pindexWalk still isn't on our main chain, we're looking at a
             // very large reorg at a time we think we're close to caught up to
             // the main chain -- this shouldn't really happen.  Bail out on the
@@ -2419,7 +2433,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
                 }
                 if (vGetData.size() > 0) {
-                    if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mmapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
+                    if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mmapBlocksInFlight.size() == mmapBlocksInFlight.count(vGetData[0].hash) && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
                         // In any case, we want to download using a compact block, not a regular one
                         vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
                     }
