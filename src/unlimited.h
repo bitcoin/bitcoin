@@ -136,39 +136,15 @@ extern CLeakyBucket sendShaper;
 // Test to determine if traffic shaping is enabled
 extern bool IsTrafficShapingEnabled();
 
-// BUIP010 Xtreme Thinblocks: begin
-
-// Xpress Validation: begin
-// Transactions that have already been accepted into the memory pool do not need to be
-// re-verified and can avoid having to do a second and expensive CheckInputs() when 
-// processing a new block.  (Protected by cs_xval)
-extern std::set<uint256> setPreVerifiedTxHash;
-
-// Orphans that are added to the thinblock must be verifed since they have never been
-// accepted into the memory pool.  (Protected by cs_xval)
-extern std::set<uint256> setUnVerifiedOrphanTxHash;
-
-extern CCriticalSection cs_xval;
-// Xpress Validation: end
-
 extern bool fIsChainNearlySyncd;
 extern CCriticalSection cs_ischainnearlysyncd;
 
-extern bool HaveConnectThinblockNodes();
-extern bool HaveThinblockNodes();
-extern bool CheckThinblockTimer(uint256 hash);
-extern bool IsThinBlocksEnabled();
-extern bool CanThinBlockBeDownloaded(CNode* pto);
 extern bool IsChainNearlySyncd();
 extern void IsChainNearlySyncdInit();
 extern bool fIsChainNearlySyncd;
 extern uint64_t LargestBlockSeen(uint64_t nBlockSize = 0);
-extern void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 extern void LoadFilter(CNode *pfrom, CBloomFilter *filter);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
-extern void ConnectToThinBlockNodes();
-extern void CheckNodeSupportForThinBlocks();
-extern void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
 
 extern bool CheckAndRequestExpeditedBlocks(CNode* pfrom);  // Checks to see if the node is configured in bitcoin.conf to be an expedited block source and if so, request them.
 extern void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops, const CNode* skip=NULL);
@@ -176,9 +152,6 @@ extern void SendExpeditedBlock(const CBlock& block,const CNode* skip=NULL);
 extern void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom);
 extern bool IsRecentlyExpeditedAndStore(const uint256& hash);
 
-extern std::map<uint256, uint64_t> mapThinBlockTimer;
-
-// BUIP010 Xtreme Thinblocks: end
 
 extern CSemaphore*  semOutboundAddNode;
 extern std::vector<CNode*> xpeditedBlk; // Who requested expedited blocks from us

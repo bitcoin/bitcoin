@@ -10,6 +10,7 @@
 #include "primitives/block.h"
 #include "bloom.h"
 #include "stat.h"
+#include "sync.h"
 #include "consensus/validation.h"
 #include "protocol.h"
 #include <vector>
@@ -109,44 +110,71 @@ public:
 };
 
 // This class stores statistics for thin block derived protocols.
-class CThinBlockStats
+class CThinBlockData
 {
 private:
-	static CStatHistory<uint64_t> nOriginalSize;
-	static CStatHistory<uint64_t> nThinSize;
-	static CStatHistory<uint64_t> nBlocks;
-	static CStatHistory<uint64_t> nMempoolLimiterBytesSaved;
-	static CStatHistory<uint64_t> nTotalBloomFilterBytes;
-        static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
-        static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
-        static std::map<int64_t, uint64_t> mapBloomFiltersOutBound;
-        static std::map<int64_t, uint64_t> mapBloomFiltersInBound;
-        static std::map<int64_t, double> mapThinBlockResponseTime;
-        static std::map<int64_t, double> mapThinBlockValidationTime;
-        static std::map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
+    CCriticalSection cs_mapThinBlockTimer;
+    std::map<uint256, uint64_t> mapThinBlockTimer;
+
+    CCriticalSection cs_thinblockstats;
+    CStatHistory<uint64_t> nOriginalSize;
+    CStatHistory<uint64_t> nThinSize;
+    CStatHistory<uint64_t> nBlocks;
+    CStatHistory<uint64_t> nMempoolLimiterBytesSaved;
+    CStatHistory<uint64_t> nTotalBloomFilterBytes;
+    std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
+    std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
+    std::map<int64_t, uint64_t> mapBloomFiltersOutBound;
+    std::map<int64_t, uint64_t> mapBloomFiltersInBound;
+    std::map<int64_t, double> mapThinBlockResponseTime;
+    std::map<int64_t, double> mapThinBlockValidationTime;
+    std::map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
  
 public:
-	static void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
-	static void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
-        static void UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize);
-        static void UpdateInBoundBloomFilter(uint64_t nBloomFilterSize);
-	static void UpdateResponseTime(double nResponseTime);
-	static void UpdateValidationTime(double nValidationTime);
-	static void UpdateInBoundReRequestedTx(int nReRequestedTx);
-        static void UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved);
-	static std::string ToString();
-        static std::string InBoundPercentToString();
-        static std::string OutBoundPercentToString();
-        static std::string InBoundBloomFiltersToString();
-        static std::string OutBoundBloomFiltersToString();
-        static std::string ResponseTimeToString();
-        static std::string ValidationTimeToString();
-        static std::string ReRequestedTxToString();
-        static std::string MempoolLimiterBytesSavedToString();
+    void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+    void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+    void UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize);
+    void UpdateInBoundBloomFilter(uint64_t nBloomFilterSize);
+    void UpdateResponseTime(double nResponseTime);
+    void UpdateValidationTime(double nValidationTime);
+    void UpdateInBoundReRequestedTx(int nReRequestedTx);
+    void UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved);
+    std::string ToString();
+    std::string InBoundPercentToString();
+    std::string OutBoundPercentToString();
+    std::string InBoundBloomFiltersToString();
+    std::string OutBoundBloomFiltersToString();
+    std::string ResponseTimeToString();
+    std::string ValidationTimeToString();
+    std::string ReRequestedTxToString();
+    std::string MempoolLimiterBytesSavedToString();
+
+    bool CheckThinblockTimer(uint256 hash);
+    void ClearThinBlockTimer(uint256 hash);
 };
+extern CThinBlockData thindata; // Singleton class
 
 
+bool HaveConnectThinblockNodes();
+bool HaveThinblockNodes();
+bool IsThinBlocksEnabled();
+bool CanThinBlockBeDownloaded(CNode* pto);
+void ConnectToThinBlockNodes();
+void CheckNodeSupportForThinBlocks();
+void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
+void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
 
+// Xpress Validation: begin
+// Transactions that have already been accepted into the memory pool do not need to be
+// re-verified and can avoid having to do a second and expensive CheckInputs() when 
+// processing a new block.  (Protected by cs_xval)
+extern std::set<uint256> setPreVerifiedTxHash;
 
+// Orphans that are added to the thinblock must be verifed since they have never been
+// accepted into the memory pool.  (Protected by cs_xval)
+extern std::set<uint256> setUnVerifiedOrphanTxHash;
+
+extern CCriticalSection cs_xval;
+// Xpress Validation: end
 
 #endif // BITCOIN_THINBLOCK_H
