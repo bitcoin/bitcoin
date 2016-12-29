@@ -275,7 +275,7 @@ void InitializeNode(CNode *pnode, CConnman& connman) {
 }
 
 // Requires cs_main
-// Helper function for MarkBlockAsReceived and MarkBlockAsNotInFlight
+// Helper function for MarkBlockAsReceivedIfValid and MarkBlockAsNotInFlight
 void ClearDownloadState(BlockDownloadMap::iterator itInFlight) {
     CNodeState *state = State(itInFlight->second.first);
     state->nBlocksInFlightValidHeaders -= itInFlight->second.second->fValidatedHeaders;
@@ -341,16 +341,19 @@ void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
 
 
 // Requires cs_main.
-// Returns a bool indicating whether we requested this block.
-bool MarkBlockAsReceived(const uint256& hash) {
-    bool found = false;
-    std::pair<BlockDownloadMap::iterator, BlockDownloadMap::iterator> range = mmapBlocksInFlight.equal_range(hash);
-    while (range.first != range.second) {
-        found = true;
-        ClearDownloadState(range.first);
-        range.first = mmapBlocksInFlight.erase(range.first);
+// Used to remove any remaining download state and references from
+// mmapBlocksInFlight in case of multiple downloads. But first check that it is
+// BLOCK_VALID_TRANSACTIONS, if not, remaining outstanding requests may want to
+// be completed to allow for the possibility of a malleated block.
+void MarkBlockAsReceivedIfValid(const uint256& hash) {
+    BlockMap::iterator mi = mapBlockIndex.find(hash);
+    if (mi != mapBlockIndex.end() && mi->second->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+        std::pair<BlockDownloadMap::iterator, BlockDownloadMap::iterator> range = mmapBlocksInFlight.equal_range(hash);
+        while (range.first != range.second) {
+            ClearDownloadState(range.first);
+            range.first = mmapBlocksInFlight.erase(range.first);
+        }
     }
-    return found;
 }
 
 // Requires cs_main.
@@ -2166,17 +2169,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
-
-            LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
-            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-                // Clear download state for this block, which is in
-                // process from some other peer.  We do this after calling
-                // ProcessNewBlock so that a malleated cmpctblock announcement
-                // can't be used to interfere with block relay.
-                MarkBlockAsReceived(pblock->GetHash());
-            }
+            LOCK(cs_main); // to test validity
+            MarkBlockAsReceivedIfValid(pblock->GetHash());
         }
-
     }
 
     else if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
@@ -2236,7 +2231,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // though the block was successfully read, and rely on the
                 // handling in ProcessNewBlock to ensure the block index is
                 // updated, reject messages go out, etc.
-                MarkBlockAsReceived(resp.blockhash); // it is now an empty pointer
+                MarkBlockAsNotInFlight(resp.blockhash, pfrom->GetId()); // it is now an empty pointer
                 fBlockRead = true;
                 // mapBlockSource is only used for sending reject messages and DoS scores,
                 // so the race between here and cs_main in ProcessNewBlock is fine.
@@ -2253,6 +2248,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, true, &fNewBlock);
             if (fNewBlock)
                 pfrom->nLastBlockTime = GetTime();
+            LOCK(cs_main); // to test validity
+            MarkBlockAsReceivedIfValid(pblock->GetHash());
         }
     }
 
@@ -2423,7 +2420,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(cs_main);
             // Also always process if we requested the block explicitly, as we may
             // need it even though it is not a candidate for a new best tip.
-            forceProcessing |= MarkBlockAsReceived(hash);
+            // TODO: Only process if requested from this peer?
+            forceProcessing |= mmapBlocksInFlight.count(hash);
+            // Block is no longer in flight from this peer
+            MarkBlockAsNotInFlight(hash, pfrom->GetId());
             // mapBlockSource is only used for sending reject messages and DoS scores,
             // so the race between here and cs_main in ProcessNewBlock is fine.
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
@@ -2432,6 +2432,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
         if (fNewBlock)
             pfrom->nLastBlockTime = GetTime();
+        LOCK(cs_main); // to test validity
+        MarkBlockAsReceivedIfValid(hash);
     }
 
 
