@@ -86,6 +86,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     progressBar(0),
     progressDialog(0),
     appMenuBar(0),
+    appToolBar(0),
     overviewAction(0),
     historyAction(0),
     quitAction(0),
@@ -453,6 +454,7 @@ void BitcoinGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -467,15 +469,7 @@ void BitcoinGUI::createToolBars()
         spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         toolbar->addWidget(spacer);
 
-        WalletSelectorLabel = new QLabel();
-        WalletSelectorLabel->setText(tr("Wallet:") + " ");
-        toolbar->addWidget(WalletSelectorLabel);
-        WalletSelectorLabel->setVisible(false);
         WalletSelector = new QComboBox();
-        toolbar->addWidget(WalletSelector);
-        WalletSelector->setVisible(false);
-        WalletSelectorLabel->setBuddy(WalletSelector);
-
         connect(WalletSelector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
 #endif
     }
@@ -551,8 +545,11 @@ bool BitcoinGUI::addWallet(const QString& name, WalletModel *walletModel)
     setWalletActionsEnabled(true);
     WalletSelector->addItem(name);
     if (WalletSelector->count() == 2) {
-        WalletSelectorLabel->setVisible(true);
-        WalletSelector->setVisible(true);
+        WalletSelectorLabel = new QLabel();
+        WalletSelectorLabel->setText(tr("Wallet:") + " ");
+        WalletSelectorLabel->setBuddy(WalletSelector);
+        appToolBar->addWidget(WalletSelectorLabel);
+        appToolBar->addWidget(WalletSelector);
     }
     rpcConsole->addWallet(name, walletModel);
     return walletFrame->addWallet(name, walletModel);

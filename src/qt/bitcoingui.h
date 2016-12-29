@@ -89,6 +89,7 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
+    QToolBar *appToolBar;
     QAction *overviewAction;
     QAction *historyAction;
     QAction *quitAction;
