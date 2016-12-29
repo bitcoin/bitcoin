@@ -175,7 +175,7 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
  * Note: This interface may still be subject to change.
  */
 
-std::string CRPCTable::help(const std::string& strCommand) const
+std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
     std::string category;
@@ -186,6 +186,10 @@ std::string CRPCTable::help(const std::string& strCommand) const
         vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
     sort(vCommands.begin(), vCommands.end());
 
+    JSONRPCRequest jreq(helpreq);
+    jreq.fHelp = true;
+    jreq.params = UniValue();
+
     for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
     {
         const CRPCCommand *pcmd = command.second;
@@ -195,10 +199,9 @@ std::string CRPCTable::help(const std::string& strCommand) const
             continue;
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
+        jreq.strMethod = strMethod;
         try
         {
-            JSONRPCRequest jreq;
-            jreq.fHelp = true;
             rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
                 (*pfn)(jreq);
@@ -247,7 +250,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.params.size() > 0)
         strCommand = jsonRequest.params[0].get_str();
 
-    return tableRPC.help(strCommand);
+    return tableRPC.help(strCommand, jsonRequest);
 }
 
 
