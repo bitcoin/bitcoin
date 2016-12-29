@@ -1208,32 +1208,45 @@ void CheckForkWarningConditions()
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
 
-    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)))
+    if (pindexBestForkTip && pindexBestForkBase)
     {
-        if (!GetfLargeWorkForkFound() && pindexBestForkBase)
+        if (!GetfLargeWorkForkFound())
         {
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
-                pindexBestForkBase->phashBlock->ToString() + std::string("'");
+                pindexBestForkBase->phashBlock->ToString() + std::string(". Payments confirmed after this block may be unreliable'");
             AlertNotify(warning);
         }
-        if (pindexBestForkTip && pindexBestForkBase)
-        {
-            LogPrintf("%s: Warning: Large valid fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\nChain state database corruption likely.\n", __func__,
+        LogPrintf("%s: Warning: Large-work fork found\n  forking the chain at height %d (%s)\n  lasting to height %d (%s).\n  Payments confirmed after the forking block may be unreliable.\n  Our chain state database may be corrupted, or some miners may be experiencing issues.\n", __func__,
                    pindexBestForkBase->nHeight, pindexBestForkBase->phashBlock->ToString(),
                    pindexBestForkTip->nHeight, pindexBestForkTip->phashBlock->ToString());
-            SetfLargeWorkForkFound(true);
-        }
-        else
-        {
-            LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state database corruption likely.\n", __func__);
-            SetfLargeWorkInvalidChainFound(true);
-        }
+        SetfLargeWorkForkFound(true);
     }
     else
-    {
         SetfLargeWorkForkFound(false);
-        SetfLargeWorkInvalidChainFound(false);
+
+    if (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)) {
+        CBlockIndex* plonger = pindexBestInvalid;
+        CBlockIndex* pforkbase = chainActive.Tip();
+        while (pforkbase && pforkbase != plonger)
+        {
+            while (plonger && plonger->nHeight > pforkbase->nHeight)
+                plonger = plonger->pprev;
+            if (pforkbase == plonger)
+                break;
+            pforkbase = pforkbase->pprev;
+        }
+        if (!GetfLargeWorkInvalidChainFound())
+        {
+            std::string warning = std::string("'Warning: Large-work invalid chain detected, forking after block ") +
+                    pforkbase->phashBlock->ToString() + std::string(". Payments confirmed after this block may be unreliable'");
+            AlertNotify(warning);
+        }
+        unsigned int nForkLength = ((pindexBestInvalid->nChainWork - chainActive.Tip()->nChainWork) / GetBlockProof(*chainActive.Tip())).getdouble();
+        LogPrintf("%s: Warning: Found invalid chain at least ~%d blocks longer than our best chain.\n Payments confirmed after the forking block at height %d (%s) may be unreliable.\n Our chain state database may be corrupted, or different network rules may be accidentally or intentionally enforced by a majority of miners.\n Be wary when being suggested to upgrade.\n", __func__, nForkLength, pforkbase->nHeight, pforkbase->phashBlock->ToString());
+        SetfLargeWorkInvalidChainFound(true);
     }
+    else
+        SetfLargeWorkInvalidChainFound(false);
 }
 
 void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
