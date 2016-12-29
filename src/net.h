@@ -586,7 +586,7 @@ public:
     ServiceFlags nServices;
     ServiceFlags nServicesExpected;
     SOCKET hSocket;
-    size_t nSendSize; // total size of all vSendMsg entries
+    std::atomic<size_t> nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
     uint64_t nSendBytes;
     std::deque<std::vector<unsigned char>> vSendMsg;
@@ -736,9 +736,9 @@ public:
     // requires LOCK(cs_vRecvMsg)
     bool ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete);
 
-    // requires LOCK(cs_vRecvMsg)
     void SetRecvVersion(int nVersionIn)
     {
+        LOCK(cs_vRecvMsg);
         nRecvVersion = nVersionIn;
         BOOST_FOREACH(CNetMessage &msg, vRecvMsg)
             msg.SetVersion(nVersionIn);

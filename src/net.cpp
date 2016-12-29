@@ -1169,9 +1169,8 @@ void CConnman::ThreadSocketHandler()
                     }
                 }
                 {
-                    TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-                    if (lockRecv && (
-                        pnode->vRecvMsg.empty() || !pnode->vRecvMsg.front().complete() ||
+                    LOCK(pnode->cs_vRecvMsg);
+                    if ((pnode->vRecvMsg.empty() || !pnode->vRecvMsg.front().complete() ||
                         pnode->GetTotalRecvSize() <= GetReceiveFloodSize()))
                         FD_SET(pnode->hSocket, &fdsetRecv);
                 }
@@ -1228,8 +1227,7 @@ void CConnman::ThreadSocketHandler()
                 continue;
             if (FD_ISSET(pnode->hSocket, &fdsetRecv) || FD_ISSET(pnode->hSocket, &fdsetError))
             {
-                TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-                if (lockRecv)
+                LOCK(pnode->cs_vRecvMsg);
                 {
                     {
                         // typical socket buffer is 8K-64K
@@ -1838,38 +1836,20 @@ void CConnman::ThreadMessageHandler()
             }
         }
 
-        bool fSleep = true;
-
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
             if (pnode->fDisconnect)
                 continue;
 
             // Receive messages
-            {
-                TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-                if (lockRecv)
-                {
-                    if (!GetNodeSignals().ProcessMessages(pnode, *this))
-                        pnode->CloseSocketDisconnect();
+            if (!GetNodeSignals().ProcessMessages(pnode, *this))
+                pnode->CloseSocketDisconnect();
 
-                    if (pnode->nSendSize < GetSendBufferSize())
-                    {
-                        if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
-                        {
-                            fSleep = false;
-                        }
-                    }
-                }
-            }
             boost::this_thread::interruption_point();
 
             // Send messages
-            {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
-                if (lockSend)
-                    GetNodeSignals().SendMessages(pnode, *this);
-            }
+            GetNodeSignals().SendMessages(pnode, *this);
+
             boost::this_thread::interruption_point();
         }
 
@@ -1879,7 +1859,7 @@ void CConnman::ThreadMessageHandler()
                 pnode->Release();
         }
 
-        if (fSleep && !fMessageHandlerWork.load(std::memory_order_relaxed))
+        if (!fMessageHandlerWork.load(std::memory_order_relaxed))
             messageHandlerCondition.timed_wait(lock, start_time + boost::posix_time::milliseconds(100));
     }
 }
