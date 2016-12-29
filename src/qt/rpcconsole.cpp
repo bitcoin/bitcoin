@@ -71,6 +71,7 @@ const QStringList historyFilter = QStringList()
     << "signmessagewithprivkey"
     << "signrawtransaction"
     << "signrawtransactionwithkey"
+    << "sweepprivkeys"
     << "walletpassphrase"
     << "walletpassphrasechange"
     << "encryptwallet";
