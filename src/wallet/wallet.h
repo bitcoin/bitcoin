@@ -669,6 +669,7 @@ public:
         nLastResend = 0;
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
+        pLastKnownBestHeader = NULL;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -688,6 +689,9 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     int64_t nTimeFirstKey;
+
+    //! last known best header, required to check for forks
+    CBlockIndex *pLastKnownBestHeader;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 

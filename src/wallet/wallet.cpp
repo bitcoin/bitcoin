@@ -1173,7 +1173,21 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
 
 void CWallet::UpdatedBlockHeaderTip(bool fInitialDownload, const CBlockIndex *pindexNew)
 {
+    LOCK2(cs_main, cs_wallet);
 
+    if (pLastKnownBestHeader != NULL)
+    {
+        if (!headersChainActive.Contains(pLastKnownBestHeader))
+        {
+            const CBlockIndex *pindexFork = headersChainActive.FindFork(pLastKnownBestHeader);
+            if (headersChainActive.Tip() && headersChainActive.Tip() != pindexFork)
+            {
+                // fork detected
+                // TODO
+            }
+        }
+    }
+    pLastKnownBestHeader = (CBlockIndex *)pindexNew;
 }
 
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock, bool validated)
