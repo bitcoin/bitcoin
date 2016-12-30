@@ -33,6 +33,7 @@ void UnregisterAllValidationInterfaces();
 class CValidationInterface {
 protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void UpdatedBlockHeaderTip(bool fInitialDownload, const CBlockIndex *pindexNew) {}
     virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock, bool validated = true) {}
     virtual void GetNonMempoolTransaction(const uint256 &hash,  std::shared_ptr<const CTransaction> &txsp) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
@@ -82,6 +83,8 @@ struct CMainSignals {
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
+    /** Best header has changed */
+    boost::signals2::signal<void (bool, const CBlockIndex *)> UpdatedBlockHeaderTip;
 };
 
 CMainSignals& GetMainSignals();
