@@ -700,7 +700,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         found = False
         for x in tips:
             if x["hash"] == block.hash:
-                assert_equal(x["status"], "headers-only")
+                assert( (x["status"] == "headers-only" or x["status"] == "headers-only-fork") )
                 found = True
                 break
         assert(found)
