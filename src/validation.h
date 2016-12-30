@@ -439,6 +439,9 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex);
 /** The currently-connected chain of blocks (protected by cs_main). */
 extern CChain chainActive;
 
+/** The currently-connected chain of PoW validated headers (protected by cs_main). */
+extern CChain headersChainActive;
+
 /** Global variable that points to the coins database (protected by cs_main) */
 extern CCoinsViewDB *pcoinsdbview;
 
