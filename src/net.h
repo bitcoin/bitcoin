@@ -358,6 +358,7 @@ private:
 
     NodeId GetNewNodeId();
 
+    size_t SocketSendData(CNode *pnode);
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
@@ -444,7 +445,6 @@ void Discover(boost::thread_group& threadGroup);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
-size_t SocketSendData(CNode *pnode);
 
 struct CombinerAll
 {
@@ -652,6 +652,7 @@ public:
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv;
+    std::atomic_bool fPauseSend;
 protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;
