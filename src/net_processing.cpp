@@ -957,6 +957,16 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
                 if (mi != mapBlockIndex.end())
                 {
+                    if (mi->second->nChainTx && !mi->second->IsValid(BLOCK_VALID_SCRIPTS) &&
+                            mi->second->IsValid(BLOCK_VALID_TREE)) {
+                        // If we have the block and all of its parents, but have not yet validated it,
+                        // we might be in the middle of connecting it (ie in the unlock of cs_main
+                        // before ActivateBestChain but after AcceptBlock).
+                        // In this case, we need to run ActivateBestChain prior to checking the relay
+                        // conditions below.
+                        CValidationState dummy;
+                        ActivateBestChain(dummy, Params());
+                    }
                     if (chainActive.Contains(mi->second)) {
                         send = true;
                     } else {
@@ -1517,6 +1527,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         LOCK(cs_main);
 
+        // We might have announced the currently-being-connected tip using a
+        // compact block, which resulted in the peer sending a getblocks
+        // request, which we would otherwise respond to without the new block.
+        // To avoid this situation we simply verify that we are on our best
+        // known chain now. This is super overkill, but we handle it better
+        // for getheaders requests, and there are no known nodes which support
+        // compact blocks but still use getblocks to request blocks.
+        {
+            CValidationState dummy;
+            ActivateBestChain(dummy, Params());
+        }
+
         // Find the last block the caller has in the main chain
         const CBlockIndex* pindex = FindForkInGlobalIndex(chainActive, locator);
 
@@ -1647,6 +1669,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // if our peer has chainActive.Tip() (and thus we are sending an empty
         // headers message). In both cases it's safe to update
         // pindexBestHeaderSent to be our tip.
+        //
+        // It is important that we simply reset the BestHeaderSent value here,
+        // and not max(BestHeaderSent, newHeaderSent). We might have announced
+        // the currently-being-connected tip using a compact block, which
+        // resulted in the peer sending a headers request, which we respond to
+        // without the new block. By resetting the BestHeaderSent, we ensure we
+        // will re-announce the new block via headers (or compact blocks again)
+        // in the SendMessages logic.
         nodestate->pindexBestHeaderSent = pindex ? pindex : chainActive.Tip();
         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
     }
