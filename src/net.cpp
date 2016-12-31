@@ -1239,18 +1239,16 @@ void CConnman::ThreadSocketHandler()
                             RecordBytesRecv(nBytes);
                             if (notify) {
                                 size_t nSizeAdded = 0;
+                                std::list<CNetMessage> completeMessages;
                                 auto it(pnode->vRecvMsg.begin());
                                 for (; it != pnode->vRecvMsg.end(); ++it) {
                                     if (!it->complete())
                                         break;
                                     nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
                                 }
-                                {
-                                    LOCK(pnode->cs_vProcessMsg);
-                                    pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
-                                    pnode->nProcessQueueSize += nSizeAdded;
-                                }
-                                WakeMessageHandler();
+                                completeMessages.splice(completeMessages.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                                if (!QueueReceivedMessages(pnode, std::move(completeMessages), nSizeAdded))
+                                    pnode->fPauseRecv = true;
                             }
                         }
                         else if (nBytes == 0)
@@ -1336,6 +1334,19 @@ void CConnman::WakeMessageHandler()
         fMsgProcWake = true;
     }
     condMsgProc.notify_one();
+}
+
+bool CConnman::QueueReceivedMessages(CNode* pnode, std::list<CNetMessage>&& completeMessages, size_t nSizeAdded)
+{
+    bool ret;
+    {
+        LOCK(pnode->cs_vProcessMsg);
+        pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), std::move(completeMessages));
+        pnode->nProcessQueueSize += nSizeAdded;
+        ret = pnode->nProcessQueueSize < nReceiveFloodSize;
+    }
+    WakeMessageHandler();
+    return ret;
 }
 
 

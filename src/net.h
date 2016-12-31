@@ -118,6 +118,7 @@ struct CSerializedNetMsg
 };
 
 
+class CNetMessage;
 class CConnman
 {
 public:
@@ -342,6 +343,7 @@ private:
     void ThreadDNSAddressSeed();
 
     void WakeMessageHandler();
+    bool QueueReceivedMessages(CNode* pnode, std::list<CNetMessage>&& completeMessages, size_t nSizeAdded);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
