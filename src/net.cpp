@@ -1239,8 +1239,18 @@ void CConnman::ThreadSocketHandler()
                             if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
                                 pnode->CloseSocketDisconnect();
                             RecordBytesRecv(nBytes);
-                            if (notify)
+                            if (notify) {
+                                auto it(pnode->vRecvMsg.begin());
+                                for (; it != pnode->vRecvMsg.end(); ++it) {
+                                    if (!it->complete())
+                                        break;
+                                }
+                                {
+                                    LOCK(pnode->cs_vProcessMsg);
+                                    pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
+                                }
                                 WakeMessageHandler();
+                            }
                         }
                         else if (nBytes == 0)
                         {

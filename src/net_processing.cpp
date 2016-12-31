@@ -2461,21 +2461,23 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
     // this maintains the order of responses
     if (!pfrom->vRecvGetData.empty()) return true;
 
-    auto it = pfrom->vRecvMsg.begin();
-    if (!pfrom->fDisconnect && it != pfrom->vRecvMsg.end()) {
+    if (pfrom->fDisconnect)
+        return false;
+
         // Don't bother if send buffer is too full to respond anyway
         if (pfrom->nSendSize >= nMaxSendBufferSize)
             return false;
 
-        // end, if an incomplete message is found
-        if (!it->complete())
-            return false;
-
-        // get next message
-        CNetMessage msg = std::move(*it);
-
-        // at this point, any failure means we can delete the current message
-        pfrom->vRecvMsg.erase(pfrom->vRecvMsg.begin());
+        std::list<CNetMessage> msgs;
+        {
+            LOCK(pfrom->cs_vProcessMsg);
+            if (pfrom->vProcessMsg.empty())
+                return false;
+            // Just take one message
+            msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
+            fMoreWork = !pfrom->vProcessMsg.empty();
+        }
+        CNetMessage& msg(msgs.front());
 
         msg.SetVersion(pfrom->GetRecvVersion());
         // Scan for message start
@@ -2550,7 +2552,6 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
 
         if (!fRet)
             LogPrintf("%s(%s, %u bytes) FAILED peer=%d\n", __func__, SanitizeString(strCommand), nMessageSize, pfrom->id);
-    }
 
     return fMoreWork;
 }
