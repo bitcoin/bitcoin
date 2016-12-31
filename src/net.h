@@ -341,6 +341,8 @@ private:
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
+    void WakeMessageHandler();
+
     uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
     CNode* FindNode(const CNetAddr& ip);
