@@ -648,6 +648,9 @@ void CNode::copyStats(CNodeStats &stats)
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
+    int64_t nTimeMicros = GetTimeMicros();
+    nLastRecv = nTimeMicros / 1000000;
+    nRecvBytes += nBytes;
     while (nBytes > 0) {
 
         // get current incomplete message, or create a new one
@@ -685,7 +688,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
             assert(i != mapRecvBytesPerMsgCmd.end());
             i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
 
-            msg.nTime = GetTimeMicros();
+            msg.nTime = nTimeMicros;
             complete = true;
         }
     }
@@ -1237,8 +1240,6 @@ void CConnman::ThreadSocketHandler()
                                 pnode->CloseSocketDisconnect();
                             if(notify)
                                 condMsgProc.notify_one();
-                            pnode->nLastRecv = GetTime();
-                            pnode->nRecvBytes += nBytes;
                             RecordBytesRecv(nBytes);
                         }
                         else if (nBytes == 0)
