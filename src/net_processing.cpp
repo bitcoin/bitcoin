@@ -2468,21 +2468,16 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interru
         if (pfrom->nSendSize >= nMaxSendBufferSize)
             return false;
 
-        auto it = pfrom->vRecvMsg.begin();
-        if (it == pfrom->vRecvMsg.end())
-            return false;
-
-        // end, if an incomplete message is found
-        if (!it->complete())
-            return false;
-
-        // get next message
-        CNetMessage msg = std::move(*it);
-
-        // at this point, any failure means we can delete the current message
-        pfrom->vRecvMsg.erase(pfrom->vRecvMsg.begin());
-
-        fMoreWork = !pfrom->vRecvMsg.empty() && pfrom->vRecvMsg.front().complete();
+        std::list<CNetMessage> msgs;
+        {
+            LOCK(pfrom->cs_vProcessMsg);
+            if (pfrom->vProcessMsg.empty())
+                return false;
+            // Just take one message
+            msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
+            fMoreWork = !pfrom->vProcessMsg.empty();
+        }
+        CNetMessage& msg(msgs.front());
 
         msg.SetVersion(pfrom->GetRecvVersion());
         // Scan for message start
