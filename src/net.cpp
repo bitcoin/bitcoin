@@ -1238,9 +1238,9 @@ void CConnman::ThreadSocketHandler()
                             bool notify = false;
                             if (!pnode->ReceiveMsgBytes(pchBuf, nBytes, notify))
                                 pnode->CloseSocketDisconnect();
+                            RecordBytesRecv(nBytes);
                             if(notify)
                                 condMsgProc.notify_one();
-                            RecordBytesRecv(nBytes);
                         }
                         else if (nBytes == 0)
                         {
