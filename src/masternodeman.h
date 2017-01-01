@@ -103,6 +103,11 @@ private:
     static const int MAX_POSE_RANK              = 10;
     static const int MAX_POSE_BLOCKS            = 10;
 
+    static const int MNB_RECOVERY_QUORUM_TOTAL      = 10;
+    static const int MNB_RECOVERY_QUORUM_REQUIRED   = 6;
+    static const int MNB_RECOVERY_WAIT_SECONDS      = 60;
+    static const int MNB_RECOVERY_RETRY_SECONDS     = 3 * 60 * 60;
+
 
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
@@ -120,6 +125,10 @@ private:
     std::map<COutPoint, std::map<CNetAddr, int64_t> > mWeAskedForMasternodeListEntry;
     // who we asked for the masternode verification
     std::map<CNetAddr, CMasternodeVerification> mWeAskedForVerification;
+
+    // these maps are used for masternode recovery from MASTERNODE_NEW_START_REQUIRED state
+    std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > > mMnbRecoveryRequests;
+    std::map<uint256, std::vector<CMasternodeBroadcast> > mMnbRecoveryGoodReplies;
 
     int64_t nLastIndexRebuildTime;
 
@@ -171,6 +180,8 @@ public:
         READWRITE(mAskedUsForMasternodeList);
         READWRITE(mWeAskedForMasternodeList);
         READWRITE(mWeAskedForMasternodeListEntry);
+        READWRITE(mMnbRecoveryRequests);
+        READWRITE(mMnbRecoveryGoodReplies);
         READWRITE(nLastWatchdogVoteTime);
         READWRITE(nDsqCount);
 
@@ -304,7 +315,8 @@ public:
     /// Update masternode list and maps using provided CMasternodeBroadcast
     void UpdateMasternodeList(CMasternodeBroadcast mnb);
     /// Perform complete check and only then update list and maps
-    bool CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos);
+    bool CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBroadcast mnb, int& nDos);
+    bool IsMnbRecoveryRequested(const uint256& hash) { return mMnbRecoveryRequests.count(hash); }
 
     void UpdateLastPaid();
 

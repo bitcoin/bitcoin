@@ -109,7 +109,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
 //
 bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 {
-    if(mnb.sigTime <= sigTime) return false;
+    if(mnb.sigTime <= sigTime && !mnb.fRecovery) return false;
 
     pubKeyMasternode = mnb.pubKeyMasternode;
     sigTime = mnb.sigTime;
@@ -119,7 +119,6 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     nPoSeBanScore = 0;
     nPoSeBanHeight = 0;
     nTimeLastChecked = 0;
-    nTimeLastWatchdogVote = mnb.sigTime;
     int nDos = 0;
     if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(this, true, nDos))) {
         lastPing = mnb.lastPing;
@@ -569,7 +568,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos)
 {
     nDos = 0;
 
-    if(pmn->sigTime == sigTime) {
+    if(pmn->sigTime == sigTime && !fRecovery) {
         // mapSeenMasternodeBroadcast in CMasternodeMan::CheckMnbAndUpdateMasternodeList should filter legit duplicates
         // but this still can happen if we just started, which is ok, just do nothing here.
         return false;

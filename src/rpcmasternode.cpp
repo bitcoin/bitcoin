@@ -765,7 +765,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
             bool fResult;
             if (mnb.CheckSignature(nDos)) {
                 if (fSafe) {
-                    fResult = mnodeman.CheckMnbAndUpdateMasternodeList(mnb, nDos);
+                    fResult = mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDos);
                 } else {
                     mnodeman.UpdateMasternodeList(mnb);
                     mnb.Relay();

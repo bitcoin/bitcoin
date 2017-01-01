@@ -340,10 +340,12 @@ class CMasternodeBroadcast : public CMasternode
 {
 public:
 
-    CMasternodeBroadcast() : CMasternode() {}
-    CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn) {}
+    bool fRecovery;
+
+    CMasternodeBroadcast() : CMasternode(), fRecovery(false) {}
+    CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
     CMasternodeBroadcast(CService addrNew, CTxIn vinNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
-        CMasternode(addrNew, vinNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn) {}
+        CMasternode(addrNew, vinNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
 
     ADD_SERIALIZE_METHODS;
 
