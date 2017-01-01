@@ -31,7 +31,7 @@ void CAuxiliaryBlockRequest::processWithPossibleBlock(const std::shared_ptr<cons
         CBlockIndex *pindexRequest = this->vBlocksToDownload[i];
         std::shared_ptr<const CBlock> currentBlock;
 
-        // if a block has been passed, check if is the next item in the sequence
+        // if a block has been passed, check if it's the next item in the sequence
         if (pindex && pblock && pindex == pindexRequest)
             currentBlock = pblock;
         else if (pindexRequest->nStatus & BLOCK_HAVE_DATA) {
@@ -64,7 +64,7 @@ void CAuxiliaryBlockRequest::processWithPossibleBlock(const std::shared_ptr<cons
                 this->cancel();
 
         // release global block request pointer if request has been completed
-        if (this->processedUpToSize == this->vBlocksToDownload.size())
+        if (currentBlockRequest == shared_from_this() && isCompleted())
             currentBlockRequest = nullptr;
 
         if (i-this->processedUpToSize >= MAX_BLOCK_TO_PROCESS_PER_ITERATION)
@@ -121,6 +121,11 @@ unsigned int CAuxiliaryBlockRequest::amountOfBlocksLoaded()
             haveData++;
     }
     return haveData;
+}
+
+bool CAuxiliaryBlockRequest::isCompleted()
+{
+    return (this->processedUpToSize == this->vBlocksToDownload.size());
 }
 
 std::shared_ptr<CAuxiliaryBlockRequest> CAuxiliaryBlockRequest::GetCurrentRequest()
