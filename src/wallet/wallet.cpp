@@ -5,6 +5,7 @@
 
 #include "wallet/wallet.h"
 
+#include "auxiliaryblockrequest.h"
 #include "base58.h"
 #include "checkpoints.h"
 #include "chain.h"
@@ -44,6 +45,8 @@ bool fWalletRbf = DEFAULT_WALLET_RBF;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
+
+const static size_t nMaxBlocksPerAuxiliaryRequest = 16*32;
 
 /**
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
@@ -1175,19 +1178,20 @@ void CWallet::UpdatedBlockHeaderTip(bool fInitialDownload, const CBlockIndex *pi
 {
     LOCK2(cs_main, cs_wallet);
 
-    if (pLastKnownBestHeader != NULL)
+    if (pNVSLastKnownBestHeader && !headersChainActive.Contains(pNVSLastKnownBestHeader))
     {
-        if (!headersChainActive.Contains(pLastKnownBestHeader))
+        const CBlockIndex *pindexFork = headersChainActive.FindFork(pNVSLastKnownBestHeader);
+        if (headersChainActive.Tip() && headersChainActive.Tip() != pindexFork)
         {
-            const CBlockIndex *pindexFork = headersChainActive.FindFork(pLastKnownBestHeader);
-            if (headersChainActive.Tip() && headersChainActive.Tip() != pindexFork)
-            {
-                // fork detected
-                // TODO
-            }
+            pNVSLastKnownBestHeader = const_cast<CBlockIndex *>(pindexFork);
+            if (pNVSBestBlock && pNVSBestBlock->nHeight >= pNVSLastKnownBestHeader->nHeight)
+                pNVSBestBlock = const_cast<CBlockIndex *>(pindexFork);
         }
     }
-    pLastKnownBestHeader = (CBlockIndex *)pindexNew;
+    pNVSLastKnownBestHeader = const_cast<CBlockIndex *>(pindexNew);
+
+    if (GetBoolArg("-spv", false))
+        RequestNonValidationScan();
 }
 
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock, bool validated)
@@ -3562,6 +3566,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
                                                                CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)));
+    strUsage += HelpMessageOpt("-spv", strprintf(_("Make use of full block spv default: %u)"), false));
     strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)"),
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)));
     strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
@@ -3763,6 +3768,15 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             }
         }
     }
+
+    // read non validation best block
+    CWalletDB walletdb(walletFile);
+    CBlockLocator locator;
+    if (walletdb.ReadNonValidationBestBlock(locator))
+        walletInstance->pNVSBestBlock = FindForkInGlobalIndex(headersChainActive, locator);
+    else
+        walletInstance->pNVSBestBlock = chainActive.Genesis();
+
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     {
@@ -3790,6 +3804,9 @@ bool CWallet::InitLoadWallet()
         return false;
     }
     pwalletMain = pwallet;
+
+    if (GetBoolArg("-spv", false))
+        pwalletMain->RequestNonValidationScan();
 
     return true;
 }
@@ -3895,6 +3912,95 @@ bool CWallet::ParameterInteraction()
         return InitError("Creation of free transactions with their relay disabled is not supported.");
 
     return true;
+}
+
+void CWallet::RequestNonValidationScan(int64_t optional_timestamp)
+{
+    if (CAuxiliaryBlockRequest::GetCurrentRequest() && !CAuxiliaryBlockRequest::GetCurrentRequest()->isCompleted())
+        return;
+
+    CBlockIndex *pIndex = NULL;
+    CBlockIndex *chainActiveTip = NULL;
+    int64_t oldest_key = std::numeric_limits<int64_t>::max();;
+    int nonValidationScanUpToHeight = 0;
+    {
+        LOCK2(cs_main, cs_wallet);
+        if (pNVSBestBlock)
+            nonValidationScanUpToHeight = pNVSBestBlock->nHeight;
+        chainActiveTip = chainActive.Tip();
+        pIndex = headersChainActive.Tip();
+        std::map<CKeyID, int64_t> mapKeyBirth;
+        GetKeyBirthTimes(mapKeyBirth);
+        for (std::map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
+            if ((*it).second < oldest_key)
+                oldest_key = (*it).second;
+        }
+    }
+
+    if (optional_timestamp > 0)
+    {
+        oldest_key = optional_timestamp;
+        nonValidationScanUpToHeight = 0;
+    }
+
+    // find header
+    if (!pIndex)
+        return;
+
+    std::vector<const CBlockIndex*> blocksToDownload;
+    do {
+        if (pIndex == chainActiveTip)
+            break;
+
+        // don't request blocks that are already scanned
+        if (pIndex->nHeight <= nonValidationScanUpToHeight)
+            break;
+
+        // check if block is relevant to this wallet
+        if (pIndex->GetBlockTime() + 7200 < oldest_key)
+            break;
+
+        // block is relevant, request
+        blocksToDownload.push_back(pIndex);
+
+        // ensure we only request up to nMaxBlocksPerAuxiliaryRequest
+        if (blocksToDownload.size() > nMaxBlocksPerAuxiliaryRequest)
+            blocksToDownload.erase(blocksToDownload.begin());
+        pIndex = pIndex->pprev;
+    } while (pIndex->pprev);
+
+    // don't create empty CBlockRequests
+    if (blocksToDownload.size() == 0)
+        return;
+    // reverse the blocks vector from older->newer
+    std::reverse(blocksToDownload.begin(), blocksToDownload.end());
+    // create an auxiliary block request
+    std::shared_ptr<CAuxiliaryBlockRequest> auxiliaryRequest(new CAuxiliaryBlockRequest(blocksToDownload, GetAdjustedTime(), true, [this](std::shared_ptr<CAuxiliaryBlockRequest> cb_AuxiliaryBlockRequest, const CBlockIndex *pindex) -> bool {
+
+        LOCK2(cs_main, cs_wallet);
+        if (pindex && (!pNVSBestBlock || pindex->nHeight > pNVSBestBlock->nHeight))
+        {
+            // write non validation best block
+            pNVSBestBlock = const_cast<CBlockIndex *>(pindex);
+            CBlockLocator locator = headersChainActive.GetLocator(pNVSBestBlock);
+
+            if (!locator.IsNull())
+            {
+                CWalletDB walletdb(strWalletFile);
+                walletdb.WriteNonValidationBestBlock(locator);
+            }
+        }
+
+        // try to download more blocks if this on has been completed
+        if (cb_AuxiliaryBlockRequest->isCompleted())
+            RequestNonValidationScan();
+
+        // continue with the request
+        return true;
+    }));
+
+    // set the global Auxiliarry Block Request
+    auxiliaryRequest->setAsCurrentRequest();
 }
 
 bool CWallet::BackupWallet(const std::string& strDest)

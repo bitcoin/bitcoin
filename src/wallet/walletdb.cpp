@@ -141,6 +141,17 @@ bool CWalletDB::ReadBestBlock(CBlockLocator& locator)
     return Read(std::string("bestblock_nomerkle"), locator);
 }
 
+bool CWalletDB::WriteNonValidationBestBlock(const CBlockLocator& locator)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("nonvalidationbestblock"), locator);
+}
+
+bool CWalletDB::ReadNonValidationBestBlock(CBlockLocator& locator)
+{
+    return Read(std::string("nonvalidationbestblock"), locator);
+}
+
 bool CWalletDB::WriteOrderPosNext(int64_t nOrderPosNext)
 {
     nWalletDBUpdated++;

@@ -141,6 +141,9 @@ public:
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
 
+    bool WriteNonValidationBestBlock(const CBlockLocator& locator);
+    bool ReadNonValidationBestBlock(CBlockLocator& locator);
+
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
     bool WriteDefaultKey(const CPubKey& vchPubKey);
