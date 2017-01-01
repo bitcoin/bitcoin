@@ -40,7 +40,10 @@ void CActiveMasternode::ManageState()
     if(eType == MASTERNODE_REMOTE) {
         ManageStateRemote();
     } else if(eType == MASTERNODE_LOCAL) {
-        ManageStateLocal();
+        // Try Remote Start first so the started local masternode can be restarted without recreate masternode broadcast.
+        ManageStateRemote();
+        if(nState != ACTIVE_MASTERNODE_STARTED)
+            ManageStateLocal();
     }
 
     SendMasternodePing();
@@ -300,9 +303,6 @@ void CActiveMasternode::ManageStateLocal()
 
         fPingerEnabled = true;
         nState = ACTIVE_MASTERNODE_STARTED;
-
-        masternode_info_t infoMn = mnodeman.GetMasternodeInfo(pubKeyMasternode);
-        if(infoMn.fInfoValid && CMasternode::IsValidStateForAutoStart(infoMn.nActiveState)) return; // sending ping should be enough
 
         //update to masternode list
         LogPrintf("CActiveMasternode::ManageStateLocal -- Update Masternode List\n");
