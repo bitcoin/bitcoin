@@ -295,6 +295,29 @@ void CMasternodeSync::ProcessTick()
                 continue;
             }
 
+            CNodeStateStats stats;
+            if(!GetNodeStateStats(pnode->id, stats) || stats.nCommonHeight == -1 || stats.nSyncHeight == -1) continue; // not enough info about this peer
+
+            // Check blocks and headers, allow a small error margin of 1 block
+            if(pCurrentBlockIndex->nHeight - 1 > stats.nCommonHeight) {
+                // This peer probably stuck, don't sync any additional data,
+                // disconnect to free this connection slot for another peer.
+                pnode->fDisconnect = true;
+                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from stuck peer, nHeight=%d, nCommonHeight=%d, peer=%d\n",
+                            pCurrentBlockIndex->nHeight, stats.nCommonHeight, pnode->id);
+                continue;
+            }
+            else if(pCurrentBlockIndex->nHeight < stats.nSyncHeight - 1) {
+                // This peer announced more headers than we have blocks currently,
+                // we probably need to wait a bit or this peer is on another (longer??) chain,
+                // so our data could be incompatible, skip it anyway for now but do not disconnect,
+                // maybe that chain is the right one.
+                LogPrintf("CMasternodeSync::ProcessTick -- skipping peer, who announced more headers than we have blocks currently, nHeight=%d, nSyncHeight=%d, peer=%d\n",
+                            pCurrentBlockIndex->nHeight, stats.nSyncHeight, pnode->id);
+                continue;
+            }
+            // If we got here, we should have enough info about this peer and it should be ok to continue further.
+
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
 
             if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "spork-sync")) {
