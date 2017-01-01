@@ -45,6 +45,9 @@ public:
     /** returns the amount of already loaded/local-stored blocks from this blockrequest */
     unsigned int amountOfBlocksLoaded();
 
+    /** returns true if all blocks have been downloaded & processed */
+    bool isCompleted();
+
     /** Get the current main blockrequest, thread_safe */
     static std::shared_ptr<CAuxiliaryBlockRequest> GetCurrentRequest();
 
