@@ -14,7 +14,7 @@
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "thinblock.h"
 #include "timedata.h"
 #include "tinyformat.h"
