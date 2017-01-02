@@ -1,39 +1,39 @@
 
 """
-  Copyright 2011 Jeff Garzik
+Copyright 2011 Jeff Garzik
 
-  AuthServiceProxy has the following improvements over python-jsonrpc's
-  ServiceProxy class:
+AuthServiceProxy has the following improvements over python-jsonrpc's
+ServiceProxy class:
 
-  - HTTP connections persist for the life of the AuthServiceProxy object
-    (if server supports HTTP/1.1)
-  - sends protocol 'version', per JSON-RPC 1.1
-  - sends proper, incrementing 'id'
-  - sends Basic HTTP authentication headers
-  - parses all JSON numbers that look like floats as Decimal
-  - uses standard Python json lib
+- HTTP connections persist for the life of the AuthServiceProxy object
+(if server supports HTTP/1.1)
+- sends protocol 'version', per JSON-RPC 1.1
+- sends proper, incrementing 'id'
+- sends Basic HTTP authentication headers
+- parses all JSON numbers that look like floats as Decimal
+- uses standard Python json lib
 
-  Previous copyright, from python-jsonrpc/jsonrpc/proxy.py:
+Previous copyright, from python-jsonrpc/jsonrpc/proxy.py:
 
-  Copyright (c) 2007 Jan-Klaas Kollhof
+Copyright (c) 2007 Jan-Klaas Kollhof
 
-  This file is part of jsonrpc.
+This file is part of jsonrpc.
 
-  jsonrpc is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License as published by
-  the Free Software Foundation; either version 2.1 of the License, or
-  (at your option) any later version.
+jsonrpc is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1 of the License, or
+(at your option) any later version.
 
-  This software is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU Lesser General Public License for more details.
+This software is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-  You should have received a copy of the GNU Lesser General Public License
-  along with this software; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+You should have received a copy of the GNU Lesser General Public License
+along with this software; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-
+import pdb
 try:
     import http.client as httplib
 except ImportError:
@@ -58,18 +58,19 @@ class JSONRPCException(Exception):
         Exception.__init__(self)
         self.error = rpc_error
     def __str__(self):
-	return "%d: %s" % (self.error["code"],self.error["message"])
+        return "%d: %s" % (self.error["code"],self.error["message"])
 
 
 def EncodeDecimal(o):
     if isinstance(o, decimal.Decimal):
-        return round(o, 8)
+        return str(o)
     raise TypeError(repr(o) + " is not JSON serializable")
 
 class AuthServiceProxy(object):
     __id_count = 0
 
     def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None):
+        self.__timeout = timeout
         self.__service_url = service_url
         self._service_name = service_name
         self.__url = urlparse.urlparse(service_url)
@@ -94,12 +95,23 @@ class AuthServiceProxy(object):
             self.__conn = connection
         elif self.__url.scheme == 'https':
             self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
-                                                  None, None, False,
-                                                  timeout)
+                                                  timeout=timeout)
         else:
             self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
-                                                 False, timeout)
-
+                                                 timeout=timeout)
+    def reconnect(self):
+        if self.__url.port is None:
+            port = 80
+        else:
+            port = self.__url.port
+       
+        if self.__url.scheme == 'https':
+            self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
+                                                  timeout=self.__timeout)
+        else:
+            self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
+                                                 timeout=self.__timeout)
+                    
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
             # Python internal stuff
@@ -117,10 +129,14 @@ class AuthServiceProxy(object):
                    'User-Agent': USER_AGENT,
                    'Authorization': self.__auth_header,
                    'Content-type': 'application/json'}
-        try:
+        while 1:
+          try:
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
-        except httplib.BadStatusLine as e:
+          except httplib.CannotSendRequest as e:
+            print("Cannot send request:", str(e))
+            self.reconnect()
+          except httplib.BadStatusLine as e:
             if e.line == "''": # if connection was closed, try again
                 self.__conn.close()
                 self.__conn.request(method, path, postdata, headers)
@@ -156,6 +172,11 @@ class AuthServiceProxy(object):
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
+
+        content_type = http_response.getheader('Content-Type')
+        if content_type != 'application/json':
+            raise JSONRPCException({
+                'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)})
 
         responsedata = http_response.read().decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)

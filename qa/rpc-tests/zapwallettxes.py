@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
@@ -23,7 +23,7 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         self.sync_all()
 
     def run_test (self):
-        print "Mining blocks..."
+        print("Mining blocks...")
         self.nodes[0].generate(1)
         self.sync_all()
         self.nodes[1].generate(101)
@@ -66,14 +66,8 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         #restart bitcoind with zapwallettxes
         self.nodes[0] = start_node(0,self.options.tmpdir, ["-zapwallettxes=1"])
         
-        aException = False
-        try:
-            tx3 = self.nodes[0].gettransaction(txid3)
-        except JSONRPCException,e:
-            print e
-            aException = True
-        
-        assert_equal(aException, True) #there must be a expection because the unconfirmed wallettx0 must be gone by now
+        assert_raises(JSONRPCException, self.nodes[0].gettransaction, [txid3])
+        #there must be a expection because the unconfirmed wallettx0 must be gone by now
 
         tx0 = self.nodes[0].gettransaction(txid0)
         assert_equal(tx0['txid'], txid0) #tx0 (confirmed) must still be available because it was confirmed

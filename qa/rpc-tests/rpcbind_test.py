@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
@@ -52,7 +52,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
 
 
 def run_test(tmpdir):
-    assert(sys.platform == 'linux2') # due to OS-specific network stats queries, this test works only on Linux
+    assert(sys.platform.startswith('linux')) # due to OS-specific network stats queries, this test works only on Linux
     # find the first non-loopback interface for testing
     non_loopback_ip = None
     for name,ip in all_interfaces():

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
@@ -29,6 +29,7 @@ class BlockchainTest(BitcoinTestFramework):
     Test blockchain-related RPC calls:
 
         - gettxoutsetinfo
+        - verifychain
 
     """
 
@@ -45,18 +46,19 @@ class BlockchainTest(BitcoinTestFramework):
     def run_test(self):
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
+        self.nodes[0].verifychain(4, 0)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res[u'total_amount'], Decimal('8725.00000000'))
-        assert_equal(res[u'transactions'], 200)
-        assert_equal(res[u'height'], 200)
-        assert_equal(res[u'txouts'], 200)
-        assert_equal(res[u'bytes_serialized'], 13924),
-        assert_equal(len(res[u'bestblock']), 64)
-        assert_equal(len(res[u'hash_serialized']), 64)
+        assert_equal(res['total_amount'], Decimal('8725.00000000'))
+        assert_equal(res['transactions'], 200)
+        assert_equal(res['height'], 200)
+        assert_equal(res['txouts'], 200)
+        assert_equal(res['bytes_serialized'], 13924),
+        assert_equal(len(res['bestblock']), 64)
+        assert_equal(len(res['hash_serialized']), 64)
 
     def _test_getblockheader(self):
         node = self.nodes[0]
