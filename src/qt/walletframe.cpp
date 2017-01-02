@@ -201,3 +201,19 @@ void WalletFrame::outOfSyncWarningClicked()
 {
     Q_EMIT requestedSyncWarningInfo();
 }
+
+void WalletFrame::setSPVMode(bool state)
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->setSPVMode(state);
+}
+
+bool WalletFrame::getSPVMode()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        return walletView->getSPVMode();
+
+    return false;
+}

@@ -1190,8 +1190,8 @@ void CWallet::UpdatedBlockHeaderTip(bool fInitialDownload, const CBlockIndex *pi
     }
     pNVSLastKnownBestHeader = const_cast<CBlockIndex *>(pindexNew);
 
-    if (GetBoolArg("-spv", false))
-        RequestNonValidationScan();
+    if (spvEnabled)
+        RequestSPVScan();
 }
 
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock, bool validated)
@@ -3566,7 +3566,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
                                                                CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)));
-    strUsage += HelpMessageOpt("-spv", strprintf(_("Make use of full block spv default: %u)"), false));
+    strUsage += HelpMessageOpt("-spv", strprintf(_("Use full block spv before validating the chain (default: %u)"), DEFAULT_USE_SPV));
     strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)"),
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)));
     strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
@@ -3805,8 +3805,8 @@ bool CWallet::InitLoadWallet()
     }
     pwalletMain = pwallet;
 
-    if (GetBoolArg("-spv", false))
-        pwalletMain->RequestNonValidationScan();
+    if (GetBoolArg("-spv", DEFAULT_USE_SPV))
+        pwalletMain->setSPVEnabled(true);
 
     return true;
 }
@@ -3914,7 +3914,7 @@ bool CWallet::ParameterInteraction()
     return true;
 }
 
-void CWallet::RequestNonValidationScan(int64_t optional_timestamp)
+void CWallet::RequestSPVScan(int64_t optional_timestamp)
 {
     if (CAuxiliaryBlockRequest::GetCurrentRequest() && !CAuxiliaryBlockRequest::GetCurrentRequest()->isCompleted())
         return;
@@ -3993,7 +3993,7 @@ void CWallet::RequestNonValidationScan(int64_t optional_timestamp)
 
         // try to download more blocks if this on has been completed
         if (cb_AuxiliaryBlockRequest->isCompleted())
-            RequestNonValidationScan();
+            RequestSPVScan();
 
         // continue with the request
         return true;
@@ -4001,6 +4001,19 @@ void CWallet::RequestNonValidationScan(int64_t optional_timestamp)
 
     // set the global Auxiliarry Block Request
     auxiliaryRequest->setAsCurrentRequest();
+}
+
+void CWallet::setSPVEnabled(bool status)
+{
+    spvEnabled = status;
+    if (status)
+        RequestSPVScan();
+    NotifySPVModeChanged(status);
+}
+
+bool CWallet::IsSPVEnabled()
+{
+    return spvEnabled;
 }
 
 bool CWallet::BackupWallet(const std::string& strDest)

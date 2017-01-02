@@ -499,6 +499,12 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
                               Q_ARG(bool, fHaveWatchonly));
 }
 
+static void NotifySPVModeChanged(WalletModel *walletmodel, bool fSPVModeEnabled)
+{
+    QMetaObject::invokeMethod(walletmodel, "updateSPVMode", Qt::QueuedConnection,
+                              Q_ARG(bool, fSPVModeEnabled));
+}
+
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
@@ -507,6 +513,7 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
     wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
     wallet->NotifyWatchonlyChanged.connect(boost::bind(NotifyWatchonlyChanged, this, _1));
+    wallet->NotifySPVModeChanged.connect(boost::bind(NotifySPVModeChanged, this, _1));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -517,6 +524,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
     wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
     wallet->NotifyWatchonlyChanged.disconnect(boost::bind(NotifyWatchonlyChanged, this, _1));
+    wallet->NotifySPVModeChanged.disconnect(boost::bind(NotifySPVModeChanged, this, _1));
 }
 
 // WalletModel::UnlockContext implementation
@@ -700,6 +708,21 @@ bool WalletModel::isWalletEnabled()
 bool WalletModel::hdEnabled() const
 {
     return wallet->IsHDEnabled();
+}
+
+bool WalletModel::spvEnabled() const
+{
+    return wallet->IsSPVEnabled();
+}
+
+void WalletModel::setSpvEnabled(bool state)
+{
+    wallet->setSPVEnabled(state);
+}
+
+void WalletModel::updateSPVMode(bool fSPVModeEnabled)
+{
+    Q_EMIT spvEnabledStatusChanged(fSPVModeEnabled);
 }
 
 int WalletModel::getDefaultConfirmTarget() const

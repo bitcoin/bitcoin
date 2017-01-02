@@ -113,6 +113,13 @@ public Q_SLOTS:
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
 
+    /** setter and getter of the wallet's spv mode */
+    void setSPVMode(bool state);
+    bool getSPVMode();
+
+    /** Update the GUI to reflect the new SPV status */
+    void updateSPVStatus();
+
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
@@ -122,6 +129,8 @@ Q_SIGNALS:
     void encryptionStatusChanged(int status);
     /** HD-Enabled status of wallet changed (only possible during startup) */
     void hdEnabledStatusChanged(int hdEnabled);
+    /** SPV-Enabled status of wallet changed*/
+    void spvEnabledStatusChanged(int spvEnabled);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
     /** Notify that the out of sync warning icon has been pressed */

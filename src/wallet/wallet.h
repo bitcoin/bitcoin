@@ -68,7 +68,8 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 //! if set, all keys will be derived by using BIP32
 static const bool DEFAULT_USE_HD_WALLET = true;
-
+//! if set, the wallet does a full-block spv sync before continue validating the chain
+static const bool DEFAULT_USE_SPV = false;
 extern const char * DEFAULT_WALLET_DAT;
 
 class CBlockIndex;
@@ -610,6 +611,8 @@ private:
     bool fFileBacked;
 
     std::set<int64_t> setKeyPool;
+    std::atomic<bool> spvEnabled;
+
 public:
     /*
      * Main wallet lock.
@@ -671,6 +674,7 @@ public:
         fBroadcastTransactions = false;
         pNVSLastKnownBestHeader = NULL;
         pNVSBestBlock = NULL;
+        spvEnabled = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -938,6 +942,9 @@ public:
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
 
+    /** SPV Mode changed */
+    boost::signals2::signal<void (bool fSPVEnabled)> NotifySPVModeChanged;
+
     /** Inquire whether this wallet broadcasts transactions. */
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
@@ -965,7 +972,9 @@ public:
     /* Wallets parameter interaction */
     static bool ParameterInteraction();
 
-    void RequestNonValidationScan(int64_t optional_timestamp = 0);
+    void RequestSPVScan(int64_t optional_timestamp = 0);
+    void setSPVEnabled(bool status);
+    bool IsSPVEnabled();
     bool BackupWallet(const std::string& strDest);
 
     /* Set the HD chain model (chain child index counters) */
