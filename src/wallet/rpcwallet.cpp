@@ -2344,6 +2344,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     CKeyID masterKeyID = pwalletMain->GetHDChain().masterKeyID;
     if (!masterKeyID.IsNull())
          obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
+    obj.push_back(Pair("spv_enabled", (int)(pwalletMain->IsSPVEnabled())));
     obj.push_back(Pair("spv_bestblock_height", (int)(pwalletMain->pNVSBestBlock ? pwalletMain->pNVSBestBlock->nHeight : 0)));
     obj.push_back(Pair("spv_bestblock_hash", (pwalletMain->pNVSBestBlock ? pwalletMain->pNVSBestBlock->GetBlockHash().GetHex() : "")));
     obj.push_back(Pair("spv_headerschain_height", (int)(pwalletMain->pNVSLastKnownBestHeader ? pwalletMain->pNVSLastKnownBestHeader->nHeight : 0)));
@@ -2913,6 +2914,32 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue setspv(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+                            "setspv (true|false)\n"
+                            "\nEnabled or disabled full block SPV mode.\n"
+                            "\nArguments:\n"
+                            "1. state             (boolean, optional) enables or disables the spv mode\n"
+                            "\nResult:\n"
+                            "   status: <true|false> (\"true\" if the spv mode is enabled)\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("setspv", "\"true\"")
+                            + HelpExampleRpc("setspv", "\"true\"")
+                            );
+
+    if (request.params.size() == 1)
+        pwalletMain->setSPVEnabled(request.params[0].get_bool());
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("status", UniValue(pwalletMain->IsSPVEnabled()));
+    return ret;
+}
+
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
 extern UniValue importaddress(const JSONRPCRequest& request);
@@ -2974,6 +3001,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true,   {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
+    { "wallet",             "setspv",                   &setspv,                   true,   {"state"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
