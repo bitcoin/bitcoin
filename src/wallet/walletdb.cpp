@@ -768,7 +768,7 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
     return DB_LOAD_OK;
 }
 
-void ThreadFlushWalletDB(const string& strFile)
+void ThreadFlushWalletDB()
 {
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("bitcoin-wallet");
@@ -810,6 +810,7 @@ void ThreadFlushWalletDB(const string& strFile)
                 if (nRefCount == 0)
                 {
                     boost::this_thread::interruption_point();
+                    const std::string& strFile = pwalletMain->strWalletFile;
                     map<string, int>::iterator _mi = bitdb.mapFileUseCount.find(strFile);
                     if (_mi != bitdb.mapFileUseCount.end())
                     {
