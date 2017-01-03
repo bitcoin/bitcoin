@@ -1782,11 +1782,24 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
         }
 
+        // When we succeed in decoding a block's txids from a cmpctblock
+        // message we typically jump to the BLOCKTXN handling code, with a
+        // dummy (empty) BLOCKTXN message, to re-use the logic there in
+        // completing processing of the putative block (without cs_main).
+        bool fProcessBLOCKTXN = false;
+        CDataStream blockTxnMsg(SER_NETWORK, PROTOCOL_VERSION);
+
+        // If we end up treating this as a plain headers message, call that as well
+        // without cs_main.
+        bool fRevertToHeaderProcessing = false;
+        CDataStream vHeadersMsg(SER_NETWORK, PROTOCOL_VERSION);
+
         // Keep a CBlock for "optimistic" compactblock reconstructions (see
         // below)
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         bool fBlockReconstructed = false;
 
+        {
         LOCK(cs_main);
         // If AcceptBlockHeader returned true, it set pindex
         assert(pindex);
@@ -1868,9 +1881,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     // Dirty hack to jump to BLOCKTXN code (TODO: move message handling into their own functions)
                     BlockTransactions txn;
                     txn.blockhash = cmpctblock.header.GetHash();
-                    CDataStream blockTxnMsg(SER_NETWORK, PROTOCOL_VERSION);
                     blockTxnMsg << txn;
-                    return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman);
+                    fProcessBLOCKTXN = true;
                 } else {
                     req.blockhash = pindex->GetBlockHash();
                     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETBLOCKTXN, req));
@@ -1906,11 +1918,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 // Dirty hack to process as if it were just a headers message (TODO: move message handling into their own functions)
                 std::vector<CBlock> headers;
                 headers.push_back(cmpctblock.header);
-                CDataStream vHeadersMsg(SER_NETWORK, PROTOCOL_VERSION);
                 vHeadersMsg << headers;
-                return ProcessMessage(pfrom, NetMsgType::HEADERS, vHeadersMsg, nTimeReceived, chainparams, connman);
+                fRevertToHeaderProcessing = true;
             }
         }
+        } // cs_main
+
+        if (fProcessBLOCKTXN)
+            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman);
+
+        if (fRevertToHeaderProcessing)
+            return ProcessMessage(pfrom, NetMsgType::HEADERS, vHeadersMsg, nTimeReceived, chainparams, connman);
 
         if (fBlockReconstructed) {
             // If we got here, we were able to optimistically reconstruct a
