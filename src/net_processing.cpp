@@ -172,6 +172,8 @@ struct CNodeState {
     list<QueuedBlock> vBlocksInFlight;
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
     int64_t nDownloadingSince;
+    //! The height of the last block requested from this peer
+    int nHighestFlyer;
     int nBlocksInFlight;
     int nBlocksInFlightValidHeaders;
     //! Whether we consider this a preferred download peer.
@@ -208,6 +210,7 @@ struct CNodeState {
         fSyncStarted = false;
         nStallingSince = 0;
         nDownloadingSince = 0;
+        nHighestFlyer = 0;
         nBlocksInFlight = 0;
         nBlocksInFlightValidHeaders = 0;
         fPreferredDownload = false;
@@ -321,6 +324,8 @@ bool MarkBlockAsReceived(const uint256& hash) {
         }
         state->vBlocksInFlight.erase(itInFlight->second.second);
         state->nBlocksInFlight--;
+        if (!state->nBlocksInFlight)
+            state->nHighestFlyer = 0;
         state->nStallingSince = 0;
         mapBlocksInFlight.erase(itInFlight);
         return true;
@@ -536,7 +541,10 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
                     }
                     return;
                 }
-                vBlocks.push_back(pindex);
+                if (!state->nHighestFlyer || pindex->nHeight - state->nHighestFlyer >= 5) { // Stripe downloads to avoid stallers
+                    vBlocks.push_back(pindex);
+                    state->nHighestFlyer = pindex->nHeight;
+                }
                 if (vBlocks.size() == count) {
                     return;
                 }
@@ -2133,6 +2141,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 }
                 pindexWalk = pindexWalk->pprev;
             }
+
             // If pindexWalk still isn't on our main chain, we're looking at a
             // very large reorg at a time we think we're close to caught up to
             // the main chain -- this shouldn't really happen.  Bail out on the
@@ -2141,36 +2150,38 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 LogPrint("net", "Large reorg, won't direct fetch to %s (%d)\n",
                         pindexLast->GetBlockHash().ToString(),
                         pindexLast->nHeight);
-            } else {
-                vector<CInv> vGetData;
-                // Download as much as possible, from earliest to latest.
-                BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch) {
-                    if (nodestate->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                        // Can't download any more from this peer
-                        break;
-                    }
-                    uint32_t nFetchFlags = GetFetchFlags(pfrom, pindex->pprev, chainparams.GetConsensus());
-                    vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
-                    MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex);
-                    LogPrint("net", "Requesting block %s from  peer=%d\n",
-                            pindex->GetBlockHash().ToString(), pfrom->id);
-                }
-                if (vGetData.size() > 1) {
-                    LogPrint("net", "Downloading blocks toward %s (%d) via headers direct fetch\n",
-                            pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
-                }
-                if (vGetData.size() > 0) {
-                    if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
-                        // We seem to be rather well-synced, so it appears pfrom was the first to provide us
-                        // with this block! Let's get them to announce using compact blocks in the future.
-                        MaybeSetPeerAsAnnouncingHeaderAndIDs(nodestate, pfrom, connman);
-                        // In any case, we want to download using a compact block, not a regular one
-                        vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
-                    }
-                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-                }
+                return true;
             }
-        }
+
+            vector<CInv> vGetData;
+            // Download as much as possible, from earliest to latest.
+            BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch) {
+                if (nodestate->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+                    // Can't download any more from this peer
+                    break;
+                }
+                uint32_t nFetchFlags = GetFetchFlags(pfrom, pindex->pprev, chainparams.GetConsensus());
+                vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
+                if (vToFetch.size() == 1)
+                    MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), chainparams.GetConsensus(), pindex);
+            }
+            if (vGetData.size() > 1) {
+                LogPrint("net", "To download: %d blocks toward %s (%d)\n", vGetData.size(),
+                        pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
+                return true;
+            }
+            if (vGetData.size() > 0) {
+                if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
+                    // We seem to be rather well-synced, so it appears pfrom was the first to provide us
+                    // with this block! Let's get them to announce using compact blocks in the future.
+                    MaybeSetPeerAsAnnouncingHeaderAndIDs(nodestate, pfrom, connman);
+                    // In any case, we want to download using a compact block, not a regular one
+                    vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
+                }
+                connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vGetData));
+                LogPrint("net", "Requesting %s from  peer=%d\n", vGetData[0].ToString(), pfrom->id);
+            }
+        } // if fCanDirectFetch()
         }
     }
 
