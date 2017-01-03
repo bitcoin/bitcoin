@@ -36,6 +36,10 @@ int64_t COmniFeeCache::GetDistributionThreshold(const uint32_t &propertyId)
 void COmniFeeCache::UpdateDistributionThresholds(uint32_t propertyId)
 {
     int64_t distributionThreshold = getTotalTokens(propertyId) / OMNI_FEE_THRESHOLD;
+    if (distributionThreshold <= 0) {
+        // protect against zero valued thresholds for low token count properties
+        distributionThreshold = 1;
+    }
     distributionThresholds[propertyId] = distributionThreshold;
 }
 
