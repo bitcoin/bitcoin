@@ -203,26 +203,39 @@ UniValue gobject(const UniValue& params, bool fHelp)
                 govobj.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode);
             }
             else {
+                LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
             }
         }
         else {
             if(params.size() != 6) {
+                LogPrintf("gobject(submit) -- Object submission rejected because fee tx not provided\n");
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-txid parameter must be included to submit this type of object");
             }
         }
 
+        std::string strHash = govobj.GetHash().ToString();
+
         std::string strError = "";
         if(!govobj.IsValidLocally(pindex, strError, true)) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
+            LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
         }
 
         // RELAY THIS OBJECT
+        // Reject if rate check fails but don't update buffer
         if(!governance.MasternodeRateCheck(govobj)) {
+            LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure - hash = %s\n", strHash);
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
+        }
+        // This check should always pass, update buffer
+        if(!governance.MasternodeRateCheck(govobj, true)) {
+            LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure (buffer updated) - hash = %s\n", strHash);
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
         }
         governance.AddSeenGovernanceObject(govobj.GetHash(), SEEN_OBJECT_IS_VALID);
         govobj.Relay();
+        LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
         governance.AddGovernanceObject(govobj);
 
         return govobj.GetHash().ToString();
