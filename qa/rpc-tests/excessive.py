@@ -28,7 +28,11 @@ class ExcessiveBlockTest (BitcoinTestFramework):
       BitcoinTestFramework.__init__(self)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(4, self.options.tmpdir,timewait=60*10)
+        self.nodes = []
+        self.nodes.append(start_node(0,self.options.tmpdir, ["-rpcservertimeout=0"], timewait=60*10))
+        self.nodes.append(start_node(1,self.options.tmpdir, ["-rpcservertimeout=0"], timewait=60*10))
+        self.nodes.append(start_node(2,self.options.tmpdir, ["-rpcservertimeout=0"], timewait=60*10))
+        self.nodes.append(start_node(3,self.options.tmpdir, ["-rpcservertimeout=0"], timewait=60*10))
         interconnect_nodes(self.nodes)
         self.is_network_split=False
         self.sync_all()
