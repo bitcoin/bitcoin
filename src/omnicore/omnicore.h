@@ -304,7 +304,7 @@ int mastercore_shutdown();
 void CheckWalletUpdate(bool forceUpdate = false);
 
 /** Used to notify that the number of tokens for a property has changed. */
-void NotifyTotalTokensChanged(uint32_t propertyId);
+void NotifyTotalTokensChanged(uint32_t propertyId, int block);
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
