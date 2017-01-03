@@ -478,6 +478,7 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 void NotifyTotalTokensChanged(uint32_t propertyId, int block)
 {
     p_feecache->UpdateDistributionThresholds(propertyId);
+    p_feecache->EvalCache(propertyId, block);
 }
 
 void CheckWalletUpdate(bool forceUpdate)
