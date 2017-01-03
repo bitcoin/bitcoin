@@ -34,6 +34,7 @@ struct CDiskBlockPos;
 class CNode;
 class CChainParams;
 
+
 extern uint32_t blockVersion;  // Overrides the mined block version if non-zero
 extern uint64_t maxGeneratedBlock;
 extern unsigned int excessiveBlockSize;

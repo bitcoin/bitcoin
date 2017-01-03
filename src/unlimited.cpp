@@ -583,13 +583,13 @@ void UnlimitedSetup(void)
     // parameter is in KBytes/sec, leaky bucket is in bytes/sec.  But if it is "off" then don't multiply
     if (rb != std::numeric_limits<long long>::max())
         rb *= 1024;
-    int64_t ra = GetArg("-receiveavg", DEFAULT_MAX_RECV_BURST);
+    int64_t ra = GetArg("-receiveavg", DEFAULT_AVE_RECV);
     if (ra != std::numeric_limits<long long>::max())
         ra *= 1024;
-    int64_t sb = GetArg("-sendburst", DEFAULT_MAX_RECV_BURST);
+    int64_t sb = GetArg("-sendburst", DEFAULT_MAX_SEND_BURST);
     if (sb != std::numeric_limits<long long>::max())
         sb *= 1024;
-    int64_t sa = GetArg("-sendavg", DEFAULT_MAX_RECV_BURST);
+    int64_t sa = GetArg("-sendavg", DEFAULT_AVE_SEND);
     if (sa != std::numeric_limits<long long>::max())
         sa *= 1024;
 
