@@ -483,6 +483,7 @@ std::string HelpMessage(HelpMessageMode mode)
     if (showDebug) {
         strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE));
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
+        strUsage += HelpMessageOpt("-rpcforceutf8", strprintf("Replace invalid UTF-8 encoded characters with question marks in RPC response (default: %d)", 1));
     }
 
     // TODO: append help messages somewhere else
