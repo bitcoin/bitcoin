@@ -31,6 +31,7 @@
 
 #include <QKeyEvent>
 #include <QMenu>
+#include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
 #include <QSignalMapper>
@@ -62,6 +63,20 @@ const struct {
     {"misc", ":/icons/tx_inout"},
     {NULL, NULL}
 };
+
+namespace {
+
+// don't add private key handling cmd's to the history
+const QStringList historyFilter = QStringList()
+    << "importprivkey"
+    << "importmulti"
+    << "signmessagewithprivkey"
+    << "signrawtransaction"
+    << "walletpassphrase"
+    << "walletpassphrasechange"
+    << "encryptwallet";
+
+}
 
 /* Object for executing console RPC commands in a separate thread.
 */
@@ -113,10 +128,10 @@ public:
 #include "rpcconsole.moc"
 
 /**
- * Split shell command line into a list of arguments and execute the command(s).
+ * Split shell command line into a list of arguments and optionally execute the command(s).
  * Aims to emulate \c bash and friends.
  *
- * - Command nesting is possible with brackets [example: validateaddress(getnewaddress())]
+ * - Command nesting is possible with parenthesis; for example: validateaddress(getnewaddress())
  * - Arguments are delimited with whitespace or comma
  * - Extra whitespace at the beginning and end and between arguments will be ignored
  * - Text can be "double" or 'single' quoted
@@ -127,9 +142,11 @@ public:
  *
  * @param[out]   result      stringified Result from the executed command(chain)
  * @param[in]    strCommand  Command line to split
+ * @param[in]    fExecute    set true if you want the command to be executed
+ * @param[out]   pstrFilteredOut  Command line, filtered to remove any sensitive data
  */
 
-bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand)
+bool RPCConsole::RPCParseCommandLine(std::string &strResult, const std::string &strCommand, const bool fExecute, std::string * const pstrFilteredOut)
 {
     std::vector< std::vector<std::string> > stack;
     stack.push_back(std::vector<std::string>());
@@ -149,12 +166,35 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
     } state = STATE_EATING_SPACES;
     std::string curarg;
     UniValue lastResult;
+    unsigned nDepthInsideSensitive = 0;
+    size_t filter_begin_pos = 0, chpos;
+    std::vector<std::pair<size_t, size_t>> filter_ranges;
+
+    auto add_to_current_stack = [&](const std::string& curarg) {
+        if (stack.back().empty() && (!nDepthInsideSensitive) && historyFilter.contains(QString::fromStdString(curarg), Qt::CaseInsensitive)) {
+            nDepthInsideSensitive = 1;
+            filter_begin_pos = chpos;
+        }
+        stack.back().push_back(curarg);
+    };
+
+    auto close_out_params = [&]() {
+        if (nDepthInsideSensitive) {
+            if (!--nDepthInsideSensitive) {
+                assert(filter_begin_pos);
+                filter_ranges.push_back(std::make_pair(filter_begin_pos, chpos));
+                filter_begin_pos = 0;
+            }
+        }
+        stack.pop_back();
+    };
 
     std::string strCommandTerminated = strCommand;
     if (strCommandTerminated.back() != '\n')
         strCommandTerminated += "\n";
-    for(char ch: strCommandTerminated)
+    for (chpos = 0; chpos < strCommandTerminated.size(); ++chpos)
     {
+        char ch = strCommandTerminated[chpos];
         switch(state)
         {
             case STATE_COMMAND_EXECUTED_INNER:
@@ -173,7 +213,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                                 curarg += ch;
                                 break;
                             }
-                            if (curarg.size())
+                            if (curarg.size() && fExecute)
                             {
                                 // if we have a value query, query arrays with index and objects with a string key
                                 UniValue subelement;
@@ -198,7 +238,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                         breakParsing = false;
 
                         // pop the stack and return the result to the current command arguments
-                        stack.pop_back();
+                        close_out_params();
 
                         // don't stringify the json in case of a string to avoid doublequotes
                         if (lastResult.isStr())
@@ -210,7 +250,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                         if (curarg.size())
                         {
                             if (stack.size())
-                                stack.back().push_back(curarg);
+                                add_to_current_stack(curarg);
                             else
                                 strResult = curarg;
                         }
@@ -236,25 +276,31 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                     if (state == STATE_ARGUMENT)
                     {
                         if (ch == '(' && stack.size() && stack.back().size() > 0)
+                        {
+                            if (nDepthInsideSensitive) {
+                                ++nDepthInsideSensitive;
+                            }
                             stack.push_back(std::vector<std::string>());
+                        }
 
                         // don't allow commands after executed commands on baselevel
                         if (!stack.size())
                             throw std::runtime_error("Invalid Syntax");
 
-                        stack.back().push_back(curarg);
+                        add_to_current_stack(curarg);
                         curarg.clear();
                         state = STATE_EATING_SPACES_IN_BRACKETS;
                     }
                     if ((ch == ')' || ch == '\n') && stack.size() > 0)
                     {
-                        std::string strPrint;
-                        // Convert argument list to JSON objects in method-dependent way,
-                        // and pass it along with the method name to the dispatcher.
-                        JSONRPCRequest req;
-                        req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
-                        req.strMethod = stack.back()[0];
-                        lastResult = tableRPC.execute(req);
+                        if (fExecute) {
+                            // Convert argument list to JSON objects in method-dependent way,
+                            // and pass it along with the method name to the dispatcher.
+                            JSONRPCRequest req;
+                            req.params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
+                            req.strMethod = stack.back()[0];
+                            lastResult = tableRPC.execute(req);
+                        }
 
                         state = STATE_COMMAND_EXECUTED;
                         curarg.clear();
@@ -266,7 +312,7 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
 
                     else if(state == STATE_ARGUMENT) // Space ends argument
                     {
-                        stack.back().push_back(curarg);
+                        add_to_current_stack(curarg);
                         curarg.clear();
                     }
                     if ((state == STATE_EATING_SPACES_IN_BRACKETS || state == STATE_ARGUMENT) && ch == ',')
@@ -301,6 +347,16 @@ bool RPCConsole::RPCExecuteCommandLine(std::string &strResult, const std::string
                 if(ch != '"' && ch != '\\') curarg += '\\'; // keep '\' for everything but the quote and '\' itself
                 curarg += ch; state = STATE_DOUBLEQUOTED;
                 break;
+        }
+    }
+    if (pstrFilteredOut) {
+        if (STATE_COMMAND_EXECUTED == state) {
+            assert(!stack.empty());
+            close_out_params();
+        }
+        *pstrFilteredOut = strCommand;
+        for (auto i = filter_ranges.rbegin(); i != filter_ranges.rend(); ++i) {
+            pstrFilteredOut->replace(i->first, i->second - i->first, "(…)");
         }
     }
     switch(state) // final state
@@ -747,12 +803,30 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
 void RPCConsole::on_lineEdit_returnPressed()
 {
     QString cmd = ui->lineEdit->text();
-    ui->lineEdit->clear();
 
     if(!cmd.isEmpty())
     {
+        std::string strFilteredCmd;
+        try {
+            std::string dummy;
+            if (!RPCParseCommandLine(dummy, cmd.toStdString(), false, &strFilteredCmd)) {
+                // Failed to parse command, so we cannot even filter it for the history
+                throw std::runtime_error("Invalid command line");
+            }
+        } catch (const std::exception& e) {
+            QMessageBox::critical(this, "Error", QString("Error: ") + QString::fromStdString(e.what()));
+            return;
+        }
+
+        ui->lineEdit->clear();
+
+        cmdBeforeBrowsing = QString();
+
         message(CMD_REQUEST, cmd);
         Q_EMIT cmdRequest(cmd);
+
+        cmd = QString::fromStdString(strFilteredCmd);
+
         // Remove command, if already in history
         history.removeOne(cmd);
         // Append command to history
@@ -762,6 +836,7 @@ void RPCConsole::on_lineEdit_returnPressed()
             history.removeFirst();
         // Set pointer to end of history
         historyPtr = history.size();
+
         // Scroll console view to end
         scrollToEnd();
     }
@@ -769,6 +844,11 @@ void RPCConsole::on_lineEdit_returnPressed()
 
 void RPCConsole::browseHistory(int offset)
 {
+    // store current text when start browsing through the history
+    if (historyPtr == history.size()) {
+        cmdBeforeBrowsing = ui->lineEdit->text();
+    }
+
     historyPtr += offset;
     if(historyPtr < 0)
         historyPtr = 0;
@@ -777,6 +857,9 @@ void RPCConsole::browseHistory(int offset)
     QString cmd;
     if(historyPtr < history.size())
         cmd = history.at(historyPtr);
+    else if (!cmdBeforeBrowsing.isNull()) {
+        cmd = cmdBeforeBrowsing;
+    }
     ui->lineEdit->setText(cmd);
 }
 
