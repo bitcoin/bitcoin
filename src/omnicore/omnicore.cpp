@@ -420,7 +420,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
  * @param nTime  The timestamp of the block to update the "Dev MSC" for
  * @return The number of "Dev MSC" generated
  */
-static int64_t calculate_and_update_devmsc(unsigned int nTime)
+static int64_t calculate_and_update_devmsc(unsigned int nTime, int block)
 {
     // do nothing if before end of fundraiser
     if (nTime < 1377993874) return 0;
@@ -455,7 +455,7 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime)
         exodus_prev = devmsc;
     }
 
-    NotifyTotalTokensChanged(OMNI_PROPERTY_MSC);
+    NotifyTotalTokensChanged(OMNI_PROPERTY_MSC, block);
 
     return exodus_delta;
 }
@@ -470,9 +470,10 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 }
 
 // Perform any actions that need to be taken when the total number of tokens for a property ID changes
-void NotifyTotalTokensChanged(uint32_t propertyId)
+void NotifyTotalTokensChanged(uint32_t propertyId, int block)
 {
     p_feecache->UpdateDistributionThresholds(propertyId);
+    p_feecache->EvalCache(propertyId, block);
 }
 
 void CheckWalletUpdate(bool forceUpdate)
@@ -3766,7 +3767,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     }
 
     // calculate devmsc as of this block and update the Exodus' balance
-    devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
+    devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime(), nBlockNow);
 
     if (msc_debug_exo) {
         int64_t balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
