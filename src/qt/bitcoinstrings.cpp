@@ -191,7 +191,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "included in share/rpcuser. This option can be specified multiple times"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Wallet will not create transactions that violate mempool chain limits "
-"(default: %u"),
+"(default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Unknown block versions being mined! It's possible unknown rules are "
 "in effect"),
