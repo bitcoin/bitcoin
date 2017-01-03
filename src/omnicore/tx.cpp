@@ -846,7 +846,7 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation()
     }
 
     // Number of tokens has changed, update fee distribution thresholds
-    NotifyTotalTokensChanged(pcrowdsale->getPropertyId());
+    NotifyTotalTokensChanged(pcrowdsale->getPropertyId(), block);
 
     // Close crowdsale, if we hit MAX_TOKENS
     if (close_crowdsale) {
@@ -1034,7 +1034,7 @@ int CMPTransaction::logicMath_SendToOwners()
     assert(sent_so_far == (int64_t)nValue);
 
     // Number of tokens has changed, update fee distribution thresholds
-    if (version == MP_TX_PKT_V0) NotifyTotalTokensChanged(OMNI_PROPERTY_MSC); // fee was burned
+    if (version == MP_TX_PKT_V0) NotifyTotalTokensChanged(OMNI_PROPERTY_MSC, block); // fee was burned
 
     return 0;
 }
@@ -1484,7 +1484,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
     assert(propertyId > 0);
     assert(update_tally_map(sender, propertyId, nValue, BALANCE));
 
-    NotifyTotalTokensChanged(propertyId);
+    NotifyTotalTokensChanged(propertyId, block);
 
     return 0;
 }
@@ -1809,7 +1809,7 @@ int CMPTransaction::logicMath_GrantTokens()
         logicHelper_CrowdsaleParticipation();
     }
 
-    NotifyTotalTokensChanged(property);
+    NotifyTotalTokensChanged(property, block);
 
     return 0;
 }
@@ -1879,7 +1879,7 @@ int CMPTransaction::logicMath_RevokeTokens()
     assert(update_tally_map(sender, property, -nValue, BALANCE));
     assert(_my_sps->updateSP(property, sp));
 
-    NotifyTotalTokensChanged(property);
+    NotifyTotalTokensChanged(property, block);
 
     return 0;
 }
