@@ -36,6 +36,10 @@ int64_t COmniFeeCache::GetDistributionThreshold(const uint32_t &propertyId)
 void COmniFeeCache::UpdateDistributionThresholds(uint32_t propertyId)
 {
     int64_t distributionThreshold = getTotalTokens(propertyId) / OMNI_FEE_THRESHOLD;
+    if (distributionThreshold <= 0) {
+        // protect against zero valued thresholds for low token count properties
+        distributionThreshold = 1;
+    }
     distributionThresholds[propertyId] = distributionThreshold;
 }
 
@@ -176,6 +180,10 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
     LOCK(cs_tally);
 
     int64_t cachedAmount = GetCachedAmount(propertyId);
+
+    if (cachedAmount == 0) {
+        PrintToLog("Aborting fee distribution for property %d, the fee cache is empty!\n", propertyId);
+    }
 
     OwnerAddrType receiversSet;
     if (isTestEcosystemProperty(propertyId)) {
