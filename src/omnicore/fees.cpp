@@ -181,6 +181,10 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
 
     int64_t cachedAmount = GetCachedAmount(propertyId);
 
+    if (cachedAmount == 0) {
+        PrintToLog("Aborting fee distribution for property %d, the fee cache is empty!\n", propertyId);
+    }
+
     OwnerAddrType receiversSet;
     if (isTestEcosystemProperty(propertyId)) {
         receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_TMSC, cachedAmount);
