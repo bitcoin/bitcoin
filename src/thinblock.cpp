@@ -911,10 +911,10 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
     pfrom->blocksSent += 1;
 }
 
-void BuildSeededBloomFilter(CBloomFilter& filterMemPool, vector<uint256>& vOrphanHashes, uint256 hash)
+void BuildSeededBloomFilter(CBloomFilter& filterMemPool, vector<uint256>& vOrphanHashes, uint256 hash, bool fDeterministic)
 {
     int64_t nStartTimer = GetTimeMillis();
-    seed_insecure_rand();
+    seed_insecure_rand(fDeterministic);
     set<uint256> setHighScoreMemPoolHashes;
     set<uint256> setPriorityMemPoolHashes;
 

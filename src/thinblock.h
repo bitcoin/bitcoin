@@ -162,7 +162,7 @@ bool CanThinBlockBeDownloaded(CNode* pto);
 void ConnectToThinBlockNodes();
 void CheckNodeSupportForThinBlocks();
 void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
-void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash);
+void BuildSeededBloomFilter(CBloomFilter& memPoolFilter, std::vector<uint256>& vOrphanHashes, uint256 hash, bool fDeterministic = false);
 
 // Xpress Validation: begin
 // Transactions that have already been accepted into the memory pool do not need to be
