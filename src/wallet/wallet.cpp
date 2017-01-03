@@ -3736,21 +3736,13 @@ CWalletKey::CWalletKey(int64_t nExpires)
     nTimeExpires = nExpires;
 }
 
-int CMerkleTx::SetMerkleBranch(const CBlockIndex* pindex, int posInBlock)
+void CMerkleTx::SetMerkleBranch(const CBlockIndex* pindex, int posInBlock)
 {
-    AssertLockHeld(cs_main);
-
     // Update the tx's hashBlock
     hashBlock = pindex->GetBlockHash();
 
     // set the position of the transaction in the block
     nIndex = posInBlock;
-
-    // Is the tx in a block that's in the main chain
-    if (!chainActive.Contains(pindex))
-        return 0;
-
-    return chainActive.Height() - pindex->nHeight + 1;
 }
 
 int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
