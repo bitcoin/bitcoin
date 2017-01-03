@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (C) 2017 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -165,7 +166,15 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     std::string strRPCUserColonPass;
     if (mapArgs["-rpcpassword"] == "") {
         // Try fall back to cookie-based authentication if no password is provided
-        if (!GetAuthCookie(&strRPCUserColonPass)) {
+        boost::filesystem::path path = GetAuthCookieFile();
+        bool found = GetAuthCookie(path, &strRPCUserColonPass) ;
+
+#ifndef WIN32
+        if (!found) // The default place where cookies are stored in our packaging standard
+            found = GetAuthCookie("/etc/bitcoin/.cookie", &strRPCUserColonPass) ;
+#endif
+
+        if (!found) {
             throw runtime_error(strprintf(
                 _("Could not locate RPC credentials. No authentication cookie could be found, and no rpcpassword is set in the configuration file (%s)"),
                     GetConfigFile().string().c_str()));

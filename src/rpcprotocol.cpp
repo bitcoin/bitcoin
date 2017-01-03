@@ -100,11 +100,10 @@ bool GenerateAuthCookie(std::string *cookie_out)
     return true;
 }
 
-bool GetAuthCookie(std::string *cookie_out)
+bool GetAuthCookie(boost::filesystem::path filepath, std::string *cookie_out)
 {
     std::ifstream file;
     std::string cookie;
-    boost::filesystem::path filepath = GetAuthCookieFile();
     file.open(filepath.string().c_str());
     if (!file.is_open())
         return false;
