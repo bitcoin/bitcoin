@@ -84,15 +84,6 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
-        CBlockIndex* pindex = NULL;
-        {
-            LOCK(cs_main);
-            pindex = chainActive.Tip();
-        }
-
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         uint256 hashParent;
 
         // -- attach to root node (root node doesn't really exist, but has a hash of zero)
@@ -118,7 +109,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         }
 
         std::string strError = "";
-        if(!govobj.IsValidLocally(pindex, strError, false))
+        if(!govobj.IsValidLocally(strError, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
 
         CWalletTx wtx;
@@ -160,12 +151,6 @@ UniValue gobject(const UniValue& params, bool fHelp)
              << ", fMnFound = " << fMnFound << endl; );
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
-
-        CBlockIndex* pindex = NULL;
-        {
-            LOCK(cs_main);
-            pindex = chainActive.Tip();
-        }
 
         uint256 txidFee;
 
@@ -217,7 +202,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
         std::string strHash = govobj.GetHash().ToString();
 
         std::string strError = "";
-        if(!govobj.IsValidLocally(pindex, strError, true)) {
+        if(!govobj.IsValidLocally(strError, true)) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
         }
@@ -575,17 +560,11 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // SETUP BLOCK INDEX VARIABLE / RESULTS VARIABLE
 
-        CBlockIndex* pindex = NULL;
-        {
-            LOCK(cs_main);
-            pindex = chainActive.Tip();
-        }
-
         UniValue objResult(UniValue::VOBJ);
 
         // GET MATCHING GOVERNANCE OBJECTS
 
-        LOCK(governance.cs);
+        LOCK2(cs_main, governance.cs);
 
         std::vector<CGovernanceObject*> objs = governance.GetAllNewerThan(nStartTime);
         governance.UpdateLastDiffTime(GetTime());
@@ -619,7 +598,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
             // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
             std::string strError = "";
-            bObj.push_back(Pair("fBlockchainValidity",  pGovObj->IsValidLocally(pindex , strError, false)));
+            bObj.push_back(Pair("fBlockchainValidity",  pGovObj->IsValidLocally(strError, false)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
             bObj.push_back(Pair("fCachedValid",  pGovObj->IsSetCachedValid()));
             bObj.push_back(Pair("fCachedFunding",  pGovObj->IsSetCachedFunding()));
@@ -698,7 +677,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
         // --
         std::string strError = "";
-        objResult.push_back(Pair("fLocalValidity",  pGovObj->IsValidLocally(chainActive.Tip(), strError, false)));
+        objResult.push_back(Pair("fLocalValidity",  pGovObj->IsValidLocally(strError, false)));
         objResult.push_back(Pair("IsValidReason",  strError.c_str()));
         objResult.push_back(Pair("fCachedValid",  pGovObj->IsSetCachedValid()));
         objResult.push_back(Pair("fCachedFunding",  pGovObj->IsSetCachedFunding()));

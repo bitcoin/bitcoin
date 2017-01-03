@@ -173,7 +173,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
         bool fMasternodeMissing = false;
-        bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, fMasternodeMissing, true);
+        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, true);
 
         if(fMasternodeMissing) {
             mapMasternodeOrphanObjects.insert(std::make_pair(nHash, object_time_pair_t(govobj, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME)));
@@ -293,8 +293,8 @@ bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj)
 
     // MAKE SURE THIS OBJECT IS OK
 
-    if(!govobj.IsValidLocally(pCurrentBlockIndex, strError, true)) {
-        LogPrintf("CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (pCurrentBlockIndex nHeight %d) \n", strError, pCurrentBlockIndex->nHeight);
+    if(!govobj.IsValidLocally(strError, true)) {
+        LogPrintf("CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
         return false;
     }
 
@@ -407,7 +407,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         // IF CACHE IS NOT DIRTY, WHY DO THIS?
         if(pObj->IsSetDirtyCache()) {
             // UPDATE LOCAL VALIDITY AGAINST CRYPTO DATA
-            pObj->UpdateLocalValidity(pCurrentBlockIndex);
+            pObj->UpdateLocalValidity();
 
             // UPDATE SENTINEL SIGNALING VARIABLES
             pObj->UpdateSentinelVariables();
@@ -668,7 +668,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
             LogPrint("gobject", "CGovernanceManager::Sync -- attempting to sync govobj: %s, peer=%d\n", strHash, pfrom->id);
 
             std::string strError;
-            bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, true); 
+            bool fIsValid = govobj.IsValidLocally(strError, true);
             if(!fIsValid) {
                 LogPrintf("CGovernanceManager::Sync -- not syncing invalid govobj: %s, strError = %s, fCachedValid = %d, peer=%d\n", 
                          strHash, strError, govobj.IsSetCachedValid(), pfrom->id);
@@ -887,7 +887,7 @@ void CGovernanceManager::CheckMasternodeOrphanObjects()
 
         string strError;
         bool fMasternodeMissing = false;
-        bool fIsValid = govobj.IsValidLocally(pCurrentBlockIndex, strError, fMasternodeMissing, true);
+        bool fIsValid = govobj.IsValidLocally(strError, fMasternodeMissing, true);
         if(!fIsValid) {
             if(!fMasternodeMissing) {
                 mapMasternodeOrphanObjects.erase(it++);

@@ -404,27 +404,23 @@ std::string CGovernanceObject::GetDataAsString()
     return s;
 }
 
-void CGovernanceObject::UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex)
+void CGovernanceObject::UpdateLocalValidity()
 {
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
-    fCachedLocalValidity = IsValidLocally(pCurrentBlockIndex, strLocalValidityError, false);
+    fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
 };
 
 
-bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral)
+bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollateral)
 {
     bool fMissingMasternode = false;
 
-    return IsValidLocally(pindex, strError, fMissingMasternode, fCheckCollateral);
+    return IsValidLocally(strError, fMissingMasternode, fCheckCollateral);
 }
 
-bool CGovernanceObject::IsValidLocally(const CBlockIndex* pindex, std::string& strError, bool& fMissingMasternode, bool fCheckCollateral)
+bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMasternode, bool fCheckCollateral)
 {
     fMissingMasternode = false;
-    if(!pindex) {
-        strError = "Tip is NULL";
-        return true;
-    }
 
     if(fUnparsable) {
         strError = "Object data unparseable";
