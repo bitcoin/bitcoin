@@ -31,7 +31,6 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
-#include <boost/signals2/signal.hpp>
 
 class CAddrMan;
 class CScheduler;
@@ -441,19 +440,6 @@ struct CombinerAll
         return true;
     }
 };
-
-// Signals for message handling
-struct CNodeSignals
-{
-    boost::signals2::signal<bool (CNode*, CConnman&), CombinerAll> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, CConnman&), CombinerAll> SendMessages;
-    boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
-    boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
-};
-
-
-CNodeSignals& GetNodeSignals();
-
 
 enum
 {
