@@ -169,15 +169,17 @@ void Intro::pickDataDirectory()
     if(!GetArg("-datadir", "").empty())
         return;
     /* 1) Default data directory for operating system */
-    QString dataDir = getDefaultDataDirectory();
+    QString dataDirDefaultCurrent = getDefaultDataDirectory();
     /* 2) Allow QSettings to override default dir */
-    dataDir = settings.value("strDataDir", dataDir).toString();
+    QString dataDir = settings.value("strDataDir", dataDirDefaultCurrent).toString();
+    /* 3) Check to see if default datadir is the one we expect */
+    QString dataDirDefaultSettings = settings.value("strDataDirDefault", dataDirDefaultCurrent).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR))
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || dataDirDefaultCurrent != dataDirDefaultSettings)
     {
-        /* If current default data directory does not exist, let the user choose one */
+        /* Let the user choose one */
         Intro intro;
-        intro.setDataDirectory(dataDir);
+        intro.setDataDirectory(dataDirDefaultCurrent);
         intro.setWindowIcon(QIcon(":icons/bitcoin"));
 
         while(true)
@@ -199,12 +201,13 @@ void Intro::pickDataDirectory()
         }
 
         settings.setValue("strDataDir", dataDir);
+        settings.setValue("strDataDirDefault", dataDirDefaultCurrent);
     }
     /* Only override -datadir if different from the default, to make it possible to
      * override -datadir in the dash.conf file in the default data directory
      * (to be consistent with dashd behavior)
      */
-    if(dataDir != getDefaultDataDirectory())
+    if(dataDir != dataDirDefaultCurrent)
         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
 }
 

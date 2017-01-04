@@ -64,6 +64,8 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
 {
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(appName);
+    // Make sure settings migrated properly
+    GUIUtil::migrateQtSettings();
     // Grab theme from settings
     QString theme = GUIUtil::getThemeName();
     // load pixmap
