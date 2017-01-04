@@ -757,7 +757,7 @@ UniValue movecmd(const JSONRPCRequest& request)
             "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
             "2. \"toaccount\"     (string, required) The name of the account to move funds to. May be the default account using \"\".\n"
             "3. amount            (numeric) Quantity of " + CURRENCY_UNIT + " to move between accounts.\n"
-            "4. minconf           (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
+            "4. (dummy)           (numeric, optional) Ignored. Remains for backward compatibility.\n"
             "5. \"comment\"       (string, optional) An optional comment, stored in the wallet only.\n"
             "\nResult:\n"
             "true|false           (boolean) true if successful.\n"
