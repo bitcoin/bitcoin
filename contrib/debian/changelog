@@ -1,8 +1,11 @@
 bitcoinclassic (1.2.0-trusty1) trusty; urgency=medium
 
-  * Change block-size strategy to use market size-equilibrium
-  * Include experimental adminserver
+  * Change block-size strategy to use market size-equilibrium.
+  * Include experimental adminserver, disabled by default.
   * Updated flexible-transactions, still disabled.
+  * Removed BIP109 signalling and handling.
+
+ -- Tom Z <tomz@freedommail.ch>  Tue, 5 Jan 2017 10:00:00 +0100
 
 bitcoinclassic (1.1.91-trusty1) trusty; urgency=medium
 
