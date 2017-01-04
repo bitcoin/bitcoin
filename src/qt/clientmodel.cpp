@@ -130,7 +130,7 @@ double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
         LOCK(cs_main);
         tip = chainActive.Tip();
     }
-    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), tip);
+    return GuessVerificationProgress(Params().Checkpoints(), tip);
 }
 
 void ClientModel::updateTimer()
