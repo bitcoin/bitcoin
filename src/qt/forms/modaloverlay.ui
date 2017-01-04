@@ -267,7 +267,7 @@ QLabel { color: rgb(40,40,40);  }</string>
              <item>
               <widget class="QLabel" name="percentageProgress">
                <property name="text">
-                <string>~</string>
+                <string notr="true">~</string>
                </property>
               </widget>
              </item>
