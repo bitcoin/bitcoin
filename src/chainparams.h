@@ -31,9 +31,9 @@ struct CCheckpointData {
 };
 
 struct ChainTxData {
-    int64_t nTimeLastCheckpoint;
-    int64_t nTransactionsLastCheckpoint;
-    double fTransactionsPerDay;
+    int64_t nTime;
+    int64_t nTxCount;
+    double dTxRate;
 };
 
 /**
