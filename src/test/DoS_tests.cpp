@@ -24,11 +24,11 @@
 #include <boost/test/unit_test.hpp>
 
 // Tests this internal-to-main.cpp method:
-extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
+extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 struct COrphanTx {
-    CTransaction tx;
+    CTransactionRef tx;
     NodeId fromPeer;
     int64_t nTimeExpire;
 };
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     BOOST_CHECK(!connman->IsBanned(addr));
 }
 
-CTransaction RandomOrphan()
+CTransactionRef RandomOrphan()
 {
     std::map<uint256, COrphanTx>::iterator it;
     it = mapOrphanTransactions.lower_bound(GetRandHash());
@@ -154,30 +154,30 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
-        AddOrphanTx(tx, i);
+        AddOrphanTx(MakeTransactionRef(tx), i);
     }
 
     // ... and 50 that depend on other orphans:
     for (int i = 0; i < 50; i++)
     {
-        CTransaction txPrev = RandomOrphan();
+        CTransactionRef txPrev = RandomOrphan();
 
         CMutableTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = txPrev.GetHash();
+        tx.vin[0].prevout.hash = txPrev->GetHash();
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-        SignSignature(keystore, txPrev, tx, 0);
+        SignSignature(keystore, *txPrev, tx, 0);
 
-        AddOrphanTx(tx, i);
+        AddOrphanTx(MakeTransactionRef(tx), i);
     }
 
     // This really-big orphan should be ignored:
     for (int i = 0; i < 10; i++)
     {
-        CTransaction txPrev = RandomOrphan();
+        CTransactionRef txPrev = RandomOrphan();
 
         CMutableTransaction tx;
         tx.vout.resize(1);
@@ -187,15 +187,15 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
             tx.vin[j].prevout.n = j;
-            tx.vin[j].prevout.hash = txPrev.GetHash();
+            tx.vin[j].prevout.hash = txPrev->GetHash();
         }
-        SignSignature(keystore, txPrev, tx, 0);
+        SignSignature(keystore, *txPrev, tx, 0);
         // Re-use same signature for other inputs
         // (they don't have to be valid for this test)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!AddOrphanTx(tx, i));
+        BOOST_CHECK(!AddOrphanTx(MakeTransactionRef(tx), i));
     }
 
     // Test EraseOrphansFor:

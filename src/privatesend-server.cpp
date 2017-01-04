@@ -217,7 +217,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, std::string& strCommand, C
                 LOCK(cs_main);
                 CValidationState validationState;
                 mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
-                if(!AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, maxTxFee, true)) {
+                if(!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(tx), false, NULL, false, maxTxFee, true)) {
                     LogPrintf("DSVIN -- transaction not valid! tx=%s", tx.ToString());
                     PushStatus(pfrom, STATUS_REJECTED, ERR_INVALID_TX, connman);
                     return;
@@ -334,10 +334,10 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 {
     if(!fMasterNode) return; // check and relay final tx only on masternode
 
-    CTransaction finalTransaction = CTransaction(finalMutableTransaction);
-    uint256 hashTx = finalTransaction.GetHash();
+    CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
+    uint256 hashTx = finalTransaction->GetHash();
 
-    LogPrint("privatesend", "CPrivateSendServer::CommitFinalTransaction -- finalTransaction=%s", finalTransaction.ToString());
+    LogPrint("privatesend", "CPrivateSendServer::CommitFinalTransaction -- finalTransaction=%s", finalTransaction->ToString());
 
     {
         // See if the transaction is valid
@@ -447,7 +447,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 
         CValidationState state;
         bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, state, *vecOffendersCollaterals[0], false, &fMissingInputs, false, maxTxFee)) {
+        if(!AcceptToMemoryPool(mempool, state, vecOffendersCollaterals[0], false, &fMissingInputs, false, maxTxFee)) {
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
@@ -482,7 +482,7 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 
         CValidationState state;
         bool fMissingInputs;
-        if(!AcceptToMemoryPool(mempool, state, *txCollateral, false, &fMissingInputs, false, maxTxFee)) {
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, &fMissingInputs, false, maxTxFee)) {
             // should never really happen
             LogPrintf("CPrivateSendServer::ChargeRandomFees -- ERROR: AcceptToMemoryPool failed!\n");
         } else {
