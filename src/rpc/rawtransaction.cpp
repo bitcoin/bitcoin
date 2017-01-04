@@ -242,26 +242,21 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
         throw std::runtime_error(
-                "gettxoutproof [\"txid\",...] ( blockhash )\n"
-                "\nReturns a hex-encoded proof that \"txid\" was included in a block.\n"
-                "\nNOTE: By default this function only works sometimes. This is when there is an\n"
-                "unspent output in the utxo for this transaction. To make it always work,\n"
-                "you need to maintain a transaction index, using the -txindex command line option or\n"
-                "specify the block in which the transaction is included manually (by blockhash).\n"
-                "\nArguments:\n"
-                "1. \"txids\"       (string) A json array of txids to filter\n"
-                "    [\n"
-                "      \"txid\"     (string) A transaction hash\n"
-                "      ,...\n"
-                "    ]\n"
-                "2. \"blockhash\"   (string, optional) If specified, looks for txid in the block with this hash\n"
-                "\nResult:\n"
-                "\"data\"           (string) A string that is a serialized, hex-encoded data for the proof.\n"
-
-                "\nExamples:\n"
-                + HelpExampleCli("gettxoutproof", "'[\"mytxid\",...]'")
-                + HelpExampleCli("gettxoutproof", "'[\"mytxid\",...]' \"blockhash\"")
-                + HelpExampleRpc("gettxoutproof", "[\"mytxid\",...], \"blockhash\"")
+            "gettxoutproof [\"txid\",...] ( blockhash )\n"
+            "\nReturns a hex-encoded proof that \"txid\" was included in a block.\n"
+            "\nNOTE: By default this function only works sometimes. This is when there is an\n"
+            "unspent output in the utxo for this transaction. To make it always work,\n"
+            "you need to maintain a transaction index, using the -txindex command line option or\n"
+            "specify the block in which the transaction is included manually (by blockhash).\n"
+            "\nArguments:\n"
+            "1. \"txids\"       (string) A json array of txids to filter\n"
+            "    [\n"
+            "      \"txid\"     (string) A transaction hash\n"
+            "      ,...\n"
+            "    ]\n"
+            "2. \"blockhash\"   (string, optional) If specified, looks for txid in the block with this hash\n"
+            "\nResult:\n"
+            "\"data\"           (string) A string that is a serialized, hex-encoded data for the proof.\n"
         );
 
     std::set<uint256> setTxids;
@@ -543,7 +538,7 @@ UniValue decodescript(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "decodescript \"hex\"\n"
+            "decodescript \"hexstring\"\n"
             "\nDecode a hex-encoded script.\n"
             "\nArguments:\n"
             "1. \"hex\"     (string) the hex encoded script\n"
@@ -755,15 +750,14 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             if (nOut < 0)
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "vout must be positive");
 
-            COutPoint out(txid, nOut);
             std::vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
             {
-                const Coin& coin = view.AccessCoin(out);
-                if (!coin.IsSpent() && coin.out.scriptPubKey != scriptPubKey) {
+                CCoinsModifier coins = view.ModifyCoins(txid);
+                if (coins->IsAvailable(nOut) && coins->vout[nOut].scriptPubKey != scriptPubKey) {
                     std::string err("Previous output scriptPubKey mismatch:\n");
-                    err = err + ScriptToAsmStr(coin.out.scriptPubKey) + "\nvs:\n"+
+                    err = err + ScriptToAsmStr(coins->vout[nOut].scriptPubKey) + "\nvs:\n"+
                         ScriptToAsmStr(scriptPubKey);
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR, err);
                 }
