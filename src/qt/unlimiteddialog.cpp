@@ -54,7 +54,7 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
 
     int64_t max, ave;
     sendShaper.get(&max, &ave);
-    int64_t longMax = LONG_LONG_MAX;
+    int64_t longMax = std::numeric_limits<long long>::max();
     bool enabled = (ave != longMax);
     ui.sendShapingEnable->setChecked(enabled);
     ui.sendBurstSlider->setRange(0, 1000); // The slider is just for convenience so setting their ranges to what is commonly chosen
@@ -91,7 +91,7 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
     }
 
     receiveShaper.get(&max, &ave);
-    enabled = (ave != LONG_LONG_MAX);
+    enabled = (ave != std::numeric_limits<long long>::max());
     ui.recvShapingEnable->setChecked(enabled);
     if (enabled) {
         ui.recvBurstEdit->setText(QString(boost::lexical_cast<std::string>(max / 1024).c_str()));

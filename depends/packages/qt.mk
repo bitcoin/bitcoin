@@ -5,7 +5,7 @@ $(package)_suffix=opensource-src-$($(package)_version).tar.gz
 $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=0ac67cf8d66d52b995f96c31c4b48117a1afb3db99eaa93e20ccd8f7f55f7fde
 $(package)_dependencies=openssl
-$(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
+$(package)_linux_dependencies=freetype fontconfig libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=mac-qmake.conf mingw-uuidof.patch pidlist_absolute.patch fix-xcb-include-order.patch fix_qt_pkgconfig.patch
@@ -23,9 +23,9 @@ $(package)_extra_sources += $($(package)_qttools_file_name)
 define $(package)_set_vars
 $(package)_config_opts_release = -release
 $(package)_config_opts_debug   = -debug
-$(package)_config_opts += -bindir $(build_prefix)/bin
-$(package)_config_opts += -c++11
+$(package)_config_opts += -no-c++11
 $(package)_config_opts += -confirm-license
+$(package)_config_opts += -dbus-runtime
 $(package)_config_opts += -hostprefix $(build_prefix)
 $(package)_config_opts += -no-alsa
 $(package)_config_opts += -no-audio-backend
@@ -46,7 +46,6 @@ $(package)_config_opts += -no-libudev
 $(package)_config_opts += -no-mitshm
 $(package)_config_opts += -no-mtdev
 $(package)_config_opts += -no-nis
-$(package)_config_opts += -no-pch
 $(package)_config_opts += -no-pulseaudio
 $(package)_config_opts += -no-openvg
 $(package)_config_opts += -no-reduce-relocations
@@ -60,7 +59,6 @@ $(package)_config_opts += -no-sql-odbc
 $(package)_config_opts += -no-sql-psql
 $(package)_config_opts += -no-sql-sqlite
 $(package)_config_opts += -no-sql-sqlite2
-$(package)_config_opts += -no-c++11
 $(package)_config_opts += -no-use-gold-linker
 $(package)_config_opts += -no-xinput2
 $(package)_config_opts += -no-xrender
@@ -80,6 +78,7 @@ $(package)_config_opts += -reduce-exports
 $(package)_config_opts += -static
 $(package)_config_opts += -silent
 $(package)_config_opts += -v
+
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin = -xplatform macx-clang-linux

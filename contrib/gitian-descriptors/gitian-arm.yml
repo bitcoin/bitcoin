@@ -33,9 +33,8 @@ remotes:
   "dir": "bitcoin"
 files: []
 script: |
-
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  HOSTS="arm-linux-gnueabihf aarch64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
@@ -80,7 +79,7 @@ script: |
     done
   done
   }
-
+  #
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
   create_global_faketime_wrappers "2000-01-01 12:00:00"
@@ -136,6 +135,7 @@ script: |
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
+  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
   SOURCEDIST=`echo bitcoinUnlimited-*.tar.gz`
@@ -161,20 +161,15 @@ script: |
     make ${MAKEOPTS} -C src check-security
     case $i in
        aarch64-*) STRIP=/usr/bin/aarch64-linux-gnu-strip make install-strip DESTDIR=${INSTALLPATH} ;;
-       arm-*) STRIP=/usr/bin/arm-linux-gnueabihf-strip make install-strip DESTDIR=${INSTALLPATH} ;;
+       arm-*) STRIP=/usr/bin/arm-linux-gnueabihf-strip make install-strip  DESTDIR=${INSTALLPATH} ;;
        *)
           make ${MAKEOPTS} -C src check-symbols
-          make install-strip DESTDIR=${INSTALLPATH}
+          make install-strip
           ;;
     esac
 
-    make install DESTDIR=${INSTALLPATH}
     # BU save the executables with debug symbols
     cp -f src/bitcoind ${OUTDIR}/bitcoind-${i}.debug
-    if [ -f src/qt/bitcoin-qt ]
-    then
-      cp -f src/qt/bitcoin-qt ${OUTDIR}/bitcoin-qt-${i}.debug
-    fi
     #BU clean and tar up the output files
     cd installed
     find . -name "lib*.la" -delete
@@ -185,8 +180,6 @@ script: |
   done
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-linux64.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-i686-*.tar.gz ${OUTDIR}/${DISTNAME}-linux32.tar.gz
   mv ${OUTDIR}/${DISTNAME}-aarch64-*.tar.gz ${OUTDIR}/${DISTNAME}-arm64.tar.gz
   mv ${OUTDIR}/${DISTNAME}-arm-*.tar.gz ${OUTDIR}/${DISTNAME}-arm32.tar.gz
 

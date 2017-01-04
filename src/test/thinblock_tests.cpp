@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
         uint256 random_hash = uint256S(hash);
         vOrphanHashes.push_back(random_hash);
     }
-    BuildSeededBloomFilter(filter, vOrphanHashes, TestBlock().GetHash());
+    BuildSeededBloomFilter(filter, vOrphanHashes, TestBlock().GetHash(), true);
 
     /* empty filter */
     CBlock block = TestBlock();
@@ -79,6 +79,42 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
     filter.clear();
     CXThinBlock xthinblock3(block, &filter);
     BOOST_CHECK(xthinblock3.collision);
+
+
+    //  Add tests using a non-deterministic bloom filter which may
+    //  or may not yeild a false positive.
+    CBloomFilter filter1;
+    BuildSeededBloomFilter(filter1, vOrphanHashes, TestBlock().GetHash(), false);
+
+    /* empty filter */
+    CBlock block1 = TestBlock();
+    CThinBlock thinblock4(block1, filter1);
+    CXThinBlock xthinblock4(block1, &filter1);
+    BOOST_CHECK(thinblock4.vMissingTx.size() >= 8 && thinblock4.vMissingTx.size() <= 9);
+    BOOST_CHECK(xthinblock4.vMissingTx.size() >= 8 && xthinblock4.vMissingTx.size() <= 9);
+
+    /* insert txid not in block */
+    const uint256 random_hash1 = uint256S("3fba505b48865fccda4e248cecc39d5dfbc6b8ef7b4adc9cd27242c1193c7132");
+    filter1.insert(random_hash1);
+    CThinBlock thinblock5(block1, filter1);
+    CXThinBlock xthinblock5(block1, &filter1);
+    BOOST_CHECK(thinblock5.vMissingTx.size() >= 8 && thinblock5.vMissingTx.size() <= 9);
+    BOOST_CHECK(xthinblock5.vMissingTx.size() >= 8 && xthinblock5.vMissingTx.size() <= 9);
+
+    /* insert txid in block */
+    const uint256 hash_in_block1 = block.vtx[1].GetHash();
+    filter1.insert(hash_in_block1);
+    CThinBlock thinblock6(block1, filter1);
+    CXThinBlock xthinblock6(block1, &filter1);
+    BOOST_CHECK(thinblock6.vMissingTx.size() >= 7 && thinblock6.vMissingTx.size() <= 8);
+    BOOST_CHECK(xthinblock6.vMissingTx.size() >= 7 && xthinblock6.vMissingTx.size() <= 8);
+
+    /*collision test*/
+    BOOST_CHECK(!xthinblock6.collision);
+    block.vtx.push_back(block1.vtx[1]); //duplicate tx
+    filter1.clear();
+    CXThinBlock xthinblock7(block, &filter1);
+    BOOST_CHECK(xthinblock7.collision);
 
 }
 

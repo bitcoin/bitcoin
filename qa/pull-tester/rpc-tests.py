@@ -134,11 +134,10 @@ for o in opts | double_opts:
             sys.exit(1)
 
 #Set env vars
-buildDir = BUILDDIR
 if "BITCOIND" not in os.environ:
-    os.environ["BITCOIND"] = buildDir + '/src/bitcoind' + EXEEXT
+    os.environ["BITCOIND"] = BUILDDIR + '/src/bitcoind' + EXEEXT
 if "BITCOINCLI" not in os.environ:
-    os.environ["BITCOINCLI"] = buildDir + '/src/bitcoin-cli' + EXEEXT
+    os.environ["BITCOINCLI"] = BUILDDIR + '/src/bitcoin-cli' + EXEEXT
 
 #Disable Windows tests by default
 if EXEEXT == ".exe" and not option_passed('win'):
@@ -255,7 +254,8 @@ def runtests():
         print("Initializing coverage directory at %s\n" % coverage.dir)
 
     if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
-        rpcTestDir = buildDir + '/qa/rpc-tests/'
+        rpcTestDir = RPC_TESTS_DIR
+        buildDir   = BUILDDIR
         run_extended = option_passed('extended') or run_only_extended
         cov_flag = coverage.flag if coverage else ''
         flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
