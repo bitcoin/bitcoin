@@ -26,9 +26,6 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-using namespace RPCServer;
-using namespace std;
-
 static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");
@@ -67,7 +64,7 @@ void RPCServer::OnPostCommand(boost::function<void (const CRPCCommand&)> slot)
 }
 
 void RPCTypeCheck(const UniValue& params,
-                  const list<UniValue::VType>& typesExpected,
+                  const std::list<UniValue::VType>& typesExpected,
                   bool fAllowNull)
 {
     unsigned int i = 0;
@@ -92,7 +89,7 @@ void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected)
 }
 
 void RPCTypeCheckObj(const UniValue& o,
-    const map<string, UniValueType>& typesExpected,
+    const std::map<std::string, UniValueType>& typesExpected,
     bool fAllowNull,
     bool fStrict)
 {
@@ -102,7 +99,7 @@ void RPCTypeCheckObj(const UniValue& o,
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
         if (!(t.second.typeAny || v.type() == t.second.type || (fAllowNull && v.isNull()))) {
-            string err = strprintf("Expected type %s for %s, got %s",
+            std::string err = strprintf("Expected type %s for %s, got %s",
                 uvTypeName(t.second.type), t.first, uvTypeName(v.type()));
             throw JSONRPCError(RPC_TYPE_ERROR, err);
         }
@@ -110,11 +107,11 @@ void RPCTypeCheckObj(const UniValue& o,
 
     if (fStrict)
     {
-        BOOST_FOREACH(const string& k, o.getKeys())
+        BOOST_FOREACH(const std::string& k, o.getKeys())
         {
             if (typesExpected.count(k) == 0)
             {
-                string err = strprintf("Unexpected key %s", k);
+                std::string err = strprintf("Unexpected key %s", k);
                 throw JSONRPCError(RPC_TYPE_ERROR, err);
             }
         }
@@ -143,9 +140,9 @@ UniValue ValueFromAmount(const CAmount& amount)
             strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 
-uint256 ParseHashV(const UniValue& v, string strName)
+uint256 ParseHashV(const UniValue& v, std::string strName)
 {
-    string strHex;
+    std::string strHex;
     if (v.isStr())
         strHex = v.get_str();
     if (!IsHex(strHex)) // Note: IsHex("") is false
@@ -156,20 +153,20 @@ uint256 ParseHashV(const UniValue& v, string strName)
     result.SetHex(strHex);
     return result;
 }
-uint256 ParseHashO(const UniValue& o, string strKey)
+uint256 ParseHashO(const UniValue& o, std::string strKey)
 {
     return ParseHashV(find_value(o, strKey), strKey);
 }
-vector<unsigned char> ParseHexV(const UniValue& v, string strName)
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
 {
-    string strHex;
+    std::string strHex;
     if (v.isStr())
         strHex = v.get_str();
     if (!IsHex(strHex))
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return ParseHex(strHex);
 }
-vector<unsigned char> ParseHexO(const UniValue& o, string strKey)
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
 {
     return ParseHexV(find_value(o, strKey), strKey);
 }
@@ -180,12 +177,12 @@ vector<unsigned char> ParseHexO(const UniValue& o, string strKey)
 
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
-    string strRet;
-    string category;
-    set<rpcfn_type> setDone;
-    vector<pair<string, const CRPCCommand*> > vCommands;
+    std::string strRet;
+    std::string category;
+    std::set<rpcfn_type> setDone;
+    std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
 
-    for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
+    for (std::map<std::string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
         vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
     sort(vCommands.begin(), vCommands.end());
 
@@ -193,10 +190,10 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     jreq.fHelp = true;
     jreq.params = UniValue();
 
-    BOOST_FOREACH(const PAIRTYPE(string, const CRPCCommand*)& command, vCommands)
+    BOOST_FOREACH(const PAIRTYPE(std::string, const CRPCCommand*)& command, vCommands)
     {
         const CRPCCommand *pcmd = command.second;
-        string strMethod = pcmd->name;
+        std::string strMethod = pcmd->name;
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
         jreq.strMethod = strMethod;
@@ -209,10 +206,10 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
         catch (const std::exception& e)
         {
             // Help text is returned in an exception
-            string strHelp = string(e.what());
+            std::string strHelp = std::string(e.what());
             if (strCommand == "")
             {
-                if (strHelp.find('\n') != string::npos)
+                if (strHelp.find('\n') != std::string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
 
                 if (category != pcmd->category)
@@ -220,7 +217,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
                     if (!category.empty())
                         strRet += "\n";
                     category = pcmd->category;
-                    string firstLetter = category.substr(0,1);
+                    std::string firstLetter = category.substr(0,1);
                     boost::to_upper(firstLetter);
                     strRet += "== " + firstLetter + category.substr(1) + " ==\n";
                 }
@@ -237,7 +234,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "help ( \"command\" )\n"
             "\nList all commands, or get help for a specified command.\n"
             "\nArguments:\n"
@@ -246,7 +243,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             "\"text\"     (string) The help text\n"
         );
 
-    string strCommand;
+    std::string strCommand;
     if (jsonRequest.params.size() > 0)
         strCommand = jsonRequest.params[0].get_str();
 
@@ -258,7 +255,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 {
     // Accept the deprecated and ignored 'detach' boolean argument
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
-        throw runtime_error(
+        throw std::runtime_error(
             "stop\n"
             "\nStop Bitcoin server.");
     // Event loop will exit after current HTTP requests have been handled, so
@@ -292,7 +289,7 @@ CRPCTable::CRPCTable()
 
 const CRPCCommand *CRPCTable::operator[](const std::string &name) const
 {
-    map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
+    std::map<std::string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
     if (it == mapCommands.end())
         return NULL;
     return (*it).second;
@@ -304,7 +301,7 @@ bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
         return false;
 
     // don't allow overwriting for now
-    map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
+    std::map<std::string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
     if (it != mapCommands.end())
         return false;
 
