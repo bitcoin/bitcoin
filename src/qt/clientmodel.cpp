@@ -238,6 +238,23 @@ void ClientModel::updateBanlist()
     banTableModel->refresh();
 }
 
+bool ClientModel::hasAuxiliaryBlockRequest(int64_t* createdRet, size_t* requestedBlocksRet, size_t* loadedBlocksRet, size_t* processedBlocksRet)
+{
+    std::shared_ptr<CAuxiliaryBlockRequest> blockRequest = CAuxiliaryBlockRequest::GetCurrentRequest();
+    if (!blockRequest)
+        return false;
+
+    if (createdRet)
+        *createdRet = blockRequest->created;
+    if (requestedBlocksRet)
+        *requestedBlocksRet = blockRequest->vBlocksToDownload.size();
+    if (loadedBlocksRet)
+        *loadedBlocksRet = blockRequest->amountOfBlocksLoaded();
+    if (processedBlocksRet)
+        *processedBlocksRet = blockRequest->processedUpToSize;
+    return true;
+}
+
 // Handlers for core signals
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
@@ -295,6 +312,15 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     }
 }
 
+static void AuxiliaryBlockRequestProgressUpdate(ClientModel *clientmodel, int64_t created, size_t blocksRequested, size_t blocksLoaded, size_t blocksProcessed)
+{
+    QMetaObject::invokeMethod(clientmodel, "auxiliaryBlockRequestProgressChanged", Qt::QueuedConnection,
+                              Q_ARG(QDateTime, QDateTime::fromTime_t(created)),
+                              Q_ARG(int, (int)blocksRequested),
+                              Q_ARG(int, (int)blocksLoaded),
+                              Q_ARG(int, (int)blocksProcessed));
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -305,6 +331,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.connect(boost::bind(BlockTipChanged, this, _1, _2, true));
+    uiInterface.NotifyAuxiliaryBlockRequestProgress.connect(boost::bind(AuxiliaryBlockRequestProgressUpdate, this, _1, _2, _3, _4));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -317,4 +344,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, true));
+    uiInterface.NotifyAuxiliaryBlockRequestProgress.disconnect(boost::bind(AuxiliaryBlockRequestProgressUpdate, this, _1, _2, _3, _4));
 }

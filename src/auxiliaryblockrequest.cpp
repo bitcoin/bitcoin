@@ -7,6 +7,7 @@
 #include "chainparams.h"
 #include "validation.h"
 #include "validationinterface.h"
+#include "ui_interface.h"
 
 #include <exception>
 
@@ -19,6 +20,14 @@ CAuxiliaryBlockRequest::CAuxiliaryBlockRequest(std::vector<const CBlockIndex*> v
     fCancelled = false;
     requestedUpToSize = 0;
     processedUpToSize = 0;
+
+    NotifyUI();
+}
+
+void CAuxiliaryBlockRequest::NotifyUI()
+{
+    // Notify UI
+    uiInterface.NotifyAuxiliaryBlockRequestProgress(this->created, this->vBlocksToDownload.size(), this->amountOfBlocksLoaded(), this->processedUpToSize);
 }
 
 void CAuxiliaryBlockRequest::processWithPossibleBlock(const std::shared_ptr<const CBlock> pblock, CBlockIndex *pindex)
@@ -58,6 +67,8 @@ void CAuxiliaryBlockRequest::processWithPossibleBlock(const std::shared_ptr<cons
 
         // log some info
         LogPrint("net", "BlockRequest: proccessed up to %ld of total requested %ld blocks\n", this->processedUpToSize, this->vBlocksToDownload.size());
+
+        NotifyUI();
 
         if (progressCallback)
             if (!progressCallback(shared_from_this(), pindexRequest))
@@ -112,10 +123,10 @@ void CAuxiliaryBlockRequest::fillInNextBlocks(std::vector<const CBlockIndex*>& v
     this->processWithPossibleBlock(NULL, NULL);
 }
 
-unsigned int CAuxiliaryBlockRequest::amountOfBlocksLoaded()
+size_t CAuxiliaryBlockRequest::amountOfBlocksLoaded()
 {
-    unsigned int haveData = 0;
-    for (unsigned int i = 0; i < this->vBlocksToDownload.size() ; i++) {
+    size_t haveData = 0;
+    for (size_t i = 0; i < this->vBlocksToDownload.size() ; i++) {
         const CBlockIndex *pindex = this->vBlocksToDownload[i];
         if (pindex->nStatus & BLOCK_HAVE_DATA)
             haveData++;

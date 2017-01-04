@@ -43,7 +43,7 @@ public:
     void fillInNextBlocks(std::vector<const CBlockIndex*>& vBlocks, unsigned int count, std::function<bool(const CBlockIndex*)> filterBlocksCallback);
 
     /** returns the amount of already loaded/local-stored blocks from this blockrequest */
-    unsigned int amountOfBlocksLoaded();
+    size_t amountOfBlocksLoaded();
 
     /** returns true if all blocks have been downloaded & processed */
     bool isCompleted();
@@ -52,6 +52,7 @@ public:
     static std::shared_ptr<CAuxiliaryBlockRequest> GetCurrentRequest();
 
 private:
+    void NotifyUI();
     const std::function<bool(std::shared_ptr<CAuxiliaryBlockRequest>, const CBlockIndex *pindex)> progressCallback; //! progress callback, with optional cancle mechanism (return false == cancel)
     std::atomic<bool> fCancelled;
 };

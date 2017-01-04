@@ -81,6 +81,8 @@ public:
     QString formatClientStartupTime() const;
     QString dataDir() const;
 
+    bool hasAuxiliaryBlockRequest(int64_t* createdRet = NULL, size_t* requestedBlocksRet = NULL, size_t* loadedBlocksRet = NULL, size_t* processedBlocksRet = NULL);
+
 private:
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
@@ -104,6 +106,8 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
+
+    void auxiliaryBlockRequestProgressChanged(const QDateTime& created, int blocksRequested, int blocksLoaded, int blocksProcessed);
 
 public Q_SLOTS:
     void updateTimer();

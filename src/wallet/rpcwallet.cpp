@@ -2322,6 +2322,10 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"spv_bestblock_height\": x,    (numeric) the height of the latest SPV scanned block\n"
             "  \"spv_bestblock_hash\": x,      (string) the hash of the latest SPV scanned block\n"
             "  \"spv_headerschain_height\": x, (numeric) the height of the wallets headers-chain tip\n"
+            "  \"spv_scan_started\": ttt,      (numeric) Timestamp of the last started SPV blocks scan\n"
+            "  \"spv_blocks_requested\": x,    (numeric) the amount of requested blocks in the current scan\n"
+            "  \"spv_blocks_loaded\": x,       (numeric) the amount of loaded blocks in the current scan\n"
+            "  \"spv_blocks_processed\": x,    (numeric) the amount of processed blocks in the current scan\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getwalletinfo", "")
@@ -2348,6 +2352,12 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("spv_bestblock_height", (int)(pwalletMain->pNVSBestBlock ? pwalletMain->pNVSBestBlock->nHeight : 0)));
     obj.push_back(Pair("spv_bestblock_hash", (pwalletMain->pNVSBestBlock ? pwalletMain->pNVSBestBlock->GetBlockHash().GetHex() : "")));
     obj.push_back(Pair("spv_headerschain_height", (int)(pwalletMain->pNVSLastKnownBestHeader ? pwalletMain->pNVSLastKnownBestHeader->nHeight : 0)));
+    std::shared_ptr<CAuxiliaryBlockRequest> blockRequest = CAuxiliaryBlockRequest::GetCurrentRequest();
+    obj.pushKV("spv_scan_started", (!blockRequest ? 0 : UniValue(blockRequest->created)));
+    obj.pushKV("spv_blocks_requested", (int64_t)(!blockRequest ? 0 : blockRequest->vBlocksToDownload.size()));
+    obj.pushKV("spv_blocks_loaded", (int)(!blockRequest ? 0 : blockRequest->amountOfBlocksLoaded()));
+    obj.pushKV("spv_blocks_processed", (!blockRequest ? 0 : (int64_t)blockRequest->processedUpToSize));
+
     return obj;
 }
 

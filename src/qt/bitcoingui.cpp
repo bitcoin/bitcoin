@@ -491,6 +491,16 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // Show progress dialog
         connect(_clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
 
+        // Show auxiliary block request (SPV) progress
+        connect(_clientModel, SIGNAL(auxiliaryBlockRequestProgressChanged(QDateTime,int,int,int)), this, SLOT(setAuxiliaryBlockRequestProgress(QDateTime,int,int,int)));
+
+        // If we already have a auxiliary block request, update the progress immediately
+        int64_t created;
+        size_t requestedBlocks, loadedBlocks, processedBlocks;
+        if (_clientModel->hasAuxiliaryBlockRequest(&created, &requestedBlocks, &loadedBlocks, &processedBlocks))
+        {
+            setAuxiliaryBlockRequestProgress(QDateTime::fromTime_t(created), requestedBlocks, loadedBlocks, processedBlocks);
+        }
         rpcConsole->setClientModel(_clientModel);
 #ifdef ENABLE_WALLET
         if(walletFrame)
@@ -773,11 +783,14 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
     if (!clientModel)
         return;
+    if (clientModel->hasAuxiliaryBlockRequest())
+        return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
     statusBar()->clearMessage();
 
     // Acquire current block source
+    bool headerSyncInProgress = false;
     enum BlockSource blockSource = clientModel->getBlockSource();
     switch (blockSource) {
         case BLOCK_SOURCE_NETWORK:
@@ -870,6 +883,41 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::setAuxiliaryBlockRequestProgress(const QDateTime& blockDate, int requestesBlocks, int loadedBlocks, int processedBlocks)
+{
+    // at this stage, always display the progress bar and it's label
+    progressBar->setVisible(true);
+    progressBarLabel->setVisible(true);
+
+    // if we are not yet connected to some peers, show different text
+    if (clientModel->getNumConnections() == 0)
+    {
+        progressBarLabel->setText(tr("Connecting to peers..."));
+        return;
+    }
+
+    QString tooltip = tr("Scanning %1 blocks...").arg(QString::number(requestesBlocks));
+    tooltip += QString("<br>");
+    tooltip += tr("%1 blocks loaded.").arg(QString::number(loadedBlocks));
+    tooltip += QString("<br>");
+    tooltip += tr("%1 blocks processed.").arg(QString::number(processedBlocks));
+    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
+
+    double nABRprogress = 1.0/requestesBlocks*loadedBlocks;
+    progressBar->setFormat(tr("behind"));
+    progressBar->setMaximum(1000000000);
+    progressBar->setValue(nABRprogress  * 1000000000.0 + 0.5);
+    progressBarLabel->setText("Download & scanning blocks (SPV)...");
+    progressBar->setToolTip(tooltip);
+    progressBarLabel->setToolTip(tooltip);
+    if (nABRprogress == 1)
+    {
+        // don't show progress if request has been completed
+        progressBar->setVisible(false);
+        progressBarLabel->setVisible(false);
+    }
 }
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
