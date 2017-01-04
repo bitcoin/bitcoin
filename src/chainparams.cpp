@@ -80,13 +80,14 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256("0x001"))
+        ( 0, uint256("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1405699509,
-        201,
-        500
+        1483492562, // * UNIX timestamp of last checkpoint block
+        0,          // * total number of transactions between genesis and last checkpoint
+                    //   (the tx=... number in the SetBestChain debug.log lines)
+        0           // * estimated number of transactions per day after checkpoint
     };
 
 static Checkpoints::MapCheckpoints mapCheckpointsRegtest =
@@ -95,9 +96,10 @@ static Checkpoints::MapCheckpoints mapCheckpointsRegtest =
         ;
 static const Checkpoints::CCheckpointData dataRegtest = {
         &mapCheckpointsRegtest,
-        0,
-        0,
-        0
+        1296688602, // * UNIX timestamp of last checkpoint block
+        0,          // * total number of transactions between genesis and last checkpoint
+                    //   (the tx=... number in the SetBestChain debug.log lines)
+        0           // * estimated number of transactions per day after checkpoint
     };
 
 class CMainParams : public CChainParams {
@@ -217,20 +219,46 @@ public:
         nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1390666206;
-        genesis.nNonce = 3861367235;
+        genesis.nTime = 1483492562;
+        genesis.nNonce = 2574547475;
+
+	/*if (true && genesis.GetHash() != hashGenesisBlock)
+                       {
+                           printf("Searching for genesis block...\n");
+                           uint256 hashTarget = uint256().SetCompact(genesis.nBits);
+                           uint256 thash;
+                           while (true)
+                           {
+                               thash = genesis.GetHash();
+                               if (thash <= hashTarget)
+                                 break;
+                               if ((genesis.nNonce & 0xFFF) == 0)
+                               {
+                                   printf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
+                               }
+                               ++genesis.nNonce;
+                               if (genesis.nNonce == 0)
+                               {
+                                   printf("NONCE WRAPPED, incrementing time\n");
+                                   ++genesis.nTime;
+                               }
+                           }
+                           printf("genesis.nTime = %u \n", genesis.nTime);
+                           printf("genesis.nNonce = %u \n", genesis.nNonce);
+                           printf("genesis.nVersion = %u \n", genesis.nVersion);
+                           //printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str()); //first this, then comment this line out and uncomment the one under.
+                           printf("genesis.hashMerkleRoot = %s \n", genesis.hashMerkleRoot.ToString().c_str()); //improvised. worked for me, to find merkle root/
+                       }*/
 
         hashGenesisBlock = genesis.GetHash();
-        //assert(hashGenesisBlock == uint256("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
+        assert(hashGenesisBlock == uint256("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"));
+        assert(genesis.hashMerkleRoot == uint256("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        /*vSeeds.push_back(CDNSSeedData("crown.tech", "testnet-seed.crown.tech"));
-        vSeeds.push_back(CDNSSeedData("crown.qa", "testnet-seed.crown.qa"));
-        *///legacy seeders
-        //vSeeds.push_back(CDNSSeedData("darkcoin.io",  "testnet-seed.darkcoin.io"));
-        //vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
-        //vSeeds.push_back(CDNSSeedData("throne.io", "test.dnsseed.throne.io"));
+
+        vSeeds.push_back(CDNSSeedData("crown.tech", "testnet-seed.crown.tech"));
+        vSeeds.push_back(CDNSSeedData("infernopool.com", "crwtestnet.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);                    // Testnet crown addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);                    // Testnet crown script addresses start with '8' or '9'
@@ -258,6 +286,10 @@ public:
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {
         return dataTestnet;
+    }
+    int AuxpowStartHeight() const
+    {
+        return 10;
     }
 };
 static CTestNetParams testNetParams;
@@ -303,6 +335,10 @@ public:
     const Checkpoints::CCheckpointData& Checkpoints() const 
     {
         return dataRegtest;
+    }
+    int AuxpowStartHeight() const
+    {
+        return 10;
     }
 };
 static CRegTestParams regTestParams;
