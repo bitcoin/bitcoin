@@ -770,6 +770,13 @@ UniValue submitblock(const JSONRPCRequest& request)
     }
     if (!sc.found)
         return "inconclusive";
+
+    if (g_connman && fAccepted)
+    {
+        // Wake up thread message handler so it sends out the block.
+        g_connman->WakeMessageHandler();
+    }
+
     return BIP22ValidationResult(sc.state);
 }
 
