@@ -1997,8 +1997,8 @@
     </message>
     <message>
         <location line="+60"/>
-        <location filename="../rpcconsole.cpp" line="+400"/>
-        <location line="+692"/>
+        <location filename="../rpcconsole.cpp" line="+456"/>
+        <location line="+719"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2134,7 +2134,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-386"/>
+        <location filename="../rpcconsole.cpp" line="-413"/>
         <source>In:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2217,7 +2217,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+123"/>
+        <location line="+150"/>
         <source>%1 B</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2662,12 +2662,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+80"/>
-        <source>(count)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+108"/>
+        <location line="+188"/>
         <source>Clear &amp;All</source>
         <translation>Clear &amp;All</translation>
     </message>
