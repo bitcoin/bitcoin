@@ -115,7 +115,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setban", 3 },
     { "spork", 1 },
     { "voteraw", 1 },
-    { "voteraw", 4 },
+    { "voteraw", 5 },
     { "getblockhashes", 0 },
     { "getblockhashes", 1 },
     { "getspentinfo", 0},

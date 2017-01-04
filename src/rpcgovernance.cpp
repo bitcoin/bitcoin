@@ -771,7 +771,7 @@ UniValue gobject(const UniValue& params, bool fHelp)
 
 UniValue voteraw(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 6)
+    if (fHelp || params.size() != 7)
         throw std::runtime_error(
                 "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
