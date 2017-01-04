@@ -179,7 +179,7 @@ static const double MIN_SUCCESS_PCT = .95;
 static const double SUFFICIENT_FEETXS = 1;
 
 // Minimum and Maximum values for tracking feerates
-static const double MIN_FEERATE = 10;
+static constexpr double MIN_FEERATE = 10;
 static const double MAX_FEERATE = 1e7;
 static const double INF_FEERATE = MAX_MONEY;
 static const double INF_PRIORITY = 1e9 * MAX_MONEY;
