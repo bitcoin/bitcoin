@@ -867,7 +867,8 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         if(walletFrame)
         {
             walletFrame->showOutOfSyncWarning(true);
-            modalOverlay->showHide();
+            if (!walletFrame->getSPVMode())
+                modalOverlay->showHide();
         }
 #endif // ENABLE_WALLET
 
@@ -1102,6 +1103,8 @@ void BitcoinGUI::setSPVStatus(int spvEnabled)
 {
     labelWalletSPVStatusIcon->setPixmap(platformStyle->SingleColorIcon(spvEnabled ? ":/icons/spv_enabled" : ":/icons/spv_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     labelWalletSPVStatusIcon->setToolTip(spvEnabled ? tr("Simple Payment Verification is <b>enabled</b>") : tr("Simple Payment Verification is <b>disabled</b>"));
+    if(spvEnabled)
+        modalOverlay->showHide(true, false);
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)
