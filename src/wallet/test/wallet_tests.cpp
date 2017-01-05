@@ -11,7 +11,6 @@
 
 #include "wallet/test/wallet_test_fixture.h"
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 // how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
@@ -54,7 +53,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
 
 static void empty_wallet(void)
 {
-    BOOST_FOREACH(COutput output, vCoins)
+    for (COutput output : vCoins)
         delete output.tx;
     vCoins.clear();
 }

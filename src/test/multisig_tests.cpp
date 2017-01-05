@@ -14,7 +14,6 @@
 #include "test/test_bitcoin.h"
 
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 typedef std::vector<unsigned char> valtype;
@@ -28,7 +27,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
-    BOOST_FOREACH(const CKey &key, keys)
+    for (const CKey &key : keys)
     {
         std::vector<unsigned char> vchSig;
         BOOST_CHECK(key.Sign(hash, vchSig));
