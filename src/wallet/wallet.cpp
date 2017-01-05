@@ -2537,6 +2537,18 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 if (nFeeRet >= nFeeNeeded)
                     break; // Done, enough fee included.
 
+                // Try to reduce change to include necessary fee
+                if (nChangePosInOut != -1 && nSubtractFeeFromAmount == 0) {
+                    CAmount additionalFeeNeeded = nFeeNeeded - nFeeRet;
+                    vector<CTxOut>::iterator change_position = txNew.vout.begin()+nChangePosInOut;
+                    // Only reduce change if remaining amount is still a large enough output.
+                    if (change_position->nValue >= MIN_FINAL_CHANGE + additionalFeeNeeded) {
+                        change_position->nValue -= additionalFeeNeeded;
+                        nFeeRet += additionalFeeNeeded;
+                        break; // Done, able to increase fee from change
+                    }
+                }
+
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
                 continue;
