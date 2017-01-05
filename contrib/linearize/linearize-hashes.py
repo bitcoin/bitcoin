@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # linearize-hashes.py:  List blocks in a linear, no-fork version of the chain.
 #
@@ -8,32 +8,47 @@
 #
 
 from __future__ import print_function
+try: # Python 3
+    import http.client as httplib
+except ImportError: # Python 2
+    import httplib
 import json
 import struct
 import re
 import base64
-import httplib
 import sys
 
 settings = {}
 
+##### Switch endian-ness #####
+def hex_switchEndian(s):
+	""" Switches the endianness of a hex string (in pairs of hex chars) """
+	pairList = [s[i:i+2].encode() for i in range(0, len(s), 2)]
+	return b''.join(pairList[::-1]).decode()
+
 class BitcoinRPC:
 	def __init__(self, host, port, username, password):
 		authpair = "%s:%s" % (username, password)
-		self.authhdr = "Basic %s" % (base64.b64encode(authpair))
-		self.conn = httplib.HTTPConnection(host, port, False, 30)
+		authpair = authpair.encode('utf-8')
+		self.authhdr = b"Basic " + base64.b64encode(authpair)
+		self.conn = httplib.HTTPConnection(host, port=port, timeout=30)
 
 	def execute(self, obj):
-		self.conn.request('POST', '/', json.dumps(obj),
-			{ 'Authorization' : self.authhdr,
-			  'Content-type' : 'application/json' })
+		try:
+			self.conn.request('POST', '/', json.dumps(obj),
+				{ 'Authorization' : self.authhdr,
+				  'Content-type' : 'application/json' })
+		except ConnectionRefusedError:
+			print('RPC connection refused. Check RPC settings and the server status.',
+			      file=sys.stderr)
+			return None
 
 		resp = self.conn.getresponse()
 		if resp is None:
 			print("JSON-RPC: no response", file=sys.stderr)
 			return None
 
-		body = resp.read()
+		body = resp.read().decode('utf-8')
 		resp_obj = json.loads(body)
 		return resp_obj
 
@@ -64,12 +79,17 @@ def get_block_hashes(settings, max_blocks_per_call=10000):
 			batch.append(rpc.build_request(x, 'getblockhash', [height + x]))
 
 		reply = rpc.execute(batch)
+		if reply is None:
+			print('Cannot continue. Program will halt.')
+			return None
 
 		for x,resp_obj in enumerate(reply):
 			if rpc.response_is_error(resp_obj):
 				print('JSON-RPC: error at height', height+x, ': ', resp_obj['error'], file=sys.stderr)
 				exit(1)
 			assert(resp_obj['id'] == x) # assume replies are in-sequence
+			if settings['rev_hash_bytes'] == 'true':
+				resp_obj['result'] = hex_switchEndian(resp_obj['result'])
 			print(resp_obj['result'])
 
 		height += num_blocks
@@ -101,6 +121,8 @@ if __name__ == '__main__':
 		settings['min_height'] = 0
 	if 'max_height' not in settings:
 		settings['max_height'] = 313000
+	if 'rev_hash_bytes' not in settings:
+		settings['rev_hash_bytes'] = 'false'
 	if 'rpcuser' not in settings or 'rpcpassword' not in settings:
 		print("Missing username and/or password in cfg file", file=stderr)
 		sys.exit(1)
@@ -109,5 +131,7 @@ if __name__ == '__main__':
 	settings['min_height'] = int(settings['min_height'])
 	settings['max_height'] = int(settings['max_height'])
 
-	get_block_hashes(settings)
+	# Force hash byte format setting to be lowercase to make comparisons easier.
+	settings['rev_hash_bytes'] = settings['rev_hash_bytes'].lower()
 
+	get_block_hashes(settings)
