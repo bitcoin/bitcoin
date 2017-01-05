@@ -116,6 +116,13 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: %s\n", e.what());
             return false;
         }
+        // Read the network specific config file
+        try {
+            ReadConfigFile(GetArg("-netconf", NETWORK_CONF_FILENAME), true);
+        } catch (const std::exception& e) {
+            fprintf(stderr,"Error reading network config file: %s\n", e.what());
+            return false;
+        }
 
         // Command-line RPC
         bool fCommandLine = false;

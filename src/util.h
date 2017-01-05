@@ -53,6 +53,7 @@ extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
 extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const NETWORK_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
 
 /**
@@ -101,12 +102,12 @@ bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
-boost::filesystem::path GetConfigFile(const std::string& confPath);
+boost::filesystem::path GetConfigFile(const std::string& confPath, const bool fNetSpecific = false);
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
-void ReadConfigFile(const std::string& confPath);
+bool ReadConfigFile(const std::string& confPath, const bool fNetSpecific = false);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
