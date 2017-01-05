@@ -3333,7 +3333,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
-    BOOST_FOREACH (const CRecipient& recipient, vecSend)
+    for (const auto& recipient : vecSend)
     {
         if (nValue < 0 || recipient.nAmount < 0)
         {
@@ -3389,6 +3389,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
 
     {
+        set<pair<const CWalletTx*,unsigned int> > setCoins;
+        std::vector<CTxDSIn> vecTxDSInTmp;
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
@@ -3410,7 +3412,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     nValueToSelect += nFeeRet;
                 double dPriority = 0;
                 // vouts to the payees
-                BOOST_FOREACH (const CRecipient& recipient, vecSend)
+                for (const auto& recipient : vecSend)
                 {
                     CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
@@ -3442,9 +3444,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
                 // Choose coins to use
-                set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
-
+                setCoins.clear();
                 if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl, nCoinType, fUseInstantSend))
                 {
                     if (nCoinType == ONLY_NONDENOMINATED) {
@@ -3467,7 +3468,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     return false;
                 }
 
-                BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
+                for (const auto& pcoin : setCoins)
                 {
                     CAmount nCredit = pcoin.first->tx->vout[pcoin.second].nValue;
                     //The coin age after the next block (depth+1) is used instead of the current,
@@ -3581,8 +3582,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 //
                 // Note how the sequence number is set to max()-1 so that the
                 // nLockTime set above actually works.
-                std::vector<CTxDSIn> vecTxDSInTmp;
-                BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins){
+                vecTxDSInTmp.clear();
+                for (const auto& coin : setCoins) {
                     CTxIn txin = CTxIn(coin.first->GetHash(),coin.second,CScript(),
                                               std::numeric_limits<unsigned int>::max()-1);
                     vecTxDSInTmp.push_back(CTxDSIn(txin, coin.first->tx->vout[coin.second].scriptPubKey));
@@ -3607,20 +3608,13 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     }
                 }
 
-                // Sign
+                // Fill in dummy signatures for fee calculation.
                 int nIn = 0;
-                CTransaction txNewConst(txNew);
                 for (const auto& txdsin : vecTxDSInTmp)
                 {
-                    bool signSuccess;
                     const CScript& scriptPubKey = txdsin.prevPubKey;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
-                    if (sign)
-                        signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
-                    else
-                        signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
-
-                    if (!signSuccess)
+                    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes))
                     {
                         strFailReason = _("Signing transaction failed");
                         return false;
@@ -3630,23 +3624,13 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 
                 unsigned int nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
 
-                // Remove scriptSigs if we used dummy signatures for fee calculation
-                if (!sign) {
-                    BOOST_FOREACH (CTxIn& txin, txNew.vin)
-                        txin.scriptSig = CScript();
+                CTransaction txNewConst(txNew);
+                dPriority = txNewConst.ComputePriority(dPriority, nBytes);
+
+                // Remove scriptSigs to eliminate the fee calculation dummy signatures
+                for (auto& txin : txNew.vin) {
+                    txin.scriptSig = CScript();
                 }
-
-                // Embed the constructed transaction data in wtxNew.
-                wtxNew.SetTx(MakeTransactionRef(std::move(txNew)));
-
-                // Limit size
-                if (::GetSerializeSize(wtxNew, SER_NETWORK, PROTOCOL_VERSION) >= MAX_STANDARD_TX_SIZE)
-                {
-                    strFailReason = _("Transaction too large");
-                    return false;
-                }
-
-                dPriority = wtxNew.tx->ComputePriority(dPriority, nBytes);
 
                 // Allow to override the default confirmation target over the CoinControl instance
                 int currentConfirmationTarget = nTxConfirmTarget;
@@ -3693,6 +3677,28 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 continue;
             }
         }
+
+        if (sign)
+        {
+            CTransaction txNewConst(txNew);
+            int nIn = 0;
+            for(const auto& txdsin : vecTxDSInTmp)
+            {
+                const CScript& scriptPubKey = txdsin.prevPubKey;
+                CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
+
+                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes))
+                {
+                    strFailReason = _("Signing transaction failed");
+                    return false;
+                }
+
+                nIn++;
+            }
+        }
+
+        // Embed the constructed transaction data in wtxNew.
+        wtxNew.SetTx(MakeTransactionRef(std::move(txNew)));
     }
 
     if (GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
