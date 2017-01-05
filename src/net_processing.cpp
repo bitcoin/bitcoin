@@ -2894,15 +2894,20 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
 
                     int nSendFlags = state.fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
 
-                    LOCK(cs_most_recent_block);
-                    if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                        if (state.fWantsCmpctWitness)
-                            connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
-                        else {
-                            CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness);
-                            connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
+                    bool fGotBlockFromCache = false;
+                    {
+                        LOCK(cs_most_recent_block);
+                        if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
+                            if (state.fWantsCmpctWitness)
+                                connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
+                            else {
+                                CBlockHeaderAndShortTxIDs cmpctblock(*most_recent_block, state.fWantsCmpctWitness);
+                                connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));
+                            }
+                            fGotBlockFromCache = true;
                         }
-                    } else {
+                    }
+                    if (!fGotBlockFromCache) {
                         CBlock block;
                         bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
                         assert(ret);
