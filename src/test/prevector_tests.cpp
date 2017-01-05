@@ -12,6 +12,7 @@
 #include "test/test_random.h"
 
 #include <boost/test/unit_test.hpp>
+#include <boost/foreach.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(PrevectorTests, TestingSetup)
 
@@ -53,13 +54,13 @@ class prevector_tester {
         local_check(pretype(real_vector.begin(), real_vector.end()) == pre_vector);
         local_check(pretype(pre_vector.begin(), pre_vector.end()) == pre_vector);
         size_t pos = 0;
-        BOOST_FOREACH(const T& v, pre_vector) {
+        for (const T& v : pre_vector) {
              local_check(v == real_vector[pos++]);
         }
         BOOST_REVERSE_FOREACH(const T& v, pre_vector) {
              local_check(v == real_vector[--pos]);
         }
-        BOOST_FOREACH(const T& v, const_pre_vector) {
+        for (const T& v : const_pre_vector) {
              local_check(v == real_vector[pos++]);
         }
         BOOST_REVERSE_FOREACH(const T& v, const_pre_vector) {
