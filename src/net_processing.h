@@ -39,7 +39,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 void Misbehaving(NodeId nodeid, int howmuch);
 
 /** Process protocol messages received from a given node */
-unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interrupt);
+unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interrupt, bool fAvoidLocking);
 /**
  * Send queued protocol messages to be sent to a give node.
  *

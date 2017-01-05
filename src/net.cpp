@@ -1873,7 +1873,7 @@ void CConnman::ThreadMessageHandler()
                 continue;
 
             // Receive messages
-            bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc);
+            bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc, false);
             fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
             if (flagInterruptMsgProc)
                 return;

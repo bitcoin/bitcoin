@@ -2439,7 +2439,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     return true;
 }
 
-unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interruptMsgProc)
+unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interruptMsgProc, bool fAvoidLocking)
 {
     const CChainParams& chainparams = Params();
     //
@@ -2452,8 +2452,11 @@ unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>&
     //
     bool fMoreWork = false;
 
-    if (!pfrom->vRecvGetData.empty())
+    if (!pfrom->vRecvGetData.empty()) {
+        if (fAvoidLocking)
+            return PROCESS_MESSAGES_MORE_WITH_MAIN;
         ProcessGetData(pfrom, chainparams.GetConsensus(), connman, interruptMsgProc);
+    }
 
     // this maintains the order of responses
     if (!pfrom->vRecvGetData.empty()) return PROCESS_MESSAGES_MORE_WITH_MAIN;
@@ -2470,6 +2473,19 @@ unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>&
             LOCK(pfrom->cs_vProcessMsg);
             if (pfrom->vProcessMsg.empty())
                 return 0;
+
+            // Check if we are supposed to avoid cs_main, but are about to try to lock it
+            string strCommand = pfrom->vProcessMsg.begin()->hdr.GetCommand();
+            if (fAvoidLocking &&
+                    strCommand != NetMsgType::GETADDR &&
+                    strCommand != NetMsgType::MEMPOOL &&
+                    strCommand != NetMsgType::PING &&
+                    strCommand != NetMsgType::PONG &&
+                    strCommand != NetMsgType::REJECT &&
+                    strCommand != NetMsgType::FEEFILTER) {
+                return PROCESS_MESSAGES_MORE_WITH_MAIN;
+            }
+
             // Just take one message
             msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
             pfrom->nProcessQueueSize -= msgs.front().vRecv.size() + CMessageHeader::HEADER_SIZE;

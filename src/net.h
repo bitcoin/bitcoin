@@ -471,7 +471,7 @@ enum ProcessMessagesFlag
 };
 struct CNodeSignals
 {
-    boost::signals2::signal<unsigned int (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
+    boost::signals2::signal<unsigned int (CNode*, CConnman&, std::atomic<bool>&, bool), CombinerAll> ProcessMessages;
     boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
     boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
     boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
