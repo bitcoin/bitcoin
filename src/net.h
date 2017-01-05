@@ -464,9 +464,14 @@ struct CombinerAll
 };
 
 // Signals for message handling
+enum ProcessMessagesFlag
+{
+    PROCESS_MESSAGES_MORE_WITH_MAIN,
+    PROCESS_MESSAGES_MORE_AVAILABLE,
+};
 struct CNodeSignals
 {
-    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
+    boost::signals2::signal<unsigned int (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
     boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
     boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
     boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
