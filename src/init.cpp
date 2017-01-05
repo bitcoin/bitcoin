@@ -1439,6 +1439,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 UnloadBlockIndex();
                 delete pcoinsTip;
                 delete pcoinsdbview;
+                delete pcoinsByScriptDB;
                 delete pcoinscatcher;
                 delete pblocktree;
 
