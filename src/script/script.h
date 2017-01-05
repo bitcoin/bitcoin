@@ -619,6 +619,29 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    /**
+     * Count the maximum number of sighashing-equivalent operations in a non-witness script.
+     * It assumes that
+     *      a. OP_CODESEPARATOR and FindAndDelete are disabled by SCRIPT_VERIFY_CONST_SCRIPTCODE.
+     *      b. SignatureHash is performed once only for each SIGHASH type.
+     *      c. Only 6 sighash types are allowed: 1, 2, 3, 0x81, 0x82, 0x83
+     * Different SIGHASH type has different level of hashing.
+     * Type 1 (ALL) hashes all vin and vout
+     * Type 2 (NONE) hashes all vin. No vout is hashed at all
+     * Type 3 (SINGLE) hashes all vin. Only 1 vout is hashed, but it also hashes lower index vouts with empty
+     *   scriptPubKey. On average, it hashes 50% of all vout in the worst case.
+     * Type 0x80 (ANYONECANPAY) hashes only 1 vin, which is O(n) and negligible, therefore,
+     * Type 0x81 hashes all vout;
+     * Type 0x82 is negligible;
+     * Type 0x83 hashes 50% of all vout on average (worst case estimation).
+     * The worst case would be using 6 different SIGHASH types in the same script. Total estimated hashing is:
+     *   (vin + vout) + vin + (vin + 0.5vout) + vout + 0.5vout = 3vin + 3vout
+     * Therefore, in the lifetime of an EvalScript, a transaction must not be hashed more than 3 times, plus
+     * negligible O(n) overhead including nVersion, nLockTime, scriptCode, etc.
+     */
+    unsigned int GetSigHashOpCount() const;
+    unsigned int GetSigHashOpCount(const CScript& scriptSig) const;
+
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;

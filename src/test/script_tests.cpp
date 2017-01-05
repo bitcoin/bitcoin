@@ -19,6 +19,7 @@
 #include "script/bitcoinconsensus.h"
 #endif
 
+#include <algorithm>
 #include <fstream>
 #include <stdint.h>
 #include <string>
@@ -100,6 +101,8 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_WITNESS_MALLEATED_P2SH, "WITNESS_MALLEATED_P2SH"},
     {SCRIPT_ERR_WITNESS_UNEXPECTED, "WITNESS_UNEXPECTED"},
     {SCRIPT_ERR_WITNESS_PUBKEYTYPE, "WITNESS_PUBKEYTYPE"},
+    {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
+    {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
 
 const char *FormatScriptError(ScriptError_t err)
@@ -1335,7 +1338,6 @@ ScriptFromHex(const char* hex)
     return CScript(data.begin(), data.end());
 }
 
-
 BOOST_AUTO_TEST_CASE(script_FindAndDelete)
 {
     // Exercise the FindAndDelete functionality
@@ -1443,6 +1445,113 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     expect = ScriptFromHex("03feed");
     BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
     BOOST_CHECK(s == expect);
+}
+
+BOOST_AUTO_TEST_CASE(script_SigHashOp)
+{
+    CScript s;
+    CKey key;
+    key.MakeNewKey(true);
+    std::vector<unsigned char> pubkey = ToByteVector(key.GetPubKey());
+
+    // Empty script
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 0);
+
+    // Maximum count is 3
+    for (int i = 1; i < 10; i++) {
+        s << OP_CHECKSIG;
+        BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(3,i));
+    }
+    s = CScript();
+    for (int i = 1; i < 10; i++) {
+        s << OP_CHECKMULTISIG;
+        BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(3,3*i));
+    }
+    s = CScript();
+    for (int i = 1; i < 10; i++) {
+        s << OP_1 << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG;
+        BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(3,i));
+    }
+    s = CScript();
+    for (int i = 1; i < 10; i++) {
+        s << OP_2 << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG;
+        BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(3,2*i));
+    }
+    s = CScript();
+    for (int i = 1; i < 10; i++) {
+        s << pubkey << OP_1 << OP_CHECKMULTISIG;
+        BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(3,i));
+    }
+    s = CScript();
+    for (int i = 1; i < 10; i++) {
+        s << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG;
+        BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(3,2*i));
+    }
+
+    // Mixing CHECKSIG and CHECKMULTISIG
+    s = CScript() << OP_CHECKSIGVERIFY << OP_1 << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+    s = CScript() << OP_1 << pubkey << pubkey << OP_2 << OP_CHECKMULTISIGVERIFY << OP_CHECKSIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+
+    // OP_RESERVED is considered as a push code. It doesn't matter since the script must fail before CHECKMULTISIG is run.
+    s = CScript() << OP_1 << OP_RESERVED << OP_0 << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 1);
+
+    // Using OP_RESERVED as number of signature is non-canonical
+    s = CScript() << OP_RESERVED << OP_RESERVED << OP_0 << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+
+    // Using non-push code before number of signature or after OP_CHECKMULTISIG is ok
+    s = CScript() << OP_NOP << OP_1 << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 1);
+    s = CScript() << OP_1 << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG << OP_NOP;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 1);
+    // But not ok if it's used in between
+    s = CScript() << OP_1 << OP_NOP << pubkey << pubkey << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+    s = CScript() << OP_1 << pubkey << OP_NOP << pubkey << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+    s = CScript() << OP_1 << pubkey << pubkey << OP_NOP << OP_2 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+    s = CScript() << OP_1 << pubkey << pubkey << OP_2 << OP_NOP << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 3);
+
+    // Test 17 * 18 combinations of nKey and nSig in OP_CHECKMULTISIG
+    static const opcodetype pushOps[] = {OP_0, OP_1, OP_2, OP_3, OP_4, OP_5, OP_6, OP_7, OP_8, OP_9, OP_10, OP_11, OP_12, OP_13, OP_14, OP_15, OP_16};
+    for (int nKey = 0; nKey <= 16; nKey++) {
+        for (int nSig = -1; nSig <= 16; nSig++) {
+            s = CScript();
+            if (nSig >= 0)
+                s << pushOps[nSig];
+            for (int i = 0; i < nKey; i++)
+                s << pubkey;
+            s << pushOps[nKey] << OP_CHECKMULTISIG;
+            if (nKey == 0)
+                BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 3); // This is non-canonical
+            else if (nSig <= 0)
+                BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(nKey, 3)); // nSig is missing or non-canonical
+            else
+                BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), std::min(std::min(nKey, nSig), 3));
+        }
+    }
+
+    // Non-canonical push for nKey or nSig
+    s = ScriptFromHex("5151510102ae");
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 3);
+    s = ScriptFromHex("0101515152ae");
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+
+    // Non-canonical push for pubkey is ok
+    // OP_2 0x0101 OP_PUSHDATA1(01) OP_PUSHDATA2(01) OP_PUSHDATA4(01) OP_1 OP_RESERVED OP_6 OP_CHECKMULTISIG
+    s = ScriptFromHex("5201014c01014d0100014e0100000001515056ae");
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
+
+    // Truncated scripts are invalid and the last known SigHashOp is returned
+    s = ScriptFromHex("ac05acadaeaf");
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 1);
+    s = ScriptFromHex("5200000053ae05acadaeaf");
+    BOOST_CHECK_EQUAL(s.GetSigHashOpCount(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
