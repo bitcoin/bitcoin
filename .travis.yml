@@ -12,7 +12,6 @@ cache:
   - depends/built
   - depends/sdk-sources
   - $HOME/.ccache
-
 env:
   global:
     - MAKEJOBS=-j3
@@ -73,4 +72,3 @@ script:
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
-

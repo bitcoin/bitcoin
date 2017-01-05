@@ -94,18 +94,19 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(cmd.password, None)
         rv.append(cmd)
 
-        # Test: outgoing IPv6 connection through node
-        node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
-        cmd = proxies[1].queue.get()
-        assert(isinstance(cmd, Socks5Command))
-        # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
-        assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "1233:3432:2434:2343:3234:2345:6546:4534")
-        assert_equal(cmd.port, 5443)
-        if not auth:
-            assert_equal(cmd.username, None)
-            assert_equal(cmd.password, None)
-        rv.append(cmd)
+        if self.have_ipv6:
+            # Test: outgoing IPv6 connection through node
+            node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
+            cmd = proxies[1].queue.get()
+            assert(isinstance(cmd, Socks5Command))
+            # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+            assert_equal(cmd.atyp, AddressType.DOMAINNAME)
+            assert_equal(cmd.addr, b"1233:3432:2434:2343:3234:2345:6546:4534")
+            assert_equal(cmd.port, 5443)
+            if not auth:
+                assert_equal(cmd.username, None)
+                assert_equal(cmd.password, None)
+            rv.append(cmd)
 
         if test_onion:
             # Test: outgoing onion connection through node
