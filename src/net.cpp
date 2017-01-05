@@ -1861,7 +1861,15 @@ void CConnman::ThreadMessageHandler()
             }
         }
 
-        bool fMoreWork = false;
+        bool fMoreWorkWithoutMain = false;
+        bool fMoreWorkWithMain = false;
+
+        // We randomly assign a thread as the "main thread",
+        // all others pass fAvoidLocks into ProcessMessages,
+        // suggesting that cs_main not be taken to avoid blocking
+        // background threads on the main thread.
+        static std::atomic_bool main_thread_running(false);
+        bool fAvoidLocks = main_thread_running.exchange(true);
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
@@ -1873,8 +1881,9 @@ void CConnman::ThreadMessageHandler()
                 continue;
 
             // Receive messages
-            bool fMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc, false);
-            fMoreWork |= (fMoreNodeWork && !pnode->fPauseSend);
+            unsigned int nMoreNodeWork = GetNodeSignals().ProcessMessages(pnode, *this, flagInterruptMsgProc, fAvoidLocks);
+            fMoreWorkWithMain    |= ((nMoreNodeWork & PROCESS_MESSAGES_MORE_WITH_MAIN) && !pnode->fPauseSend);
+            fMoreWorkWithoutMain |= ((nMoreNodeWork & PROCESS_MESSAGES_MORE_AVAILABLE) && !pnode->fPauseSend);
             if (flagInterruptMsgProc)
                 return;
 
@@ -1886,6 +1895,28 @@ void CConnman::ThreadMessageHandler()
             }
             if (flagInterruptMsgProc)
                 return;
+        }
+
+        bool fMoreWork = false; // ie if this thread should avoid sleeping
+        {
+            static CCriticalSection cs_work_to_do;
+            LOCK(cs_work_to_do);
+
+            static bool main_work_to_do = false;
+            if (fAvoidLocks) {
+                // We're in a background thread...
+                // see if we need to notify the main thread
+                // or if we can just run again and be it
+                if (fMoreWorkWithMain)
+                    main_work_to_do = true;
+                if (!main_thread_running || fMoreWorkWithoutMain)
+                    fMoreWork = true;
+            } else {
+                if (main_work_to_do || fMoreWorkWithMain || fMoreWorkWithoutMain)
+                    fMoreWork = true;
+                main_thread_running = false;
+                main_work_to_do = false;
+            }
         }
 
         {
