@@ -284,16 +284,13 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 void CBlockPolicyEstimator::removeTx(uint256 hash)
 {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
-    if (pos == mapMemPoolTxs.end()) {
-        LogPrint("estimatefee", "Blockpolicy error mempool tx %s not found for removeTx\n",
-                 hash.ToString().c_str());
-        return;
-    }
-    unsigned int entryHeight = pos->second.blockHeight;
-    unsigned int bucketIndex = pos->second.bucketIndex;
+    if (pos != mapMemPoolTxs.end()) {
+        unsigned int entryHeight = pos->second.blockHeight;
+        unsigned int bucketIndex = pos->second.bucketIndex;
 
-    feeStats.removeTx(entryHeight, nBestSeenHeight, bucketIndex);
-    mapMemPoolTxs.erase(hash);
+        feeStats.removeTx(entryHeight, nBestSeenHeight, bucketIndex);
+        mapMemPoolTxs.erase(hash);
+    }
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
