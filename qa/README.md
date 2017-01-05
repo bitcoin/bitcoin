@@ -5,6 +5,17 @@ Every pull request to the bitcoin repository is built and run through
 the regression test suite. You can also run all or only individual
 tests locally.
 
+Test dependencies
+=================
+Before running the tests, the following must be installed.
+
+Unix
+----
+The python3-zmq library is required. On Ubuntu or Debian it can be installed via:
+```
+sudo apt-get install python3-zmq
+```
+
 Running tests
 =============
 

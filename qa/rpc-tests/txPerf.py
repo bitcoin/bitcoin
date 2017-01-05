@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -58,8 +58,8 @@ class TransactionPerformanceTest(BitcoinTestFramework):
     def signingPerformance(self,node, inputs,outputs,skip=100):
         fil = open("signPerf.csv","w")
         logging.info("tx len, # inputs, # outputs, time")
-        print >>fil, "fieldNames = ['tx len', '# inputs', '# outputs', 'time']"
-        print >>fil, "data = ["
+        print ("fieldNames = ['tx len', '# inputs', '# outputs', 'time']", file=fil)
+        print ("data = [", file=fil)
         for i in range(0,len(inputs),skip):
           for j in range(0,len(outputs),skip):
             try:
@@ -68,7 +68,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               (txn,inp,outp,txid) = split_transaction(node, inputs[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=False)
             except Exception,e:
               logging.info("%d, %d, %d, split error" % (txLen,len(inp),len(outp)))
-              print >>fil, "[",txLen,",",len(inp),",",len(outp),",",'"split error:"', str(e),'"],'
+              print("[",txLen,",",len(inp),",",len(outp),",",'"split error:"', str(e),'"],', file=fil)
               continue
             try:
               s = str(txn)
@@ -78,23 +78,23 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               end=time.time()
 	      txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
               logging.info("%d, %d, %d, %f" % (txLen,len(inp),len(outp),end-start))
-              print >>fil, "[",txLen,",",len(inp),",",len(outp),",",end-start,"],"
+              print("[",txLen,",",len(inp),",",len(outp),",",end-start,"],",file=fil)
 	    except:
               logging.info("%d, %d, %d, %s" % (txLen,len(inp),len(outp),'"timeout"'))
               print txLen,",",len(inp),",",len(outp),",","timeout"
-              print >>fil, "[",txLen,",",len(inp),",",len(outp),",",'"timeout"],'
+              print("[",txLen,",",len(inp),",",len(outp),",",'"timeout"],',file=fil)
             fil.flush()
-        print >>fil,"]"
+        print("]",file=fil)
         fil.close()
 
     def validatePerformance(self,node, inputCount,outputs,skip=100):
         fil = open("validatePerf.csv","w")
-        print "tx len, # inputs, # outputs, time"
-        print >>fil, "fieldNames = ['tx len', '# inputs', '# outputs', 'time']"
-        print >>fil, "data = ["
+        print("tx len, # inputs, # outputs, time")
+        print ("fieldNames = ['tx len', '# inputs', '# outputs', 'time']",file=fil)
+        print ("data = [",file=fil)
         for i in range(0,inputCount,skip):
           for j in range(0,len(outputs),skip):
-            print "ITER: ", i, " x ", j
+            print("ITER: ", i, " x ", j)
             wallet = node.listunspent()
             wallet.sort(key=lambda x: x["amount"],reverse=True)
             while len(wallet) < i:  # Make a bunch more inputs
@@ -109,7 +109,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               (txn,inp,outp,txid) = split_transaction(node, wallet[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=True)
             except Exception,e:
               logging.info("split error: %s" % str(e))
-              print >>fil, "[ 'sign',",0,",",i,",",j,",","'split error:", str(e),"'],"
+              print("[ 'sign',",0,",",i,",",j,",","'split error:", str(e),"'],",file=fil)
               pdb.set_trace()
               continue
 
@@ -119,31 +119,31 @@ class TransactionPerformanceTest(BitcoinTestFramework):
             elapsedTime = time.time() - startTime
             logging.info("generate time: %f" % elapsedTime)
             txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
-	    print >>fil, "[ 'gen',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],"
+	    print("[ 'gen',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],",file=fil)
 
             startTime = time.time()
             self.sync_all()
             elapsedTime = time.time() - startTime
             logging.info("Sync time: %f" % elapsedTime)
-	    print >>fil, "[ 'sync',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],"
+	    print("[ 'sync',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],",file=fil)
             
-        print >>fil,"]"
+        print("]",file=fil)
         fil.close()
 
 
     def largeOutput(self):
         """This times the validation of 1 to many and many to 1 transactions.  Its not needed to be run as a daily unit test"""
-        print "synchronizing"
+        print("synchronizing")
         self.sync_all()    
         node = self.nodes[0]        
         start = time.time()
-        print "generating addresses"
+        print("generating addresses")
         if 1:
           addrs = [ node.getnewaddress() for _ in range(20000)]
           f = open("addrs.txt","w")
           f.write(str(addrs))
           f.close()
-          print "['Benchmark', 'generate 20000 addresses', %f]" % (time.time()-start)
+          print("['Benchmark', 'generate 20000 addresses', %f]" % (time.time()-start))
         else:
           import addrlist
           addrs = addrlist.addrlist
@@ -153,7 +153,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
 
         (txn,inp,outp,txid) = split_transaction(node, wallet[0], addrs[0:10000], txfee=DEFAULT_TX_FEE_PER_BYTE, sendtx=True)
         txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
-        print "[ 'gen',",txLen,",",len(inp),",",len(outp), "],"
+        print("[ 'gen',",txLen,",",len(inp),",",len(outp), "],")
 
         startTime = time.time()          
 	node.generate(1)
@@ -163,7 +163,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         print "synchronizing"
         self.sync_all()
         elapsedTime = time.time() - startTime
-        print "Sync     time: ", elapsedTime
+        print("Sync     time: ", elapsedTime)
         
         # Now join with a tx with a huge number of inputs
        	wallet = self.nodes[0].listunspent()
@@ -171,12 +171,12 @@ class TransactionPerformanceTest(BitcoinTestFramework):
 
         (txn,inp,outp,txid) = split_transaction(node, wallet[0:10000], [addrs[0]], txfee=DEFAULT_TX_FEE_PER_BYTE, sendtx=True)
         txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
-        print "[ 'gen',",txLen,",",len(inp),",",len(outp), "],"
+        print("[ 'gen',",txLen,",",len(inp),",",len(outp), "],")
       
             
 
     def run_test(self):
-        TEST_SIZE=2000  # To collect a lot of data points, set the TEST_SIZE to 2000
+        TEST_SIZE=200  # To collect a lot of data points, set the TEST_SIZE to 2000
 
         #prepare some coins for multiple *rawtransaction commands
         self.nodes[2].generate(1)
@@ -189,10 +189,10 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         # This times the validation of 1 to many and many to 1 transactions.  Its not needed to be run as a unit test
         # self.largeOutput()
     
-        print "Generating new addresses... will take awhile"
+        print("Generating new addresses... will take awhile")
         start = time.time()
         addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
-        print "['Benchmark', 'generate 2001 addresses', %f]" % (time.time()-start)
+        print("['Benchmark', 'generate 2001 addresses', %f]" % (time.time()-start))
 
 	wallet = self.nodes[0].listunspent()
         wallet.sort(key=lambda x: x["amount"],reverse=True)

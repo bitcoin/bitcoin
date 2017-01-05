@@ -1,8 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2015 The Bitcoin Core developers
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 import socket
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
@@ -56,7 +57,7 @@ class ProxyTest(BitcoinTestFramework):
             self.conf3.unauth = True
             self.conf3.auth = True
         else:
-            print "Warning: testing without local IPv6 support"
+            print("Warning: testing without local IPv6 support")
 
         self.serv1 = Socks5Server(self.conf1)
         self.serv1.start()
@@ -87,25 +88,26 @@ class ProxyTest(BitcoinTestFramework):
         assert(isinstance(cmd, Socks5Command))
         # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "15.61.23.23")
+        assert_equal(cmd.addr, b"15.61.23.23")
         assert_equal(cmd.port, 1234)
         if not auth:
             assert_equal(cmd.username, None)
             assert_equal(cmd.password, None)
         rv.append(cmd)
 
-        # Test: outgoing IPv6 connection through node
-        node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
-        cmd = proxies[1].queue.get()
-        assert(isinstance(cmd, Socks5Command))
-        # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
-        assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "1233:3432:2434:2343:3234:2345:6546:4534")
-        assert_equal(cmd.port, 5443)
-        if not auth:
-            assert_equal(cmd.username, None)
-            assert_equal(cmd.password, None)
-        rv.append(cmd)
+        if self.have_ipv6:
+            # Test: outgoing IPv6 connection through node
+            node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
+            cmd = proxies[1].queue.get()
+            assert(isinstance(cmd, Socks5Command))
+            # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+            assert_equal(cmd.atyp, AddressType.DOMAINNAME)
+            assert_equal(cmd.addr, b"1233:3432:2434:2343:3234:2345:6546:4534")
+            assert_equal(cmd.port, 5443)
+            if not auth:
+                assert_equal(cmd.username, None)
+                assert_equal(cmd.password, None)
+            rv.append(cmd)
 
         if test_onion:
             # Test: outgoing onion connection through node
@@ -113,7 +115,7 @@ class ProxyTest(BitcoinTestFramework):
             cmd = proxies[2].queue.get()
             assert(isinstance(cmd, Socks5Command))
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, "bitcoinostk4e4re.onion")
+            assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
             assert_equal(cmd.port, 8333)
             if not auth:
                 assert_equal(cmd.username, None)
@@ -125,7 +127,7 @@ class ProxyTest(BitcoinTestFramework):
         cmd = proxies[3].queue.get()
         assert(isinstance(cmd, Socks5Command))
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "node.noumenon")
+        assert_equal(cmd.addr, b"node.noumenon")
         assert_equal(cmd.port, 8333)
         if not auth:
             assert_equal(cmd.username, None)

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 """
 This module contains utilities for doing coverage analysis on the RPC
 interface.
@@ -7,7 +12,7 @@ testing.
 
 """
 import os
-
+import pdb
 
 REFERENCE_FILENAME = 'rpc_interface.txt'
 
@@ -41,7 +46,14 @@ class AuthServiceProxyWrapper(object):
         called to a file.
 
         """
-        return_val = self.auth_service_proxy_instance.__call__(*args, **kwargs)
+        while 1:
+            try:
+                return_val = self.auth_service_proxy_instance.__call__(*args, **kwargs)
+                break
+            except BrokenPipeError as e: # BU handle connection drops
+                print("Connection broken: ", str(e))
+                self.auth_service_proxy_instance.reconnect()
+            
         rpc_method = self.auth_service_proxy_instance._service_name
 
         if self.coverage_logfile:

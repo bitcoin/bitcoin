@@ -80,6 +80,7 @@ void CScheduler::serviceQueue()
         }
     }
     --nThreadsServicingQueue;
+    newTaskScheduled.notify_one();
 }
 
 void CScheduler::stop(bool drain)

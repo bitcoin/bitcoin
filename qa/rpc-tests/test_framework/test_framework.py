@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
@@ -28,7 +28,7 @@ from .util import (
     check_json_precision,
     initialize_chain_clean,
 )
-from authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import AuthServiceProxy, JSONRPCException
 
 
 class BitcoinTestFramework(object):
@@ -53,7 +53,7 @@ class BitcoinTestFramework(object):
         wallets: Pass a list of wallet filenames.  Each wallet file will be copied into the node's directory
         before starting the node.
         """
-        print("Initializing test directory "+self.options.tmpdir)
+        print("Initializing test directory ", self.options.tmpdir, "Bitcoin conf: ", str(bitcoinConfDict), "walletfiles: ", wallets)
         initialize_chain(self.options.tmpdir,bitcoinConfDict, wallets)
 
     def setup_nodes(self):
@@ -153,7 +153,7 @@ class BitcoinTestFramework(object):
         else:
             self.randomseed = int(time.time())
         random.seed(self.randomseed)
-        print "Random seed: %s" % self.randomseed
+        print("Random seed: %s" % self.randomseed)
 
         if self.options.trace_rpc:
             import logging
@@ -174,7 +174,7 @@ class BitcoinTestFramework(object):
             # Not pretty but, I changed the function signature
             # of setup_chain to allow customization of the setup.
             # However derived object may still use the old format
-	    if self.setup_chain.__defaults__ is None:
+            if self.setup_chain.__defaults__ is None:
               self.setup_chain()
             else:
               self.setup_chain(bitcoinConfDict, wallets)
@@ -189,10 +189,10 @@ class BitcoinTestFramework(object):
             print("JSONRPC error: "+e.error['message'])
             traceback.print_tb(sys.exc_info()[2])
         except AssertionError as e:
-            print("Assertion failed: "+e.message)
+            print("Assertion failed: " + str(e))
             traceback.print_tb(sys.exc_info()[2])
         except Exception as e:
-            print("Unexpected exception caught during testing: "+str(e))
+            print("Unexpected exception caught during testing: " + repr(e))
             traceback.print_tb(sys.exc_info()[2])
 
         if not self.options.noshutdown:
@@ -234,8 +234,8 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
-    def setup_chain(self,bitcoinConfDict=None, wallets=None):
-        print "Initializing test directory "+self.options.tmpdir
+    def setup_chain(self,bitcoinConfDict=None, wallets=None):  # BU add config params
+        print("Initializing test directory ", self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, self.num_nodes,bitcoinConfDict, wallets)
 
     def setup_network(self):

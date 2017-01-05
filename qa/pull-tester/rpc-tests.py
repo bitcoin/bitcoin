@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2015 The Bitcoin Core developers
 # Copyright (c) 2015-2016 The Bitcoin Unlimited developers
 # Distributed under the MIT software license, see the accompanying
@@ -27,7 +27,7 @@ For a description of arguments recognized by test scripts, see
 `qa/pull-tester/test_framework/test_framework.py:BitcoinTestFramework.main`.
 
 """
-
+import pdb
 import os
 import time
 import shutil
@@ -49,13 +49,13 @@ if os.name == 'posix':
 RPC_TESTS_DIR = SRCDIR + '/qa/rpc-tests/'
 
 #If imported values are not defined then set to zero (or disabled)
-if not vars().has_key('ENABLE_WALLET'):
+if 'ENABLE_WALLET' not in vars():
     ENABLE_WALLET=0
-if not vars().has_key('ENABLE_BITCOIND'):
+if 'ENABLE_BITCOIND' not in vars():
     ENABLE_BITCOIND=0
-if not vars().has_key('ENABLE_UTILS'):
+if 'ENABLE_UTILS' not in vars():
     ENABLE_UTILS=0
-if not vars().has_key('ENABLE_ZMQ'):
+if 'ENABLE_ZMQ' not in vars():
     ENABLE_ZMQ=0
 
 ENABLE_COVERAGE=0
@@ -124,13 +124,13 @@ bad_opt_str="Unrecognized option: %s"
 for o in opts | double_opts:
     if o.startswith('--'):
         if o not in test_script_opts + private_double_opts:
-            print bad_opt_str % o
+            print(bad_opt_str % o)
             bad_opts_found.append(o)
     elif o.startswith('-'):
         if o not in private_single_opts:
-            print bad_opt_str % o
+            print(bad_opt_str % o)
             bad_opts_found.append(o)
-            print "Run with -h to get help on usage."
+            print("Run with -h to get help on usage.")
             sys.exit(1)
 
 #Set env vars
@@ -141,8 +141,21 @@ if "BITCOINCLI" not in os.environ:
 
 #Disable Windows tests by default
 if EXEEXT == ".exe" and not option_passed('win'):
-    print "Win tests currently disabled.  Use -win option to enable"
+    print("Win tests currently disabled.  Use -win option to enable")
     sys.exit(0)
+
+if not (ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
+    print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
+    sys.exit(0)
+
+# python3-zmq may not be installed. Handle this gracefully and with some helpful info
+if ENABLE_ZMQ:
+    try:
+        import zmq
+    except ImportError as e:
+        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
+            "to run zmq tests, see dependency info in /qa/README.md.")
+        raise e
 
 #Tests
 testScripts = [ RpcTest(t) for t in [
@@ -216,15 +229,15 @@ if ENABLE_ZMQ == 1:
 
 def show_wrapper_options():
     """ print command line options specific to wrapper """
-    print "Wrapper options:"
-    print
-    print "  -extended/--extended  run the extended set of tests"
-    print "  -only-extended / -extended-only\n" + \
+    print( "Wrapper options:")
+    print()
+    print( "  -extended/--extended  run the extended set of tests")
+    print( "  -only-extended / -extended-only\n" + \
           "  --only-extended / --extended-only\n" + \
-          "                        run ONLY the extended tests"
-    print "  -list / --list        only list test names"
-    print "  -win / --win          signal running on Windows and run those tests"
-    print "  -h / -help / --help   print this help"
+          "                        run ONLY the extended tests")
+    print( "  -list / --list        only list test names")
+    print( "  -win / --win          signal running on Windows and run those tests")
+    print( "  -h / -help / --help   print this help")
 
 def runtests():
     global passOn
@@ -240,13 +253,13 @@ def runtests():
     if option_passed('list'):
         if run_only_extended:
             for t in testScriptsExt:
-                print t
+                print(t)
         else:
             for t in testScripts:
-                print t
+                print(t)
             if option_passed('extended'):
                 for t in testScriptsExt:
-                    print t
+                    print(t)
         sys.exit(0)
 
     if ENABLE_COVERAGE:
@@ -299,14 +312,14 @@ def runtests():
                         test_passed[fullscriptcmd] = True
                     except subprocess.CalledProcessError as e:
                         test_failure_info[fullscriptcmd] = e
-                        #print "CalledProcessError for test %s: %s" % (scriptname, e)
+                        print("CalledProcessError for test %s: %s" % (scriptname, e))
 
                     # exit if help was called
                     if p.match(passOn):
                         sys.exit(0)
                     else:
                         execution_time[fullscriptcmd] = int(time.time() - time0)
-                        print "Duration: %s s\n" % execution_time[fullscriptcmd]
+                        print("Duration: %s s\n" % execution_time[fullscriptcmd])
 
         # Run Extended Tests
         for i in range(len(testScriptsExt)):
@@ -336,9 +349,9 @@ def runtests():
                         test_failure_info[fullscriptcmd] = e
                         #print "CalledProcessError for test %s: %s" % (scriptname, e)
                     execution_time[fullscriptcmd] = int(time.time() - time0)
-                    print "Duration: %s s\n" % execution_time[fullscriptcmd]
+                    print("Duration: %s s\n" % execution_time[fullscriptcmd])
                 else:
-                    print "Skipping extended test name %s - already executed in regular\n" % scriptname
+                    print("Skipping extended test name %s - already executed in regular\n" % scriptname)
 
         if coverage:
             coverage.report_rpc_coverage()
@@ -347,30 +360,30 @@ def runtests():
             coverage.cleanup()
 
         # show some overall results and aggregates
-        print
-        print "%-50s  Status    Time (s)" % "Test"
-        print '-' * 70
+        print()
+        print("%-50s  Status    Time (s)" % "Test")
+        print('-' * 70)
         for k in sorted(execution_time.keys()):
-            print "%-50s  %-6s    %7s" % (k, "PASS" if test_passed[k] else "FAILED", execution_time[k])
+            print("%-50s  %-6s    %7s" % (k, "PASS" if test_passed[k] else "FAILED", execution_time[k]))
         for d in disabled:
-            print "%-50s  %-8s" % (d, "DISABLED")
+            print("%-50s  %-8s" % (d, "DISABLED"))
         for s in skipped:
-            print "%-50s  %-8s" % (s, "SKIPPED")
-        print '-' * 70
-        print "%-44s  Total time (s): %7s" % (" ", sum(execution_time.values()))
+            print("%-50s  %-8s" % (s, "SKIPPED"))
+        print('-' * 70)
+        print("%-44s  Total time (s): %7s" % (" ", sum(execution_time.values())))
 
-        print
-        print "%d test(s) passed / %d test(s) failed / %d test(s) executed" % (test_passed.values().count(True),
-                                                                   test_passed.values().count(False),
-                                                                   len(test_passed))
-        print "%d test(s) disabled / %d test(s) skipped due to platform" % (len(disabled), len(skipped))
+        print()
+        print("%d test(s) passed / %d test(s) failed / %d test(s) executed" % (list(test_passed.values()).count(True),
+                                                                   list(test_passed.values()).count(False),
+                                                                   len(test_passed)))
+        print("%d test(s) disabled / %d test(s) skipped due to platform" % (len(disabled), len(skipped)))
 
         # signal that tests have failed using exit code
-        if test_passed.values().count(False):
+        if list(test_passed.values()).count(False):
             sys.exit(1)
 
     else:
-        print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+        print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
 
 
 class RPCCoverage(object):
