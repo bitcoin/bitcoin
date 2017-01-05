@@ -2044,6 +2044,7 @@ void static UpdateAddressIndex(const CBlock& block, CBlockUndo& blockundo, bool 
     if (!fTxOutIndex)
         return;
 
+    assert(&block != nullptr);
     assert(block.vtx.size() > 0);
     unsigned int i = 0;
     if (!fConnect)
@@ -2256,7 +2257,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         LogPrint("bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
         bool flushed = view.Flush();
         assert(flushed);
-        UpdateAddressIndex(*pblock, blockundo, true);
+        UpdateAddressIndex(blockConnecting, blockundo, true);
     }
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
