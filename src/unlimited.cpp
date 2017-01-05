@@ -1398,3 +1398,35 @@ UniValue getstat(const UniValue& params, bool fHelp)
 
     return ret;
 }
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+  //  --------------------- ------------------------  -----------------------  ----------
+    /* P2P networking */
+    { "network",            "settrafficshaping",      &settrafficshaping,      true  },
+    { "network",            "gettrafficshaping",      &gettrafficshaping,      true  },
+    { "network",            "pushtx",                 &pushtx,                 true  },
+    { "network",            "getexcessiveblock",      &getexcessiveblock,      true  },
+    { "network",            "setexcessiveblock",      &setexcessiveblock,      true  },
+    { "network",            "expedited",              &expedited,              true  },
+
+    /* Mining */
+    { "mining",             "getminingmaxblock",      &getminingmaxblock,      true  },
+    { "mining",             "setminingmaxblock",      &setminingmaxblock,      true  },
+    { "mining",             "getminercomment",        &getminercomment,        true  },
+    { "mining",             "setminercomment",        &setminercomment,        true  },
+    { "mining",             "getblockversion",        &getblockversion,        true  },
+    { "mining",             "setblockversion",        &setblockversion,        true  },
+
+    /* Utility functions */
+    { "util",               "getstatlist",            &getstatlist,            true  },
+    { "util",               "getstat",                &getstat,                true  },
+    { "util",               "get",                    &gettweak,               true  },
+    { "util",               "set",                    &settweak,               true  },
+};
+
+void RegisterUnlimitedRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}

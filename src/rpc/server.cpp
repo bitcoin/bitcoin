@@ -264,28 +264,6 @@ static const CRPCCommand vRPCCommands[] =
     /* Overall control/query calls */
     { "control",            "help",                   &help,                   true  },
     { "control",            "stop",                   &stop,                   true  },
-
-    /* P2P networking */
-    { "network",            "settrafficshaping",      &settrafficshaping,      true  },  // BU
-    { "network",            "gettrafficshaping",      &gettrafficshaping,      true  },  // BU
-    { "network",            "pushtx",                 &pushtx,                 true  },  // BU
-    { "network",            "getexcessiveblock",      &getexcessiveblock,      true  },  // BU
-    { "network",            "setexcessiveblock",      &setexcessiveblock,      true  },  // BU
-    { "network",            "expedited",              &expedited,              true  },  // BU
-
-    /* Mining */
-    { "mining",             "getminingmaxblock",      &getminingmaxblock,      true  },  // BU
-    { "mining",             "setminingmaxblock",      &setminingmaxblock,      true  },  // BU
-    { "mining",             "getminercomment",        &getminercomment,        true  },  // BU
-    { "mining",             "setminercomment",        &setminercomment,        true  },  // BU
-    { "mining",             "getblockversion",        &getblockversion,        true  },  // BU
-    { "mining",             "setblockversion",        &setblockversion,        true  },  // BU
-
-    /* Utility functions */
-    { "util",               "getstatlist",            &getstatlist,            true  },  // BU
-    { "util",               "getstat",                &getstat,                true  },  // BU
-    { "util",               "get",                    &gettweak,               true  },  // BU
-    { "util",               "set",                    &settweak,               true  },  // BU
 };
 
 CRPCTable::CRPCTable()
