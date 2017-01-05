@@ -444,6 +444,8 @@ void BitcoinApplication::requestShutdown()
     delete clientModel;
     clientModel = 0;
 
+    StartShutdown();
+
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();
 }
