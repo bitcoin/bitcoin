@@ -8,6 +8,8 @@
 #include <QDateTime>
 #include <QWidget>
 
+#include <atomic>
+
 //! The required delta of headers to the estimated number of available headers until we show the IBD progress
 static constexpr int HEADER_HEIGHT_DELTA_SYNC = 24;
 
@@ -45,6 +47,7 @@ private:
     QVector<QPair<qint64, double> > blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
+    std::atomic<bool> animationRunning;
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

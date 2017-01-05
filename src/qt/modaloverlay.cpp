@@ -18,7 +18,8 @@ ui(new Ui::ModalOverlay),
 bestHeaderHeight(0),
 bestHeaderDate(QDateTime()),
 layerIsVisible(false),
-userClosed(false)
+userClosed(false),
+animationRunning(false)
 {
     ui->setupUi(this);
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
@@ -155,13 +156,21 @@ void ModalOverlay::showHide(bool hide, bool userRequested)
         setVisible(true);
 
     setGeometry(0, hide ? 0 : height(), width(), height());
-
-    QPropertyAnimation* animation = new QPropertyAnimation(this, "pos");
-    animation->setDuration(300);
-    animation->setStartValue(QPoint(0, hide ? 0 : this->height()));
-    animation->setEndValue(QPoint(0, hide ? this->height() : 0));
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    if (!animationRunning)
+    {
+        QPropertyAnimation* animation = new QPropertyAnimation(this, "pos");
+        animation->setDuration(300);
+        animation->setStartValue(QPoint(0, hide ? 0 : this->height()));
+        animation->setEndValue(QPoint(0, hide ? this->height() : 0));
+        animation->setEasingCurve(QEasingCurve::OutQuad);
+        animation->start(QAbstractAnimation::DeleteWhenStopped);
+        animationRunning = true;
+        connect(animation, &QAbstractAnimation::finished, this, [this]() {
+            // use action as you wish
+            animationRunning = false;
+            setGeometry(0, layerIsVisible ? 0 : height(), width(), height());
+        });
+    }
     layerIsVisible = !hide;
 }
 
