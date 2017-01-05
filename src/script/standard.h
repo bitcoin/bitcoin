@@ -80,5 +80,6 @@ CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 CScript GetScriptForWitness(const CScript& redeemscript);
+CScript GetScriptForNulldata(const std::vector<unsigned char>& nulldata);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

@@ -431,6 +431,76 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     return wtx.GetHash().GetHex();
 }
 
+static void PublishNulldata(const std::vector<unsigned char> nulldata, CWalletTx& wtxNew)
+{
+    CAmount curBalance = pwalletMain->GetBalance();
+    CAmount nValue = 0;
+    bool fSubtractFeeFromAmount = false;
+
+    if (nValue > curBalance || curBalance == 0)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    if (pwalletMain->GetBroadcastTransactions() && !g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    // Parse Bitcoin address
+    CScript scriptPubKey = GetScriptForNulldata(nulldata);
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwalletMain);
+    CAmount nFeeRequired;
+    std::string strError;
+    vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError)) {
+        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+    CValidationState state;
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
+        strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+}
+
+UniValue sendnulldata(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "sendnulldata \"nulldata-hex\"\n"
+            "\nCreate a tx that just embeds some nulldata in the blockchain.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"nulldata-hex\"  (string, required) Hex encoded nulldata (not including OP_RETURN or size.\n"
+            "\nResult:\n"
+            "\"transactionid\"  (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sendnulldata", "\"000102030405060708090a0b0c0d0e0f10\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    string hexNulldata = request.params[0].get_str();
+    if (!IsHex(hexNulldata))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Cannot decode nulldata");
+    std::vector<unsigned char> nulldata = ParseHex(hexNulldata);
+
+    // Amount
+    CWalletTx wtx;
+
+    EnsureWalletIsUnlocked();
+
+    PublishNulldata(nulldata, wtx);
+
+    return wtx.GetHash().GetHex();
+}
+
 UniValue listaddressgroupings(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -2635,6 +2705,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendfrom",                 &sendfrom,                 false },
     { "wallet",             "sendmany",                 &sendmany,                 false },
     { "wallet",             "sendtoaddress",            &sendtoaddress,            false },
+    { "wallet",             "sendnulldata",             &sendnulldata,             false },
     { "wallet",             "setaccount",               &setaccount,               true  },
     { "wallet",             "settxfee",                 &settxfee,                 true  },
     { "wallet",             "signmessage",              &signmessage,              true  },
