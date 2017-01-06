@@ -62,6 +62,16 @@ Removal of Priority Estimation
   major version. To prepare for this, the default for the rate limit of priority
   transactions (`-limitfreerelay`) has been set to `0` kB/minute.
 
+P2P connection management
+--------------------------
+
+- Peers manually added through the addnode option or addnode RPC now have their own
+  limit of eight connections which does not compete with other inbound or outbound
+  connection usage and is not subject to the maxconnections limitation.
+
+- New connections to manually added peers are much faster.
+
+
 0.14.0 Change log
 =================
 
