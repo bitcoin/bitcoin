@@ -63,7 +63,7 @@ public:
 
     bool fSubtractFeeFromAmount; // memory only
 
-    static const int CURRENT_VERSION = 3;
+    static const int CURRENT_VERSION = 2;
     int nVersion;
 
     ADD_SERIALIZE_METHODS;
@@ -88,11 +88,12 @@ public:
         READWRITE(sMessage);
         READWRITE(sPaymentRequest);
         READWRITE(sAuthenticatedMerchant);
-        if (nVersion == 2)
+        if (nVersion >= 2)
         {
-            READWRITE(sFreezeLockTime);            
+            READWRITE(sFreezeLockTime);
+            READWRITE(slabelPublic);
         }
-        if (nVersion == 3) READWRITE(slabelPublic);
+
         if (ser_action.ForRead())
         {
             address = QString::fromStdString(sAddress);
