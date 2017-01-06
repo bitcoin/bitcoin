@@ -431,16 +431,19 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
  */
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
+    QString returnLabel = "";
     {
         LOCK(wallet->cs_wallet);
         CBitcoinAddress address_parsed(address.toStdString());
         std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
         if (mi != wallet->mapAddressBook.end())
         {
-            return QString::fromStdString(mi->second.name);
+            returnLabel = QString::fromStdString(mi->second.name);
         }
+
     }
-    return QString();
+    return returnLabel;
+
 }
 
 /* Look up label for freeze in wallet, if not found return empty string.

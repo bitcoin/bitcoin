@@ -210,7 +210,26 @@ void SendCoinsDialog::on_sendButton_clicked()
         {
             if(entry->validate())
             {
-                recipients.append(entry->getValue());
+                SendCoinsRecipient rcp(entry->getValue());
+
+                if (rcp.labelPublic != "")
+                {
+                    // Add extra recipient for public data and
+                    // set amount to 0 because OP_RETURN is unspendable
+                    // Inserting BEFORE the tx output related to the public label
+                    SendCoinsRecipient rcpdata = rcp;
+                    rcpdata.amount = 0;
+                    rcpdata.fSubtractFeeFromAmount = false;
+                    recipients.append(rcpdata);
+
+                    // blank rcp.labelPublic because prepareTransaction will overwrite
+                    // the recipient script into an OP_RETURN when labelPublic != ""
+                    rcp.labelPublic = "";
+
+                }
+
+                recipients.append(rcp);
+
             }
             else
             {
@@ -223,6 +242,8 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         return;
     }
+
+
 
     fNewRecipientAllowed = false;
     WalletModel::UnlockContext ctx(model->requestUnlock());
@@ -256,6 +277,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     QStringList formatted;
     Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
     {
+
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");

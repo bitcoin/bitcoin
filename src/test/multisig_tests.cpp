@@ -380,6 +380,32 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
 
 
 }
+BOOST_AUTO_TEST_CASE(opreturn_send)
+{
 
+    CKey key[4];
+    for (int i = 0; i < 2; i++)
+         key[i].MakeNewKey(true);
+
+    CBasicKeyStore keystore;
+
+    // Create and unpack a CLTV script
+    vector<valtype> solutions;
+    txnouttype whichType;
+    vector<CTxDestination> addresses;
+    txnouttype type = TX_LABELPUBLIC;
+
+    string inMsg = "hello world", outMsg = "";
+    CScript s = GetScriptLabelPublic(inMsg);
+
+    outMsg = getLabelPublic(s);
+
+    BOOST_CHECK(inMsg == outMsg);
+
+    BOOST_CHECK(Solver(s, whichType, solutions));
+    BOOST_CHECK(whichType == TX_LABELPUBLIC);
+
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()

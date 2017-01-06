@@ -33,6 +33,36 @@ unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
     return nResult;
 }
 
+/*
+ * Return the OP_RETURN data associated with a script.
+ * Called from AddressTableModel::labelForAddress()
+ *
+ */
+std::string getLabelPublic(const CScript& scriptPubKey)
+{
+
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (Solver(scriptPubKey, whichType, vSolutions))
+    {
+        if (whichType == TX_LABELPUBLIC)
+        {
+            CScriptNum labelPublic0(vSolutions[0], true, 5);
+            //vSolutions[1] small format contains data size
+            CScript labelPublic1(vSolutions[1]);
+
+            if (labelPublic0 == OP_PUSHDATA1)
+                return "";
+            else if (labelPublic0 == OP_PUSHDATA2)
+                return "";
+            else
+                return std::string(labelPublic1.begin()+1,labelPublic1.end());
+        }
+    }
+
+    return "";
+}
+
 bool isFreezeCLTV(const CKeyStore &keystore, const CScript& scriptPubKey, CScriptNum& nFreezeLockTime)
 {
 	vector<valtype> vSolutions;

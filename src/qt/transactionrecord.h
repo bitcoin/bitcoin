@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "uint256.h"
+#include "wallet/wallet.h"
 
 #include <QList>
 #include <QString>
@@ -84,20 +85,20 @@ public:
     static const int RecommendedNumConfirmations = 6;
 
     TransactionRecord():
-            hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
+            hash(), time(0), type(Other), addresses(), debit(0), credit(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 hash, qint64 time):
-            hash(hash), time(time), type(Other), address(""), debit(0),
+            hash(hash), time(time), type(Other), addresses(), debit(0),
             credit(0), idx(0)
     {
     }
 
     TransactionRecord(uint256 hash, qint64 time,
-                Type type, const std::string &address,
+                Type type, const std::map <std::string,CScript> &addresses,
                 const CAmount& debit, const CAmount& credit):
-            hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
+            hash(hash), time(time), type(type), addresses(addresses), debit(debit), credit(credit),
             idx(0)
     {
     }
@@ -112,7 +113,7 @@ public:
     uint256 hash;
     qint64 time;
     Type type;
-    std::string address;
+    std::map <std::string,CScript> addresses;
     CAmount debit;
     CAmount credit;
     /**@}*/
