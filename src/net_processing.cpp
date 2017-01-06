@@ -66,6 +66,7 @@ static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUAR
 static const uint64_t RANDOMIZER_ID_ADDRESS_RELAY = 0x3cac0035b5866b90ULL; // SHA256("main address relay")[0:8]
 
 std::atomic<bool> fAutoRequestBlocks(DEFAULT_AUTOMATIC_BLOCK_REQUESTS);
+std::atomic<bool> fFetchBlocksWhileFetchingHeaders(DEFAULT_FETCH_BLOCKS_WHILE_FETCH_HEADERS);
 
 // Internal stuff
 namespace {
@@ -3187,7 +3188,9 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
         // Message: getdata (blocks)
         //
         vector<CInv> vGetData;
-        if (!pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER
+                && (fFetchBlocksWhileFetchingHeaders || (headersChainActive.Tip() && headersChainActive.Tip()->GetBlockTime() > GetAdjustedTime()-600*24))
+           ){
             vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             std::shared_ptr<CAuxiliaryBlockRequest> blockRequest = CAuxiliaryBlockRequest::GetCurrentRequest();

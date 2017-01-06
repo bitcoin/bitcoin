@@ -16,6 +16,7 @@
 #include "keystore.h"
 #include "validation.h"
 #include "net.h"
+#include "net_processing.h"
 #include "policy/policy.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
@@ -3806,7 +3807,13 @@ bool CWallet::InitLoadWallet()
     pwalletMain = pwallet;
 
     if (GetBoolArg("-spv", DEFAULT_USE_SPV))
+    {
+        // don't download blocks for validating before we have all headers
+        // allow to first request auxiliary blocks for SPV
+        fFetchBlocksWhileFetchingHeaders = false;
+
         pwalletMain->setSPVEnabled(true);
+    }
 
     return true;
 }

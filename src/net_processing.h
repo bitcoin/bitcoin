@@ -27,6 +27,9 @@ void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
 extern std::atomic<bool> fAutoRequestBlocks;
 
+static const bool DEFAULT_FETCH_BLOCKS_WHILE_FETCH_HEADERS = true;
+extern std::atomic<bool> fFetchBlocksWhileFetchingHeaders;
+
 class PeerLogicValidation : public CValidationInterface {
 private:
     CConnman* connman;
