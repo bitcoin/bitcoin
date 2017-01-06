@@ -18,6 +18,7 @@
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
+#include <wallet/rpcwallet.h>
 #endif
 
 #include <masternode-sync.h>
@@ -303,6 +304,9 @@ UniValue validateaddress(const JSONRPCRequest& request)
     }
     return ret;
 }
+
+// Needed even with !ENABLE_WALLET, to pass (ignored) pointers around
+class CWallet;
 
 /**
  * Used by addmultisigaddress / createmultisig:

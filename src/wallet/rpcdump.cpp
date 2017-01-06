@@ -18,6 +18,8 @@
 #include <merkleblock.h>
 #include <core_io.h>
 
+#include <rpcwallet.h>
+
 #include <fstream>
 #include <stdint.h>
 
