@@ -760,9 +760,29 @@
            </layout>
           </item>
           <item>
+           <widget class="QLabel" name="fallbackFeeWarningLabel">
+            <property name="toolTip">
+             <string>Using the fallbackfee can result in sending a transaction that will take serval hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(255, 150, 0);
+font-weight: bold;</string>
+            </property>
+            <property name="text">
+             <string>Warning: Fee estimation is currently not possible.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_4">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::MinimumExpanding</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
