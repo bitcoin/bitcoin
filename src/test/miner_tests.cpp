@@ -68,7 +68,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-        pblock->nVersion = 1;
+        /* Initialise the block version.  */
+        const int32_t nChainId = Params().AuxpowChainId();
+        pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION, nChainId);
         pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
         CMutableTransaction txCoinbase(pblock->vtx[0]);
         txCoinbase.vin[0].scriptSig = CScript();
