@@ -1832,7 +1832,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
             if(rounds >= nDarksendRoundsMax) continue;
             if(rounds < nDarksendRoundsMin) continue;
 
-            if(fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
+            if(fFound1000 && fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
                 //we can return this for submission
                 if(nValueRet >= nValueMin){
                     //random reduce the max amount we'll submit for anonymity
@@ -1864,7 +1864,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
         }
     }
 
-    return (nValueRet >= nValueMin && fFound100 && fFound10 && fFound1 && fFoundDot1);
+    return (nValueRet >= nValueMin && fFound1000 && fFound100 && fFound10 && fFound1 && fFoundDot1);
 }
 
 bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const

@@ -382,41 +382,40 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 double dHashesPerSec = 0.0;
 int64_t nHPSTimerStart = 0;
 
-// ***TODO*** ScanHash is not yet used in Crown
 //
 // ScanHash scans nonces looking for a hash with at least some zero bits.
 // The nonce is usually preserved between calls, but periodically or if the
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-//bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
-//{
-//    // Write the first 76 bytes of the block header to a double-SHA256 state.
-//    CHash256 hasher;
-//    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-//    ss << *pblock;
-//    assert(ss.size() == 80);
-//    hasher.Write((unsigned char*)&ss[0], 76);
+bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+{
+    // Write the first 76 bytes of the block header to a double-SHA256 state.
+    CHash256 hasher;
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << *pblock;
+    assert(ss.size() == 80);
+    hasher.Write((unsigned char*)&ss[0], 76);
 
-//    while (true) {
-//        nNonce++;
+    while (true) {
+        nNonce++;
 
-//        // Write the last 4 bytes of the block header (the nonce) to a copy of
-//        // the double-SHA256 state, and compute the result.
-//        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
+        // Write the last 4 bytes of the block header (the nonce) to a copy of
+        // the double-SHA256 state, and compute the result.
+        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
 
-//        // Return the nonce if the hash has at least some zero bits,
-//        // caller will check if it has enough to reach the target
-//        if (((uint16_t*)phash)[15] == 0)
-//            return true;
+        // Return the nonce if the hash has at least some zero bits,
+        // caller will check if it has enough to reach the target
+        if (((uint16_t*)phash)[15] == 0)
+            return true;
 
-//        // If nothing found after trying for a while, return -1
-//        if ((nNonce & 0xffff) == 0)
-//            return false;
-//        if ((nNonce & 0xfff) == 0)
-//            boost::this_thread::interruption_point();
-//    }
-//}
+        // If nothing found after trying for a while, return -1
+        if ((nNonce & 0xffff) == 0)
+            return false;
+        if ((nNonce & 0xfff) == 0)
+            boost::this_thread::interruption_point();
+    }
+}
 
 CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 {
@@ -457,7 +456,6 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-// ***TODO*** that part changed in bitcoin, we are using a mix with old one here for now
 void static BitcoinMiner(CWallet *pwallet)
 {
     LogPrintf("CrownMiner started\n");
@@ -490,12 +488,11 @@ void static BitcoinMiner(CWallet *pwallet)
             //
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
-            if(!pindexPrev) break;
 
             auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
             if (!pblocktemplate.get())
             {
-                LogPrintf("Error in CrownMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+                LogPrintf("Error in CrownnMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
@@ -509,34 +506,35 @@ void static BitcoinMiner(CWallet *pwallet)
             //
             int64_t nStart = GetTime();
             uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-            while (true)
-            {
-                unsigned int nHashesDone = 0;
+            uint256 hash;
+            uint32_t nNonce = 0;
+            uint32_t nOldNonce = 0;
+            while (true) {
+                bool fFound = ScanHash(pblock, nNonce, &hash);
+                uint32_t nHashesDone = nNonce - nOldNonce;
+                nOldNonce = nNonce;
 
-                uint256 hash;
-                while (true)
+                // Check if something found
+                if (fFound)
                 {
-                    hash = pblock->GetHash();
                     if (hash <= hashTarget)
                     {
                         // Found a solution
+                        pblock->nNonce = nNonce;
+                        assert(hash == pblock->GetHash());
+
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                        LogPrintf("BitcoinMiner:\n");
+                        LogPrintf("CrownMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
                         ProcessBlockFound(pblock, *pwallet, reservekey);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-                        // In regression test mode, stop mining after a block is found. This
-                        // allows developers to controllably generate a block on demand.
+                        // In regression test mode, stop mining after a block is found.
                         if (Params().MineBlocksOnDemand())
                             throw boost::thread_interrupted();
 
                         break;
                     }
-                    pblock->nNonce += 1;
-                    nHashesDone += 1;
-                    if ((pblock->nNonce & 0xFF) == 0)
-                        break;
                 }
 
                 // Meter hashes/sec
@@ -573,7 +571,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Regtest mode doesn't require peers
                 if (vNodes.empty() && Params().MiningRequiresPeers())
                     break;
-                if (pblock->nNonce >= 0xffff0000)
+                if (nNonce >= 0xffff0000)
                     break;
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
@@ -597,7 +595,7 @@ void static BitcoinMiner(CWallet *pwallet)
     }
     catch (const std::runtime_error &e)
     {
-        LogPrintf("BitcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("CrownMiner runtime error: %s\n", e.what());
         return;
     }
 }
