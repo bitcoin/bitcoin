@@ -1,7 +1,7 @@
 #include "tweak.h"
 #include "main.h"
 #include "net.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>

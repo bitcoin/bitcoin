@@ -12,7 +12,7 @@
 #include "main.h"
 #include "net.h"
 #include "primitives/block.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "thinblock.h"
 #include "tinyformat.h"
 #include "txmempool.h"
