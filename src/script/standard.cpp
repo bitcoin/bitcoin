@@ -34,6 +34,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
     case TX_CLTV: return "cltv";  // CLTV HODL Freeze
+    case TX_LABELPUBLIC: return "labelpublic";
     }
     return NULL;
 }
@@ -58,6 +59,9 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Freeze tx using CLTV ; nFreezeLockTime CLTV DROP (0x21 pubkeys) checksig
         mTemplates.insert(make_pair(TX_CLTV, CScript() << OP_BIGINTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP << OP_PUBKEYS << OP_CHECKSIG));
+
+        // LabelPublc OP_RETURN data size format small
+        mTemplates.insert(make_pair(TX_LABELPUBLIC, CScript() << OP_RETURN << OP_BIGINTEGER << OP_DATA));
 
     }
 
@@ -147,7 +151,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
-            else if (opcode2 == OP_BIGINTEGER)
+            else if (opcode2 == OP_BIGINTEGER )
             {
             	try {
             		CScriptNum n(vch1, true, 5);
@@ -161,6 +165,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             		break;
             	} // end try/catch
             }
+            else if (opcode2 == OP_DATA) vSolutionsRet.push_back(vch1);
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
                 // Others must match exactly
@@ -320,5 +325,42 @@ CScript GetScriptForFreeze(CScriptNum nFreezeLockTime, const CPubKey& pubKey)
 {
 	// TODO Perhaps add limit tests for nLockTime eg. 10 year max lock
 	return CScript() << nFreezeLockTime << OP_CHECKLOCKTIMEVERIFY << OP_DROP << std::vector<unsigned char>(pubKey.begin(), pubKey.end()) << OP_CHECKSIG;
+
+}
+
+/*
+ * Create an OP_RETURN script (thanks coinspark)
+ *
+ */
+CScript GetScriptLabelPublic(const string &labelPublic)
+{
+
+    int64_t nLabelPublic;
+    // string hexMsg = HexStr(labelPublic);
+    nLabelPublic = int64_t(labelPublic.c_str());
+    if (nLabelPublic > 0)
+    {
+        int sizeLabelPublic = labelPublic.size();
+
+        CScript scriptDataPublic ;
+
+        if (sizeLabelPublic <= 75)
+            // length byte + data (https://en.bitcoin.it/wiki/Script);
+            //scriptDataPublic = bytearray((sizeLabelPublic,))+ labelPublic;
+            scriptDataPublic = CScript() << OP_RETURN << CScriptNum(sizeLabelPublic) << std::vector<unsigned char>(labelPublic.begin(), labelPublic.end());
+
+        else if (sizeLabelPublic <= 256)
+            // OP_PUSHDATA1 format
+            //scriptDataPublic = "\x4c" + bytearray((metadata_len,)) + labelPublic;
+            scriptDataPublic = CScript() << OP_RETURN << OP_PUSHDATA1 << CScriptNum(sizeLabelPublic) << std::vector<unsigned char>(labelPublic.begin(), labelPublic.end());
+
+        else
+            // OP_PUSHDATA2 format
+            //scriptDataPublic = "\x4d"+ bytearray((sizeLabelPublic%256,)) + bytearray((int(sizeLabelPublic/256),)) + labelPublic;
+            scriptDataPublic = CScript() << OP_RETURN << OP_PUSHDATA2 << CScriptNum(sizeLabelPublic % 256) << CScriptNum(int(sizeLabelPublic/256)) << std::vector<unsigned char>(labelPublic.begin(), labelPublic.end());
+
+        return scriptDataPublic;
+
+    } else return CScript();
 
 }

@@ -126,14 +126,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             // Payment to self
             CAmount nChange = wtx.GetChange();
-            TransactionRecord tr(hash, nTime, TransactionRecord::SendToSelf, "",
+            TransactionRecord tr(hash, nTime, TransactionRecord::SendToSelf, listAllAddresses,
                                         -(nDebit - nChange), nCredit - nChange);
-            CTxDestination address;
-			if (ExtractDestination(wtx.vout[0].scriptPubKey, address))
-			{
-				// First output to Bitcoin Address
-				tr.address = CBitcoinAddress(address).ToString();
-			}
+
+            tr.addresses = listAllAddresses;
+
             parts.append(tr);
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }

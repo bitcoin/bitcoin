@@ -380,8 +380,6 @@ BOOST_AUTO_TEST_CASE(cltv_freeze)
 
 
 }
-
-}
 BOOST_AUTO_TEST_CASE(opreturn_send)
 {
 

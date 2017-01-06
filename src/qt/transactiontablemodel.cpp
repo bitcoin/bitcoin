@@ -417,17 +417,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     std::string addressList;
     BOOST_FOREACH(const PAIRTYPE(std::string,CScript)& addr, wtx->addresses)
     {
-    case TransactionRecord::RecvFromOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
-    case TransactionRecord::RecvWithAddress:
-    case TransactionRecord::SendToAddress:
-    case TransactionRecord::SendToSelf:
-    case TransactionRecord::Generated:
-        return lookupAddress(wtx->address, tooltip) + watchAddress;
-    case TransactionRecord::SendToOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
-    default:
-        return tr("(n/a)") + watchAddress;
+        addressList = addressList + " " + addr.first;
     }
 
     if (label == "") return QString::fromStdString(addressList) + watchAddress;

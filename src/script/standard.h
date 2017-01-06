@@ -52,6 +52,7 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_CLTV,
+    TX_LABELPUBLIC,
     TX_NULL_DATA,
 };
 
@@ -80,5 +81,7 @@ CScript GetScriptForDestination(const CTxDestination& dest);
 CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 CScript GetScriptForFreeze(CScriptNum nLockTime, const CPubKey& pubKey);
+CScript GetScriptLabelPublic(const std::string& labelPublic);
+
 
 #endif // BITCOIN_SCRIPT_STANDARD_H
