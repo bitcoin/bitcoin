@@ -176,5 +176,7 @@ int32_t Policy::blockSizeAcceptLimit()
     }
     if (limit <= 0)
         limit = static_cast<int32_t>(DEFAULT_BLOCK_ACCEPT_SIZE * 10) * 1E5;
+    if (limit < 1000000)
+        LogPrintf("BlockSize set to extremely low value (%d bytes), this may cause failures.\n", limit);
     return limit;
 }
