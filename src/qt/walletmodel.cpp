@@ -250,7 +250,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
             else {
                 scriptPubKey = GetScriptLabelPublic(rcp.labelPublic.toStdString());
-                --nAddresses; // duplicate addresses for OP_RETURNS are ok
+                --nAddresses; // remove duplicate address as rcp.adddress was copied in SendCoinsDialog::on_sendButton_clicked()
             }
 
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
