@@ -19,6 +19,8 @@
 #include "MessageBuilder_p.h"
 #include "BufferPool.h"
 
+#include <util.h>
+
 #include <assert.h>
 
 namespace {
@@ -187,7 +189,7 @@ void Streaming::MessageBuilder::setMessageSize(int size)
     assert(m_messageType != NoHeader);
     assert(m_beforeHeader == false); // should not call this before adding any data.
     if (size > 0x7FFF)
-        printf("MessageBuilder::setMessageSize Warning. Size too big for 2 bytes (%d)\n", size);
+        LogPrintf("MessageBuilder::setMessageSize Warning. Size too big for 2 bytes (%d)\n", size);
     assert(size > 0);
 
     uint32_t tmp = static_cast<uint32_t>(size);
