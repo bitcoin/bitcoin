@@ -160,8 +160,8 @@ make
 2.7 Qt 5 libraries:
 Qt must be configured with ssl and zlib support.
 Download and unpack Qt base and tools sources:
-http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qtbase-opensource-src-5.3.2.7z
-http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qttools-opensource-src-5.3.2.7z
+http://download.qt-project.org/archive/qt/5.3/5.3.2/submodules/qtbase-opensource-src-5.3.2.7z
+http://download.qt-project.org/archive/qt/5.3/5.3.2/submodules/qttools-opensource-src-5.3.2.7z
 Then from a windows command prompt (note that the following assumes qtbase has been unpacked to C:\deps\Qt\5.3.2 and 
 qttools have been unpacked to C:\deps\Qt\qttools-opensource-src-5.3.2):
 
