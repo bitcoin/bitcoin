@@ -26,7 +26,7 @@ if uploadtarget has been reached.
 #     But it is possible to adjust it (pick a multiple of 1MB below) and
 #     tests should pass. This has been tested up to 16MB.
 EXCESSIVE_BLOCKSIZE = 1000000  # bytes
-print "running with -excessiveblocksize = %s bytes" % EXCESSIVE_BLOCKSIZE
+print ("running with -excessiveblocksize = %s bytes" % EXCESSIVE_BLOCKSIZE)
 
 # sync_with_ping() timeouts also need to scale with block size
 # (this has been determined empirically)
@@ -36,7 +36,7 @@ print "running with -excessiveblocksize = %s bytes" % EXCESSIVE_BLOCKSIZE
 # to pass with 1MB on a slow i686 machine. Raising the baseline timeout
 # does not increase the test duration on faster machines.
 SYNC_WITH_PING_TIMEOUT = 60 + 20 * int((max(1000000, EXCESSIVE_BLOCKSIZE)-1000000) / 1000000)  # seconds
-print "sync_with_ping timeout =  %s sec" % SYNC_WITH_PING_TIMEOUT
+print ("sync_with_ping timeout =  %s sec" % SYNC_WITH_PING_TIMEOUT)
 
 
 # TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
@@ -120,21 +120,21 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes = []
         # an overhead factor approximates how the traffic with bigger blocks
         self.overhead_factor_a = 10  # percent
-        print "overhead_factor = %s %%" % self.overhead_factor_a
+        print ("overhead_factor = %s %%" % self.overhead_factor_a)
         # maxuploadtarget (unit: MiB) was 200 originally, now scale with EB
         self.maxuploadtarget = int(200 * EXCESSIVE_BLOCKSIZE / 1000000)
-        print "maxuploadtarget = %sMiB" % self.maxuploadtarget
+        print ("maxuploadtarget = %sMiB" % self.maxuploadtarget)
         self.blockmaxsize = EXCESSIVE_BLOCKSIZE-1000  # EB-1KB
-        print "blockmaxsize = %s bytes" % self.blockmaxsize
+        print ("blockmaxsize = %s bytes" % self.blockmaxsize)
         self.max_bytes_per_day = self.maxuploadtarget * 1024 * 1024
-        print "max_bytes_per_day = %s bytes" % self.max_bytes_per_day
+        print ("max_bytes_per_day = %s bytes" % self.max_bytes_per_day)
         self.daily_buffer = 144 * EXCESSIVE_BLOCKSIZE
-        print "daily buffer = %s bytes" % self.daily_buffer
+        print ("daily buffer = %s bytes" % self.daily_buffer)
         self.max_bytes_available = self.max_bytes_per_day - self.daily_buffer
-        print "max_bytes_available = %s bytes" % self.max_bytes_available
+        print ("max_bytes_available = %s bytes" % self.max_bytes_available)
         # roughly how many 66k transactions we need to create a big block
         self.num_transactions = int(EXCESSIVE_BLOCKSIZE / 66000) - 1
-        print "num txs in big block = %s" % self.num_transactions
+        print ("num txs in big block = %s" % self.num_transactions)
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug",
                                                               "-use-thinblocks=0", # turned off to predict size of transmitted data
                                                               "-excessiveblocksize=%s" % EXCESSIVE_BLOCKSIZE,
@@ -144,7 +144,7 @@ class MaxUploadTest(BitcoinTestFramework):
     def mine_big_block(self, node, address):
         # Want to create a big block
         # We'll generate a 66k transaction below
-        for j in xrange(self.num_transactions):
+        for j in range(self.num_transactions):
             if len(self.utxo) < self.num_transactions:
                 self.utxo = node.listunspent()
             inputs=[]
@@ -177,7 +177,7 @@ class MaxUploadTest(BitcoinTestFramework):
 
         # Generate some old blocks
         # we scale this by EB
-        self.nodes[0].generate((130 * EXCESSIVE_BLOCKSIZE / 1000000))
+        self.nodes[0].generate((130 * int(EXCESSIVE_BLOCKSIZE / 1000000)))
 
         # test_nodes[0] will only request old blocks
         # test_nodes[1] will only request new blocks
@@ -201,7 +201,7 @@ class MaxUploadTest(BitcoinTestFramework):
         # Store the hash; we'll request this later
         big_old_block = self.nodes[0].getbestblockhash()
         old_block_size = self.nodes[0].getblock(big_old_block, True)['size']
-        print "mined big block size = %s bytes" % old_block_size
+        print ("mined big block size = %s bytes" % old_block_size)
         big_old_block = int(big_old_block, 16)
 
         # Advance to two days ago
@@ -226,22 +226,22 @@ class MaxUploadTest(BitcoinTestFramework):
         # This calculation will be inaccurate due to other protocol
         # overheads, so a compensation factor is used later on to adjust
         # for those.
-        successcount = self.max_bytes_available / old_block_size
+        successcount = int(self.max_bytes_available / old_block_size)
         print("successcount = %s" % successcount)
         compensation = int(successcount * (self.overhead_factor_a / 100.0))
         print("compensation = %s" % compensation)
 
         # 144MB will be reserved for relaying new blocks, so expect this to
         # succeed for a certain number tries.
-        for i in xrange(successcount - compensation):
-            #print "data request #%s" % (i+1)
+        for i in range(successcount - compensation):
+            #print ("data request #%s" % (i+1))
             test_nodes[0].send_message(getdata_request)
             test_nodes[0].sync_with_ping()
             assert_equal(test_nodes[0].block_receive_map[big_old_block], i+1)
 
         # check that the node has not been disconnected yet
         assert_equal(len(self.nodes[0].getpeerinfo()), 3)
-        print "Peer 0 still connected after downloading old block %d times" % (successcount - compensation)
+        print ("Peer 0 still connected after downloading old block %d times" % (successcount - compensation))
 
         # At most a couple more tries should succeed (depending on how long 
         # the test has been running so far).
@@ -252,7 +252,7 @@ class MaxUploadTest(BitcoinTestFramework):
             if test_nodes[0].peer_disconnected: break
             i += 1
 
-        #for i in xrange(3 * compensation):
+        #for i in range(3 * compensation):
         #    test_nodes[0].send_message(getdata_request)
         test_nodes[0].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
