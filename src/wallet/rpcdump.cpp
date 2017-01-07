@@ -192,7 +192,7 @@ UniValue importaddress(const JSONRPCRequest& request)
     
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw runtime_error(
-            "importaddress \"address\" ( \"label\" rescan p2sh )\n"
+            "importscript \"script\" ( \"label\" rescan p2sh )\n"
             "\nAdds a script (in hex) or address that can be watched as if it were in your wallet but cannot be used to spend.\n"
             "\nArguments:\n"
             "1. \"script\"           (string, required) The hex-encoded script (or address)\n"
@@ -205,11 +205,11 @@ UniValue importaddress(const JSONRPCRequest& request)
             "as change, and not show up in many RPCs.\n"
             "\nExamples:\n"
             "\nImport a script with rescan\n"
-            + HelpExampleCli("importaddress", "\"myscript\"") +
+            + HelpExampleCli("importscript", "\"myscript\"") +
             "\nImport using a label without rescan\n"
-            + HelpExampleCli("importaddress", "\"myscript\" \"testing\" false") +
+            + HelpExampleCli("importscript", "\"myscript\" \"testing\" false") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("importaddress", "\"myscript\", \"testing\", false")
+            + HelpExampleRpc("importscript", "\"myscript\", \"testing\", false")
         );
 
 

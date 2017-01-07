@@ -94,6 +94,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importprivkey", 2 },
     { "importaddress", 2 },
     { "importaddress", 3 },
+    { "importscript", 2 },
+    { "importscript", 3 },
     { "importpubkey", 2 },
     { "importmulti", 0 },
     { "importmulti", 1 },
