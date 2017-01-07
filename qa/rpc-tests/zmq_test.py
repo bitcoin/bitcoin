@@ -25,6 +25,7 @@ class ZMQTest (BitcoinTestFramework):
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, b"hashtx")
+        self.zmqSubSocket.linger = 500
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % self.port)
         return start_nodes(4, self.options.tmpdir, extra_args=[
             ['-zmqpubhashtx=tcp://127.0.0.1:'+str(self.port), '-zmqpubhashblock=tcp://127.0.0.1:'+str(self.port)],
@@ -34,52 +35,62 @@ class ZMQTest (BitcoinTestFramework):
             ])
 
     def run_test(self):
-        self.sync_all()
+        try:
+            self.sync_all()
 
-        genhashes = self.nodes[0].generate(1)
-        self.sync_all()
+            genhashes = self.nodes[0].generate(1)
+            self.sync_all()
 
-        print("listen...")
-        msg = self.zmqSubSocket.recv_multipart()
-        topic = msg[0]
-        body = msg[1]
-
-        msg = self.zmqSubSocket.recv_multipart()
-        topic = msg[0]
-        body = msg[1]
-        blkhash = bytes_to_hex_str(body)
-
-        assert_equal(genhashes[0], blkhash) #blockhash from generate must be equal to the hash received over zmq
-
-        n = 10
-        genhashes = self.nodes[1].generate(n)
-        self.sync_all()
-
-        zmqHashes = []
-        for x in range(0,n*2):
+            print("listen...")
             msg = self.zmqSubSocket.recv_multipart()
             topic = msg[0]
             body = msg[1]
-            if topic == b"hashblock":
-                zmqHashes.append(bytes_to_hex_str(body))
 
-        for x in range(0,n):
-            assert_equal(genhashes[x], zmqHashes[x]) #blockhash from generate must be equal to the hash received over zmq
+            msg = self.zmqSubSocket.recv_multipart()
+            topic = msg[0]
+            body = msg[1]
+            blkhash = bytes_to_hex_str(body)
 
-        #test tx from a second node
-        hashRPC = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
-        self.sync_all()
+            assert_equal(genhashes[0], blkhash) #blockhash from generate must be equal to the hash received over zmq
 
-        # now we should receive a zmq msg because the tx was broadcast
-        msg = self.zmqSubSocket.recv_multipart()
-        topic = msg[0]
-        body = msg[1]
-        hashZMQ = ""
-        if topic == b"hashtx":
-            hashZMQ = bytes_to_hex_str(body)
+            n = 10
+            genhashes = self.nodes[1].generate(n)
+            self.sync_all()
 
-        assert_equal(hashRPC, hashZMQ) #blockhash from generate must be equal to the hash received over zmq
+            zmqHashes = []
+            for x in range(0,n*2):
+                msg = self.zmqSubSocket.recv_multipart()
+                topic = msg[0]
+                body = msg[1]
+                if topic == b"hashblock":
+                    zmqHashes.append(bytes_to_hex_str(body))
+
+            for x in range(0,n):
+                assert_equal(genhashes[x], zmqHashes[x]) #blockhash from generate must be equal to the hash received over zmq
+
+            #test tx from a second node
+            hashRPC = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
+            self.sync_all()
+
+            # now we should receive a zmq msg because the tx was broadcast
+            msg = self.zmqSubSocket.recv_multipart()
+            topic = msg[0]
+            body = msg[1]
+            hashZMQ = ""
+            if topic == b"hashtx":
+                hashZMQ = bytes_to_hex_str(body)
+
+            assert_equal(hashRPC, hashZMQ) #blockhash from generate must be equal to the hash received over zmq
+        finally:
+            self.zmqSubSocket.close()
+            self.zmqSubSocket = None
+            self.zmqContext.destroy()
+            self.zmqContext = None
 
 
 if __name__ == '__main__':
     ZMQTest ().main ()
+
+def Test():
+    ZMQTest ().main ()
+ 
