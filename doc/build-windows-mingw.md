@@ -4,7 +4,10 @@ Building Bitcoin on Native Windows
 This document describes the installation of the mysys and mingw tools as well as 
 the build dependencies and then finally the compilation of the bitcoin binaries.
 
-NOTE: This script will only prepare a build system and bitcoin in 32 bit.
+NOTE: These instructions will allow you to build bitcoin as either 32-bit or 64-bit.
+      For the most part, the build instructions are the same after the toolchain and
+      PATH variables are configured.  Any differences between the 32-bit and 64-bit
+      build instructions have been noted inline at each instruction step.
 
 Prepare your build system
 -------------------------
@@ -25,14 +28,25 @@ then click on Installation -> Apply changes
 
 
 1.2 Install MinGW-builds project toolchain:
-Download http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/4.9.2/threads-posix/dwarf/i686-4.9.2-release-posix-dwarf-rt_v3-rev1.7z/download
+For 32-bit download:
+http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/4.9.2/threads-posix/dwarf/i686-4.9.2-release-posix-dwarf-rt_v3-rev1.7z/download
 and unpack it to C:\
 
+For 64-bit download:
+http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.2/threads-posix/seh/x86_64-4.9.2-release-posix-seh-rt_v3-rev1.7z/download
+and unpack it to C:\
 
-1.3. Ensure that mingw-builds bin folder is set in your PATH environment variable. On Windows 7 your path should look something like:
+1.3. Ensure that the desired toolchain's bin folder is set in your PATH environment variable. This will control which toolchain, 32-bit or 64-bit, is used for building.  On Windows 7 your path should look something like:
 
-
+For 32-bit builds:
 C:\mingw32\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\
+
+For 64-bit builds:
+C:\mingw64\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\
+
+IMPORTANT: It is fine to have both the 32-bit and 64-bit toolchains installed at the same time, however you should only have one in your PATH variable at a time.  If you place both in your PATH, then the build will be made with whichever toolchain path that is listed first.
+
+NOTE: If you install both toolchains, when you switch between them remember that you need to rebuild all of the dependencies with the same toolchain as you are building the bitcoin client, otherwise linking will fail if you try to mix 32-bit and 64-bit binaries.
 
 
 1.4 Additional checks:
@@ -40,7 +54,8 @@ C:\MinGW\bin should contain nothing but mingw-get.exe.
 
 Create a shortcut to C:\MinGw\msys\1.0\msys.bat on your desktop.
 Double-click on the shortcut to start a msys shell.
-Your gcc -v output should be:
+
+For the 32-bit toolchain your gcc -v output should be:
 
 $ gcc -v
 Using built-in specs.
@@ -52,6 +67,17 @@ Thread model: posix
 gcc version 4.9.2 (i686-posix-dwarf-rev1, Built by MinGW-W64 project)
 
 
+For the 64-bit toolchain your gcc -v output should be:
+
+$ gcc -v
+Using built-in specs.
+COLLECT_GCC=C:\mingw64\bin\gcc.exe
+COLLECT_LTO_WRAPPER=C:/mingw64/bin/../libexec/gcc/x86_64-w64-mingw32/4.9.2/lto-wrapper.exe
+Target: x86_64-w64-mingw32
+Configured with: ../../../src/gcc-4.9.2/configure --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --target=x86_64-w64-mingw32 --prefix=/mingw64 --with-sysroot=/c/mingw492/x86_64-492-posix-seh-rt_v3-rev1/mingw64 --with-gxx-include-dir=/mingw64/x86_64-w64-mingw32/include/c++ --enable-shared --enable-static --disable-multilib --enable-languages=ada,c,c++,fortran,objc,obj-c++,lto --enable-libstdcxx-time=yes --enable-threads=posix --enable-libgomp --enable-libatomic --enable-lto --enable-graphite --enable-checking=release --enable-fully-dynamic-string --enable-version-specific-runtime-libs --disable-isl-version-check --disable-cloog-version-check --disable-libstdcxx-pch --disable-libstdcxx-debug --enable-bootstrap --disable-rpath --disable-win32-registry --disable-nls --disable-werror --disable-symvers --with-gnu-as --with-gnu-ld --with-arch=nocona --with-tune=core2 --with-libiconv --with-system-zlib --with-gmp=/c/mingw492/prerequisites/x86_64-w64-mingw32-static --with-mpfr=/c/mingw492/prerequisites/x86_64-w64-mingw32-static --with-mpc=/c/mingw492/prerequisites/x86_64-w64-mingw32-static --with-isl=/c/mingw492/prerequisites/x86_64-w64-mingw32-static --with-cloog=/c/mingw492/prerequisites/x86_64-w64-mingw32-static --enable-cloog-backend=isl --with-pkgversion='x86_64-posix-seh-rev1, Built by MinGW-W64 project' --with-bugurl=http://sourceforge.net/projects/mingw-w64 CFLAGS='-O2 -pipe -I/c/mingw492/x86_64-492-posix-seh-rt_v3-rev1/mingw64/opt/include -I/c/mingw492/prerequisites/x86_64-zlib-static/include -I/c/mingw492/prerequisites/x86_64-w64-mingw32-static/include' CXXFLAGS='-O2 -pipe -I/c/mingw492/x86_64-492-posix-seh-rt_v3-rev1/mingw64/opt/include -I/c/mingw492/prerequisites/x86_64-zlib-static/include -I/c/mingw492/prerequisites/x86_64-w64-mingw32-static/include' CPPFLAGS= LDFLAGS='-pipe -L/c/mingw492/x86_64-492-posix-seh-rt_v3-rev1/mingw64/opt/lib -L/c/mingw492/prerequisites/x86_64-zlib-static/lib -L/c/mingw492/prerequisites/x86_64-w64-mingw32-static/lib '
+Thread model: posix
+gcc version 4.9.2 (x86_64-posix-seh-rev1, Built by MinGW-W64 project)
+
 
 2. Download, unpack and build required dependencies.
 Save them in c:\deps folder.
@@ -60,13 +86,14 @@ Save them in c:\deps folder.
 From a MinGw shell (C:\MinGW\msys\1.0\msys.bat), unpack the source archive with tar (this will avoid symlink issues) 
 then configure and make:
 
+NOTE: For 64-bit builds, when you run the ./Configure command below, you must change mingw to mingw64.
+
 
 cd /c/deps/
 tar xvfz openssl-1.0.1k.tar.gz
 cd openssl-1.0.1k
 ./Configure no-zlib no-shared no-dso no-krb5 no-camellia no-capieng no-cast no-cms no-dtls1 no-gost no-gmp no-heartbeats no-idea no-jpake no-md2 no-mdc2 no-rc5 no-rdrand no-rfc3779 no-rsax no-sctp no-seed no-sha0 no-static_engine no-whirlpool no-rc2 no-rc4 no-ssl2 no-ssl3 mingw
 make
-
 
 
 2.2 Berkeley DB: http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz
@@ -92,7 +119,7 @@ bootstrap.bat gcc
 b2 --build-type=complete --with-chrono --with-filesystem --with-program_options --with-system --with-thread toolset=gcc variant=release link=static threading=multi runtime-link=static stage
 
 This will compile the required boost libraries and put them into the stage folder (C:\deps\boost_1_61_0\stage).
-Note: make sure you don't use tarballs, as unix EOL markers can break batch files.
+NOTE: make sure you don't use tarballs, as unix EOL markers can break batch files.
 
 
 2.3.1  Libevent 2.0.22: https://sourceforge.net/projects/levent/files/release-2.0.22-stable/libevent-2.0.22-stable.tar.gz/download
@@ -141,9 +168,11 @@ make
 cp .libs/libpng16.a .libs/libpng.a
 
 
-
 Download and unpack http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz inside your deps folder 
 then configure and make:
+
+NOTE: If you are using the 64-bit toolchain, use the following LIBS line instead:
+LIBS="../libpng-1.6.16/.libs/libpng.a ../../x86_64-w64-mingw32/lib/libz.a" \
 
 
 cd /c/deps/qrencode-3.4.4
@@ -154,7 +183,6 @@ png_LIBS="-L../libpng-1.6.16/.libs" \
 configure --enable-static --disable-shared --without-tools
 
 make
-
 
 
 2.7 Qt 5 libraries:
@@ -180,7 +208,7 @@ cd C:\deps\Qt\qttools-opensource-src-5.3.2
 qmake qttools.pro
 mingw32-make -j4
 
-Note: consider using -j switch with mingw32-make to speed up compilation process. On a quad core -j4 or -j5 should give the best results.
+NOTE: consider using -j switch with mingw32-make to speed up compilation process. On a quad core -j4 or -j5 should give the best results.
 
 
 then 
@@ -230,34 +258,16 @@ BOOST_ROOT=/c/deps/boost_1_61_0 \
 
 
 After the configure script finishes it's finally time to compile.
-This will compile a 32 bit version:
+From the msys shell prompt enter the following (this is the same for both 32-bit and 64-bit):
 
-for 32bit compile:
+make -j4
 
-     mingw32-make -j4  
-     (j is followed by the number of cores your machine has, so two core would be -j2 etc..)
-
-     or alternately just type in
-   
-     make
-
-for 64 bit compile:
-
-     You will need to install mingw64 and compile your depenancies in 64 bit
-     and then build bitcoin using the following.
-
-     make HOST=x86_64-w64-mingw32 -j4
-     (j is followed by the number of cores your machine has, so two core would be -j2 etc..)
-
-     or alternately just type in
-   
-     make
+NOTE: j is followed by the number of cores your machine has, so two core would be -j2 etc..
 
 
-Finally you can strip the executables if you wish:
+Finally you can strip the executables if you wish.  Stripping will remove debug symbols and greately reduce the final file size of the executables.  For example, the v12.1 bitcoin-qt.exe will go from ~241MB to ~26MB.
 
+strip src/bitcoin-tx.exe
 strip src/bitcoin-cli.exe
 strip src/bitcoind.exe
 strip src/qt/bitcoin-qt.exe
-
-
