@@ -76,11 +76,10 @@ std::string DecodeDumpString(const std::string &str) {
 UniValue importprivkey(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
-    
+
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw runtime_error(
             "importprivkey \"bitcoinprivkey\" ( \"label\" ) ( rescan )\n"
@@ -194,11 +193,10 @@ void ImportAddress(CWallet * const pwallet, const CBitcoinAddress& address, cons
 UniValue importaddress(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
-    
+
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw runtime_error(
             "importaddress \"address\" ( \"label\" rescan p2sh )\n"
@@ -265,7 +263,6 @@ UniValue importaddress(const JSONRPCRequest& request)
 UniValue importprunedfunds(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
@@ -328,7 +325,6 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
 UniValue removeprunedfunds(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
@@ -368,7 +364,6 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
 UniValue importpubkey(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
@@ -429,11 +424,10 @@ UniValue importpubkey(const JSONRPCRequest& request)
 UniValue importwallet(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
-    
+
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "importwallet \"filename\"\n"
@@ -538,11 +532,10 @@ UniValue importwallet(const JSONRPCRequest& request)
 UniValue dumpprivkey(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
-    
+
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "dumpprivkey \"address\"\n"
@@ -579,11 +572,10 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 UniValue dumpwallet(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
-    
+
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
             "dumpwallet \"filename\"\n"
@@ -1000,6 +992,9 @@ int64_t GetImportTimestamp(const UniValue& data, int64_t now)
 UniValue importmulti(const JSONRPCRequest& mainRequest)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(mainRequest);
+    if (!EnsureWalletIsAvailable(pwallet, mainRequest.fHelp)) {
+        return NullUniValue;
+    }
 
     // clang-format off
     if (mainRequest.fHelp || mainRequest.params.size() < 1 || mainRequest.params.size() > 2)
@@ -1039,9 +1034,6 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             "  [{ \"success\": true } , { \"success\": false, \"error\": { \"code\": -1, \"message\": \"Internal Server Error\"} }, ... ]\n");
 
     // clang-format on
-    if (!EnsureWalletIsAvailable(pwallet, mainRequest.fHelp)) {
-        return NullUniValue;
-    }
 
     RPCTypeCheck(mainRequest.params, boost::assign::list_of(UniValue::VARR)(UniValue::VOBJ));
 
