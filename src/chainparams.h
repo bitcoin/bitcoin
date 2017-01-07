@@ -90,6 +90,11 @@ public:
     inline int32_t AuxpowChainId () const { return 20; }
     /* Return start height of auxpow and the retarget interval change.  */
     virtual int AuxpowStartHeight() const = 0;
+    /* Return whether or not to enforce strict chain ID checks.  */
+    virtual bool StrictChainId() const = 0;
+    /* Return whether to allow blocks with a "legacy" version.  */
+    virtual bool AllowLegacyBlocks(unsigned nHeight) const = 0;
+
 protected:
     CChainParams() {}
 
