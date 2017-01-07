@@ -152,6 +152,8 @@ BITCOIN_CORE_H = \
   version.h \
   wallet.h \
   wallet_ismine.h \
+  compat/byteswap.h \
+  compat/endian.h \
   walletdb.h \
   compat/sanity.h
 
