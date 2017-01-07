@@ -42,17 +42,8 @@ void InitRPCMining()
     if (!pwalletMain)
         return;
 
-    CKeyID result;
-    CBitcoinAddress auxminingaddr(GetArg("-auxminingaddr", ""));
-    if (!auxminingaddr.GetKeyID(result)) {
-        pminingKey = new CReserveKey(pwalletMain);
-        CPubKey pubkey;
-        pminingKey->GetReservedKey(pubkey);
-        result = pubkey.GetID();
-    } else {
-        // getwork/getblocktemplate mining rewards paid here:
-        pminingKey = new CReserveKey(pwalletMain);
-    }
+    // getwork/getblocktemplate mining rewards paid here:
+    pminingKey = new CReserveKey(pwalletMain);
 }
 
 void ShutdownRPCMining()
@@ -813,7 +804,16 @@ Value getauxblock(const Array& params, bool fHelp)
             nStart = GetTime();
 
             // Create new block with nonce = 0 and extraNonce = 1
-                pblocktemplate = CreateNewBlockWithKey(*pminingKey);
+            CKeyID result;
+            CBitcoinAddress auxminingaddr(GetArg("-auxminingaddr", ""));
+            if (!auxminingaddr.GetKeyID(result)) {
+                CReserveKey reservekey(pwalletMain);
+                CPubKey pubkey;
+                reservekey.GetReservedKey(pubkey);
+                result = pubkey.GetID();
+            }
+            CScript scriptCoinbase = GetScriptForDestination(result);
+            pblocktemplate = CreateNewBlock(scriptCoinbase);
             if (!pblocktemplate)
                 throw JSONRPCError(RPC_OUT_OF_MEMORY, "out of memory");
 
