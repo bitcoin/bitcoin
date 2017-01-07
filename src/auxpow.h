@@ -172,7 +172,7 @@ public:
    * @param h The merkle block height.
    * @return The expected index for the aux hash.
    */
-  static int getExpectedIndex (int nNonce, int nChainId, unsigned h);
+  static int getExpectedIndex (uint32_t nNonce, int nChainId, unsigned h);
 
 };
 
