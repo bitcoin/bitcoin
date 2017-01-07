@@ -762,6 +762,19 @@ Value getauxblock(const Array& params, bool fHelp)
             + HelpExampleRpc("getauxblock", "")
             );
 
+    /*
+    boost::shared_ptr<CReserveScript> coinbaseScript;
+    GetMainSignals().ScriptForMining(coinbaseScript);
+
+    // If the keypool is exhausted, no script is returned at all.  Catch this.
+    if (!coinbaseScript)
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+    //throw an error if no script was provided
+    if (!coinbaseScript->reserveScript.size())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available (mining requires a wallet)");
+    */
+
     if (vNodes.empty())
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED,
                            "Crown is not connected!");
@@ -769,12 +782,20 @@ Value getauxblock(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD,
                            "Crown is downloading blocks...");
-    
-    /* This should never fail, since the chain is already
-       past the point of merge-mining start.  Check nevertheless.  */
-    if (chainActive.Height() + 1 < Params().AuxpowStartHeight())
-        throw std::runtime_error("getauxblock method is not yet available");
 
+    /* This should never fail, since the chain is already
+        past the point of merge-mining start.  Check nevertheless.  */
+    {
+        LOCK(cs_main);
+        if (chainActive.Height() + 1 < Params().AuxpowStartHeight())
+            throw std::runtime_error("getauxblock method is not yet available");
+    }
+
+    /* The variables below are used to keep track of created and not yet
+       submitted auxpow blocks.  Lock them to be sure even for multiple
+       RPC threads running in parallel.  */
+    static CCriticalSection cs_auxblockCache;
+    LOCK(cs_auxblockCache);
     static std::map<uint256, CBlock*> mapNewBlock;
     static std::vector<CBlockTemplate*> vNewBlockTemplate;
 
@@ -785,8 +806,11 @@ Value getauxblock(const Array& params, bool fHelp)
         static const CBlockIndex* pindexPrev = NULL;
         static uint64_t nStart;
         static CBlockTemplate* pblocktemplate;
+        static unsigned nExtraNonce = 0;
 
         // Update block
+        {
+        LOCK(cs_main);
         if (pindexPrev != chainActive.Tip()
             || (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast
                 && GetTime() - nStart > 60))
@@ -799,9 +823,6 @@ Value getauxblock(const Array& params, bool fHelp)
                     delete pbt;
                 vNewBlockTemplate.clear();
             }
-            nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            pindexPrev = chainActive.Tip();
-            nStart = GetTime();
 
             // Create new block with nonce = 0 and extraNonce = 1
             CKeyID result;
@@ -817,14 +838,20 @@ Value getauxblock(const Array& params, bool fHelp)
             if (!pblocktemplate)
                 throw JSONRPCError(RPC_OUT_OF_MEMORY, "out of memory");
 
+            // Update state only when CreateNewBlock succeeded
+            nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+            pindexPrev = chainActive.Tip();
+            nStart = GetTime();
+
             // Finalise it by setting the version and building the merkle root
             CBlock* pblock = &pblocktemplate->block;
+            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
             pblock->nVersion.SetAuxpow(true);
-            pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
             // Save
             mapNewBlock[pblock->GetHash()] = pblock;
             vNewBlockTemplate.push_back(pblocktemplate);
+        }
         }
 
         const CBlock& block = pblocktemplate->block;
