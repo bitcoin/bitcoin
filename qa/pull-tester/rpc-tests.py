@@ -203,7 +203,7 @@ testScriptsExt = [ RpcTest(t) for t in [
     'bip9-softforks',
     'bip65-cltv',
     'bip65-cltv-p2p',
-    Disabled('bip68-sequence', "TODO"),
+    'bip68-sequence',
     'bipdersig-p2p',
     'bipdersig',
     'getblocktemplate_longpoll',
