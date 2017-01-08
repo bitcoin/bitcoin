@@ -2441,6 +2441,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
 unsigned int ProcessMessages(CNode* pfrom, CConnman& connman, std::atomic<bool>& interruptMsgProc, bool fAvoidLocking)
 {
+    if (fAvoidLocking)
+        DISALLOW_LOCK(cs_main);
+
     const CChainParams& chainparams = Params();
     //
     // Message format
