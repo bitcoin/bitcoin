@@ -270,10 +270,12 @@ class TestManager(object):
                     print("Quick   RPC returns", c.rpc.getbestblockhash())
                     time.sleep(5) #wait the requestmanager re-request interval to see if the block shows up
                     print("Delayed RPC returns", c.rpc.getbestblockhash())
+
                     rpcblock =  c.rpc.getbestblockhash()
                     block = hex(blockhash)[2:]
-                    #print(" returns", rpcblock)
-                    #print(" returns", block)
+                    #sometimes a leading zero or two are missing from the blockhash. Replace these.
+                    while (len(block) < 64):
+                        block = '0' + block
                     if rpcblock == block:
                         return True
                     else:
