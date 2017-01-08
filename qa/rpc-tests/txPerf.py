@@ -66,23 +66,23 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               if i==0: i=1
               if j==0: j=1
               (txn,inp,outp,txid) = split_transaction(node, inputs[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=False)
-            except Exception,e:
+            except e:
               logging.info("%d, %d, %d, split error" % (txLen,len(inp),len(outp)))
               print("[",txLen,",",len(inp),",",len(outp),",",'"split error:"', str(e),'"],', file=fil)
               continue
             try:
               s = str(txn)
-	      #print "tx len: ", len(s)
+	      #print ("tx len: ", len(s))
               start=time.time()
-	      signedtxn = node.signrawtransaction(s)
+              signedtxn = node.signrawtransaction(s)
               end=time.time()
-	      txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
+              txLen = len(binascii.unhexlify(signedtxn["hex"]))  # Get the actual transaction size for better tx fee estimation the next time around
               logging.info("%d, %d, %d, %f" % (txLen,len(inp),len(outp),end-start))
               print("[",txLen,",",len(inp),",",len(outp),",",end-start,"],",file=fil)
-	    except:
+            except:
               logging.info("%d, %d, %d, %s" % (txLen,len(inp),len(outp),'"timeout"'))
-              print txLen,",",len(inp),",",len(outp),",","timeout"
-              print("[",txLen,",",len(inp),",",len(outp),",",'"timeout"],',file=fil)
+              print (txLen,",",len(inp),",",len(outp),",","timeout")
+              print ("[",txLen,",",len(inp),",",len(outp),",",'"timeout"],',file=fil)
             fil.flush()
         print("]",file=fil)
         fil.close()
@@ -107,7 +107,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
               if i==0: i=1
               if j==0: j=1
               (txn,inp,outp,txid) = split_transaction(node, wallet[0:i], outputs[0:j], txfee=DEFAULT_TX_FEE_PER_BYTE*10, sendtx=True)
-            except Exception,e:
+            except e:
               logging.info("split error: %s" % str(e))
               print("[ 'sign',",0,",",i,",",j,",","'split error:", str(e),"'],",file=fil)
               pdb.set_trace()
@@ -115,17 +115,17 @@ class TransactionPerformanceTest(BitcoinTestFramework):
 
             time.sleep(4) # give the transaction time to propagate so we generate tx validation data separately from block validation data
             startTime = time.time()
-	    node.generate(1)
+            node.generate(1)
             elapsedTime = time.time() - startTime
             logging.info("generate time: %f" % elapsedTime)
             txLen = len(binascii.unhexlify(txn))  # Get the actual transaction size for better tx fee estimation the next time around
-	    print("[ 'gen',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],",file=fil)
+            print("[ 'gen',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],",file=fil)
 
             startTime = time.time()
             self.sync_all()
             elapsedTime = time.time() - startTime
             logging.info("Sync time: %f" % elapsedTime)
-	    print("[ 'sync',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],",file=fil)
+            print("[ 'sync',",txLen,",",len(inp),",",len(outp),",",elapsedTime,"],",file=fil)
             
         print("]",file=fil)
         fil.close()
@@ -148,7 +148,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
           import addrlist
           addrs = addrlist.addrlist
 
-	wallet = node.listunspent()
+        wallet = node.listunspent()
         wallet.sort(key=lambda x: x["amount"],reverse=True)
 
         (txn,inp,outp,txid) = split_transaction(node, wallet[0], addrs[0:10000], txfee=DEFAULT_TX_FEE_PER_BYTE, sendtx=True)
@@ -156,11 +156,11 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         print("[ 'gen',",txLen,",",len(inp),",",len(outp), "],")
 
         startTime = time.time()          
-	node.generate(1)
+        node.generate(1)
         elapsedTime = time.time() - startTime
-        print "Generate time: ", elapsedTime
+        print ("Generate time: ", elapsedTime)
         startTime = time.time()
-        print "synchronizing"
+        print ("synchronizing")
         self.sync_all()
         elapsedTime = time.time() - startTime
         print("Sync     time: ", elapsedTime)
@@ -194,7 +194,7 @@ class TransactionPerformanceTest(BitcoinTestFramework):
         addrs = [ self.nodes[0].getnewaddress() for _ in range(TEST_SIZE+1)]
         print("['Benchmark', 'generate 2001 addresses', %f]" % (time.time()-start))
 
-	wallet = self.nodes[0].listunspent()
+        wallet = self.nodes[0].listunspent()
         wallet.sort(key=lambda x: x["amount"],reverse=True)
 
         for w in wallet[0:2]:
@@ -202,16 +202,16 @@ class TransactionPerformanceTest(BitcoinTestFramework):
           self.nodes[0].generate(1)
           self.sync_all()
           #tips = self.nodes[0].getchaintips()
-          #print "TIPS:\n", tips
+          #print ("TIPS:\n", tips)
           #lastBlock = self.nodes[0].getblock(tips[0]["hash"])
-          #print "LAST BLOCK:\n", lastBlock
+          #print ("LAST BLOCK:\n", lastBlock)
           #txoutsetinfo = self.nodes[0].gettxoutsetinfo()
-          #print "UTXOS:\n", txoutsetinfo
+          #print ("UTXOS:\n", txoutsetinfo)
 
-	self.nodes[0].generate(1)
+        self.nodes[0].generate(1)
         self.sync_all()
      
-	wallet = self.nodes[0].listunspent()
+        wallet = self.nodes[0].listunspent()
         wallet.sort(key=lambda x: x["amount"],reverse=True)
 
         logging.info("wallet length: %d" % len(wallet))
