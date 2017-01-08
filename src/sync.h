@@ -77,11 +77,15 @@ void LeaveCritical();
 std::string LocksHeld();
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
 void DeleteLock(void* cs);
+void DisallowLock(const char* pszName, const char* pszFile, int nLine, void* cs);
+void AllowLock(void* cs);
 #else
 void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
 void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
 void static inline DeleteLock(void* cs) {}
+void static inline DisallowLock(const char* pszName, const char* pszFile, int nLine, void* cs) {}
+void static inline AllowLock(void* cs) {}
 #endif
 #define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
 
@@ -171,6 +175,31 @@ public:
 
 typedef CMutexLock<CCriticalSection> CCriticalBlock;
 
+/** RAII for debug-only DissalowLock/AllowLock */
+template <typename Mutex>
+class CDisallowLock
+{
+private:
+    Mutex* pmutex;
+
+public:
+    CDisallowLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine) : pmutex(pmutexIn)
+    {
+        DisallowLock(pszName, pszFile, nLine, pmutex);
+    }
+
+    CDisallowLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine) :
+        CDisallowLock(&mutexIn, pszName, pszFile, nLine)
+    { }
+
+    ~CDisallowLock()
+    {
+        AllowLock(pmutex);
+    }
+};
+
+typedef CDisallowLock<CCriticalSection> CDisallowBlock;
+
 #define PASTE(x, y) x ## y
 #define PASTE2(x, y) PASTE(x, y)
 
@@ -189,6 +218,8 @@ typedef CMutexLock<CCriticalSection> CCriticalBlock;
         (cs).unlock();             \
         LeaveCritical();           \
     }
+
+#define DISALLOW_LOCK(cs) CDisallowBlock PASTE2(disallowblock, __COUNTER__)(cs, #cs, __FILE__, __LINE__)
 
 class CSemaphore
 {

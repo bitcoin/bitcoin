@@ -58,6 +58,7 @@ private:
 typedef std::vector<std::pair<void*, CLockLocation> > LockStack;
 typedef std::map<std::pair<void*, void*>, LockStack> LockOrders;
 typedef std::set<std::pair<void*, void*> > InvLockOrders;
+typedef std::map<void*, std::pair<CLockLocation, int> > DisallowSet;
 
 struct LockData {
     // Very ugly hack: as the global constructs and destructors run single
@@ -74,6 +75,7 @@ struct LockData {
 } static lockdata;
 
 boost::thread_specific_ptr<LockStack> lockstack;
+boost::thread_specific_ptr<DisallowSet> disallowset;
 
 static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
@@ -129,8 +131,17 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 {
     if (lockstack.get() == NULL)
         lockstack.reset(new LockStack);
+    if (disallowset.get() == NULL)
+        disallowset.reset(new DisallowSet);
 
     boost::unique_lock<boost::mutex> lock(lockdata.dd_mutex);
+
+    auto disallowit = disallowset->find(c);
+    if (!fTry && disallowit != disallowset->end()) {
+        LogPrintf("Attempted to take lock that was disallowed: ");
+        LogPrintf("Disallowed at %s, but taken at %s\n", disallowit->second.first.ToString(), locklocation.ToString());
+        assert(false);
+    }
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
 
@@ -203,6 +214,31 @@ void DeleteLock(void* cs)
         std::pair<void*, void*> invinvitem = std::make_pair(invit->second, invit->first);
         lockdata.lockorders.erase(invinvitem);
         lockdata.invlockorders.erase(invit++);
+    }
+}
+
+void DisallowLock(const char* pszName, const char* pszFile, int nLine, void* cs)
+{
+    if (disallowset.get() == NULL)
+        disallowset.reset(new DisallowSet);
+
+    auto it = disallowset->find(cs);
+    if (it == disallowset->end()) {
+        disallowset->emplace(std::piecewise_construct, std::forward_as_tuple(cs),
+                std::forward_as_tuple(std::piecewise_construct, std::forward_as_tuple(pszName, pszFile, nLine, false), std::forward_as_tuple(1)));
+    } else {
+        it->second.second++;
+    }
+}
+
+void AllowLock(void* cs)
+{
+    auto it = disallowset->find(cs);
+    assert(it != disallowset->end());
+    it->second.second--;
+    assert(it->second.second >= 0);
+    if (it->second.second == 0) {
+        disallowset->erase(it);
     }
 }
 
