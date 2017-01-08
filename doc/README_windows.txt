@@ -17,7 +17,3 @@ Crown Core is the original Crown client and it builds the backbone of the networ
 However, it downloads and stores the entire history of Crown transactions;
 depending on the speed of your computer and network connection, the synchronization
 process can take anywhere from a few hours to a day or more.
-
-See the crown wiki at:
-  https://en.bitcoin.it/wiki/Main_Page ***TODO***
-for more help and information.
