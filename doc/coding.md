@@ -133,6 +133,6 @@ Threads
 
 - ThreadRPCServer : Remote procedure call handler, listens on port 9998 for connections and services them.
 
-- BitcoinMiner : Generates bitcoins (if wallet is enabled).
+- CrowncoinMiner : Generates bitcoins (if wallet is enabled).
 
 - Shutdown : Does an orderly shutdown of everything.

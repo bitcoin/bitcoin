@@ -94,8 +94,8 @@ Issue the following:
 
 Make note of the hash (which is your collaterla_output) and index.
 
-### Enter your ThroNe details into your throne.conf file
-[From the crown github repo](https://github.com/darkcoin/darkcoin/blob/master/doc/throne_conf.md)
+### Enter your Throne details into your throne.conf file
+[From the crown github repo](https://github.com/infernoman/bitcoin/blob/master/doc/throne_conf.md)
 
 The new throne.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, throne private key, collateral output transaction id and collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
 
