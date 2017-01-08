@@ -110,7 +110,7 @@ background-color: #f2f2f2;
 
 QPushButton
 {
-border: 1px solid #9c8b46;
+border: 1px solid #3b72ef;
 color: #a1a1a1;
 background-color: #f2f2f2;
 padding: 2px;
@@ -118,9 +118,9 @@ padding: 2px;
 
 QPushButton:hover
 {
-border: 1px solid #9c8b46;
+border: 1px solid #3b72ef;
 color: #555555;
-background-color: #9c8b46;
+background-color: #3b72ef;
 padding: 2px;
 }
 
@@ -162,7 +162,7 @@ text-align: center;
 
 QProgressBar::chunk
 {
-background-color: #9c8b46;
+background-color: #3b72ef;
 }
 
 QTabBar::tab {
@@ -209,7 +209,7 @@ color: #555555;
 border-top-left-radius: 3px;
 border-top-right-radius: 3px;
 margin-bottom: 0px;
-background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #3b72ef);
 }
 
 QTabBar::tab:!selected:hover
@@ -217,7 +217,7 @@ QTabBar::tab:!selected:hover
 color: #555555;
 border-top-left-radius: 3px;
 border-top-right-radius: 3px;
-background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #9c8b46);
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #f2f2f2, stop:0.4 #f2f2f2, stop:0.2 #f2f2f2, stop:0.1 #3b72ef);
 }
 
 QHeaderView
@@ -316,7 +316,7 @@ max-height: 20px;
 
 QStackedWidget#SendCoinsEntry .QToolButton:hover 
 {
-background-color:#9c8b46;
+background-color:#3b72ef;
 padding-left:5px;
 padding-right:5px;
 border: 0;
@@ -336,12 +336,12 @@ max-width: 20px;
 
 #label_Wallet
 {
-color: #9c8b46;
+color: #3b72ef;
 }
 
 #label_RecentTransactions
 {
-color: #9c8b46;
+color: #3b72ef;
 }
 
 #frame_ovp_Wallet
