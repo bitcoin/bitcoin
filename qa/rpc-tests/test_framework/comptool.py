@@ -249,6 +249,7 @@ class TestManager(object):
     # with the expected outcome (if given)
     def check_results(self, blockhash, outcome):
         with mininode_lock:
+
             for c in self.connections:
                 if outcome is None:
                     if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
@@ -267,10 +268,17 @@ class TestManager(object):
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
                     print("Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(blockhash), outcome)
                     print("Quick   RPC returns", c.rpc.getbestblockhash())
-                    time.sleep(5)
+                    time.sleep(5) #wait the requestmanager re-request interval to see if the block shows up
                     print("Delayed RPC returns", c.rpc.getbestblockhash())
+                    rpcblock =  c.rpc.getbestblockhash()
+                    block = hex(blockhash)[2:]
+                    #print(" returns", rpcblock)
+                    #print(" returns", block)
+                    if rpcblock == block:
+                        return True
+                    else:
 		    # pdb.set_trace()
-                    return False
+                        return False
             return True
 
     # Either check that the mempools all agree with each other, or that
