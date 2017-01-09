@@ -238,7 +238,7 @@ bool LogAcceptCategory(const char* category)
         static boost::thread_specific_ptr<set<string> > ptrCategory;
         if (ptrCategory.get() == NULL)
         {
-            if (mapMultiArgs.count("-debug")) {
+            if (argsGlobal.IsArgSet("-debug")) {
                 const vector<string>& categories = mapMultiArgs.at("-debug");
                 ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
                 // thread_specific_ptr automatically deletes the set when the thread ends.
