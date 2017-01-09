@@ -20,7 +20,7 @@
 enum {
     TYPICAL_BLOCK_SIZE = 200000,   // used for initial buffer size
     DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,  // default for the maximum size of mined blocks
-    DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4,
+    DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 12,  // Default is 12 to make it very expensive for a minority hash power to get lucky, and potentially drive a block that the rest of the network sees as "excessive" onto the blockchain.
     DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
     DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 16,    // Allowed messages lengths will be this * the excessive block size
     MAX_COINBASE_SCRIPTSIG_SIZE = 100,
