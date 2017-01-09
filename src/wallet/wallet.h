@@ -660,6 +660,7 @@ public:
         nLastResend = 0;
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
+        nAccountingEntryNumber = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -679,6 +680,10 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     int64_t nTimeFirstKey;
+
+    uint64_t nAccountingEntryNumber;
+
+    bool LoadKeyValue(CDataStream& ssKey, CDataStream& ssValue, CWalletScanState &wss, std::string& strType, std::string& strErr);
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 

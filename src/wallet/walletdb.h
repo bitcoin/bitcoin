@@ -41,6 +41,26 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
+bool IsKeyType(std::string strType);
+
+class CWalletScanState {
+public:
+    unsigned int nKeys;
+    unsigned int nCKeys;
+    unsigned int nKeyMeta;
+    bool fIsEncrypted;
+    bool fAnyUnordered;
+    int nFileVersion;
+    std::vector<uint256> vWalletUpgrade;
+
+    CWalletScanState() {
+        nKeys = nCKeys = nKeyMeta = 0;
+        fIsEncrypted = false;
+        fAnyUnordered = false;
+        nFileVersion = 0;
+    }
+};
+
 /* simple HD chain data model */
 class CHDChain
 {
@@ -149,6 +169,7 @@ public:
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
     bool ErasePool(int64_t nPool);
 
+    bool ReadMinVersion(int &nVersion);
     bool WriteMinVersion(int nVersion);
 
     /// This writes directly to the database, and will not update the CWallet's cached accounting entries!
@@ -166,7 +187,8 @@ public:
     CAmount GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
-    DBErrors LoadWallet(CWallet* pwallet);
+    DBErrors ReorderTransactions(CWallet* pwallet);
+
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(CWallet* pwallet, std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut);
@@ -175,11 +197,9 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
-
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
-
 };
 
 void ThreadFlushWalletDB();
