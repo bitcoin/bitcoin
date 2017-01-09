@@ -1051,4 +1051,121 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
     BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
 }
 
+static CScript
+ScriptFromHex(const char* hex)
+{
+    std::vector<unsigned char> data = ParseHex(hex);
+    return CScript(data.begin(), data.end());
+}
+
+
+BOOST_AUTO_TEST_CASE(script_FindAndDelete)
+{
+    // Exercise the FindAndDelete functionality
+    CScript s;
+    CScript d;
+    CScript expect;
+
+    s = CScript() << OP_1 << OP_2;
+    d = CScript(); // delete nothing should be a no-op
+    expect = s;
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    BOOST_CHECK(s == expect);
+
+    s = CScript() << OP_1 << OP_2 << OP_3;
+    d = CScript() << OP_2;
+    expect = CScript() << OP_1 << OP_3;
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+
+    s = CScript() << OP_3 << OP_1 << OP_3 << OP_3 << OP_4 << OP_3;
+    d = CScript() << OP_3;
+    expect = CScript() << OP_1 << OP_4;
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 4);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("0302ff03"); // PUSH 0x02ff03 onto stack
+    d = ScriptFromHex("0302ff03");
+    expect = CScript();
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("0302ff030302ff03"); // PUSH 0x2ff03 PUSH 0x2ff03
+    d = ScriptFromHex("0302ff03");
+    expect = CScript();
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 2);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("0302ff030302ff03");
+    d = ScriptFromHex("02");
+    expect = s; // FindAndDelete matches entire opcodes
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("0302ff030302ff03");
+    d = ScriptFromHex("ff");
+    expect = s;
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    BOOST_CHECK(s == expect);
+
+    // This is an odd edge case: strip of the push-three-bytes
+    // prefix, leaving 02ff03 which is push-two-bytes:
+    s = ScriptFromHex("0302ff030302ff03");
+    d = ScriptFromHex("03");
+    expect = CScript() << ParseHex("ff03") << ParseHex("ff03");
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 2);
+    BOOST_CHECK(s == expect);
+
+    // Byte sequence that spans multiple opcodes:
+    s = ScriptFromHex("02feed5169"); // PUSH(0xfeed) OP_1 OP_VERIFY
+    d = ScriptFromHex("feed51");
+    expect = s;
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0); // doesn't match 'inside' opcodes
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("02feed5169"); // PUSH(0xfeed) OP_1 OP_VERIFY
+    d = ScriptFromHex("02feed51");
+    expect = ScriptFromHex("69");
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("516902feed5169");
+    d = ScriptFromHex("feed51");
+    expect = s;
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 0);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("516902feed5169");
+    d = ScriptFromHex("02feed51");
+    expect = ScriptFromHex("516969");
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+
+    s = CScript() << OP_0 << OP_0 << OP_1 << OP_1;
+    d = CScript() << OP_0 << OP_1;
+    expect = CScript() << OP_0 << OP_1; // FindAndDelete is single-pass
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+
+    s = CScript() << OP_0 << OP_0 << OP_1 << OP_0 << OP_1 << OP_1;
+    d = CScript() << OP_0 << OP_1;
+    expect = CScript() << OP_0 << OP_1; // FindAndDelete is single-pass
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 2);
+    BOOST_CHECK(s == expect);
+
+    // Another weird edge case:
+    // End with invalid push (not enough data)...
+    s = ScriptFromHex("0003feed");
+    d = ScriptFromHex("03feed"); // ... can remove the invalid push
+    expect = ScriptFromHex("00");
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+
+    s = ScriptFromHex("0003feed");
+    d = ScriptFromHex("00");
+    expect = ScriptFromHex("03feed");
+    BOOST_CHECK_EQUAL(s.FindAndDelete(d), 1);
+    BOOST_CHECK(s == expect);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
