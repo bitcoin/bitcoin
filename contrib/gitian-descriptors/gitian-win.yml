@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-win-0.15"
+name: "litecoin-win-0.15"
 enable_cache: true
 suites:
 - "trusty"
@@ -22,8 +22,8 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/litecoin-project/litecoin.git"
+  "dir": "litecoin"
 files: []
 script: |
   WRAP_DIR=$HOME/wrapped
@@ -101,7 +101,7 @@ script: |
   create_per-host_linker_wrapper "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd litecoin
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -119,14 +119,14 @@ script: |
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
+  SOURCEDIST=`echo litecoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find litecoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   mkdir -p $OUTDIR/src
   cp ../$SOURCEDIST $OUTDIR/src
   popd
@@ -155,7 +155,7 @@ script: |
     make deploy
     make install DESTDIR=${INSTALLPATH}
     rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-    cp -f bitcoin-*setup*.exe $OUTDIR/
+    cp -f litecoin-*setup*.exe $OUTDIR/
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
@@ -171,7 +171,7 @@ script: |
   cp -rf contrib/windeploy $BUILD_DIR
   cd $BUILD_DIR/windeploy
   mkdir unsigned
-  cp $OUTDIR/bitcoin-*setup-unsigned.exe unsigned/
+  cp $OUTDIR/litecoin-*setup-unsigned.exe unsigned/
   find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
   mv ${OUTDIR}/${DISTNAME}-x86_64-*-debug.zip ${OUTDIR}/${DISTNAME}-win64-debug.zip
   mv ${OUTDIR}/${DISTNAME}-i686-*-debug.zip ${OUTDIR}/${DISTNAME}-win32-debug.zip
