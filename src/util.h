@@ -130,6 +130,7 @@ protected:
 public:
     void ParseParameters(int argc, const char*const argv[]);
     void ReadConfigFile(const std::string& confPath);
+    const std::vector<std::string>& ArgsAt(const std::string& strArg) const;
 /**
  * Return true if the given argument has been manually set
  *
