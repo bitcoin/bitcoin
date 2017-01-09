@@ -1035,15 +1035,14 @@ UniValue sendmany(const JSONRPCRequest& request)
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
-            "1. \"fromaccount\"           (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
-            "2. \"amounts\"               (string, required) A json object with addresses and amounts\n"
+            "1. \"amounts\"               (string, required) A json object with addresses and amounts\n"
             "    {\n"
             "      \"address\":amount     (numeric or string) The chaincoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
-            "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "4. \"comment\"               (string, optional) A comment\n"
-            "5. subtractfeefrom         (string, optional) A json array with addresses.\n"
+            "2. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "3. \"comment\"               (string, optional) A comment\n"
+            "4. subtractfeefrom         (string, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less chaincoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
@@ -1051,10 +1050,10 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"            (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
-            "6. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
-            "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-            "9.\"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
+            "5. replaceable            (boolean, optional) Allow this transaction to be replaced by a transaction with higher fees via BIP 125\n"
+            "6. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
+            "7. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "8.\"use_ps\"                (bool, optional) Use anonymized funds only (default: false)\n"
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\"\n"
@@ -1413,6 +1412,16 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         if(params[2].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
+    bool has_filtered_address = false;
+    CTxDestination filtered_address = CNoDestination();
+    if (!fByAccounts && params.size() > 3) {
+        if (!IsValidDestinationString(params[3].get_str())) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "address_filter parameter was invalid");
+        }
+        filtered_address = DecodeDestination(params[3].get_str());
+        has_filtered_address = true;
+    }
+
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
     for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
@@ -1431,6 +1440,10 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
 
+            if (has_filtered_address && !(filtered_address == address)) {
+                continue;
+            }
+
             isminefilter mine = IsMine(*pwallet, address);
             if(!(mine & filter))
                 continue;
@@ -1447,10 +1460,24 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     // Reply
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> mapAccountTally;
-    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
-        const CTxDestination& dest = item.first;
-        const std::string& strAccount = item.second.name;
-        std::map<CTxDestination, tallyitem>::iterator it = mapTally.find(dest);
+
+    // Create mapAddressBook iterator
+    // If we aren't filtering, go from begin() to end()
+    auto start = pwallet->mapAddressBook.begin();
+    auto end = pwallet->mapAddressBook.end();
+    // If we are filtering, find() the applicable entry
+    if (has_filtered_address) {
+        start = pwallet->mapAddressBook.find(filtered_address);
+        if (start != end) {
+            end = std::next(start);
+        }
+    }
+
+    for (auto item_it = start; item_it != end; ++item_it)
+    {
+        const CTxDestination& address = item_it->first;
+        const std::string& strAccount = item_it->second.name;
+        auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
@@ -1476,7 +1503,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             UniValue obj(UniValue::VOBJ);
             if(fIsWatchonly)
                 obj.pushKV("involvesWatchonly", true);
-            obj.pushKV("address",       EncodeDestination(dest));
+            obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("account",       strAccount);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
@@ -1521,15 +1548,15 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 3)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaddress ( minconf include_empty include_watchonly)\n"
+            "listreceivedbyaddress ( minconf include_empty include_watchonly address_filter )\n"
             "\nList balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. include_empty     (bool, optional, default=false) Whether to include addresses that haven't received any payments.\n"
-            "3. include_watchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
-
+            "3. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
+            "4. address_filter    (string, optional) If present, only return information on this address.\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -1545,7 +1572,9 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
 
             "\nExamples:\n"
             + HelpExampleCli("listreceivedbyaddress", "")
-            + HelpExampleCli("listreceivedbyaddress", "6 false true")
+            + HelpExampleCli("listreceivedbyaddress", "6 true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"CM72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
         );
 
     ObserveSafeMode();
@@ -1866,7 +1895,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
-            "listaccounts ( minconf addlockconf include_watchonly)\n"
+            "listaccounts ( minconf include_watchonly)\n"
             "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
@@ -3891,7 +3920,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },
     { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
     { "wallet",             "listreceivedbyaccount",            &listreceivedbyaccount,         {"minconf","include_empty","include_watchonly"} },
-    { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly"} },
+    { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
     { "wallet",             "listtransactions",                 &listtransactions,              {"account","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
