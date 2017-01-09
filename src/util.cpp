@@ -12,7 +12,6 @@
 #include "chainparamsbase.h"
 #include "random.h"
 #include "serialize.h"
-#include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 
@@ -102,8 +101,7 @@ using namespace std;
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
 
-CCriticalSection cs_args;
-map<string, string> mapArgs;
+ArgsManager argsGlobal;
 static map<string, vector<string> > _mapMultiArgs;
 const map<string, vector<string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
@@ -345,7 +343,7 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+void ArgsManager::ParseParameters(int argc, const char* const argv[])
 {
     LOCK(cs_args);
     mapArgs.clear();
@@ -381,13 +379,13 @@ void ParseParameters(int argc, const char* const argv[])
     }
 }
 
-bool IsArgSet(const std::string& strArg)
+bool ArgsManager::IsArgSet(const std::string& strArg)
 {
     LOCK(cs_args);
     return mapArgs.count(strArg);
 }
 
-std::string GetArg(const std::string& strArg, const std::string& strDefault)
+std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -395,7 +393,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault)
     return strDefault;
 }
 
-int64_t GetArg(const std::string& strArg, int64_t nDefault)
+int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -403,7 +401,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault)
     return nDefault;
 }
 
-bool GetBoolArg(const std::string& strArg, bool fDefault)
+bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -411,7 +409,7 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
     return fDefault;
 }
 
-bool SoftSetArg(const std::string& strArg, const std::string& strValue)
+bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -420,7 +418,7 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue)
     return true;
 }
 
-bool SoftSetBoolArg(const std::string& strArg, bool fValue)
+bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
     if (fValue)
         return SoftSetArg(strArg, std::string("1"));
@@ -428,12 +426,56 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("0"));
 }
 
-void ForceSetArg(const std::string& strArg, const std::string& strValue)
+void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
 }
 
+void ParseParameters(int argc, const char* const argv[])
+{
+    argsGlobal.ParseParameters(argc, argv);
+}
+
+void ReadConfigFile(const std::string& confPath)
+{
+    argsGlobal.ReadConfigFile(confPath);
+}
+
+bool IsArgSet(const std::string& strArg)
+{
+    return argsGlobal.IsArgSet(strArg);
+}
+
+std::string GetArg(const std::string& strArg, const std::string& strDefault)
+{
+    return argsGlobal.GetArg(strArg, strDefault);
+}
+
+int64_t GetArg(const std::string& strArg, int64_t nDefault)
+{
+    return argsGlobal.GetArg(strArg, nDefault);
+}
+
+bool GetBoolArg(const std::string& strArg, bool fDefault)
+{
+    return argsGlobal.GetBoolArg(strArg, fDefault);
+}
+
+bool SoftSetArg(const std::string& strArg, const std::string& strValue)
+{
+    return argsGlobal.SoftSetArg(strArg, strValue);
+}
+
+bool SoftSetBoolArg(const std::string& strArg, bool fValue)
+{
+    return argsGlobal.SoftSetBoolArg(strArg, fValue);
+}
+
+void ForceSetArg(const std::string& strArg, const std::string& strValue)
+{
+    return argsGlobal.ForceSetArg(strArg, strValue);
+}
 
 
 static const int screenWidth = 79;
@@ -552,7 +594,7 @@ boost::filesystem::path GetConfigFile(const std::string& confPath)
     return pathConfigFile;
 }
 
-void ReadConfigFile(const std::string& confPath)
+void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
