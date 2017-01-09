@@ -9,4 +9,4 @@ if RECENT_TAG="$(git describe --exact-match HEAD)"; then
 else
     VERSION="$(git rev-parse --short=12 HEAD)"
 fi
-DISTNAME="bitcoin-${VERSION}"
+DISTNAME="litecoin-${VERSION}"
