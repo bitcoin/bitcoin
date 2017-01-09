@@ -239,7 +239,7 @@ bool LogAcceptCategory(const char* category)
         if (ptrCategory.get() == NULL)
         {
             if (argsGlobal.IsArgSet("-debug")) {
-                const vector<string>& categories = mapMultiArgs.at("-debug");
+                const vector<string>& categories = argsGlobal.ArgsAt("-debug");
                 ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
                 // thread_specific_ptr automatically deletes the set when the thread ends.
             } else
@@ -377,6 +377,11 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
         mapArgs[str] = strValue;
         _mapMultiArgs[str].push_back(strValue);
     }
+}
+
+const std::vector<std::string>& ArgsManager::ArgsAt(const std::string& strArg) const
+{
+    return mapMultiArgs.at(strArg);
 }
 
 bool ArgsManager::IsArgSet(const std::string& strArg)
