@@ -93,7 +93,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(":"));
     std::string strPass = strUserPass.substr(strUserPass.find(":") + 1);
 
-    if (mapMultiArgs.count("-rpcauth") > 0) {
+    if (argsGlobal.IsArgSet("-rpcauth") > 0) {
         //Search for multi-user login/pass "rpcauth" from config
         BOOST_FOREACH(std::string strRPCAuth, mapMultiArgs.at("-rpcauth"))
         {
