@@ -1741,7 +1741,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 // See https://github.com/bitcoin/bitcoin/issues/8279 for details.
                 assert(recentRejects);
                 recentRejects->insert(tx.GetHash());
-            }
+                if (RecursiveDynamicUsage(*ptx) < 100000)
+                    AddToCompactExtraTransactions(ptx);
+            } else if (tx.HasWitness() && RecursiveDynamicUsage(*ptx) < 100000)
+                AddToCompactExtraTransactions(ptx);
 
             if (pfrom->fWhitelisted && GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
                 // Always relay transactions received from whitelisted peers, even
