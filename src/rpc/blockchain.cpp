@@ -820,7 +820,7 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
         throw runtime_error(
             "pruneblockchain\n"
             "\nArguments:\n"
-            "1. \"height\"       (int, required) The block height to prune up to.\n");
+            "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or to a unix timestamp to prune based on block time.\n");
 
     if (!fPruneMode)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Cannot prune blocks because node is not in prune mode.");
@@ -830,6 +830,16 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
     int heightParam = request.params[0].get_int();
     if (heightParam < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
+
+    // Height value more than a billion is too high to be a block height, and
+    // too low to be a block time (corresponds to timestamp from Sep 2001).
+    if (heightParam > 1000000000) {
+        CBlockIndex* pindex = chainActive.FindLatestBefore(heightParam);
+        if (!pindex) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not find block before specified timestamp.");
+        }
+        heightParam = pindex->nHeight;
+    }
 
     unsigned int height = (unsigned int) heightParam;
     unsigned int chainHeight = (unsigned int) chainActive.Height();
