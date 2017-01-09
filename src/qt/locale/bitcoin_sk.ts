@@ -44,7 +44,11 @@
     </context>
 <context>
     <name>AddressTableModel</name>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez popisu)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -465,6 +469,10 @@
     <message>
         <source>Priority</source>
         <translation>Priorita</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez popisu)</translation>
     </message>
     </context>
 <context>
@@ -1384,6 +1392,10 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez popisu)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1535,7 +1547,15 @@
         <source>S&amp;end</source>
         <translation>&amp;Odoslať</translation>
     </message>
-    </context>
+    <message>
+        <source>or</source>
+        <translation>alebo</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez popisu)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1734,6 +1754,10 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez popisu)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>

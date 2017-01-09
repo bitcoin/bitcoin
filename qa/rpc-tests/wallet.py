@@ -71,7 +71,7 @@ class WalletTest (BitcoinTestFramework):
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
         self.nodes[2].lockunspent(False, [unspent_0])
-        assert_raises(JSONRPCException, self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
+        assert_raises_message(JSONRPCException, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
         self.nodes[2].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[2].listlockunspent()), 0)
@@ -330,10 +330,12 @@ class WalletTest (BitcoinTestFramework):
             # disabled until issue is fixed: https://github.com/bitcoin/bitcoin/issues/7463
             # '-salvagewallet',
         ]
+        chainlimit = 6
         for m in maintenance:
             print("check " + m)
             stop_nodes(self.nodes)
-            self.nodes = start_nodes(3, self.options.tmpdir, [[m]] * 3)
+            # set lower ancestor limit for later
+            self.nodes = start_nodes(3, self.options.tmpdir, [[m, "-limitancestorcount="+str(chainlimit)]] * 3)
             while m == '-reindex' and [block_count] * 3 != [self.nodes[i].getblockcount() for i in range(3)]:
                 # reindex will leave rpc warm up "early"; Wait for it to finish
                 time.sleep(0.1)
@@ -345,6 +347,27 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(coinbase_tx_1["transactions"]), 1)
         assert_equal(coinbase_tx_1["transactions"][0]["blockhash"], blocks[1])
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
+
+        # ==Check that wallet prefers to use coins that don't exceed mempool limits =====
+
+        # Get all non-zero utxos together
+        chain_addrs = [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()]
+        singletxid = self.nodes[0].sendtoaddress(chain_addrs[0], self.nodes[0].getbalance(), "", "", True)
+        self.nodes[0].generate(1)
+        node0_balance = self.nodes[0].getbalance()
+        # Split into two chains
+        rawtx = self.nodes[0].createrawtransaction([{"txid":singletxid, "vout":0}], {chain_addrs[0]:node0_balance/2-Decimal('0.01'), chain_addrs[1]:node0_balance/2-Decimal('0.01')})
+        signedtx = self.nodes[0].signrawtransaction(rawtx)
+        singletxid = self.nodes[0].sendrawtransaction(signedtx["hex"])
+        txids = [singletxid, singletxid]
+        self.nodes[0].generate(1)
+
+        # Make a long chain of unconfirmed payments without hitting mempool limit
+        txid_list = []
+        for i in range(chainlimit*2):
+            txid_list.append(self.nodes[0].sendtoaddress(chain_addrs[0], Decimal('0.0001')))
+        assert_equal(self.nodes[0].getmempoolinfo()['size'], chainlimit*2)
+        assert_equal(len(txid_list), chainlimit*2)
 
 if __name__ == '__main__':
     WalletTest().main()
