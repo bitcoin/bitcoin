@@ -16,6 +16,8 @@ static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 /** Default for BIP61 (sending reject messages) */
 static constexpr bool DEFAULT_ENABLE_BIP61 = true;
+/** if disabled, blocks will not be requested automatically, useful for low-resources-available mode */
+static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
@@ -91,5 +93,8 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
  */
 void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
 void ProcessPriorityRequests(const std::shared_ptr<CBlock> block);
+
+void SetAutoRequestBlocks(bool state);
+bool isAutoRequestingBlocks();
 
 #endif // BITCOIN_NET_PROCESSING_H
