@@ -93,6 +93,10 @@ CScript COINBASE_FLAGS;
 
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
+/** if enable, blocks will not be requested automatically */
+static const bool DEFAULT_BLOCK_REQUESTS_PAUSED = false;
+std::atomic<bool> fPauseBlockRequests(DEFAULT_BLOCK_REQUESTS_PAUSED);
+
 // Internal stuff
 namespace {
 
@@ -4351,6 +4355,15 @@ void DumpMempool(void)
     } catch (const std::exception& e) {
         LogPrintf("Failed to dump mempool: %s. Continuing anyway.\n", e.what());
     }
+}
+
+bool isBlockRequestsPaused() {
+    return fPauseBlockRequests;
+}
+
+void setBlockRequestsPaused(bool state) {
+    LogPrintf("%s Block Requests\n", (state ? "Pause" : "Resume"));
+    fPauseBlockRequests = state;
 }
 
 //! Guess how far we are in the verification process at the given block index
