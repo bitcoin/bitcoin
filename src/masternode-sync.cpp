@@ -17,6 +17,42 @@
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
+void ReleaseNodes(const std::vector<CNode*> &vNodesCopy)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodesCopy)
+        pnode->Release();
+}
+
+bool CMasternodeSync::CheckNodeHeight(CNode* pnode, bool fDisconnectStuckNodes)
+{
+    CNodeStateStats stats;
+    if(!GetNodeStateStats(pnode->id, stats) || stats.nCommonHeight == -1 || stats.nSyncHeight == -1) return false; // not enough info about this peer
+
+    // Check blocks and headers, allow a small error margin of 1 block
+    if(pCurrentBlockIndex->nHeight - 1 > stats.nCommonHeight) {
+        // This peer probably stuck, don't sync any additional data from it
+        if(fDisconnectStuckNodes) {
+            // Disconnect to free this connection slot for another peer.
+            pnode->fDisconnect = true;
+            LogPrintf("CMasternodeSync::CheckNodeHeight -- disconnecting from stuck peer, nHeight=%d, nCommonHeight=%d, peer=%d\n",
+                        pCurrentBlockIndex->nHeight, stats.nCommonHeight, pnode->id);
+        } else {
+            LogPrintf("CMasternodeSync::CheckNodeHeight -- skipping stuck peer, nHeight=%d, nCommonHeight=%d, peer=%d\n",
+                        pCurrentBlockIndex->nHeight, stats.nCommonHeight, pnode->id);
+        }
+        return false;
+    }
+    else if(pCurrentBlockIndex->nHeight < stats.nSyncHeight - 1) {
+        // This peer announced more headers than we have blocks currently
+        LogPrintf("CMasternodeSync::CheckNodeHeight -- skipping peer, who announced more headers than we have blocks currently, nHeight=%d, nSyncHeight=%d, peer=%d\n",
+                    pCurrentBlockIndex->nHeight, stats.nSyncHeight, pnode->id);
+        return false;
+    }
+
+    return true;
+}
+
 bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
 {
     static bool fBlockchainSynced = false;
@@ -59,6 +95,34 @@ bool CMasternodeSync::IsBlockchainSynced(bool fBlockAccepted)
 
     if(fCheckpointsEnabled && pCurrentBlockIndex->nHeight < Checkpoints::GetTotalBlocksEstimate(Params().Checkpoints()))
         return false;
+
+    std::vector<CNode*> vNodesCopy;
+    {
+        LOCK(cs_vNodes);
+        vNodesCopy = vNodes;
+        BOOST_FOREACH(CNode* pnode, vNodesCopy)
+            pnode->AddRef();
+    }
+
+    // We have enough peers and assume most of them are synced
+    if(vNodes.size() >= MASTERNODE_SYNC_ENOUGH_PEERS) {
+        // Check to see how many of our peers are (almost) at the same height as we are
+        int nNodesAtSameHeight = 0;
+        BOOST_FOREACH(CNode* pnode, vNodesCopy)
+        {
+            // Make sure this peer is presumably at the same height
+            if(!CheckNodeHeight(pnode)) continue;
+            nNodesAtSameHeight++;
+            // if we have decent number of such peers, most likely we are synced now
+            if(nNodesAtSameHeight >= MASTERNODE_SYNC_ENOUGH_PEERS) {
+                LogPrintf("CMasternodeSync::IsBlockchainSynced -- found enough peers on the same height as we are, done\n");
+                fBlockchainSynced = true;
+                ReleaseNodes(vNodesCopy);
+                return true;
+            }
+        }
+    }
+    ReleaseNodes(vNodesCopy);
 
     // wait for at least one new block to be accepted
     if(!fFirstBlockAccepted) return false;
@@ -191,13 +255,6 @@ void CMasternodeSync::ClearFulfilledRequests()
     }
 }
 
-void ReleaseNodes(const std::vector<CNode*> &vNodesCopy)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodesCopy)
-        pnode->Release();
-}
-
 void CMasternodeSync::ProcessTick()
 {
     static int nTick = 0;
@@ -295,28 +352,8 @@ void CMasternodeSync::ProcessTick()
                 continue;
             }
 
-            CNodeStateStats stats;
-            if(!GetNodeStateStats(pnode->id, stats) || stats.nCommonHeight == -1 || stats.nSyncHeight == -1) continue; // not enough info about this peer
-
-            // Check blocks and headers, allow a small error margin of 1 block
-            if(pCurrentBlockIndex->nHeight - 1 > stats.nCommonHeight) {
-                // This peer probably stuck, don't sync any additional data,
-                // disconnect to free this connection slot for another peer.
-                pnode->fDisconnect = true;
-                LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from stuck peer, nHeight=%d, nCommonHeight=%d, peer=%d\n",
-                            pCurrentBlockIndex->nHeight, stats.nCommonHeight, pnode->id);
-                continue;
-            }
-            else if(pCurrentBlockIndex->nHeight < stats.nSyncHeight - 1) {
-                // This peer announced more headers than we have blocks currently,
-                // we probably need to wait a bit or this peer is on another (longer??) chain,
-                // so our data could be incompatible, skip it anyway for now but do not disconnect,
-                // maybe that chain is the right one.
-                LogPrintf("CMasternodeSync::ProcessTick -- skipping peer, who announced more headers than we have blocks currently, nHeight=%d, nSyncHeight=%d, peer=%d\n",
-                            pCurrentBlockIndex->nHeight, stats.nSyncHeight, pnode->id);
-                continue;
-            }
-            // If we got here, we should have enough info about this peer and it should be ok to continue further.
+            // Make sure this peer is presumably at the same height
+            if(!CheckNodeHeight(pnode, true)) continue;
 
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
 
