@@ -27,28 +27,38 @@ class KeyPoolTest(BitcoinTestFramework):
         wallet_info = nodes[0].getwalletinfo()
         assert(addr_before_encrypting_data['hdmasterkeyid'] != wallet_info['hdmasterkeyid'])
         assert(addr_data['hdmasterkeyid'] == wallet_info['hdmasterkeyid'])
-        
         assert_raises_jsonrpc(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
-        # put three new keys in the keypool
+        # put six (plus 2) new keys in the keypool (100% external-, +20% internal-keys, 2 in min)
         nodes[0].walletpassphrase('test', 12000)
-        nodes[0].keypoolrefill(3)
+        nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
+        wi = nodes[0].getwalletinfo()
+        assert_equal(wi['keypoolsize_hd_internal'], 2)
+        assert_equal(wi['keypoolsize'], 6)
 
-        # drain the keys
+        # drain the internal keys
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
         addr = set()
-        addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        addr.add(nodes[0].getrawchangeaddress())
-        # assert that four unique addresses were returned
-        assert(len(addr) == 4)
         # the next one should fail
         assert_raises_jsonrpc(-12, "Keypool ran out", nodes[0].getrawchangeaddress)
+
+        # drain the external keys
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        addr.add(nodes[0].getnewaddress())
+        assert(len(addr) == 6)
+        # the next one should fail
+        assert_raises_jsonrpc(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # refill keypool with three new addresses
         nodes[0].walletpassphrase('test', 1)
         nodes[0].keypoolrefill(3)
+
         # test walletpassphrase timeout
         time.sleep(1.1)
         assert_equal(nodes[0].getwalletinfo()["unlocked_until"], 0)
@@ -57,8 +67,13 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].generate(1)
         nodes[0].generate(1)
         nodes[0].generate(1)
-        nodes[0].generate(1)
         assert_raises_jsonrpc(-12, "Keypool ran out", nodes[0].generate, 1)
+
+        nodes[0].walletpassphrase('test', 100)
+        nodes[0].keypoolrefill(100)
+        wi = nodes[0].getwalletinfo()
+        assert_equal(wi['keypoolsize_hd_internal'], 20)
+        assert_equal(wi['keypoolsize'], 100)
 
     def __init__(self):
         super().__init__()
