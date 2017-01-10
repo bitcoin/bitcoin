@@ -236,8 +236,8 @@ UniValue waitforblock(const JSONRPCRequest& request)
             "\nWaits for a specific new block and returns useful info about it.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
-            "1. blockhash to wait for (string)\n"
-            "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
+            "1. \"blockhash\" (required, string) Block hash to wait for.\n"
+            "2. timeout       (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"hash\" : {       (string) The blockhash\n"
@@ -274,12 +274,12 @@ UniValue waitforblockheight(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "waitforblockheight <blockheight> (timeout)\n"
+            "waitforblockheight <height> (timeout)\n"
             "\nWaits for (at least) block height and returns the height and hash\n"
             "of the current tip.\n"
             "\nReturns the current block on timeout or exit.\n"
             "\nArguments:\n"
-            "1. block height to wait for (int)\n"
+            "1. height  (required, int) Block height to wait for (int)\n"
             "2. timeout (int, optional, default=0) Time in milliseconds to wait for a response. 0 indicates no timeout.\n"
             "\nResult:\n"
             "{                           (json object)\n"
@@ -418,7 +418,7 @@ UniValue getrawmempool(const JSONRPCRequest& request)
             "getrawmempool ( verbose )\n"
             "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
             "\nArguments:\n"
-            "1. verbose           (boolean, optional, default=false) true for a json object, false for array of transaction ids\n"
+            "1. verbose (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
             "\nResult: (for verbose = false):\n"
             "[                     (json array of string)\n"
             "  \"transactionid\"     (string) The transaction id\n"
@@ -449,8 +449,8 @@ UniValue getmempoolancestors(const JSONRPCRequest& request)
             "getmempoolancestors txid (verbose)\n"
             "\nIf txid is in the mempool, returns all in-mempool ancestors.\n"
             "\nArguments:\n"
-            "1. \"txid\"                   (string, required) The transaction id (must be in mempool)\n"
-            "2. verbose                  (boolean, optional, default=false) true for a json object, false for array of transaction ids\n"
+            "1. \"txid\"                 (string, required) The transaction id (must be in mempool)\n"
+            "2. verbose                  (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
             "\nResult (for verbose=false):\n"
             "[                       (json array of strings)\n"
             "  \"transactionid\"           (string) The transaction id of an in-mempool ancestor transaction\n"
@@ -513,8 +513,8 @@ UniValue getmempooldescendants(const JSONRPCRequest& request)
             "getmempooldescendants txid (verbose)\n"
             "\nIf txid is in the mempool, returns all in-mempool descendants.\n"
             "\nArguments:\n"
-            "1. \"txid\"                   (string, required) The transaction id (must be in mempool)\n"
-            "2. verbose                  (boolean, optional, default=false) true for a json object, false for array of transaction ids\n"
+            "1. \"txid\"                 (string, required) The transaction id (must be in mempool)\n"
+            "2. verbose                  (boolean, optional, default=false) True for a json object, false for array of transaction ids\n"
             "\nResult (for verbose=false):\n"
             "[                       (json array of strings)\n"
             "  \"transactionid\"           (string) The transaction id of an in-mempool descendant transaction\n"
@@ -607,10 +607,10 @@ UniValue getblockhash(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "getblockhash index\n"
-            "\nReturns hash of block in best-block-chain at index provided.\n"
+            "getblockhash height\n"
+            "\nReturns hash of block in best-block-chain at height provided.\n"
             "\nArguments:\n"
-            "1. index         (numeric, required) The block index\n"
+            "1. height         (numeric, required) The height index\n"
             "\nResult:\n"
             "\"hash\"         (string) The block hash\n"
             "\nExamples:\n"
@@ -691,12 +691,12 @@ UniValue getblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "getblock \"hash\" ( verbose )\n"
+            "getblock \"blockhash\" ( verbose )\n"
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
             "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
-            "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
+            "1. \"blockhash\"          (string, required) The block hash\n"
+            "2. verbose                (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
             "\nResult (for verbose = true):\n"
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
@@ -858,12 +858,12 @@ UniValue gettxout(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
-            "gettxout \"txid\" n ( includemempool )\n"
+            "gettxout \"txid\" n ( include_mempool )\n"
             "\nReturns details about an unspent transaction output.\n"
             "\nArguments:\n"
             "1. \"txid\"       (string, required) The transaction id\n"
             "2. n              (numeric, required) vout number\n"
-            "3. includemempool  (boolean, optional) Whether to include the mempool\n"
+            "3. include_mempool  (boolean, optional) Whether to include the mempool\n"
             "\nResult:\n"
             "{\n"
             "  \"bestblock\" : \"hash\",    (string) the block hash\n"
@@ -875,7 +875,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
             "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"bitcoinaddress\"     (string) bitcoin address\n"
+            "        \"address\"     (string) bitcoin address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -940,11 +940,11 @@ UniValue verifychain(const JSONRPCRequest& request)
     int nCheckDepth = GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     if (request.fHelp || request.params.size() > 2)
         throw runtime_error(
-            "verifychain ( checklevel numblocks )\n"
+            "verifychain ( checklevel nblocks )\n"
             "\nVerifies blockchain database.\n"
             "\nArguments:\n"
             "1. checklevel   (numeric, optional, 0-4, default=" + strprintf("%d", nCheckLevel) + ") How thorough the block verification is.\n"
-            "2. numblocks    (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
+            "2. nblocks      (numeric, optional, default=" + strprintf("%d", nCheckDepth) + ", 0=all) The number of blocks to check.\n"
             "\nResult:\n"
             "true|false       (boolean) Verified or not\n"
             "\nExamples:\n"
@@ -1257,12 +1257,12 @@ UniValue preciousblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "preciousblock \"hash\"\n"
+            "preciousblock \"blockhash\"\n"
             "\nTreats a block as if it were received before others with the same work.\n"
             "\nA later preciousblock call can override the effect of an earlier one.\n"
             "\nThe effects of preciousblock are not retained across restarts.\n"
             "\nArguments:\n"
-            "1. hash   (string, required) the hash of the block to mark as precious\n"
+            "1. \"blockhash\"   (string, required) the hash of the block to mark as precious\n"
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("preciousblock", "\"blockhash\"")
@@ -1295,10 +1295,10 @@ UniValue invalidateblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "invalidateblock \"hash\"\n"
+            "invalidateblock \"blockhash\"\n"
             "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n"
             "\nArguments:\n"
-            "1. hash   (string, required) the hash of the block to mark as invalid\n"
+            "1. \"blockhash\"   (string, required) the hash of the block to mark as invalid\n"
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("invalidateblock", "\"blockhash\"")
@@ -1333,11 +1333,11 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "reconsiderblock \"hash\"\n"
+            "reconsiderblock \"blockhash\"\n"
             "\nRemoves invalidity status of a block and its descendants, reconsider them for activation.\n"
             "This can be used to undo the effects of invalidateblock.\n"
             "\nArguments:\n"
-            "1. hash   (string, required) the hash of the block to reconsider\n"
+            "1. \"blockhash\"   (string, required) the hash of the block to reconsider\n"
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("reconsiderblock", "\"blockhash\"")
@@ -1367,33 +1367,33 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },
-    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true  },
-    { "blockchain",         "getblockcount",          &getblockcount,          true  },
-    { "blockchain",         "getblock",               &getblock,               true  },
-    { "blockchain",         "getblockhash",           &getblockhash,           true  },
-    { "blockchain",         "getblockheader",         &getblockheader,         true  },
-    { "blockchain",         "getchaintips",           &getchaintips,           true  },
-    { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
-    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true  },
-    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true  },
-    { "blockchain",         "getmempoolentry",        &getmempoolentry,        true  },
-    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
-    { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
-    { "blockchain",         "gettxout",               &gettxout,               true  },
-    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
-    { "blockchain",         "verifychain",            &verifychain,            true  },
+{ //  category              name                      actor (function)         okSafe argNames
+  //  --------------------- ------------------------  -----------------------  ------ ----------
+    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true,  {} },
+    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,  {} },
+    { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
+    { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbose"} },
+    { "blockchain",         "getblockhash",           &getblockhash,           true,  {"height"} },
+    { "blockchain",         "getblockheader",         &getblockheader,         true,  {"blockhash","verbose"} },
+    { "blockchain",         "getchaintips",           &getchaintips,           true,  {} },
+    { "blockchain",         "getdifficulty",          &getdifficulty,          true,  {} },
+    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true,  {"txid","verbose"} },
+    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true,  {"txid","verbose"} },
+    { "blockchain",         "getmempoolentry",        &getmempoolentry,        true,  {"txid"} },
+    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true,  {} },
+    { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
+    { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
+    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
+    { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
 
-    { "blockchain",         "preciousblock",          &preciousblock,          true  },
+    { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
 
     /* Not shown in help */
-    { "hidden",             "invalidateblock",        &invalidateblock,        true  },
-    { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },
-    { "hidden",             "waitfornewblock",        &waitfornewblock,        true  },
-    { "hidden",             "waitforblock",           &waitforblock,           true  },
-    { "hidden",             "waitforblockheight",     &waitforblockheight,     true  },
+    { "hidden",             "invalidateblock",        &invalidateblock,        true,  {"blockhash"} },
+    { "hidden",             "reconsiderblock",        &reconsiderblock,        true,  {"blockhash"} },
+    { "hidden",             "waitfornewblock",        &waitfornewblock,        true,  {"timeout"} },
+    { "hidden",             "waitforblock",           &waitforblock,           true,  {"blockhash","timeout"} },
+    { "hidden",             "waitforblockheight",     &waitforblockheight,     true,  {"height","timeout"} },
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)

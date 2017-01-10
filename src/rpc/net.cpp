@@ -470,10 +470,10 @@ UniValue setban(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 2 ||
         (strCommand != "add" && strCommand != "remove"))
         throw runtime_error(
-                            "setban \"ip(/netmask)\" \"add|remove\" (bantime) (absolute)\n"
+                            "setban \"subnet\" \"add|remove\" (bantime) (absolute)\n"
                             "\nAttempts add or remove a IP/Subnet from the banned list.\n"
                             "\nArguments:\n"
-                            "1. \"ip(/netmask)\" (string, required) The IP/Subnet (see getpeerinfo for nodes ip) with a optional netmask (default is /32 = single ip)\n"
+                            "1. \"subnet\"       (string, required) The IP/Subnet (see getpeerinfo for nodes ip) with a optional netmask (default is /32 = single ip)\n"
                             "2. \"command\"      (string, required) 'add' to add a IP/Subnet to the list, 'remove' to remove a IP/Subnet from the list\n"
                             "3. \"bantime\"      (numeric, optional) time in seconds how long (or until when if [absolute] is set) the ip is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)\n"
                             "4. \"absolute\"     (boolean, optional) If set, the bantime must be a absolute timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -582,7 +582,9 @@ UniValue setnetworkactive(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1) {
         throw runtime_error(
             "setnetworkactive true|false\n"
-            "Disable/enable all p2p network activity."
+            "\nDisable/enable all p2p network activity.\n"
+            "\nArguments:\n"
+            "1. \"state\"        (boolean, required) true to enable networking, false to disable\n"
         );
     }
 
@@ -598,18 +600,18 @@ UniValue setnetworkactive(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
-    { "network",            "getconnectioncount",     &getconnectioncount,     true  },
-    { "network",            "ping",                   &ping,                   true  },
-    { "network",            "getpeerinfo",            &getpeerinfo,            true  },
-    { "network",            "addnode",                &addnode,                true  },
-    { "network",            "disconnectnode",         &disconnectnode,         true  },
-    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true  },
-    { "network",            "getnettotals",           &getnettotals,           true  },
-    { "network",            "getnetworkinfo",         &getnetworkinfo,         true  },
-    { "network",            "setban",                 &setban,                 true  },
-    { "network",            "listbanned",             &listbanned,             true  },
-    { "network",            "clearbanned",            &clearbanned,            true  },
-    { "network",            "setnetworkactive",       &setnetworkactive,       true, },
+    { "network",            "getconnectioncount",     &getconnectioncount,     true,  {} },
+    { "network",            "ping",                   &ping,                   true,  {} },
+    { "network",            "getpeerinfo",            &getpeerinfo,            true,  {} },
+    { "network",            "addnode",                &addnode,                true,  {"node","command"} },
+    { "network",            "disconnectnode",         &disconnectnode,         true,  {"node"} },
+    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true,  {"node"} },
+    { "network",            "getnettotals",           &getnettotals,           true,  {} },
+    { "network",            "getnetworkinfo",         &getnetworkinfo,         true,  {} },
+    { "network",            "setban",                 &setban,                 true,  {"subnet", "command", "bantime", "absolute"} },
+    { "network",            "listbanned",             &listbanned,             true,  {} },
+    { "network",            "clearbanned",            &clearbanned,            true,  {} },
+    { "network",            "setnetworkactive",       &setnetworkactive,       true,  {"state"} },
 };
 
 void RegisterNetRPCCommands(CRPCTable &t)
