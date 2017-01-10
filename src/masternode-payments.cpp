@@ -843,15 +843,36 @@ void CMasternodePayments::Sync(CNode* pnode, int nCountNeeded)
     pnode->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_MNW, nInvCount);
 }
 
-// Request low data payment blocks in batches directly from some node instead of/after preliminary Sync.
+// Request low data/unknown payment blocks in batches directly from some node instead of/after preliminary Sync.
 void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode)
 {
     // Old nodes can't process this
     if(pnode->nVersion < 70202) return;
+    if(!pCurrentBlockIndex) return;
 
     LOCK2(cs_main, cs_mapMasternodeBlocks);
 
     std::vector<CInv> vToFetch;
+    int nLimit = GetStorageLimit();
+
+    const CBlockIndex *pindex = pCurrentBlockIndex;
+
+    while(pCurrentBlockIndex->nHeight - pindex->nHeight < nLimit) {
+        if(!mapMasternodeBlocks.count(pindex->nHeight)) {
+            // We have no idea about this block height, let's ask
+            vToFetch.push_back(CInv(MSG_MASTERNODE_PAYMENT_BLOCK, pindex->GetBlockHash()));
+            // We should not violate GETDATA rules
+            if(vToFetch.size() == MAX_INV_SZ) {
+                LogPrintf("CMasternodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d blocks\n", pnode->id, MAX_INV_SZ);
+                pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
+                // Start filling new batch
+                vToFetch.clear();
+            }
+        }
+        if(!pindex->pprev) break;
+        pindex = pindex->pprev;
+    }
+
     std::map<int, CMasternodeBlockPayees>::iterator it = mapMasternodeBlocks.begin();
 
     while(it != mapMasternodeBlocks.end()) {
