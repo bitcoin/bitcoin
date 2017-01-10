@@ -13,8 +13,8 @@ import signal
 import struct
 import sys
 
-if not (sys.version_info.major >= 3 and sys.version_info.minor >= 5):
-    print("This example only works with Python 3.5 and greater")
+if not (sys.version_info.major >= 3 and sys.version_info.minor >= 4):
+    print("This example only works with Python 3.4 and greater")
     exit(1)
 
 port = 28332
@@ -31,8 +31,9 @@ class ZMQHandler():
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
-    async def handle(self) :
-        msg = await self.zmqSubSocket.recv_multipart()
+    @asyncio.coroutine
+    def handle(self) :
+        msg = yield from self.zmqSubSocket.recv_multipart()
         topic = msg[0]
         body = msg[1]
         sequence = "Unknown";
