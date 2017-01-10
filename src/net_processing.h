@@ -14,6 +14,10 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
 void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
+/** if disabled, blocks will not be requested automatically, usefull for non-validation mode */
+static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
+extern std::atomic<bool> fAutoRequestBlocks;
+
 class PeerLogicValidation : public CValidationInterface {
 private:
     CConnman* connman;
@@ -21,7 +25,7 @@ private:
 public:
     PeerLogicValidation(CConnman* connmanIn);
 
-    virtual void SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int nPosInBlock);
+    virtual void SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int nPosInBlock, bool validated);
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
     virtual void BlockChecked(const CBlock& block, const CValidationState& state);
 };

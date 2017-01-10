@@ -4,12 +4,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
+#include "auxiliaryblockrequest.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "coins.h"
 #include "consensus/validation.h"
 #include "validation.h"
+#include "net_processing.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "rpc/server.h"
@@ -25,6 +27,7 @@
 #include <univalue.h>
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
+#include <boost/assign/list_of.hpp>
 
 #include <mutex>
 #include <condition_variable>
@@ -82,6 +85,8 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     // Only report confirmations if the block is on the main chain
     if (chainActive.Contains(blockindex))
         confirmations = chainActive.Height() - blockindex->nHeight + 1;
+
+    result.push_back(Pair("validated", ((blockindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_SCRIPTS)));
     result.push_back(Pair("confirmations", confirmations));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", blockindex->nVersion));
@@ -110,6 +115,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     // Only report confirmations if the block is on the main chain
     if (chainActive.Contains(blockindex))
         confirmations = chainActive.Height() - blockindex->nHeight + 1;
+    result.push_back(Pair("validated", (blockindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_SCRIPTS));
     result.push_back(Pair("confirmations", confirmations));
     result.push_back(Pair("strippedsize", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS)));
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
@@ -642,6 +648,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
             "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+            "  \"validated\" : n,       (boolean) True if the block has been validated (for auxiliary block requests)\n"
             "  \"height\" : n,          (numeric) The block height or index\n"
             "  \"version\" : n,         (numeric) The block version\n"
             "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
@@ -1366,6 +1373,122 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+UniValue requestblocks(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw runtime_error(
+                            "requestblocks (start|cancel|status) ([\"hash_0\", \"hash_1\", ...]) (<pass-internally>)\n"
+                            "\nRequests blocks (auxiliary) by eventually downloading them.\n"
+                            "\nDownload of the requested blocks will be priorized.\n"
+                            "\nArguments:\n"
+                            "1. action            (string, required) the action to execute\n"
+                            "                                        start  = start a new block request (overwrite existing one)\n"
+                            "                                        cancel = stop current block request\n"
+                            "                                        status = get info about current request\n"
+                            "2. array of hashes   (array, optional) the hashes of the blocks to download\n"
+                            "2. pass-internally   (boolean, optional, default = false) If set, the transactions of the requested blocks get passed into the wallet/ZMQ/etc.\n"
+                            "\nResult:\n"
+                            "   cancel: <true|false> (\"true\" if a blockrequest was present)\n"
+                            "   start: {\"overwrite\": <true|false>} (if the new blocksrequest has overwritten an already existign one\n"
+                            "   status: {\n"
+                            "              \"created\": <timestamp> (block request was created at this timestamp)\n"
+                            "              \"is_cancled\": <true|false> (set if blockrequest is cancled)\n"
+                            "              \"requested_blocks\": <number> (amount of requestes blocks)\n"
+                            "              \"loaded_blocks\": <number> (amount of blocks already available on disk)\n"
+                            "              \"processed_blocks\": <number> (amount of already processed blocks)\n"
+                            "           }\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("requestblocks", "\"'[\"<blockhash>\"]'\"")
+                            + HelpExampleRpc("requestblocks", "\"'[\"<blockhash>\"]'\"")
+                            );
+
+    if (request.params[0].get_str() == "cancel")
+    {
+        if (CAuxiliaryBlockRequest::GetCurrentRequest()) {
+            CAuxiliaryBlockRequest::GetCurrentRequest()->cancel();
+            return UniValue(true);
+        }
+        else
+            return UniValue(false);
+    }
+    if (request.params[0].get_str() == "status")
+    {
+        std::shared_ptr<CAuxiliaryBlockRequest> blockRequest = CAuxiliaryBlockRequest::GetCurrentRequest();
+        UniValue ret(UniValue::VOBJ);
+        ret.pushKV("request_present", (bool)blockRequest);
+        if (blockRequest) {
+            ret.pushKV("created", UniValue(blockRequest->created));
+            ret.pushKV("is_cancled", UniValue(blockRequest->isCancelled()));
+            ret.pushKV("requested_blocks", (int64_t)blockRequest->vBlocksToDownload.size());
+            ret.pushKV("loaded_blocks", (int)blockRequest->amountOfBlocksLoaded());
+            ret.pushKV("processed_blocks", (int64_t)blockRequest->processedUpToSize);
+        }
+        return ret;
+    }
+    if (request.params[0].get_str() == "start")
+    {
+        if (request.params.size() < 2)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing blocks array");
+        UniValue hash_Uarray = request.params[1].get_array();
+        if (!hash_Uarray.isArray())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Second parameter must be an array");
+
+        std::vector<CBlockIndex*> blocksToDownload;
+        {
+            LOCK(cs_main); //mapBlockIndex
+            for (UniValue strHashU : hash_Uarray.getValues())
+            {
+                uint256 hash(uint256S(strHashU.get_str()));
+                BlockMap::iterator mi = mapBlockIndex.find(hash);
+                if (mi == mapBlockIndex.end())
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+                blocksToDownload.push_back((*mi).second);
+            }
+        }
+
+        bool passThroughSignals = false;
+        if (request.params.size() == 3 && request.params[2].isBool())
+            passThroughSignals = request.params[2].get_bool();
+
+        std::shared_ptr<CAuxiliaryBlockRequest> blockRequest(new CAuxiliaryBlockRequest(blocksToDownload, GetAdjustedTime(), passThroughSignals, [](std::shared_ptr<CAuxiliaryBlockRequest> cb_spvRequest, CBlockIndex *pindex) -> bool {
+            return true;
+        }));
+        bool overwrite = (CAuxiliaryBlockRequest::GetCurrentRequest() != nullptr);
+        // set the global SPV Request
+        blockRequest->setAsCurrentRequest();
+
+        UniValue ret(UniValue::VOBJ);
+        ret.pushKV("overwrite", UniValue(overwrite));
+        return ret;
+    }
+    else
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unkown action");
+}
+
+UniValue setautorequestblocks(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+                            "setautorequestblocks (true|false)\n"
+                            "\nIf set to false, blocks will no longer be requested automatically\n"
+                            "Useful for a pure non-validation mode in conjunction with requestblocks.\n"
+                            "\nArguments:\n"
+                            "1. state             (boolean, optional) enables or disables the automatic block download\n"
+                            "\nResult:\n"
+                            "   status: <true|false> (\"true\" if a automatic blockdownloads are enabled)\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("setautorequestblocks", "\"false\"")
+                            + HelpExampleRpc("setautorequestblocks", "\"false\"")
+                            );
+
+    if (request.params.size() == 1)
+        fAutoRequestBlocks = request.params[0].get_bool();
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("status", UniValue(fAutoRequestBlocks));
+    return ret;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1385,8 +1508,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxout",               &gettxout,               true  },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
     { "blockchain",         "verifychain",            &verifychain,            true  },
-
     { "blockchain",         "preciousblock",          &preciousblock,          true  },
+    { "blockchain",         "requestblocks",          &requestblocks,          true  },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },
@@ -1394,6 +1517,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitfornewblock",        &waitfornewblock,        true  },
     { "hidden",             "waitforblock",           &waitforblock,           true  },
     { "hidden",             "waitforblockheight",     &waitforblockheight,     true  },
+    { "hidden",             "setautorequestblocks",   &setautorequestblocks,   true  },
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)
