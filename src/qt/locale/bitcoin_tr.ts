@@ -41,6 +41,61 @@
         <source>&amp;Delete</source>
         <translation>&amp;Sil</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Parayı göndermek istediğiniz adresi seçiniz</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Parayı almak istediğiniz adresi seçiniz</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>S&amp;eçiniz</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Gönderilen adresler</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Alınan adresler</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Adres Kopyala</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>&amp;Etiketi kopyala</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Değiştir</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Adres listesini dışarı aktar</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Dışarı aktarmada hata</translation>
+    </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etiket</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -60,7 +115,43 @@
         <source>Repeat new passphrase</source>
         <translation>Yeni parolayı tekrarlayınız</translation>
     </message>
-</context>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Şifrelenmiş cüzdan</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Cüzdan kilidini kaldır</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Bu işlem, cüzdan şifresini çözmek için cüzdan parolanıza ihtiyaç duyuyor.</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Parola değiştir</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Cüzdan şifrelemesini onayla</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Cüzdanınızı şifrelemek istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Cüzdan şifrelendi</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Cüzdan şifreleme başarısız</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Cüzdan kilidi kaldırma hatası</translation>
+    </message>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -278,26 +369,6 @@
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Muamele tarihçesinden %n blok işlendi.</numerusform><numerusform>Muamele tarihçesinden %n blok işlendi</numerusform></translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n saat</numerusform><numerusform>%n saat</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n gün</numerusform><numerusform>%n gün</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n hafta</numerusform><numerusform>%n hafta</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 ve %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n yıl</numerusform><numerusform>%n yıl</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 geride</translation>
@@ -384,7 +455,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Cüzdan &lt;b&gt;şifrelenmiştir&lt;/b&gt; ve şu anda &lt;b&gt;kilitlidir&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -402,10 +473,6 @@
     <message>
         <source>Amount:</source>
         <translation>Meblağ:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Öncelik:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -460,10 +527,22 @@
         <translation>Doğrulandı</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Öncelik</translation>
+        <source>Copy address</source>
+        <translation>Adres kopyala</translation>
     </message>
-</context>
+    <message>
+        <source>Copy label</source>
+        <translation>Etiket kopyala</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Miktarı kopyala</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -486,7 +565,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Adres</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -609,6 +688,21 @@
     </message>
 </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Son blok zamanı</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Sakla</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -626,7 +720,7 @@
         <source>Select payment request file</source>
         <translation>Ödeme talebi dosyasını seç</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -938,6 +1032,9 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -947,11 +1044,7 @@
         <source>Node/Service</source>
         <translation>Düğüm/Servis</translation>
     </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Ping Süresi</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -990,7 +1083,21 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ve %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>Resmi ka&amp;ydet...</translation>
+    </message>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1194,14 +1301,6 @@
         <translation>Konsolu temizle</translation>
     </message>
     <message>
-        <source>&amp;Disconnect Node</source>
-        <translation>Düğümle Bağlantıyı &amp;Kes</translation>
-    </message>
-    <message>
-        <source>Ban Node for</source>
-        <translation>Düğümü şu süre için yasakla:</translation>
-    </message>
-    <message>
         <source>1 &amp;hour</source>
         <translation>1 &amp;saat</translation>
     </message>
@@ -1216,10 +1315,6 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;yıl</translation>
-    </message>
-    <message>
-        <source>&amp;Unban Node</source>
-        <translation>Düğümün Yasağını Kald&amp;ır</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -1352,6 +1447,14 @@
         <source>Remove</source>
         <translation>Kaldır</translation>
     </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Etiket kopyala</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Miktarı kopyala</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -1371,7 +1474,26 @@
         <source>&amp;Save Image...</source>
         <translation>Resmi ka&amp;ydet...</translation>
     </message>
-</context>
+    <message>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiket</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etiket</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1405,10 +1527,6 @@
     <message>
         <source>Amount:</source>
         <translation>Meblağ:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Öncelik:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1479,10 +1597,6 @@
         <translation>(Zeki ücret henüz başlatılmadı. Bu genelde birkaç blok alır...)</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>Teyit süresi:</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -1521,6 +1635,14 @@
     <message>
         <source>S&amp;end</source>
         <translation>G&amp;önder</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Miktarı kopyala</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
     </message>
 </context>
 <context>
@@ -1601,7 +1723,10 @@
         <source>Memo:</source>
         <translation>Not:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1699,7 +1824,7 @@
         <source>Reset all verify message fields</source>
         <translation>Tüm mesaj kontrolü alanlarını sıfırla</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1715,12 +1840,53 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Bu pano muamelenin ayrıntılı açıklamasını gösterir</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etiket</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(etiket yok)</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Copy address</source>
+        <translation>Adres kopyala</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Etiket kopyala</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Miktarı kopyala</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiket</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Dışarı aktarmada hata</translation>
+    </message>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1728,6 +1894,15 @@
         <translation>Meblağları göstermek için birim. Başka bir birim seçmek için tıklayınız.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1791,20 +1966,12 @@
         <translation>HTTP sunucusu başlatılamadı. Ayrıntılar için debug.log dosyasına bakınız.</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Dışarıdan gelen bağlantıları kabul et (varsayılan: -proxy veya -connect yoksa 1)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Çekirdeği</translation>
     </message>
     <message>
         <source>The %s developers</source>
         <translation>%s geliştiricileri</translation>
-    </message>
-    <message>
-        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>-fallbackfee çok yüksek bir değere ayarlanmış! Ücret tahminleri mevcut değilken ödeyebileceğiniz muamele ücretidir bu.</translation>
     </message>
     <message>
         <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
@@ -1827,10 +1994,6 @@
         <translation>Tüm cüzdan muamelelerini sil ve başlangıçta -rescan ile sadece blok zincirinin parçası olanları geri getir</translation>
     </message>
     <message>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>MIT yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
-    </message>
-    <message>
         <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
         <translation>%s yüklenmesinde hata: zaten var olan ve HD olmayan bir cüzdanda HD etkinleştirilemez.</translation>
     </message>
@@ -1841,10 +2004,6 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Bir cüzdan muamelesi değiştiğinde komutu çalıştır (komuttaki %s muamele kimliği ile değiştirilecektir)</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
-        <translation>Yerel aktarma politikasını ihlal ettiklerinde bile beyaz listedeki eşlerden gelen muamelelerin aktarılmasını zorla (varsayılan: %d)</translation>
     </message>
     <message>
         <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
@@ -1871,28 +2030,12 @@
         <translation>Blok veritabanı gelecekten gibi görünen bir blok içermektedir. Bu, bilgisayarınızın saat ve tarihinin yanlış ayarlanmış olmasından kaynaklanabilir. Blok veritabanını sadece bilgisayarınızın tarih ve saatinin doğru olduğundan eminseniz yeniden derleyin.</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Bu yayın öncesi bir deneme sürümüdür - tüm riski siz üstlenmiş olursunuz - bitcoin oluşturmak ya da ticari uygulamalar için kullanmayınız</translation>
-    </message>
-    <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
         <translation>Veritabanını çatallama öncesi duruma geri sarmak mümkün değil. Blok zincirini tekrar indirmeniz gerekmektedir</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Dinlenecek portu haritalamak için UPnP kullan (varsayılan: dinlenildiğinde ve -proxy olmadığında 1)</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Uyarı: şebeke tamamen mutabık değil gibi görünüyor! Bazı madenciler sorun yaşıyor gibi görünüyor.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Uyarı: eşlerimizle tamamen mutabık değiliz gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
-        <translation>Belirtilen ağ maskesi ya da IP adresinden bağlanan eşleri beyaz listeye al. Birden fazla kez belirtilebilir.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
@@ -1929,10 +2072,6 @@
     <message>
         <source>Change index out of range</source>
         <translation>Aralık dışında değişiklik endeksi</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Sadece belirtilen düğüme veya düğümlere bağlan</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -2055,10 +2194,6 @@
         <translation>auth çerezinin konumu (varsayılan: veri klasörü)</translation>
     </message>
     <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Aktardığımız ve oluşturduğumuz muamelelerdeki sigop başına asgari bayt (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
     </message>
@@ -2097,10 +2232,6 @@
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Veritabanı önbellek boyutunu megabayt olarak belirt (%d ilâ %d, varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block cost (default: %d)</source>
-        <translation>Azami blok maliyetini ayarla (varsayılan: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
@@ -2207,10 +2338,6 @@
         <translation>Aktardığımız ve oluşturduğumuz veri taşıyıcı muamelelerindeki azami veri boyutu (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation>Adres sayısı azaldıysa DNS sorgulamasıyla eş adresleri ara (varsayılan: 1 -connect kullanılmadıysa)</translation>
-    </message>
-    <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Her vekil bağlantısı için kimlik verilerini rastgele yap. Bu, Tor akış izolasyonunu etkinleştirir (varsayılan: %u)</translation>
     </message>
@@ -2221,10 +2348,6 @@
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Bu muamele, ücret düşüldükten sonra göndermek için çok düşük</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Bu ürün OpenSSL projesi tarafından OpenSSL araç takımı (http://www.openssl.org/) için geliştirilen yazılımlar, Eric Young (eay@cryptsoft.com) tarafından hazırlanmış şifreleme yazılımları ve Thomas Bernard tarafından programlanmış UPnP yazılımı içerir.</translation>
     </message>
     <message>
         <source>Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start</source>
@@ -2339,10 +2462,6 @@
         <translation>Muamele meblağı çok düşük</translation>
     </message>
     <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Muamele tutarının pozitif olması lazımdır</translation>
-    </message>
-    <message>
         <source>Transaction too large for fee policy</source>
         <translation>Ücret politikası için çok büyük muamele</translation>
     </message>
@@ -2407,12 +2526,12 @@
         <translation>-maxtxfee çok yüksek bir değere ayarlanmış! Bu denli yüksek ücretler tek bir muamelede ödenebilir.</translation>
     </message>
     <message>
-        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>-paytxfee çok yüksek bir değere ayarlanmış! Bu, muamele gönderirseniz ödeyeceğiniz muamele ücretidir.</translation>
-    </message>
-    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Muameleleri bellek alanında &lt;n&gt; saatten fazla tutma (varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
+        <translation>Oluşturma ve aktarşa muamelelerinde sigop başına eşdeğer bayt (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
@@ -2531,8 +2650,8 @@
         <translation>Anahtar alan boyutunu &lt;n&gt; değerine ayarla (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Bayt olarak asgari blok boyutunu tanımla (varsayılan: %u)</translation>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>Azami BIP141 blok ağırlığını ayarla (varsayılan: %d)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

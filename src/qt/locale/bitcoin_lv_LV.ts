@@ -37,7 +37,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Dzēst</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -56,7 +59,7 @@
         <source>Repeat new passphrase</source>
         <translation>Jaunā parole vēlreiz</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -231,10 +234,6 @@
         <translation>Nav pieejams neviens bloku avots...</translation>
     </message>
     <message>
-        <source>%1 and %2</source>
-        <translation>%1 un %2</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 aizmugurē</translation>
     </message>
@@ -278,7 +277,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -292,10 +291,6 @@
     <message>
         <source>Amount:</source>
         <translation>Daudzums:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritāte:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -337,11 +332,7 @@
         <source>Confirmed</source>
         <translation>Apstiprināts</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Prioritāte</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -356,7 +347,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Adrese</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -419,6 +410,17 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Forma</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Pēdējā bloka laiks</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -436,7 +438,7 @@
         <source>Select payment request file</source>
         <translation>Izvēlies maksājuma pieprasījuma datni</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -628,6 +630,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -648,6 +653,16 @@
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 un %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -810,7 +825,7 @@
         <source>Remove</source>
         <translation>Noņemt</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -829,7 +844,10 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Saglabāt Attēlu...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -863,10 +881,6 @@
     <message>
         <source>Amount:</source>
         <translation>Daudzums:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritāte:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -916,7 +930,7 @@
         <source>S&amp;end</source>
         <translation>&amp;Sūtīt</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -967,7 +981,10 @@
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1041,7 +1058,7 @@
         <source>Reset all verify message fields</source>
         <translation>Atiestatīt visus laukus</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1057,14 +1074,32 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Šis panelis parāda transakcijas detaļas</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1103,10 +1138,6 @@
     <message>
         <source>Block creation options:</source>
         <translation>Bloka izveidošanas iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Savienoties tikai ar norādītajām nodēm.</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1159,10 +1190,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Transakcijas summa ir pārāk maza</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Transakcijas summai ir jābūt pozitīvai</translation>
     </message>
     <message>
         <source>Transaction too large</source>

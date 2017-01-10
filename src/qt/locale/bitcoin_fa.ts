@@ -41,6 +41,49 @@
         <source>&amp;Delete</source>
         <translation>&amp;حذف</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>آدرس مورد نظر برای ارسال کوین ها را انتخاب کنید</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>آدرس موردنظر برای دریافت کوین ها را انتخاب کنید.</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>انتخاب</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>آدرس های فرستنده</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>آدرس های گیرنده</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>کپی و برچسب‌&amp;گذاری</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;ویرایش</translation>
+    </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>آدرس</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بدون برچسب)</translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -59,6 +102,54 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>تکرار گذرواژهٔ جدید</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>رمزنگاری کیف پول</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>باز کردن قفل کیف پول</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>رمزگشایی کیف پول</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>تأیید رمزنگاری کیف پول</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>آیا مطمئن هستید که می‌خواهید کیف پول خود را رمزنگاری کنید؟</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>کیف پول رمزنگاری شد</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>رمزنگاری کیف پول با شکست مواجه شد</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>رمزنگاری کیف پول بنا به یک خطای داخلی با شکست مواجه شد. کیف پول شما رمزنگاری نشد.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>بازگشایی قفل کیف‌پول با شکست مواجه شد</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>رمزگشایی کیف پول با شکست مواجه شد</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>گذرواژهٔ کیف پول با موفقیت عوض شد.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>هشدار: کلید Caps Lock روشن است!</translation>
     </message>
 </context>
 <context>
@@ -129,6 +220,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;تنظیمات...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>تغییر تنظیمات %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -235,12 +330,20 @@
         <translation>نوارابزار برگه‌ها</translation>
     </message>
     <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>درخواست پرداخت ( تولید کد کیوار و ادرس بیت کوین)</translation>
+    </message>
+    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>نمایش لیست آدرس های ارسال و لیبل ها</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>بازکردن یک بیت کوین: آدرس یا درخواست پرداخت</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -251,28 +354,16 @@
         <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
     </message>
     <message>
+        <source>Processing blocks on disk...</source>
+        <translation>پردازش بلوک‌ها روی دیسک...</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>منبعی برای دریافت بلاک در دسترس نیست...</translation>
     </message>
     <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n ساعت</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n روز</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n هفته</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 و %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n سال</numerusform></translation>
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>پردازش %n  بلاک از تاریخچه ی تراکنش ها </numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -352,7 +443,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>کیف پول &lt;b&gt;رمزنگاری شده&lt;/b&gt; است و هم‌اکنون &lt;b&gt;قفل&lt;/b&gt; است</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -370,10 +461,6 @@
     <message>
         <source>Amount:</source>
         <translation>مبلغ:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>اولویت:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -424,8 +511,48 @@
         <translation>تأیید شده</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>اولویت</translation>
+        <source>Copy label</source>
+        <translation>کپی برچسب</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>کپی مقدار</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>کپی شناسهٔ تراکنش</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>قفل کردن خرج نشده ها</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>بازکردن قفل خرج نشده ها</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>کپی تعداد</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 قفل شده)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>بله</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>خیر</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بدون برچسب)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(تغییر)</translation>
     </message>
 </context>
 <context>
@@ -442,7 +569,35 @@
         <source>&amp;Address</source>
         <translation>&amp;نشانی</translation>
     </message>
-</context>
+    <message>
+        <source>New receiving address</source>
+        <translation>نشانی گیرنده جدید</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>نشانی فرستنده جدید</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>ویرایش آدرس گیرنده</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>ویرایش آدرس قرستنده</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>نشانی وارد شده "%1" یک نشانی معتبر بیت‌کوین نیست.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>نشانی وارد شده «%1» در حال حاضر در دفترچه وجود دارد.</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>نمی‌توان کیف پول را رمزگشایی کرد.</translation>
+    </message>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -473,6 +628,10 @@
         <translation>نسخه</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-بیت)</translation>
+    </message>
+    <message>
         <source>About %1</source>
         <translation>درباره %1</translation>
     </message>
@@ -487,6 +646,26 @@
     <message>
         <source>command-line options</source>
         <translation>گزینه‌های خط فرمان</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>گزینه‌های رابط کاربری:</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>زبان را تنظیم کنید؛ برای مثال «de_DE» (پیشفرض: زبان سیستم)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>شروع برنامه به صورت کوچک‌شده</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>تنظیم گواهی ریشه SSl برای درخواست پرداخت (پیشفرض: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>نمایش پنجرهٔ خوشامدگویی در ابتدای اجرای برنامه (پیش‌فرض: %u)</translation>
     </message>
     </context>
 <context>
@@ -517,10 +696,37 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>فرم</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>زمان آخرین بلوک</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>پنهان کردن</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
         <translation>بازکردن آدرس</translation>
+    </message>
+    <message>
+        <source>Open payment request from URI or file</source>
+        <translation>بازکردن درخواست پرداخت از آدرس یا فایل</translation>
+    </message>
+    <message>
+        <source>URI:</source>
+        <translation>آدرس اینترنتی:</translation>
+    </message>
+    <message>
+        <source>Select payment request file</source>
+        <translation>انتخاب فایل درخواست پرداخت</translation>
     </message>
     </context>
 <context>
@@ -532,6 +738,14 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;عمومی</translation>
+    </message>
+    <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>اجرای خودکار %1 بعد زمان ورود به سیستم.</translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation>مگابایت</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -673,6 +887,10 @@
         <translation>تراز علی‌الحساب شما</translation>
     </message>
     <message>
+        <source>Pending:</source>
+        <translation>در انتظار:</translation>
+    </message>
+    <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>مجموع تراکنش‌هایی که هنوز تأیید نشده‌اند؛ و هنوز روی تراز علی‌الحساب اعمال نشده‌اند</translation>
     </message>
@@ -706,17 +924,20 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
-    <message>
-        <source>Ping Time</source>
-        <translation>زمان پینگ</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>مبلغ</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>یک آدرس بیت‌کوین وارد کنید (مثلاً %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -746,7 +967,17 @@
         <source>%1 ms</source>
         <translation>%1 میلیونم ثانیه</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -794,6 +1025,10 @@
         <translation>تعداد فعلی بلوک‌ها</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>استخر حافظه</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation>مصرف حافظه</translation>
     </message>
@@ -812,6 +1047,14 @@
     <message>
         <source>Services</source>
         <translation>سرویس ها</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>مدت اتصال</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>ارسال شده آخرین بار</translation>
     </message>
     <message>
         <source>Last Receive</source>
@@ -909,6 +1152,14 @@
         <translation>پیام:</translation>
     </message>
     <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>برای درخواست پرداخت از این فرم استفاده کنید.تمام قسمت ها &lt;b&gt;اختیاری&lt;b&gt; هستند.</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>تمام قسمت های فرم را خالی کن.</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>پاک‌کردن</translation>
     </message>
@@ -917,8 +1168,20 @@
         <translation>نمایش</translation>
     </message>
     <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>حذف ورودی های انتخاب‌شده از لیست</translation>
+    </message>
+    <message>
         <source>Remove</source>
         <translation>حذف کردن</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>کپی برچسب</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>کپی مقدار</translation>
     </message>
 </context>
 <context>
@@ -935,12 +1198,39 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;ذخیره عکس...</translation>
     </message>
-</context>
+    <message>
+        <source>Address</source>
+        <translation>آدرس</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بدون برچسب)</translation>
+    </message>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
         <translation>ارسال سکه</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>ورودی‌ها...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation>به طور خودکار انتخاب شدند</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -959,10 +1249,6 @@
         <translation>مبلغ:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>اولویت:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>هزینه:</translation>
     </message>
@@ -979,8 +1265,20 @@
         <translation>هزینهٔ تراکنش:</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>انتخاب...</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>در هر کیلوبایت</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation>پنهان کردن</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>در مجموع حداقل</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -989,10 +1287,6 @@
     <message>
         <source>Custom:</source>
         <translation>سفارشی:</translation>
-    </message>
-    <message>
-        <source>Confirmation time:</source>
-        <translation>روز تایید:</translation>
     </message>
     <message>
         <source>normal</source>
@@ -1011,6 +1305,10 @@
         <translation>&amp;دریافت‌کنندهٔ جدید</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>تمام قسمت های فرم را خالی کن.</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>پاکسازی &amp;همه</translation>
     </message>
@@ -1025,6 +1323,18 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;ارسال</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>کپی تعداد</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>کپی مقدار</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بدون برچسب)</translation>
     </message>
 </context>
 <context>
@@ -1081,7 +1391,10 @@
         <source>Memo:</source>
         <translation>یادداشت:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1167,7 +1480,7 @@
         <source>Reset all verify message fields</source>
         <translation>بازنشانی تمام فیلدهای پیام</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1183,14 +1496,60 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>این پانل شامل توصیف کاملی از جزئیات تراکنش است</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(بدون برچسب)</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Copy label</source>
+        <translation>کپی برچسب</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>کپی مقدار</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>کپی شناسهٔ تراکنش</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>آدرس</translation>
+    </message>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1219,10 +1578,6 @@
         <translation>اجرا در پشت زمینه به‌صورت یک سرویس و پذیرش دستورات</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>پذیرش اتصالات از بیرون (پیش فرض:1 بدون پراکسی یا اتصال)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation> هسته Bitcoin </translation>
     </message>
@@ -1235,16 +1590,8 @@
         <translation>هنگامی که یک تراکنش در کیف پولی رخ می دهد، دستور را اجرا کن(%s در دستورات بوسیله ی TxID جایگزین می شود)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>این یک نسخه ی آزمایشی است - با مسئولیت خودتان از آن استفاده کنید -  آن را در معدن و بازرگانی بکار نگیرید.</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>بستن گزینه ایجاد</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>تنها در گره (های) مشخص شده متصل شوید</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1335,10 +1682,6 @@
         <translation>مقدار تراکنش بسیار کم است</translation>
     </message>
     <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>مقادیر تراکنش باید مثبت باشد</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>تراکنش بسیار بزرگ است</translation>
     </message>
@@ -1369,6 +1712,10 @@
     <message>
         <source>Loading addresses...</source>
         <translation>بار گیری آدرس ها</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(پیش‌فرض %s)</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>

@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Ўчириш</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Янги махфий сузни такрорланг</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -246,26 +249,6 @@
         <source>No block source available...</source>
         <translation>Блок манбалари мавжуд эмас...</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n соат</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n кун</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n ҳафта</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 ва %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n йил</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 орқада</translation>
@@ -314,7 +297,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Ҳамён &lt;b&gt;кодланган&lt;/b&gt; ва вақтинча &lt;b&gt;қулфланган&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -328,10 +311,6 @@
     <message>
         <source>Amount:</source>
         <translation>Миқдори:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Муҳимлиги:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -377,11 +356,7 @@
         <source>Confirmed</source>
         <translation>Тасдиқланди</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Муҳимлиги</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -404,7 +379,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Манзил</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -475,6 +450,17 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Шакл</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Сўнгги блок вақти</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -492,7 +478,7 @@
         <source>Select payment request file</source>
         <translation>Тўлов сўрови файлини танлаш</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -684,16 +670,15 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
         <translation>Фойдаланувчи вакил</translation>
     </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Ping вақти</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -724,7 +709,17 @@
         <source>%1 ms</source>
         <translation>%1 мс</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ва %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -962,7 +957,7 @@
         <source>Remove</source>
         <translation>Ўчириш</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -977,7 +972,10 @@
         <source>&amp;Save Image...</source>
         <translation>Расмни &amp;сақлаш</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1007,10 +1005,6 @@
     <message>
         <source>Amount:</source>
         <translation>Миқдори:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Муҳимлиги:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1049,10 +1043,6 @@
         <translation>Тавсия этилган</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>Тасдиқ вақти</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>Нормал</translation>
     </message>
@@ -1088,7 +1078,7 @@
         <source>S&amp;end</source>
         <translation>Жў&amp;натиш</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1133,6 +1123,9 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -1173,14 +1166,32 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ушбу ойна операциянинг батафсил таърифини кўрсатади</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
