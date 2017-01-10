@@ -808,6 +808,11 @@ public:
      */
     static CAmount GetRequiredFee(unsigned int nTxBytes);
 
+    /**
+     * Return the rate below which wallet's outputs should be considered dust.
+     */
+    static CFeeRate GetDustRate();
+
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
     void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool);
