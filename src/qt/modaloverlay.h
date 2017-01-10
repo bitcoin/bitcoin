@@ -45,6 +45,7 @@ private:
     QVector<QPair<qint64, double> > blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
+    void eventuallyShowHeaderSyncing(int count);
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

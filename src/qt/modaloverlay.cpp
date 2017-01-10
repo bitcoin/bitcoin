@@ -71,6 +71,7 @@ void ModalOverlay::setKnownBestHeight(int count, const QDateTime& blockDate)
     if (count > bestHeaderHeight) {
         bestHeaderHeight = count;
         bestHeaderDate = blockDate;
+        eventuallyShowHeaderSyncing(count);
     }
 }
 
@@ -127,15 +128,20 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         // not syncing
         return;
 
+    // show remaining number of blocks
+    ui->numberOfBlocksLeft->setText(QString::number(bestHeaderHeight - count));
+    eventuallyShowHeaderSyncing(count);
+}
+
+void ModalOverlay::eventuallyShowHeaderSyncing(int count)
+{
     // estimate the number of headers left based on nPowTargetSpacing
     // and check if the gui is not aware of the best header (happens rarely)
-    int estimateNumHeadersLeft = bestHeaderDate.secsTo(currentDate) / Params().GetConsensus().nPowTargetSpacing;
+    int estimateNumHeadersLeft = bestHeaderDate.secsTo(QDateTime::currentDateTime()) / Params().GetConsensus().nPowTargetSpacing;
     bool hasBestHeader = bestHeaderHeight >= count;
 
-    // show remaining number of blocks
-    if (estimateNumHeadersLeft < HEADER_HEIGHT_DELTA_SYNC && hasBestHeader) {
-        ui->numberOfBlocksLeft->setText(QString::number(bestHeaderHeight - count));
-    } else {
+    // show headers-syncing progress if we still sync headers
+    if (estimateNumHeadersLeft >= HEADER_HEIGHT_DELTA_SYNC || !hasBestHeader) {
         ui->numberOfBlocksLeft->setText(tr("Unknown. Syncing Headers (%1)...").arg(bestHeaderHeight));
         ui->expectedTimeLeft->setText(tr("Unknown..."));
     }
