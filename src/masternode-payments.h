@@ -180,7 +180,7 @@ public:
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
     std::map<COutPoint, int> mapMasternodesLastVote;
 
-    CMasternodePayments() : nStorageCoeff(1.25), nMinBlocksToStore(4000) {}
+    CMasternodePayments() : nStorageCoeff(1.25), nMinBlocksToStore(5000) {}
 
     ADD_SERIALIZE_METHODS;
 
