@@ -1324,6 +1324,54 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
     BOOST_CHECK_EQUAL(derSig + "81 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "81")) << vchPubKey));
     BOOST_CHECK_EQUAL(derSig + "82 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "82")) << vchPubKey));
     BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
+
+    BOOST_CHECK_EQUAL("2", ScriptToAsmStr(CScript() << OP_2));
+    BOOST_CHECK_EQUAL("82",  ScriptToAsmStr(CScript() << ToByteVector(ParseHex("52"))));
+    BOOST_CHECK_EQUAL("5200", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("5200"))));
+    BOOST_CHECK_EQUAL("520000", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("520000"))));
+    BOOST_CHECK_EQUAL("52000000", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("52000000"))));
+    BOOST_CHECK_EQUAL("5200000000", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("5200000000"))));
+
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("81")) << OP_0));
+    BOOST_CHECK_EQUAL("-1 0", ScriptToAsmStr(CScript() << OP_1NEGATE << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("01")) << OP_0));
+    BOOST_CHECK_EQUAL("1 0", ScriptToAsmStr(CScript() << OP_1 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("02")) << OP_0));
+    BOOST_CHECK_EQUAL("2 0", ScriptToAsmStr(CScript() << OP_2 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("03")) << OP_0));
+    BOOST_CHECK_EQUAL("3 0", ScriptToAsmStr(CScript() << OP_3 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("04")) << OP_0));
+    BOOST_CHECK_EQUAL("4 0", ScriptToAsmStr(CScript() << OP_4 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("05")) << OP_0));
+    BOOST_CHECK_EQUAL("5 0", ScriptToAsmStr(CScript() << OP_5 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("06")) << OP_0));
+    BOOST_CHECK_EQUAL("6 0", ScriptToAsmStr(CScript() << OP_6 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("07")) << OP_0));
+    BOOST_CHECK_EQUAL("7 0", ScriptToAsmStr(CScript() << OP_7 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("08")) << OP_0));
+    BOOST_CHECK_EQUAL("8 0", ScriptToAsmStr(CScript() << OP_8 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("09")) << OP_0));
+    BOOST_CHECK_EQUAL("9 0", ScriptToAsmStr(CScript() << OP_9 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("0A")) << OP_0));
+    BOOST_CHECK_EQUAL("10 0", ScriptToAsmStr(CScript() << OP_10 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("0B")) << OP_0));
+    BOOST_CHECK_EQUAL("11 0", ScriptToAsmStr(CScript() << OP_11 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("0C")) << OP_0));
+    BOOST_CHECK_EQUAL("12 0", ScriptToAsmStr(CScript() << OP_12 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("0D")) << OP_0));
+    BOOST_CHECK_EQUAL("13 0", ScriptToAsmStr(CScript() << OP_13 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("0E")) << OP_0));
+    BOOST_CHECK_EQUAL("14 0", ScriptToAsmStr(CScript() << OP_14 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("0F")) << OP_0));
+    BOOST_CHECK_EQUAL("15 0", ScriptToAsmStr(CScript() << OP_15 << OP_0));
+    BOOST_CHECK_EQUAL("[error]", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("10")) << OP_0));
+    BOOST_CHECK_EQUAL("16 0", ScriptToAsmStr(CScript() << OP_16 << OP_0));
+
+    string hashEmpty("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    string hashZero("6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d");
+
+    BOOST_CHECK_EQUAL("0 OP_SHA256 " + hashEmpty + " OP_EQUAL", ScriptToAsmStr(CScript() << OP_0 << OP_SHA256 << ToByteVector(ParseHex(hashEmpty)) << OP_EQUAL));
+    BOOST_CHECK_EQUAL("00 OP_SHA256 " + hashZero + " OP_EQUAL", ScriptToAsmStr(CScript() << ToByteVector(ParseHex("00")) << OP_SHA256 << ToByteVector(ParseHex(hashZero)) << OP_EQUAL));
 }
 
 static CScript
