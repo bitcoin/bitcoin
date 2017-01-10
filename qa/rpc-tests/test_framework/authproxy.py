@@ -138,14 +138,16 @@ class AuthServiceProxy(object):
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
 
-    def __call__(self, *args):
+    def __call__(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
         log.debug("-%s-> %s %s"%(AuthServiceProxy.__id_count, self._service_name,
                                  json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+        if args and argsn:
+            raise ValueError('Cannot handle both named and positional arguments')
         postdata = json.dumps({'version': '1.1',
                                'method': self._service_name,
-                               'params': args,
+                               'params': args or argsn,
                                'id': AuthServiceProxy.__id_count}, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         response = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
