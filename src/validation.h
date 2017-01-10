@@ -287,6 +287,13 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 double GuessVerificationProgress(const ChainTxData& data, CBlockIndex* pindex);
 
 /**
+ * Pausing block requests will allow to temporary pause the verification process.
+ * Pausing won't prevent ActivateBestChain from connecting blocks (that are in flight or already on disk)
+ */
+bool isBlockRequestsPaused();
+void setBlockRequestsPaused(bool state);
+
+/**
  * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
  * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
  * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
