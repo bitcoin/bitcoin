@@ -310,8 +310,6 @@ public:
 
     std::string ToString() const;
 
-    int GetEstimatedMasternodes(int nBlock);
-
     /// Update masternode list and maps using provided CMasternodeBroadcast
     void UpdateMasternodeList(CMasternodeBroadcast mnb);
     /// Perform complete check and only then update list and maps

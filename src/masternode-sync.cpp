@@ -348,21 +348,6 @@ void CMasternodeSync::ProcessTick()
                     return;
                 }
 
-                // check for data
-                // if we have enough masternodes in or list, switch to the next asset
-                /* Note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
-                   Surely doesn't work right for testnet currently */
-                // try to fetch data from at least two peers though
-                int nMnCountEstimated = mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9;
-                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMnCount %d nMnCountEstimated %d\n",
-                          nTick, nMnCount, nMnCountEstimated);
-                if(nRequestedMasternodeAttempt > 1 && nMnCount > nMnCountEstimated) {
-                    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- found enough data\n", nTick, nRequestedMasternodeAssets);
-                    SwitchToNextAsset();
-                    ReleaseNodes(vNodesCopy);
-                    return;
-                }
-
                 // only request once from each peer
                 if(netfulfilledman.HasFulfilledRequest(pnode->addr, "masternode-list-sync")) continue;
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "masternode-list-sync");

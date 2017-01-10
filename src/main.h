@@ -251,7 +251,6 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, const Consensus::Para
 bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, const CBlock* pblock = NULL);
 
 double ConvertBitsToDouble(unsigned int nBits);
-int64_t GetTotalCoinEstimate(int nHeight);
 CAmount GetBlockSubsidy(int nBits, int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue);
 
