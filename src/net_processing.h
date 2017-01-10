@@ -34,6 +34,8 @@ static constexpr int64_t STALE_CHECK_INTERVAL = 10 * 60; // 10 minutes
 static constexpr int64_t EXTRA_PEER_CHECK_INTERVAL = 45;
 /** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict, in seconds */
 static constexpr int64_t MINIMUM_CONNECT_TIME = 30;
+/** if disabled, blocks will not be requested automatically, useful for low-resources-available mode */
+static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
@@ -104,5 +106,8 @@ void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
  */
 void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
 void ProcessPriorityRequests(const std::shared_ptr<CBlock> block);
+
+void SetAutoRequestBlocks(bool state);
+bool isAutoRequestingBlocks();
 
 #endif // BITCOIN_NET_PROCESSING_H

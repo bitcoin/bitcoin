@@ -71,6 +71,8 @@ static const int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 /// limiting block relay. Set to one week, denominated in seconds.
 static const int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 
+static std::atomic<bool> fAutoRequestBlocks(DEFAULT_AUTOMATIC_BLOCK_REQUESTS);
+
 // Internal stuff
 namespace {
     /** Number of nodes with fSyncStarted. */
@@ -518,6 +520,10 @@ bool FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
             }
         }
         return true;
+    }
+
+    if (!fAutoRequestBlocks) {
+        return false;
     }
 
     if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork || state->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
@@ -1501,6 +1507,10 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                         pindexLast->GetBlockHash().ToString(),
                         pindexLast->nHeight);
             } else {
+                // Do not request blocks if autorequest is disabled
+                if (!fAutoRequestBlocks) {
+                    return true;
+                }
                 std::vector<CInv> vGetData;
                 // Download as much as possible, from earliest to latest.
                 for (const CBlockIndex *pindex : reverse_iterate(vToFetch)) {
@@ -3809,6 +3819,14 @@ void ProcessPriorityRequests(const std::shared_ptr<CBlock> blockRef) {
                                         return rB.pindex == r.pindex;
                                     }), blocksToDownloadFirst.end());
     }
+}
+
+void SetAutoRequestBlocks(bool state) {
+    fAutoRequestBlocks = state;
+}
+
+bool isAutoRequestingBlocks() {
+    return fAutoRequestBlocks;
 }
 
 class CNetProcessingCleanup
