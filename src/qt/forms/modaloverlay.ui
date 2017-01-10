@@ -334,6 +334,13 @@ QLabel { color: rgb(40,40,40);  }</string>
             <number>10</number>
            </property>
            <item>
+            <widget class="QPushButton" name="pauseResumeVerification">
+             <property name="text">
+              <string>Pause downloading blocks</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

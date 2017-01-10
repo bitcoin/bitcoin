@@ -176,6 +176,12 @@ public:
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
+    //! get autorequesting-blocks during IBD state
+    virtual bool isAutorequestBlocks() = 0;
+
+    //! set autorequesting-blocks during IBD state
+    virtual void setAutorequestBlocks(bool state) = 0;
+
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;

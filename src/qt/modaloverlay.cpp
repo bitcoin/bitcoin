@@ -22,6 +22,7 @@ userClosed(false)
 {
     ui->setupUi(this);
     connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
+    connect(ui->pauseResumeVerification, &QPushButton::clicked, this, &ModalOverlay::pauseClicked);
     if (parent) {
         parent->installEventFilter(this);
         raise();
@@ -177,4 +178,14 @@ void ModalOverlay::closeClicked()
 {
     showHide(true);
     userClosed = true;
+}
+
+void ModalOverlay::pauseClicked()
+{
+    Q_EMIT requestVerificationPauseOrResume();
+}
+
+void ModalOverlay::setPauseResumeState(bool pauseActive)
+{
+    ui->pauseResumeVerification->setText((pauseActive ? "Resume downloading blocks": "Pause downloading blocks"));
 }

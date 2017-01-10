@@ -32,7 +32,13 @@ public Q_SLOTS:
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
     void closeClicked();
+    void pauseClicked();
+    void setPauseResumeState(bool pauseActive);
     bool isLayerVisible() const { return layerIsVisible; }
+
+Q_SIGNALS:
+    // Fired when the user requested a block download pause or resume
+    void requestVerificationPauseOrResume();
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev);
@@ -45,6 +51,7 @@ private:
     QVector<QPair<qint64, double> > blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
+    bool verificationPauseActive;
     void eventuallyShowHeaderSyncing(int count);
 };
 
