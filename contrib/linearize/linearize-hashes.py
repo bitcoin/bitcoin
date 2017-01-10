@@ -13,7 +13,6 @@ try: # Python 3
 except ImportError: # Python 2
     import httplib
 import json
-import struct
 import re
 import base64
 import sys
