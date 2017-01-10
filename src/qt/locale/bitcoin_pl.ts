@@ -41,6 +41,77 @@
         <source>&amp;Delete</source>
         <translation>&amp;Usuń</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Wybierz adres, na który chcesz wysłać monety</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Wybierz adres, na który chcesz otrzymać monety</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>W&amp;ybierz</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adresy wysyłania</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adresy odbioru</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Tutaj znajdują się adresy Bitcoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>To są twoje adresy Bitcoin do odbierania płatności. Zaleca się używanie nowych adresów odbiorczych dla każdej transakcji.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopiuj adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopiuj &amp;Etykietę</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Edytuj</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Eksportuj listę adresów</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Plik *.CSV (dane rozdzielane przecinkami)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportowanie nie powiodło się</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Wystąpił błąd podczas próby zapisu listy adresów do %1. Proszę spróbować ponownie.</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Etykieta</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(brak etykiety)</translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -59,6 +130,74 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Powtórz nowe hasło</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Wprowadź nowe hasło do portfela.&lt;br/&gt;Proszę używać hasła złożonego z &lt;b&gt;10 lub więcej losowych znaków&lt;/b&gt; albo &lt;b&gt;8 lub więcej słów.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Zaszyfruj portfel</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Ta operacja wymaga hasła do portfela aby odblokować portfel.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Odblokuj portfel</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Ta operacja wymaga hasła portfela, aby go odszyfrować.</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Odszyfruj portfel</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Zmień hasło</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Podaj stare i nowe hasło do portfela.</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Potwierdź szyfrowanie portfela</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Portfel zaszyfrowany</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Szyfrowanie portfela nie powiodło się</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Podane hasła nie są takie same.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Odblokowanie portfela nie powiodło się</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>Wprowadzone hasło do odszyfrowania portfela jest niepoprawne.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Odszyfrowanie portfela nie powiodło się</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Hasło do portfela zostało pomyślnie zmienione.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Ostrzeżenie: Caps Lock jest włączony!</translation>
     </message>
 </context>
 <context>
@@ -278,26 +417,6 @@
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform></translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n godzin</numerusform><numerusform>%n godzin</numerusform><numerusform>%n godzin</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>dzień</numerusform><numerusform>%n dni</numerusform><numerusform>%n dni</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n tygodni</numerusform><numerusform>%n tygodni</numerusform><numerusform>%n tygodni</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 i %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n lat</numerusform><numerusform>%n lat</numerusform><numerusform>%n lat</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 za</translation>
@@ -384,7 +503,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portfel jest &lt;b&gt;zaszyfrowany&lt;/b&gt; i obecnie &lt;b&gt;zablokowany&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -402,10 +521,6 @@
     <message>
         <source>Amount:</source>
         <translation>Kwota:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Priorytet:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -460,8 +575,84 @@
         <translation>Potwierdzony</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>Priorytet</translation>
+        <source>Copy address</source>
+        <translation>Kopiuj adres</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopiuj etykietę</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopiuj kwotę</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Skopiuj ID transakcji</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>Zablokuj niewydane</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>Odblokuj niewydane</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Skopiuj ilość</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Skopiuj prowizję</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Skopiuj ilość po opłacie</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Skopiuj ilość bajtów</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopiuj pył</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Skopiuj resztę</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 zablokowane)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>tak</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>nie</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Ta etykieta staje się czerwona jeżeli którykolwiek odbiorca otrzymuje kwotę mniejszą niż obecny próg pyłu.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Waha się +/- %1 satoshi na wejście.</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(brak etykiety)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>reszta z %1 (%2)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(reszta)</translation>
     </message>
 </context>
 <context>
@@ -485,6 +676,30 @@
     <message>
         <source>&amp;Address</source>
         <translation>&amp;Adres</translation>
+    </message>
+    <message>
+        <source>New receiving address</source>
+        <translation>Nowy adres odbiorczy</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>Nowy adres wysyłania</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>Zmień adres odbioru</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>Zmień adres wysyłania</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nie można było odblokować portfela.</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Generowanie nowego klucza nie powiodło się.</translation>
     </message>
 </context>
 <context>
@@ -609,6 +824,49 @@
     </message>
 </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Formularz</translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation>Pozostało bloków</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Nienznane...</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Czas ostatniego bloku</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Postęp</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>Przyrost postępu na godzinę</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>obliczanie...</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>Przewidywany czas zakończenia synchronizacji</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Ukryj</translation>
+    </message>
+    <message>
+        <source>Unknown. Syncing Headers (%1)...</source>
+        <translation>Nieznane. Synchronizowanie nagłówków (%1)...</translation>
+    </message>
+</context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -625,6 +883,10 @@
     <message>
         <source>Select payment request file</source>
         <translation>Otwórz żądanie zapłaty z pliku</translation>
+    </message>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Wybierz plik żądania zapłaty do otwarcia</translation>
     </message>
 </context>
 <context>
@@ -938,6 +1200,17 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    <message>
+        <source>Payment request error</source>
+        <translation>Błąd żądania płatności</translation>
+    </message>
+    <message>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Nie można uruchomić protokołu bitcoin: kliknij-by-zapłacić</translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -947,11 +1220,7 @@
         <source>Node/Service</source>
         <translation>Węzeł/Usługi</translation>
     </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Czas odpowiedzi</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -990,7 +1259,17 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 i %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1142,6 +1421,10 @@
         <translation>Czas odpowiedzi</translation>
     </message>
     <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>Czas trwania nadmiarowego pingu</translation>
+    </message>
+    <message>
         <source>Ping Wait</source>
         <translation>Czas odpowiedzi</translation>
     </message>
@@ -1190,14 +1473,6 @@
         <translation>Wyczyść konsolę</translation>
     </message>
     <message>
-        <source>&amp;Disconnect Node</source>
-        <translation>Odłącz Nod</translation>
-    </message>
-    <message>
-        <source>Ban Node for</source>
-        <translation>Blokuj węzeł na okres</translation>
-    </message>
-    <message>
         <source>1 &amp;hour</source>
         <translation>1 &amp;godzina</translation>
     </message>
@@ -1212,10 +1487,6 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;rok</translation>
-    </message>
-    <message>
-        <source>&amp;Unban Node</source>
-        <translation>Odblokuj węzeł</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -1348,6 +1619,14 @@
         <source>Remove</source>
         <translation>Usuń</translation>
     </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopiuj etykietę</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopiuj kwotę</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -1367,7 +1646,30 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Zapisz obraz...</translation>
     </message>
-</context>
+    <message>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etykieta</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etykieta</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(brak etykiety)</translation>
+    </message>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1401,10 +1703,6 @@
     <message>
         <source>Amount:</source>
         <translation>Kwota:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Priorytet:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1475,10 +1773,6 @@
         <translation>(Sprytne opłaty nie są jeszcze zainicjowane. Trwa to zwykle kilka bloków...)</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>Czas potwierdzenia:</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>normalnie</translation>
     </message>
@@ -1517,6 +1811,38 @@
     <message>
         <source>S&amp;end</source>
         <translation>Wy&amp;syłka</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Skopiuj ilość</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopiuj kwotę</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Skopiuj prowizję</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Skopiuj ilość po opłacie</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Skopiuj ilość bajtów</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopiuj pył</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Skopiuj resztę</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(brak etykiety)</translation>
     </message>
 </context>
 <context>
@@ -1597,7 +1923,10 @@
         <source>Memo:</source>
         <translation>Notatka:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1696,7 +2025,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <source>Reset all verify message fields</source>
         <translation>Resetuje wszystkie pola weryfikacji wiadomości</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1712,12 +2041,165 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Źródło</translation>
+    </message>
+    <message>
+        <source>Generated</source>
+        <translation>Wygenerowano</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Od</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>nieznane</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Do</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation>własny adres</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>tylko-obserwowany</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>etykieta</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ten panel pokazuje szczegółowy opis transakcji</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etykieta</translation>
+    </message>
+    <message>
+        <source>Offline</source>
+        <translation>Offline</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>Niepotwierdzone</translation>
+    </message>
+    <message>
+        <source>Abandoned</source>
+        <translation>Porzucone</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>Skonfliktowane</translation>
+    </message>
+    <message>
+        <source>Generated but not accepted</source>
+        <translation>Wygenerowane ale nie zaakceptowane</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Wysłane do</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>tylko-obserwowany</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(brak etykiety)</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation>Wszystko</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Dzisiaj</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>W tym tygodniu</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>W tym miesiącu</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>W zeszłym miesiącu</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>W tym roku</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Zakres...</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Wysłane do</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopiuj adres</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopiuj etykietę</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopiuj kwotę</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Skopiuj ID transakcji</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Plik *.CSV (dane rozdzielane przecinkami)</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Data</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etykieta</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportowanie nie powiodło się</translation>
+    </message>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1725,6 +2207,15 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Jednostka w jakiej pokazywane są kwoty. Kliknij aby wybrać inną.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1756,6 +2247,18 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Przycinanie skonfigurowano poniżej minimalnych %d MiB. Proszę użyć wyższej liczby.</translation>
     </message>
     <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Prune: ostatnia synchronizacja portfela jest za danymi. Muszisz -reindexować (pobrać cały ciąg bloków ponownie w przypadku przyciętego węzła)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Zredukuj wymaganą ilość miejsca na dysku poprzez usuwanie starych bloków. Ten tryb jest niekompatybilny z -txindex oraz -rescan. Ostrzeżenie: Wycofanie tego ustawienia wymaga ponownego pobrania całego łańcucha bloków. (domyślnie: 0 = wyłącz usuwanie bloków, &gt;%u = docelowy rozmiar w MiB jaki wykorzystać na pliki z blokami)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Ponowne skanowanie nie jest możliwe w trybie przycinania. Będzie trzeba użyć -reindex, co pobierze ponownie cały łańcuch bloków.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
     </message>
@@ -1776,10 +2279,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Uruchomienie serwera HTTP nie powiodło się. Zobacz dziennik debugowania, aby uzyskać więcej szczegółów.</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Akceptuj połączenia z zewnątrz (domyślnie: 1 jeśli nie ustawiono -proxy lub -connect)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Rdzeń Bitcoina</translation>
     </message>
@@ -1788,8 +2287,12 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Deweloperzy %s</translation>
     </message>
     <message>
-        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>-fallbackfee ma ustawioną bardzo dużą wartość!  Jest to prowizja za transakcje, którą możesz zapłacić gdy oszacowanie opłaty jest niemożliwe.</translation>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>Stawka prowizji (w %s/kB), która będzie użyta, gdy oszacowane dane o prowizjach nie będą wystarczające (domyślnie: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -1804,20 +2307,12 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Usuwa wszystkie transakcje w portfelu i tylko odtwarza te części z łańcucha bloków poprzez -rescan przy starcie</translation>
     </message>
     <message>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Rozprowadzane na licencji MIT, zobacz dołączony plik COPYING lub &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
-    </message>
-    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Błąd odczytu %s! Wszystkie klucze zostały odczytane poprawnie, ale może brakować  danych transakcji lub wpisów w książce adresowej, lub mogą one być nieprawidłowe.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Wykonaj polecenie, kiedy transakcja portfela ulegnie zmianie (%s w poleceniu zostanie zastąpione przez TxID)</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
-        <translation>Wymuś przekazywanie transakcji od osób z białej listy, nawet jeśli narusza to lokalną politykę przekazywania (default: %d)</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -1828,24 +2323,8 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Ustaw liczbę wątków skryptu weryfikacyjnego (%u do %d, 0 = auto, &lt;0 = zostaw tyle rdzeni wolnych, domyślnie: %d)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>To jest testowa wersja - używaj na własne ryzyko - nie używaj do wykopywania oraz przy aplikacjach kupieckich</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Użyj UPnP do mapowania portu nasłuchu (domyślnie: 1 gdy nasłuchuje i brak -proxy)</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Ostrzeżenie: Sieć nie wydaje się w pełni zgodna! Niektórzy górnicy wydają się doświadczać problemów.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Uwaga: Wygląda na to, że nie ma pełnej zgodności z naszymi peerami! Możliwe, że potrzebujesz aktualizacji bądź inne węzły jej potrzebują</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
-        <translation>Dodawaj do białej listy węzły łączące się z podanej maski sieciowej lub adresu IP. Może być określona kilka razy.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
@@ -1864,6 +2343,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>&lt;category&gt; mogą być:</translation>
     </message>
     <message>
+        <source>Append comment to the user agent string</source>
+        <translation>Dodaj komentarz do pola user agent</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet on startup</source>
         <translation>Próbuj odzyskać klucze prywatne z uszkodzonego portfela podczas uruchamiania.</translation>
     </message>
@@ -1872,8 +2355,8 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Opcje tworzenia bloku:</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Łącz się tylko do wskazanego węzła/węzłów</translation>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Nie można rozpoznać -%s adresu: '%s'</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1968,6 +2451,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Utrzymuj obszar pamięci dla transakcji poniżej &lt;n&gt; MB (default: %u)</translation>
     </message>
     <message>
+        <source>Loading banlist...</source>
+        <translation>Ładowanie listy zablokowanych...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Lokalizacja autoryzacyjnego pliku cookie (domyślnie: ścieżka danych)</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Brak wystarczającej liczby deskryptorów plików. </translation>
     </message>
@@ -2010,6 +2501,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Określ plik portfela (w obrębie folderu danych)</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation>Kod źródłowy dostępny jest z %s.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
@@ -2100,20 +2595,12 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Maksymalny rozmiar danych w transakcji przekazującej dane które przekazujemy i wydobywamy (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation>Wyszukaj adresy węzłów wykorzystując zapytanie DNS, jeżeli masz mało adresów (domyślnie: 1 jeśli nie użyto -connect)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Ustaw maksymalny rozmiar transakcji o wysokim priorytecie/niskiej prowizji w bajtach (domyślnie: %d)</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Zbyt niska kwota transakcji do wysłania po odjęciu opłaty</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Program ten zawiera oprogramowanie stworzone przez OpenSSL Project do użycia w OpensSSL Toolkit &lt;https://www.openssl.org/&gt;, oprogramowanie kryptograficzne napisane przez Eric Young oraz oprogramowanie UPnP napisane przez Thomas Bernard.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -2212,12 +2699,12 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Hasło zabezpieczające portu kontrolnego Tora (domyślnie: puste)</translation>
     </message>
     <message>
-        <source>Transaction amount too small</source>
-        <translation>Zbyt niska kwota transakcji </translation>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Port kontrolny sieci Tor jeśli onion listening jest włączone (domyślnie: %s)</translation>
     </message>
     <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Kwota transakcji musi być dodatnia</translation>
+        <source>Transaction amount too small</source>
+        <translation>Zbyt niska kwota transakcji </translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
@@ -2276,10 +2763,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>-maxtxfee ma ustawioną badzo dużą wartość! Tak wysokie opłaty mogą być zapłacone w jednej transakcji.</translation>
     </message>
     <message>
-        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>-paytxfee ma ustawioną bardzo dużą wartość! Jest to prowizja za transakcje, którą płacisz, gdy wysyłasz monety.</translation>
-    </message>
-    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Nie trzymaj w pamięci transakcji starszych niż &lt;n&gt; godz. (domyślnie: %u)</translation>
     </message>
@@ -2330,6 +2813,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Ostrzeżenie: Odtworzono dane z uszkodzonego pliku portfela! Oryginalny %s został zapisany jako %s w %s; jeśli twoje saldo lub transakcje są niepoprawne powinieneś odtworzyć kopię zapasową.</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation>%s jest ustawione bardzo wysoko!</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -2392,10 +2879,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Ustaw rozmiar puli kluczy na &lt;n&gt; (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Ustaw minimalny rozmiar bloku w bajtach (domyślnie: %u)</translation>
-    </message>
-    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Ustaw liczbę wątków do obsługi RPC (domyślnie: %d)</translation>
     </message>
@@ -2418,6 +2901,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>Próg, po którym nastąpi rozłączenie węzłów nietrzymających się zasad (domyślnie: %u)</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation>Kwota transakcji musi być dodatnia</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>Transakcja wymaga co najmniej jednego odbiorcy</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

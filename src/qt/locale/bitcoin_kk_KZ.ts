@@ -25,7 +25,10 @@
         <source>&amp;Delete</source>
         <translation>Жою</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -40,7 +43,7 @@
         <source>Repeat new passphrase</source>
         <translation>Жаңа құпия сөзді қайта енгізу</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -90,26 +93,6 @@
         <source>&amp;Help</source>
         <translation>Көмек</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n сағат</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n күн</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n апта</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 немесе %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n жыл</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 қалмады</translation>
@@ -136,10 +119,6 @@
     <message>
         <source>Amount:</source>
         <translation>Саны</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Басымдық</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -169,11 +148,7 @@
         <source>Confirmed</source>
         <translation>Растық</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Басымдық</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -184,7 +159,7 @@
         <source>&amp;Address</source>
         <translation>Адрес</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -197,6 +172,9 @@
         <source>Error</source>
         <translation>қате</translation>
     </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -212,6 +190,9 @@
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -220,6 +201,16 @@
         <source>Amount</source>
         <translation>Саны</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 немесе %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -239,14 +230,13 @@
     <name>ReceiveRequestDialog</name>
     </context>
 <context>
+    <name>RecentRequestsTableModel</name>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Amount:</source>
         <translation>Саны</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Басымдық</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -269,6 +259,9 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -281,10 +274,28 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
+<context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>

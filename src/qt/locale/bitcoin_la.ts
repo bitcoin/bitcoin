@@ -25,7 +25,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Dele</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -44,7 +47,7 @@
         <source>Repeat new passphrase</source>
         <translation>Itera novam tesseram</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -242,7 +245,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Cassidile &lt;b&gt;cifratum&lt;/b&gt; est et iam nunc &lt;b&gt;seratum&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -276,7 +279,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Inscriptio</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     </context>
@@ -304,6 +307,17 @@
     <message>
         <source>Error</source>
         <translation>Error</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Schema</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Hora postremi frusti</translation>
     </message>
     </context>
 <context>
@@ -428,6 +442,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
@@ -440,6 +457,12 @@
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -531,6 +554,9 @@
     </message>
     </context>
 <context>
+    <name>RecentRequestsTableModel</name>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
@@ -572,7 +598,7 @@
         <source>S&amp;end</source>
         <translation>&amp;Mitte</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -607,6 +633,9 @@
         <source>Pay To:</source>
         <translation>Pensa Ad:</translation>
     </message>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -677,7 +706,7 @@
         <source>Reset all verify message fields</source>
         <translation>Reconstitue omnes campos verificandi nuntii</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -689,14 +718,32 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Haec tabula monstrat descriptionem verbosam transactionis</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -725,10 +772,6 @@
         <translation>Operare infere sicut daemon et mandata accipe</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Accipe conexiones externas (praedefinitum: 1 nisi -proxy neque -connect)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Nucleus</translation>
     </message>
@@ -741,16 +784,8 @@
         <translation>Facere mandatum quotiescumque cassidilis transactio mutet (%s in mandato sbstituitur ab TxID)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Hoc est prae-dimittum experimentala aedes - utere eo periculo tuo proprio - nolite utere fodendo vel applicationibus mercatoriis</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Optiones creandi frustorum:</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Conecte sole ad nodos specificatos (vel nodum specificatum)</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -815,10 +850,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Magnitudo transactionis nimis parva</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Necesse est magnitudines transactionum positivas esse.</translation>
     </message>
     <message>
         <source>Transaction too large</source>

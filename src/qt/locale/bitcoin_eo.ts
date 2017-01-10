@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Forigi</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Ripetu la novan pasfrazon</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -242,26 +245,6 @@
         <source>No block source available...</source>
         <translation>Neniu fonto de blokoj trovebla...</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n horo</numerusform><numerusform>%n horoj</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n tago</numerusform><numerusform>%n tagoj</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n semajno</numerusform><numerusform>%n semajnoj</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 kaj %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n jaro</numerusform><numerusform>%n jaroj</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>mankas %1</translation>
@@ -340,7 +323,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Monujo estas &lt;b&gt;ĉifrita&lt;/b&gt; kaj aktuale &lt;b&gt;ŝlosita&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -354,10 +337,6 @@
     <message>
         <source>Amount:</source>
         <translation>Sumo:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritato:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -411,11 +390,7 @@
         <source>Confirmed</source>
         <translation>Konfirmita</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Prioritato</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -438,7 +413,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Adreso</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -509,6 +484,17 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Formularo</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Horo de la lasta bloko</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -526,7 +512,7 @@
         <source>Select payment request file</source>
         <translation>Elektu la dosieron de la pagpeto</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -710,6 +696,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -738,6 +727,16 @@
         <source>N/A</source>
         <translation>neaplikebla</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 kaj %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -920,7 +919,7 @@
         <source>Remove</source>
         <translation>Forigi</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -939,7 +938,10 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Konservi Bildon...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -969,10 +971,6 @@
     <message>
         <source>Amount:</source>
         <translation>Sumo:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritato:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1022,7 +1020,7 @@
         <source>S&amp;end</source>
         <translation>Ŝendi</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1077,7 +1075,10 @@
         <source>Memo:</source>
         <translation>Memorando:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1155,7 +1156,7 @@
         <source>Reset all verify message fields</source>
         <translation>Reagordigi ĉiujn prikontrolajn kampojn</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1171,14 +1172,32 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Tiu ĉi panelo montras detalan priskribon de la transakcio</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1207,10 +1226,6 @@
         <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Kerno de Bitmono</translation>
     </message>
@@ -1223,28 +1238,12 @@
         <translation>Plenumi komandon kiam monuja transakcio ŝanĝiĝas (%s en cmd anstataŭiĝas per TxID)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Averto: La reto ne tute konsentas! Kelkaj minantoj ŝajne spertas problemojn aktuale.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; povas esti:</translation>
     </message>
     <message>
         <source>Block creation options:</source>
         <translation>Blok-kreaj agordaĵoj:</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Konekti nur al specifita(j) nodo(j)</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1337,10 +1336,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Transakcia sumo tro malgranda</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Transakcia sumo devas esti pozitiva</translation>
     </message>
     <message>
         <source>Transaction too large</source>

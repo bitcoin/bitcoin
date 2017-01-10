@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Poista</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Toista uusi tunnuslause</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -115,6 +118,10 @@
         <translation>&amp;Tietoja %1</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>Näytä tietoa aiheesta %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>Tietoja &amp;Qt</translation>
     </message>
@@ -125,6 +132,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Asetukset...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Muuta kohteen %1 kokoonpanoasetuksia</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -255,32 +266,20 @@
         <translation><numerusform>%n aktiivinen yhteys Bitcoin-verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Bitcoin-verkkoon</numerusform></translation>
     </message>
     <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Ladataan lohkoindeksiä...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Käsitellään lohkoja levyllä...</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>Lohkojen lähdettä ei saatavilla...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Prosessoitu %n lohko rahansiirtohistoriasta.</numerusform><numerusform>Prosessoitu %n lohkoa rahansiirtohistoriasta.</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n tunti</numerusform><numerusform>%n tuntia</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n päivä</numerusform><numerusform>%n päivää</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n viikko</numerusform><numerusform>%n viikkoa</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 ja %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n vuosi</numerusform><numerusform>%n vuotta</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -309,6 +308,14 @@
     <message>
         <source>Up to date</source>
         <translation>Rahansiirtohistoria on ajan tasalla</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Näytä %1 ohjeet saadaksesi listan mahdollisista Bitcoinin komentorivivalinnoista</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1-asiakas</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -360,7 +367,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittuna&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -378,10 +385,6 @@
     <message>
         <source>Amount:</source>
         <translation>Määrä:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioriteetti:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -435,11 +438,7 @@
         <source>Confirmed</source>
         <translation>Vahvistettu</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Prioriteetti</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -462,7 +461,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Osoite</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -495,6 +494,10 @@
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>Tietoja %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -532,12 +535,28 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Näytä aloitusruutu käynnistyksen yhteydessä (oletus: %u)</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Nollaa kaikki graafisen käyttöliittymän kautta tehdyt muutokset</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>Tervetuloa</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Tervetuloa %1 pariin.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Tämä on ensimmäinen kerta, kun %1 on käynnistetty, joten voit valita data-hakemiston paikan.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 lataa ja tallentaa kopion Bitcoinin lohkoketjusta. Vähintään %2Gt dataa tullaan tallentamaan tähän hakemistoon, ja tarve kasvaa ajan myötä. Lompakko tullaan myös tallentamaan tähän hakemistoon.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -565,6 +584,21 @@
     </message>
 </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Lomake</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Viimeisimmän lohkon aika</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Piilota</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -582,7 +616,7 @@
         <source>Select payment request file</source>
         <translation>Valitse maksupyynnön tiedosto</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -592,6 +626,14 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Yleiset</translation>
+    </message>
+    <message>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>Käynnistä %1 automaattisesti järjestelmään kirjautumisen jälkeen.</translation>
+    </message>
+    <message>
+        <source>&amp;Start %1 on system login</source>
+        <translation>&amp;Käynnistä %1 järjestelmään kirjautuessa</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -750,6 +792,10 @@
         <translation>&amp;Käyttöliittymän kieli</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>Tässä voit määritellä käyttöliittymän kielen. Muutokset astuvat voimaan seuraavan kerran, kun %1 käynnistetään.</translation>
+    </message>
+    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>Yksikkö jona bitcoin-määrät näytetään</translation>
     </message>
@@ -874,6 +920,9 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -883,11 +932,7 @@
         <source>Node/Service</source>
         <translation>Noodi/Palvelu</translation>
     </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Vasteaika</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -926,7 +971,17 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ja %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -952,6 +1007,10 @@
     <message>
         <source>Using BerkeleyDB version</source>
         <translation>Käyttää BerkeleyDB-versiota</translation>
+    </message>
+    <message>
+        <source>Datadir</source>
+        <translation>Data-hakemisto</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1038,6 +1097,18 @@
         <translation>Käyttöliittymä</translation>
     </message>
     <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Avaa %1 -debug-loki tämänhetkisestä data-hakemistosta. Tämä voi viedä muutaman sekunnin suurille lokitiedostoille.</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Pienennä fontin kokoa</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Suurenna fontin kokoa</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation>Palvelut</translation>
     </message>
@@ -1114,14 +1185,6 @@
         <translation>Tyhjennä konsoli</translation>
     </message>
     <message>
-        <source>&amp;Disconnect Node</source>
-        <translation>&amp;Katkaise yhteys solmukohtaan</translation>
-    </message>
-    <message>
-        <source>Ban Node for</source>
-        <translation>Estä solmukohta</translation>
-    </message>
-    <message>
         <source>1 &amp;hour</source>
         <translation>1 &amp;tunti</translation>
     </message>
@@ -1136,10 +1199,6 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;vuosi</translation>
-    </message>
-    <message>
-        <source>&amp;Unban Node</source>
-        <translation>&amp;Poista solmukohdan esto</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1268,7 +1327,7 @@
         <source>Remove</source>
         <translation>Poista</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1287,7 +1346,14 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Tallenna kuva</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Aika</translation>
+    </message>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1321,10 +1387,6 @@
     <message>
         <source>Amount:</source>
         <translation>Määrä:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioriteetti:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1387,10 +1449,6 @@
         <translation>(Älykästä rahansiirtokulua ei ole vielä alustettu. Tähän kuluu yleensä aikaa muutaman lohkon verran...)</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>Vahvistusaika:</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>normaali</translation>
     </message>
@@ -1430,7 +1488,7 @@
         <source>S&amp;end</source>
         <translation>&amp;Lähetä</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1474,6 +1532,10 @@
         <translation>Poista tämä alkio</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Kulu vähennetään lähetettävästä määrästä. Saaja vastaanottaa vähemmän bitcoineja kuin merkitset Määrä-kenttään. Jos saajia on monia, kulu jaetaan tasan.</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>V&amp;ähennä maksukulu määrästä</translation>
     </message>
@@ -1505,9 +1567,16 @@
         <source>Memo:</source>
         <translation>Muistio:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down...</source>
+        <translation>%1 sulkeutuu...</translation>
+    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Älä sammuta tietokonetta ennenkuin tämä ikkuna katoaa.</translation>
@@ -1591,7 +1660,7 @@
         <source>Reset all verify message fields</source>
         <translation>Tyhjennä kaikki varmista-viesti-kentät</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1607,12 +1676,33 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Aika</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Tämä ruutu näyttää yksityiskohtaisen tiedon rahansiirrosta</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Aika</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Date</source>
+        <translation>Aika</translation>
+    </message>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1620,6 +1710,19 @@
         <translation>Yksikkö jossa määrät näytetään. Klikkaa valitaksesi toisen yksikön.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Vie</translation>
+    </message>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1683,48 +1786,52 @@
         <translation>HTTP-palvelinta ei voitu käynnistää. Katso debug-lokista lisätietoja.</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Hyväksy yhteyksiä ulkopuolelta (vakioasetus: 1 jos -proxy tai -connect ei määritelty)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin-ydin</translation>
     </message>
     <message>
-        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>-fallbackfee on asetettu erittäin suureksi! Tämä on rahansiirtokulu jonka voit maksaa kun arvioitu rahansirtokulu ei ole saatavilla.</translation>
+        <source>The %s developers</source>
+        <translation>%s kehittäjät</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Kytkeydy annettuun osoitteeseen ja pidä linja aina auki. Käytä [host]:portin merkintätapaa IPv6:lle.</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Ei voida lukita data-hakemistoa %s. %s on luultavasti jo käynnissä.</translation>
+    </message>
+    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Tarkistathan että tietokoneesi päivämäärä ja kellonaika ovat oikeassa! Jos kellosi on väärässä, %s ei toimi oikein.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation>Ole hyvä ja avusta, jos %s on mielestäsi hyödyllinen. Vieraile %s saadaksesi lisää tietoa ohjelmistosta.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Aseta script varmistuksen threadien lukumäärä (%u - %d, 0= auto, &lt;0 = jätä näin monta ydintä vapaaksi, oletus: %d)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Tämä on esi-julkaistu testiversio - Käytä omalla riskillä - Ei saa käytää louhimiseen tai kauppasovelluksiin.</translation>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>Lohkotietokanta sisältää lohkon, joka vaikuttaa olevan tulevaisuudesta. Tämä saattaa johtua tietokoneesi virheellisesti asetetuista aika-asetuksista. Rakenna lohkotietokanta uudelleen vain jos olet varma, että tietokoneesi päivämäärä ja aika ovat oikein.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Käytä UPnP:ta kuuntelevan portin kartoitukseen (oletus: 1 kun kuunnellaan ja -proxy ei käytössä)</translation>
     </message>
     <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Varoitus: Tietoverkko ei ole sovussa! Luohijat näyttävät kokevan virhetilanteita.</translation>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>Sinun tulee uudelleenrakentaa tietokanta käyttäen -reindex-chainstate vaihtaaksesi -txindex</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Varoitus: Olemme vertaisverkon kanssa ristiriidassa! Sinun tulee päivittää tai toisten solmujen tulee päivitää.</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
-        <translation>Salli vertaisten yhdistää annetusta verkkomaskista tai IP-osoitteesta. Voidaan määrittää useampia kertoja.</translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s korruptoitunut, korjaaminen epäonnistui</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -1735,16 +1842,24 @@
         <translation>&lt;category&gt; voi olla:</translation>
     </message>
     <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Yritä palauttaa yksityiset avaimet korruptoituneesta lompakosta käynnistyksen yhteydessä</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Lohkon luonnin asetukset:</translation>
     </message>
     <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Yhidstä ainoastaan määrättyihin noodeihin</translation>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>-%s -osoitteen '%s' selvittäminen epäonnistui</translation>
     </message>
     <message>
         <source>Connection options:</source>
         <translation>Yhteyden valinnat:</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Tekijänoikeus (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1775,6 +1890,18 @@
         <translation>Virhe alustaessa lompakon tietokantaympäristöä %s!</translation>
     </message>
     <message>
+        <source>Error loading %s</source>
+        <translation>Virhe ladattaessa %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Virhe ladattaessa %s: Lompakko vioittunut</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Virhe ladattaessa %s: Tarvitset uudemman %s -version</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Virhe avattaessa lohkoketjua</translation>
     </message>
@@ -1803,12 +1930,36 @@
         <translation>Virheellinen -onion osoite: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Virheellinen määrä -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Virheellinen määrä -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Ladataan kieltolistaa...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Todennusevästeen sijainti (oletus: datahakemisto)</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Ei tarpeeksi tiedostomerkintöjä vapaana.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Yhdistä vain solmukohtiin &lt;net&gt;-verkossa (ipv4, ipv6 tai onion)</translation>
+    </message>
+    <message>
+        <source>Print this help message and exit</source>
+        <translation>Näytä tämä ohjeviesti ja poistu</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Näytä versio ja poistu.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -1827,6 +1978,22 @@
         <translation>Aseta lompakkotiedosto (data-hakemiston sisällä)</translation>
     </message>
     <message>
+        <source>The source code is available from %s.</source>
+        <translation>Lähdekoodi löytyy %s.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Argumenttia -benchmark ei tueta, käytä -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Argumenttia -debugnet ei tueta, käytä -debug=net.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Argumenttia -tor ei tueta, käytä -onion.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Käytä UPnP:ta kuuntelevan portin kartoittamiseen (oletus: %u)</translation>
     </message>
@@ -1843,6 +2010,10 @@
         <translation>Lompakko %s sijaitsee data-hakemiston ulkopuolella %s</translation>
     </message>
     <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä %s uudelleen</translation>
+    </message>
+    <message>
         <source>Wallet options:</source>
         <translation>Lompakon valinnat:</translation>
     </message>
@@ -1855,12 +2026,20 @@
         <translation>Paljasta omat IP-osoitteet (oletus: 1 kun kuunnellaan ja -externalip tai -proxy ei ole käytössä)</translation>
     </message>
     <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Virhe: Saapuvien yhteyksien kuuntelu epäonnistui (kuuntelu palautti virheen %s)</translation>
+    </message>
+    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Aja komento kun olennainen hälytys vastaanotetaan tai nähdään todella pitkä haara (%s komennossa korvataan viestillä)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Aseta maksimikoko korkea prioriteetti/pieni palkkio rahansiirtoihin tavuissa (oletus: %d)</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>Siirtomäärä on liian pieni lähetettäväksi kulun vähentämisen jälkeen.</translation>
     </message>
     <message>
         <source>(default: %u)</source>
@@ -1871,6 +2050,10 @@
         <translation>Hyväksy julkisia REST-pyyntöjä (oletus: %u)</translation>
     </message>
     <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Luo Tor-salattu palvelu automaattisesti (oletus: %d)</translation>
+    </message>
+    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Yhdistä SOCKS5 proxin kautta</translation>
     </message>
@@ -1879,12 +2062,28 @@
         <translation>Virheitä tietokantaa luettaessa, ohjelma pysäytetään.</translation>
     </message>
     <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Tuo lohkot ulkoisesta blk000??.dat -tiedostosta käynnistettäessä</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Tietoa</translation>
     </message>
     <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>Kelvoton määrä argumentille -paytxfee=&lt;amount&gt;: '%s' (pitää olla vähintään %s)</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation>Kelvoton verkkopeite määritelty argumentissa -whitelist: '%s'</translation>
+    </message>
+    <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation>Pidä enimmillään &lt;n&gt; yhdistämiskelvotonta rahansiirtoa muistissa (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Pitää määritellä portti argumentilla -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Node relay options:</source>
@@ -1933,10 +2132,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Siirtosumma liian pieni</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Siirtosumman tulee olla positiivinen</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
@@ -1991,16 +2186,16 @@
         <translation>-maxtxfee on asetettu erittäin suureksi! Tämänkokoisia kuluja saatetaan maksaa yhdessä rahansiirrossa.</translation>
     </message>
     <message>
-        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>-paytxfee on asetettu erittäin suureksi! Tämä on rahansiirtokulu, jonka maksat, mikäli lähetät rahansiirron.</translation>
-    </message>
-    <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
         <translation>Älä pidä rahansiirtoja muistivarannoissa kauemmin kuin &lt;n&gt; tuntia (oletus: %u)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Kuinka läpikäyvä lohkojen -checkblocks -todennus on (0-4, oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
+        <translation>Tulosta debuggaustieto (oletus: %u, annettu &lt;category&gt; valinnainen)</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -2067,8 +2262,8 @@
         <translation>Aseta avainaltaan kooksi &lt;n&gt; (oletus: %u)</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Aseta pienin mahdollinen lohkokoko tavuina (oletus: %u)</translation>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>Aseta suurin BIP141-lohkopaino (oletus: %d)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

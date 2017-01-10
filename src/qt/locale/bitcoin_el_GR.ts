@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Διαγραφή</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Επανέλαβε τον νέο κωδικό πρόσβασης</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -247,10 +250,6 @@
         <translation>Η πηγή του μπλοκ δεν ειναι διαθέσιμη... </translation>
     </message>
     <message>
-        <source>%1 and %2</source>
-        <translation>%1 και %2</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 πίσω</translation>
     </message>
@@ -328,7 +327,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;κλειδωμένο&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -346,10 +345,6 @@
     <message>
         <source>Amount:</source>
         <translation>Ποσό:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Προτεραιότητα:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -403,11 +398,7 @@
         <source>Confirmed</source>
         <translation>Επικυρωμένες</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Προτεραιότητα</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -430,7 +421,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Διεύθυνση</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -509,6 +500,21 @@
     </message>
 </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Φόρμα</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Χρόνος τελευταίου μπλοκ</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Απόκρυψη</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -526,7 +532,7 @@
         <source>Select payment request file</source>
         <translation>Επιλέξτε πληρωμή αρχείου αίτησης</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -787,12 +793,11 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
-    <message>
-        <source>Ping Time</source>
-        <translation>Χρόνος καθυστέρησης</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -831,7 +836,17 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 και %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1053,7 +1068,7 @@
         <source>Remove</source>
         <translation>Αφαίρεση</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1072,7 +1087,10 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Αποθήκευση εικόνας...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1106,10 +1124,6 @@
     <message>
         <source>Amount:</source>
         <translation>Ποσό:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Προτεραιότητα:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1160,10 +1174,6 @@
         <translation>Προσαρμογή:</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>Χρόνος επικύρωσης:</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>κανονικό</translation>
     </message>
@@ -1203,7 +1213,7 @@
         <source>S&amp;end</source>
         <translation>Αποστολη</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1262,7 +1272,10 @@
         <source>Memo:</source>
         <translation>Σημείωση:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1348,7 +1361,7 @@
         <source>Reset all verify message fields</source>
         <translation>Επαναφορά όλων επαλήθευμενων πεδίων μήνυματος </translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1364,12 +1377,21 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Αυτό το παράθυρο δείχνει μια λεπτομερή περιγραφή της συναλλαγής</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1377,6 +1399,15 @@
         <translation>Μονάδα μέτρησης προβολής ποσών. Κάντε κλικ για επιλογή άλλης μονάδας.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1404,10 +1435,6 @@
         <translation>Εκτέλεση στο παρασκήνιο κι αποδοχή εντολών</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Να δέχεσαι συνδέσεις από έξω(προεπιλογή:1)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -1420,16 +1447,8 @@
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Αυτό είναι ένα προ-τεστ κυκλοφορίας - χρησιμοποιήστε το με δική σας ευθύνη - δεν χρησιμοποιείτε για εξόρυξη ή για αλλες εφαρμογές</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Αποκλεισμός επιλογων δημιουργίας: </translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Σύνδεση μόνο με ορισμένους κόμβους</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1550,10 +1569,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Το ποσό της συναλλαγής είναι πολύ μικρο </translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Τα ποσά των συναλλαγών πρέπει να είναι θετικα</translation>
     </message>
     <message>
         <source>Transaction too large</source>

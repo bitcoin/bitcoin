@@ -41,7 +41,18 @@
         <source>&amp;Delete</source>
         <translation>&amp;Eliminar</translation>
     </message>
-</context>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Escolhe qual o endereço para o  qual enviar moedas</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Escolhe qual o endereço para receber moedas</translation>
+    </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +71,7 @@
         <source>Repeat new passphrase</source>
         <translation>Repita a nova frase de palavra-passe</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -278,26 +289,6 @@
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Processado %n bloco do histórico de transações.</numerusform><numerusform>Processados %n blocos do histórico de transações.</numerusform></translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dia</numerusform><numerusform>%n dias</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 e %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n ano</numerusform><numerusform>%n anos</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>%1 em atraso</translation>
@@ -376,7 +367,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>A carteira está &lt;b&gt;encriptada&lt;/b&gt; e atualmente &lt;b&gt;bloqueada&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -394,10 +385,6 @@
     <message>
         <source>Amount:</source>
         <translation>Valor:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioridade:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -451,11 +438,7 @@
         <source>Confirmed</source>
         <translation>Confirmada</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Prioridade</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -478,7 +461,7 @@
         <source>&amp;Address</source>
         <translation>E&amp;ndereço</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -589,6 +572,21 @@
     </message>
 </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Formulário</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Data do último bloco</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Esconder</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -606,7 +604,7 @@
         <source>Select payment request file</source>
         <translation>Seleccione o ficheiro de pedido de pagamento</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -911,6 +909,9 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -920,11 +921,7 @@
         <source>Node/Service</source>
         <translation>Nó/Serviço</translation>
     </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>Tempo de Latência</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -963,7 +960,17 @@
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 e %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1159,14 +1166,6 @@
         <translation>Limpar consola</translation>
     </message>
     <message>
-        <source>&amp;Disconnect Node</source>
-        <translation>&amp;Desligar Nó</translation>
-    </message>
-    <message>
-        <source>Ban Node for</source>
-        <translation>Banir Nó por</translation>
-    </message>
-    <message>
         <source>1 &amp;hour</source>
         <translation>1 &amp;hora</translation>
     </message>
@@ -1181,10 +1180,6 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;ano</translation>
-    </message>
-    <message>
-        <source>&amp;Unban Node</source>
-        <translation>&amp;Desbloquear Nó</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -1317,7 +1312,7 @@
         <source>Remove</source>
         <translation>Remover</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1336,7 +1331,14 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Salvar Imagem...</translation>
     </message>
-</context>
+    <message>
+        <source>Amount</source>
+        <translation>Valor</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1370,10 +1372,6 @@
     <message>
         <source>Amount:</source>
         <translation>Quantia:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioridade:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1444,10 +1442,6 @@
         <translation>(Taxa inteligente ainda não foi acionada. Normalmente demora alguns blocos...)</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>Tempo de confirmação:</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>normal</translation>
     </message>
@@ -1487,7 +1481,7 @@
         <source>S&amp;end</source>
         <translation>E&amp;nviar</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1566,7 +1560,10 @@
         <source>Memo:</source>
         <translation>Memorando:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1664,7 +1661,7 @@
         <source>Reset all verify message fields</source>
         <translation>Repor todos os campos de verificação de mensagem</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1680,12 +1677,25 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Amount</source>
+        <translation>Valor</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Esta janela mostra uma descrição detalhada da transação</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1693,6 +1703,19 @@
         <translation>Unidade de valores recebidos. Clique para selecionar outra unidade.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportar os dados no separador atual para um ficheiro</translation>
+    </message>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1756,16 +1779,8 @@
         <translation>Não é possível iniciar o servidor HTTP. Verifique o debug.log para detalhes.</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Aceitar ligações externas (padrão: 1 sem -proxy ou -connect)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>-fallbackfee está definida muito elevada! Esta é a taxa de transação pode poderá pagar quando as estimativas de taxas não estão disponíveis.</translation>
     </message>
     <message>
         <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
@@ -1784,16 +1799,8 @@
         <translation>Apague todas as transações da carteira e somente restore aquelas que façam parte do blockchain através de re-scan ao reiniciar o programa</translation>
     </message>
     <message>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Distribuido através da licença de software MIT, verifique o ficheiro anexado COPYING ou &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Executar comando quando uma das transações na carteira mudar (no comando, %s é substituído pelo ID da Transação)</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
-        <translation>Forçar retransmissão das transações a partir dos pares da lista branca, mesmo que estes violem a política de retransmissão local (predefinição: %d)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -1804,24 +1811,8 @@
         <translation>A base de dados de blocos contém um bloco que aparenta ser do futuro. Isto pode ser causado por uma data incorrecta definida no seu computador. Reconstrua apenas a base de dados de blocos caso tenha a certeza de que a data e hora do seu computador estão correctos.</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Esta é uma versão de testes pré-lançamento - use à sua responsabilidade - não usar para minar ou aplicações comerciais</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Utilizar UPnP para mapear a porta de escuta (predefinição: 1 quando escutar e sem -proxy)</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Aviso: A rede não parece estar completamente de acordo! Parece que alguns mineiros estão com dificuldades técnicas.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Atenção: Parecemos não estar de acordo com os nossos pares! Poderá ter que atualizar o seu cliente, ou outros nós poderão ter que atualizar os seus clientes.</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
-        <translation>Ligações na lista branca conectam desde a seguinte netmask ou endereço IP. Posse ser especificado varias vezes.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -1842,10 +1833,6 @@
     <message>
         <source>Block creation options:</source>
         <translation>Opções da criação de bloco:</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Apenas ligar ao(s) nó(s) especificado(s)</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1950,10 +1937,6 @@
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
         <translation>Localização de cookie de autorização (predefinição: diretoria de dados)</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Mínimo de bytes por sigop nas transações que nós transmitimos e mine (predefinição: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2072,10 +2055,6 @@
         <translation>Tamanho máximo dos dados em transacções que incluem dados que propagamos e mineramos (padrão: %u)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation>Encontrar pares usando DNS lookup, caso o número de endereços seja reduzido (padrão: 1 excepto -connect)</translation>
-    </message>
-    <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Usar credenciais aleatórias por cada ligação proxy. Permite que o Tor use stream isolation (padrão: %u)</translation>
     </message>
@@ -2086,10 +2065,6 @@
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>O montante da transacção é demasiado baixo após a dedução da taxa</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Este produto inclui software desenvolvido pelo OpenSSL Project para utilização no OpenSSL Toolkit &lt;https://www.openssl.org/&gt;  e software criptográfico escrito por Eric Young e software UPnP escrito por Thomas Bernard.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -2200,10 +2175,6 @@
         <translation>Quantia da transação é muito baixa</translation>
     </message>
     <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Quantia da transação deverá ser positiva</translation>
-    </message>
-    <message>
         <source>Transaction too large for fee policy</source>
         <translation>Transacção demasiado grande para a política de taxas</translation>
     </message>
@@ -2266,10 +2237,6 @@
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee está definido com um valor muito alto! Taxas desta magnitude podem ser pagas numa única transacção.</translation>
-    </message>
-    <message>
-        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>-paytxfee está definido com um valor muito alto! Esta é a taxa que irá pagar se enviar uma transacção.</translation>
     </message>
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
@@ -2386,10 +2353,6 @@
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Definir tamanho do banco de memória da chave para &lt;n&gt; (predefinição: %u)</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: %u)</source>
-        <translation>Definir tamanho minímo de um bloco em bytes (por defeito: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

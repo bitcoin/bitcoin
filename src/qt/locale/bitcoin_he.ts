@@ -41,6 +41,69 @@
         <source>&amp;Delete</source>
         <translation>מ&amp;חיקה</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>בחר את הכתובת אליה תרצה לשלוח את המטבעות</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>בחר את הכתובת בה תקבל את המטבעות</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>בחר</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>כתובת לשליחה</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>מקבל כתובות</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>אלה הם כתובות הביטקוין שלך לשליחת תשלומים. חשוב לבדוק את הכמות של הכתובות המקבלות לפני שליחת מטבעות</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>אלה הן כתובות הביטקוין שלך לקבלת תשלומים. מומלץ להשתמש בכתובת חדשה לכל העברה.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;העתק כתובת</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>העתק &amp;תוית</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;ערוך</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>יצוא נכשל</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>אירעה שגיאה בעת הניסיון לשמור את רשימת הכתובת אל %1. נא לנסות שוב.</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>תוית</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>כתובת</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ללא תוית)</translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -60,7 +123,7 @@
         <source>Repeat new passphrase</source>
         <translation>נא לחזור על מילת הצופן החדשה</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -259,10 +322,6 @@
         <translation>אין מקור מקטעים זמין…</translation>
     </message>
     <message>
-        <source>%1 and %2</source>
-        <translation>%1 ו%2</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 מאחור</translation>
     </message>
@@ -310,7 +369,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>הארנק &lt;b&gt;מוצפן&lt;/b&gt; ו&lt;b&gt;נעול&lt;/b&gt; כרגע</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -328,10 +387,6 @@
     <message>
         <source>Amount:</source>
         <translation>סכום:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>עדיפות:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -386,10 +441,10 @@
         <translation>מאושר</translation>
     </message>
     <message>
-        <source>Priority</source>
-        <translation>עדיפות</translation>
+        <source>(no label)</source>
+        <translation>(ללא תוית)</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -412,7 +467,7 @@
         <source>&amp;Address</source>
         <translation>&amp;כתובת</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -467,6 +522,10 @@
         <translation>התחל ממוזער</translation>
     </message>
     <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>הצג מסך פתיחה בעת הפעלה (ברירת מחדל: %u)</translation>
+    </message>
+    <message>
         <source>Reset all settings changed in the GUI</source>
         <translation>איפוס כל שינויי הגדרות התצוגה</translation>
     </message>
@@ -499,6 +558,21 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>טופס</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>זמן המקטע האחרון</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>הסתר</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -516,7 +590,7 @@
         <source>Select payment request file</source>
         <translation>בחירת קובץ בקשת תשלום</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -776,16 +850,15 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
         <translation>סוכן משתמש</translation>
     </message>
-    <message>
-        <source>Ping Time</source>
-        <translation>זמן המענה</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -824,7 +897,17 @@
         <source>%1 ms</source>
         <translation>%1 מילישניות</translation>
     </message>
-</context>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 ו%2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1012,8 +1095,8 @@
         <translation>ניקוי מסוף הבקרה</translation>
     </message>
     <message>
-        <source>Ban Node for</source>
-        <translation>חסום משתמש ל</translation>
+        <source>1 &amp;hour</source>
+        <translation>1 שעה</translation>
     </message>
     <message>
         <source>1 &amp;day</source>
@@ -1150,7 +1233,7 @@
         <source>Remove</source>
         <translation>הסרה</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1169,7 +1252,26 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;שמירת תמונה…</translation>
     </message>
-</context>
+    <message>
+        <source>Address</source>
+        <translation>כתובת</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>תוית</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>תוית</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ללא תוית)</translation>
+    </message>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1203,10 +1305,6 @@
     <message>
         <source>Amount:</source>
         <translation>סכום:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>עדיפות:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1257,10 +1355,6 @@
         <translation>מותאם אישית:</translation>
     </message>
     <message>
-        <source>Confirmation time:</source>
-        <translation>זמן האישור:</translation>
-    </message>
-    <message>
         <source>normal</source>
         <translation>רגיל</translation>
     </message>
@@ -1299,6 +1393,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;שליחה</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ללא תוית)</translation>
     </message>
 </context>
 <context>
@@ -1367,7 +1465,10 @@
         <source>Memo:</source>
         <translation>תזכורת:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1453,7 +1554,7 @@
         <source>Reset all verify message fields</source>
         <translation>איפוס כל שדות אימות ההודעה</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1469,12 +1570,41 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>חלונית זו מציגה תיאור מפורט של ההעברה</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>תוית</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ללא תוית)</translation>
+    </message>
+    </context>
+<context>
+    <name>TransactionView</name>
+    <message>
+        <source>Label</source>
+        <translation>תוית</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>כתובת</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>יצוא נכשל</translation>
+    </message>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1482,6 +1612,15 @@
         <translation>יחידת המידה להצגת הסכומים. יש ללחוץ כדי לבחור ביחידת מידה אחרת.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1513,10 +1652,6 @@
         <translation>ריצה כסוכן ברקע וקבלת פקודות</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>קבלת חיבורים מבחוץ (בררת מחדל: 1 ללא ‎-proxy או ‎-connect)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>ליבת ביטקוין</translation>
     </message>
@@ -1537,18 +1672,6 @@
         <translation>ביצוע פקודה כאשר העברה בארנק משתנה (%s ב־cmd יוחלף ב־TxID)</translation>
     </message>
     <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>זוהי בניית ניסיון טרום-שחרור - השימוש בה על אחריותך - אין להשתמש לצורך כריה או יישומי מסחר</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>אזהרה: נראה שלא כל הרשת מסכימה! נראה שישנם כורים שנתקלים בבעיות.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>אזהרה: נראה שישנה אי־הסכמה בינינו לבין שאר העמיתים שלנו! יתכן שעדיף לשדרג או שכל שאר העמיתים צריכים לשדרג.</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;קטגוריה&gt; יכולה להיות:</translation>
     </message>
@@ -1559,10 +1682,6 @@
     <message>
         <source>Change index out of range</source>
         <translation>אינדקס העודף מחוץ לתחום</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>התחבר רק לצמתים המצוינים</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1735,10 +1854,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>סכום ההעברה קטן מדי</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>סכומי ההעברות חייבים להיות חיוביים</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>

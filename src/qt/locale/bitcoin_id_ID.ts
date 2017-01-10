@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Hapus</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Ulangi kata kunci baru</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -258,26 +261,6 @@
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n blok dari riwayat transaksi diproses.</numerusform></translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n jam</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n hari</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n minggu</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 dan %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n tahun</numerusform></translation>
-    </message>
     <message>
         <source>%1 behind</source>
         <translation>kurang %1</translation>
@@ -356,7 +339,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Dompet saat ini &lt;b&gt;terenkripsi&lt;/b&gt; dan &lt;b&gt;terkunci&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -374,10 +357,6 @@
     <message>
         <source>Amount:</source>
         <translation>Jumlah:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritas:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -431,11 +410,7 @@
         <source>Confirmed</source>
         <translation>Terkonfirmasi</translation>
     </message>
-    <message>
-        <source>Priority</source>
-        <translation>Prioritas</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -458,7 +433,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Alamat</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -561,6 +536,17 @@
     </message>
 </context>
 <context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Formulir</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Waktu blok terakhir</translation>
+    </message>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
@@ -578,7 +564,7 @@
         <source>Select payment request file</source>
         <translation>Pilih data permintaan pembayaran</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -822,6 +808,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -850,6 +839,16 @@
         <source>N/A</source>
         <translation>T/S</translation>
     </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 dan %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -1070,7 +1069,7 @@
         <source>Remove</source>
         <translation>Menghapus</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1089,7 +1088,14 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Simpan Gambaran...</translation>
     </message>
-</context>
+    <message>
+        <source>Amount</source>
+        <translation>Jumlah</translation>
+    </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1125,10 +1131,6 @@
         <translation>Nilai:</translation>
     </message>
     <message>
-        <source>Priority:</source>
-        <translation>Prioritas:</translation>
-    </message>
-    <message>
         <source>Fee:</source>
         <translation>Biaya:</translation>
     </message>
@@ -1155,10 +1157,6 @@
     <message>
         <source>Recommended:</source>
         <translation>Disarankan</translation>
-    </message>
-    <message>
-        <source>Confirmation time:</source>
-        <translation>Waktu konfirmasi:</translation>
     </message>
     <message>
         <source>normal</source>
@@ -1200,7 +1198,7 @@
         <source>S&amp;end</source>
         <translation>K&amp;irim</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1255,7 +1253,10 @@
         <source>Memo:</source>
         <translation>Catatan Peringatan:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1329,7 +1330,7 @@
         <source>Reset all verify message fields</source>
         <translation>Hapus semua bidang verifikasi pesan</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1345,14 +1346,36 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    <message>
+        <source>Amount</source>
+        <translation>Jumlah</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Jendela ini menampilkan deskripsi rinci dari transaksi tersebut</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1381,10 +1404,6 @@
         <translation>Berjalan dibelakang sebagai daemin dan menerima perintah</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Terima hubungan dari luar (standar: 1 kalau -proxy atau -connect tidak dipilih)</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -1393,20 +1412,8 @@
         <translation>Jalankan perintah ketika perubahan transaksi dompet (%s di cmd digantikan oleh TxID)</translation>
     </message>
     <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Peringatan: Jaringan tidak semua bersetuju! Beberapa penambang dapat persoalan.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Peringatan: Kami tidak bersetujuh dengan peer-peer kami! Kemungkinan Anda harus upgrade, atau node-node lain yang harus diupgrade.</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Pilihan pembuatan blok:</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Jangan menghubungkan node(-node) selain yang di daftar</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -1511,10 +1518,6 @@
     <message>
         <source>Transaction amount too small</source>
         <translation>Nilai transaksi terlalu kecil</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Nilai transaksi harus positif</translation>
     </message>
     <message>
         <source>Transaction too large</source>

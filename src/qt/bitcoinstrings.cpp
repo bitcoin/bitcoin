@@ -191,7 +191,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Username and hashed password for JSON-RPC connections. The field <userpw> "
 "comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is "
-"included in share/rpcuser. This option can be specified multiple times"),
+"included in share/rpcuser. The client then connects normally using the "
+"rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can "
+"be specified multiple times"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Wallet will not create transactions that violate mempool chain limits "
 "(default: %u)"),

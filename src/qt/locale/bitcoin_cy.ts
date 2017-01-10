@@ -29,7 +29,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Dileu</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -44,7 +47,7 @@
         <source>Repeat new passphrase</source>
         <translation>Ailadroddwch gyfrinymadrodd newydd</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -146,26 +149,6 @@
         <source>Tabs toolbar</source>
         <translation>Bar offer tabiau</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation>%1 a %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform></translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Gwall</translation>
@@ -226,7 +209,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Mae'r waled &lt;b&gt;wedi'i amgryptio&lt;/b&gt; ac &lt;b&gt;ar glo&lt;/b&gt; ar hyn o bryd</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -252,7 +235,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Cyfeiriad</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -276,6 +259,13 @@
     <message>
         <source>Error</source>
         <translation>Gwall</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Ffurflen</translation>
     </message>
     </context>
 <context>
@@ -332,10 +322,23 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 a %2</translation>
+    </message>
+    </context>
+<context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
+    <name>QRImageWidget</name>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -365,6 +368,9 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;Cyfeiriad Copi</translation>
     </message>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -417,6 +423,9 @@
     </message>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -445,10 +454,28 @@
     <name>TrafficGraphWidget</name>
     </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
+<context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
