@@ -340,34 +340,34 @@ public:
  */
 class CCustomParams : public CChainParams {
 
-    void UpdateFromArgs()
+    void UpdateFromArgs(ArgsManager& argsMan)
     {
-        strNetworkID = GetArg("-chainpetname", "custom");
+        strNetworkID = argsMan.GetArg("-chainpetname", "custom");
 
-        consensus.fPowAllowMinDifficultyBlocks = GetBoolArg("-con_fpowallowmindifficultyblocks", true);
-        consensus.fPowNoRetargeting = GetBoolArg("-con_fpownoretargeting", true);
-        consensus.nSubsidyHalvingInterval = GetArg("-con_nsubsidyhalvinginterval", 150);
-        consensus.BIP34Height = GetArg("-con_bip34height", 100000000);
-        consensus.BIP65Height = GetArg("-con_bip65height", 1351);
-        consensus.BIP66Height = GetArg("-con_bip66height", 1251);
-        consensus.nPowTargetTimespan = GetArg("-con_npowtargettimespan", 14 * 24 * 60 * 60); // two weeks
-        consensus.nPowTargetSpacing = GetArg("-con_npowtargetspacing", 10 * 60);
-        consensus.nRuleChangeActivationThreshold = GetArg("-con_nrulechangeactivationthreshold", 108); // 75% for testchains
-        consensus.nMinerConfirmationWindow = GetArg("-con_nminerconfirmationwindow", 144); // Faster than normal for custom (144 instead of 2016)
-        consensus.powLimit = uint256S(GetArg("-con_powlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-        consensus.BIP34Hash = uint256S(GetArg("-con_bip34hash", "0x0"));
-        consensus.nMinimumChainWork = uint256S(GetArg("-con_nminimumchainwork", "0x0"));
+        consensus.fPowAllowMinDifficultyBlocks = argsMan.GetBoolArg("-con_fpowallowmindifficultyblocks", true);
+        consensus.fPowNoRetargeting = argsMan.GetBoolArg("-con_fpownoretargeting", true);
+        consensus.nSubsidyHalvingInterval = argsMan.GetArg("-con_nsubsidyhalvinginterval", 150);
+        consensus.BIP34Height = argsMan.GetArg("-con_bip34height", 100000000);
+        consensus.BIP65Height = argsMan.GetArg("-con_bip65height", 1351);
+        consensus.BIP66Height = argsMan.GetArg("-con_bip66height", 1251);
+        consensus.nPowTargetTimespan = argsMan.GetArg("-con_npowtargettimespan", 14 * 24 * 60 * 60); // two weeks
+        consensus.nPowTargetSpacing = argsMan.GetArg("-con_npowtargetspacing", 10 * 60);
+        consensus.nRuleChangeActivationThreshold = argsMan.GetArg("-con_nrulechangeactivationthreshold", 108); // 75% for testchains
+        consensus.nMinerConfirmationWindow = argsMan.GetArg("-con_nminerconfirmationwindow", 144); // Faster than normal for custom (144 instead of 2016)
+        consensus.powLimit = uint256S(argsMan.GetArg("-con_powlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        consensus.BIP34Hash = uint256S(argsMan.GetArg("-con_bip34hash", "0x0"));
+        consensus.nMinimumChainWork = uint256S(argsMan.GetArg("-con_nminimumchainwork", "0x0"));
 
-        nDefaultPort = GetArg("-ndefaultport", 18444);
-        nPruneAfterHeight = GetArg("-npruneafterheight", 1000);
-        fMiningRequiresPeers = GetBoolArg("-fminingrequirespeers", false);
-        fDefaultConsistencyChecks = GetBoolArg("-fdefaultconsistencychecks", true);
-        fRequireStandard = GetBoolArg("-frequirestandard", false);
-        fMineBlocksOnDemand = GetBoolArg("-fmineblocksondemand", true);
+        nDefaultPort = argsMan.GetArg("-ndefaultport", 18444);
+        nPruneAfterHeight = argsMan.GetArg("-npruneafterheight", 1000);
+        fMiningRequiresPeers = argsMan.GetBoolArg("-fminingrequirespeers", false);
+        fDefaultConsistencyChecks = argsMan.GetBoolArg("-fdefaultconsistencychecks", true);
+        fRequireStandard = argsMan.GetBoolArg("-frequirestandard", false);
+        fMineBlocksOnDemand = argsMan.GetBoolArg("-fmineblocksondemand", true);
     }
 
 public:
-    CCustomParams()
+    CCustomParams(ArgsManager& argsMan)
     {
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
@@ -396,7 +396,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
 
-        UpdateFromArgs();
+        UpdateFromArgs(argsMan);
         genesis = CreateGenesisBlock(strNetworkID.c_str(), CScript(OP_TRUE), 1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
     }
@@ -409,7 +409,7 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, ArgsManager& chainArgsMan)
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
@@ -418,15 +418,23 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
     else if (chain == CBaseChainParams::CUSTOM) {
-        return std::unique_ptr<CChainParams>(new CCustomParams());
+        return std::unique_ptr<CChainParams>(new CCustomParams(chainArgsMan));
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+}
+
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
+{
+    ArgsManager chainArgsMan;
+    return CreateChainParams(chain, chainArgsMan);
 }
 
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    globalChainParams = CreateChainParams(network);
+    ArgsManager chainArgsMan;
+    chainArgsMan.ReadConfigFile(argsGlobal.GetArg("-chainconf", CHAINPARAMS_CONF_FILENAME));
+    globalChainParams = CreateChainParams(network, chainArgsMan);
 }
 
 void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
