@@ -48,7 +48,7 @@ BalancesDialog::BalancesDialog(QWidget *parent) :
     ui->balancesTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Property Name"));
     ui->balancesTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Reserved"));
     ui->balancesTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Available"));
-    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->balancesTable,100,100);
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->balancesTable, 100, 100, this);
     // note neither resizetocontents or stretch allow user to adjust - go interactive then manually set widths
     #if QT_VERSION < 0x050000
        ui->balancesTable->horizontalHeader()->setResizeMode(0, QHeaderView::Interactive);
