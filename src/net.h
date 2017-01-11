@@ -342,6 +342,7 @@ private:
     void ProcessOneShot();
     void ThreadOpenConnections();
     void ThreadMessageHandler();
+    void ThreadValidation();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
@@ -435,6 +436,8 @@ private:
 
     std::condition_variable condMsgProc;
     std::mutex mutexMsgProc;
+    std::condition_variable condValidation;
+    std::mutex mutexValidation;
     std::atomic<bool> flagInterruptMsgProc;
 
     CThreadInterrupt interruptNet;
@@ -444,6 +447,7 @@ private:
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
+    std::thread threadValidation;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
