@@ -128,9 +128,11 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
             "getrawtransaction \"txid\" ( verbose )\n"
-            "\nNOTE: By default this function only works sometimes. This is when the tx is in the mempool\n"
-            "or there is an unspent output in the utxo for this transaction. To make it always work,\n"
-            "you need to maintain a transaction index, using the -txindex command line option.\n"
+
+            "\nNOTE: By default this function only works for mempool transactions. If the -txindex option is\n"
+            "enabled, it also works for blockchain transactions.\n"
+            "DEPRECATED: for now, it also works for transactions with unspent outputs.\n"
+
             "\nReturn the raw transaction data.\n"
             "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
             "If verbose is 'false' or omitted, returns a string that is serialized, hex-encoded data for 'txid'.\n"
@@ -218,7 +220,9 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     CTransactionRef tx;
     uint256 hashBlock;
     if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string(fTxIndex ? "No such mempool or blockchain transaction"
+            : "No such mempool transaction. Use -txindex to enable blockchain transaction queries") +
+            ". Use gettransaction for wallet transactions.");
 
     string strHex = EncodeHexTx(*tx, RPCSerializationFlags());
 
