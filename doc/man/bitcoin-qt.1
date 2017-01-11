@@ -75,11 +75,13 @@ Specify pid file (default: bitcoind.pid)
 .HP
 \fB\-prune=\fR<n>
 .IP
-Reduce storage requirements by pruning (deleting) old blocks. This mode
-is incompatible with \fB\-txindex\fR and \fB\-rescan\fR. Warning: Reverting
-this setting requires re\-downloading the entire blockchain.
-(default: 0 = disable pruning blocks, >550 = target size in MiB
-to use for block files)
+Reduce storage requirements by enabling pruning (deleting) of old blocks.
+This allows the pruneblockchain RPC to be called to delete specific blocks,
+and enables automatic pruning of old blocks if a target size in MiB is
+provided. This mode is incompatible with \fB\-txindex\fR and \fB\-rescan\fR.
+Warning: Reverting this setting requires re\-downloading the entire blockchain.
+(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >550 =
+automatically prune block files to stay under the specified target size in MiB)
 .HP
 \fB\-reindex\-chainstate\fR
 .IP
