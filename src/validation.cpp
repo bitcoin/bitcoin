@@ -3035,10 +3035,12 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
-            // cast away the ppindex-returns-const CBlockIndex - we're just assigning it to a CBlockIndex*
-            // that we own and is updated non-const anyway
-            if (!AcceptBlockHeader(header, state, chainparams, const_cast<CBlockIndex**>(ppindex))) {
+            CBlockIndex *pindex = NULL; // Use a temp pindex instead of ppindex to avoid a const_cast
+            if (!AcceptBlockHeader(header, state, chainparams, &pindex)) {
                 return false;
+            }
+            if (ppindex) {
+                *ppindex = pindex;
             }
         }
     }
