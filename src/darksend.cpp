@@ -1912,7 +1912,7 @@ void CDarksendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
         strDenom += "1000";
     }
 
-    if(nDenom & (1 << 0)) {
+    if(nDenom & (1 << 1)) {
         if(strDenom.size() > 0) strDenom += "+";
         strDenom += "100";
     }
@@ -2007,7 +2007,7 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
         if(nDenomTarget != 0){
             bool fAccepted = false;
             if((nDenomTarget & (1 << 0)) &&      v == ((1000*COIN)+1000000)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 1)) && v == ((10*COIN) +10000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 1)) && v == ((100*COIN) +10000)) {fAccepted = true;}
             else if((nDenomTarget & (1 << 2)) && v == ((10*COIN) +10000)) {fAccepted = true;}
             else if((nDenomTarget & (1 << 3)) && v == ((1*COIN)  +1000)) {fAccepted = true;}
             else if((nDenomTarget & (1 << 4)) && v == ((.1*COIN) +100)) {fAccepted = true;}
