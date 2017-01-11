@@ -24,6 +24,7 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
         strUsage += HelpMessageGroup(_("Custom chain selection options (only for -chain=custom):"));
+        strUsage += HelpMessageOpt("-chainconf=<file>", strprintf(_("Specify configuration file for chain parameters (default: %s). All custom chain arguments except this one must be configured using this file."), CHAINPARAMS_CONF_FILENAME));
         strUsage += HelpMessageOpt("-chainpetname=<name>", _("Alternative name for custom chain (default: custom). This changes the genesis block."));
     }
 }
