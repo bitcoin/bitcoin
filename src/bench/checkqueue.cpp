@@ -15,6 +15,11 @@
 // This Benchmark tests the CheckQueue with the lightest
 // weight Checks, so it should make any lock contention
 // particularly visible
+static const int MIN_CORES = 2;
+static const size_t BATCHES = 101;
+static const size_t BATCH_SIZE = 30;
+static const int PREVECTOR_SIZE = 28;
+static const int QUEUE_BATCH_SIZE = 128;
 static void CCheckQueueSpeed(benchmark::State& state)
 {
     struct FakeJobNoWork {
@@ -24,21 +29,25 @@ static void CCheckQueueSpeed(benchmark::State& state)
         }
         void swap(FakeJobNoWork& x){};
     };
-    CCheckQueue<FakeJobNoWork> queue {128};
+    CCheckQueue<FakeJobNoWork> queue {QUEUE_BATCH_SIZE};
     boost::thread_group tg;
-    for (auto x = 0; x < std::max(2, GetNumCores()); ++x) {
+    for (auto x = 0; x < std::max(MIN_CORES, GetNumCores()); ++x) {
        tg.create_thread([&]{queue.Thread();});
     }
     while (state.KeepRunning()) {
         CCheckQueueControl<FakeJobNoWork> control(&queue);
-        // We can make vChecks out of the loop because calling Add doesn't
-        // change the size of the vector.
-        std::vector<FakeJobNoWork> vChecks;
-        vChecks.resize(30);
 
         // We call Add a number of times to simulate the behavior of adding
         // a block of transactions at once.
-        for (size_t j = 0; j < 101; ++j) {
+
+        std::vector<std::vector<FakeJobNoWork>> vBatches(BATCHES);
+        for (auto& vChecks : vBatches) {
+            vChecks.resize(BATCH_SIZE);
+        }
+        for (auto& vChecks : vBatches) {
+            // We can't make vChecks in the inner loop because we want to measure
+            // the cost of getting the memory to each thread and we might get the same
+            // memory
             control.Add(vChecks);
         }
         // control waits for completion by RAII, but
@@ -55,11 +64,11 @@ static void CCheckQueueSpeed(benchmark::State& state)
 static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
 {
     struct PrevectorJob {
-        prevector<28, uint8_t> p;
+        prevector<PREVECTOR_SIZE, uint8_t> p;
         PrevectorJob(){
         }
         PrevectorJob(FastRandomContext& insecure_rand){
-            p.resize(insecure_rand.rand32() % 56);
+            p.resize(insecure_rand.rand32() % (PREVECTOR_SIZE*2));
         }
         bool operator()()
         {
@@ -67,19 +76,19 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
         }
         void swap(PrevectorJob& x){p.swap(x.p);};
     };
-    CCheckQueue<PrevectorJob> queue {128};
+    CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
     boost::thread_group tg;
-    for (auto x = 0; x < std::max(2, GetNumCores()); ++x) {
+    for (auto x = 0; x < std::max(MIN_CORES, GetNumCores()); ++x) {
        tg.create_thread([&]{queue.Thread();});
     }
     while (state.KeepRunning()) {
         // Make insecure_rand here so that each iteration is identical.
         FastRandomContext insecure_rand(true);
         CCheckQueueControl<PrevectorJob> control(&queue);
-        for (size_t j = 0; j < 101; ++j) {
-            std::vector<PrevectorJob> vChecks;
-            vChecks.reserve(30);
-            for (auto x = 0; x < 30; ++x)
+        std::vector<std::vector<PrevectorJob>> vBatches(BATCHES);
+        for (auto& vChecks : vBatches) {
+            vChecks.reserve(BATCH_SIZE);
+            for (size_t x = 0; x < BATCH_SIZE; ++x)
                 vChecks.emplace_back(insecure_rand);
             control.Add(vChecks);
         }
