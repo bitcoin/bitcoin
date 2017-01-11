@@ -68,7 +68,7 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         throneListPage = new ThroneList();
     }
 
@@ -76,7 +76,7 @@ WalletView::WalletView(QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         addWidget(throneListPage);
     }
 
@@ -126,7 +126,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendCoinsPage->setClientModel(clientModel);
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         throneListPage->setClientModel(clientModel);
     }
 }
@@ -140,7 +140,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         throneListPage->setWalletModel(walletModel);
     }
 
@@ -208,7 +208,7 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoThronePage()
 {
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         setCurrentWidget(throneListPage);
     }
 }

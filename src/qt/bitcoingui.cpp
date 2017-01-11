@@ -190,7 +190,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     if(enableWallet)
     {
         frameBlocksLayout->addStretch();
-        //frameBlocksLayout->addWidget(unitDisplayControl);
+        frameBlocksLayout->addWidget(unitDisplayControl);
         frameBlocksLayout->addStretch();
         frameBlocksLayout->addWidget(labelEncryptionIcon);
     }
@@ -308,7 +308,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(historyAction);
 
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         throneAction = new QAction(QIcon(":/icons/throne"), tr("&Thrones"), this);
         throneAction->setStatusTip(tr("Browse thrones"));
         throneAction->setToolTip(throneAction->statusTip());
@@ -516,7 +516,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
-        if (throneConfig.getCount())
+        if (throneConfig.getCount() >= 0)
         {
             toolbar->addAction(throneAction);
         }
@@ -610,7 +610,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         throneAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -740,7 +740,7 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoThronePage()
 {
-    if (throneConfig.getCount()) {
+    if (throneConfig.getCount() >= 0) {
         throneAction->setChecked(true);
         if (walletFrame) walletFrame->gotoThronePage();
     }
