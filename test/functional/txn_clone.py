@@ -13,6 +13,7 @@ class TxnMallTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 4
         self.setup_clean_chain = False
+        self.extra_args = [["-walletrbf=0"]] * self.num_nodes
 
     def add_options(self, parser):
         parser.add_option("--mineblock", dest="mine_block", default=False, action="store_true",
