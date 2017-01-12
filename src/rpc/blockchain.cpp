@@ -820,7 +820,12 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
         throw runtime_error(
             "pruneblockchain\n"
             "\nArguments:\n"
-            "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or to a unix timestamp to prune based on block time.\n");
+            "1. \"height\"       (numeric, required) The block height to prune up to. May be set to a discrete height, or to a unix timestamp to prune based on block time.\n"
+            "\nResult:\n"
+            "n    (numeric) Height of the last block pruned.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("pruneblockchain", "1000")
+            + HelpExampleRpc("pruneblockchain", "1000"));
 
     if (!fPruneMode)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Cannot prune blocks because node is not in prune mode.");
@@ -847,11 +852,13 @@ UniValue pruneblockchain(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Blockchain is too short for pruning.");
     else if (height > chainHeight)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
-    else if (height > chainHeight - MIN_BLOCKS_TO_KEEP)
+    else if (height > chainHeight - MIN_BLOCKS_TO_KEEP) {
         LogPrint("rpc", "Attempt to prune blocks close to the tip.  Retaining the minimum number of blocks.");
+        height = chainHeight - MIN_BLOCKS_TO_KEEP;
+    }
 
     PruneBlockFilesManual(height);
-    return NullUniValue;
+    return uint64_t(height);
 }
 
 UniValue gettxoutsetinfo(const JSONRPCRequest& request)
