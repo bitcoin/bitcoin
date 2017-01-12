@@ -17,20 +17,20 @@ To contribute to the codebase you can make a github "pull request". This
 process is described in githubs documentation.
 
 In classic we follow the well known git branching model where we have a stable
-and a development branch.
+and a development branch, called master.
 
 ## 1.2 (stable branch)
 
 Any merge request to this branch is meant to go into the next release. Any
-commits made here will be merged into the development branch by a volunteer.
+commits made here will be merged into the master branch by a volunteer.
 
 This is the stable branch for a reason, we essentially should be able to
 release from this branch fairly quickly at any time. So no unfinished code
 reaches this branch.
 
-## Development branch
+## Master branch
 
-The development branch is where your merge requests go for finished stuff,
+The master branch is where your merge requests go for finished stuff,
 that you want the world to see and that you want others to work on. But may
 take a bit more time to stabilize.
 
