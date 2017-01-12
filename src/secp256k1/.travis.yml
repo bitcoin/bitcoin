@@ -1,12 +1,14 @@
-language: cpp
-compiler: gcc
+language: c
+compiler:
+  - clang
+  - gcc
 install:
   - sudo apt-get install -qq libssl-dev
-  - if [ "$BIGNUM" = "gmp" -o "$BIGNUM" = "auto" -o "$FIELD" = "gmp" ]; then sudo apt-get install -qq libgmp-dev; fi
-  - if [ "$FIELD" = "64bit_asm" ]; then sudo apt-get install -qq yasm; fi
+  - if [ "$BIGNUM" = "gmp" -o "$BIGNUM" = "auto" -o "$FIELD" = "gmp" ]; then sudo apt-get install --no-install-recommends --no-upgrade -qq libgmp-dev; fi
+  - if [ -n "$EXTRAPACKAGES" ]; then sudo apt-get update && sudo apt-get install --no-install-recommends --no-upgrade $EXTRAPACKAGES; fi
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  BUILD=check  EXTRAFLAGS=
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  BUILD=check  EXTRAFLAGS= HOST= EXTRAPACKAGES=
   matrix:
     - SCALAR=32bit
     - SCALAR=64bit
@@ -22,6 +24,11 @@ env:
     - BIGNUM=none     ENDOMORPHISM=yes
     - BUILD=distcheck
     - EXTRAFLAGS=CFLAGS=-DDETERMINISTIC
+    - HOST=i686-linux-gnu EXTRAPACKAGES="gcc-multilib"
+    - HOST=i686-linux-gnu EXTRAPACKAGES="gcc-multilib" ENDOMORPHISM=yes
 before_script: ./autogen.sh
-script: ./configure --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM --with-scalar=$SCALAR $EXTRAFLAGS && make -j2 $BUILD
+script:
+ - if [ -n "$HOST" ]; then export USE_HOST="--host=$HOST"; fi
+ - if [ "x$HOST" = "xi686-linux-gnu" ]; then export CC="$CC -m32"; fi
+ - ./configure --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM --with-scalar=$SCALAR $EXTRAFLAGS $USE_HOST && make -j2 $BUILD
 os: linux

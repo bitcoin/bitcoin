@@ -9,35 +9,46 @@
 
 #include "include/secp256k1.h"
 #include "util.h"
+#include "bench.h"
+
+typedef struct {
+    unsigned char msg[32];
+    unsigned char key[32];
+    unsigned char nonce[32];
+    unsigned char sig[72];
+    int siglen;
+    unsigned char pubkey[33];
+    int pubkeylen;
+} benchmark_verify_t;
+
+static void benchmark_verify(void* arg) {
+    benchmark_verify_t* data = (benchmark_verify_t*)arg;
+
+    for (int i=0; i<20000; i++) {
+        data->sig[data->siglen - 1] ^= (i & 0xFF);
+        data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
+        data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
+        CHECK(secp256k1_ecdsa_verify(data->msg, data->sig, data->siglen, data->pubkey, data->pubkeylen) == (i == 0));
+        data->sig[data->siglen - 1] ^= (i & 0xFF);
+        data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
+        data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
+    }
+}
 
 int main(void) {
-    secp256k1_start(SECP256K1_START_VERIFY);
+    secp256k1_start(SECP256K1_START_VERIFY | SECP256K1_START_SIGN);
 
-    unsigned char msg[32];
-    unsigned char sig[64];
+    benchmark_verify_t data;
 
-    for (int i = 0; i < 32; i++) msg[i] = 1 + i;
-    for (int i = 0; i < 64; i++) sig[i] = 65 + i;
+    for (int i = 0; i < 32; i++) data.msg[i] = 1 + i;
+    for (int i = 0; i < 32; i++) data.key[i] = 33 + i;
+    for (int i = 0; i < 32; i++) data.nonce[i] = 65 + i;
+    data.siglen = 72;
+    CHECK(secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, data.nonce));
+    data.pubkeylen = 33;
+    CHECK(secp256k1_ec_pubkey_create(data.pubkey, &data.pubkeylen, data.key, 1));
 
-    unsigned char pubkey[33];
-    for (int i=0; i<1000000; i++) {
-        int pubkeylen = 33;
-        CHECK(secp256k1_ecdsa_recover_compact(msg, 32, sig, pubkey, &pubkeylen, 1, i % 2));
-        for (int j = 0; j < 32; j++) {
-            sig[j + 32] = msg[j];    /* Move former message to S. */
-            msg[j] = sig[j];         /* Move former R to message. */
-            sig[j] = pubkey[j + 1];  /* Move recovered pubkey X coordinate to R (which must be a valid X coordinate). */
-        }
-    }
-
-    static const unsigned char fini[33] = {
-        0x02,
-        0x52, 0x63, 0xae, 0x9a, 0x9d, 0x47, 0x1f, 0x1a,
-        0xb2, 0x36, 0x65, 0x89, 0x11, 0xe7, 0xcc, 0x86,
-        0xa3, 0xab, 0x97, 0xb6, 0xf1, 0xaf, 0xfd, 0x8f,
-        0x9b, 0x38, 0xb6, 0x18, 0x55, 0xe5, 0xc2, 0x43
-    };
-    CHECK(memcmp(fini, pubkey, 33) == 0);
+    run_benchmark(benchmark_verify, NULL, NULL, &data, 10, 20000);
 
     secp256k1_stop();
     return 0;

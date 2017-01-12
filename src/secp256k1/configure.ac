@@ -18,6 +18,10 @@ AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 
+if test "x$CFLAGS" = "x"; then
+  CFLAGS="-O3 -g"
+fi
+
 AC_PROG_CC_C99
 if test x"$ac_cv_prog_cc_c99" == x"no"; then
   AC_MSG_ERROR([c99 compiler support required])
@@ -78,9 +82,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
 
 
 AC_ARG_ENABLE(benchmark,
-    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is yes)]),
+    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is no)]),
     [use_benchmark=$enableval],
-    [use_benchmark=yes])
+    [use_benchmark=no])
 
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
@@ -103,7 +107,11 @@ AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
 
 AC_CHECK_TYPES([__int128])
 
-AC_CHECK_DECL(__builtin_expect,AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]),,)
+AC_MSG_CHECKING([for __builtin_expect])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
+    [ AC_MSG_RESULT([yes]);AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]) ],
+    [ AC_MSG_RESULT([no])
+    ])
 
 if test x"$req_field" = x"auto"; then
   SECP_64BIT_ASM_CHECK
@@ -115,6 +123,13 @@ if test x"$req_field" = x"auto"; then
     SECP_INT128_CHECK
     if test x"$has_int128" = x"yes"; then
       set_field=64bit
+    fi
+  fi
+
+  if test x"$set_field" = x; then
+    SECP_GMP_CHECK
+    if test x"$has_gmp" = x"yes"; then
+      set_field=gmp
     fi
   fi
 
@@ -166,6 +181,11 @@ else
 fi
 
 if test x"$req_bignum" = x"auto"; then
+  SECP_GMP_CHECK
+  if test x"$has_gmp" = x"yes"; then
+    set_bignum=gmp
+  fi
+
   if test x"$set_bignum" = x; then
     set_bignum=none
   fi
@@ -271,10 +291,9 @@ AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
-AC_SUBST(YASM_BINFMT)
 AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"64bit_asm"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
-AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" != x"no"])
+AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
 
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"

@@ -102,6 +102,50 @@ static void secp256k1_fe_normalize(secp256k1_fe_t *r) {
 #endif
 }
 
+static void secp256k1_fe_normalize_var(secp256k1_fe_t *r) {
+    uint64_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4];
+
+    /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+    uint64_t x = t4 >> 48; t4 &= 0x0FFFFFFFFFFFFULL;
+    uint64_t m;
+
+    /* The first pass ensures the magnitude is 1, ... */
+    t0 += x * 0x1000003D1ULL;
+    t1 += (t0 >> 52); t0 &= 0xFFFFFFFFFFFFFULL;
+    t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL; m = t1;
+    t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL; m &= t2;
+    t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL; m &= t3;
+
+    /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+    VERIFY_CHECK(t4 >> 49 == 0);
+
+    /* At most a single final reduction is needed; check if the value is >= the field characteristic */
+    x = (t4 >> 48) | ((t4 == 0x0FFFFFFFFFFFFULL) & (m == 0xFFFFFFFFFFFFFULL)
+        & (t0 >= 0xFFFFEFFFFFC2FULL));
+
+    if (x) {
+        t0 += 0x1000003D1ULL;
+        t1 += (t0 >> 52); t0 &= 0xFFFFFFFFFFFFFULL;
+        t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL;
+        t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL;
+        t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL;
+
+        /* If t4 didn't carry to bit 48 already, then it should have after any final reduction */
+        VERIFY_CHECK(t4 >> 48 == x);
+
+        /* Mask off the possible multiple of 2^256 from the final reduction */
+        t4 &= 0x0FFFFFFFFFFFFULL;
+    }
+
+    r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
+
+#ifdef VERIFY
+    r->magnitude = 1;
+    r->normalized = 1;
+    secp256k1_fe_verify(r);
+#endif
+}
+
 SECP256K1_INLINE static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
     r->n[0] = a;
     r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
@@ -255,7 +299,7 @@ static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const s
     secp256k1_fe_verify(b);
     VERIFY_CHECK(r != b);
 #endif
-    secp256k1_fe_mul_inner(a->n, b->n, r->n);
+    secp256k1_fe_mul_inner(r->n, a->n, b->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
@@ -268,7 +312,7 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     VERIFY_CHECK(a->magnitude <= 8);
     secp256k1_fe_verify(a);
 #endif
-    secp256k1_fe_sqr_inner(a->n, r->n);
+    secp256k1_fe_sqr_inner(r->n, a->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;

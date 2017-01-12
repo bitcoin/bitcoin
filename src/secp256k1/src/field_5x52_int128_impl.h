@@ -15,7 +15,7 @@
 #define VERIFY_BITS(x, n) do { } while(0)
 #endif
 
-SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t * SECP256K1_RESTRICT b, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint64_t *r, const uint64_t *a, const uint64_t * SECP256K1_RESTRICT b) {
     VERIFY_BITS(a[0], 56);
     VERIFY_BITS(a[1], 56);
     VERIFY_BITS(a[2], 56);
@@ -152,7 +152,7 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uin
     /* [r4 r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
 
-SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint64_t *a, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t *a) {
     VERIFY_BITS(a[0], 56);
     VERIFY_BITS(a[1], 56);
     VERIFY_BITS(a[2], 56);

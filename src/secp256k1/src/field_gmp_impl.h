@@ -46,6 +46,10 @@ static void secp256k1_fe_normalize(secp256k1_fe_t *r) {
         mpn_sub(r->n, r->n, FIELD_LIMBS, secp256k1_field_p, FIELD_LIMBS);
 }
 
+static void secp256k1_fe_normalize_var(secp256k1_fe_t *r) {
+    secp256k1_fe_normalize(r);
+}
+
 SECP256K1_INLINE static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
     r->n[0] = a;
     for (int i=1; i<FIELD_LIMBS+1; i++)
