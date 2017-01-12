@@ -84,7 +84,6 @@ def b58decode_chk(v):
     result = b58decode(v)
     if result is None:
         return None
-    h3 = checksum(result[:-4])
     if result[-4:] == checksum(result[:-4]):
         return result[:-4]
     else:
