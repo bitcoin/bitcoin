@@ -474,7 +474,16 @@ boost::filesystem::path GetDefaultDataDir()
     return pathRet / "Library/Application Support/Bitcoin";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    fs::path legacyPath = pathRet / ".bitcoin";
+    if (fs::exists(legacyPath))
+        return legacyPath;
+    fs::path configDir;
+    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
+    if (pszConfigHome == NULL || strlen(pszConfigHome) == 0)
+        configDir = pathRet / ".config";
+    else
+        configDir = fs::path(pszConfigHome);
+    return configDir / "bitcoin";
 #endif
 #endif
 }
