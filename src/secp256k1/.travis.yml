@@ -4,24 +4,22 @@ compiler:
   - gcc
 install:
   - sudo apt-get install -qq libssl-dev
-  - if [ "$BIGNUM" = "gmp" -o "$BIGNUM" = "auto" -o "$FIELD" = "gmp" ]; then sudo apt-get install --no-install-recommends --no-upgrade -qq libgmp-dev; fi
+  - if [ "$BIGNUM" = "gmp" -o "$BIGNUM" = "auto" ]; then sudo apt-get install --no-install-recommends --no-upgrade -qq libgmp-dev; fi
   - if [ -n "$EXTRAPACKAGES" ]; then sudo apt-get update && sudo apt-get install --no-install-recommends --no-upgrade $EXTRAPACKAGES; fi
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  BUILD=check  EXTRAFLAGS= HOST= EXTRAPACKAGES=
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  ASM=no  BUILD=check  EXTRAFLAGS= HOST= EXTRAPACKAGES=
   matrix:
     - SCALAR=32bit
     - SCALAR=64bit
-    - FIELD=gmp
-    - FIELD=gmp       ENDOMORPHISM=yes
-    - FIELD=64bit_asm
-    - FIELD=64bit_asm ENDOMORPHISM=yes
     - FIELD=64bit
     - FIELD=64bit     ENDOMORPHISM=yes
+    - FIELD=64bit                       ASM=x86_64
+    - FIELD=64bit     ENDOMORPHISM=yes  ASM=x86_64
     - FIELD=32bit
     - FIELD=32bit     ENDOMORPHISM=yes
-    - BIGNUM=none
-    - BIGNUM=none     ENDOMORPHISM=yes
+    - BIGNUM=no
+    - BIGNUM=no       ENDOMORPHISM=yes
     - BUILD=distcheck
     - EXTRAFLAGS=CFLAGS=-DDETERMINISTIC
     - HOST=i686-linux-gnu EXTRAPACKAGES="gcc-multilib"

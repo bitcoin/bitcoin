@@ -13,9 +13,7 @@
 
 #include "util.h"
 
-#if defined(USE_FIELD_GMP)
-#include "field_gmp_impl.h"
-#elif defined(USE_FIELD_10X26)
+#if defined(USE_FIELD_10X26)
 #include "field_10x26_impl.h"
 #elif defined(USE_FIELD_5X52)
 #include "field_5x52_impl.h"
@@ -64,6 +62,13 @@ static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
             tmp[32 - alen/2 + i] = (cvt[(unsigned char)a[2*i]] << 4) + cvt[(unsigned char)a[2*i+1]];
     }
     return secp256k1_fe_set_b32(r, tmp);
+}
+
+SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+    secp256k1_fe_t na;
+    secp256k1_fe_negate(&na, a, 1);
+    secp256k1_fe_add(&na, b);
+    return secp256k1_fe_normalizes_to_zero_var(&na);
 }
 
 static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
@@ -130,10 +135,7 @@ static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     /* Check that a square root was actually calculated */
 
     secp256k1_fe_sqr(&t1, r);
-    secp256k1_fe_negate(&t1, &t1, 1);
-    secp256k1_fe_add(&t1, a);
-    secp256k1_fe_normalize_var(&t1);
-    return secp256k1_fe_is_zero(&t1);
+    return secp256k1_fe_equal_var(&t1, a);
 }
 
 static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {

@@ -36,12 +36,19 @@ void random_field_element_test(secp256k1_fe_t *fe) {
 }
 
 void random_field_element_magnitude(secp256k1_fe_t *fe) {
+    int n = secp256k1_rand32() % 9;
     secp256k1_fe_normalize(fe);
-    int n = secp256k1_rand32() % 4;
-    for (int i = 0; i < n; i++) {
-        secp256k1_fe_negate(fe, fe, 1 + 2*i);
-        secp256k1_fe_negate(fe, fe, 2 + 2*i);
+    if (n == 0) {
+        return;
     }
+    secp256k1_fe_t zero;
+    secp256k1_fe_clear(&zero);
+    secp256k1_fe_negate(&zero, &zero, 0);
+    secp256k1_fe_mul_int(&zero, n - 1);
+    secp256k1_fe_add(fe, &zero);
+#ifdef VERIFY
+    CHECK(fe->magnitude == n);
+#endif
 }
 
 void random_group_element_test(secp256k1_ge_t *ge) {
@@ -89,6 +96,121 @@ void random_scalar_order(secp256k1_scalar_t *num) {
             continue;
         break;
     } while(1);
+}
+
+/***** HASH TESTS *****/
+
+void run_sha256_tests(void) {
+    static const char *inputs[8] = {
+        "", "abc", "message digest", "secure hash algorithm", "SHA256 is considered to be safe",
+        "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        "For this sample, this 63-byte string will be used as input data",
+        "This is exactly 64 bytes long, not counting the terminating byte"
+    };
+    static const unsigned char outputs[8][32] = {
+        {0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55},
+        {0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea, 0x41, 0x41, 0x40, 0xde, 0x5d, 0xae, 0x22, 0x23, 0xb0, 0x03, 0x61, 0xa3, 0x96, 0x17, 0x7a, 0x9c, 0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad},
+        {0xf7, 0x84, 0x6f, 0x55, 0xcf, 0x23, 0xe1, 0x4e, 0xeb, 0xea, 0xb5, 0xb4, 0xe1, 0x55, 0x0c, 0xad, 0x5b, 0x50, 0x9e, 0x33, 0x48, 0xfb, 0xc4, 0xef, 0xa3, 0xa1, 0x41, 0x3d, 0x39, 0x3c, 0xb6, 0x50},
+        {0xf3, 0x0c, 0xeb, 0x2b, 0xb2, 0x82, 0x9e, 0x79, 0xe4, 0xca, 0x97, 0x53, 0xd3, 0x5a, 0x8e, 0xcc, 0x00, 0x26, 0x2d, 0x16, 0x4c, 0xc0, 0x77, 0x08, 0x02, 0x95, 0x38, 0x1c, 0xbd, 0x64, 0x3f, 0x0d},
+        {0x68, 0x19, 0xd9, 0x15, 0xc7, 0x3f, 0x4d, 0x1e, 0x77, 0xe4, 0xe1, 0xb5, 0x2d, 0x1f, 0xa0, 0xf9, 0xcf, 0x9b, 0xea, 0xea, 0xd3, 0x93, 0x9f, 0x15, 0x87, 0x4b, 0xd9, 0x88, 0xe2, 0xa2, 0x36, 0x30},
+        {0x24, 0x8d, 0x6a, 0x61, 0xd2, 0x06, 0x38, 0xb8, 0xe5, 0xc0, 0x26, 0x93, 0x0c, 0x3e, 0x60, 0x39, 0xa3, 0x3c, 0xe4, 0x59, 0x64, 0xff, 0x21, 0x67, 0xf6, 0xec, 0xed, 0xd4, 0x19, 0xdb, 0x06, 0xc1},
+        {0xf0, 0x8a, 0x78, 0xcb, 0xba, 0xee, 0x08, 0x2b, 0x05, 0x2a, 0xe0, 0x70, 0x8f, 0x32, 0xfa, 0x1e, 0x50, 0xc5, 0xc4, 0x21, 0xaa, 0x77, 0x2b, 0xa5, 0xdb, 0xb4, 0x06, 0xa2, 0xea, 0x6b, 0xe3, 0x42},
+        {0xab, 0x64, 0xef, 0xf7, 0xe8, 0x8e, 0x2e, 0x46, 0x16, 0x5e, 0x29, 0xf2, 0xbc, 0xe4, 0x18, 0x26, 0xbd, 0x4c, 0x7b, 0x35, 0x52, 0xf6, 0xb3, 0x82, 0xa9, 0xe7, 0xd3, 0xaf, 0x47, 0xc2, 0x45, 0xf8}
+    };
+    for (int i = 0; i < 8; i++) {
+        secp256k1_sha256_t hasher;
+        secp256k1_sha256_initialize(&hasher);
+        secp256k1_sha256_write(&hasher, (const unsigned char*)(inputs[i]), strlen(inputs[i]));
+        unsigned char out[32];
+        secp256k1_sha256_finalize(&hasher, out);
+        CHECK(memcmp(out, outputs[i], 32) == 0);
+        if (strlen(inputs[i]) > 0) {
+            secp256k1_sha256_initialize(&hasher);
+            int split = secp256k1_rand32() % strlen(inputs[i]);
+            secp256k1_sha256_write(&hasher, (const unsigned char*)(inputs[i]), split);
+            secp256k1_sha256_write(&hasher, (const unsigned char*)(inputs[i] + split), strlen(inputs[i]) - split);
+            secp256k1_sha256_finalize(&hasher, out);
+            CHECK(memcmp(out, outputs[i], 32) == 0);
+        }
+    }
+}
+
+void run_hmac_sha256_tests(void) {
+    static const char *keys[6] = {
+        "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b",
+        "\x4a\x65\x66\x65",
+        "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa",
+        "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19",
+        "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa",
+        "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
+    };
+    static const char *inputs[6] = {
+        "\x48\x69\x20\x54\x68\x65\x72\x65",
+        "\x77\x68\x61\x74\x20\x64\x6f\x20\x79\x61\x20\x77\x61\x6e\x74\x20\x66\x6f\x72\x20\x6e\x6f\x74\x68\x69\x6e\x67\x3f",
+        "\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd",
+        "\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd",
+        "\x54\x65\x73\x74\x20\x55\x73\x69\x6e\x67\x20\x4c\x61\x72\x67\x65\x72\x20\x54\x68\x61\x6e\x20\x42\x6c\x6f\x63\x6b\x2d\x53\x69\x7a\x65\x20\x4b\x65\x79\x20\x2d\x20\x48\x61\x73\x68\x20\x4b\x65\x79\x20\x46\x69\x72\x73\x74",
+        "\x54\x68\x69\x73\x20\x69\x73\x20\x61\x20\x74\x65\x73\x74\x20\x75\x73\x69\x6e\x67\x20\x61\x20\x6c\x61\x72\x67\x65\x72\x20\x74\x68\x61\x6e\x20\x62\x6c\x6f\x63\x6b\x2d\x73\x69\x7a\x65\x20\x6b\x65\x79\x20\x61\x6e\x64\x20\x61\x20\x6c\x61\x72\x67\x65\x72\x20\x74\x68\x61\x6e\x20\x62\x6c\x6f\x63\x6b\x2d\x73\x69\x7a\x65\x20\x64\x61\x74\x61\x2e\x20\x54\x68\x65\x20\x6b\x65\x79\x20\x6e\x65\x65\x64\x73\x20\x74\x6f\x20\x62\x65\x20\x68\x61\x73\x68\x65\x64\x20\x62\x65\x66\x6f\x72\x65\x20\x62\x65\x69\x6e\x67\x20\x75\x73\x65\x64\x20\x62\x79\x20\x74\x68\x65\x20\x48\x4d\x41\x43\x20\x61\x6c\x67\x6f\x72\x69\x74\x68\x6d\x2e"
+    };
+    static const unsigned char outputs[6][32] = {
+        {0xb0, 0x34, 0x4c, 0x61, 0xd8, 0xdb, 0x38, 0x53, 0x5c, 0xa8, 0xaf, 0xce, 0xaf, 0x0b, 0xf1, 0x2b, 0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7, 0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7},
+        {0x5b, 0xdc, 0xc1, 0x46, 0xbf, 0x60, 0x75, 0x4e, 0x6a, 0x04, 0x24, 0x26, 0x08, 0x95, 0x75, 0xc7, 0x5a, 0x00, 0x3f, 0x08, 0x9d, 0x27, 0x39, 0x83, 0x9d, 0xec, 0x58, 0xb9, 0x64, 0xec, 0x38, 0x43},
+        {0x77, 0x3e, 0xa9, 0x1e, 0x36, 0x80, 0x0e, 0x46, 0x85, 0x4d, 0xb8, 0xeb, 0xd0, 0x91, 0x81, 0xa7, 0x29, 0x59, 0x09, 0x8b, 0x3e, 0xf8, 0xc1, 0x22, 0xd9, 0x63, 0x55, 0x14, 0xce, 0xd5, 0x65, 0xfe},
+        {0x82, 0x55, 0x8a, 0x38, 0x9a, 0x44, 0x3c, 0x0e, 0xa4, 0xcc, 0x81, 0x98, 0x99, 0xf2, 0x08, 0x3a, 0x85, 0xf0, 0xfa, 0xa3, 0xe5, 0x78, 0xf8, 0x07, 0x7a, 0x2e, 0x3f, 0xf4, 0x67, 0x29, 0x66, 0x5b},
+        {0x60, 0xe4, 0x31, 0x59, 0x1e, 0xe0, 0xb6, 0x7f, 0x0d, 0x8a, 0x26, 0xaa, 0xcb, 0xf5, 0xb7, 0x7f, 0x8e, 0x0b, 0xc6, 0x21, 0x37, 0x28, 0xc5, 0x14, 0x05, 0x46, 0x04, 0x0f, 0x0e, 0xe3, 0x7f, 0x54},
+        {0x9b, 0x09, 0xff, 0xa7, 0x1b, 0x94, 0x2f, 0xcb, 0x27, 0x63, 0x5f, 0xbc, 0xd5, 0xb0, 0xe9, 0x44, 0xbf, 0xdc, 0x63, 0x64, 0x4f, 0x07, 0x13, 0x93, 0x8a, 0x7f, 0x51, 0x53, 0x5c, 0x3a, 0x35, 0xe2}
+    };
+    for (int i = 0; i < 6; i++) {
+        secp256k1_hmac_sha256_t hasher;
+        secp256k1_hmac_sha256_initialize(&hasher, (const unsigned char*)(keys[i]), strlen(keys[i]));
+        secp256k1_hmac_sha256_write(&hasher, (const unsigned char*)(inputs[i]), strlen(inputs[i]));
+        unsigned char out[32];
+        secp256k1_hmac_sha256_finalize(&hasher, out);
+        CHECK(memcmp(out, outputs[i], 32) == 0);
+        if (strlen(inputs[i]) > 0) {
+            secp256k1_hmac_sha256_initialize(&hasher, (const unsigned char*)(keys[i]), strlen(keys[i]));
+            int split = secp256k1_rand32() % strlen(inputs[i]);
+            secp256k1_hmac_sha256_write(&hasher, (const unsigned char*)(inputs[i]), split);
+            secp256k1_hmac_sha256_write(&hasher, (const unsigned char*)(inputs[i] + split), strlen(inputs[i]) - split);
+            secp256k1_hmac_sha256_finalize(&hasher, out);
+            CHECK(memcmp(out, outputs[i], 32) == 0);
+        }
+    }
+}
+
+void run_rfc6979_hmac_sha256_tests(void) {
+    static const unsigned char key1[32] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x00};
+    static const unsigned char msg1[32] = {0x4b, 0xf5, 0x12, 0x2f, 0x34, 0x45, 0x54, 0xc5, 0x3b, 0xde, 0x2e, 0xbb, 0x8c, 0xd2, 0xb7, 0xe3, 0xd1, 0x60, 0x0a, 0xd6, 0x31, 0xc3, 0x85, 0xa5, 0xd7, 0xcc, 0xe2, 0x3c, 0x77, 0x85, 0x45, 0x9a};
+    static const unsigned char out1[3][32] = {
+        {0x4f, 0xe2, 0x95, 0x25, 0xb2, 0x08, 0x68, 0x09, 0x15, 0x9a, 0xcd, 0xf0, 0x50, 0x6e, 0xfb, 0x86, 0xb0, 0xec, 0x93, 0x2c, 0x7b, 0xa4, 0x42, 0x56, 0xab, 0x32, 0x1e, 0x42, 0x1e, 0x67, 0xe9, 0xfb},
+        {0x2b, 0xf0, 0xff, 0xf1, 0xd3, 0xc3, 0x78, 0xa2, 0x2d, 0xc5, 0xde, 0x1d, 0x85, 0x65, 0x22, 0x32, 0x5c, 0x65, 0xb5, 0x04, 0x49, 0x1a, 0x0c, 0xbd, 0x01, 0xcb, 0x8f, 0x3a, 0xa6, 0x7f, 0xfd, 0x4a},
+        {0xf5, 0x28, 0xb4, 0x10, 0xcb, 0x54, 0x1f, 0x77, 0x00, 0x0d, 0x7a, 0xfb, 0x6c, 0x5b, 0x53, 0xc5, 0xc4, 0x71, 0xea, 0xb4, 0x3e, 0x46, 0x6d, 0x9a, 0xc5, 0x19, 0x0c, 0x39, 0xc8, 0x2f, 0xd8, 0x2e}
+    };
+
+    static const unsigned char key2[32] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    static const unsigned char msg2[32] = {0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55};
+    static const unsigned char out2[3][32] = {
+        {0x9c, 0x23, 0x6c, 0x16, 0x5b, 0x82, 0xae, 0x0c, 0xd5, 0x90, 0x65, 0x9e, 0x10, 0x0b, 0x6b, 0xab, 0x30, 0x36, 0xe7, 0xba, 0x8b, 0x06, 0x74, 0x9b, 0xaf, 0x69, 0x81, 0xe1, 0x6f, 0x1a, 0x2b, 0x95},
+        {0xdf, 0x47, 0x10, 0x61, 0x62, 0x5b, 0xc0, 0xea, 0x14, 0xb6, 0x82, 0xfe, 0xee, 0x2c, 0x9c, 0x02, 0xf2, 0x35, 0xda, 0x04, 0x20, 0x4c, 0x1d, 0x62, 0xa1, 0x53, 0x6c, 0x6e, 0x17, 0xae, 0xd7, 0xa9},
+        {0x75, 0x97, 0x88, 0x7c, 0xbd, 0x76, 0x32, 0x1f, 0x32, 0xe3, 0x04, 0x40, 0x67, 0x9a, 0x22, 0xcf, 0x7f, 0x8d, 0x9d, 0x2e, 0xac, 0x39, 0x0e, 0x58, 0x1f, 0xea, 0x09, 0x1c, 0xe2, 0x02, 0xba, 0x94}
+    };
+
+    secp256k1_rfc6979_hmac_sha256_t rng;
+    unsigned char out[32];
+
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key1, 32, msg1, 32);
+    for (int i = 0; i < 3; i++) {
+        secp256k1_rfc6979_hmac_sha256_generate(&rng, out, 32);
+        CHECK(memcmp(out, out1[i], 32) == 0);
+    }
+    secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key2, 32, msg2, 32);
+    for (int i = 0; i < 3; i++) {
+        secp256k1_rfc6979_hmac_sha256_generate(&rng, out, 32);
+        CHECK(memcmp(out, out2[i], 32) == 0);
+    }
+    secp256k1_rfc6979_hmac_sha256_finalize(&rng);
 }
 
 /***** NUM TESTS *****/
@@ -494,9 +616,9 @@ void random_fe_non_square(secp256k1_fe_t *ns) {
 }
 
 int check_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
-    secp256k1_fe_t an = *a; secp256k1_fe_normalize(&an);
+    secp256k1_fe_t an = *a; secp256k1_fe_normalize_weak(&an);
     secp256k1_fe_t bn = *b; secp256k1_fe_normalize_var(&bn);
-    return secp256k1_fe_equal(&an, &bn);
+    return secp256k1_fe_equal_var(&an, &bn);
 }
 
 int check_fe_inverse(const secp256k1_fe_t *a, const secp256k1_fe_t *ai) {
@@ -523,16 +645,16 @@ void run_field_misc(void) {
         random_fe_non_zero(&y);
         /* Test the fe equality and comparison operations. */
         CHECK(secp256k1_fe_cmp_var(&x, &x) == 0);
-        CHECK(secp256k1_fe_equal(&x, &x));
+        CHECK(secp256k1_fe_equal_var(&x, &x));
         z = x;
         secp256k1_fe_add(&z,&y);
         secp256k1_fe_normalize(&z);
         /* Test the conditional move. */
         secp256k1_fe_cmov(&z, &x, 0);
-        CHECK(secp256k1_fe_equal(&x, &z) == 0);
+        CHECK(secp256k1_fe_equal_var(&x, &z) == 0);
         CHECK(secp256k1_fe_cmp_var(&x, &z) != 0);
         secp256k1_fe_cmov(&y, &x, 1);
-        CHECK(secp256k1_fe_equal(&x, &y));
+        CHECK(secp256k1_fe_equal_var(&x, &y));
         /* Test that mul_int, mul, and add agree. */
         secp256k1_fe_add(&y, &x);
         secp256k1_fe_add(&y, &x);
@@ -656,108 +778,148 @@ void run_sqrt(void) {
 
 /***** GROUP TESTS *****/
 
-int ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
-    if (a->infinity && b->infinity)
-        return 1;
-    return check_fe_equal(&a->x, &b->x) && check_fe_equal(&a->y, &b->y);
+void ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
+    CHECK(a->infinity == b->infinity);
+    if (a->infinity)
+        return;
+    CHECK(secp256k1_fe_equal_var(&a->x, &b->x));
+    CHECK(secp256k1_fe_equal_var(&b->y, &b->y));
 }
 
 void ge_equals_gej(const secp256k1_ge_t *a, const secp256k1_gej_t *b) {
-    secp256k1_ge_t bb;
-    secp256k1_gej_t bj = *b;
-    secp256k1_ge_set_gej_var(&bb, &bj);
-    CHECK(ge_equals_ge(a, &bb));
-}
-
-void gej_equals_gej(const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
-    secp256k1_ge_t aa, bb;
-    secp256k1_gej_t aj = *a, bj = *b;
-    secp256k1_ge_set_gej_var(&aa, &aj);
-    secp256k1_ge_set_gej_var(&bb, &bj);
-    CHECK(ge_equals_ge(&aa, &bb));
+    CHECK(a->infinity == b->infinity);
+    if (a->infinity)
+        return;
+    /* Check a.x * b.z^2 == b.x && a.y * b.z^3 == b.y, to avoid inverses. */
+    secp256k1_fe_t z2s;
+    secp256k1_fe_sqr(&z2s, &b->z);
+    secp256k1_fe_t u1, u2, s1, s2;
+    secp256k1_fe_mul(&u1, &a->x, &z2s);
+    u2 = b->x; secp256k1_fe_normalize_weak(&u2);
+    secp256k1_fe_mul(&s1, &a->y, &z2s); secp256k1_fe_mul(&s1, &s1, &b->z);
+    s2 = b->y; secp256k1_fe_normalize_weak(&s2);
+    CHECK(secp256k1_fe_equal_var(&u1, &u2));
+    CHECK(secp256k1_fe_equal_var(&s1, &s2));
 }
 
 void test_ge(void) {
-    char ca[135];
-    char cb[68];
-    int rlen;
-    secp256k1_ge_t a, b, i, n;
-    random_group_element_test(&a);
-    random_group_element_test(&b);
-    rlen = sizeof(ca);
-    secp256k1_ge_get_hex(ca,&rlen,&a);
-    CHECK(rlen > 4 && rlen <= (int)sizeof(ca));
-    rlen = sizeof(cb);
-    secp256k1_ge_get_hex(cb,&rlen,&b); /* Intentionally undersized buffer. */
-    n = a;
-    secp256k1_fe_normalize(&a.y);
-    secp256k1_fe_negate(&n.y, &a.y, 1);
-    secp256k1_ge_set_infinity(&i);
-    random_field_element_magnitude(&a.x);
-    random_field_element_magnitude(&a.y);
-    random_field_element_magnitude(&b.x);
-    random_field_element_magnitude(&b.y);
-    random_field_element_magnitude(&n.x);
-    random_field_element_magnitude(&n.y);
+    int runs = 4;
+    /* Points: (infinity, p1, p1, -p1, -p1, p2, p2, -p2, -p2, p3, p3, -p3, -p3, p4, p4, -p4, -p4).
+     * The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
+     * All magnitudes are randomized.
+     * All 17*17 combinations of points are added to eachother, using all applicable methods.
+     */
+    secp256k1_ge_t *ge = malloc(sizeof(secp256k1_ge_t) * (1 + 4 * runs));
+    secp256k1_gej_t *gej = malloc(sizeof(secp256k1_gej_t) * (1 + 4 * runs));
+    secp256k1_gej_set_infinity(&gej[0]);
+    secp256k1_ge_clear(&ge[0]);
+    secp256k1_ge_set_gej_var(&ge[0], &gej[0]);
+    for (int i = 0; i < runs; i++) {
+        secp256k1_ge_t g;
+        random_group_element_test(&g);
+        ge[1 + 4 * i] = g;
+        ge[2 + 4 * i] = g;
+        secp256k1_ge_neg(&ge[3 + 4 * i], &g);
+        secp256k1_ge_neg(&ge[4 + 4 * i], &g);
+        secp256k1_gej_set_ge(&gej[1 + 4 * i], &ge[1 + 4 * i]);
+        random_group_element_jacobian_test(&gej[2 + 4 * i], &ge[2 + 4 * i]);
+        secp256k1_gej_set_ge(&gej[3 + 4 * i], &ge[3 + 4 * i]);
+        random_group_element_jacobian_test(&gej[4 + 4 * i], &ge[4 + 4 * i]);
+        for (int j = 0; j < 4; j++) {
+            random_field_element_magnitude(&ge[1 + j + 4 * i].x);
+            random_field_element_magnitude(&ge[1 + j + 4 * i].y);
+            random_field_element_magnitude(&gej[1 + j + 4 * i].x);
+            random_field_element_magnitude(&gej[1 + j + 4 * i].y);
+            random_field_element_magnitude(&gej[1 + j + 4 * i].z);
+        }
+    }
 
-    secp256k1_gej_t aj, bj, ij, nj;
-    random_group_element_jacobian_test(&aj, &a);
-    random_group_element_jacobian_test(&bj, &b);
-    secp256k1_gej_set_infinity(&ij);
-    random_group_element_jacobian_test(&nj, &n);
-    random_field_element_magnitude(&aj.x);
-    random_field_element_magnitude(&aj.y);
-    random_field_element_magnitude(&aj.z);
-    random_field_element_magnitude(&bj.x);
-    random_field_element_magnitude(&bj.y);
-    random_field_element_magnitude(&bj.z);
-    random_field_element_magnitude(&nj.x);
-    random_field_element_magnitude(&nj.y);
-    random_field_element_magnitude(&nj.z);
+    for (int i1 = 0; i1 < 1 + 4 * runs; i1++) {
+        for (int i2 = 0; i2 < 1 + 4 * runs; i2++) {
+            /* Compute reference result using gej + gej (var). */
+            secp256k1_gej_t refj, resj;
+            secp256k1_ge_t ref;
+            secp256k1_gej_add_var(&refj, &gej[i1], &gej[i2]);
+            secp256k1_ge_set_gej_var(&ref, &refj);
 
-    /* gej + gej adds */
-    secp256k1_gej_t aaj; secp256k1_gej_add_var(&aaj, &aj, &aj);
-    secp256k1_gej_t abj; secp256k1_gej_add_var(&abj, &aj, &bj);
-    secp256k1_gej_t aij; secp256k1_gej_add_var(&aij, &aj, &ij);
-    secp256k1_gej_t anj; secp256k1_gej_add_var(&anj, &aj, &nj);
-    secp256k1_gej_t iaj; secp256k1_gej_add_var(&iaj, &ij, &aj);
-    secp256k1_gej_t iij; secp256k1_gej_add_var(&iij, &ij, &ij);
+            /* Test gej + ge (var). */
+            secp256k1_gej_add_ge_var(&resj, &gej[i1], &ge[i2]);
+            ge_equals_gej(&ref, &resj);
 
-    /* gej + ge adds */
-    secp256k1_gej_t aa; secp256k1_gej_add_ge_var(&aa, &aj, &a);
-    secp256k1_gej_t ab; secp256k1_gej_add_ge_var(&ab, &aj, &b);
-    secp256k1_gej_t ai; secp256k1_gej_add_ge_var(&ai, &aj, &i);
-    secp256k1_gej_t an; secp256k1_gej_add_ge_var(&an, &aj, &n);
-    secp256k1_gej_t ia; secp256k1_gej_add_ge_var(&ia, &ij, &a);
-    secp256k1_gej_t ii; secp256k1_gej_add_ge_var(&ii, &ij, &i);
+            /* Test gej + ge (const). */
+            if (i2 != 0) {
+                /* secp256k1_gej_add_ge does not support its second argument being infinity. */
+                secp256k1_gej_add_ge(&resj, &gej[i1], &ge[i2]);
+                ge_equals_gej(&ref, &resj);
+            }
 
-    /* const gej + ge adds */
-    secp256k1_gej_t aac; secp256k1_gej_add_ge(&aac, &aj, &a);
-    secp256k1_gej_t abc; secp256k1_gej_add_ge(&abc, &aj, &b);
-    secp256k1_gej_t anc; secp256k1_gej_add_ge(&anc, &aj, &n);
-    secp256k1_gej_t iac; secp256k1_gej_add_ge(&iac, &ij, &a);
+            /* Test doubling (var). */
+            if ((i1 == 0 && i2 == 0) || ((i1 + 3)/4 == (i2 + 3)/4 && ((i1 + 3)%4)/2 == ((i2 + 3)%4)/2)) {
+                /* Normal doubling. */
+                secp256k1_gej_double_var(&resj, &gej[i1]);
+                ge_equals_gej(&ref, &resj);
+                secp256k1_gej_double_var(&resj, &gej[i2]);
+                ge_equals_gej(&ref, &resj);
+            }
 
-    CHECK(secp256k1_gej_is_infinity(&an));
-    CHECK(secp256k1_gej_is_infinity(&anj));
-    CHECK(secp256k1_gej_is_infinity(&anc));
-    gej_equals_gej(&aa, &aaj);
-    gej_equals_gej(&aa, &aac);
-    gej_equals_gej(&ab, &abj);
-    gej_equals_gej(&ab, &abc);
-    gej_equals_gej(&an, &anj);
-    gej_equals_gej(&an, &anc);
-    gej_equals_gej(&ia, &iaj);
-    gej_equals_gej(&ai, &aij);
-    gej_equals_gej(&ii, &iij);
-    ge_equals_gej(&a, &ai);
-    ge_equals_gej(&a, &ai);
-    ge_equals_gej(&a, &iaj);
-    ge_equals_gej(&a, &iaj);
-    ge_equals_gej(&a, &iac);
+            /* Test adding opposites. */
+            if ((i1 == 0 && i2 == 0) || ((i1 + 3)/4 == (i2 + 3)/4 && ((i1 + 3)%4)/2 != ((i2 + 3)%4)/2)) {
+                CHECK(secp256k1_ge_is_infinity(&ref));
+            }
+
+            /* Test adding infinity. */
+            if (i1 == 0) {
+                CHECK(secp256k1_ge_is_infinity(&ge[i1]));
+                CHECK(secp256k1_gej_is_infinity(&gej[i1]));
+                ge_equals_gej(&ref, &gej[i2]);
+            }
+            if (i2 == 0) {
+                CHECK(secp256k1_ge_is_infinity(&ge[i2]));
+                CHECK(secp256k1_gej_is_infinity(&gej[i2]));
+                ge_equals_gej(&ref, &gej[i1]);
+            }
+        }
+    }
+
+    /* Test adding all points together in random order equals infinity. */
+    {
+        secp256k1_gej_t *gej_shuffled = malloc((4 * runs + 1) * sizeof(secp256k1_gej_t));
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            gej_shuffled[i] = gej[i];
+        }
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            int swap = i + secp256k1_rand32() % (4 * runs + 1 - i);
+            if (swap != i) {
+                secp256k1_gej_t t = gej_shuffled[i];
+                gej_shuffled[i] = gej_shuffled[swap];
+                gej_shuffled[swap] = t;
+            }
+        }
+        secp256k1_gej_t sum;
+        secp256k1_gej_set_infinity(&sum);
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            secp256k1_gej_add_var(&sum, &sum, &gej_shuffled[i]);
+        }
+        CHECK(secp256k1_gej_is_infinity(&sum));
+        free(gej_shuffled);
+    }
+
+    /* Test batch gej -> ge conversion. */
+    {
+        secp256k1_ge_t *ge_set_all = malloc((4 * runs + 1) * sizeof(secp256k1_ge_t));
+        secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej);
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            ge_equals_gej(&ge_set_all[i], &gej[i]);
+        }
+        free(ge_set_all);
+    }
+
+    free(ge);
+    free(gej);
 }
 
 void run_ge(void) {
-    for (int i = 0; i < 2000*count; i++) {
+    for (int i = 0; i < count * 32; i++) {
         test_ge();
     }
 }
@@ -949,6 +1111,44 @@ void run_ecdsa_sign_verify(void) {
     }
 }
 
+/** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
+static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+    (void)msg32;
+    (void)key32;
+    memcpy(nonce32, data, 32);
+    return (counter == 0);
+}
+
+static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   /* Dummy nonce generator that has a fatal error on the first counter value. */
+   if (counter == 0) return 0;
+   return nonce_function_rfc6979(nonce32, msg32, key32, counter - 1, data);
+}
+
+static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   /* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
+   if (counter < 3) {
+       memset(nonce32, counter==0 ? 0 : 255, 32);
+       if (counter == 2) nonce32[31]--;
+       return 1;
+   }
+   if (counter < 5) {
+       static const unsigned char order[] = {
+           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+           0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+           0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+       };
+       memcpy(nonce32, order, 32);
+       if (counter == 4) nonce32[31]++;
+       return 1;
+   }
+   /* Retry rate of 6979 is negligible esp. as we only call this in determinstic tests. */
+   /* If someone does fine a case where it retries for secp256k1, we'd like to know. */
+   if (counter > 5) return 0;
+   return nonce_function_rfc6979(nonce32, msg32, key32, counter - 5, data);
+}
+
 void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
@@ -1006,13 +1206,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Sign. */
     unsigned char signature[72]; int signaturelen = 72;
-    while(1) {
-        unsigned char rnd[32];
-        secp256k1_rand256_test(rnd);
-        if (secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, rnd) == 1) {
-            break;
-        }
-    }
+    CHECK(secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, NULL, NULL) == 1);
     /* Verify. */
     CHECK(secp256k1_ecdsa_verify(message, signature, signaturelen, pubkey, pubkeylen) == 1);
     /* Destroy signature and verify again. */
@@ -1021,13 +1215,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Compact sign. */
     unsigned char csignature[64]; int recid = 0;
-    while(1) {
-        unsigned char rnd[32];
-        secp256k1_rand256_test(rnd);
-        if (secp256k1_ecdsa_sign_compact(message, csignature, privkey, rnd, &recid) == 1) {
-            break;
-        }
-    }
+    CHECK(secp256k1_ecdsa_sign_compact(message, csignature, privkey, NULL, NULL, &recid) == 1);
     /* Recover. */
     unsigned char recpubkey[65]; int recpubkeylen = 0;
     CHECK(secp256k1_ecdsa_recover_compact(message, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
@@ -1077,7 +1265,7 @@ void test_random_pubkeys(void) {
         CHECK(secp256k1_eckey_pubkey_serialize(&elem, in, &size, 0));
         CHECK(size == 65);
         CHECK(secp256k1_eckey_pubkey_parse(&elem2, in, size));
-        CHECK(ge_equals_ge(&elem,&elem2));
+        ge_equals_ge(&elem,&elem2);
         /* Check that the X9.62 hybrid type is checked. */
         in[0] = (r & 1) ? 6 : 7;
         res = secp256k1_eckey_pubkey_parse(&elem2, in, size);
@@ -1086,7 +1274,7 @@ void test_random_pubkeys(void) {
             else CHECK(!res);
         }
         if (res) {
-            CHECK(ge_equals_ge(&elem,&elem2));
+            ge_equals_ge(&elem,&elem2);
             CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, 0));
             CHECK(memcmp(&in[1], &out[1], 64) == 0);
         }
@@ -1280,6 +1468,12 @@ void test_ecdsa_edge_cases(void) {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
         };
+        static const unsigned char nonce2[32] = {
+            0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+            0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+            0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+            0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x40
+        };
         const unsigned char key[32] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1294,10 +1488,74 @@ void test_ecdsa_edge_cases(void) {
         };
         unsigned char sig[72];
         int siglen = 72;
-        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 0);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) == 0);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce2) == 0);
         msg[31] = 0xaa;
         siglen = 72;
-        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce2) == 1);
+        siglen = 10;
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) != 1);
+    }
+
+    /* Nonce function corner cases. */
+    {
+        unsigned char key[32];
+        unsigned char msg[32];
+        unsigned char sig[72];
+        memset(key, 0, 32);
+        memset(msg, 0, 32);
+        key[31] = 1;
+        msg[31] = 1;
+        int siglen = 72;
+        int recid;
+        /* Nonce function failure results in signature failure. */
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce_function_test_fail, NULL) == 0);
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig, key, nonce_function_test_fail, NULL, &recid) == 0);
+        /* The retry loop successfully makes its way to the first good value. */
+        unsigned char sig2[72];
+        int siglen2 = 72;
+        siglen = 72;
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce_function_test_retry, NULL) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, nonce_function_rfc6979, NULL) == 1);
+        CHECK((siglen == siglen2) && (memcmp(sig, sig2, siglen) == 0));
+        int recid2;
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig, key, nonce_function_test_retry, NULL, &recid) == 1);
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig2, key, nonce_function_rfc6979, NULL, &recid2) == 1);
+        CHECK((recid == recid2) && (memcmp(sig, sig2, 64) == 0));
+        /* The default nonce function is determinstic. */
+        siglen = 72;
+        siglen2 = 72;
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, NULL, NULL) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, NULL, NULL) == 1);
+        CHECK((siglen == siglen2) && (memcmp(sig, sig2, siglen) == 0));
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig, key, NULL, NULL, &recid) == 1);
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig2, key, NULL, NULL, &recid2) == 1);
+        CHECK((recid == recid2) && (memcmp(sig, sig2, 64) == 0));
+        /* The default nonce function changes output with different messages. */
+        secp256k1_ecdsa_sig_t s[512];
+        for(int i=0; i<256; i++) {
+            siglen2 = 72;
+            msg[0] = i;
+            CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, NULL, NULL) == 1);
+            CHECK(secp256k1_ecdsa_sig_parse(&s[i], sig2, siglen2));
+            for (int j=0; j<i; j++) {
+                CHECK(!secp256k1_scalar_eq(&s[i].r, &s[j].r));
+            }
+        }
+        msg[0] = 0;
+        msg[31] = 2;
+        /* The default nonce function changes output with different keys. */
+        for(int i=256; i<512; i++) {
+            siglen2 = 72;
+            key[0] = i - 256;
+            CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, NULL, NULL) == 1);
+            CHECK(secp256k1_ecdsa_sig_parse(&s[i], sig2, siglen2));
+            for (int j=0; j<i; j++) {
+                CHECK(!secp256k1_scalar_eq(&s[i].r, &s[j].r));
+            }
+        }
+        key[0] = 0;
     }
 
     /* Privkey export where pubkey is the point at infinity. */
@@ -1404,6 +1662,10 @@ int main(int argc, char **argv) {
     secp256k1_ge_start();
     secp256k1_scalar_start();
     secp256k1_ecdsa_start();
+
+    run_sha256_tests();
+    run_hmac_sha256_tests();
+    run_rfc6979_hmac_sha256_tests();
 
 #ifndef USE_NUM_NONE
     /* num tests */

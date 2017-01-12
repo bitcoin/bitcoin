@@ -109,25 +109,53 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const se
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_recompute(secp256k1_scalar_t *r2, const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
     if (secp256k1_scalar_is_zero(&sig->r) || secp256k1_scalar_is_zero(&sig->s))
         return 0;
 
-    int ret = 0;
     secp256k1_scalar_t sn, u1, u2;
     secp256k1_scalar_inverse_var(&sn, &sig->s);
     secp256k1_scalar_mul(&u1, &sn, message);
     secp256k1_scalar_mul(&u2, &sn, &sig->r);
     secp256k1_gej_t pubkeyj; secp256k1_gej_set_ge(&pubkeyj, pubkey);
     secp256k1_gej_t pr; secp256k1_ecmult(&pr, &pubkeyj, &u2, &u1);
-    if (!secp256k1_gej_is_infinity(&pr)) {
-        secp256k1_fe_t xr; secp256k1_gej_get_x_var(&xr, &pr);
-        secp256k1_fe_normalize_var(&xr);
-        unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
-        secp256k1_scalar_set_b32(r2, xrb, NULL);
-        ret = 1;
+    if (secp256k1_gej_is_infinity(&pr)) {
+        return 0;
     }
-    return ret;
+    unsigned char c[32];
+    secp256k1_scalar_get_b32(c, &sig->r);
+    secp256k1_fe_t xr;
+    secp256k1_fe_set_b32(&xr, c);
+
+    // We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
+    // in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
+    // compute the remainder modulo n, and compare it to xr. However:
+    //
+    //       xr == X(pr) mod n
+    //   <=> exists h. (xr + h * n < p && xr + h * n == X(pr))
+    //   [Since 2 * n > p, h can only be 0 or 1]
+    //   <=> (xr == X(pr)) || (xr + n < p && xr + n == X(pr))
+    //   [In Jacobian coordinates, X(pr) is pr.x / pr.z^2 mod p]
+    //   <=> (xr == pr.x / pr.z^2 mod p) || (xr + n < p && xr + n == pr.x / pr.z^2 mod p)
+    //   [Multiplying both sides of the equations by pr.z^2 mod p]
+    //   <=> (xr * pr.z^2 mod p == pr.x) || (xr + n < p && (xr + n) * pr.z^2 mod p == pr.x)
+    //
+    // Thus, we can avoid the inversion, but we have to check both cases separately.
+    // secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
+    if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        // xr.x == xr * xr.z^2 mod p, so the signature is valid.
+        return 1;
+    }
+    if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_consts->p_minus_order) >= 0) {
+        // xr + p >= n, so we can skip testing the second case.
+        return 0;
+    }
+    secp256k1_fe_add(&xr, &secp256k1_ecdsa_consts->order_as_fe);
+    if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        // (xr + n) * pr.z^2 mod p == pr.x, so the signature is valid.
+        return 1;
+    }
+    return 0;
 }
 
 static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message, int recid) {
@@ -159,13 +187,6 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     return !secp256k1_gej_is_infinity(&qj);
 }
 
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
-    secp256k1_scalar_t r2;
-    int ret = 0;
-    ret = secp256k1_ecdsa_sig_recompute(&r2, sig, pubkey, message) && secp256k1_scalar_eq(&sig->r, &r2);
-    return ret;
-}
-
 static int secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
     secp256k1_gej_t rp;
     secp256k1_ecmult_gen(&rp, nonce);
@@ -177,6 +198,12 @@ static int secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     secp256k1_fe_get_b32(b, &r.x);
     int overflow = 0;
     secp256k1_scalar_set_b32(&sig->r, b, &overflow);
+    if (secp256k1_scalar_is_zero(&sig->r)) {
+        /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature. */
+        secp256k1_gej_clear(&rp);
+        secp256k1_ge_clear(&r);
+        return 0;
+    }
     if (recid)
         *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
     secp256k1_scalar_t n;

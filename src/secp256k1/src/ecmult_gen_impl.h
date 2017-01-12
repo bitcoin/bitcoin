@@ -73,7 +73,7 @@ static void secp256k1_ecmult_gen_start(void) {
             secp256k1_gej_double_var(&numsbase, &numsbase);
             if (j == 62) {
                 /* In the last iteration, numsbase is (1 - 2^j) * nums instead. */
-                secp256k1_gej_neg_var(&numsbase, &numsbase);
+                secp256k1_gej_neg(&numsbase, &numsbase);
                 secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej);
             }
         }

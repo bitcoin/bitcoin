@@ -14,7 +14,6 @@
 typedef struct {
     unsigned char msg[32];
     unsigned char key[32];
-    unsigned char nonce[32];
     unsigned char sig[72];
     int siglen;
     unsigned char pubkey[33];
@@ -42,9 +41,8 @@ int main(void) {
 
     for (int i = 0; i < 32; i++) data.msg[i] = 1 + i;
     for (int i = 0; i < 32; i++) data.key[i] = 33 + i;
-    for (int i = 0; i < 32; i++) data.nonce[i] = 65 + i;
     data.siglen = 72;
-    CHECK(secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, data.nonce));
+    secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, NULL, NULL);
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_create(data.pubkey, &data.pubkeylen, data.key, 1));
 
