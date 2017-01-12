@@ -48,6 +48,17 @@ Low-level RPC changes
   an optional third arg, which was always ignored. Make sure to never pass more
   than two arguments.
 
+Fee Estimation Changes
+----------------------
+
+- Since 0.13.2 fee estimation for a confirmation target of 1 block has been
+  disabled. This is only a minor behavior change as there was often insufficient
+  data for this target anyway. `estimatefee 1` will now always return -1 and
+  `estimatesmartfee 1` will start searching at a target of 2.
+
+- The default target for fee estimation is changed to 6 blocks in both the GUI
+  (previously 25) and for RPC calls (previously 2).
+
 Removal of Priority Estimation
 ------------------------------
 
