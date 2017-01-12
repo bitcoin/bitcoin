@@ -964,8 +964,13 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         // before ActivateBestChain but after AcceptBlock).
                         // In this case, we need to run ActivateBestChain prior to checking the relay
                         // conditions below.
+                        std::shared_ptr<const CBlock> a_recent_block;
+                        {
+                            LOCK(cs_most_recent_block);
+                            a_recent_block = most_recent_block;
+                        }
                         CValidationState dummy;
-                        ActivateBestChain(dummy, Params());
+                        ActivateBestChain(dummy, Params(), a_recent_block);
                     }
                     if (chainActive.Contains(mi->second)) {
                         send = true;
@@ -1525,8 +1530,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
-        LOCK(cs_main);
-
         // We might have announced the currently-being-connected tip using a
         // compact block, which resulted in the peer sending a getblocks
         // request, which we would otherwise respond to without the new block.
@@ -1535,9 +1538,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // for getheaders requests, and there are no known nodes which support
         // compact blocks but still use getblocks to request blocks.
         {
+            std::shared_ptr<const CBlock> a_recent_block;
+            {
+                LOCK(cs_most_recent_block);
+                a_recent_block = most_recent_block;
+            }
             CValidationState dummy;
-            ActivateBestChain(dummy, Params());
+            ActivateBestChain(dummy, Params(), a_recent_block);
         }
+
+        LOCK(cs_main);
 
         // Find the last block the caller has in the main chain
         const CBlockIndex* pindex = FindForkInGlobalIndex(chainActive, locator);
