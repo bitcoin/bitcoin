@@ -118,6 +118,46 @@
     "description": "Parses a transation with no inputs and a single output script (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP", "nversion=1"],
+    "output_cmp": "txcreatescript1.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP", "nversion=1"],
+    "output_cmp": "txcreatescript1.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:S", "nversion=1"],
+    "output_cmp": "txcreatescript2.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP:S", "nversion=1"],
+    "output_cmp": "txcreatescript2.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:W", "nversion=1"],
+    "output_cmp": "txcreatescript3.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP:W", "nversion=1"],
+    "output_cmp": "txcreatescript3.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:WS", "nversion=1"],
+    "output_cmp": "txcreatescript4.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH, wrapped in a P2SH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP:WS", "nversion=1"],
+    "output_cmp": "txcreatescript4.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH, wrapped in a P2SH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
     "args":
     ["-create", "nversion=1",
      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
@@ -150,6 +190,42 @@
       "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
     "output_cmp": "txcreatesignv2.hex",
     "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey1.hex",
+    "description": "Creates a new transaction with a single pay-to-pubkey output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey1.json",
+    "description": "Creates a new transaction with a single pay-to-pubkey output (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey2.hex",
+    "description": "Creates a new transaction with a single pay-to-witness-pubkey output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey2.json",
+    "description": "Creates a new transaction with a single pay-to-witness-pubkey output (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:WS", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey3.hex",
+    "description": "Creates a new transaction with a single pay-to-witness-pubkey, wrapped in P2SH output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:WS", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey3.json",
+    "description": "Creates a new transaction with a single pay-to-pub-key output, wrapped in P2SH (output as json)"
   },
   { "exec": "./bitcoin-tx",
     "args":
@@ -236,5 +312,45 @@
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
     "output_cmp": "txcreatedata_seq1.json",
     "description": "Adds a new input with sequence number to a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
+    "output_cmp": "txcreatemultisig1.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
+    "output_cmp": "txcreatemultisig1.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],
+    "output_cmp": "txcreatemultisig2.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2SH output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],
+    "output_cmp": "txcreatemultisig2.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2SH output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:W", "nversion=1"],
+    "output_cmp": "txcreatemultisig3.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:W", "nversion=1"],
+    "output_cmp": "txcreatemultisig3.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:WS", "nversion=1"],
+    "output_cmp": "txcreatemultisig4.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output, wrapped in P2SH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:WS", "nversion=1"],
+    "output_cmp": "txcreatemultisig4.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output, wrapped in P2SH (output in json)"
   }
 ]
