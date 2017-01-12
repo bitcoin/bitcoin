@@ -20,6 +20,7 @@ static const size_t BATCHES = 101;
 static const size_t BATCH_SIZE = 30;
 static const int PREVECTOR_SIZE = 28;
 static const int QUEUE_BATCH_SIZE = 128;
+static const int QUEUE_SIZE = BATCHES*BATCH_SIZE*5;
 static void CCheckQueueSpeed(benchmark::State& state)
 {
     struct FakeJobNoWork {
@@ -35,20 +36,16 @@ static void CCheckQueueSpeed(benchmark::State& state)
        tg.create_thread([&]{queue.Thread();});
     }
     while (state.KeepRunning()) {
-        CCheckQueueControl<FakeJobNoWork> control(&queue, MAX_SCRIPTCHECKS_PER_BLOCK);
+        CCheckQueueControl<FakeJobNoWork> control(&queue, QUEUE_SIZE);
 
         // We call Add a number of times to simulate the behavior of adding
         // a block of transactions at once.
 
-        std::vector<std::vector<FakeJobNoWork>> vBatches(BATCHES);
-        for (auto& vChecks : vBatches) {
-            vChecks.resize(BATCH_SIZE);
-        }
-        for (auto& vChecks : vBatches) {
-            // We can't make vChecks in the inner loop because we want to measure
-            // the cost of getting the memory to each thread and we might get the same
-            // memory
-            control.Add(vChecks);
+        for (size_t x = 0; x < BATCHES; ++x) {
+            for (size_t y = 0; y < BATCH_SIZE; ++y) {
+                control.Add();
+            }
+            control.Flush(BATCH_SIZE);
         }
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity
@@ -84,13 +81,12 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
     while (state.KeepRunning()) {
         // Make insecure_rand here so that each iteration is identical.
         FastRandomContext insecure_rand(true);
-        CCheckQueueControl<PrevectorJob> control(&queue, MAX_SCRIPTCHECKS_PER_BLOCK);
-        std::vector<std::vector<PrevectorJob>> vBatches(BATCHES);
-        for (auto& vChecks : vBatches) {
-            vChecks.reserve(BATCH_SIZE);
-            for (size_t x = 0; x < BATCH_SIZE; ++x)
-                vChecks.emplace_back(insecure_rand);
-            control.Add(vChecks);
+        CCheckQueueControl<PrevectorJob> control(&queue, QUEUE_SIZE);
+        for (size_t x = 0; x < BATCHES; ++x) {
+            for (size_t y = 0; y < BATCH_SIZE; ++y) {
+                control.Add(insecure_rand);
+            }
+            control.Flush(BATCH_SIZE);
         }
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity
