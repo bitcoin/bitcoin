@@ -174,5 +174,9 @@ endef
 
 define $(package)_postprocess_cmds
   rm -rf native/mkspecs/ native/lib/ lib/cmake/ && \
-  rm -f lib/lib*.la lib/*.prl plugins/*/*.prl
+  rm -f lib/lib*.la lib/*.prl plugins/*/*.prl && \
+  if `test -f bin/uic`; then cp bin/uic native/bin/; fi && \
+  if `test -f bin/lrelease`; then cp bin/lrelease native/bin/; fi && \
+  if `test -f bin/qdbuscpp2xml`; then cp bin/qdbuscpp2xml native/bin/; fi && \
+  if `test -f bin/qdbusxml2cpp`; then cp bin/qdbusxml2cpp native/bin/; fi
 endef
