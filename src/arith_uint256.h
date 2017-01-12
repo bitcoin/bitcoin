@@ -57,6 +57,7 @@ public:
     }
 
     explicit base_uint(const std::string& str);
+    explicit base_uint(const std::vector<unsigned char>& vch);
 
     bool operator!() const
     {
@@ -249,7 +250,6 @@ public:
     }
 
     friend class uint256;
-    friend class uint512;
 };
 
 /** 256-bit unsigned big integer. */
@@ -259,6 +259,7 @@ public:
     arith_uint256(const base_uint<256>& b) : base_uint<256>(b) {}
     arith_uint256(uint64_t b) : base_uint<256>(b) {}
     explicit arith_uint256(const std::string& str) : base_uint<256>(str) {}
+    explicit arith_uint256(const std::vector<unsigned char>& vch) : base_uint<256>(vch) {}
 
     /**
      * The "compact" format is a representation of a whole
@@ -287,24 +288,6 @@ public:
     friend arith_uint256 UintToArith256(const uint256 &);
 };
 
-/** 512-bit unsigned big integer. */
-class uint512 : public base_uint<512> {
-public:
-    uint512() {}
-    uint512(const base_uint<512>& b) : base_uint<512>(b) {}
-    uint512(uint64_t b) : base_uint<512>(b) {}
-    explicit uint512(const std::string& str) : base_uint<512>(str) {}
-    explicit uint512(const std::vector<unsigned char>& vch) : base_uint<512>(vch) {}
-
-    arith_uint256 trim256() const
-    {
-        arith_uint256 ret;
-        for (unsigned int i = 0; i < arith_uint256::WIDTH; i++){
-            ret.pn[i] = pn[i];
-        }
-        return ret;
-    }
-};
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
 
