@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     PrecomputedTransactionData txdata(tx);
     boost::thread_group threadGroup;
     CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue, MAX_SCRIPTCHECKS_PER_BLOCK);
 
     for (int i=0; i<20; i++)
         threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));

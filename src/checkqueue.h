@@ -181,7 +181,7 @@ public:
     CCheckQueueControl() = delete;
     CCheckQueueControl(const CCheckQueueControl&) = delete;
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
+    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn, const unsigned int size) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or NULL
         if (pqueue != NULL) {

@@ -35,7 +35,7 @@ static void CCheckQueueSpeed(benchmark::State& state)
        tg.create_thread([&]{queue.Thread();});
     }
     while (state.KeepRunning()) {
-        CCheckQueueControl<FakeJobNoWork> control(&queue);
+        CCheckQueueControl<FakeJobNoWork> control(&queue, MAX_SCRIPTCHECKS_PER_BLOCK);
 
         // We call Add a number of times to simulate the behavior of adding
         // a block of transactions at once.
@@ -84,7 +84,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
     while (state.KeepRunning()) {
         // Make insecure_rand here so that each iteration is identical.
         FastRandomContext insecure_rand(true);
-        CCheckQueueControl<PrevectorJob> control(&queue);
+        CCheckQueueControl<PrevectorJob> control(&queue, MAX_SCRIPTCHECKS_PER_BLOCK);
         std::vector<std::vector<PrevectorJob>> vBatches(BATCHES);
         for (auto& vChecks : vBatches) {
             vChecks.reserve(BATCH_SIZE);

@@ -158,7 +158,7 @@ void Correct_Queue_range(std::vector<size_t> range)
     for (auto i : range) {
         size_t total = i;
         FakeCheckCheckCompletion::n_calls = 0;
-        CCheckQueueControl<FakeCheckCheckCompletion> control(small_queue.get());
+        CCheckQueueControl<FakeCheckCheckCompletion> control(small_queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
         while (total) {
             vChecks.resize(std::min(total, (size_t) GetRand(10)));
             total -= vChecks.size();
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_One)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Max)
 {
     std::vector<size_t> range;
-    range.push_back(100000);
+    range.push_back(MAX_SCRIPTCHECKS_PER_BLOCK);
     Correct_Queue_range(range);
 }
 /** Test that random numbers of checks are correct
@@ -203,9 +203,11 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Max)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 {
     std::vector<size_t> range;
-    range.reserve(100000/1000);
-    for (size_t i = 2; i < 100000; i += std::max((size_t)1, (size_t)GetRand(std::min((size_t)1000, ((size_t)100000) - i))))
+    range.reserve(MAX_SCRIPTCHECKS_PER_BLOCK/1000);
+    for (size_t i = 2; i < MAX_SCRIPTCHECKS_PER_BLOCK;
+            i += std::max((size_t)1, (size_t)GetRand(std::min((size_t)1000, ((size_t)MAX_SCRIPTCHECKS_PER_BLOCK) - i)))) {
         range.push_back(i);
+    }
     Correct_Queue_range(range);
 }
 
@@ -221,7 +223,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
     }
 
     for (size_t i = 0; i < 1001; ++i) {
-        CCheckQueueControl<FailingCheck> control(fail_queue.get());
+        CCheckQueueControl<FailingCheck> control(fail_queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
         size_t remaining = i;
         while (remaining) {
             size_t r = GetRand(10);
@@ -254,7 +256,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 
     for (auto times = 0; times < 10; ++times) {
         for (bool end_fails : {true, false}) {
-            CCheckQueueControl<FailingCheck> control(fail_queue.get());
+            CCheckQueueControl<FailingCheck> control(fail_queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
             {
                 std::vector<FailingCheck> vChecks;
                 vChecks.resize(100, false);
@@ -281,10 +283,10 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_UniqueCheck)
 
     }
 
-    size_t COUNT = 100000;
+    size_t COUNT = MAX_SCRIPTCHECKS_PER_BLOCK;
     size_t total = COUNT;
     {
-        CCheckQueueControl<UniqueCheck> control(queue.get());
+        CCheckQueueControl<UniqueCheck> control(queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
         while (total) {
             size_t r = GetRand(10);
             std::vector<UniqueCheck> vChecks;
@@ -318,7 +320,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Memory)
     for (size_t i = 0; i < 1000; ++i) {
         size_t total = i;
         {
-            CCheckQueueControl<MemoryCheck> control(queue.get());
+            CCheckQueueControl<MemoryCheck> control(queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
             while (total) {
                 size_t r = GetRand(10);
                 std::vector<MemoryCheck> vChecks;
@@ -348,7 +350,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
         tg.create_thread([&]{queue->Thread();});
     }
     std::thread t0([&]() {
-        CCheckQueueControl<FrozenCleanupCheck> control(queue.get());
+        CCheckQueueControl<FrozenCleanupCheck> control(queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
         std::vector<FrozenCleanupCheck> vChecks(1);
         // Freezing can't be the default initialized behavior given how the queue
         // swaps in default initialized Checks (otherwise freezing destructor
@@ -389,7 +391,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         for (size_t i = 0; i < 3; ++i) {
             tg.create_thread(
                     [&]{
-                    CCheckQueueControl<FakeCheck> control(queue.get());
+                    CCheckQueueControl<FakeCheck> control(queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
                     // While sleeping, no other thread should execute to this point
                     auto observed = ++nThreads;
                     MilliSleep(10);
@@ -410,7 +412,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
         {
             std::unique_lock<std::mutex> l(m);
             tg.create_thread([&]{
-                    CCheckQueueControl<FakeCheck> control(queue.get());
+                    CCheckQueueControl<FakeCheck> control(queue.get(), MAX_SCRIPTCHECKS_PER_BLOCK);
                     std::unique_lock<std::mutex> ll(m);
                     has_lock = true;
                     cv.notify_one();

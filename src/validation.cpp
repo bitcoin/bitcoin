@@ -9,7 +9,6 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
-#include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "hash.h"
@@ -1834,7 +1833,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CBlockUndo blockundo;
 
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
+    CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL, MAX_SCRIPTCHECKS_PER_BLOCK);
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
