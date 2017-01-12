@@ -16,6 +16,8 @@ from test_framework.util import *
 import time
 import os
 
+MIN_BLOCKS_TO_KEEP = 288
+
 
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
@@ -241,6 +243,21 @@ class PruneTest(BitcoinTestFramework):
             else:
                 return index
 
+        def prune(index, expected_ret=None):
+            ret = node.pruneblockchain(height(index))
+            # Check the return value. When use_timestamp is True, just check
+            # that the return value is less than or equal to the expected
+            # value, because when more than one block is generated per second,
+            # a timestamp will not be granular enough to uniquely identify an
+            # individual block.
+            if expected_ret is None:
+                expected_ret = index
+            if use_timestamp:
+                assert_greater_than(ret, 0)
+                assert_greater_than(expected_ret + 1, ret)
+            else:
+                assert_equal(ret, expected_ret)
+
         def has_block(index):
             return os.path.isfile(self.options.tmpdir + "/node{}/regtest/blocks/blk{:05}.dat".format(node_number, index))
 
@@ -264,30 +281,30 @@ class PruneTest(BitcoinTestFramework):
             pass
 
         # height=100 too low to prune first block file so this is a no-op
-        node.pruneblockchain(height(100))
+        prune(100)
         if not has_block(0):
             raise AssertionError("blk00000.dat is missing when should still be there")
 
         # height=500 should prune first file
-        node.pruneblockchain(height(500))
+        prune(500)
         if has_block(0):
             raise AssertionError("blk00000.dat is still there, should be pruned by now")
         if not has_block(1):
             raise AssertionError("blk00001.dat is missing when should still be there")
 
         # height=650 should prune second file
-        node.pruneblockchain(height(650))
+        prune(650)
         if has_block(1):
             raise AssertionError("blk00001.dat is still there, should be pruned by now")
 
         # height=1000 should not prune anything more, because tip-288 is in blk00002.dat.
-        node.pruneblockchain(height(1000))
+        prune(1000, 1001 - MIN_BLOCKS_TO_KEEP)
         if not has_block(2):
             raise AssertionError("blk00002.dat is still there, should be pruned by now")
 
         # advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)
         node.generate(288)
-        node.pruneblockchain(height(1000))
+        prune(1000)
         if has_block(2):
             raise AssertionError("blk00002.dat is still there, should be pruned by now")
         if has_block(3):
