@@ -23,8 +23,9 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The classic team uses two branches, a stable and an develop branch. The stable is one that
-has only tested code on it and this is where releases are made from. The 'develop' branch
+The classic team uses two branches, a stable and an develop branch (called master).
+The stable is one that
+has only tested code on it and this is where releases are made from. The 'master' branch
 is used for actual development and that branch should be used with caution.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
