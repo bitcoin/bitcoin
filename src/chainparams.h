@@ -28,9 +28,12 @@ typedef std::map<int, uint256> MapCheckpoints;
 
 struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
-    int64_t nTimeLastCheckpoint;
-    int64_t nTransactionsLastCheckpoint;
-    double fTransactionsPerDay;
+};
+
+struct ChainTxData {
+    int64_t nTime;
+    int64_t nTxCount;
+    double dTxRate;
 };
 
 /**
@@ -73,6 +76,7 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+    const ChainTxData& TxData() const { return chainTxData; }
 protected:
     CChainParams() {}
 
@@ -90,6 +94,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     CCheckpointData checkpointData;
+    ChainTxData chainTxData;
 };
 
 /**
