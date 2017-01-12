@@ -92,6 +92,8 @@ static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
+static const int DEFAULT_MESSAGE_HANDLER_THREADS = 2; // Too much cs_main for any more to be useful
+
 typedef int NodeId;
 
 struct AddedNodeInfo
@@ -120,6 +122,7 @@ struct CSerializedNetMsg
 };
 
 
+class CNetMessage;
 class CConnman
 {
 public:
@@ -327,6 +330,7 @@ public:
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id);
 
+    unsigned int GetReceiveFloodSize() const;
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -342,6 +346,9 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
+
+    void WakeMessageHandler();
+    bool QueueReceivedMessages(CNode* pnode, std::list<CNetMessage>&& completeMessages, size_t nSizeAdded);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
@@ -367,8 +374,6 @@ private:
     void DumpAddresses();
     void DumpData();
     void DumpBanlist();
-
-    unsigned int GetReceiveFloodSize() const;
 
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
@@ -428,6 +433,9 @@ private:
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
 
+    /** flag for waking the message processor. */
+    bool fMsgProcWake;
+
     std::condition_variable condMsgProc;
     std::mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc;
@@ -438,7 +446,7 @@ private:
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
-    std::thread threadMessageHandler;
+    std::list<std::thread> threadMessageHandlers;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover(boost::thread_group& threadGroup);
@@ -463,9 +471,14 @@ struct CombinerAll
 };
 
 // Signals for message handling
+enum ProcessMessagesFlag
+{
+    PROCESS_MESSAGES_MORE_WITH_MAIN,
+    PROCESS_MESSAGES_MORE_AVAILABLE,
+};
 struct CNodeSignals
 {
-    boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> ProcessMessages;
+    boost::signals2::signal<unsigned int (CNode*, CConnman&, std::atomic<bool>&, bool), CombinerAll> ProcessMessages;
     boost::signals2::signal<bool (CNode*, CConnman&, std::atomic<bool>&), CombinerAll> SendMessages;
     boost::signals2::signal<void (CNode*, CConnman&)> InitializeNode;
     boost::signals2::signal<void (NodeId, bool&)> FinalizeNode;
@@ -610,16 +623,21 @@ public:
     std::deque<std::vector<unsigned char>> vSendMsg;
     CCriticalSection cs_vSend;
 
+    CCriticalSection cs_vProcessMsg;
+    std::list<CNetMessage> vProcessMsg;
+    size_t nProcessQueueSize;
+
     std::deque<CInv> vRecvGetData;
-    std::deque<CNetMessage> vRecvMsg;
-    CCriticalSection cs_vRecvMsg;
     uint64_t nRecvBytes;
-    int nRecvVersion;
+    std::atomic<int> nRecvVersion;
 
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
+
+    CCriticalSection cs_processing; // Used only in ThreadMessageHandler
+
     const CAddress addr;
     std::string addrName;
     CService addrLocal;
@@ -650,6 +668,8 @@ public:
     const NodeId id;
 
     const uint64_t nKeyedNetGroup;
+    std::atomic_bool fPauseRecv;
+    std::atomic_bool fPauseSend;
 protected:
 
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -723,6 +743,8 @@ private:
     const ServiceFlags nLocalServices;
     const int nMyStartingHeight;
     int nSendVersion;
+    std::list<CNetMessage> vRecvMsg;
+    CCriticalSection cs_vRecvMsg;
 public:
 
     NodeId GetId() const {
@@ -743,24 +765,15 @@ public:
         return nRefCount;
     }
 
-    // requires LOCK(cs_vRecvMsg)
-    unsigned int GetTotalRecvSize()
-    {
-        unsigned int total = 0;
-        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg)
-            total += msg.vRecv.size() + 24;
-        return total;
-    }
-
-    // requires LOCK(cs_vRecvMsg)
     bool ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete);
 
-    // requires LOCK(cs_vRecvMsg)
     void SetRecvVersion(int nVersionIn)
     {
         nRecvVersion = nVersionIn;
-        BOOST_FOREACH(CNetMessage &msg, vRecvMsg)
-            msg.SetVersion(nVersionIn);
+    }
+    int GetRecvVersion()
+    {
+        return nRecvVersion;
     }
     void SetSendVersion(int nVersionIn)
     {
