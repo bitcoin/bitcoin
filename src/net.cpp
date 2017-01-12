@@ -1159,12 +1159,10 @@ void CConnman::ThreadSocketHandler()
                 // * We wait for data to be received (and disconnect after timeout).
                 // * We process a message in the buffer (message handler thread).
                 {
-                    TRY_LOCK(pnode->cs_vSend, lockSend);
-                    if (lockSend) {
-                        if (!pnode->vSendMsg.empty()) {
-                            FD_SET(pnode->hSocket, &fdsetSend);
-                            continue;
-                        }
+                    LOCK(pnode->cs_vSend);
+                    if (!pnode->vSendMsg.empty()) {
+                        FD_SET(pnode->hSocket, &fdsetSend);
+                        continue;
                     }
                 }
                 {
@@ -1277,12 +1275,10 @@ void CConnman::ThreadSocketHandler()
                 continue;
             if (FD_ISSET(pnode->hSocket, &fdsetSend))
             {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
-                if (lockSend) {
-                    size_t nBytes = SocketSendData(pnode);
-                    if (nBytes)
-                        RecordBytesSent(nBytes);
-                }
+                LOCK(pnode->cs_vSend);
+                size_t nBytes = SocketSendData(pnode);
+                if (nBytes)
+                    RecordBytesSent(nBytes);
             }
 
             //
@@ -1887,7 +1883,7 @@ void CConnman::ThreadMessageHandler()
 
             // Send messages
             {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
+                TRY_LOCK(pnode->cs_sendProcessing, lockSend);
                 if (lockSend)
                     GetNodeSignals().SendMessages(pnode, *this, flagInterruptMsgProc);
             }
