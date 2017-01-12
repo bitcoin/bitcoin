@@ -267,7 +267,7 @@ void CThroneSync::Process()
             } else if(RequestedThroneAttempt < 6) {
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
-                uint256 n = 0;
+                uint256 n = uint256();
                 pnode->PushMessage("mnvs", n); //sync throne votes
             } else {
                 RequestedThroneAssets = THRONE_SYNC_FINISHED;
@@ -394,7 +394,7 @@ void CThroneSync::Process()
 
                 if(RequestedThroneAttempt >= THRONE_SYNC_THRESHOLD*3) return;
 
-                uint256 n = 0;
+                uint256 n = uint256();
                 pnode->PushMessage("mnvs", n); //sync throne votes
                 RequestedThroneAttempt++;
                 

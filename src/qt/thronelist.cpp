@@ -130,7 +130,7 @@ void ThroneList::StartAll(std::string strCommand)
         std::string errorMessage;
         CThroneBroadcast mnb;
 
-        CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+        CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
         CThrone *pmn = mnodeman.Find(vin);
 
         if(strCommand == "start-missing" && pmn) continue;
@@ -210,7 +210,7 @@ void ThroneList::updateMyNodeList(bool reset) {
 
     ui->tableWidgetThrones->setSortingEnabled(false);
     BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-        CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+        CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
         CThrone *pmn = mnodeman.Find(vin);
 
         updateMyThroneInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),

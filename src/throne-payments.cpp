@@ -494,7 +494,7 @@ bool CThronePayments::IsScheduled(CThrone& mn, int nNotBlockHeight)
 
 bool CThronePayments::AddWinningThrone(CThronePaymentWinner& winnerIn)
 {
-    uint256 blockHash = 0;
+    uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
         return false;
     }
