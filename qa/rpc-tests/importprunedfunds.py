@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -23,7 +23,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         import time
         begintime = int(time.time())
 
-        print "Mining blocks..."
+        print("Mining blocks...")
         self.nodes[0].generate(101)
 
         # sync
@@ -82,10 +82,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         #Import with no affiliated address
         try:
             result1 = self.nodes[1].importprunedfunds(rawtxn1, proof1, "")
-        except JSONRPCException,e:
-            errorString = e.error['message']
+        except JSONRPCException as e:
+            assert('No addresses' in e.error['message'])
+        else:
+            assert(False)
 
-        assert('No addresses' in errorString)
 
         balance1 = self.nodes[1].getbalance("", 0, True)
         assert_equal(balance1, Decimal(0))
@@ -119,10 +120,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         try:
             self.nodes[1].removeprunedfunds(txnid1)
-        except JSONRPCException,e:
-            errorString = e.error['message']
+        except JSONRPCException as e:
+            assert('does not exist' in e.error['message'])
+        else:
+            assert(False)
 
-        assert('does not exist' in errorString)
 
         balance1 = Decimal(self.nodes[1].getbalance("", 0, True))
         assert_equal(balance1, Decimal('0.075'))
