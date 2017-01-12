@@ -469,6 +469,10 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
         throw runtime_error(
             "decoderawtransaction \"hexstring\"\n"
             "\nReturn a JSON object representing the serialized, hex-encoded transaction.\n"
+            "Transactions will first be decoded using non-witness serialization and then with witness serialization if the\n"
+            "first non-witness decoding fails.\n"
+            "\nIf the transaction has 0 inputs and properly decodes with witness serialization, it will be decoded with\n"
+            "with witness serialization."
 
             "\nArguments:\n"
             "1. \"hexstring\"      (string, required) The transaction hex string\n"
@@ -521,10 +525,21 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
     LOCK(cs_main);
     RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VSTR));
 
-    CMutableTransaction mtx;
+    CMutableTransaction mtx, witMtx;
 
-    if (!DecodeHexTx(mtx, request.params[0].get_str(), true))
+    // First attempt to decode the transaction as a non-witness transaction
+    if (!DecodeHexTx(mtx, request.params[0].get_str(), true)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+    // If the transaction has 0-inputs (either a 0-input non-witness transaction or a witness transaction)
+    // then attempt to decode it as a witness transaction. If this is successful, then the transaction is
+    // a witness transaction and that is returned. Otherwise it is a 0-input non-witness transaction and the
+    // non-witness decoding is returned.
+    if (mtx.vin.size() == 0) {
+        if (DecodeHexTx(witMtx, request.params[0].get_str(), false)) {
+            mtx = witMtx;
+        }
+    }
 
     UniValue result(UniValue::VOBJ);
     TxToJSON(CTransaction(std::move(mtx)), uint256(), result);
