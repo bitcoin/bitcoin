@@ -2913,9 +2913,9 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return true;
 }
 
-void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
+int64_t CWallet::ReserveKeyFromKeyPool(CKeyPool& keypool)
 {
-    nIndex = -1;
+    int64_t nIndex;
     keypool.vchPubKey = CPubKey();
     {
         LOCK(cs_wallet);
@@ -2925,7 +2925,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
 
         // Get the oldest key
         if(setKeyPool.empty())
-            return;
+            throw keypool_empty();
 
         CWalletDB walletdb(strWalletFile);
 
@@ -2938,6 +2938,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool)
         assert(keypool.vchPubKey.IsValid());
         LogPrintf("keypool reserve %d\n", nIndex);
     }
+    return nIndex;
 }
 
 void CWallet::KeepKey(int64_t nIndex)
@@ -2963,13 +2964,13 @@ void CWallet::ReturnKey(int64_t nIndex)
 
 bool CWallet::GetKeyFromPool(CPubKey& result)
 {
-    int64_t nIndex = 0;
+    int64_t nIndex;
     CKeyPool keypool;
     {
         LOCK(cs_wallet);
-        ReserveKeyFromKeyPool(nIndex, keypool);
-        if (nIndex == -1)
-        {
+        try {
+            nIndex = ReserveKeyFromKeyPool(keypool);
+        } catch (keypool_empty) {
             if (IsLocked()) return false;
             result = GenerateNewKey();
             return true;
@@ -3181,12 +3182,12 @@ bool CReserveKey::GetReservedKey(CPubKey& pubkey)
     if (nIndex == -1)
     {
         CKeyPool keypool;
-        pwallet->ReserveKeyFromKeyPool(nIndex, keypool);
-        if (nIndex != -1)
-            vchPubKey = keypool.vchPubKey;
-        else {
+        try {
+            nIndex = pwallet->ReserveKeyFromKeyPool(keypool);
+        } catch (keypool_empty) {
             return false;
         }
+        vchPubKey = keypool.vchPubKey;
     }
     assert(vchPubKey.IsValid());
     pubkey = vchPubKey;
