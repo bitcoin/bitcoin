@@ -58,9 +58,11 @@ Removal of Priority Estimation
   converted to the new format which is not readable by prior versions of the
   software.
 
-- The concept of "priority" transactions is planned to be removed in the next
-  major version. To prepare for this, the default for the rate limit of priority
-  transactions (`-limitfreerelay`) has been set to `0` kB/minute.
+- The concept of "priority" (coin age) transactions is planned to be removed in
+  the next major version. To prepare for this, the default for the rate limit of
+  priority transactions (`-limitfreerelay`) has been set to `0` kB/minute. This
+  is not to be confused with the `prioritisetransaction` RPC which will remain
+  supported for adding fee deltas to transactions.
 
 P2P connection management
 --------------------------
