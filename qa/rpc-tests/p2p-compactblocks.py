@@ -310,6 +310,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         tip = int(node.getbestblockhash(), 16)
         assert(test_node.wait_for_block_announcement(tip))
 
+        # Make sure we will receive a fast-announce compact block
+        self.request_cb_announcements(test_node, node, version)
+
         # Now mine a block, and look at the resulting compact block.
         test_node.clear_block_announcement()
         block_hash = int(node.generate(1)[0], 16)
@@ -319,27 +322,36 @@ class CompactBlocksTest(BitcoinTestFramework):
         [tx.calc_sha256() for tx in block.vtx]
         block.rehash()
 
-        # Don't care which type of announcement came back for this test; just
-        # request the compact block if we didn't get one yet.
+        # Wait until the block was announced (via compact blocks)
         wait_until(test_node.received_block_announcement, timeout=30)
         assert(test_node.received_block_announcement())
 
-        with mininode_lock:
-            if test_node.last_cmpctblock is None:
-                test_node.clear_block_announcement()
-                inv = CInv(4, block_hash)  # 4 == "CompactBlock"
-                test_node.send_message(msg_getdata([inv]))
-
-        wait_until(test_node.received_block_announcement, timeout=30)
-        assert(test_node.received_block_announcement())
-
-        # Now we should have the compactblock
+        # Now fetch and check the compact block
         header_and_shortids = None
         with mininode_lock:
             assert(test_node.last_cmpctblock is not None)
             # Convert the on-the-wire representation to absolute indexes
             header_and_shortids = HeaderAndShortIDs(test_node.last_cmpctblock.header_and_shortids)
+        self.check_compactblock_construction_from_block(version, header_and_shortids, block_hash, block)
 
+        # Now fetch the compact block using a normal non-announce getdata
+        with mininode_lock:
+            test_node.clear_block_announcement()
+            inv = CInv(4, block_hash)  # 4 == "CompactBlock"
+            test_node.send_message(msg_getdata([inv]))
+
+        wait_until(test_node.received_block_announcement, timeout=30)
+        assert(test_node.received_block_announcement())
+
+        # Now fetch and check the compact block
+        header_and_shortids = None
+        with mininode_lock:
+            assert(test_node.last_cmpctblock is not None)
+            # Convert the on-the-wire representation to absolute indexes
+            header_and_shortids = HeaderAndShortIDs(test_node.last_cmpctblock.header_and_shortids)
+        self.check_compactblock_construction_from_block(version, header_and_shortids, block_hash, block)
+
+    def check_compactblock_construction_from_block(self, version, header_and_shortids, block_hash, block):
         # Check that we got the right block!
         header_and_shortids.header.calc_sha256()
         assert_equal(header_and_shortids.header.sha256, block_hash)
