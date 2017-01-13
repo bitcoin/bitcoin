@@ -28,7 +28,7 @@ class CCoinsViewTest : public CCoinsView
     std::map<uint256, CCoins> map_;
 
 public:
-    bool GetCoins(const uint256& txid, CCoins& coins) const
+    bool GetCoins(const uint256& txid, CCoins& coins) const final
     {
         std::map<uint256, CCoins>::const_iterator it = map_.find(txid);
         if (it == map_.end()) {
@@ -42,15 +42,15 @@ public:
         return true;
     }
 
-    bool HaveCoins(const uint256& txid) const
+    bool HaveCoins(const uint256& txid) const final
     {
         CCoins coins;
         return GetCoins(txid, coins);
     }
 
-    uint256 GetBestBlock() const { return hashBestBlock_; }
+    uint256 GetBestBlock() const final { return hashBestBlock_; }
 
-    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
+    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) final
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {

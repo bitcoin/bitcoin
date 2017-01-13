@@ -200,9 +200,9 @@ class PosixLockedPageAllocator: public LockedPageAllocator
 {
 public:
     PosixLockedPageAllocator();
-    void* AllocateLocked(size_t len, bool *lockingSuccess);
-    void FreeLocked(void* addr, size_t len);
-    size_t GetLimit();
+    void* AllocateLocked(size_t len, bool *lockingSuccess) final;
+    void FreeLocked(void* addr, size_t len) final;
+    size_t GetLimit() final;
 private:
     size_t page_size;
 };
