@@ -3220,10 +3220,6 @@
         <translation>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</translation>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</translation>
-    </message>
-    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</translation>
     </message>

@@ -21,7 +21,7 @@ using namespace std;
  * JSON-RPC protocol.  Bitcoin speaks version 1.0 for maximum compatibility,
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
  * unspecified (HTTP errors and contents of 'error').
- * 
+ *
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
  */
@@ -81,8 +81,8 @@ bool GenerateAuthCookie(std::string *cookie_out)
     GetRandBytes(rand_pwd, 32);
     std::string cookie = COOKIEAUTH_USER + ":" + EncodeBase64(&rand_pwd[0],32);
 
-    /** the umask determines what permissions are used to create this file -
-     * these are set to 077 in init.cpp unless overridden with -sysperms.
+    /**
+     * The umask determines what permissions are used to create this file.
      */
     std::ofstream file;
     boost::filesystem::path filepath = GetAuthCookieFile();
@@ -123,4 +123,3 @@ void DeleteAuthCookie()
         LogPrintf("%s: Unable to remove random auth cookie file: %s\n", __func__, e.what());
     }
 }
-

@@ -261,7 +261,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
                             fMockDb ? strFile.c_str() : "main", // Logical db name
                             DB_BTREE,                           // Database type
                             nFlags,                             // Flags
-                            0);
+                            0600);                              // Permissions
 
             if (ret != 0) {
                 delete pdb;
