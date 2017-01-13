@@ -398,6 +398,7 @@ public:
     {
         fCreditCached = false;
         fAvailableCreditCached = false;
+        fImmatureCreditCached = false;
         fAnonymizedCreditCached = false;
         fDenomUnconfCreditCached = false;
         fDenomConfCreditCached = false;
