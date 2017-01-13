@@ -754,11 +754,11 @@ void PeerLogicValidation::SyncTransaction(const CTransaction& tx, const CBlockIn
 
 static CCriticalSection cs_most_recent_block;
 static std::shared_ptr<const CBlock> most_recent_block;
-static std::shared_ptr<CBlockHeaderAndShortTxIDs> most_recent_compact_block;
+static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block;
 static uint256 most_recent_block_hash;
 
 void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) {
-    std::shared_ptr<CBlockHeaderAndShortTxIDs> pcmpctblock = std::make_shared<CBlockHeaderAndShortTxIDs> (*pblock, true);
+    std::shared_ptr<const CBlockHeaderAndShortTxIDs> pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs> (*pblock, true);
     CNetMsgMaker msgMaker(PROTOCOL_VERSION);
 
     LOCK(cs_main);
