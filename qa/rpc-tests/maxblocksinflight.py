@@ -13,8 +13,10 @@ In this test we connect to one node over p2p, send it numerous inv's, and
 compare the resulting number of getdata requests to a max allowed value.  We
 test for exceeding 128 blocks in flight, which was the limit an 0.9 client will
 reach. [0.10 clients shouldn't request more than 16 from a single peer.]
+
+In BU we request a maximum of 256 blocks at a time with 32 from a single peer
 '''
-MAX_REQUESTS = 128
+MAX_REQUESTS = 256
 
 class TestManager(NodeConnCB):
     # set up NodeConnCB callbacks, overriding base class
@@ -42,7 +44,7 @@ class TestManager(NodeConnCB):
     def run(self):
         self.connection.rpc.generate(1)  # Leave IBD
 
-        numBlocksToGenerate = [8, 16, 128, 1024]
+        numBlocksToGenerate = [8, 16, 128, 256]
         for count in range(len(numBlocksToGenerate)):
             current_invs = []
             for i in range(numBlocksToGenerate[count]):
@@ -52,6 +54,7 @@ class TestManager(NodeConnCB):
                     current_invs = []
             if len(current_invs) > 0:
                 self.connection.send_message(msg_inv(current_invs))
+            print ("requesting " + str(len(current_invs)) + " blocks")
 
             # Wait and see how many blocks were requested
             time.sleep(2)
@@ -64,7 +67,10 @@ class TestManager(NodeConnCB):
                         raise AssertionError("Error, test failed: block %064x requested more than once" % key)
             if total_requests > MAX_REQUESTS:
                 raise AssertionError("Error, too many blocks (%d) requested" % total_requests)
+            if total_requests < numBlocksToGenerate[count]:
+                raise AssertionError("Error, not enough blocks (%d) requested" % total_requests)
             print("Round %d: success (total requests: %d)" % (count, total_requests))
+            self.blockReqCounts = {}
 
         self.disconnectOkay = True
         self.connection.disconnect_node()
