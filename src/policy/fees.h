@@ -179,7 +179,12 @@ static const double MIN_SUCCESS_PCT = .95;
 static const double SUFFICIENT_FEETXS = 1;
 
 // Minimum and Maximum values for tracking feerates
-static constexpr double MIN_BUCKET_FEERATE = 10;
+// The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
+// might ever want to track.  Historically this has been 1000 since it was
+// inheriting DEFAULT_MIN_RELAY_TX_FEE and changing it is disruptive as it
+// invalidates old estimates files. So leave it at 1000 unless it becomes
+// necessary to lower it, and then lower it substantially.
+static constexpr double MIN_BUCKET_FEERATE = 1000;
 static const double MAX_BUCKET_FEERATE = 1e7;
 static const double INF_FEERATE = MAX_MONEY;
 static const double INF_PRIORITY = 1e9 * MAX_MONEY;
@@ -199,7 +204,7 @@ class CBlockPolicyEstimator
 {
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
-    CBlockPolicyEstimator(const CFeeRate& minRelayFee);
+    CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
