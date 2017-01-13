@@ -3221,10 +3221,6 @@ Var vänlig och försök igen.</translation>
         <translation>Kan inte låsa data-mappen %s. Bitcoin Core körs förmodligen redan.</translation>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Skapa nya filer med systemets förvalda rättigheter, istället för umask 077 (bara effektivt med avaktiverad plånboks funktionalitet)</translation>
-    </message>
-    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Upptäck egna IP adresser (standard: 1 vid lyssning ingen -externalip eller -proxy)</translation>
     </message>

@@ -3144,10 +3144,6 @@
         <translation>Nedaří se mi získat zámek na datový adresář %s. Bitcoin Core pravděpodobně už jednou běží.</translation>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Vytvářet nové soubory s výchozími systémovými právy namísto umask 077 (uplatní se, pouze pokud je vypnutá funkce peněženky)</translation>
-    </message>
-    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Zjistit vlastní IP adresu (výchozí: 1, pokud naslouchá a není zadáno -externalip nebo -proxy)</translation>
     </message>

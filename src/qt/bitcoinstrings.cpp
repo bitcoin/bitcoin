@@ -47,9 +47,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. Bitcoin Classic is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Create new files with system default permissions, instead of umask 077 (only "
-"effective with disabled wallet functionality)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
