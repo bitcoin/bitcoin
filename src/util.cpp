@@ -458,32 +458,34 @@ boost::filesystem::path GetDefaultDataDir()
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
     // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
     // Mac: ~/Library/Application Support/Bitcoin
-    // Unix: ~/.bitcoin
+    // Unix: $XDG_DATA_HOME/Bitcoin (fall back to ~/.bitcoin if it exists)
 #ifdef WIN32
     // Windows
     return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
 #else
-    fs::path pathRet;
+    fs::path pathHome;
     char* pszHome = getenv("HOME");
     if (pszHome == NULL || strlen(pszHome) == 0)
-        pathRet = fs::path("/");
+        pathHome = fs::path("/");
     else
-        pathRet = fs::path(pszHome);
+        pathHome = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Bitcoin";
+    return pathHome / "Library/Application Support/Bitcoin";
 #else
     // Unix
-    fs::path legacyPath = pathRet / ".bitcoin";
-    if (fs::exists(legacyPath))
-        return legacyPath;
-    fs::path configDir;
-    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
-    if (pszConfigHome == NULL || strlen(pszConfigHome) == 0)
-        configDir = pathRet / ".config";
+    fs::path pathLegacy = pathHome / ".bitcoin";
+    if (fs::exists(pathLegacy))
+        return pathLegacy;
+
+    fs::path pathDataHome;
+    char* pszDataHome = getenv("XDG_DATA_HOME");
+    if (pszDataHome == NULL || strlen(pszDataHome) == 0)
+        pathDataHome = pathHome / ".local/share";
     else
-        configDir = fs::path(pszConfigHome);
-    return configDir / "bitcoin";
+        pathDataHome = fs::path(pszDataHome);
+
+    return pathDataHome / "Bitcoin";
 #endif
 #endif
 }
@@ -530,11 +532,37 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
-    if (!pathConfigFile.is_complete())
-        pathConfigFile = GetDataDir(false) / pathConfigFile;
+    namespace fs = boost::filesystem;
 
-    return pathConfigFile;
+    fs::path pathConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+    if (pathConfigFile.is_complete())
+        return pathConfigFile;
+
+#if defined(WIN32) || defined(MAC_OSX)
+    // Windows and Mac
+    return GetDataDir(false) / pathConfigFile;
+#else
+    // Unix
+    fs::path pathLegacyConfigFile = GetDataDir(false) / pathConfigFile;
+    if (fs::exists(pathLegacyConfigFile))
+        return pathLegacyConfigFile;
+
+    fs::path pathHome;
+    char* pszHome = getenv("HOME");
+    if (pszHome == NULL || strlen(pszHome) == 0)
+        pathHome = fs::path("/");
+    else
+        pathHome = fs::path(pszHome);
+
+    fs::path pathConfigHome;
+    char* pszConfigHome = getenv("XDG_CONFIG_HOME");
+    if (pszConfigHome == NULL || strlen(pszConfigHome) == 0)
+        pathConfigHome = pathHome / ".config";
+    else
+        pathConfigHome = fs::path(pszConfigHome);
+
+    return pathConfigHome / "Bitcoin" / pathConfigFile;
+#endif
 }
 
 void ReadConfigFile(map<string, string>& mapSettingsRet,
