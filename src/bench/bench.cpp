@@ -76,6 +76,8 @@ bool benchmark::State::KeepRunning()
 
     --count;
 
+    assert(count != 0 && "count == 0 => (now == 0 && beginTime == 0) => return above");
+
     // Output results
     double average = (now-beginTime)/count;
     std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << "\n";
