@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(addrman_find)
     // Test 18; Find does not discriminate by port number.
     CAddrInfo* info2 = addrman.Find(addr2);
     BOOST_CHECK(info2);
-    if (info2)
+    if (info2 && info1)
         BOOST_CHECK(info2->ToString() == info1->ToString());
 
     // Test 19: Find returns another IP matching what we searched on.
