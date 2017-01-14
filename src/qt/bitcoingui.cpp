@@ -31,6 +31,7 @@
 #include "macdockiconhandler.h"
 #endif
 
+#include "chainparams.h"
 #include "init.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -815,7 +816,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
     }
-    else
+    else if (Params().NetworkIDString() != "regtest")
     {
         QString timeBehindText = GUIUtil::formateNiceTimeOffset(secs);
 
