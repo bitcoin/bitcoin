@@ -106,6 +106,7 @@ BASE_SCRIPTS= [
     'invalidtxrequest.py',
     'p2p-versionbits-warning.py',
     'preciousblock.py',
+    'test_script_address2.py',
     'importprunedfunds.py',
     'signmessages.py',
     'nulldummy.py',

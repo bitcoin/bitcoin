@@ -104,8 +104,8 @@ public:
 class CBitcoinAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id);
-    bool Set(const CTxDestination &dest);
+    bool Set(const CScriptID &id, CChainParams::Base58Type type=CChainParams::SCRIPT_ADDRESS2);
+    bool Set(const CTxDestination &dest, CChainParams::Base58Type type=CChainParams::SCRIPT_ADDRESS2);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
