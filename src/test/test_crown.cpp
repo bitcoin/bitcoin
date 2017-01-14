@@ -4,6 +4,7 @@
 
 #define BOOST_TEST_MODULE Crown Test Suite
 
+#include "key.h"
 #include "main.h"
 #include "random.h"
 #include "txdb.h"
@@ -30,10 +31,11 @@ struct TestingSetup {
     boost::thread_group threadGroup;
 
     TestingSetup() {
+        ECC_Start();
         SetupEnvironment();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
-        SelectParams(CBaseChainParams::UNITTEST);
+        SelectParams(CBaseChainParams::MAIN);
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
@@ -58,6 +60,7 @@ struct TestingSetup {
     }
     ~TestingSetup()
     {
+        ECC_Stop();
         threadGroup.interrupt_all();
         threadGroup.join_all();
         UnregisterNodeSignals(GetNodeSignals());

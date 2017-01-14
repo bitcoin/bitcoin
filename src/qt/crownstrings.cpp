@@ -114,8 +114,6 @@ QT_TRANSLATE_NOOP("crown-core", ""
 "Maximum total fees to use in a single wallet transaction, setting too low "
 "may abort large transactions (default: %s)"),
 QT_TRANSLATE_NOOP("crown-core", ""
-"Name to construct url for KeePass entry that stores the wallet passphrase"),
-QT_TRANSLATE_NOOP("crown-core", ""
 "Number of seconds to keep misbehaving peers from reconnecting (default: %u)"),
 QT_TRANSLATE_NOOP("crown-core", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
@@ -231,7 +229,6 @@ QT_TRANSLATE_NOOP("crown-core", "Cannot write default address"),
 QT_TRANSLATE_NOOP("crown-core", "Collateral not valid."),
 QT_TRANSLATE_NOOP("crown-core", "Connect only to the specified node(s)"),
 QT_TRANSLATE_NOOP("crown-core", "Connect through SOCKS5 proxy"),
-QT_TRANSLATE_NOOP("crown-core", "Connect to KeePassHttp on port <port> (default: %u)"),
 QT_TRANSLATE_NOOP("crown-core", "Connect to a node to retrieve peer addresses, and disconnect"),
 QT_TRANSLATE_NOOP("crown-core", "Connection options:"),
 QT_TRANSLATE_NOOP("crown-core", "Copyright (C) 2009-%i The Bitcoin Core Developers"),
@@ -301,8 +298,6 @@ QT_TRANSLATE_NOOP("crown-core", "Invalid netmask specified in -whitelist: '%s'")
 QT_TRANSLATE_NOOP("crown-core", "Invalid port detected in throne.conf"),
 QT_TRANSLATE_NOOP("crown-core", "Invalid private key."),
 QT_TRANSLATE_NOOP("crown-core", "Invalid script detected."),
-QT_TRANSLATE_NOOP("crown-core", "KeePassHttp id for the established association"),
-QT_TRANSLATE_NOOP("crown-core", "KeePassHttp key for AES encrypted communication with KeePass"),
 QT_TRANSLATE_NOOP("crown-core", "Keep N CRW anonymized (default: %u)"),
 QT_TRANSLATE_NOOP("crown-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("crown-core", "Last Darksend was too recent."),
@@ -413,7 +408,6 @@ QT_TRANSLATE_NOOP("crown-core", "Unable to sign spork message, wrong key?"),
 QT_TRANSLATE_NOOP("crown-core", "Unknown network specified in -onlynet: '%s'"),
 QT_TRANSLATE_NOOP("crown-core", "Unknown state: id = %u"),
 QT_TRANSLATE_NOOP("crown-core", "Upgrade wallet to latest format"),
-QT_TRANSLATE_NOOP("crown-core", "Use KeePass 2 integration using KeePassHttp plugin (default: %u)"),
 QT_TRANSLATE_NOOP("crown-core", "Use N separate thrones to anonymize funds  (2-8, default: %u)"),
 QT_TRANSLATE_NOOP("crown-core", "Use OpenSSL (https) for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("crown-core", "Use UPnP to map the listening port (default: %u)"),

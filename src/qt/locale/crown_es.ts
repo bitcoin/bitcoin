@@ -3362,10 +3362,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX requiere entradas con al menos 6 confirmaciones, puede que neesite esperar unos pocos minutos y volver a intentarlo.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Nombre para construir la url de la entrada KeePass que almacena la contraseña del monedero</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Petición de direcciones de pares mediante búsqueda de DNS , si las direcciones son pocas (predeterminado: 1 salvo con -connect)</translation>
     </message>
@@ -3793,10 +3789,6 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Conectarse a través de un proxy SOCKS5</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Conectarse a KeePassHttp a través del puerto &lt;port&gt; (predeterminado: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i Los Desarrolladores de Bitcoin Core</translation>
     </message>
@@ -4145,10 +4137,6 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
         <translation>Umbral para la desconexión de pares con mal comportamiento (predeterminado: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>sar la integración de KeePass2 con el conector KeePassHttp (predeterminado: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Usar N nodos maestros distintos para generar fondos anónimos (2-8, predeterminado: %u)</translation>
     </message>
@@ -4207,14 +4195,6 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Crown" admin@foo.com
     <message>
         <source>Invalid script detected.</source>
         <translation>Script inválido detectado.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Identificación del KeePassHttp para la asociación establecida</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Clave KeePassHttp para la comunicación cifrada AES con KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

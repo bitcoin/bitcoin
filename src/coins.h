@@ -9,7 +9,6 @@
 #include "compressor.h"
 #include "serialize.h"
 #include "uint256.h"
-#include "undo.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -237,11 +236,8 @@ public:
         Cleanup();
     }
 
-    //! mark an outpoint spent, and construct undo information
-    bool Spend(const COutPoint &out, CTxInUndo &undo);
-
     //! mark a vout spent
-    bool Spend(int nPos);
+    bool Spend(uint32_t nPos);
 
     //! check whether a particular output is still available
     bool IsAvailable(unsigned int nPos) const {
@@ -407,6 +403,17 @@ public:
      * allowed.
      */
     CCoinsModifier ModifyCoins(const uint256 &txid);
+
+    /**
+     * Return a modifiable reference to a CCoins. Assumes that no entry with the given
+     * txid exists and creates a new one. This saves a database access in the case where
+     * the coins were to be wiped out by FromTx anyway.  This should not be called with
+     * the 2 historical coinbase duplicate pairs because the new coins are marked fresh, and
+     * in the event the duplicate coinbase was spent before a flush, the now pruned coins
+     * would not properly overwrite the first coinbase of the pair. Simultaneous modifications
+     * are not allowed.
+     */
+    CCoinsModifier ModifyNewCoins(const uint256 &txid);
 
     /**
      * Push the modifications applied to this cache to its base.

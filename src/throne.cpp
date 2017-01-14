@@ -148,28 +148,28 @@ bool CThrone::UpdateFromNewBroadcast(CThroneBroadcast& mnb)
 //
 uint256 CThrone::CalculateScore(int mod, int64_t nBlockHeight)
 {
-    if(chainActive.Tip() == NULL) return 0;
+    if(chainActive.Tip() == NULL) return uint256();
 
-    uint256 hash = 0;
-    uint256 aux = vin.prevout.hash + vin.prevout.n;
+    uint256 hash = uint256();
+    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     if(!GetBlockHash(hash, nBlockHeight)) {
         LogPrintf("CalculateScore ERROR - nHeight %d - Returned 0\n", nBlockHeight);
-        return 0;
+        return uint256();
     }
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << hash;
-    uint256 hash2 = ss.GetHash();
+    arith_uint256 hash2 = UintToArith256(ss.GetHash());
 
     CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
     ss2 << hash;
     ss2 << aux;
-    uint256 hash3 = ss2.GetHash();
+    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
 
-    uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
+    arith_uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
 
-    return r;
+    return ArithToUint256(r);
 }
 
 void CThrone::Check(bool forceCheck)
@@ -197,7 +197,7 @@ void CThrone::Check(bool forceCheck)
     if(!unitTest){
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
+        CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -230,7 +230,7 @@ int64_t CThrone::SecondsSincePayment() {
     uint256 hash =  ss.GetHash();
 
     // return some deterministic value for unknown/unpaid but force it to be more than 30 days old
-    return month + hash.GetCompact(false);
+    return month + UintToArith256(hash).GetCompact(false);
 }
 
 int64_t CThrone::GetLastPaid() {
@@ -246,7 +246,7 @@ int64_t CThrone::GetLastPaid() {
     uint256 hash =  ss.GetHash();
 
     // use a deterministic offset to break a tie -- 2.5 minutes
-    int64_t nOffset = hash.GetCompact(false) % 150; 
+    int64_t nOffset = UintToArith256(hash).GetCompact(false) % 150; 
 
     if (chainActive.Tip() == NULL) return false;
 
@@ -383,7 +383,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
     std::string strMessage;
     std::string errorMessage = "";
 
-    if(protocolVersion < 70201) {
+    if(protocolVersion <= 99999999) {
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
         strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
@@ -492,7 +492,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
+    CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
@@ -524,7 +524,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
     // verify that sig time is legit in past
     // should be at least not earlier than block when 10000 CRW tx got THRONE_MIN_CONFIRMATIONS
-    uint256 hashBlock = 0;
+    uint256 hashBlock = uint256();
     CTransaction tx2;
     GetTransaction(vin.prevout.hash, tx2, hashBlock, true);
     BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
@@ -602,7 +602,7 @@ bool CThroneBroadcast::VerifySignature()
 CThronePing::CThronePing()
 {
     vin = CTxIn();
-    blockHash = uint256(0);
+    blockHash = uint256();
     sigTime = 0;
     vchSig = std::vector<unsigned char>();
 }

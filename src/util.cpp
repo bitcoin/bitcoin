@@ -10,7 +10,7 @@
 
 #include "util.h"
 
-#include "allocators.h"
+#include "support/allocators/secure.h"
 #include "chainparamsbase.h"
 #include "random.h"
 #include "serialize.h"
@@ -24,7 +24,6 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
-#include <openssl/crypto.h> // for OPENSSL_cleanse()
 
 
 #ifndef WIN32
@@ -237,7 +236,6 @@ bool LogAcceptCategory(const char* category)
                 ptrCategory->insert(string("darksend"));
                 ptrCategory->insert(string("instantx"));
                 ptrCategory->insert(string("throne"));
-                ptrCategory->insert(string("keepass"));
                 ptrCategory->insert(string("mnpayments"));
                 ptrCategory->insert(string("mnbudget"));
             }

@@ -3200,10 +3200,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>InstantX richiede input con almeno 6 conferme, potrebbe essere necessario attendere qualche minuto e poi riprovare.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Nome di costruire url per l'ingresso KeePass che memorizza la parola d'ordine portafoglio</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Fare domande per indirizzi pari via lookup DNS, se a corto di indirizzi (predefinita: 1 a meno -connect)</translation>
     </message>
@@ -3574,14 +3570,6 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Invalid script detected.</source>
         <translation>Script invalido</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>ID KeePassHttp per la connessione stabilita</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Chiave KeePassHttp per AES comunicazione cripra con KeePass</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>

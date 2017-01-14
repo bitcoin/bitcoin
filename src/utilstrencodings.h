@@ -9,7 +9,6 @@
 #ifndef BITCOIN_UTILSTRENCODINGS_H
 #define BITCOIN_UTILSTRENCODINGS_H
 
-#include "allocators.h"
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -32,8 +31,6 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
 std::string DecodeBase64(const std::string& str);
 std::string EncodeBase64(const unsigned char* pch, size_t len);
 std::string EncodeBase64(const std::string& str);
-SecureString DecodeBase64Secure(const SecureString& input);
-SecureString EncodeBase64Secure(const SecureString& input);
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
 std::string DecodeBase32(const std::string& str);
 std::string EncodeBase32(const unsigned char* pch, size_t len);

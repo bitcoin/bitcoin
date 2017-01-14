@@ -2698,10 +2698,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX kräver indatan med åtminstone 6 bekräftelser. Du kanske måste vänta ett par minuter och försöka igen.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Namnge för att skapa en url för en KeePass-inmatning som lagrar plånbokslösenfrasen.</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Förfrågan till peer-adresser via DNS-lookup, om det är brist på adresser (standardvärde:1 unless -connect)</translation>
     </message>
@@ -2988,14 +2984,6 @@ https://www.transifex.com/projects/p/crown/</translation>
     <message>
         <source>Invalid script detected.</source>
         <translation>Ogiltigt skript hittades.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp-id för den etablerade kopplingen</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePassHttp-nyckel för AES-krypterad kommunikation med KeePass</translation>
     </message>
     <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>

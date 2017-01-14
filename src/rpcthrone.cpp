@@ -365,7 +365,7 @@ Value throne(const Array& params, bool fHelp)
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
 
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CThrone *pmn = mnodeman.Find(vin);
             CThroneBroadcast mnb;
 
@@ -420,7 +420,7 @@ Value throne(const Array& params, bool fHelp)
         Object resultObj;
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CThrone *pmn = mnodeman.Find(vin);
 
             std::string strStatus = pmn ? pmn->Status() : "MISSING";
@@ -498,10 +498,10 @@ Value throne(const Array& params, bool fHelp)
 
         std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
         for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++){
-            uint256 nHigh = 0;
+            arith_uint256  nHigh = 0;
             CThrone *pBestThrone = NULL;
             BOOST_FOREACH(CThrone& mn, vThrones) {
-                uint256 n = mn.CalculateScore(1, nHeight-100);
+                arith_uint256  n = UintToArith256(mn.CalculateScore(1, nHeight-100));
                 if(n > nHigh){
                     nHigh = n;
                     pBestThrone = &mn;
@@ -753,7 +753,7 @@ Value thronebroadcast(const Array& params, bool fHelp)
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             std::string errorMessage;
 
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CThroneBroadcast mnb;
 
             bool result = activeThrone.CreateBroadcast(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage, mnb, true);

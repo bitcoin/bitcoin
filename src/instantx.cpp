@@ -462,7 +462,7 @@ void CleanTransactionLocksList()
 
 uint256 CConsensusVote::GetHash() const
 {
-    return vinThrone.prevout.hash + vinThrone.prevout.n + txHash;
+    return ArithToUint256(UintToArith256(vinThrone.prevout.hash) + vinThrone.prevout.n + UintToArith256(txHash));
 }
 
 

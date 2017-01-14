@@ -870,7 +870,6 @@ AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
 AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
-AM_CONDITIONAL([USE_LIBSECP256K1],[test x$use_libsecp256k1 = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
@@ -924,7 +923,7 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT

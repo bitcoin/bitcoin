@@ -89,7 +89,7 @@ static void CheckBlockIndex();
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "DarkCoin Signed Message:\n";
+const string strMessageMagic = "Crown Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1789,14 +1789,32 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
-            txundo.vprevout.push_back(CTxInUndo());
-            bool ret = inputs.ModifyCoins(txin.prevout.hash)->Spend(txin.prevout, txundo.vprevout.back());
-            assert(ret);
-        }
-    }
+            CCoinsModifier coins = inputs.ModifyCoins(txin.prevout.hash);
+            unsigned nPos = txin.prevout.n;
 
-    // add outputs
-    inputs.ModifyCoins(tx.GetHash())->FromTx(tx, nHeight);
+            if (nPos >= coins->vout.size() || coins->vout[nPos].IsNull())
+                assert(false);
+            // mark an outpoint spent, and construct undo information
+            txundo.vprevout.push_back(CTxInUndo(coins->vout[nPos]));
+            coins->Spend(nPos);
+            if (coins->vout.size() == 0) {
+                CTxInUndo& undo = txundo.vprevout.back();
+                undo.nHeight = coins->nHeight;
+                undo.fCoinBase = coins->fCoinBase;
+                undo.nVersion = coins->nVersion;
+            }
+        }
+        // add outputs
+        inputs.ModifyNewCoins(tx.GetHash())->FromTx(tx, nHeight);
+    }
+    else {
+        // add outputs for coinbase tx
+        // In this case call the full ModifyCoins which will do a database
+        // lookup to be sure the coins do not already exist otherwise we do not
+        // know whether to mark them fresh or not.  We want the duplicate coinbases
+        // before BIP30 to still be properly overwritten.
+        inputs.ModifyCoins(tx.GetHash())->FromTx(tx, nHeight);
+    }
 }
 
 bool CScriptCheck::operator()() {

@@ -3362,10 +3362,6 @@ Dies kann passieren, wenn einige Crown aus ihrer Wallet bereits ausgegeben wurde
         <translation>InstantX benötigt Zahlungseingänge mit mindestens 6 Bestätigungen, warten Sie also ein paar Minuten und versuchen Sie es dann erneut.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Name, um eine URL für den KeyPass-Eintrag zu erzeugen, der die Wallet-Passphrase speichert.</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Abfrage der Peer-Adressen über DNS, falls es wenige Adressen gibt (Standard: 1, außer wenn -connect konfiguriert wurde)</translation>
     </message>
@@ -3791,10 +3787,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Crown Alert\" admin@foo.com</tran
         <translation>Über einen SOCKS5-Proxy verbinden</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Mit KeePassHttp auf &lt;port&gt; verbinden (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i Die "Bitcoin Core"-Entwickler</translation>
     </message>
@@ -4144,10 +4136,6 @@ Crown Core wird heruntergefahren.</translation>
         <translation>Schwellenwert, um Verbindungen zu sich nicht konform verhaltenden Gegenstellen zu beenden (Standard: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>"KeePass 2"-Integration mit KeePassHttp-plugin (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>N unterschiedliche Thrones benutzen, um Crown zu anonymisieren (2-8, Standard: %u)</translation>
     </message>
@@ -4206,14 +4194,6 @@ Crown Core wird heruntergefahren.</translation>
     <message>
         <source>Invalid script detected.</source>
         <translation>Invalides Zahlskript entdeckt.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>"KeePassHttp id" für bestehende verknüpfte Verbindungen.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>"KeePassHttp key" für die  AES-verschlüsselte Kommunikation mit "KeePass"</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

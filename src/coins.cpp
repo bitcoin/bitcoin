@@ -31,28 +31,14 @@ void CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes) con
     nBytes += nLastUsedByte;
 }
 
-bool CCoins::Spend(const COutPoint &out, CTxInUndo &undo) {
-    if (out.n >= vout.size())
+bool CCoins::Spend(uint32_t nPos) 
+{
+    if (nPos >= vout.size() || vout[nPos].IsNull())
         return false;
-    if (vout[out.n].IsNull())
-        return false;
-    undo = CTxInUndo(vout[out.n]);
-    vout[out.n].SetNull();
+    vout[nPos].SetNull();
     Cleanup();
-    if (vout.size() == 0) {
-        undo.nHeight = nHeight;
-        undo.fCoinBase = fCoinBase;
-        undo.nVersion = this->nVersion;
-    }
     return true;
 }
-
-bool CCoins::Spend(int nPos) {
-    CTxInUndo undo;
-    COutPoint out(0, nPos);
-    return Spend(out, undo);
-}
-
 
 bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) const { return false; }
 bool CCoinsView::HaveCoins(const uint256 &txid) const { return false; }
@@ -118,6 +104,15 @@ CCoinsModifier CCoinsViewCache::ModifyCoins(const uint256 &txid) {
         }
     }
     // Assume that whenever ModifyCoins is called, the entry will be modified.
+    ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
+    return CCoinsModifier(*this, ret.first);
+}
+
+CCoinsModifier CCoinsViewCache::ModifyNewCoins(const uint256 &txid) {
+    assert(!hasModifier);
+    std::pair<CCoinsMap::iterator, bool> ret = cacheCoins.insert(std::make_pair(txid, CCoinsCacheEntry()));
+    ret.first->second.coins.Clear();
+    ret.first->second.flags = CCoinsCacheEntry::FRESH;
     ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
     return CCoinsModifier(*this, ret.first);
 }

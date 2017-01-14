@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     break;
                 }
 
-                mapprevOutScriptPubKeys[COutPoint(uint256(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
+                mapprevOutScriptPubKeys[COutPoint(uint256S(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
             }
             if (!fValid)
             {
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
 
-                mapprevOutScriptPubKeys[COutPoint(uint256(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
+                mapprevOutScriptPubKeys[COutPoint(uint256S(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
             }
             if (!fValid)
             {

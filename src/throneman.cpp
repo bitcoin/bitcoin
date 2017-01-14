@@ -484,12 +484,12 @@ CThrone* CThroneMan::GetNextThroneInQueueForPayment(int nBlockHeight, bool fFilt
     //  -- (chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = CountEnabled()/10;
     int nCountTenth = 0; 
-    uint256 nHigh = 0;
+    arith_uint256 nHigh = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecThroneLastPaid){
         CThrone* pmn = Find(s.second);
         if(!pmn) break;
 
-        uint256 n = pmn->CalculateScore(1, nBlockHeight-100);
+        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
         if(n > nHigh){
             nHigh = n;
             pBestThrone = pmn;
@@ -544,7 +544,7 @@ CThrone* CThroneMan::GetCurrentThroNe(int mod, int64_t nBlockHeight, int minProt
 
         // calculate the score for each Throne
         uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         // determine the winner
         if(n2 > score){
@@ -561,7 +561,7 @@ int CThroneMan::GetThroneRank(const CTxIn& vin, int64_t nBlockHeight, int minPro
     std::vector<pair<int64_t, CTxIn> > vecThroneScores;
 
     //make sure we know about this block
-    uint256 hash = 0;
+    uint256 hash = uint256();
     if(!GetBlockHash(hash, nBlockHeight)) return -1;
 
     // scan for winner
@@ -572,7 +572,7 @@ int CThroneMan::GetThroneRank(const CTxIn& vin, int64_t nBlockHeight, int minPro
             if(!mn.IsEnabled()) continue;
         }
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecThroneScores.push_back(make_pair(n2, mn.vin));
     }
@@ -596,7 +596,7 @@ std::vector<pair<int, CThrone> > CThroneMan::GetThroneRanks(int64_t nBlockHeight
     std::vector<pair<int, CThrone> > vecThroneRanks;
 
     //make sure we know about this block
-    uint256 hash = 0;
+    uint256 hash = uint256();
     if(!GetBlockHash(hash, nBlockHeight)) return vecThroneRanks;
 
     // scan for winner
@@ -610,7 +610,7 @@ std::vector<pair<int, CThrone> > CThroneMan::GetThroneRanks(int64_t nBlockHeight
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecThroneScores.push_back(make_pair(n2, mn));
     }
@@ -640,7 +640,7 @@ CThrone* CThroneMan::GetThroneByRank(int nRank, int64_t nBlockHeight, int minPro
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecThroneScores.push_back(make_pair(n2, mn.vin));
     }

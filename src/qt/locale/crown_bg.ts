@@ -3362,10 +3362,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX изисква средства с поне 6 потвърждения, може да се наложи да почакате няколко минути и да опитате отново.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Име за създаване на URL за KeePass входа , който съхранява паролата за портфейла</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Заявка за адреси на пиъри чрез DNS справка, ако адресите са недостатъчно (по-подразбиране: 1 освен ако -свързан)</translation>
     </message>
@@ -3783,10 +3779,6 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Свързване през SOCKS5 прокси</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Свързване към KeePassHttp през порт &lt;port&gt; (по подразбиране: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Запазени права (C) 2009-%i Bitcoin Core разработчици</translation>
     </message>
@@ -4135,10 +4127,6 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Праг на прекъсване на връзката при непорядъчно държащи се пиъри (по подразбиране: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Използвай KeePass 2 интеграция чрез плъгина KeePassHttp (по подразбиране: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Използвай N отделни Throne за анонимизиране на средствата (2-8, по подразбиране: %u)</translation>
     </message>
@@ -4197,14 +4185,6 @@ for example: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
     <message>
         <source>Invalid script detected.</source>
         <translation>Открит е невалиден скрипт.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp id за осъществяване на връзка</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePassHttp ключ за  AES криптирана връзка с KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

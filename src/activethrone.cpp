@@ -295,7 +295,7 @@ bool CActiveThrone::GetThroNeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, s
     // Find the vin
     if(!strTxHash.empty()) {
         // Let's find it
-        uint256 txHash(strTxHash);
+        uint256 txHash(uint256S(strTxHash));
         int outputIndex = atoi(strOutputIndex.c_str());
         bool found = false;
         BOOST_FOREACH(COutput& out, possibleCoins) {

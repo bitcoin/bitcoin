@@ -174,8 +174,8 @@ public:
     void SetNull()
     {
         nVersion.SetNull();
-        hashPrevBlock = 0;
-        hashMerkleRoot = 0;
+        hashPrevBlock = uint256();
+        hashMerkleRoot = uint256();
         nTime = 0;
         nBits = 0;
         nNonce = 0;

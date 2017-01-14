@@ -56,19 +56,18 @@ static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data
 
 static Checkpoints::MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-        ( 0, uint256("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
-        ( 100000, uint256("0x000000000001f9595f38d13a62f030c877717db91659157eb732e2a89c8f9c1d"))
-        ( 200000, uint256("0x000000000000e0438b3279cecc380a96c8a7b40bceb94fc03d0a210fdda2b959"))
-        ( 300000, uint256("0x00000000000059901c2ea32bc486d91a355a8fe362e34fc3d10c45bb5e5ca79d"))
-        ( 400000, uint256("0x0000000000001b97fb8367b435b4554cb9d5438d28f03c4259df7ed8854fe946"))
-        ( 500000, uint256("0xb53d68a141c9ced04eeca5624b66665a58732c48d383f81a29cf80a8a57186ff"))
-        ( 600000, uint256("0x84e2277d1dc957ae41869498311937bdcedce7e48fa33f962b9b9e9c16df5410"))
-        ( 700000, uint256("0x75ec82017af651ac1383b623898d6f6b57d0500137913fd000f928b8bd409146"))
-        ( 800000, uint256("0x64412d45320a7f2394b009bcf00bc841e60c3e0680dbfc45176568699af5bdec"))
-        ( 900000, uint256("0xbdf0bcfe3ada671b64526854af8cb7f6f52c1489446e26268e70fbee1e72be5f"))
-        ( 1000000, uint256("0xcb324809eef485d0243d2210dd15300a941fece86a19e858383429c80cf37b0b"))
-        ( 1100000, uint256("0xf172bdb7a894b9e055eae4b1b2e8d91aba9404d24fa808985346cc7c8eea35a6"))
-
+        ( 0, uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
+        ( 100000, uint256S("0x000000000001f9595f38d13a62f030c877717db91659157eb732e2a89c8f9c1d"))
+        ( 200000, uint256S("0x000000000000e0438b3279cecc380a96c8a7b40bceb94fc03d0a210fdda2b959"))
+        ( 300000, uint256S("0x00000000000059901c2ea32bc486d91a355a8fe362e34fc3d10c45bb5e5ca79d"))
+        ( 400000, uint256S("0x0000000000001b97fb8367b435b4554cb9d5438d28f03c4259df7ed8854fe946"))
+        ( 500000, uint256S("0xb53d68a141c9ced04eeca5624b66665a58732c48d383f81a29cf80a8a57186ff"))
+        ( 600000, uint256S("0x84e2277d1dc957ae41869498311937bdcedce7e48fa33f962b9b9e9c16df5410"))
+        ( 700000, uint256S("0x75ec82017af651ac1383b623898d6f6b57d0500137913fd000f928b8bd409146"))
+        ( 800000, uint256S("0x64412d45320a7f2394b009bcf00bc841e60c3e0680dbfc45176568699af5bdec"))
+        ( 900000, uint256S("0xbdf0bcfe3ada671b64526854af8cb7f6f52c1489446e26268e70fbee1e72be5f"))
+        ( 1000000, uint256S("0xcb324809eef485d0243d2210dd15300a941fece86a19e858383429c80cf37b0b"))
+        ( 1100000, uint256S("0xf172bdb7a894b9e055eae4b1b2e8d91aba9404d24fa808985346cc7c8eea35a6"))
         ;
 static const Checkpoints::CCheckpointData data = {
         &mapCheckpoints,
@@ -80,7 +79,7 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"))
+        ( 0, uint256S("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
@@ -92,7 +91,7 @@ static const Checkpoints::CCheckpointData dataTestnet = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsRegtest =
         boost::assign::map_list_of
-        ( 0, uint256("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"))
+        ( 0, uint256S("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"))
         ;
 static const Checkpoints::CCheckpointData dataRegtest = {
         &mapCheckpointsRegtest,
@@ -155,8 +154,8 @@ public:
 
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
-        assert(genesis.hashMerkleRoot == uint256("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
+        assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
+        assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
         vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
@@ -261,8 +260,8 @@ public:
                        }*/
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"));
-        assert(genesis.hashMerkleRoot == uint256("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
+        assert(hashGenesisBlock == uint256S("0x000000004daeaebf6182d09b7b40b81bc72caab1a13c79cef2669b0b5686b7b8"));
+        assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -339,7 +338,7 @@ public:
         genesis.nNonce = 1;
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 19445;
-        assert(hashGenesisBlock == uint256("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"));
+        assert(hashGenesisBlock == uint256S("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"));
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
@@ -412,7 +411,7 @@ public:
     virtual void setDefaultConsistencyChecks(bool afDefaultConsistencyChecks)  { fDefaultConsistencyChecks=afDefaultConsistencyChecks; }
     virtual void setAllowMinDifficultyBlocks(bool afAllowMinDifficultyBlocks) {  fAllowMinDifficultyBlocks=afAllowMinDifficultyBlocks; }
     virtual void setSkipProofOfWorkCheck(bool afSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = afSkipProofOfWorkCheck; }
-    virtual void setProofOfWorkLimit(const uint256& limit) { bnProofOfWorkLimit = limit; }
+    virtual void setProofOfWorkLimit(const arith_uint256& limit) { bnProofOfWorkLimit = limit; }
 };
 static CUnitTestParams unitTestParams;
 

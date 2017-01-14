@@ -3346,10 +3346,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>O InstantX necessita de entradas com pelo menos 6 confirmações, pode ser necessário aguardar mais uns minutos e tentar de novo.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Nome para construir o url para a entrada KeePass que guarda a palavra-passe da carteira</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Questionar por endereços dos nós através de pesquisas DNS caso tenha poucos endereços (omissão: 1 excepto -connect)</translation>
     </message>
@@ -3686,10 +3682,6 @@ https://www.transifex.com/projects/p/crown/</translation>
     <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Conectar através de SOCKS5 proxy</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Conectar a KeePassHttp na porta &lt;port&gt; (default: %u)</translation>
     </message>
     <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
@@ -4032,10 +4024,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>Limiar para desconectar pares mal comportados (default: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Utilize integração KeePass 2 usando plugin KeePassHttp (default: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Utilize N throne distintos para anonimizar fundos (2-8, default: %u)</translation>
     </message>
@@ -4094,14 +4082,6 @@ https://www.transifex.com/projects/p/crown/</translation>
     <message>
         <source>Invalid script detected.</source>
         <translation>Script inválido detectado.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Identificador KeePassHttp para a associação estabelecida</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Chave KeePassHttp para usar na comunicação cifrada AES com o KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

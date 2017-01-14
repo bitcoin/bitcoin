@@ -266,6 +266,18 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     return false;
 }
 
+bool CThronePayments::CanVote(COutPoint outThrone, int nBlockHeight)
+{
+    LOCK(cs_mapThronePayeeVotes);
+
+    if (mapThronesLastVote.count(outThrone) && mapThronesLastVote[outThrone] == nBlockHeight) {
+        return false;
+    }
+
+    //record this masternode voted
+    mapThronesLastVote[outThrone] = nBlockHeight;
+    return true;
+}
 
 void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 {
@@ -482,7 +494,7 @@ bool CThronePayments::IsScheduled(CThrone& mn, int nNotBlockHeight)
 
 bool CThronePayments::AddWinningThrone(CThronePaymentWinner& winnerIn)
 {
-    uint256 blockHash = 0;
+    uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
         return false;
     }

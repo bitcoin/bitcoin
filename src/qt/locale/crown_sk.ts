@@ -3361,10 +3361,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX vyžaduje vstupy s aspoň 6 potvrdeniami, môžete počkať pár minút a skúsiť znova.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Meno pre vytvorenie url pre položku KeePass, ktorá uchová heslo peňženky</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Dotaz na partnerské adresy pomocou vyhľadávania DNS v prípade nedostatku adries (predvolené: 1, pokiaľ -connect)</translation>
     </message>
@@ -3791,10 +3787,6 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Pripojiť sa cez SOCKS5 proxy</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Pripojiť ku KeePassHttp na porte &lt;port&gt; (predvolené: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Autorské práva (C) 2009-%i Vývojári jadra Bitcoin</translation>
     </message>
@@ -4143,10 +4135,6 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
         <translation>Hranica pre odpájanie zle sa správajúcim partnerským uzlom (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Použiť integráciu KeePass 2 s využitím doplnku KeePassHttp (predvolené: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Použiť N rozdielnych throne na anonymizovanie zdrojov (2-8, predvolené: %u)</translation>
     </message>
@@ -4205,14 +4193,6 @@ napríklad: alertnotify=echo %%s | mail -s "Crown Upozornenie" admin@foo.com
     <message>
         <source>Invalid script detected.</source>
         <translation>Zistený neplatný skript.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Identifikátor KeePassHttp pre zavedené priradenie</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Kľúč KeePassHttp pre šifrovanú AES komunikáciu s KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

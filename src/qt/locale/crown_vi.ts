@@ -3362,10 +3362,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX cần đầu vào với ít nhất 6 xác nhận, bạn có thể cần phải đợi vài phút và thử lại.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Đặt tên để tạo dựng url cho các thành phần KeePass mà nó sẽ lưu giữ mật khẩu của ví</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Truy vấn địa chỉ đối tác ngang hàng thông qua tìm kiếm DNS, nếu có ít địa chỉ (ngầm định: 1 trừ trường hợp -connect)</translation>
     </message>
@@ -3791,10 +3787,6 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Kết nối thông qua SOCKS 5 proxy</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Kết nối tới KeePassHttp trên cổng &lt;port&gt; (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Bản quyền (C) 2009-%i bởi Nhóm phát triển Bitcoin Core</translation>
     </message>
@@ -4143,10 +4135,6 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
         <translation>Ngưỡng ngắt kết nối khi đối tác ngang hàng cư xử không đúng (ngầm định: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Sử dụng tích hợp KeePass 2 dùng KeePassHttp plugin (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Sử dụng N masternods riêng biệt để ẩn danh khoản tiền (2-8, ngầm định: %u)</translation>
     </message>
@@ -4205,14 +4193,6 @@ ví dụ: alertnotify=echo %%s | mail -s "Crown Alert" admin@foo.com
     <message>
         <source>Invalid script detected.</source>
         <translation>Kịch bản được phát hiện không hợp lệ.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp id cho thiết lập sự kết hợp</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Khoá KeePassHttp cho liên lạc mã hoá AES với KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

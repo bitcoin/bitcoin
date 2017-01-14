@@ -191,7 +191,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
     string strTxid = strInput.substr(0, pos);
     if ((strTxid.size() != 64) || !IsHex(strTxid))
         throw runtime_error("invalid TX input txid");
-    uint256 txid(strTxid);
+    uint256 txid(uint256S(strTxid));
 
     static const unsigned int minTxOutSz = 9;
     static const unsigned int maxVout = MAX_BLOCK_SIZE / minTxOutSz;
@@ -449,9 +449,24 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
     tx = mergedTx;
 }
 
+class Secp256k1Init
+{
+    ECCVerifyHandle globalVerifyHandle;
+
+public:
+    Secp256k1Init() {
+        ECC_Start();
+    }
+    ~Secp256k1Init() {
+        ECC_Stop();
+    }
+};
+
 static void MutateTx(CMutableTransaction& tx, const string& command,
                      const string& commandVal)
 {
+    boost::scoped_ptr<Secp256k1Init> ecc;
+
     if (command == "nversion")
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
@@ -469,8 +484,10 @@ static void MutateTx(CMutableTransaction& tx, const string& command,
     else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
 
-    else if (command == "sign")
+    else if (command == "sign") {
+        if (!ecc) { ecc.reset(new Secp256k1Init()); }
         MutateTxSign(tx, commandVal);
+    }
 
     else if (command == "load")
         RegisterLoad(commandVal);
