@@ -105,7 +105,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         ui->progressIncreasePerH->setText(QString::number(progressPerHour*100, 'f', 2)+"%");
 
         // show expected remaining time
-        ui->expectedTimeLeft->setText(GUIUtil::formateNiceTimeOffset(remainingMSecs/1000.0));
+        ui->expectedTimeLeft->setText(GUIUtil::formatNiceTimeOffset(remainingMSecs/1000.0));
 
         static const int MAX_SAMPLES = 5000;
         if (blockProcessTime.count() > MAX_SAMPLES)
