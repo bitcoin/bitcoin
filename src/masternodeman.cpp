@@ -173,8 +173,9 @@ void CMasternodeMan::Check()
 
 void CMasternodeMan::CheckAndRemove()
 {
-    LogPrintf("CMasternodeMan::CheckAndRemove\n");
+    if(!masternodeSync.IsMasternodeListSynced()) return;
 
+    LogPrintf("CMasternodeMan::CheckAndRemove\n");
 
     {
         // Need LOCK2 here to ensure consistent locking order because code below locks cs_main
@@ -202,7 +203,12 @@ void CMasternodeMan::CheckAndRemove()
                 it = vMasternodes.erase(it);
                 fMasternodesRemoved = true;
             } else {
-                if(pCurrentBlockIndex && !fAskedForMnbRecovery && it->IsNewStartRequired() && !IsMnbRecoveryRequested(hash)) {
+                bool fAsk = pCurrentBlockIndex &&
+                            !fAskedForMnbRecovery &&
+                            masternodeSync.IsSynced() &&
+                            it->IsNewStartRequired() &&
+                            !IsMnbRecoveryRequested(hash);
+                if(fAsk) {
                     // this mn is in a non-recoverable state and we haven't asked other nodes yet
                     std::set<CNetAddr> setRequested;
                     // calulate only once and only when it's needed
@@ -919,6 +925,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 void CMasternodeMan::DoFullVerificationStep()
 {
     if(activeMasternode.vin == CTxIn()) return;
+    if(!masternodeSync.IsSynced()) return;
 
     std::vector<std::pair<int, CMasternode> > vecMasternodeRanks = GetMasternodeRanks(pCurrentBlockIndex->nHeight - 1, MIN_POSE_PROTO_VERSION);
 
