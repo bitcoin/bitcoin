@@ -11,6 +11,7 @@
 
 #include <vector>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
