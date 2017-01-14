@@ -1755,10 +1755,10 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
 
     //Check to see if any of the denomination are off, in that case mark them as fulfilled
     if(!(nDenom & (1 << 0))) fFound1000 = true;
-    if(!(nDenom & (1 << 0))) fFound100 = true;
-    if(!(nDenom & (1 << 1))) fFound10 = true;
-    if(!(nDenom & (1 << 2))) fFound1 = true;
-    if(!(nDenom & (1 << 3))) fFoundDot1 = true;
+    if(!(nDenom & (1 << 1))) fFound100 = true;
+    if(!(nDenom & (1 << 2))) fFound10 = true;
+    if(!(nDenom & (1 << 3))) fFound1 = true;
+    if(!(nDenom & (1 << 4))) fFoundDot1 = true;
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
@@ -1798,7 +1798,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
             } else {
                 //Criterion has not been satisfied, we will only take 1 of each until it is.
                 if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((1000*COIN)    +1000000)) {fAccepted = true; fFound1000 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)+10000)) {fAccepted = true; fFound10 = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((100*COIN)+10000)) {fAccepted = true; fFound100 = true;}
                 else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((10*COIN)+10000)) {fAccepted = true; fFound10 = true;}
                 else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((1*COIN) +1000)) {fAccepted = true; fFound1 = true;}
                 else if((nDenom & (1 << 4)) && out.tx->vout[out.i].nValue == ((.1*COIN)+100)) {fAccepted = true; fFoundDot1 = true;}

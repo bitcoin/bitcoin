@@ -197,7 +197,7 @@ void CThrone::Check(bool forceCheck)
     if(!unitTest){
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
+        CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -383,7 +383,7 @@ bool CThroneBroadcast::CheckAndUpdate(int& nDos)
     std::string strMessage;
     std::string errorMessage = "";
 
-    if(protocolVersion < 70201) {
+    if(protocolVersion <= 99999999) {
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
         strMessage = addr.ToString(false) + boost::lexical_cast<std::string>(sigTime) +
@@ -492,7 +492,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
+    CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
