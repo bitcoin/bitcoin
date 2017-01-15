@@ -9,6 +9,7 @@ define $(package)_set_vars
 $(package)_config_opts=--disable-shared --enable-cxx --disable-replication
 $(package)_config_opts_mingw32=--enable-mingw
 $(package)_config_opts_linux=--with-pic
+$(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_preprocess_cmds
