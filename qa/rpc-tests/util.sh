@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Copyright (c) 2014 The Crowncoin developers
+# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Crown developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +12,7 @@ function echoerr {
 
 # Usage: ExtractKey <key> "<json_object_string>"
 # Warning: this will only work for the very-well-behaved
-# JSON produced by crowncoind, do NOT use it to try to
+# JSON produced by crownd, do NOT use it to try to
 # parse arbitrary/nested/etc JSON.
 function ExtractKey {
     echo $2 | tr -d ' "{}\n' | awk -v RS=',' -F: "\$1 ~ /$1/ { print \$2}"
@@ -20,7 +21,7 @@ function ExtractKey {
 function CreateDataDir {
   DIR=$1
   mkdir -p $DIR
-  CONF=$DIR/crowncoin.conf
+  CONF=$DIR/crown.conf
   echo "regtest=1" >> $CONF
   echo "keypool=2" >> $CONF
   echo "rpcuser=rt" >> $CONF
@@ -38,6 +39,10 @@ function AssertEqual {
   if (( $( echo "$1 == $2" | bc ) == 0 ))
   then
     echoerr "AssertEqual: $1 != $2"
+    declare -f CleanUp > /dev/null 2>&1
+    if [[ $? -eq 0 ]] ; then
+        CleanUp
+    fi
     exit 1
   fi
 }
@@ -49,6 +54,10 @@ function CheckBalance {
   if (( $( echo "$B == $EXPECT" | bc ) == 0 ))
   then
     echoerr "bad balance: $B (expected $2)"
+    declare -f CleanUp > /dev/null 2>&1
+    if [[ $? -eq 0 ]] ; then
+        CleanUp
+    fi
     exit 1
   fi
 }

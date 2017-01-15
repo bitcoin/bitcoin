@@ -1,76 +1,76 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Crowncoin in Unix. 
+Some notes on how to build Crown in Unix. 
+
+Note
+---------------------
+Always use absolute paths to configure and compile crown and the dependencies,
+for example, when specifying the the path of the dependency:
+
+	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+
+Here BDB_PREFIX must absolute path - it is defined using $(pwd) which ensures
+the usage of the absolute path.
 
 To Build
 ---------------------
 
-	./autogen.sh
-	./configure
-	make
+```bash
+./autogen.sh
+./configure
+make
+make install # optional
+```
 
-This will build crowncoin-qt as well if the dependencies are met.
+This will build crown-qt as well if the dependencies are met.
 
 Dependencies
 ---------------------
 
+These dependencies are required:
+
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  libssl      | SSL Support      | Secure communications
- libdb4.8    | Berkeley DB      | Wallet storage
  libboost    | Boost            | C++ Library
- miniupnpc   | UPnP Support     | Optional firewall-jumping support
- qt          | GUI              | GUI toolkit
- protobuf    | Payments in GUI  | Data interchange format used for payment protocol
- libqrencode | QR codes in GUI  | Optional for generating QR codes
 
-[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
-http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for upnp behavior desired:
+Optional dependencies:
 
-	--without-miniupnpc      No UPnP support miniupnp not required
-	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
-	--enable-upnp-default    UPnP support turned on by default at runtime
+ Library     | Purpose          | Description
+ ------------|------------------|----------------------
+ miniupnpc   | UPnP Support     | Firewall-jumping support
+ libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
+ qt          | GUI              | GUI toolkit (only needed when GUI enabled)
+ protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
+ libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
 
-Licenses of statically linked libraries:
- Berkeley DB   New BSD license with additional requirement that linked
-               software must be free open source
- Boost         MIT-like license
- miniupnpc     New (3-clause) BSD license
-
-- For the versions used in the release, see doc/release-process.md under *Fetch and build inputs*.
+For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
 System requirements
 --------------------
 
 C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
-memory available when compiling Crowncoin. With 512MB of memory or less
+memory available when compiling Crown Core. With 512MB of memory or less
 compilation will take much longer due to swap thrashing.
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential
-	sudo apt-get install libtool autotools-dev autoconf
-	sudo apt-get install libssl-dev
-
-for Ubuntu 12.04 and later:
+	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
+	
+for Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
 
 	sudo apt-get install libboost-all-dev
 
- db4.8 packages are available [here](https://launchpad.net/~crowncoin/+archive/crowncoin).
+ db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
  You can add the repository using the following command:
 
-        sudo add-apt-repository ppa:crowncoin/crowncoin
+        sudo add-apt-repository ppa:bitcoin/bitcoin
         sudo apt-get update
 
  Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
  but using these will break binary wallet compatibility, and is not recommended.
-
-for Ubuntu 13.10:
-	libboost1.54 will not work,
-	remove libboost1.54-all-dev and install libboost1.53-all-dev instead.
 
 for Debian 7 (Wheezy) and later:
  The oldstable repository contains db4.8 packages.
@@ -83,10 +83,9 @@ To enable the change run
 
 	sudo apt-get update
 
-for other Ubuntu & Debian:
+for other Debian & Ubuntu (with ppa):
 
-	sudo apt-get install libdb4.8-dev
-	sudo apt-get install libdb4.8++-dev
+	sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
 Optional:
 
@@ -95,7 +94,7 @@ Optional:
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
 
-If you want to build Crowncoin-Qt, make sure that the required packages for Qt development
+If you want to build Crown-Qt, make sure that the required packages for Qt development
 are installed. Either Qt 4 or Qt 5 are necessary to build the GUI.
 If both Qt 4 and Qt 5 are installed, Qt 4 will be used. Pass `--with-gui=qt5` to configure to choose Qt5.
 To build without GUI pass `--without-gui`.
@@ -106,23 +105,34 @@ To build with Qt 4 you need the following:
 
 For Qt 5 you need the following:
 
-    sudo apt-get install libqt5gui5 libqt5core5 libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev
+    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
 
 libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a crowncoin-qt executable will be
+Once these are installed, they will be found by configure and a crown-qt executable will be
 built by default.
 
 Notes
 -----
-The release is built with GCC and then "strip crowncoind" to strip the debug
+The release is built with GCC and then "strip crownd" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
 
 miniupnpc
 ---------
+
+[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
+http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
+turned off by default.  See the configure options for upnp behavior desired:
+
+	--without-miniupnpc      No UPnP support miniupnp not required
+	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
+	--enable-upnp-default    UPnP support turned on by default at runtime
+
+To build:
+
 	tar -xzvf miniupnpc-1.6.tar.gz
 	cd miniupnpc-1.6
 	make
@@ -135,10 +145,10 @@ Berkeley DB
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself:
 
 ```bash
-CROWNCOIN_ROOT=$(pwd)
+CRW_ROOT=$(pwd)
 
-# Pick some path to install BDB to, here we create a directory within the crowncoin directory
-BDB_PREFIX="${CROWNCOIN_ROOT}/db4"
+# Pick some path to install BDB to, here we create a directory within the crown directory
+BDB_PREFIX="${CRW_ROOT}/db4"
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
@@ -153,8 +163,8 @@ cd db-4.8.30.NC/build_unix/
 ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 make install
 
-# Configure Crowncoin to use our own-built instance of BDB
-cd $CROWNCOIN_ROOT
+# Configure Crown Core to use our own-built instance of BDB
+cd $CRW_ROOT
 ./configure (other args...) LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
 ```
 
@@ -171,7 +181,7 @@ If you need to build Boost yourself:
 
 Security
 --------
-To help make your crowncoin installation more secure by making certain attacks impossible to
+To help make your Crown installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
@@ -195,7 +205,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./crowncoin
+    	scanelf -e ./crownd
 
     The output should contain:
      TYPE
@@ -203,13 +213,13 @@ Hardening enables the following features:
 
 * Non-executable Stack
     If the stack is executable then trivial stack based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, crowncoin should be built with a non-executable stack
+    vulnerable buffers are found. By default, crown should be built with a non-executable stack
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./crowncoin`
+    `scanelf -e ./crownd`
 
     the output should contain:
 	STK/REL/PTL
@@ -219,7 +229,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, crowncoin may be compiled in
+When the intention is to run only a P2P node without a wallet, crown may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet

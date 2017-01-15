@@ -6,13 +6,13 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with 'make check'.
 
-To run the crowncoind tests manually, launch src/test/test_crowncoin .
+To run the crownd tests manually, launch src/test/test_crown .
 
-To add more crowncoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
+To add more crownd tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the test/ directory or add new .cpp files that
 implement new BOOST_AUTO_TEST_SUITE sections.
 
-To run the crowncoin-qt tests manually, launch src/qt/test/crowncoin-qt_test
+To run the crown-qt tests manually, launch src/qt/test/crown-qt_test
 
-To add more crowncoin-qt tests, add them to the `src/qt/test/` directory and
+To add more crown-qt tests, add them to the `src/qt/test/` directory and
 the `src/qt/test/test_main.cpp` file.

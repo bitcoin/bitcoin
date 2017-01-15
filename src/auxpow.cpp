@@ -1,69 +1,145 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2011 Vince Durham
-// Copyright (c) 2009-2014 The Crowncoin developers
-// Copyright (c) 2014-2015 Daniel Kraft
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core.h"
+#include "auxpow.h"
+
+#include "compat/endian.h"
+#include "instantx.h"
 #include "main.h"
 #include "util.h"
 
+#include "script/script.h"
+
 #include <algorithm>
 
-typedef std::vector<unsigned char> valtype;
 
-/* Moved from main.cpp.  CMerkleTx is necessary for auxpow.  */
+/* Moved from wallet.cpp.  CMerkleTx is necessary for auxpow, independent
+   of an enabled (or disabled) wallet.  Always include the code.  */
 
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
+int CMerkleTx::SetMerkleBranch(const CBlock& block)
 {
     AssertLockHeld(cs_main);
     CBlock blockTmp;
 
-    if (pblock == NULL) {
-        CCoins coins;
-        if (pcoinsTip->GetCoins(GetHash(), coins)) {
-            CBlockIndex *pindex = chainActive[coins.nHeight];
-            if (pindex) {
-                if (!ReadBlockFromDisk(blockTmp, pindex))
-                    return 0;
-                pblock = &blockTmp;
-            }
-        }
+    // Update the tx's hashBlock
+    hashBlock = block.GetHash();
+
+    // Locate the transaction
+    for (nIndex = 0; nIndex < (int)block.vtx.size(); nIndex++)
+        if (block.vtx[nIndex] == *(CTransaction*)this)
+            break;
+    if (nIndex == (int)block.vtx.size())
+    {
+        vMerkleBranch.clear();
+        nIndex = -1;
+        LogPrintf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
+        return 0;
     }
 
-    if (pblock) {
-        // Update the tx's hashBlock
-        hashBlock = pblock->GetHash();
-
-        // Locate the transaction
-        for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
-            if (pblock->vtx[nIndex] == *(CTransaction*)this)
-                break;
-        if (nIndex == (int)pblock->vtx.size())
-        {
-            vMerkleBranch.clear();
-            nIndex = -1;
-            LogPrintf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
-            return 0;
-        }
-
-        // Fill in merkle branch
-        vMerkleBranch = pblock->GetMerkleBranch(nIndex);
-    }
+    // Fill in merkle branch
+    vMerkleBranch = block.GetMerkleBranch(nIndex);
 
     // Is the tx in a block that's in the main chain
-    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
     if (mi == mapBlockIndex.end())
         return 0;
-    CBlockIndex* pindex = (*mi).second;
+    const CBlockIndex* pindex = (*mi).second;
     if (!pindex || !chainActive.Contains(pindex))
         return 0;
 
     return chainActive.Height() - pindex->nHeight + 1;
 }
 
-/* ************************************************************************** */
+int CMerkleTx::GetDepthInMainChainINTERNAL(const CBlockIndex* &pindexRet) const
+{
+    if (hashBlock.IsNull() || nIndex == -1)
+        return 0;
+    AssertLockHeld(cs_main);
+
+    // Find the block it claims to be in
+    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+    if (mi == mapBlockIndex.end())
+        return 0;
+    CBlockIndex* pindex = (*mi).second;
+    if (!pindex || !chainActive.Contains(pindex))
+        return 0;
+
+    // Make sure the merkle branch connects to this block
+    if (!fMerkleVerified)
+    {
+        if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != pindex->hashMerkleRoot)
+            return 0;
+        fMerkleVerified = true;
+    }
+
+    pindexRet = pindex;
+    return chainActive.Height() - pindex->nHeight + 1;
+}
+
+int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX) const
+{
+    AssertLockHeld(cs_main);
+    int nResult = GetDepthInMainChainINTERNAL(pindexRet);
+    if (nResult == 0 && !mempool.exists(GetHash()))
+        return -1; // Not in chain, not in mempool
+
+    if(enableIX){
+        if (nResult < 6){
+            int signatures = GetTransactionLockSignatures();
+            if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
+                return nInstantXDepth+nResult;
+            }
+        }
+    }
+
+    return nResult;
+}
+
+int CMerkleTx::GetBlocksToMaturity() const
+{
+    if (!IsCoinBase())
+        return 0;
+    return std::max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+}
+
+
+bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectInsaneFee, bool ignoreFees)
+{
+    CValidationState state;
+    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectInsaneFee, ignoreFees);
+}
+
+int CMerkleTx::GetTransactionLockSignatures() const
+{
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
+    if(!fEnableInstantX) return -1;
+
+    //compile consessus vote
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
+    if (i != mapTxLocks.end()){
+        return (*i).second.CountSignatures();
+    }
+
+    return -1;
+}
+
+bool CMerkleTx::IsTransactionLockTimedOut() const
+{
+    if(!fEnableInstantX) return 0;
+
+    //compile consessus vote
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
+    if (i != mapTxLocks.end()){
+        return GetTime() > (*i).second.nTimeout;
+    }
+
+    return false;
+}
 
 bool
 CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
@@ -71,10 +147,8 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
     if (nIndex != 0)
         return error("AuxPow is not a generate");
 
-    /* In contrast to Namecoin, we always enforce a strict chain ID.
-       There's not really a use to allow non-strict on testnet unless
-       you want to accept legacy blocks.  */
-    if (parentBlock.nVersion.GetChainId () == nChainId)
+    if (Params ().StrictChainId ()
+        && parentBlock.nVersion.GetChainId () == nChainId)
         return error("Aux POW parent has our chain ID");
 
     if (vChainMerkleBranch.size() > 30)
@@ -130,15 +204,16 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
     if (script.end() - pc < 8)
         return error("Aux POW missing chain merkle tree size and nonce in parent coinbase");
 
-    int nSize;
+    uint32_t nSize;
     memcpy(&nSize, &pc[0], 4);
-    const unsigned merkleHeight = vChainMerkleBranch.size ();
-    if (nSize != (1 << merkleHeight))
+    nSize = le32toh (nSize);
+    const unsigned merkleHeight = vChainMerkleBranch.size();
+    if (nSize != (1u << merkleHeight))
         return error("Aux POW merkle branch size does not match parent coinbase");
 
-    int nNonce;
+    uint32_t nNonce;
     memcpy(&nNonce, &pc[4], 4);
-
+    nNonce = le32toh (nNonce);
     if (nChainIndex != getExpectedIndex (nNonce, nChainId, merkleHeight))
         return error("Aux POW wrong index");
 
@@ -146,7 +221,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId) const
 }
 
 int
-CAuxPow::getExpectedIndex (int nNonce, int nChainId, unsigned h)
+CAuxPow::getExpectedIndex (uint32_t nNonce, int nChainId, unsigned h)
 {
   // Choose a pseudo-random slot in the chain merkle tree
   // but have it be fixed for a size/nonce/chain combination.
@@ -155,7 +230,15 @@ CAuxPow::getExpectedIndex (int nNonce, int nChainId, unsigned h)
   // same chain while reducing the chance that two chains clash
   // for the same slot.
 
-  unsigned rand = nNonce;
+  /* This computation can overflow the uint32 used.  This is not an issue,
+     though, since we take the mod against a power-of-two in the end anyway.
+     This also ensures that the computation is, actually, consistent
+     even if done in 64 bits as it was in the past on some systems.
+
+     Note that h is always <= 30 (enforced by the maximum allowed chain
+     merkle branch length), so that 32 bits are enough for the computation.  */
+
+  uint32_t rand = nNonce;
   rand = rand * 1103515245 + 12345;
   rand += nChainId;
   rand = rand * 1103515245 + 12345;

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,18 +6,16 @@
 #include "throne.h"
 #include "activethrone.h"
 #include "darksend.h"
-#include "core.h"
 #include "util.h"
 #include "addrman.h"
+#include "spork.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
-
-CCriticalSection cs_process_message;
 
 /** Throne manager */
 CThroneMan mnodeman;
 
-struct CompareValueOnly
+struct CompareLastPaid
 {
     bool operator()(const pair<int64_t, CTxIn>& t1,
                     const pair<int64_t, CTxIn>& t2) const
@@ -25,7 +23,17 @@ struct CompareValueOnly
         return t1.first < t2.first;
     }
 };
-struct CompareValueOnlyMN
+
+struct CompareScoreTxIn
+{
+    bool operator()(const pair<int64_t, CTxIn>& t1,
+                    const pair<int64_t, CTxIn>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
+struct CompareScoreMN
 {
     bool operator()(const pair<int64_t, CThrone>& t1,
                     const pair<int64_t, CThrone>& t2) const
@@ -58,8 +66,8 @@ bool CThroneDB::Write(const CThroneMan& mnodemanToSave)
 
     // open output file, and associate with CAutoFile
     FILE *file = fopen(pathMN.string().c_str(), "wb");
-    CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
-    if (!fileout)
+    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+    if (fileout.IsNull())
         return error("%s : Failed to open file %s", __func__, pathMN.string());
 
     // Write and commit header, data
@@ -69,7 +77,7 @@ bool CThroneDB::Write(const CThroneMan& mnodemanToSave)
     catch (std::exception &e) {
         return error("%s : Serialize or I/O error - %s", __func__, e.what());
     }
-    FileCommit(fileout);
+//    FileCommit(fileout);
     fileout.fclose();
 
     LogPrintf("Written info to mncache.dat  %dms\n", GetTimeMillis() - nStart);
@@ -78,13 +86,13 @@ bool CThroneDB::Write(const CThroneMan& mnodemanToSave)
     return true;
 }
 
-CThroneDB::ReadResult CThroneDB::Read(CThroneMan& mnodemanToLoad)
+CThroneDB::ReadResult CThroneDB::Read(CThroneMan& mnodemanToLoad, bool fDryRun)
 {
     int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathMN.string().c_str(), "rb");
-    CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
-    if (!filein)
+    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
+    if (filein.IsNull())
     {
         error("%s : Failed to open file %s", __func__, pathMN.string());
         return FileError;
@@ -153,9 +161,14 @@ CThroneDB::ReadResult CThroneDB::Read(CThroneMan& mnodemanToLoad)
         return IncorrectFormat;
     }
 
-    mnodemanToLoad.CheckAndRemove(); // clean out expired
     LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", mnodemanToLoad.ToString());
+    if(!fDryRun) {
+        LogPrintf("Throne manager - cleaning....\n");
+        mnodemanToLoad.CheckAndRemove(true);
+        LogPrintf("Throne manager - result:\n");
+        LogPrintf("  %s\n", mnodemanToLoad.ToString());
+    }
 
     return Ok;
 }
@@ -168,8 +181,8 @@ void DumpThrones()
     CThroneMan tempMnodeman;
 
     LogPrintf("Verifying mncache.dat format...\n");
-    CThroneDB::ReadResult readResult = mndb.Read(tempMnodeman);
-    // there was an error and it was not an error on file openning => do not proceed
+    CThroneDB::ReadResult readResult = mndb.Read(tempMnodeman, true);
+    // there was an error and it was not an error on file opening => do not proceed
     if (readResult == CThroneDB::FileError)
         LogPrintf("Missing throne cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CThroneDB::Ok)
@@ -201,10 +214,9 @@ bool CThroneMan::Add(CThrone &mn)
         return false;
 
     CThrone *pmn = Find(mn.vin);
-
     if (pmn == NULL)
     {
-        if(fDebug) LogPrintf("CThroneMan: Adding new Throne %s - %i now\n", mn.addr.ToString().c_str(), size() + 1);
+        LogPrint("throne", "CThroneMan: Adding new Throne %s - %i now\n", mn.addr.ToString(), size() + 1);
         vThrones.push_back(mn);
         return true;
     }
@@ -212,25 +224,70 @@ bool CThroneMan::Add(CThrone &mn)
     return false;
 }
 
+void CThroneMan::AskForMN(CNode* pnode, CTxIn &vin)
+{
+    std::map<COutPoint, int64_t>::iterator i = mWeAskedForThroneListEntry.find(vin.prevout);
+    if (i != mWeAskedForThroneListEntry.end())
+    {
+        int64_t t = (*i).second;
+        if (GetTime() < t) return; // we've asked recently
+    }
+
+    // ask for the mnb info once from the node that sent mnp
+
+    LogPrintf("CThroneMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.ToString());
+    pnode->PushMessage("dseg", vin);
+    int64_t askAgain = GetTime() + THRONE_MIN_MNP_SECONDS;
+    mWeAskedForThroneListEntry[vin.prevout] = askAgain;
+}
+
 void CThroneMan::Check()
 {
     LOCK(cs);
 
-    BOOST_FOREACH(CThrone& mn, vThrones)
+    BOOST_FOREACH(CThrone& mn, vThrones) {
         mn.Check();
+    }
 }
 
-void CThroneMan::CheckAndRemove()
+void CThroneMan::CheckAndRemove(bool forceExpiredRemoval)
 {
-    LOCK(cs);
-
     Check();
 
-    //remove inactive
+    LOCK(cs);
+
+    //remove inactive and outdated
     vector<CThrone>::iterator it = vThrones.begin();
     while(it != vThrones.end()){
-        if((*it).activeState == CThrone::THRONE_REMOVE || (*it).activeState == CThrone::THRONE_VIN_SPENT){
-            if(fDebug) LogPrintf("CThroneMan: Removing inactive Throne %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+        if((*it).activeState == CThrone::THRONE_REMOVE ||
+                (*it).activeState == CThrone::THRONE_VIN_SPENT ||
+                (forceExpiredRemoval && (*it).activeState == CThrone::THRONE_EXPIRED) ||
+                (*it).protocolVersion < thronePayments.GetMinThronePaymentsProto()) {
+            LogPrint("throne", "CThroneMan: Removing inactive Throne %s - %i now\n", (*it).addr.ToString(), size() - 1);
+
+            //erase all of the broadcasts we've seen from this vin
+            // -- if we missed a few pings and the node was removed, this will allow is to get it back without them 
+            //    sending a brand new mnb
+            map<uint256, CThroneBroadcast>::iterator it3 = mapSeenThroneBroadcast.begin();
+            while(it3 != mapSeenThroneBroadcast.end()){
+                if((*it3).second.vin == (*it).vin){
+                    throneSync.mapSeenSyncMNB.erase((*it3).first);
+                    mapSeenThroneBroadcast.erase(it3++);
+                } else {
+                    ++it3;
+                }
+            }
+
+            // allow us to ask for this throne again if we see another ping
+            map<COutPoint, int64_t>::iterator it2 = mWeAskedForThroneListEntry.begin();
+            while(it2 != mWeAskedForThroneListEntry.end()){
+                if((*it2).first == (*it).vin.prevout){
+                    mWeAskedForThroneListEntry.erase(it2++);
+                } else {
+                    ++it2;
+                }
+            }
+
             it = vThrones.erase(it);
         } else {
             ++it;
@@ -267,6 +324,28 @@ void CThroneMan::CheckAndRemove()
         }
     }
 
+    // remove expired mapSeenThroneBroadcast
+    map<uint256, CThroneBroadcast>::iterator it3 = mapSeenThroneBroadcast.begin();
+    while(it3 != mapSeenThroneBroadcast.end()){
+        if((*it3).second.lastPing.sigTime < GetTime() - THRONE_REMOVAL_SECONDS*2){
+            LogPrint("throne", "CThroneMan::CheckAndRemove - Removing expired Throne broadcast %s\n", (*it3).second.GetHash().ToString());
+            throneSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
+            mapSeenThroneBroadcast.erase(it3++);
+        } else {
+            ++it3;
+        }
+    }
+
+    // remove expired mapSeenThronePing
+    map<uint256, CThronePing>::iterator it4 = mapSeenThronePing.begin();
+    while(it4 != mapSeenThronePing.end()){
+        if((*it4).second.sigTime < GetTime()-(THRONE_REMOVAL_SECONDS*2)){
+            mapSeenThronePing.erase(it4++);
+        } else {
+            ++it4;
+        }
+    }
+
 }
 
 void CThroneMan::Clear()
@@ -276,24 +355,15 @@ void CThroneMan::Clear()
     mAskedUsForThroneList.clear();
     mWeAskedForThroneList.clear();
     mWeAskedForThroneListEntry.clear();
+    mapSeenThroneBroadcast.clear();
+    mapSeenThronePing.clear();
     nDsqCount = 0;
 }
 
-int CThroneMan::CountEnabled()
+int CThroneMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
-
-    BOOST_FOREACH(CThrone& mn, vThrones) {
-        mn.Check();
-        if(mn.IsEnabled()) i++;
-    }
-
-    return i;
-}
-
-int CThroneMan::CountThronesAboveProtocol(int protocolVersion)
-{
-    int i = 0;
+    protocolVersion = protocolVersion == -1 ? thronePayments.GetMinThronePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CThrone& mn, vThrones) {
         mn.Check();
@@ -308,17 +378,36 @@ void CThroneMan::DsegUpdate(CNode* pnode)
 {
     LOCK(cs);
 
-    std::map<CNetAddr, int64_t>::iterator it = mWeAskedForThroneList.find(pnode->addr);
-    if (it != mWeAskedForThroneList.end())
-    {
-        if (GetTime() < (*it).second) {
-            LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
-            return;
+    if(Params().NetworkID() == CBaseChainParams::MAIN) {
+        if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())){
+            std::map<CNetAddr, int64_t>::iterator it = mWeAskedForThroneList.find(pnode->addr);
+            if (it != mWeAskedForThroneList.end())
+            {
+                if (GetTime() < (*it).second) {
+                    LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+                    return;
+                }
+            }
         }
     }
+    
     pnode->PushMessage("dseg", CTxIn());
     int64_t askAgain = GetTime() + THRONES_DSEG_SECONDS;
     mWeAskedForThroneList[pnode->addr] = askAgain;
+}
+
+CThrone *CThroneMan::Find(const CScript &payee)
+{
+    LOCK(cs);
+    CScript payee2;
+
+    BOOST_FOREACH(CThrone& mn, vThrones)
+    {
+        payee2 = GetScriptForDestination(mn.pubkey.GetID());
+        if(payee2 == payee)
+            return &mn;
+    }
+    return NULL;
 }
 
 CThrone *CThroneMan::Find(const CTxIn &vin)
@@ -327,7 +416,7 @@ CThrone *CThroneMan::Find(const CTxIn &vin)
 
     BOOST_FOREACH(CThrone& mn, vThrones)
     {
-        if(mn.vin == vin)
+        if(mn.vin.prevout == vin.prevout)
             return &mn;
     }
     return NULL;
@@ -346,52 +435,106 @@ CThrone *CThroneMan::Find(const CPubKey &pubKeyThrone)
     return NULL;
 }
 
-
-CThrone* CThroneMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
+// 
+// Deterministically select the oldest/best throne to pay on the network
+//
+CThrone* CThroneMan::GetNextThroneInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
 {
     LOCK(cs);
 
-    CThrone *pOldestThrone = NULL;
+    CThrone *pBestThrone = NULL;
+    std::vector<pair<int64_t, CTxIn> > vecThroneLastPaid;
 
+    /*
+        Make a vector with all of the last paid times
+    */
+
+    int nMnCount = CountEnabled();
     BOOST_FOREACH(CThrone &mn, vThrones)
     {
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
-        if(!RegTest()){
-            if(mn.GetThroneInputAge() < nMinimumAge || mn.lastTimeSeen - mn.sigTime < nMinimumActiveSeconds) continue;
-        }
+        // //check protocol version
+        if(mn.protocolVersion < thronePayments.GetMinThronePaymentsProto()) continue;
 
-        bool found = false;
-        BOOST_FOREACH(const CTxIn& vin, vVins)
-            if(mn.vin == vin)
-            {
-                found = true;
-                break;
-            }
+        //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
+        if(thronePayments.IsScheduled(mn, nBlockHeight)) continue;
 
-        if(found) continue;
+        //it's too new, wait for a cycle
+        if(fFilterSigTime && mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
 
-        if(pOldestThrone == NULL || pOldestThrone->GetThroneInputAge() < mn.GetThroneInputAge()){
-            pOldestThrone = &mn;
-        }
+        //make sure it has as many confirmations as there are thrones
+        if(mn.GetThroneInputAge() < nMnCount) continue;
+
+        vecThroneLastPaid.push_back(make_pair(mn.SecondsSincePayment(), mn.vin));
     }
 
-    return pOldestThrone;
+    nCount = (int)vecThroneLastPaid.size();
+
+    //when the network is in the process of upgrading, don't penalize nodes that recently restarted
+    if(fFilterSigTime && nCount < nMnCount/3) return GetNextThroneInQueueForPayment(nBlockHeight, false, nCount);
+
+    // Sort them high to low
+    sort(vecThroneLastPaid.rbegin(), vecThroneLastPaid.rend(), CompareLastPaid());
+
+    // Look at 1/10 of the oldest nodes (by last payment), calculate their scores and pay the best one
+    //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
+    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
+    //  -- (chance per block * chances before IsScheduled will fire)
+    int nTenthNetwork = CountEnabled()/10;
+    int nCountTenth = 0; 
+    arith_uint256 nHigh = 0;
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecThroneLastPaid){
+        CThrone* pmn = Find(s.second);
+        if(!pmn) break;
+
+        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
+        if(n > nHigh){
+            nHigh = n;
+            pBestThrone = pmn;
+        }
+        nCountTenth++;
+        if(nCountTenth >= nTenthNetwork) break;
+    }
+    return pBestThrone;
 }
 
-CThrone *CThroneMan::FindRandom()
+CThrone *CThroneMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion)
 {
     LOCK(cs);
 
-    if(size() == 0) return NULL;
+    protocolVersion = protocolVersion == -1 ? thronePayments.GetMinThronePaymentsProto() : protocolVersion;
 
-    return &vThrones[GetRandInt(vThrones.size())];
+    int nCountEnabled = CountEnabled(protocolVersion);
+    LogPrintf("CThroneMan::FindRandomNotInVec - nCountEnabled - vecToExclude.size() %d\n", nCountEnabled - vecToExclude.size());
+    if(nCountEnabled - vecToExclude.size() < 1) return NULL;
+
+    int rand = GetRandInt(nCountEnabled - vecToExclude.size());
+    LogPrintf("CThroneMan::FindRandomNotInVec - rand %d\n", rand);
+    bool found;
+
+    BOOST_FOREACH(CThrone &mn, vThrones) {
+        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
+        found = false;
+        BOOST_FOREACH(CTxIn &usedVin, vecToExclude) {
+            if(mn.vin.prevout == usedVin.prevout) {
+                found = true;
+                break;
+            }
+        }
+        if(found) continue;
+        if(--rand < 1) {
+            return &mn;
+        }
+    }
+
+    return NULL;
 }
 
 CThrone* CThroneMan::GetCurrentThroNe(int mod, int64_t nBlockHeight, int minProtocol)
 {
-    unsigned int score = 0;
+    int64_t score = 0;
     CThrone* winner = NULL;
 
     // scan for winner
@@ -401,8 +544,7 @@ CThrone* CThroneMan::GetCurrentThroNe(int mod, int64_t nBlockHeight, int minProt
 
         // calculate the score for each Throne
         uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         // determine the winner
         if(n2 > score){
@@ -416,34 +558,31 @@ CThrone* CThroneMan::GetCurrentThroNe(int mod, int64_t nBlockHeight, int minProt
 
 int CThroneMan::GetThroneRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
-    std::vector<pair<unsigned int, CTxIn> > vecThroneScores;
+    std::vector<pair<int64_t, CTxIn> > vecThroneScores;
 
     //make sure we know about this block
-    uint256 hash = 0;
+    uint256 hash = uint256();
     if(!GetBlockHash(hash, nBlockHeight)) return -1;
 
     // scan for winner
     BOOST_FOREACH(CThrone& mn, vThrones) {
-
         if(mn.protocolVersion < minProtocol) continue;
         if(fOnlyActive) {
             mn.Check();
             if(!mn.IsEnabled()) continue;
         }
-
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecThroneScores.push_back(make_pair(n2, mn.vin));
     }
 
-    sort(vecThroneScores.rbegin(), vecThroneScores.rend(), CompareValueOnly());
+    sort(vecThroneScores.rbegin(), vecThroneScores.rend(), CompareScoreTxIn());
 
     int rank = 0;
-    BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecThroneScores){
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecThroneScores){
         rank++;
-        if(s.second == vin) {
+        if(s.second.prevout == vin.prevout) {
             return rank;
         }
     }
@@ -453,11 +592,11 @@ int CThroneMan::GetThroneRank(const CTxIn& vin, int64_t nBlockHeight, int minPro
 
 std::vector<pair<int, CThrone> > CThroneMan::GetThroneRanks(int64_t nBlockHeight, int minProtocol)
 {
-    std::vector<pair<unsigned int, CThrone> > vecThroneScores;
+    std::vector<pair<int64_t, CThrone> > vecThroneScores;
     std::vector<pair<int, CThrone> > vecThroneRanks;
 
     //make sure we know about this block
-    uint256 hash = 0;
+    uint256 hash = uint256();
     if(!GetBlockHash(hash, nBlockHeight)) return vecThroneRanks;
 
     // scan for winner
@@ -471,16 +610,15 @@ std::vector<pair<int, CThrone> > CThroneMan::GetThroneRanks(int64_t nBlockHeight
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecThroneScores.push_back(make_pair(n2, mn));
     }
 
-    sort(vecThroneScores.rbegin(), vecThroneScores.rend(), CompareValueOnlyMN());
+    sort(vecThroneScores.rbegin(), vecThroneScores.rend(), CompareScoreMN());
 
     int rank = 0;
-    BOOST_FOREACH (PAIRTYPE(unsigned int, CThrone)& s, vecThroneScores){
+    BOOST_FOREACH (PAIRTYPE(int64_t, CThrone)& s, vecThroneScores){
         rank++;
         vecThroneRanks.push_back(make_pair(rank, s.second));
     }
@@ -490,7 +628,7 @@ std::vector<pair<int, CThrone> > CThroneMan::GetThroneRanks(int64_t nBlockHeight
 
 CThrone* CThroneMan::GetThroneByRank(int nRank, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
-    std::vector<pair<unsigned int, CTxIn> > vecThroneScores;
+    std::vector<pair<int64_t, CTxIn> > vecThroneScores;
 
     // scan for winner
     BOOST_FOREACH(CThrone& mn, vThrones) {
@@ -502,16 +640,15 @@ CThrone* CThroneMan::GetThroneByRank(int nRank, int64_t nBlockHeight, int minPro
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecThroneScores.push_back(make_pair(n2, mn.vin));
     }
 
-    sort(vecThroneScores.rbegin(), vecThroneScores.rend(), CompareValueOnly());
+    sort(vecThroneScores.rbegin(), vecThroneScores.rend(), CompareScoreTxIn());
 
     int rank = 0;
-    BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecThroneScores){
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecThroneScores){
         rank++;
         if(rank == nRank) {
             return Find(s.second);
@@ -524,19 +661,15 @@ CThrone* CThroneMan::GetThroneByRank(int nRank, int64_t nBlockHeight, int minPro
 void CThroneMan::ProcessThroneConnections()
 {
     //we don't care about this for regtest
-    if(RegTest()) return;
+    if(Params().NetworkID() == CBaseChainParams::REGTEST) return;
 
     LOCK(cs_vNodes);
-
-    if(!darkSendPool.pSubmittedToThrone) return;
-
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        if(darkSendPool.pSubmittedToThrone->addr == pnode->addr) continue;
-
+    BOOST_FOREACH(CNode* pnode, vNodes) {
         if(pnode->fDarkSendMaster){
-            LogPrintf("Closing Throne connection %s \n", pnode->addr.ToString().c_str());
-            pnode->CloseSocketDisconnect();
+            if(darkSendPool.pSubmittedToThrone != NULL && pnode->addr == darkSendPool.pSubmittedToThrone->addr) continue;
+            LogPrintf("Closing Throne connection %s \n", pnode->addr.ToString());
+            pnode->fDarkSendMaster = false;
+            pnode->Release();
         }
     }
 }
@@ -545,284 +678,48 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
 {
 
     if(fLiteMode) return; //disable all Darksend/Throne related functionality
-    if(IsInitialBlockDownload()) return;
+    if(!throneSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
 
-    if (strCommand == "dsee") { //DarkSend Election Entry
+    if (strCommand == "mnb") { //Throne Broadcast
+        CThroneBroadcast mnb;
+        vRecv >> mnb;
 
-        CTxIn vin;
-        CService addr;
-        CPubKey pubkey;
-        CPubKey pubkey2;
-        vector<unsigned char> vchSig;
-        int64_t sigTime;
-        int count;
-        int current;
-        int64_t lastUpdated;
-        int protocolVersion;
-        std::string strMessage;
-
-        // 70047 and greater
-        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion ;
-
-        // make sure signature isn't in the future (past is OK)
-        if (sigTime > GetAdjustedTime() + 60 * 60) {
-            LogPrintf("dsee - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
-            return;
-        }
-
-        bool isLocal = addr.IsRFC1918() || addr.IsLocal();
-        if(RegTest()) isLocal = false;
-
-        std::string vchPubKey(pubkey.begin(), pubkey.end());
-        std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-
-        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion) ;
-
-        if(protocolVersion < nThroneMinProtocol) {
-            LogPrintf("dsee - ignoring outdated Throne %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
-            return;
-        }
-
-        CScript pubkeyScript;
-        pubkeyScript.SetDestination(pubkey.GetID());
-
-        if(pubkeyScript.size() != 25) {
-            LogPrintf("dsee - pubkey the wrong size\n");
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        CScript pubkeyScript2;
-        pubkeyScript2.SetDestination(pubkey2.GetID());
-
-        if(pubkeyScript2.size() != 25) {
-            LogPrintf("dsee - pubkey2 the wrong size\n");
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        std::string errorMessage = "";
-        if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
-            LogPrintf("dsee - Got bad Throne address signature\n");
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        if(Params().NetworkID() == CChainParams::MAIN){
-            if(addr.GetPort() != 9340) return;
-        } else if(addr.GetPort() == 9340) return;
-
-        //search existing Throne list, this is where we update existing Thrones with new dsee broadcasts
-        CThrone* pmn = this->Find(vin);
-        // if we are throne but with undefined vin and this dsee is ours (matches our Throne privkey) then just skip this part
-        if(pmn != NULL && !(fThroNe && activeThrone.vin == CTxIn() && pubkey2 == activeThrone.pubKeyThrone))
-        {
-            // count == -1 when it's a new entry
-            //   e.g. We don't want the entry relayed/time updated when we're syncing the list
-            // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
-            //   after that they just need to match
-            if(count == -1 && pmn->pubkey == pubkey && !pmn->UpdatedWithin(THRONE_MIN_DSEE_SECONDS)){
-                pmn->UpdateLastSeen();
-
-                if(pmn->sigTime < sigTime){ //take the newest entry
-                    LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
-                    pmn->pubkey2 = pubkey2;
-                    pmn->sigTime = sigTime;
-                    pmn->sig = vchSig;
-                    pmn->protocolVersion = protocolVersion;
-                    pmn->addr = addr;
-                    pmn->Check();
-                    if(pmn->IsEnabled())
-                        mnodeman.RelayThroneEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
-                }
-            }
-
-            return;
-        }
-
-        // make sure the vout that was signed is related to the transaction that spawned the Throne
-        //  - this is expensive, so it's only done once per Throne
-        if(!darkSendSigner.IsVinAssociatedWithPubkey(vin, pubkey)) {
-            LogPrintf("dsee - Got mismatched pubkey and vin\n");
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        if(fDebug) LogPrintf("dsee - Got NEW Throne entry %s\n", addr.ToString().c_str());
-
-        // make sure it's still unspent
-        //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-
-        CValidationState state;
-        CTransaction tx = CTransaction();
-        CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
-        tx.vin.push_back(vin);
-        tx.vout.push_back(vout);
-        if(AcceptableInputs(mempool, state, tx)){
-            if(fDebug) LogPrintf("dsee - Accepted Throne entry %i %i\n", count, current);
-
-            if(GetInputAge(vin) < THRONE_MIN_CONFIRMATIONS){
-                LogPrintf("dsee - Input must have least %d confirmations\n", THRONE_MIN_CONFIRMATIONS);
-                Misbehaving(pfrom->GetId(), 20);
-                return;
-            }
-
-            // verify that sig time is legit in past
-            // should be at least not earlier than block when 1000 DASH tx got THRONE_MIN_CONFIRMATIONS
-            uint256 hashBlock = 0;
-            GetTransaction(vin.prevout.hash, tx, hashBlock, true);
-            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-            if (mi != mapBlockIndex.end() && (*mi).second)
-            {
-                CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
-                CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + THRONE_MIN_CONFIRMATIONS - 1]; // block where tx got THRONE_MIN_CONFIRMATIONS
-                if(pConfIndex->GetBlockTime() > sigTime)
-                {
-                    LogPrintf("dsee - Bad sigTime %d for Throne %20s %105s (%i conf block is at %d)\n",
-                              sigTime, addr.ToString(), vin.ToString(), THRONE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
-                    return;
-                }
-            }
-
-
-            // use this as a peer
-            addrman.Add(CAddress(addr), pfrom->addr, 2*60*60);
-
-            //doesn't support multisig addresses
-
-            // add our Throne
-            CThrone mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion);
-            mn.UpdateLastSeen(lastUpdated);
-            this->Add(mn);
-
-            // if it matches our Throne privkey, then we've been remotely activated
-            if(pubkey2 == activeThrone.pubKeyThrone && protocolVersion == PROTOCOL_VERSION){
-                activeThrone.EnableHotColdThroNe(vin, addr);
-            }
-
-            if(count == -1 && !isLocal)
-                mnodeman.RelayThroneEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
-
+        int nDoS = 0;
+        if (CheckMnbAndUpdateThroneList(mnb, nDoS)) {
+            // use announced Throne as a peer
+             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
         } else {
-            LogPrintf("dsee - Rejected Throne entry %s\n", addr.ToString().c_str());
-
-            int nDoS = 0;
-            if (state.IsInvalid(nDoS))
-            {
-                LogPrintf("dsee - %s from %s %s was not accepted into the memory pool\n", tx.GetHash().ToString().c_str(),
-                    pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str());
-                if (nDoS > 0)
-                    Misbehaving(pfrom->GetId(), nDoS);
-            }
+            if(nDoS > 0) Misbehaving(pfrom->GetId(), nDoS);
         }
     }
 
-    else if (strCommand == "dseep") { //DarkSend Election Entry Ping
+    else if (strCommand == "mnp") { //Throne Ping
+        CThronePing mnp;
+        vRecv >> mnp;
 
-        CTxIn vin;
-        vector<unsigned char> vchSig;
-        int64_t sigTime;
-        bool stop;
-        vRecv >> vin >> vchSig >> sigTime >> stop;
+        LogPrint("throne", "mnp - Throne ping, vin: %s\n", mnp.vin.ToString());
 
-        //LogPrintf("dseep - Received: vin: %s sigTime: %lld stop: %s\n", vin.ToString().c_str(), sigTime, stop ? "true" : "false");
+        if(mapSeenThronePing.count(mnp.GetHash())) return; //seen
+        mapSeenThronePing.insert(make_pair(mnp.GetHash(), mnp));
 
-        if (sigTime > GetAdjustedTime() + 60 * 60) {
-            LogPrintf("dseep - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
-            return;
+        int nDoS = 0;
+        if(mnp.CheckAndUpdate(nDoS)) return;
+
+        if(nDoS > 0) {
+            // if anything significant failed, mark that node
+            Misbehaving(pfrom->GetId(), nDoS);
+        } else {
+            // if nothing significant failed, search existing Throne list
+            CThrone* pmn = Find(mnp.vin);
+            // if it's known, don't ask for the mnb, just return
+            if(pmn != NULL) return;
         }
 
-        if (sigTime <= GetAdjustedTime() - 60 * 60) {
-            LogPrintf("dseep - Signature rejected, too far into the past %s - %d %d \n", vin.ToString().c_str(), sigTime, GetAdjustedTime());
-            return;
-        }
-
-        // see if we have this Throne
-        CThrone* pmn = this->Find(vin);
-        if(pmn != NULL && pmn->protocolVersion >= nThroneMinProtocol)
-        {
-            // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
-            // take this only if it's newer
-            if(pmn->lastDseep < sigTime)
-            {
-                std::string strMessage = pmn->addr.ToString() + boost::lexical_cast<std::string>(sigTime) + boost::lexical_cast<std::string>(stop);
-
-                std::string errorMessage = "";
-                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
-                {
-                    LogPrintf("dseep - Got bad Throne address signature %s \n", vin.ToString().c_str());
-                    //Misbehaving(pfrom->GetId(), 100);
-                    return;
-                }
-
-                pmn->lastDseep = sigTime;
-
-                if(!pmn->UpdatedWithin(THRONE_MIN_DSEEP_SECONDS))
-                {
-                    if(stop) pmn->Disable();
-                    else
-                    {
-                        pmn->UpdateLastSeen();
-                        pmn->Check();
-                        if(!pmn->IsEnabled()) return;
-                    }
-                    mnodeman.RelayThroneEntryPing(vin, vchSig, sigTime, stop);
-                }
-            }
-            return;
-        }
-
-        if(fDebug) LogPrintf("dseep - Couldn't find Throne entry %s\n", vin.ToString().c_str());
-
-        std::map<COutPoint, int64_t>::iterator i = mWeAskedForThroneListEntry.find(vin.prevout);
-        if (i != mWeAskedForThroneListEntry.end())
-        {
-            int64_t t = (*i).second;
-            if (GetTime() < t) return; // we've asked recently
-        }
-
-        // ask for the dsee info once from the node that sent dseep
-
-        LogPrintf("dseep - Asking source node for missing entry %s\n", vin.ToString().c_str());
-        pfrom->PushMessage("dseg", vin);
-        int64_t askAgain = GetTime() + THRONE_MIN_DSEEP_SECONDS;
-        mWeAskedForThroneListEntry[vin.prevout] = askAgain;
-
-    } else if (strCommand == "mvote") { //Throne Vote
-
-        CTxIn vin;
-        vector<unsigned char> vchSig;
-        int nVote;
-        vRecv >> vin >> vchSig >> nVote;
-
-        // see if we have this Throne
-        CThrone* pmn = this->Find(vin);
-        if(pmn != NULL)
-        {
-            if((GetAdjustedTime() - pmn->lastVote) > (60*60))
-            {
-                std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
-
-                std::string errorMessage = "";
-                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
-                {
-                    LogPrintf("mvote - Got bad Throne address signature %s \n", vin.ToString().c_str());
-                    return;
-                }
-
-                pmn->nVote = nVote;
-                pmn->lastVote = GetAdjustedTime();
-
-                //send to all peers
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    pnode->PushMessage("mvote", vin, vchSig, nVote);
-            }
-
-            return;
-        }
+        // something significant is broken or mn is unknown,
+        // we might have to ask for a throne entry once
+        AskForMN(pfrom, mnp.vin);
 
     } else if (strCommand == "dseg") { //Get Throne list or specific entry
 
@@ -831,11 +728,11 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
 
         if(vin == CTxIn()) { //only should ask for this once
             //local network
-            if(!pfrom->addr.IsRFC1918() && Params().NetworkID() == CChainParams::MAIN)
-            {
+            bool isLocal = (pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal());
+
+            if(!isLocal && Params().NetworkID() == CBaseChainParams::MAIN) {
                 std::map<CNetAddr, int64_t>::iterator i = mAskedUsForThroneList.find(pfrom->addr);
-                if (i != mAskedUsForThroneList.end())
-                {
+                if (i != mAskedUsForThroneList.end()){
                     int64_t t = (*i).second;
                     if (GetTime() < t) {
                         Misbehaving(pfrom->GetId(), 34);
@@ -848,44 +745,36 @@ void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStre
             }
         } //else, asking for a specific node which is ok
 
-        int count = this->size();
-        int i = 0;
+
+        int nInvCount = 0;
 
         BOOST_FOREACH(CThrone& mn, vThrones) {
-
             if(mn.addr.IsRFC1918()) continue; //local network
 
-            if(mn.IsEnabled())
-            {
-                if(fDebug) LogPrintf("dseg - Sending Throne entry - %s \n", mn.addr.ToString().c_str());
-                if(vin == CTxIn()){
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
-                } else if (vin == mn.vin) {
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
-                    LogPrintf("dseg - Sent 1 Throne entries to %s\n", pfrom->addr.ToString().c_str());
-                    return;
+            if(mn.IsEnabled()) {
+                LogPrint("throne", "dseg - Sending Throne entry - %s \n", mn.addr.ToString());
+                if(vin == CTxIn() || vin == mn.vin){
+                    CThroneBroadcast mnb = CThroneBroadcast(mn);
+                    uint256 hash = mnb.GetHash();
+                    pfrom->PushInventory(CInv(MSG_THRONE_ANNOUNCE, hash));
+                    nInvCount++;
+
+                    if(!mapSeenThroneBroadcast.count(hash)) mapSeenThroneBroadcast.insert(make_pair(hash, mnb));
+
+                    if(vin == mn.vin) {
+                        LogPrintf("dseg - Sent 1 Throne entries to %s\n", pfrom->addr.ToString());
+                        return;
+                    }
                 }
-                i++;
             }
         }
 
-        LogPrintf("dseg - Sent %d Throne entries to %s\n", i, pfrom->addr.ToString().c_str());
+        if(vin == CTxIn()) {
+            pfrom->PushMessage("ssc", THRONE_SYNC_LIST, nInvCount);
+            LogPrintf("dseg - Sent %d Throne entries to %s\n", nInvCount, pfrom->addr.ToString());
+        }
     }
 
-}
-
-void CThroneMan::RelayThroneEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
-}
-
-void CThroneMan::RelayThroneEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
 }
 
 void CThroneMan::Remove(CTxIn vin)
@@ -895,10 +784,11 @@ void CThroneMan::Remove(CTxIn vin)
     vector<CThrone>::iterator it = vThrones.begin();
     while(it != vThrones.end()){
         if((*it).vin == vin){
-            if(fDebug) LogPrintf("CThroneMan: Removing Throne %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+            LogPrint("throne", "CThroneMan: Removing Throne %s - %i now\n", (*it).addr.ToString(), size() - 1);
             vThrones.erase(it);
             break;
         }
+        ++it;
     }
 }
 
@@ -913,4 +803,58 @@ std::string CThroneMan::ToString() const
             ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
+}
+
+void CThroneMan::UpdateThroneList(CThroneBroadcast mnb) {
+    mapSeenThronePing.insert(make_pair(mnb.lastPing.GetHash(), mnb.lastPing));
+    mapSeenThroneBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+    throneSync.AddedThroneList(mnb.GetHash());
+
+    LogPrintf("CThroneMan::UpdateThroneList() - addr: %s\n    vin: %s\n", mnb.addr.ToString(), mnb.vin.ToString());
+
+    CThrone* pmn = Find(mnb.vin);
+    if(pmn == NULL)
+    {
+        CThrone mn(mnb);
+        Add(mn);
+    } else {
+        pmn->UpdateFromNewBroadcast(mnb);
+    }
+}
+
+bool CThroneMan::CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos) {
+    nDos = 0;
+    LogPrint("throne", "CThroneMan::CheckMnbAndUpdateThroneList - Throne broadcast, vin: %s\n", mnb.vin.ToString());
+
+    if(mapSeenThroneBroadcast.count(mnb.GetHash())) { //seen
+        throneSync.AddedThroneList(mnb.GetHash());
+        return true;
+    }
+    mapSeenThroneBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+
+    LogPrint("throne", "CThroneMan::CheckMnbAndUpdateThroneList - Throne broadcast, vin: %s new\n", mnb.vin.ToString());
+
+    if(!mnb.CheckAndUpdate(nDos)){
+        LogPrint("throne", "CThroneMan::CheckMnbAndUpdateThroneList - Throne broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
+        return false;
+    }
+
+    // make sure the vout that was signed is related to the transaction that spawned the Throne
+    //  - this is expensive, so it's only done once per Throne
+    if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
+        LogPrintf("CThroneMan::CheckMnbAndUpdateThroneList - Got mismatched pubkey and vin\n");
+        nDos = 33;
+        return false;
+    }
+
+    // make sure it's still unspent
+    //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
+    if(mnb.CheckInputsAndAdd(nDos)) {
+        throneSync.AddedThroneList(mnb.GetHash());
+    } else {
+        LogPrintf("CThroneMan::CheckMnbAndUpdateThroneList - Rejected Throne entry %s\n", mnb.addr.ToString());
+        return false;
+    }
+
+    return true;
 }

@@ -362,7 +362,7 @@ Thanks to everyone who contributed to this release:
 - Julian Langschaedel
 - Kangmo
 - Lake Denman
-- Luke Dashjr
+- Luke Crownjr
 - Mark Friedenbach
 - Matt Corallo
 - Michael Bauer

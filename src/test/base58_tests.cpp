@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Crowncoin developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,10 @@
 #include "data/base58_keys_valid.json.h"
 
 #include "key.h"
-#include "script.h"
+#include "script/script.h"
 #include "uint256.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
         std::vector<unsigned char> sourcedata = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
         BOOST_CHECK_MESSAGE(
-                    EncodeBase58(&sourcedata[0], &sourcedata[sourcedata.size()]) == base58string,
+                    EncodeBase58(begin_ptr(sourcedata), end_ptr(sourcedata)) == base58string,
                     strTest);
     }
 }
@@ -124,8 +125,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
 {
     Array tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
-    CCrowncoinSecret secret;
-    CCrowncoinAddress addr;
+    CBitcoinSecret secret;
+    CBitcoinAddress addr;
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -142,14 +143,14 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
         if (isTestnet)
-            SelectParams(CChainParams::TESTNET);
+            SelectParams(CBaseChainParams::TESTNET);
         else
-            SelectParams(CChainParams::MAIN);
+            SelectParams(CBaseChainParams::MAIN);
         if(isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             // Must be valid private key
-            // Note: CCrowncoinSecret::SetString tests isValid, whereas CCrowncoinAddress does not!
+            // Note: CBitcoinSecret::SetString tests isValid, whereas CBitcoinAddress does not!
             BOOST_CHECK_MESSAGE(secret.SetString(exp_base58string), "!SetString:"+ strTest);
             BOOST_CHECK_MESSAGE(secret.IsValid(), "!IsValid:" + strTest);
             CKey privkey = secret.GetKey();
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid pubkey as privkey:" + strTest);
         }
     }
-    SelectParams(CChainParams::MAIN);
+    SelectParams(CBaseChainParams::UNITTEST);
 }
 
 // Goal: check that generated keys match test vectors
@@ -198,16 +199,16 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
         if (isTestnet)
-            SelectParams(CChainParams::TESTNET);
+            SelectParams(CBaseChainParams::TESTNET);
         else
-            SelectParams(CChainParams::MAIN);
+            SelectParams(CBaseChainParams::MAIN);
         if(isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             CKey key;
             key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
             assert(key.IsValid());
-            CCrowncoinSecret secret;
+            CBitcoinSecret secret;
             secret.SetKey(key);
             BOOST_CHECK_MESSAGE(secret.ToString() == exp_base58string, "result mismatch: " + strTest);
         }
@@ -232,18 +233,18 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
                 BOOST_ERROR("Bad addrtype: " << strTest);
                 continue;
             }
-            CCrowncoinAddress addrOut;
+            CBitcoinAddress addrOut;
             BOOST_CHECK_MESSAGE(addrOut.Set(dest), "encode dest: " + strTest);
             BOOST_CHECK_MESSAGE(addrOut.ToString() == exp_base58string, "mismatch: " + strTest);
         }
     }
 
     // Visiting a CNoDestination must fail
-    CCrowncoinAddress dummyAddr;
+    CBitcoinAddress dummyAddr;
     CTxDestination nodest = CNoDestination();
     BOOST_CHECK(!dummyAddr.Set(nodest));
 
-    SelectParams(CChainParams::MAIN);
+    SelectParams(CBaseChainParams::UNITTEST);
 }
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
@@ -251,8 +252,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 {
     Array tests = read_json(std::string(json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
     std::vector<unsigned char> result;
-    CCrowncoinSecret secret;
-    CCrowncoinAddress addr;
+    CBitcoinSecret secret;
+    CBitcoinAddress addr;
 
     BOOST_FOREACH(Value& tv, tests)
     {

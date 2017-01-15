@@ -1,5 +1,16 @@
-Building Crowncoin
+Building Crown
 
-See doc/build-*.md for instructions on building crowncoind,
+Use the autogen script to prepare the build environment.
+
+    ./autogen.sh
+    ./configure
+    make
+
+Precompiled binaries are available at github, see
+https://github.com/crownproject/crown-binaries
+
+Always verify the signatures and checksums.
+
+See doc/build-*.md for instructions on building crownd,
 the intended-for-services, no-graphical-interface, reference
-implementation of Crowncoin.
+implementation of Crown.

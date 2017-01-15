@@ -1,5 +1,5 @@
 
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,6 @@ public:
         std::string privKey;
         std::string txHash;
         std::string outputIndex;
-
     public:
 
         CThroneEntry(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex) {
@@ -78,7 +77,6 @@ public:
         void setIp(const std::string& ip) {
             this->ip = ip;
         }
-
     };
 
     CThroneConfig() {
@@ -86,13 +84,19 @@ public:
     }
 
     void clear();
-//    bool read(std::string& strErr);
-//	void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
-	bool read(boost::filesystem::path path);
-    	void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
+    bool read(std::string& strErr);
+    void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
 
     std::vector<CThroneEntry>& getEntries() {
         return entries;
+    }
+
+    int getCount() {
+        int c = -1;
+        BOOST_FOREACH(CThroneEntry e, entries) {
+            if(e.getAlias() != "") c++;
+        }
+        return c;
     }
 
 private:

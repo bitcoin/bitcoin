@@ -21,8 +21,8 @@ Value darksend(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() == 0)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, reset, or auto (AutoDenominate)"
+            "darksend <crownaddress> <amount>\n"
+            "crownaddress, reset, or auto (AutoDenominate)"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
@@ -45,14 +45,14 @@ Value darksend(const Array& params, bool fHelp)
 
     if (params.size() != 2)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, denominate, or auto (AutoDenominate)"
+            "darksend <crownaddress> <amount>\n"
+            "crownaddress, denominate, or auto (AutoDenominate)"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
     CCrowncoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crown address");
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
@@ -105,17 +105,17 @@ Value throne(const Array& params, bool fHelp)
                 "  genkey       - Generate new throneprivkey\n"
                 "  enforce      - Enforce throne payments\n"
                 "  outputs      - Print throne compatible outputs\n"
-                "  start        - Start throne configured in dash.conf\n"
+                "  start        - Start throne configured in crown.conf\n"
                 "  start-alias  - Start single throne by assigned alias configured in throne.conf\n"
                 "  start-many   - Start all thrones configured in throne.conf\n"
-                "  stop         - Stop throne configured in dash.conf\n"
+                "  stop         - Stop throne configured in crown.conf\n"
                 "  stop-alias   - Stop single throne by assigned alias configured in throne.conf\n"
                 "  stop-many    - Stop all thrones configured in throne.conf\n"
                 "  list         - Print list of all known thrones (see thronelist for more info)\n"
                 "  list-conf    - Print throne.conf in JSON format\n"
                 "  winners      - Print list of throne winners\n"
-                "  vote-many    - Vote on a Dash initiative\n"
-                "  vote         - Vote on a Dash initiative\n"
+                "  vote-many    - Vote on a Crown initiative\n"
+                "  vote         - Vote on a Crown initiative\n"
                 );
 
 
@@ -354,20 +354,7 @@ Value throne(const Array& params, bool fHelp)
             if(mne.getAlias() == alias) {
                 found = true;
                 std::string errorMessage;
-                BOOST_FOREACH(CThrone& mn, vThrones) {
-                    std::string strAddr = mn.addr.ToString();
-                    if (strAddr == mne.getIp()){
-                        found2 = true;
-                        found = false;
-                    }
-                }
-                bool result;
-                if (!found2){
-                    result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
-                } else {
-                    errorMessage = "Throne has already been started and your IP added to the list.";
-                }
-
+                bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
                 statusObj.push_back(Pair("result", result ? "successful" : "failed"));
                 if(!result) {
                     statusObj.push_back(Pair("errorMessage", errorMessage));
@@ -376,7 +363,7 @@ Value throne(const Array& params, bool fHelp)
             }
         }
 
-        if(!found && !found2) {
+        if(!found) {
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
         }
@@ -410,38 +397,20 @@ Value throne(const Array& params, bool fHelp)
         int total = 0;
         int successful = 0;
         int fail = 0;
-        bool found = false;
 
         Object resultsObj;
         std::vector<CThrone> vThrones = mnodeman.GetFullThroneVector();
 
         BOOST_FOREACH(CThroneConfig::CThroneEntry mne, throneConfig.getEntries()) {
             total++;
-
             std::string errorMessage;
-            bool result;
-            BOOST_FOREACH(CThrone& mn, vThrones) {
-                std::string strAddr = mn.addr.ToString();
-                if (strAddr == mne.getIp()){
-                    found = true;
-                }
-                if (!found){
-                    result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
-                } else {
-                    errorMessage = "Throne has already been started and your IP added to the list.";
-                    result = false;
-                }
-            }
-
+            bool result = activeThrone.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
             Object statusObj;
             statusObj.push_back(Pair("alias", mne.getAlias()));
             statusObj.push_back(Pair("result", result ? "successful" : "failed"));
 
-            if (result && !found) {
+            if (result) {
                 successful++;
-            } else if (!result && found){
-                fail++;
-                statusObj.push_back(Pair("errorMessage", errorMessage));
             } else {
                 fail++;
                 statusObj.push_back(Pair("errorMessage", errorMessage));
@@ -734,7 +703,7 @@ Value thronelist(const Array& params, bool fHelp)
                 "  rank           - Print rank of a throne based on current block\n"
                 "  status         - Print throne status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
                 "  vin            - Print vin associated with a throne (can be additionally filtered, partial match)\n"
-                "  votes          - Print all throne votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  votes          - Print all throne votes for a Crown initiative (can be additionally filtered, partial match)\n"
                 );
     }
 

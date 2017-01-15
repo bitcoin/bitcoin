@@ -1,23 +1,20 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2015 The Crown developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef THRONEMAN_H
 #define THRONEMAN_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 #include "throne.h"
 
 #define THRONES_DUMP_SECONDS               (15*60)
-#define THRONES_DSEG_SECONDS               (1*60*60)
+#define THRONES_DSEG_SECONDS               (3*60*60)
 
 using namespace std;
 
@@ -46,7 +43,7 @@ public:
 
     CThroneDB();
     bool Write(const CThroneMan &mnodemanToSave);
-    ReadResult Read(CThroneMan& mnodemanToLoad);
+    ReadResult Read(CThroneMan& mnodemanToLoad, bool fDryRun = false);
 };
 
 class CThroneMan
@@ -55,8 +52,11 @@ private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
-    // map to hold all MNs
+    // critical section to protect the inner data structures specifically on messaging
+    mutable CCriticalSection cs_process_message;
 
+    // map to hold all MNs
+    std::vector<CThrone> vThrones;
     // who's asked for the Throne list and the last time
     std::map<CNetAddr, int64_t> mAskedUsForThroneList;
     // who we asked for the Throne list and the last time
@@ -65,27 +65,28 @@ private:
     std::map<COutPoint, int64_t> mWeAskedForThroneListEntry;
 
 public:
+    // Keep track of all broadcasts I've seen
+    map<uint256, CThroneBroadcast> mapSeenThroneBroadcast;
+    // Keep track of all pings I've seen
+    map<uint256, CThronePing> mapSeenThronePing;
+    
     // keep track of dsq count to prevent thrones from gaming darksend queue
     int64_t nDsqCount;
 
-    std::vector<CThrone> vThrones;
+    ADD_SERIALIZE_METHODS;
 
-    IMPLEMENT_SERIALIZE
-    (
-        // serialized format:
-        // * version byte (currently 0)
-        // * thrones vector
-        {
-                LOCK(cs);
-                unsigned char nVersion = 0;
-                READWRITE(nVersion);
-                READWRITE(vThrones);
-                READWRITE(mAskedUsForThroneList);
-                READWRITE(mWeAskedForThroneList);
-                READWRITE(mWeAskedForThroneListEntry);
-                READWRITE(nDsqCount);
-        }
-    )
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        LOCK(cs);
+        READWRITE(vThrones);
+        READWRITE(mAskedUsForThroneList);
+        READWRITE(mWeAskedForThroneList);
+        READWRITE(mWeAskedForThroneListEntry);
+        READWRITE(nDsqCount);
+
+        READWRITE(mapSeenThroneBroadcast);
+        READWRITE(mapSeenThronePing);
+    }
 
     CThroneMan();
     CThroneMan(CThroneMan& other);
@@ -93,30 +94,32 @@ public:
     /// Add an entry
     bool Add(CThrone &mn);
 
+    /// Ask (source) node for mnb
+    void AskForMN(CNode *pnode, CTxIn &vin);
+
     /// Check all Thrones
     void Check();
 
     /// Check all Thrones and remove inactive
-    void CheckAndRemove();
+    void CheckAndRemove(bool forceExpiredRemoval = false);
 
     /// Clear Throne vector
     void Clear();
 
-    int CountEnabled();
-
-    int CountThronesAboveProtocol(int protocolVersion);
+    int CountEnabled(int protocolVersion = -1);
 
     void DsegUpdate(CNode* pnode);
 
     /// Find an entry
+    CThrone* Find(const CScript &payee);
     CThrone* Find(const CTxIn& vin);
     CThrone* Find(const CPubKey& pubKeyThrone);
 
-    /// Find an entry thta do not match every entry provided vector
-    CThrone* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds);
+    /// Find an entry in the throne list that is next to be paid
+    CThrone* GetNextThroneInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount);
 
     /// Find a random entry
-    CThrone* FindRandom();
+    CThrone* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion = -1);
 
     /// Get the current winner for this block
     CThrone* GetCurrentThroNe(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
@@ -136,14 +139,12 @@ public:
 
     std::string ToString() const;
 
-    //
-    // Relay Throne Messages
-    //
-
-    void RelayThroneEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion);
-    void RelayThroneEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
-
     void Remove(CTxIn vin);
+
+    /// Update throne list and maps using provided CThroneBroadcast
+    void UpdateThroneList(CThroneBroadcast mnb);
+    /// Perform complete check and only then update list and maps
+    bool CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos);
 
 };
 

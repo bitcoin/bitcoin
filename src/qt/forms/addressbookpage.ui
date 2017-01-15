@@ -27,7 +27,7 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="toolTip">
-      <string>Double-click to edit address or label</string>
+      <string>Right-click to edit address or label</string>
      </property>
      <property name="tabKeyNavigation">
       <bool>false</bool>
@@ -60,8 +60,11 @@
         <string>&amp;New</string>
        </property>
        <property name="icon">
-        <iconset resource="../crowncoin.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -74,8 +77,11 @@
         <string>&amp;Copy</string>
        </property>
        <property name="icon">
-        <iconset resource="../crowncoin.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -88,8 +94,11 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../crowncoin.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -115,8 +124,11 @@
         <string>&amp;Export</string>
        </property>
        <property name="icon">
-        <iconset resource="../crowncoin.qrc">
+        <iconset resource="../crown.qrc">
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -131,6 +143,9 @@
        <property name="text">
         <string>C&amp;lose</string>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
     </layout>
@@ -138,7 +153,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../crowncoin.qrc"/>
+  <include location="../crown.qrc"/>
  </resources>
  <connections/>
 </ui>
