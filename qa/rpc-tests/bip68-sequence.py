@@ -44,8 +44,9 @@ class BIP68Test(BitcoinTestFramework):
         print("Running test sequence-lock-confirmed-inputs")
         self.test_sequence_lock_confirmed_inputs()
 
-        print("Running test sequence-lock-unconfirmed-inputs")
-        self.test_sequence_lock_unconfirmed_inputs()
+        #BU: this test uses prioritisetransaction which has been disabled in BU
+        #print("Running test sequence-lock-unconfirmed-inputs")
+        #self.test_sequence_lock_unconfirmed_inputs()
 
         print("Running test BIP68 not consensus before versionbits activation")
         self.test_bip68_not_consensus()
