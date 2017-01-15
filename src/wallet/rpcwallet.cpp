@@ -2506,6 +2506,8 @@ extern UniValue importaddress(const UniValue& params, bool fHelp);
 extern UniValue importpubkey(const UniValue& params, bool fHelp);
 extern UniValue dumpwallet(const UniValue& params, bool fHelp);
 extern UniValue importwallet(const UniValue& params, bool fHelp);
+extern UniValue importprunedfunds(const UniValue& params, bool fHelp);
+extern UniValue removeprunedfunds(const UniValue& params, bool fHelp);
 
 const CRPCCommand vWalletRPCCommands[] =
 { //  category              name                        actor (function)           okSafeMode
@@ -2532,6 +2534,7 @@ const CRPCCommand vWalletRPCCommands[] =
     { "wallet",             "importprivkey",            &importprivkey,            true  },
     { "wallet",             "importwallet",             &importwallet,             true  },
     { "wallet",             "importaddress",            &importaddress,            true  },
+    { "wallet",             "importprunedfunds",        &importprunedfunds,        true  },
     { "wallet",             "importpubkey",             &importpubkey,             true  },
     { "wallet",             "keypoolrefill",            &keypoolrefill,            true  },
     { "wallet",             "listaccounts",             &listaccounts,             false },
@@ -2553,6 +2556,7 @@ const CRPCCommand vWalletRPCCommands[] =
     { "wallet",             "walletlock",               &walletlock,               true  },
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true  },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true  },
+    { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true  },
 };
 
 void walletRegisterRPCCommands()
