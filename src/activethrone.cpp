@@ -375,20 +375,10 @@ vector<COutput> CActiveThrone::SelectCoinsThrone()
     // Retrieve all possible outputs
     pwalletMain->AvailableCoins(vCoins);
 
-<<<<<<< HEAD
-    // Filter
-    if (chainActive.Tip()->nHeight<145000) {
-    BOOST_FOREACH(const COutput& out, vCoins)
-    {
-        if(out.tx->vout[out.i].scriptPubKey == scriptPubKey && out.tx->vout[out.i].nValue == 10000*COIN) { //exactly
-        	filteredCoins.push_back(out);
-        }
-=======
     // Lock MN coins from throne.conf back if they where temporary unlocked
     if(!confLockedCoins.empty()) {
         BOOST_FOREACH(COutPoint outpoint, confLockedCoins)
             pwalletMain->LockCoin(outpoint);
->>>>>>> 347481c8b44861117094b4febb0882bb1f4dd377
     }
 
     // Filter
