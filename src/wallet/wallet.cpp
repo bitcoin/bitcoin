@@ -2899,10 +2899,9 @@ bool CWallet::NewKeyPool()
             walletdb.ErasePool(nIndex);
         setKeyPool.clear();
 
-        if (IsLocked())
+        if (!TopUpKeyPool()) {
             return false;
-
-        TopUpKeyPool();
+        }
         LogPrintf("CWallet::NewKeyPool rewrote keypool\n");
     }
     return true;
