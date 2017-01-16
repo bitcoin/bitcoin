@@ -11,7 +11,6 @@ Type=forking
 PIDFile=/var/lib/bitcoind/bitcoind.pid
 ExecStart=/usr/bin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
 -conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoind -disablewallet \
--sysperms=1
 
 Restart=always
 PrivateTmp=true
