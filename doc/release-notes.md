@@ -52,7 +52,7 @@ Fee Estimation Changes
   (previously 25) and for RPC calls (previously 2).
 
 Removal of Priority Estimation
-------------------------------
+-------------------------------
 
 - Estimation of "priority" needed for a transaction to be included within a target
   number of blocks has been removed.  The rpc calls are deprecated and will either
@@ -76,6 +76,27 @@ P2P connection management
 
 - New connections to manually added peers are much faster.
 
+Introduction of assumed-valid blocks
+-------------------------------------
+
+- A significant portion of the initial block download time is spent verifying
+  scripts/signatures.  Although the verification must pass to ensure the security
+  of the system, no other result from this verification is needed: If the node
+  knew the history of a given block were valid it could skip checking scripts
+  for its ancestors.
+
+- A new configuration option 'assumevalid' is provided to express this knowledge
+  to the software.  Unlike the 'checkpoints' in the past this setting does not
+  force the use of a particular chain: chains that are consistent with it are
+  processed quicker, but other chains are still accepted if they'd otherwise
+  be chosen as best. Also unlike 'checkpoints' the user can configure which
+  block history is assumed true, this means that even outdated software can
+  sync more quickly if the setting is updated by the user.
+
+- Because the validity of a chain history is a simple objective fact it is much
+  easier to review this setting.  As a result the software ships with a default
+  value adjusted to match the current chain shortly before release.  The use
+  of this default value can be disabled by setting -assumevalid=0
 
 0.14.0 Change log
 =================
