@@ -114,12 +114,17 @@ public:
             READWRITE(nVersion);
         READWRITE(nTime);
         READWRITE(vchPubKey);
-        if (nVersion >= FEATURE_HD_SPLIT)
-            READWRITE(fInternal);
-        else
-        {
-            if (ser_action.ForRead())
+        if (ser_action.ForRead()) {
+            try {
+                READWRITE(fInternal);
+            }
+            catch (...) {
+                /* flag as external address if we can't read the internal boolean */
                 fInternal = false;
+            }
+        }
+        else {
+            READWRITE(fInternal);
         }
     }
 };

@@ -3933,6 +3933,7 @@ bool CWallet::BackupWallet(const std::string& strDest)
 CKeyPool::CKeyPool()
 {
     nTime = GetTime();
+    fInternal = false;
 }
 
 CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
