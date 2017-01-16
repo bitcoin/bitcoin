@@ -81,6 +81,15 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
 {
     // Largest block you're willing to create:
     nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+
+    if (IsArgSet("-blockmintxfee")) {
+        CAmount n = 0;
+        ParseMoney(GetArg("-blockmintxfee", ""), n);
+        blockMinFeeRate = CFeeRate(n);
+    } else {
+        blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
+    }
+
     // Limit to between 1K and MAX_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MaxBlockSize(fDIP0001ActiveAtTip)-1000), nBlockMaxSize));
 }
@@ -409,7 +418,7 @@ void BlockAssembler::addPackageTxs()
             packageSigOps = modit->nSigOpCountWithAncestors;
         }
 
-        if (packageFees < ::minRelayTxFee.GetFee(packageSize)) {
+        if (packageFees < blockMinFeeRate.GetFee(packageSize)) {
             // Everything else we might consider has a lower fee rate
             return;
         }
