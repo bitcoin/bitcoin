@@ -3220,10 +3220,6 @@
         <translation>Ute av stand til å låse datamappen %s. Bitcoin Core kjører sannsynligvis allerede.</translation>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Opprett nye filer med standardtillatelser i systemet, i stedet for umask 077 (kun virksom med lommebokfunksjonalitet slått av)</translation>
-    </message>
-    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Oppdag egne IP-adresser (standardverdi: 1 ved lytting og ingen -externalip eller -proxy)</translation>
     </message>

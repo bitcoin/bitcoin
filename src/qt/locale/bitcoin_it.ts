@@ -3221,10 +3221,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Non è possibile ottenere un lock sulla cartella %s. Probabilmente Bitcoin Core è già in esecuzione.</translation>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Crea nuovi file con i permessi di default del sistema, invece che con umask 077 (ha effetto solo con funzionalità di portamonete disabilitate)</translation>
-    </message>
-    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Scopre i propri indirizzi IP (predefinito: 1 se in ascolto ed -externalip o -proxy non sono specificati)</translation>
     </message>

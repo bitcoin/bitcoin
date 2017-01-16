@@ -3221,10 +3221,6 @@
         <translation>沒辦法鎖定資料目錄 %s。Bitcoin Core 可能已經在執行了。</translation>
     </message>
     <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>用系統預設權限來造出新的檔案，而不是用使用者權限罩遮(umask)值 077 (只有在關掉錢包功能時才有作用)。</translation>
-    </message>
-    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>找出自己的網際網路位址(預設值: 當有聽候連線且沒有指定 -externalip 或 -proxy 時為 1)</translation>
     </message>
