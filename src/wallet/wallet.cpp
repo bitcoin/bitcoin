@@ -2912,6 +2912,10 @@ size_t CWallet::KeypoolCountExternalKeys()
 {
     AssertLockHeld(cs_wallet); // setKeyPool
 
+    // immediately return setKeyPool's size if HD or HD_SPLIT is disabled or not supported
+    if (!IsHDEnabled() || !CanSupportFeature(FEATURE_HD_SPLIT))
+        return setKeyPool.size();
+
     CWalletDB walletdb(strWalletFile);
 
     // count amount of external keys
