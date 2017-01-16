@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string>
 
+bool ChronoSanityCheck();
 int64_t GetTime();
 int64_t GetTimeMillis();
 int64_t GetTimeMicros();

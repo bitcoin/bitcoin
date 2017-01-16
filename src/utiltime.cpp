@@ -40,6 +40,38 @@ static inline const tm gmtime_int(time_t time)
     return out;
 }
 
+bool ChronoSanityCheck()
+{
+    // std::chrono::system_clock.time_since_epoch and time_t(0) are not guaranteed
+    // to use the Unix epoch timestamp, but in practice they almost certainly will.
+    // Any differing behavior will be assumed to be an error, unless certain
+    // platforms prove to consistently deviate, at which point we'll cope with it
+    // by adding offsets.
+
+    // Create a new clock from time_t(0) and make sure that it represents 0
+    // seconds from the system_clock's time_since_epoch. Then convert that back
+    // to a time_t and verify that it's the same as before.
+    const time_t zeroTime{};
+    auto clock = std::chrono::system_clock::from_time_t(zeroTime);
+    if (std::chrono::duration_cast<std::chrono::seconds>(clock.time_since_epoch()).count() != 0)
+        return false;
+
+    time_t nTime = std::chrono::system_clock::to_time_t(clock);
+    if (nTime != zeroTime)
+        return false;
+
+    // Check that the above zero time is actually equal to the known unix timestamp.
+    tm epoch = gmtime_int(nTime);
+    if ((epoch.tm_sec != 0)  || \
+       (epoch.tm_min  != 0)  || \
+       (epoch.tm_hour != 0)  || \
+       (epoch.tm_mday != 1)  || \
+       (epoch.tm_mon  != 0)  || \
+       (epoch.tm_year != 70))
+        return false; 
+    return true;
+}
+
 template <typename T>
 static inline int64_t GetCurrentTime()
 {
