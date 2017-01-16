@@ -1,6 +1,6 @@
 /*
  * This file is part of the bitcoin-classic project
- * Copyright (C) 2016 Tom Zander <tomz@freedommail.ch>
+ * Copyright (C) 2016-2017 Tom Zander <tomz@freedommail.ch>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -206,6 +206,106 @@ BOOST_AUTO_TEST_CASE(Clear)
     strcpy(pool.begin(), "bla");
     ConstBuffer buf = pool.commit(4);
     BOOST_CHECK(strncmp(buf.begin(), "bla", 3) == 0);
+}
+
+BOOST_AUTO_TEST_CASE(CMFBasic)
+{
+    MessageBuilder builder(NoHeader);
+    builder.add(15, 6512);
+    ConstBuffer buf = builder.buffer();
+    const char * data = buf.begin();
+    BOOST_CHECK_EQUAL(buf.size(), 3);
+    BOOST_CHECK_EQUAL(data[0], 120);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(data[1]), 177);
+    BOOST_CHECK_EQUAL(data[2], 112);
+
+    MessageParser parser(buf);
+    ParsedType type = parser.next();
+    BOOST_CHECK_EQUAL(type, FoundTag);
+    BOOST_CHECK_EQUAL(parser.tag(), 15);
+    BOOST_CHECK_EQUAL(parser.intData(), 6512);
+    type = parser.next();
+    BOOST_CHECK_EQUAL(type, EndOfDocument);
+}
+
+BOOST_AUTO_TEST_CASE(CMFBasic2)
+{
+    MessageBuilder builder(NoHeader);
+    builder.add(129, 6512);
+    ConstBuffer buf = builder.buffer();
+    BOOST_CHECK_EQUAL(buf.size(), 5);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[0]), 248);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[1]), 128);
+    BOOST_CHECK_EQUAL(buf[2], 1);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[3]), 177);
+    BOOST_CHECK_EQUAL(buf[4], 112);
+
+    MessageParser parser(buf);
+    ParsedType type = parser.next();
+    BOOST_CHECK_EQUAL(type, FoundTag);
+    BOOST_CHECK_EQUAL(parser.tag(), 129);
+    BOOST_CHECK_EQUAL(parser.intData(), 6512);
+    type = parser.next();
+    BOOST_CHECK_EQUAL(type, EndOfDocument);
+}
+
+BOOST_AUTO_TEST_CASE(CMFTypes)
+{
+    MessageBuilder builder(NoHeader);
+    builder.add(1, std::string("Föo"));
+    std::vector<char> blob;
+    blob.assign(4, 'h');
+    blob[1] = blob[3] = 'i';
+    builder.add(200, blob);
+    builder.add(3, true);
+    builder.add(40, false);
+
+    ConstBuffer buf = builder.buffer();
+    BOOST_CHECK_EQUAL(buf.size(), 17);
+
+    // string '1'
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[0]), 10);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[1]), 4); // serialized string length
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[2]), 70);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[3]), 195);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[4]), 182);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[5]), 111);
+
+    // blob '200'
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[6]), 251);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[7]), 128);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[8]), 72);
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[9]), 4); // length of bytearray
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[10]), 104);  //'h'
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[11]), 105);  //'i'
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[12]), 104);  //'h'
+    BOOST_CHECK_EQUAL(static_cast<unsigned char>(buf[13]), 105);  //'i'
+
+    // bool-true '3'
+    BOOST_CHECK(static_cast<unsigned char>(buf[14]) == 28);
+
+    // bool-false '40'
+    BOOST_CHECK(static_cast<unsigned char>(buf[15]) == 253);
+    BOOST_CHECK(static_cast<unsigned char>(buf[16]) == 40);
+
+    MessageParser parser(buf);
+    BOOST_CHECK_EQUAL(parser.next(), FoundTag);
+    BOOST_CHECK_EQUAL(parser.tag(), (unsigned int) 1);
+    BOOST_CHECK_EQUAL(parser.stringData(), std::string("Föo"));
+    BOOST_CHECK_EQUAL(parser.next(), FoundTag);
+    BOOST_CHECK_EQUAL(parser.tag(), (unsigned int) 200);
+    std::vector<char> blobCopy = parser.bytesData();
+    BOOST_CHECK_EQUAL(blobCopy.size(), blob.size());
+    for (unsigned int i = 0; i < blobCopy.size(); ++i) {
+        BOOST_CHECK_EQUAL(blobCopy[i], blob[i]);
+    }
+    BOOST_CHECK_EQUAL(parser.next(), FoundTag);
+    BOOST_CHECK_EQUAL(parser.tag(), (unsigned int) 3);
+    BOOST_CHECK_EQUAL(parser.boolData(), true);
+    BOOST_CHECK_EQUAL(parser.next(), FoundTag);
+    BOOST_CHECK_EQUAL(parser.tag(), (unsigned int) 40);
+    BOOST_CHECK_EQUAL(parser.boolData(), false);
+    BOOST_CHECK_EQUAL(parser.next(), EndOfDocument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
