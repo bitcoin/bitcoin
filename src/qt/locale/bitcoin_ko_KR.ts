@@ -2898,10 +2898,6 @@
         <translation>Tor 서비스를 이용하여 피어에게 연결하기 위해 분리된 SOCKS5 프록시를 사용 (기본값: %s)</translation>
     </message>
     <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
-        <translation>JSON-RPC 연결시 사용자 이름과 해시화된 암호문. &lt;userpw&gt; 필드는 &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt; 포멧으로 구성되어 있습니다. 전형적 파이썬 스크립트에선 share/rpcuser가 포함되어 있습니다. 이 옵션은 여러번 지정할 수 있습니다.</translation>
-    </message>
-    <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>경고: 알려지지 않은 버전의 블록이 채굴되었습니다. 알려지지 않은 규칙이 적용되었을 가능성이 있습니다.</translation>
     </message>

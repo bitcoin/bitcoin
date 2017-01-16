@@ -2295,10 +2295,6 @@
         <translation>Použiť samostatný SOCKS5 proxy server na dosiahnutie počítačov cez skryté služby Tor (predvolené: %s)</translation>
     </message>
     <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
-        <translation>Užívateľské hash meno a heslo pre JSON-RPC pripojenia. Pole &lt;userpw&gt; je vo formáte &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Kanonický python skript je zahrnutý v share/rpcuser. Toto nastavenie môže byť špecifikované viac krát</translation>
-    </message>
-    <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Varovanie: Neznáma verzia blokov sa doluje! Je možné, že neznáme pravidlá majú efekt</translation>
     </message>
