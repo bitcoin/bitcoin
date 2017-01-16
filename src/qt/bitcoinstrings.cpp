@@ -132,13 +132,20 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Randomize credentials for every proxy connection. This enables Tor stream "
 "isolation (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Reduce storage requirements by pruning (deleting) old blocks. This mode is "
-"incompatible with -txindex and -rescan. Warning: Reverting this setting "
-"requires re-downloading the entire blockchain. (default: 0 = disable pruning "
-"blocks, >%u = target size in MiB to use for block files)"),
+"Reduce storage requirements by enabling pruning (deleting) of old blocks. "
+"This allows the pruneblockchain RPC to be called to delete specific blocks, "
+"and enables automatic pruning of old blocks if a target size in MiB is "
+"provided. This mode is incompatible with -txindex and -rescan. Warning: "
+"Reverting this setting requires re-downloading the entire blockchain. "
+"(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >%u "
+"= automatically prune block files to stay under the specified target size in "
+"MiB)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Rescans are not possible in pruned mode. You will need to use -reindex which "
 "will download the whole blockchain again."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Set lowest fee rate (in %s/kB) for transactions to be included in block "
+"creation. (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
