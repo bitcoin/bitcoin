@@ -3930,10 +3930,9 @@ bool CWallet::NewKeyPool()
         privateSendClient.fEnablePrivateSend = false;
         nKeysLeftSinceAutoBackup = 0;
 
-        if (IsLocked())
+        if (!TopUpKeyPool()) {
             return false;
-
-        TopUpKeyPool();
+        }
         LogPrintf("CWallet::NewKeyPool rewrote keypool\n");
     }
     return true;
