@@ -3001,7 +3001,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool int
                 throw std::runtime_error(std::string(__func__) + ": read failed");
             if (!HaveKey(tmpKeypool.vchPubKey.GetID()))
                 throw std::runtime_error(std::string(__func__) + ": unknown key in key pool");
-            if (!IsHDEnabled() || (tmpKeypool.fInternal == internal && CanSupportFeature(FEATURE_HD_SPLIT)))
+            if (!IsHDEnabled() || !CanSupportFeature(FEATURE_HD_SPLIT) || tmpKeypool.fInternal == internal)
             {
                 nIndex = id;
                 keypool = tmpKeypool;
