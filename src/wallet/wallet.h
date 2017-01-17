@@ -118,7 +118,7 @@ public:
             try {
                 READWRITE(fInternal);
             }
-            catch (...) {
+            catch (std::ios_base::failure&) {
                 /* flag as external address if we can't read the internal boolean */
                 fInternal = false;
             }
