@@ -470,7 +470,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         # drain the keypool
         self.nodes[1].getnewaddress()
         self.nodes[1].getrawchangeaddress()
-        self.nodes[1].getrawchangeaddress()
         inputs = []
         outputs = {self.nodes[0].getnewaddress():1.1}
         rawTx = self.nodes[1].createrawtransaction(inputs, outputs)

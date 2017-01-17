@@ -29,15 +29,19 @@ class KeyPoolTest(BitcoinTestFramework):
         assert(addr_data['hdmasterkeyid'] == wallet_info['hdmasterkeyid'])
         assert_raises_jsonrpc(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
-        # put six (plus 2) new keys in the keypool (100% external-, +20% internal-keys, 2 in min)
+        # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
         nodes[0].walletpassphrase('test', 12000)
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 2)
+        assert_equal(wi['keypoolsize_hd_internal'], 6)
         assert_equal(wi['keypoolsize'], 6)
 
         # drain the internal keys
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
+        nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
         nodes[0].getrawchangeaddress()
         addr = set()
@@ -72,7 +76,7 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 20)
+        assert_equal(wi['keypoolsize_hd_internal'], 100)
         assert_equal(wi['keypoolsize'], 100)
 
     def __init__(self):
