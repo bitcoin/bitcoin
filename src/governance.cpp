@@ -152,6 +152,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         uint256 nHash = govobj.GetHash();
         std::string strHash = nHash.ToString();
 
+        pfrom->setAskFor.erase(nHash);
+
         LogPrint("gobject", "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
 
         if(!AcceptObjectMessage(nHash)) {
@@ -235,6 +237,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         uint256 nHash = vote.GetHash();
         std::string strHash = nHash.ToString();
+
+        pfrom->setAskFor.erase(nHash);
 
         if(!AcceptVoteMessage(nHash)) {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",

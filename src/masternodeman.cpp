@@ -780,6 +780,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
+        pfrom->setAskFor.erase(mnb.GetHash());
+
         LogPrint("masternode", "MNANNOUNCE -- Masternode announce, masternode=%s\n", mnb.vin.prevout.ToStringShort());
 
         // backward compatibility patch
@@ -805,13 +807,17 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodePing mnp;
         vRecv >> mnp;
 
+        uint256 nHash = mnp.GetHash();
+
+        pfrom->setAskFor.erase(nHash);
+
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s\n", mnp.vin.prevout.ToStringShort());
 
         // Need LOCK2 here to ensure consistent locking order because the CheckAndUpdate call below locks cs_main
         LOCK2(cs_main, cs);
 
-        if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
-        mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
+        if(mapSeenMasternodePing.count(nHash)) return; //seen
+        mapSeenMasternodePing.insert(std::make_pair(nHash, mnp));
 
         LogPrint("masternode", "MNPING -- Masternode ping, masternode=%s new\n", mnp.vin.prevout.ToStringShort());
 

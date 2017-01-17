@@ -340,18 +340,22 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, std::string& strCommand, 
 
         if(!pCurrentBlockIndex) return;
 
+        uint256 nHash = vote.GetHash();
+
+        pfrom->setAskFor.erase(nHash);
+
         {
             LOCK(cs_mapMasternodePaymentVotes);
-            if(mapMasternodePaymentVotes.count(vote.GetHash())) {
-                LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nHeight=%d seen\n", vote.GetHash().ToString(), pCurrentBlockIndex->nHeight);
+            if(mapMasternodePaymentVotes.count(nHash)) {
+                LogPrint("mnpayments", "MASTERNODEPAYMENTVOTE -- hash=%s, nHeight=%d seen\n", nHash.ToString(), pCurrentBlockIndex->nHeight);
                 return;
             }
 
             // Avoid processing same vote multiple times
-            mapMasternodePaymentVotes[vote.GetHash()] = vote;
+            mapMasternodePaymentVotes[nHash] = vote;
             // but first mark vote as non-verified,
             // AddPaymentVote() below should take care of it if vote is actually ok
-            mapMasternodePaymentVotes[vote.GetHash()].MarkAsNotVerified();
+            mapMasternodePaymentVotes[nHash].MarkAsNotVerified();
         }
 
         int nFirstBlock = pCurrentBlockIndex->nHeight - GetStorageLimit();
