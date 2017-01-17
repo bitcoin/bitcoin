@@ -321,6 +321,12 @@ public:
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
 
+    CGovernanceObject& operator=(CGovernanceObject from)
+    {
+        swap(*this, from);
+        return *this;
+    }
+
 private:
     // FUNCTIONS FOR DEALING WITH DATA STRING
     void LoadData();
