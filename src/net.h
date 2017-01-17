@@ -328,6 +328,8 @@ public:
     CSipHasher GetDeterministicRandomizer(uint64_t id);
 
     unsigned int GetReceiveFloodSize() const;
+
+    void WakeMessageHandler();
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -343,8 +345,6 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
-
-    void WakeMessageHandler();
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
