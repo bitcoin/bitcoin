@@ -2,6 +2,19 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test BIP65 (CHECKLOCKTIMEVERIFY).
+
+Connect to a single node.
+Mine 2 (version 3) blocks (save the coinbases for later).
+Generate 98 more version 3 blocks, verify the node accepts.
+Mine 749 version 4 blocks, verify the node accepts.
+Check that the new CLTV rules are not enforced on the 750th version 4 block.
+Check that the new CLTV rules are enforced on the 751st version 4 block.
+Mine 199 new version blocks.
+Mine 1 old-version block.
+Mine 1 new version block.
+Mine 1 old version block, see that the node rejects.
+"""
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -20,19 +33,6 @@ def cltv_invalidate(tx):
     tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
                                   list(CScript(tx.vin[0].scriptSig)))
 
-'''
-This test is meant to exercise BIP65 (CHECKLOCKTIMEVERIFY)
-Connect to a single node.
-Mine 2 (version 3) blocks (save the coinbases for later).
-Generate 98 more version 3 blocks, verify the node accepts.
-Mine 749 version 4 blocks, verify the node accepts.
-Check that the new CLTV rules are not enforced on the 750th version 4 block.
-Check that the new CLTV rules are enforced on the 751st version 4 block.
-Mine 199 new version blocks.
-Mine 1 old-version block.
-Mine 1 new version block.
-Mine 1 old version block, see that the node rejects.
-'''
 
 class BIP65Test(ComparisonTestFramework):
 
