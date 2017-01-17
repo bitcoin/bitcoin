@@ -1121,20 +1121,24 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
     }
 }
 
-void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
+void CWallet::SyncTransactions(const std::vector<CTransactionRef>& vtx, const CBlockIndex *pindex)
 {
     LOCK2(cs_main, cs_wallet);
 
-    if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true))
-        return; // Not one of ours
+    for (size_t i = 0; i < vtx.size(); i++) {
+        const CTransaction& tx = *vtx[i];
 
-    // If a transaction changes 'conflicted' state, that changes the balance
-    // available of the outputs it spends. So force those to be
-    // recomputed, also:
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        if (mapWallet.count(txin.prevout.hash))
-            mapWallet[txin.prevout.hash].MarkDirty();
+        if (!AddToWalletIfInvolvingMe(tx, pindex, pindex ? i : -1, true))
+            continue; // Not one of ours
+
+        // If a transaction changes 'conflicted' state, that changes the balance
+        // available of the outputs it spends. So force those to be
+        // recomputed, also:
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            if (mapWallet.count(txin.prevout.hash))
+                mapWallet[txin.prevout.hash].MarkDirty();
+        }
     }
 }
 
