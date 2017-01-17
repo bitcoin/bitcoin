@@ -248,6 +248,10 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           self.nodes[1].set("net.excessiveTx=100000")
           self.nodes[2].set("net.excessiveTx=100000")
           self.nodes[3].set("net.excessiveTx=100000")
+          self.nodes[0].setminingmaxblock(1000000)
+          self.nodes[1].setminingmaxblock(1000000)
+          self.nodes[2].setminingmaxblock(1000000)
+          self.nodes[3].setminingmaxblock(1000000)
              
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=True)
@@ -292,6 +296,12 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           assert_equal(mbefore[1:],[(0, 0), (0, 0), (0, 0)])  # verify that the transaction did not propagate
           assert(mbefore[0][0] > 0) # verify that the transaction is in my node
 
+          print ("allowing tx a chance to propagate - sleeping...")
+          while len(self.nodes[0].getmempoolinfo()) < 1 :
+              print ("sleeping 1")
+              time.sleep(1)
+          time.sleep(5)
+
           logging.info("Test a large transaction in block < 1MB")
           largeBlock = self.nodes[0].generate(1)
           self.sync_blocks()
@@ -303,7 +313,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
           logging.info("Creating addresses...")
           addrs = [ self.nodes[0].getnewaddress() for _ in range(2000)]
-            # Create a LOT of UTXOs for the next test
+          # Create a LOT of UTXOs for the next test
           wallet = self.nodes[0].listunspent()
           wallet.sort(key=lambda x: x["amount"],reverse=True)
           wlen = len(wallet)
@@ -325,7 +335,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
             wallet.sort(key=lambda x: x["amount"],reverse=True)
             wlen = len(wallet)
             
-        
+
           self.nodes[0].generate(1)
           self.sync_all()
 
