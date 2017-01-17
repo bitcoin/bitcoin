@@ -722,6 +722,18 @@ private:
 
     std::unique_ptr<CWalletDBWrapper> dbw;
 
+    /**
+     * The following is used to keep track of how far behind the wallet is
+     * from the chain sync, and to allow clients to block on us being caught up.
+     *
+     * Note that this is *not* how far we've processed, we may need some rescan
+     * to have seen all transactions in the chain, but is only used to track
+     * live BlockConnected callbacks.
+     *
+     * Protected by cs_main (see BlockUntilSyncedToCurrentChain)
+     */
+    const CBlockIndex* m_last_block_processed;
+
 public:
     /*
      * Main wallet lock.
@@ -1106,6 +1118,14 @@ public:
        caller must ensure the current wallet version is correct before calling
        this function). */
     bool SetHDMasterKey(const CPubKey& key);
+
+    /**
+     * Blocks until the wallet state is up-to-date to /at least/ the current
+     * chain at the time this function is entered
+     * Obviously holding cs_main/cs_wallet when going into this call may cause
+     * deadlock
+     */
+    void BlockUntilSyncedToCurrentChain();
 };
 
 /** A key allocated from the key pool. */
