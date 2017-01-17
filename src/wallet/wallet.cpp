@@ -1168,8 +1168,47 @@ void CWallet::SyncTransactions(const std::vector<CTransactionRef>& vtx, const CB
         }
 
         hashPrevBestCoinBase = vtx[0]->GetHash();
+
+        {
+            std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
+            lastBlockProcessed = pindex;
+        }
+        cv_blockProcessed.notify_all();
     }
 }
+
+
+void CWallet::BlockUntilSyncedToCurrentChain() {
+    const CBlockIndex* initialChainTip;
+    {
+        LOCK(cs_main);
+        initialChainTip = chainActive.Tip();
+    }
+    AssertLockNotHeld(cs_main);
+    AssertLockNotHeld(cs_wallet);
+    std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
+
+    assert(lastBlockProcessed);
+
+    cv_blockProcessed.wait(lock, [this, initialChainTip] {
+            if (this->lastBlockProcessed == initialChainTip) {
+                return true;
+            }
+            // Catch the race condition where the wallet may have caught up and
+            // moved past initialChainTip before we could get
+            // lastBlockProcessedMutex.
+            TRY_LOCK(cs_main, mainLocked);
+            if (mainLocked) {
+                if (this->lastBlockProcessed == chainActive.Tip()) {
+                    return true;
+                }
+                // If the user called invalidatechain some things might block
+                // forever, so we check if we're ahead of a the tip (a state
+                // which should never be exposed to the outside world)
+                return this->lastBlockProcessed->nChainWork > chainActive.Tip()->nChainWork;
+            }
+        });
+};
 
 
 isminetype CWallet::IsMine(const CTxIn &txin) const
@@ -1534,6 +1573,12 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             }
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
+
+        {
+            std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
+            lastBlockProcessed = chainActive.Tip();
+        }
+        cv_blockProcessed.notify_all();
     }
     return ret;
 }
@@ -3581,8 +3626,6 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
 
-    RegisterValidationInterface(walletInstance);
-
     CBlockIndex *pindexRescan = chainActive.Tip();
     if (GetBoolArg("-rescan", false))
         pindexRescan = chainActive.Genesis();
@@ -3595,6 +3638,12 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         else
             pindexRescan = chainActive.Genesis();
     }
+
+    //We must set lastBlockProcessed prior to registering the wallet as a validation interface
+    walletInstance->lastBlockProcessed = pindexRescan;
+
+    RegisterValidationInterface(walletInstance);
+
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
         //We can't rescan beyond non-pruned blocks, stop and throw an error

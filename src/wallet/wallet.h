@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <condition_variable>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -603,6 +604,14 @@ private:
     bool fFileBacked;
 
     std::set<int64_t> setKeyPool;
+
+    /**
+     * The following are used to keep track of how far behind the wallet is
+     * from the chain sync, and to allow clients to block on us being caught up
+     */
+    const CBlockIndex* lastBlockProcessed;
+    std::mutex lastBlockProcessedMutex;
+    std::condition_variable cv_blockProcessed;
 public:
     /*
      * Main wallet lock.
@@ -951,6 +960,14 @@ public:
     
     /* Set the current HD master key (will reset the chain child index counters) */
     bool SetHDMasterKey(const CPubKey& key);
+
+    /**
+     * Blocks until the wallet state is up-to-date to /at least/ the current
+     * chain at the time this function is entered
+     * Obviously holding cs_main/cs_wallet when going into this call may cause
+	 * deadlock
+     */
+    void BlockUntilSyncedToCurrentChain();
 };
 
 /** A key allocated from the key pool. */
