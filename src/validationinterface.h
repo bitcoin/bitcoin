@@ -7,11 +7,6 @@
 #define BITCOIN_VALIDATIONINTERFACE_H
 
 #include <boost/signals2/signal.hpp>
-<<<<<<< HEAD
-#include <boost/shared_ptr.hpp>
-
-=======
->>>>>>> 1c95e2f... Use std::shared_ptr instead of boost::shared_ptr in ScriptForMining
 #include <memory>
 
 #include "primitives/transaction.h" // CTransaction(Ref)
@@ -44,7 +39,6 @@ protected:
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void NotifyTransactionLock(const CTransaction &tx) {}
-    virtual bool UpdatedTransaction(const uint256 &hash) { return false;}
     virtual void Inventory(const uint256 &hash) {}
     virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
@@ -71,8 +65,6 @@ struct CMainSignals {
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &)> BlockConnected;
     /** Notifies listeners of a block being disconnected */
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &)> BlockDisconnected;
-    /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
-    boost::signals2::signal<bool (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of an updated transaction lock without new data. */
     boost::signals2::signal<void (const CTransaction &)> NotifyTransactionLock;
     /** Notifies listeners of a new active block chain. */
