@@ -685,6 +685,10 @@ private:
      */
     bool AddWatchOnly(const CScript& dest) override;
 
+    // Used to NotifyTransactionChanged of the previous block's coinbase when
+    // the next block comes in
+    uint256 hashPrevBestCoinbase;
+
 public:
     /*
      * Main wallet lock.
@@ -949,8 +953,6 @@ public:
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
-
-    void UpdatedTransaction(const uint256 &hashTx) override;
 
     void Inventory(const uint256 &hash) override
     {
