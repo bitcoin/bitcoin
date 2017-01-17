@@ -2,6 +2,7 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test block proposals with getblocktemplate."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -66,9 +67,6 @@ def assert_template(node, tmpl, txlist, expect):
         raise AssertionError('unexpected: %s' % (rsp,))
 
 class GetBlockTemplateProposalTest(BitcoinTestFramework):
-    '''
-    Test block proposals with getblocktemplate.
-    '''
 
     def __init__(self):
         super().__init__()

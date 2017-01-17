@@ -2,6 +2,7 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test segwit transactions and blocks on P2P network."""
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
@@ -21,9 +22,6 @@ VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
 
-'''
-SegWit p2p test.
-'''
 
 # Calculate the virtual size of a witness block:
 # (base + witness/4)

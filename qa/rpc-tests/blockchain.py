@@ -2,11 +2,14 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test RPCs related to blockchainstate.
 
-#
-# Test RPC calls related to blockchain state. Tests correspond to code in
-# rpc/blockchain.cpp.
-#
+Test the following RPCs:
+    - gettxoutsetinfo
+    - verifychain
+
+Tests correspond to code in rpc/blockchain.cpp.
+"""
 
 from decimal import Decimal
 
@@ -23,13 +26,6 @@ from test_framework.util import (
 
 
 class BlockchainTest(BitcoinTestFramework):
-    """
-    Test blockchain-related RPC calls:
-
-        - gettxoutsetinfo
-        - verifychain
-
-    """
 
     def __init__(self):
         super().__init__()

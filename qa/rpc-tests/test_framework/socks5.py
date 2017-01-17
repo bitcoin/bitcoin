@@ -2,9 +2,7 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-'''
-Dummy Socks5 server for testing.
-'''
+"""Dummy Socks5 server for testing."""
 
 import socket, threading, queue
 import traceback, sys
@@ -20,7 +18,7 @@ class AddressType:
 
 ### Utility functions
 def recvall(s, n):
-    '''Receive n bytes from a socket, or fail'''
+    """Receive n bytes from a socket, or fail."""
     rv = bytearray()
     while n > 0:
         d = s.recv(n)
@@ -32,7 +30,7 @@ def recvall(s, n):
 
 ### Implementation classes
 class Socks5Configuration(object):
-    '''Proxy configuration'''
+    """Proxy configuration."""
     def __init__(self):
         self.addr = None # Bind address (must be set)
         self.af = socket.AF_INET # Bind address family
@@ -40,7 +38,7 @@ class Socks5Configuration(object):
         self.auth = False  # Support authentication
 
 class Socks5Command(object):
-    '''Information about an incoming socks5 command'''
+    """Information about an incoming socks5 command."""
     def __init__(self, cmd, atyp, addr, port, username, password):
         self.cmd = cmd # Command (one of Command.*)
         self.atyp = atyp # Address type (one of AddressType.*)
@@ -58,9 +56,7 @@ class Socks5Connection(object):
         self.peer = peer
 
     def handle(self):
-        '''
-        Handle socks5 request according to RFC1928
-        '''
+        """Handle socks5 request according to RFC192."""
         try:
             # Verify socks version
             ver = recvall(self.conn, 1)[0]

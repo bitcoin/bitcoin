@@ -2,11 +2,11 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test mempool re-org scenarios.
 
-#
-# Test re-org scenarios with a mempool that contains transactions
-# that spend (directly or indirectly) coinbase transactions.
-#
+Test re-org scenarios with a mempool that contains transactions
+that spend (directly or indirectly) coinbase transactions.
+"""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
