@@ -1306,10 +1306,6 @@ CPubKey CWallet::GenerateNewHDMasterKey()
 bool CWallet::SetHDMasterKey(const CPubKey& pubkey)
 {
     LOCK(cs_wallet);
-
-    // ensure this wallet.dat can only be opened by clients supporting HD with chain split
-    SetMinVersion(FEATURE_HD_SPLIT);
-
     // store the keyid (hash160) together with
     // the child index counter in the database
     // as a hdchain object
@@ -3670,6 +3666,9 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
             CPubKey masterPubKey = walletInstance->GenerateNewHDMasterKey();
             if (!walletInstance->SetHDMasterKey(masterPubKey))
                 throw std::runtime_error(std::string(__func__) + ": Storing master key failed");
+
+            // ensure this wallet.dat can only be opened by clients supporting HD with chain split
+            walletInstance->SetMinVersion(FEATURE_HD_SPLIT);
         }
         CPubKey newDefaultKey;
         if (walletInstance->GetKeyFromPool(newDefaultKey, false)) {
