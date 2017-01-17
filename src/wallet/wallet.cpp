@@ -2946,13 +2946,11 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             nTargetSize = std::max(GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t) 0);
 
         // count amount of available keys (internal, external)
-        // make sure the keypool of external keys fits the user selected target (-keypool)
-        // generate +20% internal keys (minimum 2 keys)
+        // make sure the keypool of external and internal keys fits the user selected target (-keypool)
         int64_t amountExternal = KeypoolCountExternalKeys();
         int64_t amountInternal = setKeyPool.size() - amountExternal;
-        int64_t targetInternal = std::max((int64_t)ceil(nTargetSize * 0.2), (int64_t) 2);
         int64_t missingExternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - amountExternal, (int64_t) 0);
-        int64_t missingInternal = std::max(targetInternal - amountInternal, (int64_t) 0);
+        int64_t missingInternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - amountInternal, (int64_t) 0);
 
         if (!IsHDEnabled() || !CanSupportFeature(FEATURE_HD_SPLIT))
         {
