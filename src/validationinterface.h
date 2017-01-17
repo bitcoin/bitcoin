@@ -36,7 +36,6 @@ protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     virtual void SyncTransactions(const std::vector<CTransactionRef> &ptxn, const CBlockIndex *pindex) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
-    virtual void UpdatedTransaction(const uint256 &hash) {}
     virtual void Inventory(const uint256 &hash) {}
     virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
@@ -53,8 +52,6 @@ struct CMainSignals {
     boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> UpdatedBlockTip;
     /** Notifies listeners of updated transaction data (transaction, and optionally the block it is found in. */
     boost::signals2::signal<void (const std::vector<CTransactionRef> &, const CBlockIndex *pindex)> SyncTransactions;
-    /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
-    boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */
     boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
     /** Notifies listeners about an inventory item being seen on the network. */

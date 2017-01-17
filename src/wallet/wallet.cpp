@@ -1140,6 +1140,35 @@ void CWallet::SyncTransactions(const std::vector<CTransactionRef>& vtx, const CB
                 mapWallet[txin.prevout.hash].MarkDirty();
         }
     }
+
+
+    if (pindex) {
+        // Watch for changes to the previous coinbase transaction.
+        static uint256 hashPrevBestCoinBase;
+
+        // Only notify UI if this transaction is in this wallet
+        {
+            if (hashPrevBestCoinBase.IsNull()) {
+                // For correctness we scan over the entire wallet, looking for
+                // the previous block's coinbase, just in case it is ours, so
+                // that we can notify the UI that it should now be displayed.
+                if (pindex->pprev) {
+                    for (const std::pair<uint256, CWalletTx>& p : mapWallet) {
+                        if (p.second.IsCoinBase() && p.second.hashBlock == pindex->pprev->GetBlockHash()) {
+                            NotifyTransactionChanged(this, p.first, CT_UPDATED);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashPrevBestCoinBase);
+                if (mi != mapWallet.end())
+                    NotifyTransactionChanged(this, hashPrevBestCoinBase, CT_UPDATED);
+            }
+        }
+
+        hashPrevBestCoinBase = vtx[0]->GetHash();
+    }
 }
 
 
@@ -3230,17 +3259,6 @@ void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
         if (!HaveKey(keyID))
             throw runtime_error(std::string(__func__) + ": unknown key in key pool");
         setAddress.insert(keyID);
-    }
-}
-
-void CWallet::UpdatedTransaction(const uint256 &hashTx)
-{
-    {
-        LOCK(cs_wallet);
-        // Only notify UI if this transaction is in this wallet
-        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
-        if (mi != mapWallet.end())
-            NotifyTransactionChanged(this, hashTx, CT_UPDATED);
     }
 }
 

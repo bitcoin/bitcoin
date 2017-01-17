@@ -15,7 +15,6 @@ CMainSignals& GetMainSignals()
 void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.UpdatedBlockTip.connect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, _1, _2, _3));
     g_signals.SyncTransactions.connect(boost::bind(&CValidationInterface::SyncTransactions, pwalletIn, _1, _2));
-    g_signals.UpdatedTransaction.connect(boost::bind(&CValidationInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CValidationInterface::SetBestChain, pwalletIn, _1));
     g_signals.Inventory.connect(boost::bind(&CValidationInterface::Inventory, pwalletIn, _1));
     g_signals.Broadcast.connect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, _1, _2));
@@ -32,7 +31,6 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.Broadcast.disconnect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, _1, _2));
     g_signals.Inventory.disconnect(boost::bind(&CValidationInterface::Inventory, pwalletIn, _1));
     g_signals.SetBestChain.disconnect(boost::bind(&CValidationInterface::SetBestChain, pwalletIn, _1));
-    g_signals.UpdatedTransaction.disconnect(boost::bind(&CValidationInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SyncTransactions.disconnect(boost::bind(&CValidationInterface::SyncTransactions, pwalletIn, _1, _2));
     g_signals.UpdatedBlockTip.disconnect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, _1, _2, _3));
     g_signals.NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
@@ -45,7 +43,6 @@ void UnregisterAllValidationInterfaces() {
     g_signals.Broadcast.disconnect_all_slots();
     g_signals.Inventory.disconnect_all_slots();
     g_signals.SetBestChain.disconnect_all_slots();
-    g_signals.UpdatedTransaction.disconnect_all_slots();
     g_signals.SyncTransactions.disconnect_all_slots();
     g_signals.UpdatedBlockTip.disconnect_all_slots();
     g_signals.NewPoWValidBlock.disconnect_all_slots();
