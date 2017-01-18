@@ -158,7 +158,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         if(!AcceptObjectMessage(nHash)) {
             LogPrintf("MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
-            Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
@@ -243,7 +242,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(!AcceptVoteMessage(nHash)) {
             LogPrint("gobject", "MNGOVERNANCEOBJECTVOTE -- Received unrequested vote object: %s, hash: %s, peer = %d\n",
                       vote.ToString(), strHash, pfrom->GetId());
-            //Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
@@ -672,9 +670,9 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
                 LogPrint("gobject", "CGovernanceManager::Sync -- attempting to sync govobj: %s, peer=%d\n", strHash, pfrom->id);
 
-                if(!govobj.IsSetCachedValid()) {
-                    LogPrintf("CGovernanceManager::Sync -- invalid flag cached, not syncing govobj: %s, fCachedValid = %d, peer=%d\n",
-                              strHash, govobj.IsSetCachedValid(), pfrom->id);
+                if(govobj.IsSetCachedDelete()) {
+                    LogPrintf("CGovernanceManager::Sync -- not syncing deleted govobj: %s, peer=%d\n",
+                              strHash, pfrom->id);
                     continue;
                 }
 
@@ -695,9 +693,9 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
             LogPrint("gobject", "CGovernanceManager::Sync -- attempting to sync govobj: %s, peer=%d\n", strHash, pfrom->id);
 
-            if(!govobj.IsSetCachedValid()) {
-                LogPrintf("CGovernanceManager::Sync -- invalid flag cached, not syncing govobj: %s, fCachedValid = %d, peer=%d\n",
-                          strHash, govobj.IsSetCachedValid(), pfrom->id);
+            if(govobj.IsSetCachedDelete()) {
+                LogPrintf("CGovernanceManager::Sync -- not syncing deleted govobj: %s, peer=%d\n",
+                          strHash, pfrom->id);
                 return;
             }
 
