@@ -99,7 +99,7 @@ public:
     }
 };
 
-// Dumb serialization/storage-helper for CBlockHeaderAndShortTxIDs and PartiallyDownlaodedBlock
+// Dumb serialization/storage-helper for CBlockHeaderAndShortTxIDs and PartiallyDownloadedBlock
 struct PrefilledTransaction {
     // Used as an offset since last prefilled tx in CBlockHeaderAndShortTxIDs,
     // as a proper transaction-in-block-index in PartiallyDownloadedBlock
