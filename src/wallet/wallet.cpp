@@ -1194,6 +1194,9 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
             if (this->lastBlockProcessed == initialChainTip) {
                 return true;
             }
+            if (this->lastBlockProcessed->GetAncestor(initialChainTip->nHeight) == initialChainTip) {
+                return true;
+            }
             // Catch the race condition where the wallet may have caught up and
             // moved past initialChainTip before we could get
             // lastBlockProcessedMutex.
