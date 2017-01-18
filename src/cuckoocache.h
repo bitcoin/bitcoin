@@ -257,7 +257,7 @@ private:
      *
      * First, epoch_check decrements and checks the cheap heuristic, and then does
      * a more expensive scan if the cheap heuristic runs out. If the expensive
-     * scan suceeds, the epochs are aged and old elements are allow_erased. The
+     * scan succeeds, the epochs are aged and old elements are allow_erased. The
      * cheap heuristic is reset to retrigger after the worst case growth of the
      * current epoch's elements would exceed the epoch_size.
      */
@@ -395,7 +395,7 @@ public:
             * 1) On first iteration, last_loc == invalid(), find returns last, so
             *    last_loc defaults to locs[0].
             * 2) On further iterations, where last_loc == locs[k], last_loc will
-            *    go to locs[k+1 % 8], i.e., next of the 8 indicies wrapping around
+            *    go to locs[k+1 % 8], i.e., next of the 8 indices wrapping around
             *    to 0 if needed.
             *
             * This prevents moving the element we just put in.
