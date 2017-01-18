@@ -178,18 +178,22 @@ void CMasternodeSync::SwitchToNextAsset()
         case(MASTERNODE_SYNC_INITIAL):
             ClearFulfilledRequests();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_SPORKS):
             nTimeLastMasternodeList = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_LIST):
             nTimeLastPaymentVote = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_MNW):
             nTimeLastGovernanceItem = GetTime();
             nRequestedMasternodeAssets = MASTERNODE_SYNC_GOVERNANCE;
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_GOVERNANCE):
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
