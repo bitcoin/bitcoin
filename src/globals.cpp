@@ -191,6 +191,14 @@ during reindexing by allowing the size to be set to low and random values.
 */
 CTweak<uint64_t> reindexTypicalBlockSize("reindex.typicalBlockSize","Set larger than the typical block size.  The block data file's RAM buffer will initally be 2x this size.",TYPICAL_BLOCK_SIZE);
 
+/** This is the initial size of CFileBuffer's RAM buffer during reindex.  A 
+larger size will result in a tiny bit better performance if blocks are that 
+size.
+The real purpose of this parameter is to exhaustively test dynamic buffer resizes
+during reindexing by allowing the size to be set to low and random values.
+*/
+CTweak<uint64_t> checkScriptDays("blockchain.checkScriptDays","The number of days in the past we check scripts during initial block download.",DEFAULT_CHECKPOINT_DAYS);
+
 
 CRequestManager requester;  // after the maps nodes and tweaks
 
