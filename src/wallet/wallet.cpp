@@ -3681,17 +3681,13 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     RegisterValidationInterface(walletInstance);
 
-    CBlockIndex *pindexRescan = chainActive.Tip();
-    if (GetBoolArg("-rescan", false))
-        pindexRescan = chainActive.Genesis();
-    else
+    CBlockIndex *pindexRescan = chainActive.Genesis();
+    if (!GetBoolArg("-rescan", false))
     {
         CWalletDB walletdb(walletFile);
         CBlockLocator locator;
         if (walletdb.ReadBestBlock(locator))
             pindexRescan = FindForkInGlobalIndex(chainActive, locator);
-        else
-            pindexRescan = chainActive.Genesis();
     }
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
