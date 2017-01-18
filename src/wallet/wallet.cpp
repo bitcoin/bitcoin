@@ -1195,7 +1195,7 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
                 return true;
             }
             // Catch the race condition where the wallet may have caught up and
-            // moved past initialChainTip before we could get
+            // moved past initialChainTip through a reorg before we could get
             // lastBlockProcessedMutex.
             // This should be exceedingly rare in regular usage, so potentially
             // eating 100ms to retry this lock should be fine (not TRY_LOCKing
