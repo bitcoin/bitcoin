@@ -1143,12 +1143,9 @@ void CWallet::SyncTransactions(const std::vector<CTransactionRef>& vtx, const CB
 
 
     if (pindex) {
-        // Watch for changes to the previous coinbase transaction.
-        static uint256 hashPrevBestCoinBase;
-
         // Only notify UI if this transaction is in this wallet
         {
-            if (hashPrevBestCoinBase.IsNull()) {
+            if (hashPrevBestCoinbase.IsNull()) {
                 // For correctness we scan over the entire wallet, looking for
                 // the previous block's coinbase, just in case it is ours, so
                 // that we can notify the UI that it should now be displayed.
@@ -1161,13 +1158,13 @@ void CWallet::SyncTransactions(const std::vector<CTransactionRef>& vtx, const CB
                     }
                 }
             } else {
-                map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashPrevBestCoinBase);
+                map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashPrevBestCoinbase);
                 if (mi != mapWallet.end())
-                    NotifyTransactionChanged(this, hashPrevBestCoinBase, CT_UPDATED);
+                    NotifyTransactionChanged(this, hashPrevBestCoinbase, CT_UPDATED);
             }
         }
 
-        hashPrevBestCoinBase = vtx[0]->GetHash();
+        hashPrevBestCoinbase = vtx[0]->GetHash();
 
         {
             std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
