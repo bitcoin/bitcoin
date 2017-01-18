@@ -1190,13 +1190,16 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
 
     assert(lastBlockProcessed);
 
-    cv_blockProcessed.wait(lock, [this, initialChainTip] {
+    auto pred = [this, initialChainTip] {
             if (this->lastBlockProcessed == initialChainTip) {
                 return true;
             }
             // Catch the race condition where the wallet may have caught up and
             // moved past initialChainTip before we could get
             // lastBlockProcessedMutex.
+            // This should be exceedingly rare in regular usage, so potentially
+            // eating 100ms to retry this lock should be fine (not TRY_LOCKing
+            // here would be a lock inversion against lastBlockProcessedMutex)
             TRY_LOCK(cs_main, mainLocked);
             if (mainLocked) {
                 if (this->lastBlockProcessed == chainActive.Tip()) {
@@ -1207,7 +1210,12 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
                 // which should never be exposed to the outside world)
                 return this->lastBlockProcessed->nChainWork > chainActive.Tip()->nChainWork;
             }
-        });
+            return false;
+        };
+
+    while (!pred()) {
+        cv_blockProcessed.wait_for(lock, std::chrono::milliseconds(100));
+    }
 };
 
 
