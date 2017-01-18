@@ -27,7 +27,7 @@ What is Bitcoin Unlimited?
 Bitcoin Unlimited is an implementation of the Bitcoin client software that is based on Bitcoin Core.
 However, Bitcoin Unlimited has a very different philosophy than Core.
 
-It follows a philosophy and is administered by a formal process described in the [Articles of Federation](http://www.bitcoinunlimited.info/resources/BUarticles.pdf).
+It follows a philosophy and is administered by a formal process described in the [Articles of Federation](https://www.bitcoinunlimited.info/resources/BUarticles.pdf).
 In short, we believe in market-driven decision making, emergent consensus, and giving our users choices.
 
 Quick installation Instructions
