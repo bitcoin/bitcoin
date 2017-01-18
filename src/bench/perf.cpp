@@ -6,7 +6,7 @@
 
 #if defined(__i386__) || defined(__x86_64__)
 
-/* These architectures support quering the cycle counter
+/* These architectures support querying the cycle counter
  * from user space, no need for any syscall overhead.
  */
 void perf_init(void) { }
