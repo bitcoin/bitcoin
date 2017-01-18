@@ -219,8 +219,6 @@ void CMasternode::Check(bool fForce)
         nActiveState = MASTERNODE_UPDATE_REQUIRED;
         if(nActiveStatePrev != nActiveState) {
             LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
-            // RESCAN AFFECTED VOTES
-            FlagGovernanceItemsAsDirty();
         }
         return;
     }
@@ -259,8 +257,6 @@ void CMasternode::Check(bool fForce)
             nActiveState = MASTERNODE_NEW_START_REQUIRED;
             if(nActiveStatePrev != nActiveState) {
                 LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
-                // RESCAN AFFECTED VOTES
-                FlagGovernanceItemsAsDirty();
             }
             return;
         }
@@ -283,8 +279,6 @@ void CMasternode::Check(bool fForce)
             nActiveState = MASTERNODE_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
                 LogPrint("masternode", "CMasternode::Check -- Masternode %s is in %s state now\n", vin.prevout.ToStringShort(), GetStateString());
-                // RESCAN AFFECTED VOTES
-                FlagGovernanceItemsAsDirty();
             }
             return;
         }
@@ -962,14 +956,6 @@ void CMasternode::UpdateWatchdogVoteTime()
 */
 void CMasternode::FlagGovernanceItemsAsDirty()
 {
-    std::map<uint256, int>::iterator it = mapGovernanceObjectsVotedOn.begin();
-    while(it != mapGovernanceObjectsVotedOn.end()){
-        CGovernanceObject *pObj = governance.FindGovernanceObject((*it).first);
-
-        if(pObj) pObj->InvalidateVoteCache();
-        ++it;
-    }
-
     std::vector<uint256> vecDirty;
     {
         std::map<uint256, int>::iterator it = mapGovernanceObjectsVotedOn.begin();

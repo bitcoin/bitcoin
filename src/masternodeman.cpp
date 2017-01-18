@@ -200,6 +200,7 @@ void CMasternodeMan::CheckAndRemove()
                 mWeAskedForMasternodeListEntry.erase((*it).vin.prevout);
 
                 // and finally remove it from the list
+                it->FlagGovernanceItemsAsDirty();
                 it = vMasternodes.erase(it);
                 fMasternodesRemoved = true;
             } else {
