@@ -2776,6 +2776,9 @@ public:
     }
 };
 
+void SendMsgGetData(const Consensus::Params& consensusParams, CNode* pto, CConnman& connman, const CNetMsgMaker& msgMaker, CNodeState& state, const int64_t nNow, const bool fFetch);
+void SendMsgFeeFilter(CNode* pto, CConnman& connman, const CNetMsgMaker& msgMaker);
+
 bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interruptMsgProc)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
@@ -3191,7 +3194,14 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 return true;
             }
         }
+        SendMsgGetData(consensusParams, pto, connman, msgMaker, state, nNow, fFetch);
+        SendMsgFeeFilter(pto, connman, msgMaker);
+    }
+    return true;
+}
 
+void SendMsgGetData(const Consensus::Params& consensusParams, CNode* pto, CConnman& connman, const CNetMsgMaker& msgMaker, CNodeState& state, const int64_t nNow, const bool fFetch)
+{
         //
         // Message: getdata (blocks)
         //
@@ -3238,11 +3248,13 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
         }
         if (!vGetData.empty())
             connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-
+}
         //
         // Message: feefilter
         //
         // We don't want white listed peers to filter txs to us if we have -whitelistforcerelay
+void SendMsgFeeFilter(CNode* pto, CConnman& connman, const CNetMsgMaker& msgMaker)
+{
         if (pto->nVersion >= FEEFILTER_VERSION && GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
             !(pto->fWhitelisted && GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY))) {
             CAmount currentFilter = mempool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
@@ -3266,8 +3278,6 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 pto->nextSendTimeFeeFilter = timeNow + GetRandInt(MAX_FEEFILTER_CHANGE_DELAY) * 1000000;
             }
         }
-    }
-    return true;
 }
 
 class CNetProcessingCleanup
