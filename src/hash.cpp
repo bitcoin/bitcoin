@@ -42,7 +42,7 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
         //----------
         // tail
-        const uint8_t* tail = (const uint8_t*)(&vDataToHash[0] + nblocks * 4);
+        const uint8_t* tail = &vDataToHash[0] + nblocks * 4;
 
         uint32_t k1 = 0;
 
