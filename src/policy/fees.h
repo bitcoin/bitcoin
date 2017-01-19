@@ -182,7 +182,6 @@ static const double SUFFICIENT_FEETXS = 1;
 static constexpr double MIN_FEERATE = 10;
 static const double MAX_FEERATE = 1e7;
 static const double INF_FEERATE = MAX_MONEY;
-static const double INF_PRIORITY = 1e9 * MAX_MONEY;
 
 // We have to lump transactions into buckets based on feerate, but we want to be able
 // to give accurate estimates over a large range of potential feerates
@@ -222,20 +221,6 @@ public:
      *  estimate at the lowest target where one can be given.
      */
     CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
-
-    /** Return a priority estimate.
-     *  DEPRECATED
-     *  Returns -1
-     */
-    double estimatePriority(int confTarget);
-
-    /** Estimate priority needed to get be included in a block within
-     *  confTarget blocks.
-     *  DEPRECATED
-     *  Returns -1 unless mempool is currently limited then returns INF_PRIORITY
-     *  answerFoundAtTarget is set to confTarget
-     */
-    double estimateSmartPriority(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
 
     /** Write estimation data to a file */
     void Write(CAutoFile& fileout);
