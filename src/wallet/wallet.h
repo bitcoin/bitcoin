@@ -825,6 +825,10 @@ public:
     std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
 
     isminetype IsMine(const CTxIn& txin) const;
+    /**
+     * Returns amount of debit if the input matches the
+     * filter, otherwise returns 0
+     */
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     isminetype IsMine(const CTxOut& txout) const;
     CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
@@ -834,6 +838,8 @@ public:
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    /** Returns whether all of the inputs match the filter */
+    bool IsAllFromMe(const CTransaction& tx, const isminefilter& filter) const;
     CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc);
@@ -885,6 +891,9 @@ public:
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;
 
+    //! Check if a given transaction has any of its outputs spent by another transaction in the wallet
+    bool HasWalletSpend(const uint256& txid) const;
+
     //! Flush wallet (bitdb flush)
     void Flush(bool shutdown=false);
 
@@ -920,6 +929,9 @@ public:
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
+
+    /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
+    bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 
     /* Returns the wallets help message */
     static std::string GetWalletHelpString(bool showDebug);
