@@ -1121,22 +1121,102 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
     }
 }
 
-void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
+void CWallet::SyncTransactions(const std::vector<CTransactionRef>& vtx, const CBlockIndex *pindex)
 {
     LOCK2(cs_main, cs_wallet);
 
-    if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true))
-        return; // Not one of ours
+    for (size_t i = 0; i < vtx.size(); i++) {
+        const CTransaction& tx = *vtx[i];
 
-    // If a transaction changes 'conflicted' state, that changes the balance
-    // available of the outputs it spends. So force those to be
-    // recomputed, also:
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        if (mapWallet.count(txin.prevout.hash))
-            mapWallet[txin.prevout.hash].MarkDirty();
+        if (!AddToWalletIfInvolvingMe(tx, pindex, pindex ? i : -1, true))
+            continue; // Not one of ours
+
+        // If a transaction changes 'conflicted' state, that changes the balance
+        // available of the outputs it spends. So force those to be
+        // recomputed, also:
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            if (mapWallet.count(txin.prevout.hash))
+                mapWallet[txin.prevout.hash].MarkDirty();
+        }
+    }
+
+
+    if (pindex) {
+        // Only notify UI if this transaction is in this wallet
+        {
+            if (hashPrevBestCoinbase.IsNull()) {
+                // For correctness we scan over the entire wallet, looking for
+                // the previous block's coinbase, just in case it is ours, so
+                // that we can notify the UI that it should now be displayed.
+                if (pindex->pprev) {
+                    for (const std::pair<uint256, CWalletTx>& p : mapWallet) {
+                        if (p.second.IsCoinBase() && p.second.hashBlock == pindex->pprev->GetBlockHash()) {
+                            NotifyTransactionChanged(this, p.first, CT_UPDATED);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashPrevBestCoinbase);
+                if (mi != mapWallet.end())
+                    NotifyTransactionChanged(this, hashPrevBestCoinbase, CT_UPDATED);
+            }
+        }
+
+        hashPrevBestCoinbase = vtx[0]->GetHash();
+
+        {
+            std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
+            lastBlockProcessed = pindex;
+        }
+        cv_blockProcessed.notify_all();
     }
 }
+
+
+void CWallet::BlockUntilSyncedToCurrentChain() {
+    const CBlockIndex* initialChainTip;
+    {
+        LOCK(cs_main);
+        initialChainTip = chainActive.Tip();
+    }
+    AssertLockNotHeld(cs_main);
+    AssertLockNotHeld(cs_wallet);
+    std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
+
+    assert(lastBlockProcessed);
+
+    auto pred = [this, initialChainTip] {
+            if (this->lastBlockProcessed == initialChainTip) {
+                return true;
+            }
+            if (this->lastBlockProcessed->GetAncestor(initialChainTip->nHeight) == initialChainTip) {
+                return true;
+            }
+            // Catch the race condition where the wallet may have caught up and
+            // moved past initialChainTip through a reorg before we could get
+            // lastBlockProcessedMutex.
+            // This should be exceedingly rare in regular usage, so potentially
+            // eating 100ms to retry this lock should be fine (not TRY_LOCKing
+            // here would be a lock inversion against lastBlockProcessedMutex)
+            TRY_LOCK(cs_main, mainLocked);
+            if (mainLocked) {
+                if (this->lastBlockProcessed == chainActive.Tip()) {
+                    return true;
+                }
+                // If the user called invalidatechain some things might block
+                // forever, so we check if we're ahead of a the tip (a state
+                // which should never be exposed to the outside world)
+                return this->lastBlockProcessed->nChainWork > chainActive.Tip()->nChainWork;
+            }
+            return false;
+        };
+
+    while (!pred()) {
+        cv_blockProcessed.wait_for(lock, std::chrono::milliseconds(100));
+    }
+};
 
 
 isminetype CWallet::IsMine(const CTxIn &txin) const
@@ -1501,6 +1581,12 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             }
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
+
+        {
+            std::unique_lock<std::mutex> lock(lastBlockProcessedMutex);
+            lastBlockProcessed = chainActive.Tip();
+        }
+        cv_blockProcessed.notify_all();
     }
     return ret;
 }
@@ -3229,17 +3315,6 @@ void CWallet::GetAllReserveKeys(set<CKeyID>& setAddress) const
     }
 }
 
-void CWallet::UpdatedTransaction(const uint256 &hashTx)
-{
-    {
-        LOCK(cs_wallet);
-        // Only notify UI if this transaction is in this wallet
-        map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
-        if (mi != mapWallet.end())
-            NotifyTransactionChanged(this, hashTx, CT_UPDATED);
-    }
-}
-
 void CWallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
     boost::shared_ptr<CReserveKey> rKey(new CReserveKey(this));
@@ -3559,8 +3634,6 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
 
-    RegisterValidationInterface(walletInstance);
-
     CBlockIndex *pindexRescan = chainActive.Tip();
     if (GetBoolArg("-rescan", false))
         pindexRescan = chainActive.Genesis();
@@ -3573,6 +3646,12 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
         else
             pindexRescan = chainActive.Genesis();
     }
+
+    //We must set lastBlockProcessed prior to registering the wallet as a validation interface
+    walletInstance->lastBlockProcessed = pindexRescan;
+
+    RegisterValidationInterface(walletInstance);
+
     if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
     {
         //We can't rescan beyond non-pruned blocks, stop and throw an error

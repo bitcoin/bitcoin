@@ -184,6 +184,15 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     abort();
 }
 
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+{
+    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, *lockstack)
+        if (i.first == cs) {
+            fprintf(stderr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld().c_str());
+            abort();
+        }
+}
+
 void DeleteLock(void* cs)
 {
     if (!lockdata.available) {
