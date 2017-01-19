@@ -1,4 +1,5 @@
-OMNICORE_TEST_H = 
+OMNICORE_TEST_H = \
+  omnicore/test/utils_tx.h
 
 OMNICORE_TEST_CPP = \
   omnicore/test/alert_tests.cpp \
