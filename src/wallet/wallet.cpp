@@ -531,7 +531,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
     int nMinOrderPos = std::numeric_limits<int>::max();
     const CWalletTx* copyFrom = nullptr;
     for (TxSpends::iterator it = range.first; it != range.second; ++it) {
-        const CWalletTx* wtx = &mapWallet[it->second];
+        const CWalletTx* wtx = &mapWallet.at(it->second);
         if (wtx->nOrderPos < nMinOrderPos) {
             nMinOrderPos = wtx->nOrderPos;;
             copyFrom = wtx;
@@ -544,7 +544,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
     for (TxSpends::iterator it = range.first; it != range.second; ++it)
     {
         const uint256& hash = it->second;
-        CWalletTx* copyTo = &mapWallet[hash];
+        CWalletTx* copyTo = &mapWallet.at(hash);
         if (copyFrom == copyTo) continue;
         assert(copyFrom && "Oldest wallet transaction in range assumed to have been found.");
         if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
@@ -3081,7 +3081,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
             // Notify that old coins are spent
             for (const CTxIn& txin : wtxNew.tx->vin)
             {
-                CWalletTx &coin = mapWallet[txin.prevout.hash];
+                CWalletTx &coin = mapWallet.at(txin.prevout.hash);
                 coin.BindWallet(this);
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
             }
@@ -3092,7 +3092,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
         // Get the inserted-CWalletTx from mapWallet so that the
         // fInMempool flag is cached properly
-        CWalletTx& wtx = mapWallet[wtxNew.GetHash()];
+        CWalletTx& wtx = mapWallet.at(wtxNew.GetHash());
 
         if (fBroadcastTransactions)
         {
@@ -3548,7 +3548,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
                 CTxDestination address;
                 if(!IsMine(txin)) /* If this input isn't mine, ignore it */
                     continue;
-                if(!ExtractDestination(mapWallet[txin.prevout.hash].tx->vout[txin.prevout.n].scriptPubKey, address))
+                if(!ExtractDestination(mapWallet.at(txin.prevout.hash).tx->vout[txin.prevout.n].scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 any_mine = true;
