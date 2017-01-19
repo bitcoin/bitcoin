@@ -28,8 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-
 extern CWallet* pwalletMain;
 
 /**
@@ -963,7 +961,7 @@ public:
         }
     }
 
-    void GetScriptForMining(boost::shared_ptr<CReserveScript> &script) override;
+    void GetScriptForMining(std::shared_ptr<CReserveScript> &script) override;
     
     unsigned int GetKeyPoolSize()
     {
