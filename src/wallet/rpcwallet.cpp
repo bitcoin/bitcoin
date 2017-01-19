@@ -2652,8 +2652,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "By default, the new fee will be calculated automatically using estimatefee.\n"
             "The user can specify a confirmation target for estimatefee.\n"
             "Alternatively, the user can specify totalFee, or use RPC setpaytxfee to set a higher fee rate.\n"
-            "At a minimum, the new fee rate must be high enough to pay a new relay fee (relay fee amount returned\n"
-            "by getnetworkinfo RPC) and to enter the node's mempool.\n"
+            "At a minimum, the new fee rate must be high enough to pay a new relay fee over the original fee\n"
+            "to enter the node's mempool.\n"
             "\nArguments:\n"
             "1. txid                  (string, required) The txid to be bumped\n"
             "2. options               (object, optional)\n"
@@ -2787,9 +2787,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CFeeRate nNewFeeRate;
 
     if (totalFee > 0) {
-        CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + minRelayTxFee.GetFee(maxNewTxSize);
+        CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + ::incrementalRelayFee.GetFee(maxNewTxSize);
         if (totalFee < minTotalFee) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee, must be at least %s (oldFee %s + relayFee %s)", FormatMoney(minTotalFee), nOldFeeRate.GetFee(maxNewTxSize), minRelayTxFee.GetFee(maxNewTxSize)));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee, must be at least %s (oldFee %s + relayFee %s)", FormatMoney(minTotalFee), nOldFeeRate.GetFee(maxNewTxSize), ::incrementalRelayFee.GetFee(maxNewTxSize)));
         }
         nNewFee = totalFee;
         nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
@@ -2804,9 +2804,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
             nNewFeeRate = CWallet::fallbackFee;
         }
 
-        // new fee rate must be at least old rate + minimum relay rate
-        if (nNewFeeRate.GetFeePerK() < nOldFeeRate.GetFeePerK() + ::minRelayTxFee.GetFeePerK()) {
-            nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerK() + ::minRelayTxFee.GetFeePerK());
+        // new fee rate must be at least old rate + minimum incremental relay rate
+        if (nNewFeeRate.GetFeePerK() < nOldFeeRate.GetFeePerK() + ::incrementalRelayFee.GetFeePerK()) {
+            nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerK() + ::incrementalRelayFee.GetFeePerK());
         }
 
         nNewFee = nNewFeeRate.GetFee(maxNewTxSize);
