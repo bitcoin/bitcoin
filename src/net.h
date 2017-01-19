@@ -687,6 +687,8 @@ public:
     std::list<CNetMessage> vProcessMsg;
     size_t nProcessQueueSize;
 
+    CCriticalSection cs_sendProcessing;
+
     std::deque<CInv> vRecvGetData;
     uint64_t nRecvBytes;
     std::atomic<int> nRecvVersion;
