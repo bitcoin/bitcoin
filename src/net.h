@@ -40,6 +40,8 @@ namespace boost {
 static const int PING_INTERVAL = 2 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
+/** Minimum time between warnings printed to log. */
+static const int WARNING_INTERVAL = 10 * 60;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
 /** The maximum number of new addresses to accumulate before announcing. */
@@ -336,9 +338,11 @@ public:
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
+    int64_t nLastWarningTime;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
+    int nNumWarningsSkipped;
     int nVersion;
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and

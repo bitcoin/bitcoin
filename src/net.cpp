@@ -2386,6 +2386,8 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     addr = addrIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;
+    nNumWarningsSkipped = 0;
+    nLastWarningTime = 0;
     strSubVer = "";
     fWhitelisted = false;
     fOneShot = false;
@@ -2446,8 +2448,16 @@ CNode::~CNode()
 void CNode::AskFor(const CInv& inv)
 {
     if (mapAskFor.size() > MAPASKFOR_MAX_SZ || setAskFor.size() > SETASKFOR_MAX_SZ) {
-        LogPrintf("CNode::AskFor -- WARNING: inventory message dropped: mapAskFor.size = %d, setAskFor.size = %d, MAPASKFOR_MAX_SZ = %d, SETASKFOR_MAX_SZ = %d, peer=%d\n",
-                  mapAskFor.size(), setAskFor.size(), MAPASKFOR_MAX_SZ, SETASKFOR_MAX_SZ, id);
+        int64_t nNow = GetTime();
+        if(nNow - nLastWarningTime > WARNING_INTERVAL) {
+            LogPrintf("CNode::AskFor -- WARNING: inventory message dropped: mapAskFor.size = %d, setAskFor.size = %d, MAPASKFOR_MAX_SZ = %d, SETASKFOR_MAX_SZ = %d, nSkipped = %d, peer=%d\n",
+                      mapAskFor.size(), setAskFor.size(), MAPASKFOR_MAX_SZ, SETASKFOR_MAX_SZ, nNumWarningsSkipped, id);
+            nLastWarningTime = nNow;
+            nNumWarningsSkipped = 0;
+        }
+        else {
+            ++nNumWarningsSkipped;
+        }
         return;
     }
     // a peer may not have multiple non-responded queue positions for a single inv item
