@@ -7,8 +7,11 @@
 #define BITCOIN_VALIDATIONINTERFACE_H
 
 #include <boost/signals2/signal.hpp>
+<<<<<<< HEAD
 #include <boost/shared_ptr.hpp>
 
+=======
+>>>>>>> 1c95e2f... Use std::shared_ptr instead of boost::shared_ptr in ScriptForMining
 #include <memory>
 
 #include "primitives/transaction.h" // CTransaction(Ref)
@@ -45,7 +48,7 @@ protected:
     virtual void Inventory(const uint256 &hash) {}
     virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
-    virtual void GetScriptForMining(boost::shared_ptr<CReserveScript>&) {}
+    virtual void GetScriptForMining(std::shared_ptr<CReserveScript>&) {}
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {}
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
@@ -85,7 +88,7 @@ struct CMainSignals {
      */
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     /** Notifies listeners that a key for mining is required (coinbase) */
-    boost::signals2::signal<void (boost::shared_ptr<CReserveScript>&)> ScriptForMining;
+    boost::signals2::signal<void (std::shared_ptr<CReserveScript>&)> ScriptForMining;
     /**
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
