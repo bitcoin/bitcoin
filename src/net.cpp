@@ -788,7 +788,7 @@ void SocketSendData(CNode *pnode)
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
                 {
                     LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
-                    pnode->CloseSocketDisconnect();
+                    pnode->fDisconnect = true;
                 }
             }
             // couldn't send anything at all
@@ -1749,7 +1749,7 @@ void ThreadMessageHandler()
                 if (lockRecv)
                 {
                     if (!g_signals.ProcessMessages(pnode))
-                        pnode->CloseSocketDisconnect();
+                        pnode->fDisconnect = true;
 
                     if (pnode->nSendSize < SendBufferSize())
                     {
