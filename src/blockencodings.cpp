@@ -113,6 +113,9 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     if (shorttxids.size() != cmpctblock.shorttxids.size())
         return READ_STATUS_FAILED; // Short ID collision
 
+    size_t missing_txs = shorttxids.size();
+    bool shortid_collision = false;
+
     std::vector<bool> have_txn(txn_available.size());
     {
         LOCK(pool->cs);
@@ -125,20 +128,32 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                     txn_available[idit->second] = vTxHashes[i].second->GetSharedTx();
                     have_txn[idit->second]  = true;
                     mempool_count++;
+                    missing_txs--;
                 } else {
                     // If we find two mempool txn that match the short id, just request it.
                     // This should be rare enough that the extra bandwidth doesn't matter,
                     // but eating a round-trip due to FillBlock failure would be annoying
                     if (txn_available[idit->second]) {
                         txn_available[idit->second].reset();
-                        mempool_count--;
+                        shortid_collision = true;
                     }
                 }
             }
-            // Though ideally we'd continue scanning for the two-txn-match-shortid case,
-            // the performance win of an early exit here is too good to pass up and worth
-            // the extra risk.
-            if (mempool_count == shorttxids.size()) {
+            if (missing_txs == 0 && !shortid_collision) {
+                // We've found transactions matching all of the shortids and haven't yet
+                // found a shortid collision. We could continue scanning through the
+                // mempool and extra pool in case there's a shortid collision later,
+                // but running GetShortID() on the entire mempool and extra pool is an
+                // expensive operation.
+                //
+                // Instead we just assume that we now have all the correct transactions
+                // from the block. If one of our transactions isn't correct and is
+                // actually a shortid collision, we'll return READ_STATUS_FAILED in
+                // FillBlock() and fall back to requesting the full block from the peer.
+                //
+                // Put simply - there's a very high probibility that we can complete the
+                // block now. The downside is that if we fail, we'll have to request a full
+                // block.
                 break;
             }
         }
@@ -151,8 +166,8 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
             if (!have_txn[idit->second]) {
                 txn_available[idit->second] = extra_txn[i].second;
                 have_txn[idit->second]  = true;
-                mempool_count++;
                 extra_count++;
+                missing_txs--;
             } else {
                 // If we find two mempool/extra txn that match the short id, just
                 // request it.
@@ -163,15 +178,14 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
                 if (txn_available[idit->second] &&
                         txn_available[idit->second]->GetWitnessHash() != extra_txn[i].second->GetWitnessHash()) {
                     txn_available[idit->second].reset();
-                    mempool_count--;
-                    extra_count--;
+                    shortid_collision = true;
                 }
             }
         }
-        // Though ideally we'd continue scanning for the two-txn-match-shortid case,
-        // the performance win of an early exit here is too good to pass up and worth
-        // the extra risk.
-        if (mempool_count == shorttxids.size()) {
+        if (missing_txs == 0 && !shortid_collision) {
+            // See comment above - we have transactions for all shortids and haven't yet
+            // found a shortid collision. Assume that we have all the correct transactions
+            // in the block.
             break;
         }
     }
@@ -227,7 +241,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_CHECKBLOCK_FAILED;
     }
 
-    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, %lu txn from mempool (incl at least %lu from extra pool) and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
+    LogPrint("cmpctblock", "Successfully reconstructed block %s with %lu txn prefilled, up to %lu txn from mempool, up to %lu from extra pool and %lu txn requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size());
     if (vtx_missing.size() < 5) {
         for (const auto& tx : vtx_missing) {
             LogPrint("cmpctblock", "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());
