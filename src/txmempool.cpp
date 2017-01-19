@@ -875,16 +875,6 @@ CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, int *answerFoundAtBlocks) con
     LOCK(cs);
     return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, *this);
 }
-double CTxMemPool::estimatePriority(int nBlocks) const
-{
-    LOCK(cs);
-    return minerPolicyEstimator->estimatePriority(nBlocks);
-}
-double CTxMemPool::estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks) const
-{
-    LOCK(cs);
-    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, *this);
-}
 
 bool
 CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
