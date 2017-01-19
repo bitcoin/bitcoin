@@ -295,6 +295,15 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.nLockTime;
 }
 
+class CTransaction;
+
+/* Hashes used in segwit signatures (see BIP 143) */
+struct PrecomputedTransactionData
+{
+    uint256 hashPrevouts, hashSequence, hashOutputs;
+
+    PrecomputedTransactionData(const CTransaction& tx);
+};
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
@@ -326,6 +335,10 @@ private:
     const uint256 hash;
 
     uint256 ComputeHash() const;
+
+public:
+    /** Also memory only */
+    const PrecomputedTransactionData cache;
 
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
