@@ -188,8 +188,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Now we can connect the other nodes, didn't want to connect them earlier
         # so the estimates would not be affected by the splitting transactions
-        # Node1 mines small blocks but that are bigger than the expected transaction rate,
-        # and allows free transactions.
+        # Node1 mines small blocks but that are bigger than the expected transaction rate.
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
         # (17k is room enough for 110 or so transactions)
         self.nodes.append(start_node(1, self.options.tmpdir,

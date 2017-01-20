@@ -588,7 +588,7 @@
         <x>0</x>
         <y>0</y>
         <width>824</width>
-        <height>72</height>
+        <height>80</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
@@ -1111,7 +1111,7 @@
                      <item>
                       <widget class="QLabel" name="confirmationTargetLabel">
                        <property name="text">
-                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(count)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                        <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(count)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                        </property>
                       </widget>
                      </item>
@@ -1159,7 +1159,7 @@
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayoutFee5" stretch="0,0,0">
+            <layout class="QHBoxLayout" name="horizontalLayoutFee5" stretch="0">
              <property name="spacing">
               <number>8</number>
              </property>
@@ -1167,34 +1167,14 @@
               <number>4</number>
              </property>
              <item>
-              <widget class="QCheckBox" name="checkBoxFreeTx">
+              <widget class="QCheckBox" name="optInRBF">
+               <property name="toolTip">
+                <string>Indicates that the sender may wish to replace this transaction with a new one paying higher fees (prior to being confirmed).</string>
+               </property>
                <property name="text">
-                <string>Send as zero-fee transaction if possible</string>
+                <string>Request Replace-By-Fee</string>
                </property>
               </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelFreeTx">
-               <property name="text">
-                <string>(confirmation may take longer)</string>
-               </property>
-               <property name="margin">
-                <number>5</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacerFee5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>1</width>
-                 <height>1</height>
-                </size>
-               </property>
-              </spacer>
              </item>
             </layout>
            </item>
