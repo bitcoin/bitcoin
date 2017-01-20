@@ -38,6 +38,8 @@ struct BIP9Deployment {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
+    int coinbaseMaturity;
     int nSubsidyHalvingInterval;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
