@@ -41,7 +41,7 @@ public:
     typedef std::function<void(void)> Function;
 
     // Call func at/after time t
-    void schedule(Function f, boost::chrono::system_clock::time_point t);
+    void schedule(Function f, boost::chrono::system_clock::time_point t=boost::chrono::system_clock::now());
 
     // Convenience method: call f once deltaSeconds from now
     void scheduleFromNow(Function f, int64_t deltaMilliSeconds);
