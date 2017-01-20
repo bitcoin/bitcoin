@@ -20,6 +20,8 @@ class CValidationInterface;
 class CValidationState;
 class uint256;
 class CScheduler;
+class CTxMemPool;
+enum class MemPoolRemovalReason;
 
 // These functions dispatch to one or all registered wallets
 
@@ -36,6 +38,15 @@ protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     /** Notifies listeners of a transaction having been added to mempool. */
     virtual void TransactionAddedToMempool(const CTransactionRef &ptxn) {}
+    /**
+     * Notifies listeners of a transaction leaving mempool.
+     *
+     * This only fires for transactions which leave mempool because of expiry,
+     * size limiting, reorg (changes in lock times/coinbase maturity), or
+     * replacement. This does not include any transactions which are included
+     * in BlockConnectedDisconnected either in block->vtx or in txnConflicted.
+     */
+    virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
@@ -74,6 +85,8 @@ private:
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
 
+    void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
+
 public:
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
     void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
@@ -81,6 +94,11 @@ public:
     void UnregisterBackgroundSignalScheduler();
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
+
+    /** Register with mempool to call TransactionRemovedFromMempool callbacks */
+    void RegisterWithMempoolSignals(CTxMemPool& pool);
+    /** Unregister with mempool */
+    void UnregisterWithMempoolSignals(CTxMemPool& pool);
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
