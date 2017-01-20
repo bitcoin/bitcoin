@@ -103,7 +103,7 @@ public:
 
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
-    ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
