@@ -39,7 +39,7 @@ for folder in folders:
         if extension.lower() == '.png':
             print("optimizing "+file+"..."),
             file_path = os.path.join(absFolder, file)
-            fileMetaMap = {'file' : file, 'osize': os.path.getsize(file_path), 'sha256Old' : file_hash(file_path)};
+            fileMetaMap = {'file' : file, 'osize': os.path.getsize(file_path), 'sha256Old' : file_hash(file_path)}
             fileMetaMap['contentHashPre'] = content_hash(file_path)
         
             pngCrushOutput = ""

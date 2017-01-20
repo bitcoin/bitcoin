@@ -1662,7 +1662,7 @@ class SegWitTest(BitcoinTestFramework):
         # too many sigops (contributing to legacy sigop count).
         checksig_count = (extra_sigops_available // 4) + 1
         scriptPubKey_checksigs = CScript([OP_CHECKSIG]*checksig_count)
-        tx2.vout.append(CTxOut(0, scriptPubKey_checksigs));
+        tx2.vout.append(CTxOut(0, scriptPubKey_checksigs))
         tx2.vin.pop()
         tx2.wit.vtxinwit.pop()
         tx2.vout[0].nValue -= tx.vout[-2].nValue
