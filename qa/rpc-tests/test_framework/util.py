@@ -442,47 +442,6 @@ def make_change(from_node, amount_in, amount_out, fee):
         outputs[from_node.getnewaddress()] = change
     return outputs
 
-def send_zeropri_transaction(from_node, to_node, amount, fee):
-    """
-    Create&broadcast a zero-priority transaction.
-    Returns (txid, hex-encoded-txdata)
-    Ensures transaction is zero-priority by first creating a send-to-self,
-    then using its output
-    """
-
-    # Create a send-to-self with confirmed inputs:
-    self_address = from_node.getnewaddress()
-    (total_in, inputs) = gather_inputs(from_node, amount+fee*2)
-    outputs = make_change(from_node, total_in, amount+fee, fee)
-    outputs[self_address] = float(amount+fee)
-
-    self_rawtx = from_node.createrawtransaction(inputs, outputs)
-    self_signresult = from_node.signrawtransaction(self_rawtx)
-    self_txid = from_node.sendrawtransaction(self_signresult["hex"], True)
-
-    vout = find_output(from_node, self_txid, amount+fee)
-    # Now immediately spend the output to create a 1-input, 1-output
-    # zero-priority transaction:
-    inputs = [ { "txid" : self_txid, "vout" : vout } ]
-    outputs = { to_node.getnewaddress() : float(amount) }
-
-    rawtx = from_node.createrawtransaction(inputs, outputs)
-    signresult = from_node.signrawtransaction(rawtx)
-    txid = from_node.sendrawtransaction(signresult["hex"], True)
-
-    return (txid, signresult["hex"])
-
-def random_zeropri_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
-    """
-    Create a random zero-priority transaction.
-    Returns (txid, hex-encoded-transaction-data, fee)
-    """
-    from_node = random.choice(nodes)
-    to_node = random.choice(nodes)
-    fee = min_fee + fee_increment*random.randint(0,fee_variants)
-    (txid, txhex) = send_zeropri_transaction(from_node, to_node, amount, fee)
-    return (txid, txhex, fee)
-
 def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
     """
     Create a random transaction.
