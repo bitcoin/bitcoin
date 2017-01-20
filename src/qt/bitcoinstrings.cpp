@@ -78,6 +78,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Extra transactions to keep in memory for compact block reconstructions "
+"(default: %u)"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Fees (in %s/kB) smaller than this are considered zero fee for relaying, "
 "mining and transaction creation (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -94,6 +97,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "If paytxfee is not set, include enough fee so transactions begin "
 "confirmation on average within n blocks (default: %u)"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"If this block is in the chain assume that it and its ancestors are valid and "
+"potentially skip their script verification (0 to verify all, default: %s, "
+"testnet: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),

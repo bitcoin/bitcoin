@@ -2205,6 +2205,14 @@
         <translation>警告：未知のおつりアドレスです</translation>
     </message>
     <message>
+        <source>Confirm custom change address</source>
+        <translation>カスタムおつりアドレスを確認</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>おつりとして指定されたアドレスはこのウォレットに属さないもののようです。このウォレットの一部またはすべての資産がこのアドレスへ送金されます。よろしいですか？</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>（ラベル無し）</translation>
     </message>
@@ -3022,10 +3030,6 @@
         <translation>剪定: 最後のウォレット同期ポイントは、選定されたデータよりも過去のものとなっています。-reindexをする必要があります (剪定されたノードの場合、ブロックチェイン全体をダウンロードします)</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>古いブロックを剪定する (削除する) ことで記憶容量の必要量を削減する。このモードを有効にすると-txindexや-rescanと互換性がなくなります。警告: この設定の再有効化には全ブロックチェインの再ダウンロードが必要となります。(規定値: 0 = ブロックの剪定無効、&gt;%u = ブロックファイルに使用するMiB単位の目標サイズ)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>剪定モードでは再スキャンを行うことはできません。-reindexを指定し、ブロックチェイン全体を再ダウンロードする必要があります。</translation>
     </message>
@@ -3106,6 +3110,14 @@
         <translation>%s が有用だと感じられた方はぜひプロジェクトへの貢献をお願いします。ソフトウェアのより詳細な情報については %s をご覧ください。</translation>
     </message>
     <message>
+        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
+        <translation>古いブロックの剪定 (削除) を有効にすることでストレージの必要量を削減する。これにより pruneblockchain RPC を呼び出すことで指定されたブロックを削除することができます。またターゲットサイズが MiB 単位で指定された場合には古いブロックの自動剪定が有効となります。このモードは -txindex および -rescan オプションと互換性がありません。警告: この設定を最有効化するにはすべてのブロックチェーンの再ダウンロードが必要となります。(デフォルト: 0 = ブロックの剪定を無効化する, 1 = RPC 経由での手動剪定を許可する, &gt;%u = MiB 単位で指定されたターゲットサイズを常に下回るようにブロックファイルを自動的に剪定する)</translation>
+    </message>
+    <message>
+        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
+        <translation>ブロック生成時に取り込まれるトランザクションの最低手数料率 (%s/kB 単位)。(デフォルト: %s)</translation>
+    </message>
+    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>スクリプト検証スレッドを設定 (%uから%dの間, 0 = 自動, &lt;0 = たくさんのコアを自由にしておく, 初期値: %d)</translation>
     </message>
@@ -3124,6 +3136,10 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>リスン ポートの割当に UPnP を使用 (初期値: リスン中および-proxyが指定されていない場合は1)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
+        <translation>JSON-RPC 接続時のユーザ名とハッシュ化されたパスワード。&lt;userpw&gt; フィールドのフォーマットは &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;。標準的な Python スクリプトが share/rpcuser 内に含まれています。クライアントは通常の場合には rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; を利用して接続を行います。このオプションは複数回指定できます。</translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>

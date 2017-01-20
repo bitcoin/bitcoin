@@ -2163,10 +2163,6 @@
         <translation>Suprimir: a última sincronização da carteira vai além dos dados suprimidos. O que precisa para -reindex (transferir novamente toda a cadeia de blocos, no caso de nó suprimido)</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Reduza os requisitos de armazenamento podando (eliminando) blocos antigos. Este modo é incompatível com -txindex e -rescan. Aviso: Reverter esta opção requer um novo descarregamento da cadeia de blocos completa. (padrão: 0 = desactivar poda de blocos, &gt;%u = tamanho desejado em MiB para utilizar em ficheiros de blocos)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Reanálises não são possíveis no modo de suprimir. Para isso terá de utilizar -reindex que irá transferir novamente toda a cadeia de blocos.</translation>
     </message>

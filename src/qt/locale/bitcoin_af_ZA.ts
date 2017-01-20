@@ -10,8 +10,20 @@
         <translation>Maak 'n kopie van die huidige adres na die stelsel klipbord</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Kopie</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Verwyder die huidiglik gekieste address van die lys</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Verwyder</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Kies die address na wie die muntstukke gestuur moet word</translation>
     </message>
     </context>
 <context>
@@ -409,6 +421,14 @@
     <message>
         <source>Copy amount</source>
         <translation>Kopieer bedrag</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 tot %2</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>of</translation>
     </message>
     <message>
         <source>(no label)</source>
