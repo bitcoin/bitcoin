@@ -22,7 +22,7 @@ QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
     unitlist.append(CRW);
     unitlist.append(mCRW);
     unitlist.append(uCRW);
-    unitlist.append(crowns);
+    unitlist.append(cSats);
     return unitlist;
 }
 
@@ -33,7 +33,7 @@ bool BitcoinUnits::valid(int unit)
     case CRW:
     case mCRW:
     case uCRW:
-    case crowns:
+    case cSats:
         return true;
     default:
         return false;
@@ -47,7 +47,7 @@ QString BitcoinUnits::id(int unit)
         case CRW: return QString("crown");
         case mCRW: return QString("mcrown");
         case uCRW: return QString::fromUtf8("ucrown");
-        case crowns: return QString("crowns");
+        case cSats: return QString("csats");
         default: return QString("???");
     }
 }
@@ -61,7 +61,7 @@ QString BitcoinUnits::name(int unit)
             case CRW: return QString("CRW");
             case mCRW: return QString("mCRW");
             case uCRW: return QString::fromUtf8("μCRW");
-            case crowns: return QString("crowns");
+            case cSats: return QString("cSats");
             default: return QString("???");
         }
     }
@@ -72,7 +72,7 @@ QString BitcoinUnits::name(int unit)
             case CRW: return QString("tCRW");
             case mCRW: return QString("mtCRW");
             case uCRW: return QString::fromUtf8("μtCRW");
-            case crowns: return QString("tcrowns");
+            case cSats: return QString("tcSats");
             default: return QString("???");
         }
     }
@@ -87,7 +87,7 @@ QString BitcoinUnits::description(int unit)
             case CRW: return QString("Crown");
             case mCRW: return QString("Milli-Crown (1 / 1" THIN_SP_UTF8 "000)");
             case uCRW: return QString("Micro-Crown (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-            case crowns: return QString("Ten Nano-Crown (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case cSats: return QString("Ten Crown-Satoshi (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
     }
@@ -98,7 +98,7 @@ QString BitcoinUnits::description(int unit)
             case CRW: return QString("TestCrowns");
             case mCRW: return QString("Milli-TestCrown (1 / 1" THIN_SP_UTF8 "000)");
             case uCRW: return QString("Micro-TestCrown (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-            case crowns: return QString("Ten Nano-TestCrown (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case cSats: return QString("Ten TestCrown-Satoshi (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             default: return QString("???");
         }
     }
@@ -111,7 +111,7 @@ qint64 BitcoinUnits::factor(int unit)
     case CRW:  return 100000000;
     case mCRW: return 100000;
     case uCRW: return 100;
-    case crowns: return 1;
+    case cSats: return 1;
     default:   return 100000000;
     }
 }
@@ -123,7 +123,7 @@ int BitcoinUnits::decimals(int unit)
     case CRW: return 8;
     case mCRW: return 5;
     case uCRW: return 2;
-    case crowns: return 0;
+    case cSats: return 0;
     default: return 0;
     }
 }

@@ -213,11 +213,11 @@ RES_ICONS = \
   qt/res/icons/unit_crown.png \
   qt/res/icons/unit_mcrown.png \
   qt/res/icons/unit_ucrown.png \
-  qt/res/icons/unit_crowns.png \
+  qt/res/icons/unit_csats.png \
   qt/res/icons/unit_tcrown.png \
   qt/res/icons/unit_tmcrown.png \
   qt/res/icons/unit_tucrown.png \
-  qt/res/icons/unit_tcrowns.png
+  qt/res/icons/unit_tcsats.png
 
 BITCOIN_QT_CPP = \
   qt/bitcoinaddressvalidator.cpp \

@@ -39,11 +39,11 @@
         <file alias="unit_crown">res/icons/unit_crown.png</file>
         <file alias="unit_mcrown">res/icons/unit_mcrown.png</file>
         <file alias="unit_ucrown">res/icons/unit_ucrown.png</file>
-        <file alias="unit_crowns">res/icons/unit_crowns.png</file>
+        <file alias="unit_csats">res/icons/unit_csats.png</file>
         <file alias="unit_tcrown">res/icons/unit_tcrown.png</file>
         <file alias="unit_tmcrown">res/icons/unit_tmcrown.png</file>
         <file alias="unit_tucrown">res/icons/unit_tucrown.png</file>
-        <file alias="unit_tcrowns">res/icons/unit_tcrowns.png</file>
+        <file alias="unit_tcsats">res/icons/unit_tcsats.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
         <file alias="key">res/icons/key.png</file>
