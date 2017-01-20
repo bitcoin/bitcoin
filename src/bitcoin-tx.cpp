@@ -9,6 +9,7 @@
 #include "base58.h"
 #include "clientversion.h"
 #include "coins.h"
+#include "consensus/consensus.h"
 #include "core_io.h"
 #include "keystore.h"
 #include "policy/policy.h"

@@ -9,6 +9,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "hash.h"
@@ -1343,7 +1344,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
         CAmount nValueIn = 0;
         CAmount nFees = 0;
-        int coinbaseMaturity = ::Params().GetConsensus().coinbaseMaturity;
+        const int coinbaseMaturity = ::Params().GetConsensus().coinbaseMaturity;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             const COutPoint &prevout = tx.vin[i].prevout;
