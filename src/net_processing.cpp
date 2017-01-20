@@ -1853,7 +1853,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             LogPrint("mempool", "   invalid orphan tx %s\n", orphanHash.ToString());
                         }
                         // Has inputs but not accepted to mempool
-                        // Probably non-standard or insufficient fee/priority
+                        // Probably non-standard or insufficient fee
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanHash.ToString());
                         vEraseQueue.push_back(orphanHash);
                         if (!orphanTx.HasWitness() && !stateDummy.CorruptionPossible()) {
@@ -3249,9 +3249,8 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 static CFeeRate default_feerate(DEFAULT_MIN_RELAY_TX_FEE);
                 static FeeFilterRounder filterRounder(default_feerate);
                 CAmount filterToSend = filterRounder.round(currentFilter);
-                // If we don't allow free transactions, then we always have a fee filter of at least minRelayTxFee
-                if (GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) <= 0)
-                    filterToSend = std::max(filterToSend, ::minRelayTxFee.GetFeePerK());
+                // We always have a fee filter of at least minRelayTxFee
+                filterToSend = std::max(filterToSend, ::minRelayTxFee.GetFeePerK());
                 if (filterToSend != pto->lastSentFeeFilter) {
                     connman.PushMessage(pto, msgMaker.Make(NetMsgType::FEEFILTER, filterToSend));
                     pto->lastSentFeeFilter = filterToSend;

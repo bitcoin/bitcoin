@@ -3842,9 +3842,6 @@ bool CWallet::ParameterInteraction()
     bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     fWalletRbf = GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
 
-    if (GetBoolArg("-sendfreetransactions", false))
-        InitWarning("The argument -sendfreetransactions is no longer supported.");
-
     return true;
 }
 
