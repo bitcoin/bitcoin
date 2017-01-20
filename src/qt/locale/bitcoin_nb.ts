@@ -1710,10 +1710,6 @@
         <translation>Beskjæring: siste lommeboksynkronisering går utenfor beskjærte data. Du må bruke -reindex (laster ned hele blokkjeden igjen for beskjærte noder)</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Reduser lagringsbehovet ved beskjæring (sletting) av gamle blokker. Denne modusen er ikke kompatibel med -txindex og -rescan. Advarsel: Tilbakestilling av denne innstillingen krever at hele blokkjeden må lastes ned på nytt. (Standardverdi: 0 = deaktiver beskjæring av blokker, &gt;%u = mål for størrelse i MiB å bruke for blokkfiler)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Omsøk er ikke mulig i beskjært modus. Du vil måtte bruke -reindex som vil laste nede hele blokkjeden på nytt.</translation>
     </message>

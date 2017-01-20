@@ -3006,10 +3006,6 @@
         <translation>Prune (Kürzung): Die letzte Syncronisation der Wallet liegt vor gekürzten (gelöschten) Blöcken. Es ist ein -reindex (download der gesamten Blockkette) notwendig.</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Speicherplatzanforderung durch kürzen (löschen) alter Blöcke reduzieren. Dieser Modus ist nicht mit -txindex und -rescan kompatibel. Warnung: Die Umkehr dieser Einstellung erfordert das erneute Herunterladen der gesamten Blockkette. (Standard: 0 = deaktiviert das Kürzen von Blöcken, &gt;%u = Zielgröße in MiB, die für Blockdateien verwendet werden darf)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Rescans sind im pruned mode nicht möglich. Ein -reindex ist notwendig, welcher die gesmate Blockkette erneut herunterlädt.</translation>
     </message>

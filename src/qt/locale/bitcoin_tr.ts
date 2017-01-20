@@ -1938,10 +1938,6 @@
         <translation>Budama: son cüzdan eşleşmesi budanmış verilerin ötesine gitmektedir. -reindex kullanmanız gerekmektedir (Budanmış düğüm ise tüm blok zincirini tekrar indirmeniz gerekir.)</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Depolama gerekliliğini eski blokları budayarak (silerek) düşür. Bu kip -txindex ve -rescan ile uyumsuzdur. İkaz: Bu ayarı geri almak tüm blok zincirini yeniden indirmeyi gerektirir. (varsayılan: 0 = blokları silmeyi devre dışı bırak, &gt;%u = MiB olarak blok dosyaları için kullanılacak hedef boyut)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Tekrar taramalar budanmış kipte mümkün değildir. Tüm blok zincirini tekrar indirecek olan -reindex seçeneğini kullanmanız gerekecektir.</translation>
     </message>

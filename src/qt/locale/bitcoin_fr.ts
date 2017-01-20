@@ -1998,11 +1998,11 @@
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Si cette option est activée, et l'adresse de monnaie rendue est vide ou invalide, la monnaie sera envoyée vers une adresse nouvellement générée.</translation>
+        <translation>Si cette option est activée et l'adresse de monnaie est vide ou invalide, la monnaie sera envoyée vers une adresse nouvellement générée.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation>Adresse personnalisée de monnaie rendue</translation>
+        <translation>Adresse personnalisée de monnaie</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
@@ -2202,7 +2202,15 @@
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation>Avertissement : adresse de monnaie rendue inconnue</translation>
+        <translation>Avertissement : adresse de monnaie inconnue</translation>
+    </message>
+    <message>
+        <source>Confirm custom change address</source>
+        <translation>Confimer l'adresse personnalisée de monnaie</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>L'adresse que vous avez sélectionnée pour la monnaie ne fait pas partie de ce porte-monnaie. Les fonds de ce porte-monnaie peuvent en partie ou en totalité être envoyés vers cette adresse. Êtes-vous certain ?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2307,7 +2315,7 @@
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Ne pas fermer l'ordinateur jusqu'à la disparition de cette fenêtre.</translation>
+        <translation>Ne pas éteindre l'ordinateur jusqu'à la disparition de cette fenêtre.</translation>
     </message>
 </context>
 <context>
@@ -3022,10 +3030,6 @@
         <translation>Élagage : la dernière synchronisation de porte-monnaie va par-delà les données élaguées.  Vous devez -reindex (réindexer, télécharger de nouveau toute la chaîne de blocs en cas de nœud élagué)</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Réduire les exigences de stockage en élaguant (supprimant) les anciens blocs. Ce mode est incompatible avec -txindex et -rescan. Avertissement : ramener ce paramètre à sa valeur antérieure exige un nouveau téléchargement de la chaîne de blocs en entier (par défaut : 0 = désactiver l'élagage des blocs, &gt;%u = taille cible en Mio à utiliser pour les fichiers de blocs).</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Les rebalayages sont impossibles en mode élagage. Vous devrez utiliser -reindex, ce qui téléchargera de nouveau la chaîne de blocs en entier.</translation>
     </message>
@@ -3106,6 +3110,14 @@
         <translation>Si vous trouvez %s utile, vous pouvez y contribuer. Vous trouverez davantage d'informations à propos du logiciel sur %s.</translation>
     </message>
     <message>
+        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
+        <translation>Réduire les exigences de stockage en activant l'élagage (suppression) des anciens blocs. Cela permet d'appeler le RPC « pruneblockchain » pour supprimer des blocs précis et active l'élagage automatique des anciens blocs si une taille cible en Mio est fournie. Ce mode n'est pas compatible avec -txindex et -rescan. Avertissement : ramener ce paramètre à sa valeur antérieure exige de retélécharger l'intégralité de la chaîne de blocs (par défaut : 0 = désactiver l'élagage des blocs, 1 = permettre l'élagage manuel par RPC, &gt;%u = élaguer automatiquement les fichiers de blocs pour rester en deçà de la taille cible précisée en Mio).</translation>
+    </message>
+    <message>
+        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
+        <translation>Définir le taux minimal de frais (en %s/ko) pour les transactions à inclure dans la création de blocs (par défaut : %s)</translation>
+    </message>
+    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Définir le nombre de fils de vérification des scripts (%u à %d, 0 = auto, &lt; 0 = laisser ce nombre de cœurs inutilisés, par défaut : %d)</translation>
     </message>
@@ -3124,6 +3136,10 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Utiliser l'UPnP pour mapper le port d'écoute (par défaut : 1 en écoute et sans -proxy)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
+        <translation>Nom d'utilisateur et mot de passe haché pour les connexions JSON-RPC. Le champ &lt;userpw&gt; est au format : &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script python canonique est inclus dans share/rpcuser. Le client se connecte ensuite normalement en utilisant la paire d'arguments rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt;. Cette option peut être spécifiée plusieurs fois.</translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
