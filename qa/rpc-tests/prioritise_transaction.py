@@ -51,7 +51,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined
-        self.nodes[0].prioritisetransaction(txids[0][0], 0, int(3*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(txids[0][0], int(3*base_fee*COIN))
 
         self.nodes[0].generate(1)
 
@@ -70,7 +70,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # Add a prioritisation before a tx is in the mempool (de-prioritising a
         # high-fee transaction so that it's now low fee).
-        self.nodes[0].prioritisetransaction(high_fee_tx, -1e15, -int(2*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(high_fee_tx, -int(2*base_fee*COIN))
 
         # Add everything back to mempool
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
@@ -118,7 +118,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000 byte transaction and check that it is
         # accepted.
-        self.nodes[0].prioritisetransaction(tx_id, 0, int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(tx_id, int(self.relayfee*COIN))
 
         print("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx_hex), tx_id)
