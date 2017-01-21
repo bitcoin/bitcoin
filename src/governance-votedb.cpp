@@ -58,6 +58,7 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const CTxIn& vinMaster
     vote_l_it it = listVotes.begin();
     while(it != listVotes.end()) {
         if(it->GetVinMasternode() == vinMasternode) {
+            mapVoteIndex.erase(it->GetHash());
             listVotes.erase(it++);
         }
         else {
