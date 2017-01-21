@@ -651,7 +651,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("version", pblock->nVersion));
     result.push_back(Pair("rules", aRules));
     result.push_back(Pair("vbavailable", vbavailable));
-    result.push_back(Pair("vbrequired", int(0)));
+    result.push_back(Pair("vbrequired", (int)0));
 
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here

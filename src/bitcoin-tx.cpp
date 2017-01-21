@@ -328,7 +328,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
 
     // extract and validate PUBKEYs
     std::vector<CPubKey> pubkeys;
-    for(int pos = 1; pos <= int(numkeys); pos++) {
+    for(int pos = 1; pos <= (int)numkeys; pos++) {
         CPubKey pubkey(ParseHex(vStrInputParts[pos + 2]));
         if (!pubkey.IsFullyValid())
             throw std::runtime_error("invalid TX output pubkey");

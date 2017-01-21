@@ -191,9 +191,9 @@ void test_cache_erase(size_t megabytes)
     for (uint32_t i = (n_insert / 2); i < n_insert; ++i)
         count_fresh += set.contains(hashes[i], false);
 
-    double hit_rate_erased_but_contained = double(count_erased_but_contained) / (double(n_insert) / 4.0);
-    double hit_rate_stale = double(count_stale) / (double(n_insert) / 4.0);
-    double hit_rate_fresh = double(count_fresh) / (double(n_insert) / 2.0);
+    double hit_rate_erased_but_contained = (double)count_erased_but_contained / ((double)n_insert / 4.0);
+    double hit_rate_stale = (double)count_stale / ((double)n_insert / 4.0);
+    double hit_rate_fresh = (double)count_fresh / ((double)n_insert / 2.0);
 
     // Check that our hit_rate_fresh is perfect
     BOOST_CHECK_EQUAL(hit_rate_fresh, 1.0);

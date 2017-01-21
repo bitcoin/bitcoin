@@ -510,8 +510,8 @@ const static char DIRTY = CCoinsCacheEntry::DIRTY;
 const static char FRESH = CCoinsCacheEntry::FRESH;
 const static char NO_ENTRY = -1;
 
-const static auto FLAGS = {char(0), FRESH, DIRTY, char(DIRTY | FRESH)};
-const static auto CLEAN_FLAGS = {char(0), FRESH};
+const static auto FLAGS = {(char)0, FRESH, DIRTY, (char)(DIRTY | FRESH)};
+const static auto CLEAN_FLAGS = {(char)0, FRESH};
 const static auto ABSENT_FLAGS = {NO_ENTRY};
 
 void SetCoinsValue(CAmount value, CCoins& coins)
