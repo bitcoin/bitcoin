@@ -162,75 +162,33 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
     template<typename Callable>
-    bool ForEachNodeContinueIf(Callable&& func)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            if(!func(node))
-                return false;
-        return true;
-    };
-
-    template<typename Callable>
-    bool ForEachNodeContinueIf(Callable&& func) const
-    {
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            if(!func(node))
-                return false;
-        return true;
-    };
-
-    template<typename Callable, typename CallableAfter>
-    bool ForEachNodeContinueIfThen(Callable&& pre, CallableAfter&& post)
-    {
-        bool ret = true;
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            if(!pre(node)) {
-                ret = false;
-                break;
-            }
-        post();
-        return ret;
-    };
-
-    template<typename Callable, typename CallableAfter>
-    bool ForEachNodeContinueIfThen(Callable&& pre, CallableAfter&& post) const
-    {
-        bool ret = true;
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            if(!pre(node)) {
-                ret = false;
-                break;
-            }
-        post();
-        return ret;
-    };
-
-    template<typename Callable>
     void ForEachNode(Callable&& func)
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            func(node);
+        for (auto&& node : vNodes) {
+            if (NodeFullyConnected(node))
+                func(node);
+        }
     };
 
     template<typename Callable>
     void ForEachNode(Callable&& func) const
     {
         LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            func(node);
+        for (auto&& node : vNodes) {
+            if (NodeFullyConnected(node))
+                func(node);
+        }
     };
 
     template<typename Callable, typename CallableAfter>
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
     {
         LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
-            pre(node);
+        for (auto&& node : vNodes) {
+            if (NodeFullyConnected(node))
+                pre(node);
+        }
         post();
     };
 
@@ -238,8 +196,10 @@ public:
     void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
     {
         LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
-            pre(node);
+        for (auto&& node : vNodes) {
+            if (NodeFullyConnected(node))
+                pre(node);
+        }
         post();
     };
 
@@ -371,6 +331,9 @@ private:
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
     void RecordBytesSent(uint64_t bytes);
+
+    // Whether the node should be passed out in ForEach* callbacks
+    static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
