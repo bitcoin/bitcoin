@@ -129,6 +129,7 @@ private:
     // these maps are used for masternode recovery from MASTERNODE_NEW_START_REQUIRED state
     std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > > mMnbRecoveryRequests;
     std::map<uint256, std::vector<CMasternodeBroadcast> > mMnbRecoveryGoodReplies;
+    std::list< std::pair<CService, uint256> > listScheduledMnbRequestConnections;
 
     int64_t nLastIndexRebuildTime;
 
@@ -200,6 +201,7 @@ public:
 
     /// Ask (source) node for mnb
     void AskForMN(CNode *pnode, const CTxIn &vin);
+    void AskForMnb(CNode *pnode, const uint256 &hash);
 
     /// Check all Masternodes
     void Check();
@@ -295,6 +297,7 @@ public:
     CMasternode* GetMasternodeByRank(int nRank, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
 
     void ProcessMasternodeConnections();
+    std::pair<CService, uint256> PopScheduledMnbRequestConnection();
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 

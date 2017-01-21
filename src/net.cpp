@@ -24,6 +24,7 @@
 
 #include "darksend.h"
 #include "instantx.h"
+#include "masternodeman.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -65,6 +66,7 @@ using namespace std;
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
+    const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 20;
 
     struct ListenSocket {
         SOCKET socket;
@@ -111,6 +113,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
+static CSemaphore *semMasternodeOutbound = NULL;
 boost::condition_variable messageHandlerCondition;
 
 // Signals for message handling
@@ -1053,6 +1056,7 @@ void ThreadSocketHandler()
 
                     // release outbound grant (if any)
                     pnode->grantOutbound.Release();
+                    pnode->grantMasternodeOutbound.Release();
 
                     // close socket and cleanup
                     pnode->CloseSocketDisconnect();
@@ -1690,6 +1694,32 @@ void ThreadOpenAddedConnections()
     }
 }
 
+void ThreadMnbRequestConnections()
+{
+    // Connecting to specific addresses, no masternode connections available
+    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
+        return;
+
+    int nTick = 0;
+    while (true)
+    {
+        MilliSleep(1000);
+        nTick++;
+
+        CSemaphoreGrant grant(*semMasternodeOutbound);
+        boost::this_thread::interruption_point();
+
+        std::pair<CService, uint256> p = mnodeman.PopScheduledMnbRequestConnection();
+        if(p.first == CService()) continue;
+        CNode* pnode = ConnectNode(CAddress(p.first), NULL, true);
+        if(pnode) {
+            grant.MoveTo(pnode->grantMasternodeOutbound);
+            if(p.second != uint256())
+                mnodeman.AskForMnb(pnode, p.second);
+        }
+    }
+}
+
 // if successful, this moves the passed grant to the constructed node
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot)
 {
@@ -1967,6 +1997,11 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
+    if (semMasternodeOutbound == NULL) {
+        // initialize semaphore
+        semMasternodeOutbound = new CSemaphore(MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
+    }
+
     if (pnodeLocalHost == NULL)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
 
@@ -1993,6 +2028,9 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Initiate outbound connections
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "opencon", &ThreadOpenConnections));
 
+    // Initiate masternode connections
+    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "mnbcon", &ThreadMnbRequestConnections));
+
     // Process messages
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "msghand", &ThreadMessageHandler));
 
@@ -2007,6 +2045,10 @@ bool StopNode()
     if (semOutbound)
         for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
             semOutbound->post();
+
+    if (semMasternodeOutbound)
+        for (int i=0; i<MAX_OUTBOUND_MASTERNODE_CONNECTIONS; i++)
+            semMasternodeOutbound->post();
 
     if (fAddressesInitialized)
     {
@@ -2043,6 +2085,8 @@ public:
         vhListenSocket.clear();
         delete semOutbound;
         semOutbound = NULL;
+        delete semMasternodeOutbound;
+        semMasternodeOutbound = NULL;
         delete pnodeLocalHost;
         pnodeLocalHost = NULL;
 
