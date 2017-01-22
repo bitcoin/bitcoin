@@ -15,7 +15,7 @@
  *  with deterministic seeds)
  *  2) Some test methods are templated to allow for easier testing
  *  against new versions / comparing
- *  3) Results should be treated as a regression test, ie, did the behavior
+ *  3) Results should be treated as a regression test, i.e., did the behavior
  *  change significantly from what was expected. This can be OK, depending on
  *  the nature of the change, but requires updating the tests to reflect the new
  *  expected behavior. For example improving the hit rate may cause some tests
