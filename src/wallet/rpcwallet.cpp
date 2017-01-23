@@ -2674,8 +2674,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"txid\":    \"value\",   (string)  The id of the new transaction\n"
-            "  \"oldfee\":  n,         (numeric) Fee of the replaced transaction\n"
-            "  \"fee\":     n,         (numeric) Fee of the new transaction\n"
+            "  \"origfee\":  n,         (numeric) Fee of the replaced transaction\n"
+            "  \"fee\":      n,         (numeric) Fee of the new transaction\n"
             "}\n"
             "\nExamples:\n"
             "\nBump the fee, get the new transaction\'s txid\n" +
@@ -2899,7 +2899,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("txid", wtxBumped.GetHash().GetHex()));
-    result.push_back(Pair("oldfee", ValueFromAmount(nOldFee)));
+    result.push_back(Pair("origfee", ValueFromAmount(nOldFee)));
     result.push_back(Pair("fee", ValueFromAmount(nNewFee)));
 
     return result;
