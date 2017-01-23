@@ -15,9 +15,11 @@ static const unsigned int MAX_POSSIBLE_BLOCK_SIZE = 4000000;
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
 /** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
-static const unsigned int MAX_BLOCK_BASE_SIZE = 1000000;
+static const unsigned int MAX_STRIPPED_BLOCK_SIZE = 1000000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
+/** The maximum allowed size for a transaction excluding witness data, in bytes (network rule) */
+static const unsigned int MAX_STRIPPED_TRANSACTION_SIZE = 1000000;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 
