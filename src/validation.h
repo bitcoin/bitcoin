@@ -545,6 +545,9 @@ int GetSpendHeight(const CCoinsViewCache& inputs);
 
 extern VersionBitsCache versionbitscache;
 
+uint32_t GetMaxStrippedBlockSize(const CBlockIndex* pindexPrev, const Consensus::Params&, int64_t nMedianTimePast);
+uint32_t GetMaxBlockSize(const CBlockIndex* pindexPrev, const Consensus::Params&, int64_t nMedianTimePast);
+
 /**
  * Determine what nVersion a new block should use.
  */

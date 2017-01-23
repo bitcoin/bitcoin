@@ -18,7 +18,11 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
     {
         /*.name =*/ "segwit",
         /*.gbt_force =*/ false,
-    }
+    },
+    {
+        /*.name =*/ "blksize",
+        /*.gbt_force =*/ true,
+    },
 };
 
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
