@@ -8,8 +8,10 @@
 
 #include <stdint.h>
 
-/** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
-static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 4000000;
+/** The maximum allowed size for a serialized block under BIP 141 rules, in bytes */
+static const unsigned int MAX_BIP141_BLOCK_SIZE = 4000000;
+/** The maximum possible size for a serialized block, in bytes (only for buffer size limits) */
+static const unsigned int MAX_POSSIBLE_BLOCK_SIZE = 4000000;
 /** The maximum allowed weight for a block, see BIP 141 (network rule) */
 static const unsigned int MAX_BLOCK_WEIGHT = 4000000;
 /** The maximum allowed size for a block excluding witness data, in bytes (network rule) */

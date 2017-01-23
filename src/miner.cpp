@@ -86,7 +86,7 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     bool fWeightSet = false;
     if (IsArgSet("-blockmaxweight")) {
         nBlockMaxWeight = GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
-        nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
+        nBlockMaxSize = MAX_POSSIBLE_BLOCK_SIZE;
         fWeightSet = true;
     }
     if (IsArgSet("-blockmaxsize")) {
@@ -105,10 +105,10 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
 
     // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
     nBlockMaxWeight = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_WEIGHT-4000), nBlockMaxWeight));
-    // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
-    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
+    // Limit size to between 1K and MAX_BIP141_BLOCK_SIZE-1K for sanity:
+    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BIP141_BLOCK_SIZE-1000), nBlockMaxSize));
     // Whether we need to account for byte usage (in addition to weight usage)
-    fNeedSizeAccounting = (nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE-1000);
+    fNeedSizeAccounting = (nBlockMaxSize < nBlockMaxWeight * 4);
 }
 
 void BlockAssembler::resetBlock()
