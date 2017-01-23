@@ -39,7 +39,7 @@ def addlength(script):
     return scriptlen + script
 
 def create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount):
-    pkscript = witness_script(version, pubkey);
+    pkscript = witness_script(version, pubkey)
     if (encode_p2sh):
         p2sh_hash = bytes_to_hex_str(ripemd160(sha256(hex_str_to_bytes(pkscript))))
         pkscript = "a914"+p2sh_hash+"87"
