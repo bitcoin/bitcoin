@@ -820,45 +820,7 @@ UniValue getbalance(const JSONRPCRequest& request)
         if(request.params[3].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
-    CAmount legacyBalance = pwallet->GetLegacyBalance(filter, nMinDepth, account);
-
-    if (request.params[0].get_str() == "*") {
-        // Calculate total balance in a very different way from GetBalance().
-        // The biggest difference is that GetBalance() sums up all unspent
-        // TxOuts paying to the wallet, while this sums up both spent and
-        // unspent TxOuts paying to the wallet, and then subtracts the values of
-        // TxIns spending from the wallet. This also has fewer restrictions on
-        // which unconfirmed transactions are considered trusted.
-        CAmount nBalance = 0;
-        for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
-            const CWalletTx& wtx = pairWtx.second;
-            if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
-                continue;
-
-            CAmount allFee;
-            std::string strSentAccount;
-            std::list<COutputEntry> listReceived;
-            std::list<COutputEntry> listSent;
-            wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
-            if (wtx.GetDepthInMainChain(fAddLockConf) >= nMinDepth)
-            {
-                for (const COutputEntry& r : listReceived)
-                    nBalance += r.amount;
-            }
-            for (const COutputEntry& s : listSent)
-                nBalance -= s.amount;
-            nBalance -= allFee;
-        }
-        assert(nBalance == legacyBalance);
-        return  ValueFromAmount(nBalance);
-    }
-
-    std::string strAccount = AccountFromValue(request.params[0]);
-
-    CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, filter, fAddLockConf);
-
-    assert(nBalance == legacyBalance);
-    return ValueFromAmount(nBalance);
+    return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account, fAddLockConf));
 }
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -990,9 +952,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLockConf);
-    CAmount legacyBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
-    assert(nBalance == legacyBalance);
+    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLockConf);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1103,9 +1063,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLockConf);
-    CAmount legacyBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
-    assert(nBalance == legacyBalance);
+    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLockConf);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
