@@ -809,6 +809,8 @@ UniValue getbalance(const JSONRPCRequest& request)
     if (request.params.size() == 0)
         return  ValueFromAmount(pwallet->GetBalance());
 
+    const std::string* account = request.params[0].get_str() != "*" ? &request.params[0].get_str() : nullptr;
+
     int nMinDepth = 1;
     if (request.params.size() > 1)
         nMinDepth = request.params[1].get_int();
@@ -817,6 +819,8 @@ UniValue getbalance(const JSONRPCRequest& request)
     if(request.params.size() > 3)
         if(request.params[3].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
+
+    CAmount legacyBalance = pwallet->GetLegacyBalance(filter, nMinDepth, account);
 
     if (request.params[0].get_str() == "*") {
         // Calculate total balance in a very different way from GetBalance().
@@ -845,6 +849,7 @@ UniValue getbalance(const JSONRPCRequest& request)
                 nBalance -= s.amount;
             nBalance -= allFee;
         }
+        assert(nBalance == legacyBalance);
         return  ValueFromAmount(nBalance);
     }
 
@@ -852,6 +857,7 @@ UniValue getbalance(const JSONRPCRequest& request)
 
     CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, filter, fAddLockConf);
 
+    assert(nBalance == legacyBalance);
     return ValueFromAmount(nBalance);
 }
 
@@ -985,6 +991,8 @@ UniValue sendfrom(const JSONRPCRequest& request)
 
     // Check funds
     CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLockConf);
+    CAmount legacyBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
+    assert(nBalance == legacyBalance);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1096,6 +1104,8 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     // Check funds
     CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLockConf);
+    CAmount legacyBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount);
+    assert(nBalance == legacyBalance);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
