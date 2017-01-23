@@ -59,9 +59,17 @@
         <source>Repeat new passphrase</source>
         <translation>Ripeti nuova passphrase</translation>
     </message>
-    </context>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Attenzione: Il tasto blocco delle maiuscole è attivo!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmask</translation>
+    </message>
     <message>
         <source>Banned Until</source>
         <translation>bannato fino </translation>

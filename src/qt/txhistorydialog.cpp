@@ -73,7 +73,7 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     ui->txHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Address"));
     ui->txHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Amount"));
     // borrow ColumnResizingFixer again
-    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->txHistoryTable,100,100);
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->txHistoryTable, 100, 100, this);
     // allow user to adjust - go interactive then manually set widths
     #if QT_VERSION < 0x050000
        ui->txHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Fixed);

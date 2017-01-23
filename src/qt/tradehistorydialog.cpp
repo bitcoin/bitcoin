@@ -80,7 +80,7 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     ui->tradeHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Trade Details"));
     ui->tradeHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Sold"));
     ui->tradeHistoryTable->setHorizontalHeaderItem(7, new QTableWidgetItem("Received"));
-    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->tradeHistoryTable,100,100);
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->tradeHistoryTable, 100, 100, this);
     #if QT_VERSION < 0x050000
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Fixed);
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Interactive);

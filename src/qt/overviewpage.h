@@ -9,6 +9,7 @@
 #include "uint256.h"
 
 #include <QWidget>
+#include <memory>
 
 class ClientModel;
 class TransactionFilterProxy;
@@ -60,7 +61,7 @@ private:
     CAmount currentWatchImmatureBalance;
 
     TxViewDelegate *txdelegate;
-    TransactionFilterProxy *filter;
+    std::unique_ptr<TransactionFilterProxy> filter;
 
 private Q_SLOTS:
     void updateDisplayUnit();
