@@ -22,7 +22,7 @@ try:
         msg = zmqSubSocket.recv_multipart()
         topic = str(msg[0])
         body = msg[1]
-        sequence = "Unknown";
+        sequence = "Unknown"
         if len(msg[-1]) == 4:
           msgSequence = struct.unpack('<I', msg[-1])[-1]
           sequence = str(msgSequence)
