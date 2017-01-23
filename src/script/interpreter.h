@@ -110,13 +110,6 @@ enum
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
 
-struct PrecomputedTransactionData
-{
-    uint256 hashPrevouts, hashSequence, hashOutputs;
-
-    PrecomputedTransactionData(const CTransaction& tx);
-};
-
 enum SigVersion
 {
     SIGVERSION_BASE = 0,
