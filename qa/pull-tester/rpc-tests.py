@@ -153,6 +153,7 @@ testScripts = [
     'import-rescan.py',
     'bumpfee.py',
     'rpcnamedargs.py',
+    'listsinceblock.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
