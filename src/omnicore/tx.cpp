@@ -846,6 +846,9 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation()
         assert(update_tally_map(receiver, pcrowdsale->getPropertyId(), tokens.second, BALANCE));
     }
 
+    // Number of tokens has changed, update fee distribution thresholds
+    NotifyTotalTokensChanged(pcrowdsale->getPropertyId(), block);
+
     // Close crowdsale, if we hit MAX_TOKENS
     if (close_crowdsale) {
         eraseMaxedCrowdsale(receiver, blockTime, block);
@@ -877,7 +880,7 @@ int CMPTransaction::logicMath_SimpleSend()
         return (PKT_ERROR_SEND -23);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SEND -24);
     }
@@ -928,13 +931,13 @@ int CMPTransaction::logicMath_SendToOwners()
         return (PKT_ERROR_STO -23);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_STO -24);
     }
 
     if (version > MP_TX_PKT_V0) {
-        if (!_my_sps->hasSP(distribution_property)) {
+        if (!IsPropertyIdValid(distribution_property)) {
             PrintToLog("%s(): rejected: distribution property %d does not exist\n", __func__, distribution_property);
             return (PKT_ERROR_STO -24);
         }
@@ -1030,6 +1033,9 @@ int CMPTransaction::logicMath_SendToOwners()
 
     // sent_so_far must equal nValue here
     assert(sent_so_far == (int64_t)nValue);
+
+    // Number of tokens has changed, update fee distribution thresholds
+    if (version == MP_TX_PKT_V0) NotifyTotalTokensChanged(OMNI_PROPERTY_MSC, block); // fee was burned
 
     return 0;
 }
@@ -1242,12 +1248,12 @@ int CMPTransaction::logicMath_MetaDExTrade()
         return (PKT_ERROR_METADEX -30);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property for sale %d does not exist\n", __func__, property);
         return (PKT_ERROR_METADEX -31);
     }
 
-    if (!_my_sps->hasSP(desired_property)) {
+    if (!IsPropertyIdValid(desired_property)) {
         PrintToLog("%s(): rejected: desired property %d does not exist\n", __func__, desired_property);
         return (PKT_ERROR_METADEX -32);
     }
@@ -1318,12 +1324,12 @@ int CMPTransaction::logicMath_MetaDExCancelPrice()
         return (PKT_ERROR_METADEX -30);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property for sale %d does not exist\n", __func__, property);
         return (PKT_ERROR_METADEX -31);
     }
 
-    if (!_my_sps->hasSP(desired_property)) {
+    if (!IsPropertyIdValid(desired_property)) {
         PrintToLog("%s(): rejected: desired property %d does not exist\n", __func__, desired_property);
         return (PKT_ERROR_METADEX -32);
     }
@@ -1374,12 +1380,12 @@ int CMPTransaction::logicMath_MetaDExCancelPair()
         return (PKT_ERROR_METADEX -30);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property for sale %d does not exist\n", __func__, property);
         return (PKT_ERROR_METADEX -31);
     }
 
-    if (!_my_sps->hasSP(desired_property)) {
+    if (!IsPropertyIdValid(desired_property)) {
         PrintToLog("%s(): rejected: desired property %d does not exist\n", __func__, desired_property);
         return (PKT_ERROR_METADEX -32);
     }
@@ -1479,6 +1485,8 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
     assert(propertyId > 0);
     assert(update_tally_map(sender, propertyId, nValue, BALANCE));
 
+    NotifyTotalTokensChanged(propertyId, block);
+
     return 0;
 }
 
@@ -1530,7 +1538,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
         return (PKT_ERROR_SP -23);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SP -24);
     }
@@ -1609,7 +1617,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
         return (PKT_ERROR_SP -22);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SP -24);
     }
@@ -1745,7 +1753,7 @@ int CMPTransaction::logicMath_GrantTokens()
         return (PKT_ERROR_TOKENS -23);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_TOKENS -24);
     }
@@ -1802,6 +1810,8 @@ int CMPTransaction::logicMath_GrantTokens()
         logicHelper_CrowdsaleParticipation();
     }
 
+    NotifyTotalTokensChanged(property, block);
+
     return 0;
 }
 
@@ -1835,7 +1845,7 @@ int CMPTransaction::logicMath_RevokeTokens()
         return (PKT_ERROR_TOKENS -23);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_TOKENS -24);
     }
@@ -1870,6 +1880,8 @@ int CMPTransaction::logicMath_RevokeTokens()
     assert(update_tally_map(sender, property, -nValue, BALANCE));
     assert(_my_sps->updateSP(property, sp));
 
+    NotifyTotalTokensChanged(property, block);
+
     return 0;
 }
 
@@ -1898,7 +1910,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
         return (PKT_ERROR_TOKENS -22);
     }
 
-    if (!_my_sps->hasSP(property)) {
+    if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_TOKENS -24);
     }

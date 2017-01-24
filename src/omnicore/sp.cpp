@@ -562,6 +562,25 @@ CMPCrowd* mastercore::getCrowd(const std::string& address)
     return (CMPCrowd *)NULL;
 }
 
+bool mastercore::IsPropertyIdValid(uint32_t propertyId)
+{
+    if (propertyId == 0) return false;
+
+    uint32_t nextId = 0;
+
+    if (propertyId < TEST_ECO_PROPERTY_1) {
+        nextId = _my_sps->peekNextSPID(1);
+    } else {
+        nextId = _my_sps->peekNextSPID(2);
+    }
+
+    if (propertyId < nextId) {
+        return true;
+    }
+
+    return false;
+}
+
 bool mastercore::isPropertyDivisible(uint32_t propertyId)
 {
     // TODO: is a lock here needed

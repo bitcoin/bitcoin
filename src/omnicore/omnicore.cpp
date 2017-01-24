@@ -348,6 +348,8 @@ int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
                 owners++;
             }
         }
+        int64_t cachedFee = p_feecache->GetCachedAmount(propertyId);
+        totalTokens += cachedFee;
     }
 
     if (property.fixed) {
@@ -423,7 +425,7 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
  * @param nTime  The timestamp of the block to update the "Dev MSC" for
  * @return The number of "Dev MSC" generated
  */
-static int64_t calculate_and_update_devmsc(unsigned int nTime)
+static int64_t calculate_and_update_devmsc(unsigned int nTime, int block)
 {
     // do nothing if before end of fundraiser
     if (nTime < 1377993874) return 0;
@@ -458,6 +460,8 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime)
         exodus_prev = devmsc;
     }
 
+    NotifyTotalTokensChanged(OMNI_PROPERTY_MSC, block);
+
     return exodus_delta;
 }
 
@@ -468,6 +472,13 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
     } else {
         return _my_sps->peekNextSPID(2);
     }
+}
+
+// Perform any actions that need to be taken when the total number of tokens for a property ID changes
+void NotifyTotalTokensChanged(uint32_t propertyId, int block)
+{
+    p_feecache->UpdateDistributionThresholds(propertyId);
+    p_feecache->EvalCache(propertyId, block);
 }
 
 void CheckWalletUpdate(bool forceUpdate)
@@ -555,6 +566,38 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
     bool hasMultisig = false;
     bool hasOpReturn = false;
     bool hasMoney = false;
+
+    /* Fast Search
+     * Perform a string comparison on hex for each scriptPubKey & look directly for Exodus hash160 bytes or omni marker bytes
+     * This allows to drop non-Omni transactions with less work
+     */
+    std::string strClassC = "6f6d6e69";
+    std::string strClassAB = "76a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac";
+    bool examineClosely = false;
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        const CTxOut& output = tx.vout[n];
+        std::string strSPB = HexStr(output.scriptPubKey.begin(), output.scriptPubKey.end());
+        if (strSPB != strClassAB) { // not an exodus marker
+            if (nBlock < 395000) { // class C not enabled yet, no need to search for marker bytes
+                continue;
+            } else {
+                if (strSPB.find(strClassC) != std::string::npos) {
+                    examineClosely = true;
+                    break;
+                }
+            }
+        } else {
+            examineClosely = true;
+            break;
+        }
+    }
+
+    // Examine everything when not on mainnet
+    if (isNonMainNet()) {
+        examineClosely = true;
+    }
+
+    if (!examineClosely) return NO_MARKER;
 
     for (unsigned int n = 0; n < tx.vout.size(); ++n) {
         const CTxOut& output = tx.vout[n];
@@ -978,7 +1021,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             // ### PREPARE A FEW VARS ###
             std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-            PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
+            PrepareObfuscatedHashes(strSender, 1+nPackets, strObfuscatedHashes);
             unsigned char packets[MAX_PACKETS][32];
             unsigned int mdata_count = 0;  // multisig data count
 
@@ -2274,7 +2317,11 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         assert(mp_obj.getEncodingClass() != NO_MARKER);
         assert(mp_obj.getSender().empty() == false);
 
-        fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed
+        const CConsensusParams& params = ConsensusParams();
+        if (isNonMainNet() || nBlock <= params.LAST_EXODUS_BLOCK) {
+            fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        }
     }
 
     if (pop_ret > 0) {
@@ -3709,7 +3756,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     }
 
     // calculate devmsc as of this block and update the Exodus' balance
-    devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
+    devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime(), nBlockNow);
 
     if (msc_debug_exo) {
         int64_t balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
@@ -3721,9 +3768,6 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
     // transactions were found in the block, signal the UI accordingly
     if (countMP > 0) CheckWalletUpdate(true);
-
-    // total tokens for properties may have changed, recalculate distribution thresholds for MetaDEx fees
-    p_feecache->UpdateDistributionThresholds();
 
     // calculate and print a consensus hash if required
     if (msc_debug_consensus_hash_every_block) {

@@ -133,6 +133,8 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
                   uint256("1ca6c6f7f31ff7705a0336140485338abcbadf27e4bfdb3484b900b0b4673bba") },
         { 430000, uint256("000000000000000001868b2bb3a285f3cc6b33ea234eb70facf4dcdf22186b87"),
                   uint256("758b6850a3fdd86194d20f4c7f3bbbe66c38f78722c242e2ecefaaa42eda6a15") },
+        { 440000, uint256("0000000000000000038cc0f7bcdbb451ad34a458e2d535764f835fdeb896f29b"),
+                  uint256("94e3e045b846b35226c1b7c9399992515094e227fd195626e3875ad812b44e7a") },
     };
 
     const size_t nSize = sizeof(vCheckpoints) / sizeof(vCheckpoints[0]);
@@ -603,6 +605,9 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
  */
 bool VerifyCheckpoint(int block, const uint256& blockHash)
 {
+    // optimization; we only checkpoint every 10,000 blocks - skip any further work if block not a multiple of 10K
+    if (block % 10000 != 0) return true;
+
     const std::vector<ConsensusCheckpoint>& vCheckpoints = ConsensusParams().GetCheckpoints();
 
     for (std::vector<ConsensusCheckpoint>::const_iterator it = vCheckpoints.begin(); it != vCheckpoints.end(); ++it) {

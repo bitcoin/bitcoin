@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(prepare_obfuscated_hashes)
 {
     std::string strSeed("1CdighsfdfRcj4ytQSskZgQXbUEamuMUNF");
     std::string vstrObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-    PrepareObfuscatedHashes(strSeed, vstrObfuscatedHashes);
+    PrepareObfuscatedHashes(strSeed, 5, vstrObfuscatedHashes);
 
     BOOST_CHECK_EQUAL(vstrObfuscatedHashes[1],
             "1D9A3DE5C2E22BF89A1E41E6FEDAB54582F8A0C3AE14394A59366293DD130C59");

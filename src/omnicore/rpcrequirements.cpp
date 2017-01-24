@@ -43,7 +43,7 @@ void RequirePropertyName(const std::string& name)
 void RequireExistingProperty(uint32_t propertyId)
 {
     LOCK(cs_tally);
-    if (!mastercore::_my_sps->hasSP(propertyId)) {
+    if (!mastercore::IsPropertyIdValid(propertyId)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
     }
 }
