@@ -321,7 +321,7 @@ public:
     int GetBestHeight() const;
 
     /** Get a unique deterministic randomizer. */
-    CSipHasher GetDeterministicRandomizer(uint64_t id);
+    CSipHasher GetDeterministicRandomizer(uint64_t id) const;
 
     unsigned int GetReceiveFloodSize() const;
 
@@ -342,7 +342,7 @@ private:
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
-    uint64_t CalculateKeyedNetGroup(const CAddress& ad);
+    uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
     CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const CSubNet& subNet);
@@ -357,7 +357,7 @@ private:
 
     NodeId GetNewNodeId();
 
-    size_t SocketSendData(CNode *pnode);
+    size_t SocketSendData(CNode *pnode) const;
     //!check is the banlist has unwritten changes
     bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
