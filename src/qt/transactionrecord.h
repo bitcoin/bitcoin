@@ -62,6 +62,9 @@ public:
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
 
+    /** Current number of blocks based on the headers chain */
+    int cur_num_blocks_headers_chain;
+
     /** true if transaction has been validated (false == spv) */
     bool fValidated;
 };

@@ -36,7 +36,8 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0)
+    cachedNumBlocks(0),
+    cachedNumBlocksHeadersChain(0)
 {
     fHaveWatchOnly = wallet->HaveWatchOnly();
     fForceCheckBalanceChanged = false;
@@ -125,12 +126,13 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks)
+    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || (spvEnabled() && headersChainActive.Height() != cachedNumBlocksHeadersChain))
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
+        cachedNumBlocksHeadersChain = headersChainActive.Height();
 
         checkBalanceChanged();
         if(transactionTableModel)

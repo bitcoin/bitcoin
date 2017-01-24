@@ -237,6 +237,7 @@ private:
     CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+    int cachedNumBlocksHeadersChain;
 
     QTimer *pollTimer;
 
