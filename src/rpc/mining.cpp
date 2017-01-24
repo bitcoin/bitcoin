@@ -863,6 +863,78 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue estimaterawfee(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1|| request.params.size() > 3)
+        throw std::runtime_error(
+            "estimaterawfee nblocks (threshold horizon)\n"
+            "\nWARNING: This interface is unstable and may disappear or change!\n"
+            "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
+            "         implementation of fee estimation. The parameters it can be called with\n"
+            "         and the results it returns will change if the internal implementation changes.\n"
+            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+            "confirmation within nblocks blocks if possible. Uses virtual transaction size as defined\n"
+            "in BIP 141 (witness data is discounted).\n"
+            "\nArguments:\n"
+            "1. nblocks     (numeric)\n"
+            "2. threshold   (numeric, optional) The proportion of transactions in a given feerate range that must have been\n"
+            "               confirmed within nblocks in order to consider those feerates as high enough and proceed to check\n"
+            "               lower buckets.  Default: 0.95\n"
+            "3. horizon     (numeric, optional) How long a history of estimates to consider. 0=short, 1=medium, 2=long.\n"
+            "               Default: 1\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"feerate\" : x.x,        (numeric) estimate fee-per-kilobyte (in BTC)\n"
+            "  \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
+            "  \"pass.\"                 information about the lowest range of feerates to succeed in meeting the threshold\n"
+            "  \"fail.\"                 information about the highest range of feerates to fail to meet the threshold\n"
+            "  \"startrange\" : x.x,     (numeric) start of feerate range\n"
+            "  \"endrange\" : x.x,       (numeric) end of feerate range\n"
+            "  \"withintarget\" : x.x,   (numeric) number of txs over history horizon in the feerate range that were confirmed within target\n"
+            "  \"totalconfirmed\" : x.x, (numeric) number of txs over history horizon in the feerate range that were confirmed at any point\n"
+            "  \"inmempool\" : x.x,      (numeric) current number of txs in mempool in the feerate range unconfirmed for at least target blocks\n"
+            "}\n"
+            "\n"
+            "A negative feerate is returned if no answer can be given.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimaterawfee", "6 0.9 1")
+            );
+
+    RPCTypeCheck(request.params, boost::assign::list_of(UniValue::VNUM)(UniValue::VNUM)(UniValue::VNUM), true);
+    RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
+    int nBlocks = request.params[0].get_int();
+    double threshold = 0.95;
+    if (!request.params[1].isNull())
+        threshold = request.params[1].get_real();
+    FeeEstimateHorizon horizon = FeeEstimateHorizon::MED_HALFLIFE;
+    if (!request.params[2].isNull()) {
+        int horizonInt = request.params[2].get_int();
+        if (horizonInt < 0 || horizonInt > 2) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid horizon for fee estimates");
+        } else {
+            horizon = (FeeEstimateHorizon)horizonInt;
+        }
+    }
+    UniValue result(UniValue::VOBJ);
+    CFeeRate feeRate;
+    EstimationResult buckets;
+    feeRate = ::feeEstimator.estimateRawFee(nBlocks, threshold, horizon, &buckets);
+
+    result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
+    result.push_back(Pair("decay", buckets.decay));
+    result.push_back(Pair("pass.startrange", round(buckets.pass.start)));
+    result.push_back(Pair("pass.endrange", round(buckets.pass.end)));
+    result.push_back(Pair("pass.withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0));
+    result.push_back(Pair("pass.totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0));
+    result.push_back(Pair("pass.inmempool", round(buckets.pass.inMempool * 100.0) / 100.0));
+    result.push_back(Pair("fail.startrange", round(buckets.fail.start)));
+    result.push_back(Pair("fail.endrange", round(buckets.fail.end)));
+    result.push_back(Pair("fail.withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0));
+    result.push_back(Pair("fail.totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0));
+    result.push_back(Pair("fail.inmempool", round(buckets.fail.inMempool * 100.0) / 100.0));
+    return result;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -877,6 +949,8 @@ static const CRPCCommand commands[] =
 
     { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"nblocks"} },
+
+    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"nblocks", "threshold", "horizon"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)
