@@ -2061,7 +2061,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
                 setDirtyBlockIndex.erase(it++);
             }
             if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
-                return AbortNode(state, "Files to write to block index database");
+                return AbortNode(state, "Failed to write to block index database");
             }
         }
         // Finally remove any pruned files
