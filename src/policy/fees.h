@@ -61,6 +61,28 @@ class TxConfirmStats;
  * they've been outstanding.
  */
 
+enum FeeEstimateHorizon {
+    SHORT_HALFLIFE = 0,
+    MED_HALFLIFE = 1,
+    LONG_HALFLIFE = 2
+};
+
+struct EstimatorBucket
+{
+    double start = -1;
+    double end = -1;
+    double withinTarget = 0;
+    double totalConfirmed = 0;
+    double inMempool = 0;
+};
+
+struct EstimationResult
+{
+    EstimatorBucket pass;
+    EstimatorBucket fail;
+    double decay;
+};
+
 /**
  *  We want to be able to estimate feerates that are needed on tx's to be included in
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
@@ -90,6 +112,8 @@ private:
 
     /** Require an avg of 0.1 tx in the combined feerate bucket per block to have stat significance */
     static constexpr double SUFFICIENT_FEETXS = 0.1;
+    /** Require an avg of 0.5 tx when using short decay since there are fewer blocks considered*/
+    static constexpr double SUFFICIENT_TXS_SHORT = 0.5;
 
     /** Minimum and Maximum values for tracking feerates
      * The MIN_BUCKET_FEERATE should just be set to the lowest reasonable feerate we
@@ -131,6 +155,10 @@ public:
      *  estimate at the lowest target where one can be given.
      */
     CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool) const;
+
+    /** Return a specific fee estimate calculation with a given success threshold and time horizon.
+     */
+    CFeeRate estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult *result = nullptr) const;
 
     /** Write estimation data to a file */
     bool Write(CAutoFile& fileout) const;
@@ -190,4 +218,5 @@ private:
     std::set<double> feeset;
     FastRandomContext insecure_rand;
 };
+
 #endif /*BITCOIN_POLICYESTIMATOR_H */
