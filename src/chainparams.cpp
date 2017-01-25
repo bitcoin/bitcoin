@@ -159,6 +159,7 @@ public:
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
         vSeeds.push_back(CDNSSeedData("infernopool.com", "crw.infernopool.com"));
+	vSeeds.push_back(CDNSSeedData("hardcrw", "hardcrw.infernopool.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);                    // Crown addresses start with 'X'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);                    // Crown script addresses start with '7'
