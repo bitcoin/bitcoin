@@ -145,17 +145,19 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret, bool inter
         // always derive hardened keys
         // childIndex | BIP32_HARDENED_KEY_LIMIT = derive childIndex in hardened child-index-range
         // example: 1 | BIP32_HARDENED_KEY_LIMIT == 0x80000001 == 2147483649
-        chainChildKey.Derive(childKey, (internal ? hdChain.nInternalChainCounter : hdChain.nExternalChainCounter) | BIP32_HARDENED_KEY_LIMIT);
-        metadata.hdKeypath = "m/0'/" + std::string(internal ? "1'/"+ std::to_string(hdChain.nInternalChainCounter) : "0'/" + std::to_string(hdChain.nExternalChainCounter)) + "'";
-        metadata.hdMasterKeyID = hdChain.masterKeyID;
-        // increment childkey index
-        if (internal)
+        if (internal) {
+            chainChildKey.Derive(childKey, hdChain.nInternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
+            metadata.hdKeypath = "m/0'/1'/" + std::to_string(hdChain.nInternalChainCounter) + "'";
             hdChain.nInternalChainCounter++;
-        else
+        }
+        else {
+            chainChildKey.Derive(childKey, hdChain.nExternalChainCounter | BIP32_HARDENED_KEY_LIMIT);
+            metadata.hdKeypath = "m/0'/0'/" + std::to_string(hdChain.nExternalChainCounter) + "'";
             hdChain.nExternalChainCounter++;
+        }
     } while (HaveKey(childKey.key.GetPubKey().GetID()));
     secret = childKey.key;
-
+    metadata.hdMasterKeyID = hdChain.masterKeyID;
     // update the chain model in the database
     if (!CWalletDB(strWalletFile).WriteHDChain(hdChain))
         throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
