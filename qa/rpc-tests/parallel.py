@@ -256,7 +256,7 @@ class ParallelTest (BitcoinTestFramework):
         self.nodes.append(start_node(3, self.options.tmpdir, ["-par=1", "-rpcservertimeout=0","-debug", "-use-thinblocks=0", "-excessiveblocksize=6000000", "-blockprioritysize=6000000", "-blockmaxsize=6000000"]))
         self.nodes.append(start_node(4, self.options.tmpdir, ["-par=1", "-rpcservertimeout=0","-debug", "-use-thinblocks=0", "-excessiveblocksize=6000000", "-blockprioritysize=6000000", "-blockmaxsize=6000000"]))
         self.nodes.append(start_node(5, self.options.tmpdir, ["-par=1", "-rpcservertimeout=0","-debug", "-use-thinblocks=0", "-excessiveblocksize=6000000", "-blockprioritysize=6000000", "-blockmaxsize=6000000"]))
-        connect_nodes(self.nodes[0],1)
+        connect_nodes(self.nodes[1],0)
         connect_nodes(self.nodes[1],2)
         connect_nodes(self.nodes[1],3)
         connect_nodes(self.nodes[1],4)

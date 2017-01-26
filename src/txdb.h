@@ -15,8 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 
 class CBlockFileInfo;
 class CBlockIndex;
@@ -36,7 +34,6 @@ class CCoinsViewDB : public CCoinsView
 protected:
     CDBWrapper db;
 
-    mutable boost::shared_mutex utxo;
 
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
