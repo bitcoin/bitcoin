@@ -331,7 +331,7 @@ class PruneTest(BitcoinTestFramework):
         print ("Syncing node 5 to test wallet")
         connect_nodes(self.nodes[0], 5)
         nds = [self.nodes[0], self.nodes[5]]
-        sync_blocks(nds)
+        sync_blocks(nds, wait=5, timeout=300)
         try:
             stop_node(self.nodes[5],5) #stop and start to trigger rescan
             start_node(5, self.options.tmpdir, ["-debug=1","-prune=550"])
