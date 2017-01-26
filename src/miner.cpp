@@ -103,9 +103,9 @@ BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
         blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     }
 
-    // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
-    // FIXME: Remove this before AD 2024 if weight stops being enforced
-    nBlockMaxWeight = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_WEIGHT-4000), nBlockMaxWeight));
+    // FIXME: Adjust these if DEPLOYMENT_BLKSIZE is active
+    // Limit weight to between 4K and MAX_BIP141_BLOCK_WEIGHT-4K for sanity:
+    nBlockMaxWeight = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BIP141_BLOCK_WEIGHT-4000), nBlockMaxWeight));
     // Limit size to between 1K and MAX_BIP141_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BIP141_BLOCK_SIZE-1000), nBlockMaxSize));
     // Whether we need to account for byte usage (in addition to weight usage)
