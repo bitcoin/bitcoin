@@ -827,7 +827,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
         // mempool consistency for us.
         LOCK(pool.cs);
-        if (setConflicts.size())
+        const bool fReplacementTransaction = setConflicts.size();
+        if (fReplacementTransaction)
         {
             CFeeRate newFeeRate(nModifiedFees, nSize);
             set<uint256> setConflictsParents;
@@ -991,10 +992,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
         pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
-        // This transaction should only count for fee estimation if
-        // the node is not behind and it is not dependent on any other
-        // transactions in the mempool
-        bool validForFeeEstimation = IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
+        // This transaction should only count for fee estimation if it isn't a
+        // BIP 125 replacement transaction (may not be widely supported), the
+        // node is not behind, and the transaction is not dependent on any other
+        // transactions in the mempool.
+        bool validForFeeEstimation = !fReplacementTransaction && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
