@@ -2664,6 +2664,33 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
+// Calculate the size of the transaction assuming all signatures are max size
+// Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
+// TODO: re-use this in CWallet::CreateTransaction (right now
+// CreateTransaction uses the constructed dummy-signed tx to do a priority
+// calculation, but we should be able to refactor after priority is removed).
+// NOTE: this requires that all inputs must be in mapWallet (eg the tx should
+// be IsAllFromMe).
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx)
+{
+    CMutableTransaction txNew(tx);
+    std::vector<pair<CWalletTx *, unsigned int>> vCoins;
+    // Look up the inputs.  We should have already checked that this transaction
+    // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
+    // wallet, with a valid index into the vout array.
+    for (auto& input : tx.vin) {
+        const auto mi = pwalletMain->mapWallet.find(input.prevout.hash);
+        assert(mi != pwalletMain->mapWallet.end() && input.prevout.n < mi->second.tx->vout.size());
+        vCoins.emplace_back(make_pair(&(mi->second), input.prevout.n));
+    }
+    if (!pwalletMain->DummySignTx(txNew, vCoins)) {
+        // This should never happen, because IsAllFromMe(ISMINE_SPENDABLE)
+        // implies that we can sign for every input.
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction contains inputs that cannot be signed");
+    }
+    return GetVirtualTransactionSize(txNew);
+}
+
 UniValue bumpfee(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp)) {
@@ -2769,9 +2796,9 @@ UniValue bumpfee(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_MISC_ERROR, "Transaction does not have a change output");
     }
 
-    // signature sizes can vary by a byte, so add 1 for each input when calculating the new fee
+    // Calculate the expected size of the new transaction.
     int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
-    const int64_t maxNewTxSize = txSize + wtx.tx->vin.size();
+    const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx);
 
     // optional parameters
     bool specifiedConfirmTarget = false;
@@ -2845,8 +2872,12 @@ UniValue bumpfee(const JSONRPCRequest& request)
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
-        if (nNewFeeRate.GetFeePerK() < nOldFeeRate.GetFeePerK() + walletIncrementalRelayFee.GetFeePerK()) {
-            nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerK() + walletIncrementalRelayFee.GetFeePerK());
+        // walletIncrementalRelayFee.GetFeePerK() should be exact, because it's initialized
+        // in that unit (fee per kb).
+        // However, nOldFeeRate is a calculated value from the tx fee/size, so
+        // add 1 satoshi to the result, because it may have been rounded down.
+        if (nNewFeeRate.GetFeePerK() < nOldFeeRate.GetFeePerK() + 1 + walletIncrementalRelayFee.GetFeePerK()) {
+            nNewFeeRate = CFeeRate(nOldFeeRate.GetFeePerK() + 1 + walletIncrementalRelayFee.GetFeePerK());
             nNewFee = nNewFeeRate.GetFee(maxNewTxSize);
         }
     }
