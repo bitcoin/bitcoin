@@ -33,14 +33,17 @@ CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(Get
 }
 
 bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) const {
+    LOCK(cs_utxo);
     return db.Read(make_pair(DB_COINS, txid), coins);
 }
 
 bool CCoinsViewDB::HaveCoins(const uint256 &txid) const {
+    LOCK(cs_utxo);
     return db.Exists(make_pair(DB_COINS, txid));
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
+    LOCK(cs_utxo);
     uint256 hashBestChain;
     if (!db.Read(DB_BEST_BLOCK, hashBestChain))
         return uint256();
@@ -48,6 +51,7 @@ uint256 CCoinsViewDB::GetBestBlock() const {
 }
 
 bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+    LOCK(cs_utxo);
     CDBBatch batch(&db.GetObfuscateKey());
     size_t count = 0;
     size_t changed = 0;
@@ -94,16 +98,18 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
 }
 
 bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    CAmount nTotalAmount = 0;
+    {
+    LOCK(cs_utxo);
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
     boost::scoped_ptr<CDBIterator> pcursor(const_cast<CDBWrapper*>(&db)->NewIterator());
     pcursor->Seek(DB_COINS);
 
-    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
-    CAmount nTotalAmount = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, uint256> key;
@@ -130,7 +136,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
         }
         pcursor->Next();
     }
-  
+    }
     {
         LOCK(cs_main);
         stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;

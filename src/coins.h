@@ -12,12 +12,15 @@
 #include "memusage.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "sync.h"
 
 #include <assert.h>
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 /** 
  * Pruned version of CTransaction: only retains metadata and unspent transaction outputs
@@ -316,6 +319,9 @@ struct CCoinsStats
 class CCoinsView
 {
 public:
+
+    mutable CCriticalSection cs_utxo;
+
     //! Retrieve the CCoins (unspent transaction outputs) for a given txid
     virtual bool GetCoins(const uint256 &txid, CCoins &coins) const;
 
