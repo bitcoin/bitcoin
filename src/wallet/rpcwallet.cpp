@@ -2438,7 +2438,8 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     UniValue obj(UniValue::VOBJ);
-    size_t kpExternalSize = (int)pwallet->KeypoolCountExternalKeys();
+
+    size_t kpExternalSize = pwalletMain->KeypoolCountExternalKeys();
     obj.push_back(Pair("walletversion", pwallet->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwallet->GetBalance())));
     obj.push_back(Pair("unconfirmed_balance", ValueFromAmount(pwallet->GetUnconfirmedBalance())));
