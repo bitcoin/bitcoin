@@ -12,6 +12,7 @@
 #include "uint256.h"
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+static const int SERIALIZE_TRANSACTION_NO_SIGS = 0x60000000;  /* includes SERIALIZE_TRANSACTION_NO_WITNESS */
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
@@ -107,7 +108,13 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(prevout);
-        READWRITE(*(CScriptBase*)(&scriptSig));
+        if ((s.GetVersion() & SERIALIZE_TRANSACTION_NO_SIGS) == SERIALIZE_TRANSACTION_NO_SIGS) {
+            assert(!ser_action.ForRead());
+            CScriptBase dummy;
+            READWRITE(dummy);
+        } else {
+            READWRITE(*(CScriptBase*)(&scriptSig));
+        }
         READWRITE(nSequence);
     }
 

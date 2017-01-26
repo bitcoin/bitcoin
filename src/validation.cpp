@@ -3065,18 +3065,19 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
     // large by filling up the coinbase witness, which doesn't change
     // the block hash, so we couldn't mark the block as permanently
     // failed).
-    int64_t nMaxBlockWeight;
     if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_BLKSIZE, versionbitscache) == THRESHOLD_ACTIVE) {
         const uint32_t maxBlockSize = GetMaxBlockSize(pindexPrev, consensusParams, nMedianTimePast);
         if (::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > maxBlockSize) {
             return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
         }
-        nMaxBlockWeight = maxBlockSize * 2;
+        const int64_t nMaxBlockWeight = maxBlockSize * 2;
+        if (GetBlockWeight(block, SERIALIZE_TRANSACTION_NO_SIGS) > nMaxBlockWeight) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+        }
     } else {
-        nMaxBlockWeight = MAX_BIP141_BLOCK_WEIGHT;
-    }
-    if (GetBlockWeight(block) > nMaxBlockWeight) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+        if (GetBlockWeight(block, SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BIP141_BLOCK_WEIGHT) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
+        }
     }
 
     return true;
