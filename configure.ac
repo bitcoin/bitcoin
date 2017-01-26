@@ -516,6 +516,59 @@ fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
 
+dnl gmtime checks taken from libmicrohttpd
+AC_CHECK_FUNCS_ONCE([gmtime_r])
+AC_CHECK_DECL([gmtime_s],
+  [
+    AC_MSG_CHECKING([[whether gmtime_s is in C11 form]])
+    AC_LINK_IFELSE(
+        [ AC_LANG_PROGRAM(
+          [[
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <time.h>
+#ifdef __cplusplus
+extern "C"
+#endif
+             struct tm* gmtime_s(const time_t* time, struct tm* result);
+           ]], [[
+             struct tm res;
+             time_t t;
+             gmtime_s (&t, &res);
+          ]])
+        ],
+        [
+          AC_DEFINE([HAVE_C11_GMTIME_S], [1], [Define to 1 if you have the `gmtime_s' function in C11 form.])
+          AC_MSG_RESULT([[yes]])
+        ],
+        [
+          AC_MSG_RESULT([[no]])
+          AC_MSG_CHECKING([[whether gmtime_s is in W32 form]])
+          AC_LINK_IFELSE(
+            [ AC_LANG_PROGRAM(
+              [[
+#include <time.h>
+#ifdef __cplusplus
+extern "C"
+#endif
+errno_t gmtime_s(struct tm* _tm, const time_t* time);
+              ]], [[
+                 struct tm res;
+                 time_t t;
+                 gmtime_s (&res, &t);
+              ]])
+            ],
+            [
+              AC_DEFINE([HAVE_W32_GMTIME_S], [1], [Define to 1 if you have the `gmtime_s' function in W32 form.])
+              AC_MSG_RESULT([[yes]])
+            ],
+            [AC_MSG_RESULT([[no]])
+            ])
+        ])
+  ], [],
+  [[#define __STDC_WANT_LIB_EXT1__ 1
+#include <time.h>]]
+)
+
 AC_CHECK_DECLS([strnlen])
 
 # Check for daemon(3), unrelated to --with-daemon (although used by it)
