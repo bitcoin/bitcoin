@@ -2733,6 +2733,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
             "  \"txid\":    \"value\",   (string)  The id of the new transaction\n"
             "  \"origfee\":  n,         (numeric) Fee of the replaced transaction\n"
             "  \"fee\":      n,         (numeric) Fee of the new transaction\n"
+            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty)\n"
             "}\n"
             "\nExamples:\n"
             "\nBump the fee, get the new transaction\'s txid\n" +
@@ -2945,8 +2946,16 @@ UniValue bumpfee(const JSONRPCRequest& request)
     CWalletTx wtxBumped(pwalletMain, MakeTransactionRef(std::move(tx)));
     wtxBumped.mapValue["replaces_txid"] = hash.ToString();
     CValidationState state;
-    if (!pwalletMain->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state) || !state.IsValid()) {
+    if (!pwalletMain->CommitTransaction(wtxBumped, reservekey, g_connman.get(), state)) {
+        // NOTE: CommitTransaction never returns false, so this should never happen.
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason()));
+    }
+
+    UniValue vErrors(UniValue::VARR);
+    if (state.IsInvalid()) {
+        // This can happen if the mempool rejected the transaction.  Report
+        // what happened in the "errors" response.
+        vErrors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
     }
 
     // mark the original tx as bumped
@@ -2955,13 +2964,14 @@ UniValue bumpfee(const JSONRPCRequest& request)
         // along with an exception. It would be good to return information about
         // wtxBumped to the caller even if marking the original transaction
         // replaced does not succeed for some reason.
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Created new bumpfee transaction but could not mark the original transaction as replaced.");
+        vErrors.push_back("Error: Created new bumpfee transaction but could not mark the original transaction as replaced.");
     }
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("txid", wtxBumped.GetHash().GetHex()));
     result.push_back(Pair("origfee", ValueFromAmount(nOldFee)));
     result.push_back(Pair("fee", ValueFromAmount(nNewFee)));
+    result.push_back(Pair("errors", vErrors));
 
     return result;
 }
