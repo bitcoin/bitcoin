@@ -7,8 +7,6 @@
 #ifndef _SECP256K1_FIELD_REPR_IMPL_H_
 #define _SECP256K1_FIELD_REPR_IMPL_H_
 
-#include <stdio.h>
-#include <string.h>
 #include "util.h"
 #include "num.h"
 #include "field.h"
@@ -39,10 +37,6 @@ static void secp256k1_fe_verify(const secp256k1_fe *a) {
         }
     }
     VERIFY_CHECK(r == 1);
-}
-#else
-static void secp256k1_fe_verify(const secp256k1_fe *a) {
-    (void)a;
 }
 #endif
 
@@ -428,6 +422,14 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe *r, const secp256k1_f
     secp256k1_fe_verify(r);
 #endif
 }
+
+#if defined(USE_EXTERNAL_ASM)
+
+/* External assembler implementation */
+void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b);
+void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a);
+
+#else
 
 #ifdef VERIFY
 #define VERIFY_BITS(x, n) VERIFY_CHECK(((x) >> (n)) == 0)
@@ -1037,7 +1039,7 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t 
     VERIFY_BITS(r[2], 27);
     /* [r9 r8 r7 r6 r5 r4 r3 r2 r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
-
+#endif
 
 static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp256k1_fe * SECP256K1_RESTRICT b) {
 #ifdef VERIFY

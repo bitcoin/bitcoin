@@ -203,7 +203,9 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
 static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
     unsigned char c[32];
     secp256k1_scalar sn, u1, u2;
+#if !defined(EXHAUSTIVE_TEST_ORDER)
     secp256k1_fe xr;
+#endif
     secp256k1_gej pubkeyj;
     secp256k1_gej pr;
 
@@ -219,6 +221,19 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     if (secp256k1_gej_is_infinity(&pr)) {
         return 0;
     }
+
+#if defined(EXHAUSTIVE_TEST_ORDER)
+{
+    secp256k1_scalar computed_r;
+    secp256k1_ge pr_ge;
+    secp256k1_ge_set_gej(&pr_ge, &pr);
+    secp256k1_fe_normalize(&pr_ge.x);
+
+    secp256k1_fe_get_b32(c, &pr_ge.x);
+    secp256k1_scalar_set_b32(&computed_r, c, NULL);
+    return secp256k1_scalar_eq(sigr, &computed_r);
+}
+#else
     secp256k1_scalar_get_b32(c, sigr);
     secp256k1_fe_set_b32(&xr, c);
 
@@ -252,6 +267,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
         return 1;
     }
     return 0;
+#endif
 }
 
 static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
@@ -267,14 +283,10 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
     secp256k1_scalar_set_b32(sigr, b, &overflow);
-    if (secp256k1_scalar_is_zero(sigr)) {
-        /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature.
-         * This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N.
-         */
-        secp256k1_gej_clear(&rp);
-        secp256k1_ge_clear(&r);
-        return 0;
-    }
+    /* These two conditions should be checked before calling */
+    VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
+    VERIFY_CHECK(overflow == 0);
+
     if (recid) {
         /* The overflow condition is cryptographically unreachable as hitting it requires finding the discrete log
          * of some P where P.x >= order, and only 1 in about 2^127 points meet this criteria.
