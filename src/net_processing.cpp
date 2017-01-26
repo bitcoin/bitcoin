@@ -1277,7 +1277,6 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
         // Change version
         pfrom->SetSendVersion(nSendVersion);
         pfrom->nVersion = nVersion;
-        pfrom->fSuccessfullyConnected = true;
 
         if((nServices & NODE_WITNESS))
         {
@@ -1387,6 +1386,7 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
             nCMPCTBLOCKVersion = 1;
             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
+        pfrom->fSuccessfullyConnected = true;
     }
 
 
@@ -2725,8 +2725,8 @@ bool SendMessages(CNode* pto, CConnman& connman, std::atomic<bool>& interruptMsg
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
-        // Don't send anything until we get its version message
-        if (pto->nVersion == 0 || pto->fDisconnect)
+        // Don't send anything until the version handshake is complete
+        if (!pto->fSuccessfullyConnected || pto->fDisconnect)
             return true;
 
         // If we get here, the outgoing message serialization version is set and can't change.
