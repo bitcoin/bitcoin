@@ -46,6 +46,11 @@ int64_t GetTimeMicros()
     return now;
 }
 
+int64_t GetSystemTimeInSeconds()
+{
+    return GetTimeMicros()/1000000;
+}
+
 /** Return a time useful for the debug log */
 int64_t GetLogTimeMicros()
 {
