@@ -457,9 +457,45 @@ struct PrecomputedTransactionData
     PrecomputedTransactionData(const CTransaction& tx);
 };
 
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
-static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
-template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
+class CTransactionRef {
+public:
+    std::shared_ptr<const CTransaction> ptx;
+
+    CTransactionRef() {}
+
+    CTransactionRef(CMutableTransaction&& txIn) { ptx = std::make_shared<const CTransaction>(std::move(txIn)); }
+    CTransactionRef(CTransaction&& txIn) { ptx = std::make_shared<const CTransaction>(std::move(txIn)); }
+
+    CTransactionRef(const CTransactionRef &a) : ptx(a.ptx) {}
+
+    CTransactionRef(std::nullptr_t) {}
+
+    const CTransaction& operator* () const { return *ptx; }
+    operator bool() const { return (bool)ptx; }
+
+    // Accessors to make this look like a shared_ptr.
+    void reset() { ptx.reset(); }
+    long use_count() const { return ptx.use_count(); }
+    const CTransaction *operator->() const { return &(*ptx); }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const {
+        ptx->Serialize(s);
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& is) {
+        ptx = std::make_shared<const CTransaction>(deserialize, is);
+    }
+
+    template <typename Stream>
+    CTransactionRef(deserialize_type, Stream& s) {
+        ptx = std::make_shared<const CTransaction>(deserialize, s);
+    }
+};
+
+static inline CTransactionRef MakeTransactionRef() { return CTransactionRef(CTransaction()); }
+template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return CTransactionRef(std::forward<Tx>(txIn)); }
 
 /** Compute the weight of a transaction, as defined by BIP 141 */
 int64_t GetTransactionWeight(const CTransaction &tx);
