@@ -472,7 +472,7 @@ public:
     CHashedTransaction() : cacheReady(false) {}
 
     void ComputeCache() const;
-    PrecomputedTransactionData& GetCache() const { return cache; }
+    const PrecomputedTransactionData& GetCache() const { return cache; }
 
     template <typename Stream>
     CHashedTransaction(deserialize_type, Stream& s) : cacheReady(false), tx(CMutableTransaction(deserialize, s)) {}
@@ -501,7 +501,7 @@ public:
     const CTransaction *operator->() const { return &(ptx->tx); }
 
     void ComputeCache() const { ptx->ComputeCache(); }
-    PrecomputedTransactionData& GetCache() const { return ptx->GetCache(); }
+    const PrecomputedTransactionData& GetCache() const { return ptx->GetCache(); }
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
