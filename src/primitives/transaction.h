@@ -454,7 +454,8 @@ struct PrecomputedTransactionData
 {
     uint256 hashPrevouts, hashSequence, hashOutputs;
 
-    PrecomputedTransactionData(const CTransaction& tx);
+    PrecomputedTransactionData() {}
+    void Compute(const CTransaction &tx);
 };
 
 class CHashedTransaction {

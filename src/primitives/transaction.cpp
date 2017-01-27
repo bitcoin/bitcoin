@@ -162,7 +162,7 @@ uint256 GetOutputsHash(const CTransaction& txTo) {
     return ss.GetHash();
 }
 
-PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
+void PrecomputedTransactionData::Compute(const CTransaction &txTo)
 {
     hashPrevouts = GetPrevoutHash(txTo);
     hashSequence = GetSequenceHash(txTo);
