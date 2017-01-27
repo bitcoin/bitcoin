@@ -457,40 +457,54 @@ struct PrecomputedTransactionData
     PrecomputedTransactionData(const CTransaction& tx);
 };
 
-class CTransactionRef {
+class CHashedTransaction {
 public:
-    std::shared_ptr<const CTransaction> ptx;
+    const CTransaction tx;
 
+    CHashedTransaction(CMutableTransaction&& txIn) : tx(std::move(txIn)) {}
+    CHashedTransaction(CTransaction&& txIn) : tx(std::move(txIn)) {}
+    CHashedTransaction(const CMutableTransaction& txIn) : tx(txIn) {}
+    CHashedTransaction() {}
+
+    template <typename Stream>
+    CHashedTransaction(deserialize_type, Stream& s) : tx(CMutableTransaction(deserialize, s)) {}
+};
+
+class CTransactionRef {
+private:
+    std::shared_ptr<const CHashedTransaction> ptx;
+
+public:
     CTransactionRef() {}
 
-    CTransactionRef(CMutableTransaction&& txIn) { ptx = std::make_shared<const CTransaction>(std::move(txIn)); }
-    CTransactionRef(CTransaction&& txIn) { ptx = std::make_shared<const CTransaction>(std::move(txIn)); }
+    CTransactionRef(CMutableTransaction&& txIn) { ptx = std::make_shared<const CHashedTransaction>(std::move(txIn)); }
+    CTransactionRef(CTransaction&& txIn) { ptx = std::make_shared<const CHashedTransaction>(std::move(txIn)); }
 
     CTransactionRef(const CTransactionRef &a) : ptx(a.ptx) {}
 
     CTransactionRef(std::nullptr_t) {}
 
-    const CTransaction& operator* () const { return *ptx; }
+    const CTransaction& operator* () const { return ptx->tx; }
     operator bool() const { return (bool)ptx; }
 
     // Accessors to make this look like a shared_ptr.
     void reset() { ptx.reset(); }
     long use_count() const { return ptx.use_count(); }
-    const CTransaction *operator->() const { return &(*ptx); }
+    const CTransaction *operator->() const { return &(ptx->tx); }
 
     template <typename Stream>
-    void Serialize(Stream& s) const {
-        ptx->Serialize(s);
+    inline void Serialize(Stream& s) const {
+        ptx->tx.Serialize(s);
     }
 
     template <typename Stream>
     void Unserialize(Stream& is) {
-        ptx = std::make_shared<const CTransaction>(deserialize, is);
+        ptx = std::make_shared<const CHashedTransaction>(deserialize, is);
     }
 
     template <typename Stream>
     CTransactionRef(deserialize_type, Stream& s) {
-        ptx = std::make_shared<const CTransaction>(deserialize, s);
+        ptx = std::make_shared<const CHashedTransaction>(deserialize, s);
     }
 };
 
