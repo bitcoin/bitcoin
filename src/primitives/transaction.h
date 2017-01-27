@@ -459,16 +459,23 @@ struct PrecomputedTransactionData
 };
 
 class CHashedTransaction {
+private:
+    mutable PrecomputedTransactionData cache;
+    mutable bool cacheReady;
+
 public:
     const CTransaction tx;
 
-    CHashedTransaction(CMutableTransaction&& txIn) : tx(std::move(txIn)) {}
-    CHashedTransaction(CTransaction&& txIn) : tx(std::move(txIn)) {}
-    CHashedTransaction(const CMutableTransaction& txIn) : tx(txIn) {}
-    CHashedTransaction() {}
+    CHashedTransaction(CMutableTransaction&& txIn) : cacheReady(false), tx(std::move(txIn)) {}
+    CHashedTransaction(CTransaction&& txIn) : cacheReady(false), tx(std::move(txIn)) {}
+    CHashedTransaction(const CMutableTransaction& txIn) : cacheReady(false), tx(txIn) {}
+    CHashedTransaction() : cacheReady(false) {}
+
+    void ComputeCache() const;
+    PrecomputedTransactionData& GetCache() const { return cache; }
 
     template <typename Stream>
-    CHashedTransaction(deserialize_type, Stream& s) : tx(CMutableTransaction(deserialize, s)) {}
+    CHashedTransaction(deserialize_type, Stream& s) : cacheReady(false), tx(CMutableTransaction(deserialize, s)) {}
 };
 
 class CTransactionRef {
@@ -488,10 +495,13 @@ public:
     const CTransaction& operator* () const { return ptx->tx; }
     operator bool() const { return (bool)ptx; }
 
-    // Accessors to make this look like a shared_ptr.
+    // Accessors to make this look like a shared_ptr to a CTransaction.
     void reset() { ptx.reset(); }
     long use_count() const { return ptx.use_count(); }
     const CTransaction *operator->() const { return &(ptx->tx); }
+
+    void ComputeCache() const { ptx->ComputeCache(); }
+    PrecomputedTransactionData& GetCache() const { return ptx->GetCache(); }
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {

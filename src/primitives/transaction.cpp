@@ -169,6 +169,14 @@ void PrecomputedTransactionData::Compute(const CTransaction &txTo)
     hashOutputs = GetOutputsHash(txTo);
 }
 
+void CHashedTransaction::ComputeCache() const
+{
+    if (!cacheReady) {
+        cache.Compute(tx);
+        cacheReady = true;
+    }
+}
+
 int64_t GetTransactionWeight(const CTransaction& tx)
 {
     return ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
