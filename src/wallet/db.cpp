@@ -114,7 +114,7 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
 void CDBEnv::MakeMock()
 {
     if (fDbEnvInit)
-        throw runtime_error("CDBEnv::MakeMock: Already initialized");
+        throw std::runtime_error("CDBEnv::MakeMock: Already initialized");
 
     boost::this_thread::interruption_point();
 
@@ -137,7 +137,7 @@ void CDBEnv::MakeMock()
                              DB_PRIVATE,
                          S_IRUSR | S_IWUSR);
     if (ret > 0)
-        throw runtime_error(strprintf("CDBEnv::MakeMock: Error %d opening database environment.", ret));
+        throw std::runtime_error(strprintf("CDBEnv::MakeMock: Error %d opening database environment.", ret));
 
     fDbEnvInit = true;
     fMockDb = true;
@@ -211,7 +211,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
         {
             CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
-            string strType, strErr;
+            std::string strType, strErr;
             if (!(*recoverKVcallback)(callbackDataIn, ssKey, ssValue))
                 continue;
         }
@@ -375,7 +375,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
     {
         LOCK(bitdb.cs_db);
         if (!bitdb.Open(GetDataDir()))
-            throw runtime_error("CDB: Failed to open database environment.");
+            throw std::runtime_error("CDB: Failed to open database environment.");
 
         strFile = strFilename;
         ++bitdb.mapFileUseCount[strFile];
@@ -388,7 +388,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
                 DbMpoolFile* mpf = pdb->get_mpf();
                 ret = mpf->set_flags(DB_MPOOL_NOFILE, 1);
                 if (ret != 0)
-                    throw runtime_error(strprintf("CDB: Failed to configure for no temp file backing for database %s", strFile));
+                    throw std::runtime_error(strprintf("CDB: Failed to configure for no temp file backing for database %s", strFile));
             }
 
             ret = pdb->open(nullptr,                               // Txn pointer
@@ -403,7 +403,7 @@ CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnClose
                 pdb = nullptr;
                 --bitdb.mapFileUseCount[strFile];
                 strFile = "";
-                throw runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
+                throw std::runtime_error(strprintf("CDB: Error %d, can't open database %s", ret, strFilename));
             }
 
             if (fCreate && !Exists(std::string("version"))) {
@@ -604,7 +604,7 @@ bool CDB::PeriodicFlush(std::string strFile)
     {
         // Don't do this if any databases are in use
         int nRefCount = 0;
-        map<string, int>::iterator mi = bitdb.mapFileUseCount.begin();
+        std::map<std::string, int>::iterator mi = bitdb.mapFileUseCount.begin();
         while (mi != bitdb.mapFileUseCount.end())
         {
             nRefCount += (*mi).second;
@@ -614,7 +614,7 @@ bool CDB::PeriodicFlush(std::string strFile)
         if (nRefCount == 0)
         {
             boost::this_thread::interruption_point();
-            map<string, int>::iterator mi = bitdb.mapFileUseCount.find(strFile);
+            std::map<std::string, int>::iterator mi = bitdb.mapFileUseCount.find(strFile);
             if (mi != bitdb.mapFileUseCount.end())
             {
                 LogPrint("db", "Flushing %s\n", strFile);
