@@ -86,7 +86,12 @@ static int AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
+    try {
+        ParseParameters(argc, argv, AllowedArgs::BitcoinCli);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version")) {
         std::string strUsage = strprintf(_("%s RPC client version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version")) {
@@ -122,11 +127,7 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    if (GetBoolArg("-rpcssl", false))
-    {
-        fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
-        return EXIT_FAILURE;
-    }
+
     return CONTINUE_EXECUTION;
 }
 

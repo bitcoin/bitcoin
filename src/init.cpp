@@ -877,22 +877,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), string("0")) != categories.end())
         fDebug = false;
 
-    // Check for -debugnet
-    if (GetBoolArg("-debugnet", false))
-        InitWarning(_("Unsupported argument -debugnet ignored, use -debug=net."));
-    // Check for -socks - as this is a privacy risk to continue, exit here
-    if (mapArgs.count("-socks"))
-        return InitError(_("Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
-    // Check for -tor - as this is a privacy risk to continue, exit here
-    if (GetBoolArg("-tor", false))
-        return InitError(_("Unsupported argument -tor found, use -onion."));
-
-    if (GetBoolArg("-benchmark", false))
-        InitWarning(_("Unsupported argument -benchmark ignored, use -debug=bench."));
-
-    if (GetBoolArg("-whitelistalwaysrelay", false))
-        InitWarning(_("Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay."));
-
     // Checkmempool and checkblockindex default to true in regtest mode
     int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {

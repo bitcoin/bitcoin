@@ -74,7 +74,12 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    ParseParameters(argc, argv);
+    try {
+        ParseParameters(argc, argv, AllowedArgs::Bitcoind);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return false;
+    }
 
     // Process help and version before taking care about datadir
     if (mapArgs.count("-?") || mapArgs.count("-h") ||  mapArgs.count("-help") || mapArgs.count("-version"))

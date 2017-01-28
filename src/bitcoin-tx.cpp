@@ -49,7 +49,12 @@ static int AppInitRawTx(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
+    try {
+        ParseParameters(argc, argv, AllowedArgs::BitcoinTx);
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Error parsing program options: %s\n", e.what());
+        return EXIT_FAILURE;
+    }
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
@@ -61,11 +66,17 @@ static int AppInitRawTx(int argc, char* argv[])
 
     fCreateBlank = GetBoolArg("-create", false);
 
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help"))
+    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
-            _("Usage:") + "\n" +
+        std::string strUsage = strprintf(_("%s bitcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n";
+
+        fprintf(stdout, "%s", strUsage.c_str());
+
+        if (mapArgs.count("-version"))
+            return false;
+
+        strUsage = "\n" + _("Usage:") + "\n" +
               "  bitcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded bitcoin transaction") + "\n" +
               "  bitcoin-tx [options] -create [commands]   " + _("Create hex-encoded bitcoin transaction") + "\n" +
               "\n";

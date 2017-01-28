@@ -343,7 +343,7 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+void ParseParameters(int argc, const char* const argv[], CheckArgFunc checkArgFunc)
 {
     mapArgs.clear();
     mapMultiArgs.clear();
@@ -372,6 +372,7 @@ void ParseParameters(int argc, const char* const argv[])
         if (str.length() > 1 && str[1] == '-')
             str = str.substr(1);
         InterpretNegativeSetting(str, strValue);
+        checkArgFunc(str.substr(1));
 
         mapArgs[str] = strValue;
         mapMultiArgs[str].push_back(strValue);
@@ -549,6 +550,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
         string strKey = string("-") + it->string_key;
         string strValue = it->value[0];
         InterpretNegativeSetting(strKey, strValue);
+        AllowedArgs::ConfigFile(strKey.substr(1));
         if (mapSettingsRet.count(strKey) == 0)
             mapSettingsRet[strKey] = strValue;
         mapMultiSettingsRet[strKey].push_back(strValue);
