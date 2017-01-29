@@ -21,10 +21,10 @@
 //
 // When startup is finished and the main window is
 // shown, a signal is sent to slot uiReady(), which
-// emits a receivedURL() signal for any payment
+// emits a receivedURI() signal for any payment
 // requests that happened during startup.
 //
-// After startup, receivedURL() happens as usual.
+// After startup, receivedURI() happens as usual.
 //
 // This class has one more feature: a static
 // method that finds URIs passed in the command line

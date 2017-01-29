@@ -2576,7 +2576,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
                 // we use the highest possible value in that range (maxint-2)
                 // to avoid conflicting with other possible uses of nSequence,
-                // and in the spirit of "smallest posible change from prior
+                // and in the spirit of "smallest possible change from prior
                 // behavior."
                 for (const auto& coin : setCoins)
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
