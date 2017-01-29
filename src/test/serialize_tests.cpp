@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(sizes)
 
 BOOST_AUTO_TEST_CASE(floats_conversion)
 {
-    // Choose values that map unambigiously to binary floating point to avoid
+    // Choose values that map unambiguously to binary floating point to avoid
     // rounding issues at the compiler side.
     BOOST_CHECK_EQUAL(ser_uint32_to_float(0x00000000), 0.0F);
     BOOST_CHECK_EQUAL(ser_uint32_to_float(0x3f000000), 0.5F);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(floats_conversion)
 
 BOOST_AUTO_TEST_CASE(doubles_conversion)
 {
-    // Choose values that map unambigiously to binary floating point to avoid
+    // Choose values that map unambiguously to binary floating point to avoid
     // rounding issues at the compiler side.
     BOOST_CHECK_EQUAL(ser_uint64_to_double(0x0000000000000000ULL), 0.0);
     BOOST_CHECK_EQUAL(ser_uint64_to_double(0x3fe0000000000000ULL), 0.5);
