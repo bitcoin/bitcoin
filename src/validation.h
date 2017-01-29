@@ -206,7 +206,7 @@ static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 /** Minimum blocks required to signal NODE_NETWORK_LIMITED */
 static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 
-static const signed int DEFAULT_CHECKBLOCKS = 6;
+static const signed int DEFAULT_CHECKBLOCKS = 6 * 4;
 static const unsigned int DEFAULT_CHECKLEVEL = 3;
 
 // Require that user allocate at least 550MB for block & undo files (blk???.dat and rev???.dat)

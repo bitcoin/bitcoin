@@ -129,7 +129,7 @@ class SegWitTest(BitcoinTestFramework):
 
     ''' Helpers '''
     # Build a block on top of node0's tip.
-    def build_next_block(self, nVersion=4):
+    def build_next_block(self, nVersion=VB_TOP_BITS):
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
@@ -963,12 +963,11 @@ class SegWitTest(BitcoinTestFramework):
         assert(self.test_node.last_message["getdata"].inv[0].type == blocktype)
         test_witness_block(self.nodes[0].rpc, self.test_node, block1, True)
 
-        block2 = self.build_next_block(nVersion=4)
-        block2.solve()
+        # Litecoin: Blocks with nVersion < VB_TOP_BITS are rejected
 
-        self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
-        assert(self.test_node.last_message["getdata"].inv[0].type == blocktype)
-        test_witness_block(self.nodes[0].rpc, self.test_node, block2, True)
+        # self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
+        # assert(self.test_node.last_message["getdata"].inv[0].type == blocktype)
+        # test_witness_block(self.nodes[0].rpc, self.test_node, block2, True)
 
         block3 = self.build_next_block(nVersion=(VB_TOP_BITS | (1<<15)))
         block3.solve()
@@ -1021,7 +1020,8 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(rpc_details["weight"], weight)
 
             # Upgraded node should not ask for blocks from unupgraded
-            block4 = self.build_next_block(nVersion=4)
+            # Litecoin: Blocks with nVersion < VB_TOP_BITS are rejected
+            block4 = self.build_next_block(nVersion=(VB_TOP_BITS | (1<<15)))
             block4.solve()
             self.old_node.getdataset = set()
 
@@ -1874,6 +1874,12 @@ class SegWitTest(BitcoinTestFramework):
 
         self.utxo.pop(0)
 
+    def test_reject_blocks(self):
+        print ("\tTesting rejection of block.nVersion < BIP9_TOP_BITS blocks")
+        block = self.build_next_block(nVersion=4)
+        block.solve()
+        resp = self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
+        assert_equal(resp, 'bad-version(0x00000004)')
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
@@ -1926,6 +1932,7 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Test P2SH witness handling again
+        self.test_reject_blocks()
         self.test_p2sh_witness(segwit_activated=True)
         self.test_witness_commitments()
         self.test_block_malleability()
