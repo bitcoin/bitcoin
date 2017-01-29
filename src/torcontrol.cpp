@@ -372,7 +372,7 @@ private:
     struct event *reconnect_ev;
     float reconnect_timeout;
     CService service;
-    /** Cooie for SAFECOOKIE auth */
+    /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
     std::vector<uint8_t> clientNonce;
