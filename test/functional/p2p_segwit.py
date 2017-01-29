@@ -237,7 +237,7 @@ class SegWitTest(BitcoinTestFramework):
 
     # Helper functions
 
-    def build_next_block(self, version=4):
+    def build_next_block(self, nVersion=VB_TOP_BITS):
         """Build a block on top of node0's tip."""
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
@@ -1941,6 +1941,11 @@ class SegWitTest(BitcoinTestFramework):
     @subtest  # type: ignore
     def test_upgrade_after_activation(self):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
+
+        block = self.build_next_block(nVersion=4)
+        block.solve()
+        resp = self.nodes[0].submitblock(block.serialize().hex())
+        assert_equal(resp, 'bad-version(0x00000004)')
 
         self.restart_node(2, extra_args=["-segwitheight={}".format(SEGWIT_HEIGHT)])
         self.connect_nodes(0, 2)
