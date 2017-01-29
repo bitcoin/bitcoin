@@ -2490,7 +2490,7 @@ void ThreadCheckDarkSendPool()
                 mnodeman.ProcessMasternodeConnections();
                 mnodeman.CheckAndRemove();
                 mnpayments.CheckAndRemove();
-                CleanTxLockCandidates();
+                instantsend.CheckAndRemove();
             }
 
             darkSendPool.CheckTimeout();

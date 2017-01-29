@@ -41,7 +41,6 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 
         QString strTxStatus;
         bool fOffline = (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60) && (wtx.GetRequestCount() == 0);
-        int nSignatures = GetTransactionLockSignatures(wtx.GetHash());
 
         if (fOffline) {
             strTxStatus = tr("%1/offline").arg(nDepth);
@@ -51,14 +50,16 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
             strTxStatus = tr("%1 confirmations").arg(nDepth);
         }
 
-        if(nSignatures < 0) return strTxStatus; // regular tx
+        if(!instantsend.HasTxLockRequest(wtx.GetHash())) return strTxStatus; // regular tx
 
+        int nSignatures = instantsend.GetTransactionLockSignatures(wtx.GetHash());
+        int nSignaturesMax = CTxLockRequest(wtx).GetMaxSignatures();
         // InstantSend
         strTxStatus += " (";
-        if(nSignatures >= INSTANTSEND_SIGNATURES_REQUIRED) {
+        if(instantsend.IsLockedInstantSendTransaction(wtx.GetHash())) {
             strTxStatus += tr("verified via InstantSend");
-        } else if(!IsTransactionLockTimedOut(wtx.GetHash())) {
-            strTxStatus += tr("InstantSend verification in progress - %1 of %2 signatures").arg(nSignatures).arg(INSTANTSEND_SIGNATURES_TOTAL);
+        } else if(!instantsend.IsTxLockRequestTimedOut(wtx.GetHash())) {
+            strTxStatus += tr("InstantSend verification in progress - %1 of %2 signatures").arg(nSignatures).arg(nSignaturesMax);
         } else {
             strTxStatus += tr("InstantSend verification failed");
         }

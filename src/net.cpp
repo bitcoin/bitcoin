@@ -2111,10 +2111,11 @@ void RelayTransaction(const CTransaction& tx)
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss.reserve(10000);
     uint256 hash = tx.GetHash();
+    CTxLockRequest txLockRequest;
     if(mapDarksendBroadcastTxes.count(hash)) { // MSG_DSTX
         ss << mapDarksendBroadcastTxes[hash];
-    } else if(mapLockRequestAccepted.count(hash)) { // MSG_TXLOCK_REQUEST
-        ss << mapLockRequestAccepted[hash];
+    } else if(instantsend.GetTxLockRequest(hash, txLockRequest)) { // MSG_TXLOCK_REQUEST
+        ss << txLockRequest;
     } else { // MSG_TX
         ss << tx;
     }
@@ -2125,7 +2126,7 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
     uint256 hash = tx.GetHash();
     int nInv = mapDarksendBroadcastTxes.count(hash) ? MSG_DSTX :
-                (mapLockRequestAccepted.count(hash) ? MSG_TXLOCK_REQUEST : MSG_TX);
+                (instantsend.HasTxLockRequest(hash) ? MSG_TXLOCK_REQUEST : MSG_TX);
     CInv inv(nInv, hash);
     {
         LOCK(cs_mapRelay);
