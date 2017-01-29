@@ -143,7 +143,31 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
       nBlockSize += h.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
     }
     assert(nBlockSize == 80);  // BU always 80 bytes
-    nBlockSize += MAX_COINBASE_SCRIPTSIG_SIZE;  // BU Miners may take the block we give them and add additional strings to the coinbase
+
+
+    unsigned int nCoinbaseSize=0;
+    // Compute coinbase transaction WITHOUT FEES just to get its size.  We will recompute this at the end when we know the fees.
+    {
+      txNew.vout[0].nValue = 0;  // Will be fixed below
+      txNew.vin[0].scriptSig = CScript() << (int) 1 << CScriptNum(0);  // block height will be fixed below
+
+      // BU005 add block size settings to the coinbase
+      std::string cbmsg = FormatCoinbaseMessage(BUComments, minerComment);
+      const char* cbcstr = cbmsg.c_str();
+      vector<unsigned char> vec(cbcstr, cbcstr+cbmsg.size());
+      COINBASE_FLAGS = CScript() << vec;
+      // Chop off any extra data in the COINBASE_FLAGS so the sig does not exceed the max.  
+      // we can do this because the coinbase is not a "real" script...
+      if (txNew.vin[0].scriptSig.size() + COINBASE_FLAGS.size() > MAX_COINBASE_SCRIPTSIG_SIZE)
+        {
+          COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - txNew.vin[0].scriptSig.size());
+        }
+      txNew.vin[0].scriptSig = txNew.vin[0].scriptSig + COINBASE_FLAGS;
+      nCoinbaseSize = txNew.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+      // BU005 END
+    }
+    
+    nBlockSize += std::max(nCoinbaseSize,(unsigned int) coinbaseReserve.value);  // BU Miners take the block we give them, wipe away our coinbase and add their own.  So if their reserve choice is bigger then our coinbase then use that.
     
     uint64_t nBlockTx = 0;
     unsigned int nBlockSigOps = 100;
@@ -333,7 +357,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
           }
         txNew.vin[0].scriptSig = txNew.vin[0].scriptSig + COINBASE_FLAGS;
         // BU005 END
-
+        
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
@@ -357,12 +381,11 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
               {
                 throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
               }
-            if (pblock->fExcessive)
-              {
-                throw std::runtime_error(strprintf("%s: Excessive block generated: %s", __func__, FormatStateMessage(state)));
-              }
           }
-           
+        if (pblock->fExcessive)
+          {
+            throw std::runtime_error(strprintf("%s: Excessive block generated: %s", __func__, FormatStateMessage(state)));
+          }           
     }
 
     return pblocktemplate.release();
