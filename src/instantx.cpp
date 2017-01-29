@@ -173,12 +173,14 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate)
 
         if(n == -1) {
             LogPrint("instantsend", "CInstantSend::Vote -- Unknown Masternode %s\n", activeMasternode.vin.prevout.ToStringShort());
+            ++itOutpointLock;
             continue;
         }
 
         int nSignaturesTotal = COutPointLock::SIGNATURES_TOTAL;
         if(n > nSignaturesTotal) {
             LogPrint("instantsend", "CInstantSend::Vote -- Masternode not in the top %d (%d)\n", nSignaturesTotal, n);
+            ++itOutpointLock;
             continue;
         }
 
@@ -202,7 +204,10 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate)
                 }
             }
         }
-        if(fAlreadyVoted) continue; // skip to the next outpoint
+        if(fAlreadyVoted) {
+            ++itOutpointLock;
+            continue; // skip to the next outpoint
+        }
 
         // we haven't voted for this outpoint yet, let's try to do this now
         CTxLockVote vote(txHash, itOutpointLock->first, activeMasternode.vin.prevout);
