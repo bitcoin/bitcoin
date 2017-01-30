@@ -184,13 +184,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
       BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
       unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
       BOOST_CHECK(blockSize <= maxGeneratedBlock);
-      // printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
+      //printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
       delete pblocktemplate;
     }
 
     coinbaseReserve.value=0;  // Test no reserve
      // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
-    for (unsigned int i = 2000; i <= 80000; i+=37)
+    for (unsigned int i = 2000; i <= 40000; i+=73)
     {
       maxGeneratedBlock = i;
 
@@ -204,13 +204,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
       delete pblocktemplate;
     }
 
-    std::string testMinerComment("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM");
+    std::string testMinerComment("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM__________");
      // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
-    //printf("test mining with different sized miner comments");
-    for (unsigned int i = 2000; i <= 80000; i+=17)
+    printf("test mining with different sized miner comments");
+    for (unsigned int i = 2000; i <= 40000; i+=113)
     {
       maxGeneratedBlock = i;
-      minerComment = testMinerComment.substr(0,i%100);
+      if ((i%100) > 0) minerComment = testMinerComment.substr(0,i%100);
+      else minerComment = "";
+      //minerComment = testMinerComment.substr(0,i%100);
       pblocktemplate = CreateNewBlock(chainparams, scriptPubKey);
       BOOST_CHECK(pblocktemplate);
       BOOST_CHECK(pblocktemplate->block.fExcessive == false);
