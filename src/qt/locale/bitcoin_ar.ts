@@ -422,10 +422,6 @@
         <translation>معالجة الكتل على القرص...</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>لا يوجد أي مصدر الكتلة</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>خلف %1</translation>
     </message>

@@ -417,10 +417,6 @@
         <source>Processing blocks on disk...</source>
         <translation>A processar blocos no disco...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Nenhuma fonte de blocos disponível...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Processado %n bloco do histórico de transações.</numerusform><numerusform>Processados %n blocos do histórico de transações.</numerusform></translation>

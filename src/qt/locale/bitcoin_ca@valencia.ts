@@ -394,10 +394,6 @@
         <translation>Opcions de la &amp;línia d'ordes</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>No hi ha cap font de bloc disponible...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 darrere</translation>
     </message>

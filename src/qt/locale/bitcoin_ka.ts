@@ -238,10 +238,6 @@
         <translation>საკომანდო სტრიქონის ოპ&amp;ციები</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>ბლოკების წყარო მიუწვდომელია...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 გავლილია</translation>
     </message>

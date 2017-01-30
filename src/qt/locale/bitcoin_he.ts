@@ -318,10 +318,6 @@
         <translation>מעבד בלוקים על הדיסק...</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>אין מקור מקטעים זמין…</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 מאחור</translation>
     </message>

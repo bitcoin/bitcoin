@@ -299,7 +299,7 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+356"/>
+        <location filename="../bitcoingui.cpp" line="+357"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
@@ -1134,7 +1134,7 @@
     <message>
         <location line="+7"/>
         <location line="+26"/>
-        <location filename="../modaloverlay.cpp" line="+136"/>
+        <location filename="../modaloverlay.cpp" line="+138"/>
         <source>Unknown...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2533,7 +2533,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+553"/>
+        <location filename="../sendcoinsdialog.cpp" line="+554"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>

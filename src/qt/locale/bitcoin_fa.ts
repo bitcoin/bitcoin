@@ -357,10 +357,6 @@
         <source>Processing blocks on disk...</source>
         <translation>پردازش بلوک‌ها روی دیسک...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>منبعی برای دریافت بلاک در دسترس نیست...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>پردازش %n  بلاک از تاریخچه ی تراکنش ها </numerusform></translation>

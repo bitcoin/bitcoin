@@ -385,10 +385,6 @@
         <source>Processing blocks on disk...</source>
         <translation>Kõvakettal olevate plokkide töötlemine...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Plokkide allikas pole saadaval...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Töödeldud %n plokk transaktsioonide ajaloost.</numerusform><numerusform>Töödeldud %n plokki transaktsioonide ajaloost.</numerusform></translation>

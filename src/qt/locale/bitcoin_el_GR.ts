@@ -246,10 +246,6 @@
         <translation>&amp;Επιλογές γραμμής εντολών</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Η πηγή του μπλοκ δεν ειναι διαθέσιμη... </translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 πίσω</translation>
     </message>

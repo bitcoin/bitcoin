@@ -422,10 +422,6 @@
         <translation>Обработване на блокове на диска...</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Липсва източник на блоковете...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 зад</translation>
     </message>
