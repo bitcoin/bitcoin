@@ -3,6 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <event2/event.h>
+
+#ifdef EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
+// It would probably be ideal to define dummy test(s) that report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
+
 #include <map>
 #include <stdlib.h>
 
@@ -86,3 +90,5 @@ BOOST_AUTO_TEST_CASE(raii_event_order)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif  // EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
