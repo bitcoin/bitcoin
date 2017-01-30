@@ -31,20 +31,32 @@ Provides utilities for managing copyright headers of `The Bitcoin Core
 developers` in repository source files. It has three subcommands:
 
 ```
-$ ./copyright_header.py report <base_directory> [verbose]
+$ ./copyright_header.py report <base_directory>
+$ ./copyright_header.py ci_check <base_directory>
 $ ./copyright_header.py update <base_directory>
 $ ./copyright_header.py insert <file>
 ```
 Running these subcommands without arguments displays a usage string.
 
-copyright\_header.py report \<base\_directory\> [verbose]
+copyright\_header.py report \<base\_directory\>
 ---------------------------------------------------------
 
 Produces a report of all copyright header notices found inside the source files
-of a repository. Useful to quickly visualize the state of the headers.
-Specifying `verbose` will list the full filenames of files of each category.
+of a repository. Useful to quickly visualize the state of the headers in the
+repository. If there are issues found, the specific files are listed with a
+summary of what the issue is.
 
-copyright\_header.py update \<base\_directory\> [verbose]
+copyright\_header.py ci\_check \<base\_directory\>
+---------------------------------------------------------
+
+Similar to the `report` command, but is for the TravisCI system to run in order
+to enforce rules for copyright headers. It returns a non-zero status if issues
+are found. Also, it outputs a listing of specific files that have issues and
+provides a suggestion for how to resolve by either fixing the file (because
+there was an mistake) or by updating the script's rules (because making an
+exception is appropriate).
+
+copyright\_header.py update \<base\_directory\>
 ---------------------------------------------------------
 Updates all the copyright headers of `The Bitcoin Core developers` which were
 changed in a year more recent than is listed. For example:
@@ -81,7 +93,8 @@ The copyright dates will be set to be `<year_introduced>-<current_year>` where
 year rather than two hyphenated years.
 
 If the file already has a copyright for `The Bitcoin Core developers`, the
-script will exit.
+script will exit. If the file is in a subtree where a different copyright
+header is appropriate, the script will exit.
 
 gen-manpages.sh
 ===============
