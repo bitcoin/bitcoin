@@ -135,6 +135,14 @@ public:
             int nRequired;
             ExtractDestinations(subscript, whichType, addresses, nRequired);
             obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+            CKeyID keyID;
+            CPubKey pubkey;
+            if (GetWitnessKeyID(pwalletMain, scriptID, keyID) &&
+                pwalletMain->GetPubKey(keyID, pubkey)) {
+                // Wallet should only have compressed pubkeys for segwit
+                assert(pubkey.IsCompressed());
+                obj.push_back(Pair("pubkey", HexStr(pubkey)));
+            }
             obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
             UniValue a(UniValue::VARR);
             BOOST_FOREACH(const CTxDestination& addr, addresses)
@@ -204,7 +212,8 @@ UniValue validateaddress(const JSONRPCRequest& request)
         if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
             ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
         CKeyID keyID;
-        if (pwalletMain && address.GetKeyID(keyID) && pwalletMain->mapKeyMetadata.count(keyID) && !pwalletMain->mapKeyMetadata[keyID].hdKeypath.empty())
+        CScriptID scriptID;
+        if (pwalletMain && (address.GetKeyID(keyID) || (address.GetScriptID(scriptID) && GetWitnessKeyID(pwalletMain, scriptID, keyID))) && pwalletMain->mapKeyMetadata.count(keyID) && !pwalletMain->mapKeyMetadata[keyID].hdKeypath.empty())
         {
             ret.push_back(Pair("hdkeypath", pwalletMain->mapKeyMetadata[keyID].hdKeypath));
             ret.push_back(Pair("hdmasterkeyid", pwalletMain->mapKeyMetadata[keyID].hdMasterKeyID.GetHex()));
@@ -242,7 +251,8 @@ CScript _createmultisig_redeemScript(const UniValue& params)
         if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
-            if (!address.GetKeyID(keyID))
+            CScriptID scriptID;
+            if (!address.GetKeyID(keyID) && (!address.GetScriptID(scriptID) || !GetWitnessKeyID(pwalletMain, scriptID, keyID)))
                 throw runtime_error(
                     strprintf("%s does not refer to a key",ks));
             CPubKey vchPubKey;
@@ -355,7 +365,8 @@ UniValue verifymessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKeyID keyID;
-    if (!addr.GetKeyID(keyID))
+    CScriptID scriptID;
+    if (!addr.GetKeyID(keyID) && !addr.GetScriptID(scriptID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
     bool fInvalid = false;
@@ -371,6 +382,15 @@ UniValue verifymessage(const JSONRPCRequest& request)
     CPubKey pubkey;
     if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
         return false;
+
+    //Possibly p2sh-p2wpkh
+    if (scriptID != CScriptID()) {
+        CScriptID nestedScriptID = CScriptID(CScript() << OP_0 << ToByteVector(pubkey.GetID()));
+        //Failure here could mean address is any other type of p2sh
+        if (scriptID != nestedScriptID) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Given P2SH address does not match the signature.");
+        }
+    }
 
     return (pubkey.GetID() == keyID);
 }
