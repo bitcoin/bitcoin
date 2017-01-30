@@ -148,8 +148,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     unsigned int nCoinbaseSize=0;
     // Compute coinbase transaction WITHOUT FEES just to get its size.  We will recompute this at the end when we know the fees.
     {
-      txNew.vout[0].nValue = 0;  // Will be fixed below
-      txNew.vin[0].scriptSig = CScript() << (int) 1 << CScriptNum(0);  // block height will be fixed below
+      txNew.vout[0].nValue = 0;  // Will be fixed below, but we need to adjust the size for a possible 9 byte varint
+      txNew.vin[0].scriptSig = CScript() << ((int) 0) << CScriptNum(0);  // block height will be fixed below, but we need to adjust the size for a possible 9 byte varint
 
       // BU005 add block size settings to the coinbase
       std::string cbmsg = FormatCoinbaseMessage(BUComments, minerComment);
@@ -163,7 +163,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
           COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - txNew.vin[0].scriptSig.size());
         }
       txNew.vin[0].scriptSig = txNew.vin[0].scriptSig + COINBASE_FLAGS;
-      nCoinbaseSize = txNew.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+      nCoinbaseSize = txNew.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) + 16;  // This code serialized the transaction but the 2 zeros above (nValue and block height) got encoded into 2 bytes, yet these are varints so there is a possible 16 more bytes 
       // BU005 END
     }
     
