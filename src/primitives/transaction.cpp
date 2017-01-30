@@ -169,12 +169,10 @@ void PrecomputedTransactionData::Compute(const CTransaction &txTo)
     hashOutputs = GetOutputsHash(txTo);
 }
 
-void CHashedTransaction::ComputeCache() const
+const PrecomputedTransactionData& CHashedTransaction::GetCache() const
 {
-    if (!cacheReady) {
-        cache.Compute(tx);
-        cacheReady = true;
-    }
+    std::call_once(cache.flag, [&]() { cache.Compute(tx); });
+    return cache;
 }
 
 int64_t GetTransactionWeight(const CTransaction& tx)

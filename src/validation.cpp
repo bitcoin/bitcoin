@@ -950,7 +950,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        ptx.ComputeCache();
         const PrecomputedTransactionData &txdata = ptx.GetCache();
         if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, txdata)) {
             // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
@@ -1903,8 +1902,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
-
-        block.vtx[i].ComputeCache();
 
         if (!tx.IsCoinBase())
         {

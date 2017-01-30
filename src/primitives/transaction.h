@@ -11,6 +11,8 @@
 #include "serialize.h"
 #include "uint256.h"
 
+#include <mutex>
+
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
@@ -453,6 +455,7 @@ struct CMutableTransaction
 struct PrecomputedTransactionData
 {
     uint256 hashPrevouts, hashSequence, hashOutputs;
+    std::once_flag flag; // for ensuring the hashes are generated once
 
     PrecomputedTransactionData() {}
     void Compute(const CTransaction &tx);
@@ -461,21 +464,19 @@ struct PrecomputedTransactionData
 class CHashedTransaction {
 private:
     mutable PrecomputedTransactionData cache;
-    mutable bool cacheReady;
 
 public:
     const CTransaction tx;
 
-    CHashedTransaction(CMutableTransaction&& txIn) : cacheReady(false), tx(std::move(txIn)) {}
-    CHashedTransaction(CTransaction&& txIn) : cacheReady(false), tx(std::move(txIn)) {}
-    CHashedTransaction(const CMutableTransaction& txIn) : cacheReady(false), tx(txIn) {}
-    CHashedTransaction() : cacheReady(false) {}
+    CHashedTransaction(CMutableTransaction&& txIn) : tx(std::move(txIn)) {}
+    CHashedTransaction(CTransaction&& txIn) : tx(std::move(txIn)) {}
+    CHashedTransaction(const CMutableTransaction& txIn) : tx(txIn) {}
+    CHashedTransaction() {}
 
-    void ComputeCache() const;
-    const PrecomputedTransactionData& GetCache() const { return cache; }
+    const PrecomputedTransactionData& GetCache() const;
 
     template <typename Stream>
-    CHashedTransaction(deserialize_type, Stream& s) : cacheReady(false), tx(CMutableTransaction(deserialize, s)) {}
+    CHashedTransaction(deserialize_type, Stream& s) : tx(CMutableTransaction(deserialize, s)) {}
 };
 
 class CTransactionRef {
@@ -500,7 +501,6 @@ public:
     long use_count() const { return ptx.use_count(); }
     const CTransaction *operator->() const { return &(ptx->tx); }
 
-    void ComputeCache() const { ptx->ComputeCache(); }
     const PrecomputedTransactionData& GetCache() const { return ptx->GetCache(); }
 
     template <typename Stream>
