@@ -8,19 +8,23 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
+#include "consensus/header_verify.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
+#include "keystore.h"
 #include "validation.h"
 #include "miner.h"
 #include "net.h"
-#include "pow.h"
 #include "rpc/server.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif
 
 #include <memory>
 #include <stdint.h>
@@ -98,7 +102,11 @@ UniValue getnetworkhashps(const JSONRPCRequest& request)
 
 UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
-    static const int nInnerLoopCount = 0x10000;
+    CKeyStore* blockSignKeystore = NULL;
+#ifdef ENABLE_WALLET
+    blockSignKeystore = pwalletMain;
+#endif
+  
     int nHeightStart = 0;
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -121,15 +129,11 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            ++pblock->nNonce;
-            --nMaxTries;
-        }
-        if (nMaxTries == 0) {
-            break;
-        }
-        if (pblock->nNonce == nInnerLoopCount) {
-            continue;
+        if (!MaybeGenerateProof(Params().GetConsensus(), pblock, blockSignKeystore, nMaxTries)) {
+            if (nMaxTries == 0)
+                break;
+            else
+                continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         if (!ProcessNewBlock(Params(), shared_pblock, true, NULL))
@@ -548,7 +552,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     // Update nTime
     UpdateTime(pblock, consensusParams, pindexPrev);
-    pblock->nNonce = 0;
+    ResetProof(consensusParams, pblock);
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = (THRESHOLD_ACTIVE != VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache));
@@ -595,8 +599,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue aux(UniValue::VOBJ);
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
-
-    arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
@@ -666,6 +668,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("coinbaseaux", aux));
     result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
+    const uint32_t nBits = Params().GetConsensus().fSignBlockChain ? 0 : pblock->proof.pow.nBits;
+    const arith_uint256 hashTarget = arith_uint256().SetCompact(nBits);
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
@@ -679,7 +683,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SERIALIZED_SIZE));
     result.push_back(Pair("weightlimit", (int64_t)MAX_BLOCK_WEIGHT));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
-    result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+    result.push_back(Pair("bits", strprintf("%08x", nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];

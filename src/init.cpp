@@ -318,6 +318,10 @@ void OnRPCPreCommand(const CRPCCommand& cmd)
 
 std::string HelpMessage(HelpMessageMode mode)
 {
+    const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
+    const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
+    const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
+    const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
     const bool showDebug = GetBoolArg("-help-debug", false);
 
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
@@ -329,7 +333,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-blocknotify=<cmd>", _("Execute command when the best block changes (%s in cmd is replaced by block hash)"));
     if (showDebug)
         strUsage += HelpMessageOpt("-blocksonly", strprintf(_("Whether to operate in a blocks only mode (default: %u)"), DEFAULT_BLOCKSONLY));
-    strUsage +=HelpMessageOpt("-assumevalid=<hex>", strprintf(_("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)"), Params(CBaseChainParams::MAIN).GetConsensus().defaultAssumeValid.GetHex(), Params(CBaseChainParams::TESTNET).GetConsensus().defaultAssumeValid.GetHex()));
+    strUsage +=HelpMessageOpt("-assumevalid=<hex>", strprintf(_("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)"), defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnetChainParams->GetConsensus().defaultAssumeValid.GetHex()));
     strUsage += HelpMessageOpt("-conf=<file>", strprintf(_("Specify configuration file (default: %s)"), BITCOIN_CONF_FILENAME));
     if (mode == HMM_BITCOIND)
     {
@@ -382,7 +386,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-onlynet=<net>", _("Only connect to nodes in network <net> (ipv4, ipv6 or onion)"));
     strUsage += HelpMessageOpt("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), DEFAULT_PERMIT_BAREMULTISIG));
     strUsage += HelpMessageOpt("-peerbloomfilters", strprintf(_("Support filtering of blocks and transaction with bloom filters (default: %u)"), DEFAULT_PEERBLOOMFILTERS));
-    strUsage += HelpMessageOpt("-port=<port>", strprintf(_("Listen for connections on <port> (default: %u or testnet: %u)"), Params(CBaseChainParams::MAIN).GetDefaultPort(), Params(CBaseChainParams::TESTNET).GetDefaultPort()));
+    strUsage += HelpMessageOpt("-port=<port>", strprintf(_("Listen for connections on <port> (default: %u or testnet: %u)"), defaultChainParams->GetDefaultPort(), testnetChainParams->GetDefaultPort()));
     strUsage += HelpMessageOpt("-proxy=<ip:port>", _("Connect through SOCKS5 proxy"));
     strUsage += HelpMessageOpt("-proxyrandomize", strprintf(_("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)"), DEFAULT_PROXYRANDOMIZE));
     strUsage += HelpMessageOpt("-rpcserialversion", strprintf(_("Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)"), DEFAULT_RPC_SERIALIZE_VERSION));
@@ -422,8 +426,8 @@ std::string HelpMessage(HelpMessageMode mode)
     {
         strUsage += HelpMessageOpt("-checkblocks=<n>", strprintf(_("How many blocks to check at startup (default: %u, 0 = all)"), DEFAULT_CHECKBLOCKS));
         strUsage += HelpMessageOpt("-checklevel=<n>", strprintf(_("How thorough the block verification of -checkblocks is (0-4, default: %u)"), DEFAULT_CHECKLEVEL));
-        strUsage += HelpMessageOpt("-checkblockindex", strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally. Also sets -checkmempool (default: %u)", Params(CBaseChainParams::MAIN).DefaultConsistencyChecks()));
-        strUsage += HelpMessageOpt("-checkmempool=<n>", strprintf("Run checks every <n> transactions (default: %u)", Params(CBaseChainParams::MAIN).DefaultConsistencyChecks()));
+        strUsage += HelpMessageOpt("-checkblockindex", strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally. Also sets -checkmempool (default: %u)", defaultChainParams->DefaultConsistencyChecks()));
+        strUsage += HelpMessageOpt("-checkmempool=<n>", strprintf("Run checks every <n> transactions (default: %u)", defaultChainParams->DefaultConsistencyChecks()));
         strUsage += HelpMessageOpt("-checkpoints", strprintf("Disable expensive verification for known chain history (default: %u)", DEFAULT_CHECKPOINTS_ENABLED));
         strUsage += HelpMessageOpt("-disablesafemode", strprintf("Disable safemode, override a real safe mode event (default: %u)", DEFAULT_DISABLE_SAFEMODE));
         strUsage += HelpMessageOpt("-testsafemode", strprintf("Force safe mode (default: %u)", DEFAULT_TESTSAFEMODE));
@@ -470,7 +474,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += HelpMessageGroup(_("Node relay options:"));
     if (showDebug) {
-        strUsage += HelpMessageOpt("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", !Params(CBaseChainParams::TESTNET).RequireStandard()));
+        strUsage += HelpMessageOpt("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", defaultChainParams->RequireStandard()));
         strUsage += HelpMessageOpt("-incrementalrelayfee=<amt>", strprintf("Fee rate (in %s/kB) used to define cost of relay, used for mempool limiting and BIP 125 replacement. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_INCREMENTAL_RELAY_FEE)));
         strUsage += HelpMessageOpt("-dustrelayfee=<amt>", strprintf("Fee rate (in %s/kB) used to defined dust, the value of an output such that it will cost about 1/3 of its value in fees at this fee rate to spend it. (default: %s)", CURRENCY_UNIT, FormatMoney(DUST_RELAY_TX_FEE)));
     }
@@ -495,7 +499,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcauth=<userpw>", _("Username and hashed password for JSON-RPC connections. The field <userpw> comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can be specified multiple times"));
-    strUsage += HelpMessageOpt("-rpcport=<port>", strprintf(_("Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"), BaseParams(CBaseChainParams::MAIN).RPCPort(), BaseParams(CBaseChainParams::TESTNET).RPCPort()));
+    strUsage += HelpMessageOpt("-rpcport=<port>", strprintf(_("Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"), defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()));
     strUsage += HelpMessageOpt("-rpcallowip=<ip>", _("Allow JSON-RPC connections from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times"));
     strUsage += HelpMessageOpt("-rpcthreads=<n>", strprintf(_("Set the number of threads to service RPC calls (default: %d)"), DEFAULT_HTTP_THREADS));
     if (showDebug) {
@@ -728,7 +732,7 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (mapMultiArgs.count("-connect") && mapMultiArgs.at("-connect").size() > 0) {
+    if (argsGlobal.IsArgSet("-connect") && argsGlobal.ArgsAt("-connect").size() > 0) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (SoftSetBoolArg("-dnsseed", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
@@ -874,8 +878,8 @@ bool AppInitParameterInteraction()
 
     // Make sure enough file descriptors are available
     int nBind = std::max(
-                (mapMultiArgs.count("-bind") ? mapMultiArgs.at("-bind").size() : 0) +
-                (mapMultiArgs.count("-whitebind") ? mapMultiArgs.at("-whitebind").size() : 0), size_t(1));
+                (argsGlobal.IsArgSet("-bind") ? argsGlobal.ArgsAt("-bind").size() : 0) +
+                (argsGlobal.IsArgSet("-whitebind") ? argsGlobal.ArgsAt("-whitebind").size() : 0), size_t(1));
     nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
@@ -891,10 +895,10 @@ bool AppInitParameterInteraction()
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    fDebug = mapMultiArgs.count("-debug");
+    fDebug = argsGlobal.IsArgSet("-debug");
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
     if (fDebug) {
-        const vector<string>& categories = mapMultiArgs.at("-debug");
+        const vector<string>& categories = argsGlobal.ArgsAt("-debug");
         if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), string("0")) != categories.end())
             fDebug = false;
     }
@@ -1058,12 +1062,12 @@ bool AppInitParameterInteraction()
         fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "fee") != vstrReplacementModes.end());
     }
 
-    if (mapMultiArgs.count("-bip9params")) {
+    if (argsGlobal.IsArgSet("-bip9params")) {
         // Allow overriding BIP9 parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
-        const vector<string>& deployments = mapMultiArgs.at("-bip9params");
+        const vector<string>& deployments = argsGlobal.ArgsAt("-bip9params");
         for (auto i : deployments) {
             std::vector<std::string> vDeploymentParams;
             boost::split(vDeploymentParams, i, boost::is_any_of(":"));
@@ -1081,7 +1085,7 @@ bool AppInitParameterInteraction()
             for (int j=0; j<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j)
             {
                 if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[j].name) == 0) {
-                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                    UpdateBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
                     found = true;
                     LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
                     break;
@@ -1209,8 +1213,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<string> uacomments;
-    if (mapMultiArgs.count("-uacomment")) {
-        BOOST_FOREACH(string cmt, mapMultiArgs.at("-uacomment"))
+    if (argsGlobal.IsArgSet("-uacomment")) {
+        BOOST_FOREACH(string cmt, argsGlobal.ArgsAt("-uacomment"))
         {
             if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
                 return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
@@ -1223,9 +1227,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
 
-    if (mapMultiArgs.count("-onlynet")) {
+    if (argsGlobal.IsArgSet("-onlynet")) {
         std::set<enum Network> nets;
-        BOOST_FOREACH(const std::string& snet, mapMultiArgs.at("-onlynet")) {
+        BOOST_FOREACH(const std::string& snet, argsGlobal.ArgsAt("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
                 return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
@@ -1238,8 +1242,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (mapMultiArgs.count("-whitelist")) {
-        BOOST_FOREACH(const std::string& net, mapMultiArgs.at("-whitelist")) {
+    if (argsGlobal.IsArgSet("-whitelist")) {
+        BOOST_FOREACH(const std::string& net, argsGlobal.ArgsAt("-whitelist")) {
             CSubNet subnet;
             LookupSubNet(net.c_str(), subnet);
             if (!subnet.IsValid())
@@ -1291,16 +1295,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (fListen) {
         bool fBound = false;
-        if (mapMultiArgs.count("-bind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-bind")) {
+        if (argsGlobal.IsArgSet("-bind")) {
+            BOOST_FOREACH(const std::string& strBind, argsGlobal.ArgsAt("-bind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(ResolveErrMsg("bind", strBind));
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
             }
         }
-        if (mapMultiArgs.count("-whitebind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-whitebind")) {
+        if (argsGlobal.IsArgSet("-whitebind")) {
+            BOOST_FOREACH(const std::string& strBind, argsGlobal.ArgsAt("-whitebind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, 0, false))
                     return InitError(ResolveErrMsg("whitebind", strBind));
@@ -1309,7 +1313,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
             }
         }
-        if (!mapMultiArgs.count("-bind") && !mapMultiArgs.count("-whitebind")) {
+        if (!argsGlobal.IsArgSet("-bind") && !argsGlobal.IsArgSet("-whitebind")) {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
             fBound |= Bind(connman, CService(in6addr_any, GetListenPort()), BF_NONE);
@@ -1319,8 +1323,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
 
-    if (mapMultiArgs.count("-externalip")) {
-        BOOST_FOREACH(const std::string& strAddr, mapMultiArgs.at("-externalip")) {
+    if (argsGlobal.IsArgSet("-externalip")) {
+        BOOST_FOREACH(const std::string& strAddr, argsGlobal.ArgsAt("-externalip")) {
             CService addrLocal;
             if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
                 AddLocal(addrLocal, LOCAL_MANUAL);
@@ -1329,8 +1333,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (mapMultiArgs.count("-seednode")) {
-        BOOST_FOREACH(const std::string& strDest, mapMultiArgs.at("-seednode"))
+    if (argsGlobal.IsArgSet("-seednode")) {
+        BOOST_FOREACH(const std::string& strDest, argsGlobal.ArgsAt("-seednode"))
             connman.AddOneShot(strDest);
     }
 
@@ -1581,9 +1585,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
     std::vector<boost::filesystem::path> vImportFiles;
-    if (mapMultiArgs.count("-loadblock"))
+    if (argsGlobal.IsArgSet("-loadblock"))
     {
-        BOOST_FOREACH(const std::string& strFile, mapMultiArgs.at("-loadblock"))
+        BOOST_FOREACH(const std::string& strFile, argsGlobal.ArgsAt("-loadblock"))
             vImportFiles.push_back(strFile);
     }
 

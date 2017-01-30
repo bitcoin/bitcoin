@@ -177,13 +177,13 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
 
 bitcoind_processes = {}
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, chain):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     rpc_u, rpc_p = rpc_auth_pair(n)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("regtest=1\n")
+        f.write("chain=%s\n" % chain)
         f.write("rpcuser=" + rpc_u + "\n")
         f.write("rpcpassword=" + rpc_p + "\n")
         f.write("port="+str(p2p_port(n))+"\n")
@@ -226,7 +226,7 @@ def wait_for_bitcoind_start(process, url, i):
                 raise # unknown JSON RPC exception
         time.sleep(0.25)
 
-def initialize_chain(test_dir, num_nodes, cachedir):
+def initialize_chain(test_dir, num_nodes, cachedir, chain):
     """
     Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
@@ -248,7 +248,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
 
         # Create cache directories, run bitcoinds:
         for i in range(MAX_NODES):
-            datadir=initialize_datadir(cachedir, i)
+            datadir=initialize_datadir(cachedir, i, chain)
             args = [ os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
@@ -289,24 +289,24 @@ def initialize_chain(test_dir, num_nodes, cachedir):
         stop_nodes(rpcs)
         disable_mocktime()
         for i in range(MAX_NODES):
-            os.remove(log_filename(cachedir, i, "debug.log"))
-            os.remove(log_filename(cachedir, i, "db.log"))
-            os.remove(log_filename(cachedir, i, "peers.dat"))
-            os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
+            os.remove(log_filename(cachedir, i, chain, "debug.log"))
+            os.remove(log_filename(cachedir, i, chain, "db.log"))
+            os.remove(log_filename(cachedir, i, chain, "peers.dat"))
+            os.remove(log_filename(cachedir, i, chain, "fee_estimates.dat"))
 
     for i in range(num_nodes):
         from_dir = os.path.join(cachedir, "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
-        initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
+        initialize_datadir(test_dir, i, chain) # Overwrite port/rpcport in bitcoin.conf
 
-def initialize_chain_clean(test_dir, num_nodes):
+def initialize_chain_clean(test_dir, num_nodes, chain):
     """
     Create an empty blockchain and num_nodes wallets.
     Useful if a test case wants complete control over initialization.
     """
     for i in range(num_nodes):
-        datadir=initialize_datadir(test_dir, i)
+        datadir=initialize_datadir(test_dir, i, chain)
 
 
 def _rpchost_to_args(rpchost):
@@ -367,8 +367,8 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
         raise
     return rpcs
 
-def log_filename(dirname, n_node, logname):
-    return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
+def log_filename(dirname, n_node, chain, logname):
+    return os.path.join(dirname, "node"+str(n_node), chain, logname)
 
 def stop_node(node, i):
     try:

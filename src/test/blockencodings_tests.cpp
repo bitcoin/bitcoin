@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "blockencodings.h"
+#include "consensus/header_verify.h"
 #include "consensus/merkle.h"
 #include "chainparams.h"
+#include "keystore.h"
 #include "random.h"
 
 #include "test/test_bitcoin.h"
@@ -31,7 +33,7 @@ static CBlock BuildBlockTestCase() {
     block.vtx[0] = MakeTransactionRef(tx);
     block.nVersion = 42;
     block.hashPrevBlock = GetRandHash();
-    block.nBits = 0x207fffff;
+    block.proof.pow.nBits = 0x207fffff;
 
     tx.vin[0].prevout.hash = GetRandHash();
     tx.vin[0].prevout.n = 0;
@@ -47,7 +49,8 @@ static CBlock BuildBlockTestCase() {
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+    CBasicKeyStore dummyKeystore;
+    while (!GenerateProof(Params().GetConsensus(), &block, &dummyKeystore));
     return block;
 }
 
@@ -284,12 +287,13 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     block.vtx[0] = MakeTransactionRef(std::move(coinbase));
     block.nVersion = 42;
     block.hashPrevBlock = GetRandHash();
-    block.nBits = 0x207fffff;
+    block.proof.pow.nBits = 0x207fffff;
 
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+    CBasicKeyStore dummyKeystore;
+    while (!GenerateProof(Params().GetConsensus(), &block, &dummyKeystore));
 
     // Test simple header round-trip with only coinbase
     {

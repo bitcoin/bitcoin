@@ -125,6 +125,7 @@ public:
 class CBitcoinSecret : public CBase58Data
 {
 public:
+    void SetKey(const CKey& vchSecret, const CChainParams& chainparams);
     void SetKey(const CKey& vchSecret);
     CKey GetKey();
     bool IsValid() const;
@@ -132,6 +133,7 @@ public:
     bool SetString(const std::string& strSecret);
 
     CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
+    CBitcoinSecret(const CKey& vchSecret, const CChainParams& chainparams) { SetKey(vchSecret, chainparams); }
     CBitcoinSecret() {}
 };
 

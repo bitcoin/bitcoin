@@ -623,7 +623,7 @@ int main(int argc, char *argv[])
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         SelectParams(ChainNameFromCommandLine());
     } catch(std::exception &e) {
@@ -635,7 +635,7 @@ int main(int argc, char *argv[])
     PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
 
-    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(networkStyle->getAppName());

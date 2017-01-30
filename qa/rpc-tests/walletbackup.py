@@ -97,9 +97,9 @@ class WalletBackupTest(BitcoinTestFramework):
         stop_node(self.nodes[2], 2)
 
     def erase_three(self):
-        os.remove(self.options.tmpdir + "/node0/regtest/wallet.dat")
-        os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
-        os.remove(self.options.tmpdir + "/node2/regtest/wallet.dat")
+        os.remove(self.options.tmpdir + "/node0/" + self.chain + "/wallet.dat")
+        os.remove(self.options.tmpdir + "/node1/" + self.chain + "/wallet.dat")
+        os.remove(self.options.tmpdir + "/node2/" + self.chain + "/wallet.dat")
 
     def run_test(self):
         logging.info("Generating initial blockchain")
@@ -157,13 +157,13 @@ class WalletBackupTest(BitcoinTestFramework):
         self.erase_three()
 
         # Start node2 with no chain
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/blocks")
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/chainstate")
+        shutil.rmtree(self.options.tmpdir + "/node2/" + self.chain + "/blocks")
+        shutil.rmtree(self.options.tmpdir + "/node2/" + self.chain + "/chainstate")
 
         # Restore wallets from backup
-        shutil.copyfile(tmpdir + "/node0/wallet.bak", tmpdir + "/node0/regtest/wallet.dat")
-        shutil.copyfile(tmpdir + "/node1/wallet.bak", tmpdir + "/node1/regtest/wallet.dat")
-        shutil.copyfile(tmpdir + "/node2/wallet.bak", tmpdir + "/node2/regtest/wallet.dat")
+        shutil.copyfile(tmpdir + "/node0/wallet.bak", tmpdir + "/node0/" + self.chain + "/wallet.dat")
+        shutil.copyfile(tmpdir + "/node1/wallet.bak", tmpdir + "/node1/" + self.chain + "/wallet.dat")
+        shutil.copyfile(tmpdir + "/node2/wallet.bak", tmpdir + "/node2/" + self.chain + "/wallet.dat")
 
         logging.info("Re-starting nodes")
         self.start_three()
@@ -178,8 +178,8 @@ class WalletBackupTest(BitcoinTestFramework):
         self.erase_three()
 
         #start node2 with no chain
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/blocks")
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/chainstate")
+        shutil.rmtree(self.options.tmpdir + "/node2/" + self.chain + "/blocks")
+        shutil.rmtree(self.options.tmpdir + "/node2/" + self.chain + "/chainstate")
 
         self.start_three()
 

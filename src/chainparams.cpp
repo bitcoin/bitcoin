@@ -16,7 +16,7 @@
 
 #include "chainparamsseeds.h"
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, bool fSignBlock)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
@@ -28,9 +28,13 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
     CBlock genesis;
     genesis.nTime    = nTime;
-    genesis.nBits    = nBits;
-    genesis.nNonce   = nNonce;
     genesis.nVersion = nVersion;
+    if (fSignBlock) {
+        genesis.proof.script = new CScript();
+    } else {
+        genesis.proof.pow.nBits = nBits;
+        genesis.proof.pow.nNonce = nNonce;
+    }
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
@@ -52,7 +56,13 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 {
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, false);
+}
+
+void CChainParams::UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+{
+    consensus.vDeployments[d].nStartTime = nStartTime;
+    consensus.vDeployments[d].nTimeout = nTimeout;
 }
 
 /**
@@ -80,6 +90,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
+        consensus.fSignBlockChain = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -166,7 +177,6 @@ public:
         };
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -185,6 +195,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.fSignBlockChain = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -255,7 +266,6 @@ public:
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -274,6 +284,7 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.fSignBlockChain = false;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -329,42 +340,125 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
     }
-
-    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
-    {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-    }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
-
-const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+static CScript StrHexToScript(std::string strScript)
+{
+    if (!strScript.empty()) {
+        const std::vector<unsigned char> scriptData = ParseHex(strScript);
+        return CScript(scriptData.begin(), scriptData.end());
+    }
+    return CScript(OP_TRUE);
 }
 
-CChainParams& Params(const std::string& chain)
+/**
+ * Regression test
+ */
+class CCustomParams : public CChainParams {
+
+    void UpdateFromArgs(ArgsManager& argsMan)
+    {
+        strNetworkID = argsMan.GetArg("-chainpetname", "custom");
+
+        consensus.fPowAllowMinDifficultyBlocks = argsMan.GetBoolArg("-con_fpowallowmindifficultyblocks", true);
+        consensus.fPowNoRetargeting = argsMan.GetBoolArg("-con_fpownoretargeting", true);
+        consensus.nSubsidyHalvingInterval = argsMan.GetArg("-con_nsubsidyhalvinginterval", 150);
+        consensus.BIP34Height = argsMan.GetArg("-con_bip34height", 100000000);
+        consensus.BIP65Height = argsMan.GetArg("-con_bip65height", 1351);
+        consensus.BIP66Height = argsMan.GetArg("-con_bip66height", 1251);
+        consensus.nPowTargetTimespan = argsMan.GetArg("-con_npowtargettimespan", 14 * 24 * 60 * 60); // two weeks
+        consensus.nPowTargetSpacing = argsMan.GetArg("-con_npowtargetspacing", 10 * 60);
+        consensus.nRuleChangeActivationThreshold = argsMan.GetArg("-con_nrulechangeactivationthreshold", 108); // 75% for testchains
+        consensus.nMinerConfirmationWindow = argsMan.GetArg("-con_nminerconfirmationwindow", 144); // Faster than normal for custom (144 instead of 2016)
+        consensus.powLimit = uint256S(argsMan.GetArg("-con_powlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        consensus.BIP34Hash = uint256S(argsMan.GetArg("-con_bip34hash", "0x0"));
+        consensus.nMinimumChainWork = uint256S(argsMan.GetArg("-con_nminimumchainwork", "0x0"));
+        consensus.fSignBlockChain = argsMan.GetBoolArg("-con_fsignblockchain", false);
+        fSignBlocksGlobal = consensus.fSignBlockChain;
+        consensus.blocksignScript = StrHexToScript(argsMan.GetArg("-con_signblockscript", "51")); // OP_TRUE == 51
+
+        nDefaultPort = argsMan.GetArg("-ndefaultport", 18444);
+        nPruneAfterHeight = argsMan.GetArg("-npruneafterheight", 1000);
+        fMiningRequiresPeers = argsMan.GetBoolArg("-fminingrequirespeers", false);
+        fDefaultConsistencyChecks = argsMan.GetBoolArg("-fdefaultconsistencychecks", true);
+        fRequireStandard = argsMan.GetBoolArg("-frequirestandard", false);
+        fMineBlocksOnDemand = argsMan.GetBoolArg("-fmineblocksondemand", true);
+    }
+
+public:
+    CCustomParams(ArgsManager& argsMan)
+    {
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
+
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xbf;
+        pchMessageStart[2] = 0xb5;
+        pchMessageStart[3] = 0xda;
+        vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
+        vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
+        chainTxData = ChainTxData{
+            0,
+            0,
+            0
+        };
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+
+        UpdateFromArgs(argsMan);
+        const std::string timestampStr = std::string(strNetworkID + argsMan.GetArg("-con_signblockscript", ""));
+        genesis = CreateGenesisBlock(timestampStr.c_str(), CScript(OP_TRUE), 1296688602, 2, 0x207fffff, 1, 50 * COIN, consensus.fSignBlockChain);
+        consensus.hashGenesisBlock = genesis.GetHash();
+    }
+};
+
+static std::unique_ptr<CChainParams> globalChainParams;
+
+const CChainParams &Params() {
+    assert(globalChainParams);
+    return *globalChainParams;
+}
+
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, ArgsManager& chainArgsMan)
 {
     if (chain == CBaseChainParams::MAIN)
-            return mainParams;
+        return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
-            return testNetParams;
+        return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
-            return regTestParams;
-    else
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+        return std::unique_ptr<CChainParams>(new CRegTestParams());
+    else if (chain == CBaseChainParams::CUSTOM) {
+        return std::unique_ptr<CChainParams>(new CCustomParams(chainArgsMan));
+    }
+    throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+}
+
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
+{
+    ArgsManager chainArgsMan;
+    return CreateChainParams(chain, chainArgsMan);
 }
 
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+    ArgsManager chainArgsMan;
+    chainArgsMan.ReadConfigFile(argsGlobal.GetArg("-chainconf", CHAINPARAMS_CONF_FILENAME));
+    globalChainParams = CreateChainParams(network, chainArgsMan);
 }
 
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
 {
-    regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
+    globalChainParams->UpdateBIP9Parameters(d, nStartTime, nTimeout);
 }
  

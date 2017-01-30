@@ -6,8 +6,8 @@
 #include "txdb.h"
 
 #include "chainparams.h"
+#include "consensus/header_verify.h"
 #include "hash.h"
-#include "pow.h"
 #include "uint256.h"
 
 #include <stdint.h>
@@ -174,6 +174,7 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
 bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256&)> insertBlockIndex)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
 
@@ -194,13 +195,14 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nVersion       = diskindex.nVersion;
                 pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
                 pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
+                pindexNew->proof.pow.nBits = diskindex.proof.pow.nBits;
+                pindexNew->proof.pow.nNonce = diskindex.proof.pow.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                if (!CheckProof(consensusParams, pindexNew->GetBlockHeader()) &&
+                    pindexNew->GetBlockHash() != consensusParams.hashGenesisBlock)
+                    return error("%s: CheckProof failed: %s", __func__, pindexNew->ToString());
 
                 pcursor->Next();
             } else {

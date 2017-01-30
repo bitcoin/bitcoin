@@ -43,7 +43,7 @@ class PruneTest(BitcoinTestFramework):
 
         # Create node 2 to test pruning
         self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-prune=550"], timewait=900))
-        self.prunedir = self.options.tmpdir+"/node2/regtest/blocks/"
+        self.prunedir = self.options.tmpdir + "/node2/" + self.chain + "/blocks/"
 
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         self.nodes.append(start_node(3, self.options.tmpdir, ["-debug=0","-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
