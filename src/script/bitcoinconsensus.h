@@ -72,6 +72,13 @@ EXPORT_SYMBOL int bitcoinconsensus_verify_script_with_amount(const unsigned char
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
 
+/// All hashes are 32 bytes
+EXPORT_SYMBOL void* bitcoinconsensus_create_consensus_parameters(unsigned char* pHashGenesisBlock, int nSubsidyHalvingInterval, int BIP34Height, unsigned char* pBIP34Hash, int BIP65Height, int BIP66Height, uint32_t nRuleChangeActivationThreshold, uint32_t nMinerConfirmationWindow, int bitDeploymentCsv, int64_t nStartTimeDeploymentCsv, int64_t nTimeoutDeploymentCsv, int bitDeploymentSegwit, int64_t nStartTimeDeploymentSegwit, int64_t nTimeoutDeploymentSegwit, unsigned char* pPowLimit, bool fPowAllowMinDifficultyBlocks, bool fPowNoRetargeting, int64_t nPowTargetSpacing, int64_t nPowTargetTimespan);
+
+EXPORT_SYMBOL void bitcoinconsensus_destroy_consensus_parameters(void* consensusParams);
+
+EXPORT_SYMBOL int bitcoinconsensus_verify_header(const unsigned char* header, unsigned int headerLen, const void* consensusParams, const void* indexObject, const void* iBlockIndex, int64_t nAdjustedTime, bitcoinconsensus_error* err);
+
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
 #ifdef __cplusplus
