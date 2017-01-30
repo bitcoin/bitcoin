@@ -326,7 +326,7 @@ void UpdatePreferredDownload(CNode* node, CNodeState* state)
 // Returns time at which to timeout block request (nTime in microseconds)
 int64_t GetBlockTimeout(int64_t nTime, int nValidatedQueuedBefore)
 {
-    return nTime + 500000 * Params().GetConsensus().nPowTargetSpacing * (4 + nValidatedQueuedBefore);
+    return nTime + 500000 * Params().TargetSpacing() * (4 + nValidatedQueuedBefore);
 }
 
 void InitializeNode(NodeId nodeid, const CNode *pnode) {
@@ -5491,6 +5491,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
                 pto->fDisconnect = true;
             }
+        }
 
         //
         // Message: getdata (blocks)
