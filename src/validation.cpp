@@ -932,14 +932,14 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             // Finally in addition to paying more fees than the conflicts the
             // new transaction must pay for its own bandwidth.
             CAmount nDeltaFees = nModifiedFees - nConflictingFees;
-            if (nDeltaFees < ::minRelayTxFee.GetFee(nSize))
+            if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
             {
                 return state.DoS(0, false,
                         REJECT_INSUFFICIENTFEE, "insufficient fee", false,
                         strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
                               hash.ToString(),
                               FormatMoney(nDeltaFees),
-                              FormatMoney(::minRelayTxFee.GetFee(nSize))));
+                              FormatMoney(::incrementalRelayFee.GetFee(nSize))));
             }
         }
 

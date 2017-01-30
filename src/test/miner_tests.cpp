@@ -9,6 +9,7 @@
 #include "consensus/validation.h"
 #include "validation.h"
 #include "miner.h"
+#include "policy/policy.h"
 #include "pubkey.h"
 #include "script/standard.h"
 #include "txmempool.h"
@@ -23,6 +24,8 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(miner_tests, TestingSetup)
+
+static CFeeRate blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
 
 static
 struct {
@@ -112,7 +115,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashHighFeeTx);
     BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashMediumFeeTx);
 
-    // Test that a package below the min relay fee doesn't get included
+    // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 0 fee
     uint256 hashFreeTx = tx.GetHash();
@@ -120,8 +123,8 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     size_t freeTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
     // Calculate a fee on child transaction that will put the package just
-    // below the min relay fee (assuming 1 child tx of the same size).
-    CAmount feeToUse = minRelayTxFee.GetFee(2*freeTxSize) - 1;
+    // below the block min tx fee (assuming 1 child tx of the same size).
+    CAmount feeToUse = blockMinFeeRate.GetFee(2*freeTxSize) - 1;
 
     tx.vin[0].prevout.hash = hashFreeTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
@@ -158,7 +161,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     // This tx can't be mined by itself
     tx.vin[0].prevout.hash = hashFreeTx2;
     tx.vout.resize(1);
-    feeToUse = minRelayTxFee.GetFee(freeTxSize);
+    feeToUse = blockMinFeeRate.GetFee(freeTxSize);
     tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
     uint256 hashLowFeeTx2 = tx.GetHash();
     mempool.addUnchecked(hashLowFeeTx2, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
