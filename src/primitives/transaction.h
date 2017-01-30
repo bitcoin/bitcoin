@@ -12,6 +12,7 @@
 #include "uint256.h"
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
+static const int SERIALIZE_TRANSACTION_NO_PRECOMPUTATION   = 0x20000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
@@ -302,9 +303,10 @@ struct PrecomputedTransactionData
 {
 private:
     uint256 hashPrevouts, hashSequence, hashOutputs;
+    bool cacheReady;
 
 public:
-    PrecomputedTransactionData(const CTransaction& tx);
+    PrecomputedTransactionData(const CTransaction& tx, bool createCache);
     uint256 GetPrevoutHash(const CTransaction& tx) const;
     uint256 GetSequenceHash(const CTransaction& tx) const;
     uint256 GetOutputsHash(const CTransaction& tx) const;
@@ -351,7 +353,7 @@ public:
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
-    CTransaction(CMutableTransaction &&tx);
+    CTransaction(CMutableTransaction &&tx, bool createCache);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -361,7 +363,7 @@ public:
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>
-    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
+    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s), !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_PRECOMPUTATION)) {}
 
     bool IsNull() const {
         return vin.empty() && vout.empty();

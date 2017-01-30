@@ -86,26 +86,40 @@ uint256 GetOutputsHash(const CTransaction& txTo) {
     return ss.GetHash();
 }
 
-PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
+PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo, bool createCache)
 {
-    hashPrevouts = ::GetPrevoutHash(txTo);
-    hashSequence = ::GetSequenceHash(txTo);
-    hashOutputs = ::GetOutputsHash(txTo);
+    if (createCache) {
+        hashPrevouts = ::GetPrevoutHash(txTo);
+        hashSequence = ::GetSequenceHash(txTo);
+        hashOutputs = ::GetOutputsHash(txTo);
+        cacheReady = true;
+    } else {
+        cacheReady = false;
+    }
 }
 
 uint256 PrecomputedTransactionData::GetPrevoutHash(const CTransaction& txTo) const
 {
-    return hashPrevouts;
+    if (cacheReady) {
+        return hashPrevouts;
+    }
+    return ::GetPrevoutHash(txTo);
 }
 
 uint256 PrecomputedTransactionData::GetSequenceHash(const CTransaction& txTo) const
 {
-    return hashSequence;
+    if (cacheReady) {
+        return hashSequence;
+    }
+    return ::GetSequenceHash(txTo);
 }
 
 uint256 PrecomputedTransactionData::GetOutputsHash(const CTransaction& txTo) const
 {
-    return hashOutputs;
+    if (cacheReady) {
+        return hashOutputs;
+    }
+    return ::GetOutputsHash(txTo);
 }
 
 uint256 CTransaction::ComputeHash() const
@@ -119,9 +133,9 @@ uint256 CTransaction::GetWitnessHash() const
 }
 
 /* For backward compatibility, the hash is initialized to 0. TODO: remove the need for this default constructor entirely. */
-CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0), hash(), cache(*this) {}
-CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), hash(ComputeHash()), cache(*this) {}
-CTransaction::CTransaction(CMutableTransaction &&tx) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), nLockTime(tx.nLockTime), hash(ComputeHash()), cache(*this) {}
+CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0), hash(), cache(*this, true) {}
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime), hash(ComputeHash()), cache(*this, true) {}
+CTransaction::CTransaction(CMutableTransaction &&tx, bool createCache) : nVersion(tx.nVersion), vin(std::move(tx.vin)), vout(std::move(tx.vout)), nLockTime(tx.nLockTime), hash(ComputeHash()), cache(*this, createCache) {}
 
 CAmount CTransaction::GetValueOut() const
 {
