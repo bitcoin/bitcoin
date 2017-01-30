@@ -390,10 +390,6 @@
         <translation>Опцыі каманднага радка</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Крыніца блокаў недасяжная...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 таму</translation>
     </message>

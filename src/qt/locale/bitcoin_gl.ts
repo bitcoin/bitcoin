@@ -226,10 +226,6 @@
         <translation>Opcións da liña de comandos</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Non hai orixe de bloques dispoñible...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 detrás</translation>
     </message>

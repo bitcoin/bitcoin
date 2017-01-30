@@ -319,6 +319,22 @@ Var vänlig och försök igen.</translation>
         <translation>Öppna &amp;URI...</translation>
     </message>
     <message>
+        <source>Click to disable network activity.</source>
+        <translation>Klicka för att inaktivera nätverksaktivitet.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Nätverksaktivitet inaktiverad.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Klicka för att aktivera nätverksaktivitet igen.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Synkar huvuden (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Återindexerar block på disken...</translation>
     </message>
@@ -430,10 +446,6 @@ Var vänlig och försök igen.</translation>
         <source>Processing blocks on disk...</source>
         <translation>Bearbetar block på disken...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Ingen block-källa tillgänglig...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Bearbetade %n block av transaktionshistoriken.</numerusform><numerusform>Bearbetade %n block av transaktionshistoriken.</numerusform></translation>
@@ -473,6 +485,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>%1 client</source>
         <translation>%1-klient</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Ansluter till noder...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -608,6 +624,18 @@ Var vänlig och försök igen.</translation>
         <translation>Kopiera belopp</translation>
     </message>
     <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopiera transaktions-ID</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>ja</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>nej</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(Ingen etikett)</translation>
     </message>
@@ -633,6 +661,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>&amp;Address</source>
         <translation>&amp;Adress</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Kunde inte låsa upp plånboken.</translation>
     </message>
     </context>
 <context>
@@ -763,14 +795,34 @@ Var vänlig och försök igen.</translation>
         <translation>Formulär</translation>
     </message>
     <message>
+        <source>Number of blocks left</source>
+        <translation>Antal block kvar</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Okänt...</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Sista blocktid</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Förlopp</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>beräknar...</translation>
     </message>
     <message>
         <source>Hide</source>
         <translation>Göm</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1)...</source>
+        <translation>Okänd. Synkar huvuden (%1)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1102,6 +1154,18 @@ Var vänlig och försök igen.</translation>
 </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>URI handling</source>
+        <translation>URI-hantering</translation>
+    </message>
+    <message>
+        <source>Refund from %1</source>
+        <translation>Återbetalning från %1</translation>
+    </message>
+    <message>
+        <source>Bad response from server %1</source>
+        <translation>Felaktigt svar från server %1</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -1113,7 +1177,11 @@ Var vänlig och försök igen.</translation>
         <source>Node/Service</source>
         <translation>Nod/Tjänst</translation>
     </message>
-    </context>
+    <message>
+        <source>Ping</source>
+        <translation>Ping</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1152,14 +1220,42 @@ Var vänlig och försök igen.</translation>
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n sekund</numerusform><numerusform>%n sekunder</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minut</numerusform><numerusform>%n minuter</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n timme</numerusform><numerusform>%n timmar</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dag</numerusform><numerusform>%n dagar</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n vecka</numerusform><numerusform>%n veckor</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 och %2</translation>
     </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n år</numerusform><numerusform>%n år</numerusform></translation>
+    </message>
     </context>
 <context>
     <name>QObject::QObject</name>
-    </context>
+    <message>
+        <source>Error: %1</source>
+        <translation>Fel: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     </context>
@@ -1513,8 +1609,16 @@ Var vänlig och försök igen.</translation>
         <translation>Ta bort</translation>
     </message>
     <message>
+        <source>Copy URI</source>
+        <translation>Kopiera URI</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>Kopiera etikett</translation>
+    </message>
+    <message>
+        <source>Copy message</source>
+        <translation>Kopiera meddelande</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1540,6 +1644,14 @@ Var vänlig och försök igen.</translation>
         <translation>&amp;Spara Bild...</translation>
     </message>
     <message>
+        <source>Payment information</source>
+        <translation>Betalinformaton</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Adress</translation>
     </message>
@@ -1547,16 +1659,32 @@ Var vänlig och försök igen.</translation>
         <source>Label</source>
         <translation>Etikett</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Meddelande</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Datum</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Etikett</translation>
     </message>
     <message>
+        <source>Message</source>
+        <translation>Meddelande</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(Ingen etikett)</translation>
+    </message>
+    <message>
+        <source>(no message)</source>
+        <translation>(inget meddelande)</translation>
     </message>
     </context>
 <context>
@@ -1706,6 +1834,18 @@ Var vänlig och försök igen.</translation>
         <translation>Kopiera belopp</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1 till %2</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>eller</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n block(s)</source>
+        <translation><numerusform>%n block</numerusform><numerusform>%n block</numerusform></translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(Ingen etikett)</translation>
     </message>
@@ -1791,7 +1931,11 @@ Var vänlig och försök igen.</translation>
     </context>
 <context>
     <name>SendConfirmationDialog</name>
-    </context>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1889,7 +2033,19 @@ Var vänlig och försök igen.</translation>
         <source>Reset all verify message fields</source>
         <translation>Rensa alla fält</translation>
     </message>
-    </context>
+    <message>
+        <source>Message signed.</source>
+        <translation>Meddelande signerat.</translation>
+    </message>
+    <message>
+        <source>The signature could not be decoded.</source>
+        <translation>Signaturen kunde inte avkodas.</translation>
+    </message>
+    <message>
+        <source>Message verified.</source>
+        <translation>Meddelande verifierat.</translation>
+    </message>
+</context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1906,6 +2062,18 @@ Var vänlig och försök igen.</translation>
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Datum</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Meddelande</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1916,6 +2084,10 @@ Var vänlig och försök igen.</translation>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Datum</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Etikett</translation>
@@ -1940,8 +2112,16 @@ Var vänlig och försök igen.</translation>
         <translation>Kopiera belopp</translation>
     </message>
     <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopiera transaktions-ID</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Kommaseparerad fil (*.csv)</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Datum</translation>
     </message>
     <message>
         <source>Label</source>

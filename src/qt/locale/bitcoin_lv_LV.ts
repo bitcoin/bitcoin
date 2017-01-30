@@ -230,10 +230,6 @@
         <translation>&amp;Komandrindas iespējas</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Nav pieejams neviens bloku avots...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 aizmugurē</translation>
     </message>

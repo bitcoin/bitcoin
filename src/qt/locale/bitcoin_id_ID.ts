@@ -253,10 +253,6 @@
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n koneksi aktif ke jaringan Bitcoin</numerusform></translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Sumber blok tidak tersedia...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n blok dari riwayat transaksi diproses.</numerusform></translation>

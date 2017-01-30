@@ -277,10 +277,6 @@
         <source>Processing blocks on disk...</source>
         <translation>Spracovávam bloky na disku...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Nedostupný zdroj blokov...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Spracovaných %n blok transakčnej histórie.</numerusform><numerusform>Spracovaných %n bloky transakčnej histórie.</numerusform><numerusform>Spracovaných %n blokov transakčnej histórie.</numerusform></translation>

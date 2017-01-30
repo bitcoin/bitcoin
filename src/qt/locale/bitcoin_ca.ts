@@ -441,10 +441,6 @@
         <source>Processing blocks on disk...</source>
         <translation>S'estan processant els blocs al disc...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>No hi ha cap font de bloc disponible...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>S'ha processat %n bloc de l'historial de transacció.</numerusform><numerusform>S'han processat %n blocs de l'historial de transacció.</numerusform></translation>

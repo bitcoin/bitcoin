@@ -361,10 +361,6 @@
         <source>Processing blocks on disk...</source>
         <translation>Bloklar diske yazıdırılıyor...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Hiçbir blok kaynağı mevcut değil...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Muamele tarihçesinden %n blok işlendi.</numerusform><numerusform>Muamele tarihçesinden %n blok işlendi</numerusform></translation>

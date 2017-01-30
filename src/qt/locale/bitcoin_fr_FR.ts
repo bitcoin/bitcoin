@@ -262,10 +262,6 @@
         <translation>Indexation des blocs sur le disque...</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Aucun bloc source disponible</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>en retard de %1</translation>
     </message>

@@ -330,6 +330,10 @@
         <translation>Klicken zum Aktivieren der Netzwerkaktivität.</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Kopfdaten werden synchronisiert (%1%)...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Reindiziere Blöcke auf Datenträger...</translation>
     </message>
@@ -441,10 +445,6 @@
         <source>Processing blocks on disk...</source>
         <translation>Verarbeite Blöcke auf Datenträger...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Keine Blockquelle verfügbar...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n Block des Transaktionsverlaufs verarbeitet.</numerusform><numerusform>%n Blöcke des Transaktionsverlaufs verarbeitet.</numerusform></translation>
@@ -484,6 +484,10 @@
     <message>
         <source>%1 client</source>
         <translation>%1 Client</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Verbinde mit Netzwerk...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -2193,6 +2197,10 @@
         <translation>Warnung: Unbekannte Wechselgeld-Adresse</translation>
     </message>
     <message>
+        <source>Confirm custom change address</source>
+        <translation>Bestätige benutzerdefinierte Wechselgeld-Adresse</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(keine Bezeichnung)</translation>
     </message>
@@ -3100,6 +3108,10 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>UPnP verwenden, um eine Portweiterleitung einzurichten (Standard: 1, wenn abgehört wird und -proxy nicht gesetzt ist)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
+        <translation>Benutzername und gehashtes Passwort für JSON-RPC Verbindungen. Das Feld &lt;userpw&gt; kommt im Format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Ein kanonisches Pythonskript ist in share/rpcuser inbegriffen. Der client benutzt wie gehabt, die rpcuser/rpcpassword Parameter. Diese Option kann mehrere Male spezifiziert werden</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

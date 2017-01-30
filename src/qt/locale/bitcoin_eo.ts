@@ -242,10 +242,6 @@
         <translation>&amp;Komandliniaj agordaĵoj</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Neniu fonto de blokoj trovebla...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>mankas %1</translation>
     </message>

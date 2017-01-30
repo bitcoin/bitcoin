@@ -429,10 +429,6 @@
         <source>Processing blocks on disk...</source>
         <translation>디스크에서 블록 처리중...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>사용 가능한 블록이 없습니다...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n 블럭 만큼의 거래 기록이 처리됨.</numerusform></translation>

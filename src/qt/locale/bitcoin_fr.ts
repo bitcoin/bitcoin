@@ -441,10 +441,6 @@
         <source>Processing blocks on disk...</source>
         <translation>Traitement des blocs sur le disque...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Aucune source de blocs disponible...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n bloc d'historique transactionnel a été traité</numerusform><numerusform>%n blocs d'historique transactionnel ont été traités</numerusform></translation>
@@ -484,6 +480,10 @@
     <message>
         <source>%1 client</source>
         <translation>Client %1</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Connexion aux pairs...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -3092,6 +3092,10 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Exécuter la commande lorsqu'une transaction de porte-monnaie change (%s dans la commande est remplacée par TxID)</translation>
+    </message>
+    <message>
+        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
+        <translation>Si ce bloc est dans la chaîne, supposer qu'il est valide, ainsi que ces ancêtres, et ignorer potentiellement la vérification de leur script (0 pour tout vérifier, valeur par défaut : %s, réseau de test : %s)</translation>
     </message>
     <message>
         <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>

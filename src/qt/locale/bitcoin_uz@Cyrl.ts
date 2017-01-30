@@ -246,10 +246,6 @@
         <translation><numerusform>%n та Bitcoin тармоғига фаол уланиш мавжуд</numerusform></translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Блок манбалари мавжуд эмас...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 орқада</translation>
     </message>

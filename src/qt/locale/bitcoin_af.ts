@@ -382,10 +382,6 @@
         <translation>Blokke op skyf word geprosesseer...</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Geen blokbron beskikbaar...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 agter</translation>
     </message>

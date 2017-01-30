@@ -429,10 +429,6 @@
         <source>Processing blocks on disk...</source>
         <translation>Bezig met verwerken van blokken op harde schijf...</translation>
     </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>Geen bron voor blokken beschikbaar...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n blok aan transactiegeschiedenis verwerkt.</numerusform><numerusform>%n blokken aan transactiegeschiedenis verwerkt.</numerusform></translation>

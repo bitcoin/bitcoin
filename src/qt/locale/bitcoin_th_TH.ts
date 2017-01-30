@@ -41,6 +41,18 @@
         <source>&amp;Delete</source>
         <translation>&amp;ลบ</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>เลือกที่อยู่เพื่อส่งเหรียญไปไว้</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>เลือกที่อยู่เพื่อส่งเหรียญไปไว้</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>ส่งที่อยู่</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -272,10 +284,6 @@
     <message>
         <source>Processing blocks on disk...</source>
         <translation>กำลังดำเนินการกับบล็อกในดิสก์...</translation>
-    </message>
-    <message>
-        <source>No block source available...</source>
-        <translation>ไม่มีบล็อกเริ่มต้น ให้ใช้ได้...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>

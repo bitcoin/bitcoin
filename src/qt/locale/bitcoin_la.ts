@@ -194,10 +194,6 @@
         <translation>Optiones mandati initiantis</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Nulla fons frustorum absens...</translation>
-    </message>
-    <message>
         <source>%1 behind</source>
         <translation>%1 post</translation>
     </message>
