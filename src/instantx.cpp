@@ -540,7 +540,9 @@ bool CInstantSend::ResolveConflicts(const CTxLockCandidate& txLockCandidate, int
             // Not in UTXO anymore? A conflicting tx was mined while we were waiting for votes.
             // Reprocess tip to make sure tx for this lock is included.
             LogPrintf("CTxLockRequest::ResolveConflicts -- Failed to find UTXO %s - disconnecting tip...\n", txin.prevout.ToStringShort());
-            DisconnectBlocks(1);
+            if(!DisconnectBlocks(1)) {
+                return false;
+            }
             // Recursively check at "new" old height. Conflicting tx should be rejected by AcceptToMemoryPool.
             ResolveConflicts(txLockCandidate, nMaxBlocks - 1);
             LogPrintf("CTxLockRequest::ResolveConflicts -- Failed to find UTXO %s - activating best chain...\n", txin.prevout.ToStringShort());

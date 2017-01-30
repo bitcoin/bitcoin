@@ -102,7 +102,7 @@ struct COrphanTx {
 };
 map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
-map<uint256, int64_t> mapRejectedBlocks;
+map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
@@ -2779,16 +2779,23 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
-    // DASH : MODIFYED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
+    // DASH : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
+
+    // It's possible that we simply don't have enough data and this could fail
+    // (i.e. block itself could be a correct one and we need to store it),
+    // that's why this is in ConnectBlock. Could be the other way around however -
+    // the peer who sent us this block is missing some data and wasn't able
+    // to recognize that block is actually invalid.
+    // TODO: resync data (both ways?) and try to reprocess this block later.
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, chainparams.GetConsensus());
     std::string strError = "";
     if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
-        return state.DoS(100, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
+        return state.DoS(0, error("ConnectBlock(DASH): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
 
     if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
         mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-        return state.DoS(100, error("ConnectBlock(DASH): couldn't find masternode or superblock payments"),
+        return state.DoS(0, error("ConnectBlock(DASH): couldn't find masternode or superblock payments"),
                                 REJECT_INVALID, "bad-cb-payee");
     }
     // END DASH
@@ -3162,21 +3169,25 @@ bool DisconnectBlocks(int blocks)
     const CChainParams& chainparams = Params();
 
     LogPrintf("DisconnectBlocks -- Got command to replay %d blocks\n", blocks);
-    for(int i = 0; i <= blocks; i++)
-        DisconnectTip(state, chainparams.GetConsensus());
+    for(int i = 0; i <= blocks; i++) {
+        if(!DisconnectTip(state, chainparams.GetConsensus()) || !state.IsValid()) {
+            return false;
+        }
+    }
 
     return true;
 }
 
 void ReprocessBlocks(int nBlocks)
 {
+    LOCK(cs_main);
+
     std::map<uint256, int64_t>::iterator it = mapRejectedBlocks.begin();
     while(it != mapRejectedBlocks.end()){
         //use a window twice as large as is usual for the nBlocks we want to reset
         if((*it).second  > GetTime() - (nBlocks*60*5)) {
             BlockMap::iterator mi = mapBlockIndex.find((*it).first);
             if (mi != mapBlockIndex.end() && (*mi).second) {
-                LOCK(cs_main);
 
                 CBlockIndex* pindex = (*mi).second;
                 LogPrintf("ReprocessBlocks -- %s\n", (*it).first.ToString());
@@ -3188,15 +3199,10 @@ void ReprocessBlocks(int nBlocks)
         ++it;
     }
 
-    CValidationState state;
-    {
-        LOCK(cs_main);
-        DisconnectBlocks(nBlocks);
-    }
+    DisconnectBlocks(nBlocks);
 
-    if (state.IsValid()) {
-        ActivateBestChain(state, Params());
-    }
+    CValidationState state;
+    ActivateBestChain(state, Params());
 }
 
 /**
@@ -3748,6 +3754,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     // Relay corresponding transaction lock request and all its votes
                     // to let other nodes complete the lock.
                     instantsend.Relay(hashLocked);
+                    LOCK(cs_main);
                     mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
                     return state.DoS(0, error("CheckBlock(DASH): transaction %s conflicts with transaction lock %s",
                                                 tx.GetHash().ToString(), hashLocked.ToString()),
