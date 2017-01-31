@@ -365,9 +365,9 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           self.nodes[0].set("net.excessiveBlock=2000000")
 
           wallet.sort(key=lambda x: x["amount"],reverse=True)
-          (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0:2000],[addrs[0]],txfeePer=60)
+          (tx, vin, vout, txid) = split_transaction(self.nodes[0],wallet[0:2500],[addrs[0]],txfeePer=60)
           logging.debug("Transaction Length is: ", len(binascii.unhexlify(tx)))
-          assert(binascii.unhexlify(tx) > 100000) # txn has to be big for the test to work
+          assert(len(binascii.unhexlify(tx)) > 100000) # txn has to be big for the test to work
 
           origCounts = [ x.getblockcount() for x in self.nodes ]
           base = origCounts[0]

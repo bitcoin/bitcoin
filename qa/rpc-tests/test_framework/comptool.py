@@ -205,7 +205,6 @@ class TestManager(object):
                 blockhash in node.block_request_map and node.block_request_map[blockhash]
                 for node in self.test_nodes
             )
-        time.sleep(1)  # The BU xthin preferential thinblock timer will delay sync so we need to wait longer for sync
         # --> error if not requested
         if not wait_until(blocks_requested, attempts=20*num_blocks):
             # print [ c.cb.block_request_map for c in self.connections ]
@@ -249,6 +248,7 @@ class TestManager(object):
     # with the expected outcome (if given)
     def check_results(self, blockhash, outcome):
         with mininode_lock:
+
             for c in self.connections:
                 if outcome is None:
                     if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
@@ -267,10 +267,19 @@ class TestManager(object):
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
                     print("Node ", c.addr, " has best block ", hex(c.cb.bestblockhash), ". Expecting ", hex(blockhash), outcome)
                     print("Quick   RPC returns", c.rpc.getbestblockhash())
-                    time.sleep(5)
+                    time.sleep(5) #wait the requestmanager re-request interval to see if the block shows up
                     print("Delayed RPC returns", c.rpc.getbestblockhash())
+
+                    rpcblock =  c.rpc.getbestblockhash()
+                    block = hex(blockhash)[2:]
+                    #sometimes a leading zero or two are missing from the blockhash. Replace these.
+                    while (len(block) < 64):
+                        block = '0' + block
+                    if rpcblock == block:
+                        return True
+                    else:
 		    # pdb.set_trace()
-                    return False
+                        return False
             return True
 
     # Either check that the mempools all agree with each other, or that
