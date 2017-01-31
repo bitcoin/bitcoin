@@ -8,6 +8,36 @@ check-doc.py
 Check if all command line args are documented. The return value indicates the
 number of undocumented args.
 
+clang\_format.py
+===================
+
+A utility for invoking clang-format to observe the state of C++ code
+formatting in the repository. It produces reports of style metrics and also can
+apply formatting. It has three subcommands - `report`, `check`, and `format`:
+
+```
+clang_format.py [-h] [-b BIN_PATH] [-s STYLE_FILE] [-j JOBS] [-f]
+                    {report,check,format} [target [target ...]]
+```
+
+The style definition file and clang-format binary can be varied to experiment and compare results.
+
+clang\_format.py report
+-----------------------
+
+Produces a report with analysis of the selected files taken as a group.
+
+clang\_format.py check
+-----------------------
+
+Validates that the selected files match the style and gives a per-file report
+and returns a non-zero bash status if there are any format issues discovered.
+
+clang\_format.py format
+-----------------------
+
+Applies the style formatting to the selected files.
+
 clang-format-diff.py
 ===================
 
