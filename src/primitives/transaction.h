@@ -310,6 +310,8 @@ public:
     uint256 GetPrevoutHash(const CTransaction& tx) const;
     uint256 GetSequenceHash(const CTransaction& tx) const;
     uint256 GetOutputsHash(const CTransaction& tx) const;
+
+    bool IsReady() const { return cacheReady; }
 };
 
 /** The basic transaction that is broadcasted on the network and contained in

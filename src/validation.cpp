@@ -948,6 +948,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
+        if (!tx.cache.IsReady()) {
+            LogPrintf("AcceptToMemoryPool: PERFORMANCE BUG: transaction being validated without cached hashes; please report this!\n");
+        }
         if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true)) {
             // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
             // need to turn both off, and compare against just turning off CLEANSTACK
@@ -1910,6 +1913,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
+
+            if (!tx.cache.IsReady()) {
+                LogPrintf("ConnectBlock: PERFORMANCE BUG: block contains transaction without cached hashes; please report this!\n");
+            }
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
