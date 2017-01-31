@@ -143,7 +143,7 @@ class BlockDataCopier:
 		(blkDate, blkTS) = get_blk_dt(blk_hdr)
 		if self.timestampSplit and (blkDate > self.lastDate):
 			print("New month " + blkDate.strftime("%Y-%m") + " @ " + hash_str)
-			lastDate = blkDate
+			self.lastDate = blkDate
 			if outF:
 				outF.close()
 				if setFileTime:
