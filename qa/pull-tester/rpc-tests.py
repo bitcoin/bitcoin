@@ -21,6 +21,7 @@ For a description of arguments recognized by test scripts, see
 
 """
 
+import argparse
 import configparser
 import os
 import time
@@ -29,6 +30,19 @@ import sys
 import subprocess
 import tempfile
 import re
+
+# Parse arguments and pass through unrecognised args
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument('--coverage', action='store_true')
+parser.add_argument('-extended', action='store_true')
+parser.add_argument('--help', '-h', '-?', action='store_true')
+parser.add_argument('--parallel', type=int, default=4)
+parser.add_argument('-win', action='store_true')
+(args, unknown_args) = parser.parse_known_args()
+
+#Create a set to store arguments and create the passon string
+tests = set(arg for arg in unknown_args if arg[:2] != "--")
+passon_args = [arg for arg in unknown_args if arg[:2] == "--"]
 
 BOLD = ("","")
 if os.name == 'posix':
@@ -47,35 +61,14 @@ ENABLE_ZMQ = config["components"]["ENABLE_ZMQ"] == "True"
 
 RPC_TESTS_DIR = config["environment"]["SRCDIR"] + '/qa/rpc-tests/'
 
-ENABLE_COVERAGE=0
-
-#Create a set to store arguments and create the passon string
-opts = set()
-passon_args = []
-PASSON_REGEX = re.compile("^--")
-PARALLEL_REGEX = re.compile('^-parallel=')
-
-print_help = False
-run_parallel = 4
-
-for arg in sys.argv[1:]:
-    if arg == "--help" or arg == "-h" or arg == "-?":
-        print_help = True
-        break
-    if arg == '--coverage':
-        ENABLE_COVERAGE = 1
-    elif PASSON_REGEX.match(arg):
-        passon_args.append(arg)
-    elif PARALLEL_REGEX.match(arg):
-        run_parallel = int(arg.split(sep='=', maxsplit=1)[1])
-    else:
-        opts.add(arg)
+print_help = args.help
+run_parallel = args.parallel
 
 #Set env vars
 if "BITCOIND" not in os.environ:
     os.environ["BITCOIND"] = config["environment"]["BUILDDIR"] + '/src/bitcoind' + config["environment"]["EXEEXT"]
 
-if config["environment"]["EXEEXT"] == ".exe" and "-win" not in opts:
+if config["environment"]["EXEEXT"] == ".exe" and not args.win:
     # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
     # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
     print("Win tests currently disabled by default.  Use -win option to enable")
@@ -95,7 +88,7 @@ if ENABLE_ZMQ:
         # ENABLE_ZMQ=0
         raise
 
-testScripts = [
+BASE_SCRIPTS= [
     # longest test should go first, to favor running tests in parallel
     'wallet-hd.py',
     'walletbackup.py',
@@ -152,10 +145,9 @@ testScripts = [
     'rpcnamedargs.py',
     'listsinceblock.py',
 ]
-if ENABLE_ZMQ:
-    testScripts.append('zmq_test.py')
+ZMQ_SCRIPTS = ["zmq_test.py"]
 
-testScriptsExt = [
+EXTENDED_SCRIPTS = [
     'pruning.py',
     # vv Tests less than 20m vv
     'smartfees.py',
@@ -184,26 +176,39 @@ testScriptsExt = [
     'replace-by-fee.py',
 ]
 
+ALL_SCRIPTS = BASE_SCRIPTS + ZMQ_SCRIPTS + EXTENDED_SCRIPTS
 
 def runtests():
-    test_list = []
-    if '-extended' in opts:
-        test_list = testScripts + testScriptsExt
-    elif len(opts) == 0 or (len(opts) == 1 and "-win" in opts):
-        test_list = testScripts
+    # Build list of tests
+    if len(tests) != 0:
+        # Individual tests have been specified. Run specified tests that exist
+        # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
+        test_list = [t for t in ALL_SCRIPTS if
+                (t in tests or re.sub(".py$", "", t) in tests)]
+        if len(test_list) == 0:
+            print("No valid test scripts specified. Check that your test is in one "
+                  "of the test lists in rpc-tests.py or run rpc-tests.py with no arguments to run all tests")
+            sys.exit(0)
     else:
-        for t in testScripts + testScriptsExt:
-            if t in opts or re.sub(".py$", "", t) in opts:
-                test_list.append(t)
+        # No individual tests have been specified. Run base tests, and
+        # optionally ZMQ tests and extended tests.
+        test_list = BASE_SCRIPTS
+        if ENABLE_ZMQ:
+            test_list += ZMQ_SCRIPTS
+        if args.extended:
+            test_list += EXTENDED_SCRIPTS
+            # TODO: BASE_SCRIPTS and EXTENDED_SCRIPTS are sorted by runtime
+            # (for parallel running efficiency). This combined list will is no
+            # longer sorted.
 
-    if print_help:
+    if args.help:
         # Only print help of the first script and exit
         subprocess.check_call((RPC_TESTS_DIR + test_list[0]).split() + ['-h'])
         sys.exit(0)
 
     coverage = None
 
-    if ENABLE_COVERAGE:
+    if args.coverage:
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
     flags = ["--srcdir=%s/src" % config["environment"]["BUILDDIR"]] + passon_args
