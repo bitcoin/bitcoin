@@ -60,6 +60,7 @@ mkdir -p ~/src
 cd ~/src
 git clone https://github.com/BitcoinUnlimited/BitcoinUnlimited.git bu-src
 cd bu-src
+git checkout release
 ./autogen.sh
 ./configure
 make
