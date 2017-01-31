@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     delete pblocktemplate;
 
     // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value, the mempool has 65k bytes of tx in it so this code will test both saturated and unsaturated blocks.
-    for (unsigned int i = 2000; i <= 80000; i+=1000)
+    for (unsigned int i = 2000; i <= 80000; i+=2000)
     {
       maxGeneratedBlock = i;
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     coinbaseReserve.value=0;  // Test no reserve
      // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
-    for (unsigned int i = 2000; i <= 40000; i+=73)
+    for (unsigned int i = 2000; i <= 20000; i+=773)
     {
       maxGeneratedBlock = i;
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     std::string testMinerComment("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM__________");
      // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
-    printf("test mining with different sized miner comments");
+    //printf("test mining with different sized miner comments");
     for (unsigned int i = 2000; i <= 40000; i+=113)
     {
       maxGeneratedBlock = i;
