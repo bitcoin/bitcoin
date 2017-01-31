@@ -2,19 +2,11 @@
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 """
-Run Regression Test Suite
+rpc-tests.py - run regression test suite
 
 This module calls down into individual test cases via subprocess. It will
-forward all unrecognized arguments onto the individual test scripts, other
-than:
-
-    - `-extended`: run the "extended" test suite in addition to the basic one.
-    - `-win`: signal that this is running in a Windows environment, and we
-      should run the tests.
-    - `--coverage`: this generates a basic coverage report for the RPC
-      interface.
+forward all unrecognized arguments onto the individual test scripts.
 
 For a description of arguments recognized by test scripts, see
 `qa/pull-tester/test_framework/test_framework.py:BitcoinTestFramework.main`.
@@ -32,12 +24,18 @@ import tempfile
 import re
 
 # Parse arguments and pass through unrecognised args
-parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument('--coverage', action='store_true')
-parser.add_argument('-extended', action='store_true')
-parser.add_argument('--help', '-h', '-?', action='store_true')
-parser.add_argument('--parallel', type=int, default=4)
-parser.add_argument('-win', action='store_true')
+parser = argparse.ArgumentParser(add_help=False,
+                                 usage='%(prog)s [rpc-test.py options] [script options] [scripts]',
+                                 description=__doc__,
+                                 epilog='''
+Help text and arguments for individual test script:''',
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
+parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
+parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
+parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
+parser.add_argument('--nozmq', action='store_true', help='do not run the zmq tests')
+parser.add_argument('--win', action='store_true', help='signal that this is running in a Windows environment and that we should run the tests')
 (args, unknown_args) = parser.parse_known_args()
 
 #Create a set to store arguments and create the passon string
@@ -57,12 +55,12 @@ config.read_file(open(os.path.dirname(__file__) + "/tests_config.ini"))
 ENABLE_WALLET = config["components"]["ENABLE_WALLET"] == "True"
 ENABLE_UTILS = config["components"]["ENABLE_UTILS"] == "True"
 ENABLE_BITCOIND = config["components"]["ENABLE_BITCOIND"] == "True"
-ENABLE_ZMQ = config["components"]["ENABLE_ZMQ"] == "True"
+ENABLE_ZMQ = config["components"]["ENABLE_ZMQ"] == "True" and not args.nozmq
 
 RPC_TESTS_DIR = config["environment"]["SRCDIR"] + '/qa/rpc-tests/'
 
 print_help = args.help
-run_parallel = args.parallel
+jobs = args.jobs
 
 #Set env vars
 if "BITCOIND" not in os.environ:
@@ -71,7 +69,7 @@ if "BITCOIND" not in os.environ:
 if config["environment"]["EXEEXT"] == ".exe" and not args.win:
     # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
     # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
-    print("Win tests currently disabled by default.  Use -win option to enable")
+    print("Win tests currently disabled by default.  Use --win option to enable")
     sys.exit(0)
 
 if not (ENABLE_WALLET and ENABLE_UTILS and ENABLE_BITCOIND):
@@ -83,9 +81,8 @@ if ENABLE_ZMQ:
     try:
         import zmq
     except ImportError:
-        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or "
-              "to run zmq tests, see dependency info in /qa/README.md.")
-        # ENABLE_ZMQ=0
+        print("ERROR: \"import zmq\" failed. Use -nozmq to run without the ZMQ tests."
+              "To run zmq tests, see dependency info in /qa/README.md.")
         raise
 
 BASE_SCRIPTS= [
@@ -202,7 +199,8 @@ def runtests():
             # longer sorted.
 
     if args.help:
-        # Only print help of the first script and exit
+        # Print help for rpc-tests.py, then print help of the first script and exit.
+        parser.print_help()
         subprocess.check_call((RPC_TESTS_DIR + test_list[0]).split() + ['-h'])
         sys.exit(0)
 
@@ -216,7 +214,7 @@ def runtests():
     if coverage:
         flags.append(coverage.flag)
 
-    if len(test_list) > 1 and run_parallel > 1:
+    if len(test_list) > 1 and jobs > 1:
         # Populate cache
         subprocess.check_output([RPC_TESTS_DIR + 'create_cache.py'] + flags)
 
@@ -224,7 +222,7 @@ def runtests():
     max_len_name = len(max(test_list, key=len))
     time_sum = 0
     time0 = time.time()
-    job_queue = RPCTestHandler(run_parallel, test_list, flags)
+    job_queue = RPCTestHandler(jobs, test_list, flags)
     results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED", "DURATION") + BOLD[0]
     all_passed = True
     for _ in range(len(test_list)):
