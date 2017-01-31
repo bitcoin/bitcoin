@@ -161,16 +161,6 @@ void CMasternodeMan::AskForMN(CNode* pnode, const CTxIn &vin)
     pnode->PushMessage(NetMsgType::DSEG, vin);
 }
 
-void CMasternodeMan::AskForMnb(CNode* pnode, const uint256 &hash)
-{
-    if(!pnode || hash == uint256()) return;
-
-    LogPrint("masternode", "CMasternodeMan::AskForMnb -- asking for mnb %s from addr=%s\n", hash.ToString(), pnode->addr.ToString());
-    std::vector<CInv> vToFetch;
-    vToFetch.push_back(CInv(MSG_MASTERNODE_ANNOUNCE, hash));
-    pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
-}
-
 void CMasternodeMan::Check()
 {
     LOCK(cs);
@@ -198,7 +188,8 @@ void CMasternodeMan::CheckAndRemove()
         // Remove spent masternodes, prepare structures and make requests to reasure the state of inactive ones
         std::vector<CMasternode>::iterator it = vMasternodes.begin();
         std::vector<std::pair<int, CMasternode> > vecMasternodeRanks;
-        bool fAskedForMnbRecovery = false; // ask for one mn at a time
+        // ask for up to MNB_RECOVERY_MAX_ASK_ENTRIES masternode entries at a time
+        int nAskForMnbRecovery = MNB_RECOVERY_MAX_ASK_ENTRIES;
         while(it != vMasternodes.end()) {
             CMasternodeBroadcast mnb = CMasternodeBroadcast(*it);
             uint256 hash = mnb.GetHash();
@@ -216,7 +207,7 @@ void CMasternodeMan::CheckAndRemove()
                 fMasternodesRemoved = true;
             } else {
                 bool fAsk = pCurrentBlockIndex &&
-                            !fAskedForMnbRecovery &&
+                            (nAskForMnbRecovery > 0) &&
                             masternodeSync.IsSynced() &&
                             it->IsNewStartRequired() &&
                             !IsMnbRecoveryRequested(hash);
@@ -228,7 +219,8 @@ void CMasternodeMan::CheckAndRemove()
                         int nRandomBlockHeight = GetRandInt(pCurrentBlockIndex->nHeight);
                         vecMasternodeRanks = GetMasternodeRanks(nRandomBlockHeight);
                     }
-                    // ask first MNB_RECOVERY_QUORUM_TOTAL mns we can connect to and we haven't asked recently
+                    bool fAskedForMnbRecovery = false;
+                    // ask first MNB_RECOVERY_QUORUM_TOTAL masternodes we can connect to and we haven't asked recently
                     for(int i = 0; setRequested.size() < MNB_RECOVERY_QUORUM_TOTAL && i < (int)vecMasternodeRanks.size(); i++) {
                         // avoid banning
                         if(mWeAskedForMasternodeListEntry.count(it->vin.prevout) && mWeAskedForMasternodeListEntry[it->vin.prevout].count(vecMasternodeRanks[i].second.addr)) continue;
@@ -237,6 +229,10 @@ void CMasternodeMan::CheckAndRemove()
                         setRequested.insert(addr);
                         listScheduledMnbRequestConnections.push_back(std::make_pair(addr, hash));
                         fAskedForMnbRecovery = true;
+                    }
+                    if(fAskedForMnbRecovery) {
+                        LogPrint("masternode", "CMasternodeMan::CheckAndRemove -- Recovery initiated, masternode=%s\n", it->vin.prevout.ToStringShort());
+                        nAskForMnbRecovery--;
                     }
                     // wait for mnb recovery replies for MNB_RECOVERY_WAIT_SECONDS seconds
                     mMnbRecoveryRequests[hash] = std::make_pair(GetTime() + MNB_RECOVERY_WAIT_SECONDS, setRequested);
@@ -773,13 +769,31 @@ void CMasternodeMan::ProcessMasternodeConnections()
     }
 }
 
-std::pair<CService, uint256> CMasternodeMan::PopScheduledMnbRequestConnection()
+std::pair<CService, std::set<uint256> > CMasternodeMan::PopScheduledMnbRequestConnection()
 {
     LOCK(cs);
-    if(listScheduledMnbRequestConnections.empty()) return make_pair(CService(), uint256());
-    std::pair<CService, uint256> p = listScheduledMnbRequestConnections.front();
-    listScheduledMnbRequestConnections.pop_front();
-    return p;
+    if(listScheduledMnbRequestConnections.empty()) {
+        return std::make_pair(CService(), std::set<uint256>());
+    }
+
+    std::set<uint256> setResult;
+
+    listScheduledMnbRequestConnections.sort();
+    std::pair<CService, uint256> pairFront = listScheduledMnbRequestConnections.front();
+
+    // squash hashes from requests with the same CService as the first one into setResult
+    std::list< std::pair<CService, uint256> >::iterator it = listScheduledMnbRequestConnections.begin();
+    while(it != listScheduledMnbRequestConnections.end()) {
+        if(pairFront.first == it->first) {
+            setResult.insert(it->second);
+            it = listScheduledMnbRequestConnections.erase(it);
+        } else {
+            // since list is sorted now, we can be sure that there is no more hashes left
+            // to ask for from this addr
+            break;
+        }
+    }
+    return std::make_pair(pairFront.first, setResult);
 }
 
 

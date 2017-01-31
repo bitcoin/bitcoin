@@ -105,6 +105,7 @@ private:
 
     static const int MNB_RECOVERY_QUORUM_TOTAL      = 10;
     static const int MNB_RECOVERY_QUORUM_REQUIRED   = 6;
+    static const int MNB_RECOVERY_MAX_ASK_ENTRIES   = 10;
     static const int MNB_RECOVERY_WAIT_SECONDS      = 60;
     static const int MNB_RECOVERY_RETRY_SECONDS     = 3 * 60 * 60;
 
@@ -297,7 +298,7 @@ public:
     CMasternode* GetMasternodeByRank(int nRank, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
 
     void ProcessMasternodeConnections();
-    std::pair<CService, uint256> PopScheduledMnbRequestConnection();
+    std::pair<CService, std::set<uint256> > PopScheduledMnbRequestConnection();
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
