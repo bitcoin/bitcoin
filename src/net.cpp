@@ -1712,7 +1712,7 @@ void ThreadMnbRequestConnections()
 
         CNode* pnode = NULL;
         {
-            LOCK(cs_vNodes);
+            LOCK2(cs_main, cs_vNodes);
             pnode = ConnectNode(CAddress(p.first), NULL, true);
             if(!pnode) continue;
             pnode->AddRef();
