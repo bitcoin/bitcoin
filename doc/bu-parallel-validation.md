@@ -29,56 +29,50 @@ The following describes the internal mechanisms used to achieve parallel validat
 2a) Script Check Queues:  A total of four script check queues are created with their own thread group which are used to validated 
 signatures.  Each new block that arrives will be assigned one of those queues during the validation process.
 
-2b) Semaphores:  There are two semaphores for managing block validations which are sized at 4, for new blocks, and 32 for IBD. 
-Although there are only 4 script queues available we still allow 32 IBD threads to run concurrently since that gives the main processing 
-thread a chance to retrieve other blocks while the current ones complete their validation.
+2b) Semaphores:  There one semaphore used for managing block validations which is sized equal to the number of script check queues. 
 
 2c) Locking: The parallel processing is made possible by first having separate threads for validation, but then largely by managing 
 the internal locks of `cs_main` in the `ConnectBlock()` function which is found in the `src/main.cpp` source file. During the 
 process of `CheckInputs()` we do not have to maintain the lock on `cs_main` which allows other competing threads to continue their 
 own validation; the reason for this is that each thread of validation uses it's own view of the UTXO and the scriptcheckqueue's have
-their own internal locking mechanism. Furthermore when it comes time to wait for the script threads to finish we also do not need to
-maintain the `cs_main` locks during the `control.Wait()`. 
+and UTXO cache's have their own internal locking mechanisms. Furthermore when it comes time to wait for the script threads to finish we also do not need to
+maintain the `cs_main` locks during the `control.Wait()` where we wait for the script threads to finish up. 
 
-Although this unlocking and locking of `cs_main` causes some overhead it is not invoked during the mining process but only when we 
-receive a new block from an external source which needs validation.  It is designed primarily to prevent the big block DDOS attack from 
-jamming the main processing thread.
+The unlocking and locking of `cs_main` is not invoked during the mining process but only when we receive a new block from an external source which needs validation.  In this way we always give priority to the miner's newly mined blocks.
 
-2d) Interrupts:  If multiple blocks are competing to win the validation race or if all 4 script queues are in use and another new block 
+2d) Quitting threads:  If multiple blocks are competing to win the validation race or if all 4 script queues are in use and another new block 
 arrives there are several ways we use to stop one or all of the other competing threads.  We do this by first sending a message to quit 
-the script threads which prevents them from completing their verification, followed by issuing a standard thread interrupt. Also, if one 
-block has finished and has advanced the tip, the other concurrent threads will see that the tip has advanced and will exit their validation 
-threads.
+the script threads which prevents them from completing their verification, followed by issuing a Quit message to the blockvalidation threads. Also, if one 
+block has finished and has advanced the tip, the other concurrent threads may see that the tip has advanced and will exit their validation threads.
 
 2e) Temp view cache:  Each processing thread has it's own temporary view of the UTXO which it can used to pre-validate the inputs and ensure 
 that the block is valid (as each input is checked the UTXO must be updated before the next input can be checked because many times the 
-current input depends on some previous input in the same block). When and If a processing thread wins the validation race it will flush it's 
-temporary and now updated view of the UTXO to the base view which then updates the UTXO on disk.  This is key to having several threads of 
+current input depends on some previous output in the same block). When and If a processing thread wins the validation race it will flush it's 
+temporary and now updated view of the UTXO to the base view (in memory UTXO cache).  This is key to having several threads of 
 validation running concurrently, since we can not have multiple threads all updating the same UTXO base view at the same time.
 
 2f) nSequenceId: In order to have the correct `pindexMostWork` we must update the `nSequenceId` an additional time after the
 winning block updates the `UTXO` and advances the chain tip. We can not only rely only on the `pindexMostWork` returned from the `CBlockIndexWorkComparator()`
-as was previously the case.  That is because pindexMostWork returned from the comparator may not necessarily point to the winning block.  
-So what we have to do is swap the `nSequenceId` between the winning and losing blocks such that the winning block has the lowest nSequenceId and 
-the losing blocks nSequenceId's are bumped up one while at the same time keeping their relative ordering.
+as was previously the case.  That is because pindexMostWork returned from the comparator may not necessarily point to the winning block.
+The `nSequenceId` is swapped between the winning and losing blocks such that the winning block has the lowest nSequenceId and 
+the losing blocks nSequenceId's are bumped up one, while at the same time keeping their relative ordering.
+
+2g) UTXO locking: Due to the need to remove the cs_main locks during the time where we are checking inputs we must have locking
+enabled on the reads and writes to both the UTXO db cache as well as the in memory UTXO cache.  Having these more granular locks
+in place will also allow us to implement multi-threadeding for transaction validation in a future release.
 
 
 3. IBD and new blocks
 ---------------------- 
 
-Parallel Validation is only in effect when new blocks arrive.  In other words, the `fIsChainNearlySyncd` flag must be true
-indicating that IBD has been completed.
-
-Although parallel validation is not in operation during IBD, the blocks arriving that need validating will get processed in a
-separate thread.  This helps to free up the main processing thread and allows requests for more blocks to be made while the other
-threads continue to be processed.
+Parallel Validation is only in effect at all times during both IBD and when new blocks arrive.
 
 
 4. How is mining affected
 --------------------------
 
 Mining is not affected by Parallel Validation.  When new blocks are created locally they bypass parallel validation.  In other words, the `cs_main` locks 
-are not unlocked and then locked repeatedly, allowing the validation process to be completed as quickly as possible.  Whether parallel validation
+are not unlocked and then locked, giving priority to mined blocks and allowing the validation process to be completed as quickly as possible.  Whether parallel validation
 is invoked or not depends on the boolean `fParallel`.  When set to `true` then parallel validation is in effect, and when `false` , as in the case
 of generating a new block, then it is turned off.
 NOTE: Miners will still use parallel validation if a block arrives from an external source. It is only turned off when validating a block they
@@ -91,7 +85,7 @@ mine themself.
 a) Parallel Validation when two separate chains are being mined.
 
 `Occasionally and under normal conditions, two separate chains can be mined for a short while until one chain overtakes
-the other. Under this condition we could have a situatation where a very large block is being validation on fork 1 which
+the other. Under this condition we could have a situatation where a very large block is being validated on fork 1 which
 is the chain active tip, however another block arrives on fork 2. While we would like to do a parallel validation on fork 2, it
 is not actually possible unless we re-org to fork 2. And if we re-org to fork 2 then any blocks that are still validating on fork 1 will fail. So all we can do in this situation is to allow the block on fork 1 to finish its validation, unless the
 fork 2 chain receives yet another block and pulls ahead as being the most work chain. If fork 2 pulls ahead then we will 
@@ -99,7 +93,7 @@ initiate a re-org to fork 2 and begin validation on fork 2, while terminating an
 
 To put it another way and more simply: The outcome of this scenario under PV will be the same as it is currently; there is no
 change in terms how the situation is resolved.  The only difference being that any PV threads that are still running on fork1 need
-to be termintated in some way before the reorg to fork 2.`
+to be termintated before the reorg to fork 2.`
 
 b) The following attack is outlined, however after some discussion, it was found not to be possible.  The reason being that
 PV will only be happening on the chainactive tip which means that the blocks being validated will all have the same parent.

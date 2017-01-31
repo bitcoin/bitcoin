@@ -228,7 +228,6 @@ class ExcessiveBlockTest (BitcoinTestFramework):
           n.generate(10)
           self.sync_blocks()
         
-        print ("sync all")
         self.sync_all()
         # verify mempool is cleaned up on all nodes
         mbefore = [ (lambda y: (y["size"],y["bytes"]))(x.getmempoolinfo()) for x in self.nodes]

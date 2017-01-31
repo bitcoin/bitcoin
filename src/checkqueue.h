@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <vector>
 
-#include <boost/atomic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
