@@ -85,7 +85,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     entry.nFee = 11;
     entry.dPriority = 111.0;
     entry.nHeight = 11;
-
+    maxGeneratedBlock = 100000;
+    excessiveBlockSize = maxGeneratedBlock;
     LOCK(cs_main);
     fCheckpointsEnabled = false;
 
@@ -168,8 +169,60 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         mempool.addUnchecked(hash, entry.Fee(1000000).Time(GetTime()).SpendsCoinbase(spendsCoinbase).SigOps(20).FromTx(tx));
         tx.vin[0].prevout.hash = hash;
     }
-    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+    pblocktemplate = CreateNewBlock(chainparams, scriptPubKey);
+    BOOST_CHECK(pblocktemplate);
     delete pblocktemplate;
+
+    // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value, the mempool has 65k bytes of tx in it so this code will test both saturated and unsaturated blocks.
+    for (unsigned int i = 2000; i <= 80000; i+=1000)
+    {
+      maxGeneratedBlock = i;
+
+      pblocktemplate = CreateNewBlock(chainparams, scriptPubKey);
+      BOOST_CHECK(pblocktemplate);
+      BOOST_CHECK(pblocktemplate->block.fExcessive == false);
+      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
+      unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+      BOOST_CHECK(blockSize <= maxGeneratedBlock);
+      //printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
+      delete pblocktemplate;
+    }
+
+    coinbaseReserve.value=0;  // Test no reserve
+     // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
+    for (unsigned int i = 2000; i <= 40000; i+=73)
+    {
+      maxGeneratedBlock = i;
+
+      pblocktemplate = CreateNewBlock(chainparams, scriptPubKey);
+      BOOST_CHECK(pblocktemplate);
+      BOOST_CHECK(pblocktemplate->block.fExcessive == false);
+      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
+      unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+      BOOST_CHECK(blockSize <= maxGeneratedBlock);
+      //printf("%lu %lu <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, (long unsigned int) maxGeneratedBlock);
+      delete pblocktemplate;
+    }
+
+    std::string testMinerComment("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM__________");
+     // Now generate lots of full size blocks and verify that none exceed the maxGeneratedBlock value
+    printf("test mining with different sized miner comments");
+    for (unsigned int i = 2000; i <= 40000; i+=113)
+    {
+      maxGeneratedBlock = i;
+      if ((i%100) > 0) minerComment = testMinerComment.substr(0,i%100);
+      else minerComment = "";
+      //minerComment = testMinerComment.substr(0,i%100);
+      pblocktemplate = CreateNewBlock(chainparams, scriptPubKey);
+      BOOST_CHECK(pblocktemplate);
+      BOOST_CHECK(pblocktemplate->block.fExcessive == false);
+      BOOST_CHECK(pblocktemplate->block.nBlockSize <= maxGeneratedBlock);
+      unsigned int blockSize = pblocktemplate->block.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+      BOOST_CHECK(blockSize <= maxGeneratedBlock);
+      //printf("%lu %lu (miner comment is %d) <= %lu\n", (long unsigned int) blockSize, (long unsigned int) pblocktemplate->block.nBlockSize, i%100, (long unsigned int) maxGeneratedBlock);
+      delete pblocktemplate;
+    }
+    
     mempool.clear();
 
     // block size > limit

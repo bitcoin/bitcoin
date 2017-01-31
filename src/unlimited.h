@@ -23,6 +23,7 @@ enum {
     DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 12,  // Default is 12 to make it very expensive for a minority hash power to get lucky, and potentially drive a block that the rest of the network sees as "excessive" onto the blockchain.
     DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
     DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 16,    // Allowed messages lengths will be this * the excessive block size
+    DEFAULT_COINBASE_RESERVE_SIZE = 1000,
     MAX_COINBASE_SCRIPTSIG_SIZE = 100,
     EXCESSIVE_BLOCK_CHAIN_RESET = 6*24,  // After 1 day of non-excessive blocks, reset the checker
 };
@@ -188,6 +189,7 @@ std::string SubverValidator(const std::string& value,std::string* item,bool vali
 
 extern CTweak<unsigned int> maxTxSize;
 extern CTweak<uint64_t> blockSigopsPerMb;
+extern CTweak<uint64_t> coinbaseReserve;
 extern CTweak<uint64_t> blockMiningSigopsPerMb;
 
 // Protocol changes:
